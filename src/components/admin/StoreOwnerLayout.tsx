@@ -114,14 +114,14 @@ export default function StoreOwnerLayout({ children, title, storeId, storeName, 
   }, [location.pathname]);
 
   useEffect(() => {
-    if (!isLodging) return;
+    if (!isLodgingStoreCategory(storeCategory)) return;
     try {
       const saved = localStorage.getItem("lodging-qa-summary");
       setQaSummary(saved ? JSON.parse(saved) : null);
     } catch {
       setQaSummary(null);
     }
-  }, [isLodging, sidebarOpen]);
+  }, [storeCategory, sidebarOpen]);
 
   // Focus trap + focus return for the mobile drawer
   useFocusTrap(asideRef, sidebarOpen);
