@@ -12,7 +12,7 @@ import { LODGING_TAB_IDS } from "@/lib/admin/storeTabRouting";
 const proofRows = ["20 hotel sections registered", "Deep-link refresh routing enabled", "Setup Wizard enabled", "QA checklist + PDF report enabled", "Empty-state audit enabled", "Unit and E2E coverage added"];
 const quickLinks = [
   ["Rooms", "lodge-rooms", BedDouble], ["Rate Plans", "lodge-rate-plans", CalendarRange], ["Reservations", "lodge-reservations", CalendarRange], ["Front Desk", "lodge-frontdesk", KeyRound],
-  ["Add-ons", "lodge-addons", PackagePlus], ["Guest Requests", "lodge-guest-requests", MessageSquareText], ["Reports", "lodge-reports", FileText], ["QA Checklist", "qa", ListChecks],
+  ["Add-ons", "lodge-addons", PackagePlus], ["Guest Requests", "lodge-guest-requests", MessageSquareText], ["Reports", "lodge-reports", FileText], ["QA Checklist", "qa", ListChecks], ["Completion Verification", "verification", ShieldCheck],
 ] as const;
 const sectionDescriptions: Record<string, string> = {
   "lodge-overview": "Setup score, next action, and operations snapshot.", "lodge-rooms": "Rooms, inventory, rates, photos, and add-ons.", "lodge-rate-plans": "Rate plans and availability readiness.", "lodge-reservations": "Booking list, guest details, and status workflow.", "lodge-calendar": "Availability calendar and date blocks.", "lodge-guests": "Guest CRM, VIP notes, and stay history.", "lodge-frontdesk": "Today’s arrivals, in-house stays, and departures.", "lodge-housekeeping": "Room readiness and cleaning workflow.", "lodge-maintenance": "Maintenance readiness and task routing.", "lodge-addons": "Packages, extras, and guest-bookable services.", "lodge-guest-requests": "Service requests and add-on follow-up.", "lodge-dining": "Dining and meal-plan operations.", "lodge-experiences": "Tours and destination experiences.", "lodge-transport": "Transfers, parking, rental, and arrival logistics.", "lodge-wellness": "Spa, wellness, and treatment services.", "lodge-amenities": "Amenities and property policy settings.", "lodge-property": "Property profile, location, and guest-facing details.", "lodge-policies": "Rules, deposits, payment, and cancellation setup.", "lodge-reviews": "Completed stay follow-up and feedback readiness.", "lodge-reports": "Occupancy, ADR, RevPAR, revenue, and CSV export.",
@@ -25,7 +25,7 @@ export default function HotelAdminLaunchPage() {
   const ops = useLodgingOpsData(storeId);
   const completion = getLodgingCompletion({ rooms: ops.rooms, profile: ops.profile, addons: ops.addons, reservationsCount: ops.reservations.length, housekeepingCount: 0, maintenanceReady: true, reportsReady: ops.reservations.length > 0 || ops.rooms.length > 0 });
   const qa = runLodgingQa({ storeId, storeName: ownerStore?.name, storeCategory: ownerStore?.category, completion });
-  const openTab = (tab: string) => tab === "qa" ? navigate("/admin/lodging/qa-checklist") : navigate(`/admin/stores/${storeId}?tab=${tab}`);
+  const openTab = (tab: string) => tab === "qa" ? navigate("/admin/lodging/qa-checklist") : tab === "verification" ? navigate("/admin/lodging/completion-verification") : navigate(`/admin/stores/${storeId}?tab=${tab}`);
 
   return (
     <main className="min-h-screen bg-background px-5 py-8 text-foreground">
