@@ -584,15 +584,11 @@ const Profile = () => {
                     {/* Name & status */}
                     <div className="px-6 pb-1.5 pt-2 text-left">
                       <CardTitle className="flex items-center justify-start gap-2 text-lg font-bold">
-                        <Sparkles className="h-4 w-4 text-primary" />
                         {profile?.full_name || t("profile.set_name")}
                         {profile?.is_verified && <BlueVerifiedBadge />}
                       </CardTitle>
                       {/* Email hidden — only visible to account owner in settings */}
                       <div className="flex flex-wrap items-center justify-start gap-2 mt-3">
-                        <Badge className="bg-primary/12 text-primary border-primary/25 font-semibold rounded-full px-3 py-1 shadow-sm">
-                          <Star className="w-3 h-3 mr-1 fill-primary" /> {profile?.status || t("profile.active_member")}
-                        </Badge>
                         {isPlus && (
                           <Badge className="bg-gradient-to-r from-amber-500/20 to-orange-500/20 text-amber-500 border-amber-500/30 font-semibold rounded-full px-3 py-1 shadow-sm">
                             <Crown className="w-3 h-3 mr-1" /> ZIVO+ {plan === "annual" ? "Annual" : "Monthly"}
