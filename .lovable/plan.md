@@ -1,78 +1,76 @@
 
-Plan to make the Hotel/Resort update visibly complete and easy to access
+Plan to make the Hotel/Resort update feel fully complete and visible in the app
 
-1. Fix the main reason it looks unfinished
-   - The current preview route is `/index`, which shows the regular mobile app home, not the Hotel/Resort admin screen.
-   - Add a clear route path and entry point so the completed Hotel/Resort admin can be opened directly from the preview instead of looking hidden.
-   - Keep the existing admin route:
-     - `/admin/stores/:storeId`
-   - Add tab deep-link support:
-     - `/admin/stores/:storeId?tab=lodge-overview`
-     - `/admin/stores/:storeId?tab=lodge-rate-plans`
-     - `/admin/stores/:storeId?tab=lodge-addons`
-     - `/admin/stores/:storeId?tab=lodge-guest-requests`
-   - When a sidebar item or checklist item is clicked, update the URL `tab` parameter so refresh/back navigation keeps the same Hotel/Resort section open.
+1. Add a dedicated Hotel/Resort launch screen
+   - Create a clear Hotel/Resort Operations home page instead of relying only on hidden admin tabs.
+   - Add route:
+     - `/hotel-admin`
+   - If the logged-in user owns a Hotel, Resort, Guesthouse, or B&B store, automatically open their store admin:
+     - `/admin/stores/{storeId}?tab=lodge-overview`
+   - If no lodging store is found, show a helpful page:
+     - “No Hotel / Resort store connected yet”
+     - Button: “Set up Hotel / Resort”
+     - Button: “Go to Partner Login”
+   - This prevents the update from looking missing when the preview opens on `/index`.
 
-2. Add a visible “Hotel / Resort Admin” entry from the mobile app home
-   - On mobile `/index`, add a compact partner/admin card only for logged-in users who own a store.
-   - If the user owns a Hotel, Resort, or Guesthouse store, show:
-     - “Hotel / Resort Admin”
+2. Add a visible Hotel/Resort button at the top of `/index`
+   - Move the “Hotel / Resort Admin” owner card higher on the mobile home page, near the top under the search area.
+   - Make it more obvious with:
+     - Hotel / Resort Admin title
      - Store name
      - Setup progress
-     - Button: “Open Hotel Operations”
-   - The button opens:
-     - `/admin/stores/{storeId}?tab=lodge-overview`
-   - If the user owns a non-lodging store, keep the existing store/partner behavior and do not show hotel-specific wording.
+     - “Open Hotel Operations” button
+     - “Rooms”, “Rates”, “Guest Requests” quick chips
+   - If the owner store data is still loading, show a small skeleton/loading state instead of nothing.
+   - If the user is not logged in or no owner store is detected, show a compact “Partner Admin” shortcut that opens `/partner-login`.
 
-3. Add a proper owner-store lookup hook
-   - Create or reuse a hook that checks `store_profiles.owner_id = current user id`.
-   - Return:
-     - Store id
-     - Store name
-     - Store category
-     - Whether it is lodging
-   - Use normalized lodging categories:
-     - `hotel`
-     - `resort`
-     - `guesthouse`
-     - `guesthouse / b&b`
-     - `b&b`
-   - This avoids the upgrade only being visible when the user manually knows the admin URL.
-
-4. Strengthen the Hotel/Resort dashboard completion state
-   - Add a top “Hotel admin is active” status strip inside `LodgingOverviewSection`.
-   - Show exactly what has been enabled:
-     - Hotel sidebar sections
-     - Rate plans
-     - Guest requests
-     - Add-ons manager
-     - Front desk
-     - Housekeeping
-     - Reports
-     - Folio & charges
-   - Add clear “Next step” CTA buttons:
-     - Complete setup checklist
-     - Add room/rates
-     - Add guest add-ons
-     - Open front desk
-
-5. Make the sidebar progress real, not just text
-   - Replace the static sidebar text “9-step checklist in Hotel Overview” with actual progress:
-     - Example: `Setup progress: 4/9 ready`
-   - Pass setup progress from the store editor into `StoreOwnerLayout`, or compute a lightweight progress count using existing lodging data.
+3. Add a sidebar “completion center”
+   - In the Hotel/Resort sidebar banner, add:
+     - Real setup progress
+     - “Continue setup” button
+     - “Open Overview” button
    - Keep it compact for the 428px mobile preview.
+   - Make sure it is visible before the long section list so the user immediately sees the hotel admin is installed.
 
-6. Make incomplete setup obvious but not broken
-   - If no rooms exist yet, Hotel Overview should show:
-     - “Hotel admin is installed. Add your first room to start.”
-   - If rooms exist but no rates, show:
-     - “Rooms added. Add base rates next.”
-   - If rates exist but no add-ons, show:
-     - “Rates ready. Add guest services next.”
-   - This will make it clear the feature is complete, even if business data is not fully configured yet.
+4. Add a stronger Hotel Overview completion dashboard
+   - Add a top “Hotel / Resort Admin Installed” panel with:
+     - Admin sections enabled
+     - Deep links enabled
+     - Setup checklist enabled
+     - Rate plans enabled
+     - Guest requests enabled
+     - Folio & charges enabled
+   - Add one clear “Next best action” based on the property state:
+     - No rooms → “Add first room”
+     - Rooms but no rates → “Add base rates”
+     - Rates but no add-ons → “Add guest services”
+     - Everything ready → “Open front desk”
+   - Keep all buttons wired to real existing tabs.
 
-7. Polish the new Hotel/Resort sections for “complete” feel
-   - Review these sections and add stronger headers/empty states where needed:
+5. Add a visual “Hotel Operations” quick menu inside the admin page
+   - At the top of `AdminStoreEditPage.tsx` for lodging stores, add a horizontal quick menu:
+     - Overview
+     - Rooms
+     - Rates
+     - Reservations
+     - Front Desk
+     - Add-ons
+     - Guest Requests
+     - Reports
+   - This makes the update visible even if the mobile sidebar is closed.
+   - Each quick item updates the `?tab=` URL and opens the correct section.
+
+6. Improve direct URL support and tab safety
+   - Keep current `?tab=` deep links.
+   - Add validation so invalid or non-lodging tab names do not show a blank tab.
+   - If a user opens:
+     - `/admin/stores/:storeId?tab=lodge-rate-plans`
+   - and the store is lodging, it opens correctly.
+   - If the store is not lodging, redirect safely to `profile`.
+   - If no `tab` is provided for lodging stores, default to `lodge-overview`.
+
+7. Make every lodging section feel less placeholder-like
+   - Review and polish:
      - Hotel Overview
      - Rate Plans & Availability
      - Add-ons & Packages
@@ -83,59 +81,116 @@ Plan to make the Hotel/Resort update visibly complete and easy to access
      - Spa & Wellness
      - Policies & Rules
      - Reviews & Guest Feedback
-   - Ensure every button routes somewhere real.
-   - Remove or reword anything that feels like a placeholder.
+   - Add better empty states that explain exactly what the owner should do next.
+   - Add real navigation buttons only where the destination exists.
+   - Remove wording that feels unfinished, like “coming later” or vague placeholders.
 
-8. Improve direct navigation from Partner Login
-   - When a lodging store owner signs in through `/partner-login`, redirect them directly to:
-     - `/admin/stores/{storeId}?tab=lodge-overview`
-   - Keep non-lodging partners going to their normal dashboard.
-   - If a store setup is incomplete, still route through `/store/setup` as currently intended.
+8. Add a Hotel/Resort setup wizard mode
+   - Add a “Setup Wizard” card to Hotel Overview.
+   - The wizard will guide the owner through:
+     - Property profile
+     - Rooms
+     - Rates
+     - Availability
+     - Policies
+     - Add-ons
+     - Housekeeping
+     - Front desk
+     - Reports
+   - Each step has:
+     - Ready / Needs setup status
+     - Short description
+     - Button to open the right tab
+   - Reuse the existing `LodgingSetupChecklist` logic so it stays connected to real data.
 
-9. Add a small admin/store list indicator
-   - In `/admin/stores`, show a badge for Hotel/Resort/Guesthouse stores:
-     - “Hotel Admin Ready”
-   - Add a quick action:
-     - “Open Hotel Operations”
-   - This gives admins a visible way to confirm the Hotel/Resort upgrade is installed.
+9. Add admin/testing visibility tools
+   - Add an admin-only “Hotel Admin Check” button from the hotel overview or store list.
+   - It opens the existing lodging wiring check page:
+     - `/admin/lodging/wiring-check`
+   - Add quick links for:
+     - Open Hotel Overview
+     - Open Rate Plans
+     - Open Guest Requests
+     - Open Reservations
+   - This gives a visible way to confirm the hotel system is wired.
 
-10. Validate after implementation
-   - Confirm `/index` shows the Hotel/Resort admin entry for a lodging store owner.
-   - Confirm `/admin/stores/:storeId?tab=lodge-overview` opens Hotel Overview directly.
-   - Confirm every Hotel/Resort sidebar item updates the URL and renders the correct section.
-   - Confirm refresh keeps the selected Hotel/Resort tab.
-   - Confirm mobile sidebar still scrolls and closes after tapping a section.
-   - Run a production build and fix any TypeScript errors.
+10. Fix owner-store detection edge cases
+   - Improve `useOwnerStoreProfile.ts` to handle:
+     - Multiple owned stores
+     - Lodging category variants:
+       - Hotel
+       - Hotels
+       - Resort
+       - Resorts
+       - Guesthouse
+       - Guest House
+       - Guesthouse / B&B
+       - Bed and Breakfast
+       - B&B
+     - Category values with extra spaces or different capitalization
+   - Prefer lodging store first when multiple stores exist.
+   - Return loading and empty states so the home card does not silently disappear.
+
+11. Validation after implementation
+   - Confirm `/index` clearly shows a Hotel/Resort or Partner Admin entry.
+   - Confirm `/hotel-admin` works as a direct entry point.
+   - Confirm `/admin/stores/:storeId?tab=lodge-overview` opens Hotel Overview.
+   - Confirm invalid tab names do not produce blank pages.
+   - Confirm the mobile sidebar remains scrollable and closes after tapping a tab.
+   - Confirm the top quick menu opens every major lodging section.
+   - Confirm every button routes to a real working tab/page.
+   - Run a production build and fix TypeScript errors.
 
 Files to update
 
-- `src/pages/admin/AdminStoreEditPage.tsx`
-  - Add URL `?tab=` support.
-  - Keep active tab synced with sidebar/checklist clicks.
-  - Default lodging stores to `lodge-overview`.
-
-- `src/components/admin/StoreOwnerLayout.tsx`
-  - Replace static setup text with real progress.
-  - Keep Hotel/Resort sidebar items visible and mobile-friendly.
-
 - `src/pages/app/AppHome.tsx`
-  - Add visible “Hotel / Resort Admin” card for lodging store owners on `/index`.
-
-- `src/pages/PartnerLogin.tsx`
-  - Redirect lodging store owners directly to Hotel Overview.
-
-- `src/pages/admin/AdminStoresPage.tsx`
-  - Add “Hotel Admin Ready” badge and “Open Hotel Operations” action for lodging stores.
-
-- `src/components/admin/store/lodging/LodgingOverviewSection.tsx`
-  - Add stronger completion/active status messaging and next-step CTAs.
-
-- `src/components/admin/store/lodging/LodgingSetupChecklist.tsx`
-  - Reuse progress calculation for the sidebar/mobile entry where needed.
-
-Optional new hook
+  - Move and strengthen Hotel/Resort Admin entry.
+  - Add fallback Partner Admin entry when no lodging owner store is detected.
 
 - `src/hooks/useOwnerStoreProfile.ts`
-  - Fetch the logged-in user’s owned store profile.
-  - Normalize lodging category detection.
-  - Used by mobile home and partner/admin entry points.
+  - Improve lodging category normalization.
+  - Support multiple owned stores and prefer lodging stores.
+
+- `src/pages/admin/AdminStoreEditPage.tsx`
+  - Add tab validation.
+  - Add top Hotel Operations quick menu.
+  - Strengthen default lodging tab behavior.
+
+- `src/components/admin/StoreOwnerLayout.tsx`
+  - Add compact completion center in the sidebar.
+  - Add Continue Setup / Open Overview actions.
+
+- `src/components/admin/store/lodging/LodgingOverviewSection.tsx`
+  - Add stronger installed/active dashboard.
+  - Add next-best-action logic.
+  - Add Setup Wizard card.
+
+- `src/components/admin/store/lodging/LodgingSetupChecklist.tsx`
+  - Reuse checklist as wizard-style setup steps.
+  - Improve compact mode for sidebar/home use.
+
+- `src/components/admin/store/lodging/LodgingAddOnsSection.tsx`
+  - Improve empty states and button wording.
+
+- `src/components/admin/store/lodging/LodgingRatePlansSection.tsx`
+  - Improve rate readiness messaging and next actions.
+
+- `src/components/admin/store/lodging/LodgingGuestRequestsSection.tsx`
+  - Improve request workspace empty states and reservation links.
+
+New file to add
+
+- `src/pages/admin/HotelAdminLaunchPage.tsx`
+  - Direct `/hotel-admin` entry route for owners and preview access.
+
+- Optional: `src/components/admin/store/lodging/LodgingOperationsQuickMenu.tsx`
+  - Reusable top quick menu for lodging admin tabs.
+
+Route update
+
+- `src/App.tsx`
+  - Add:
+    - `/hotel-admin`
+  - Keep existing:
+    - `/admin/stores/:storeId`
+    - `/admin/stores/:storeId?tab=lodge-overview`
