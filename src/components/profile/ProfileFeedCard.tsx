@@ -15,6 +15,8 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { formatDistanceToNow } from "date-fns";
 import { toUserPostInteractionId } from "@/lib/social/postInteraction";
 import CommentsSheet from "@/components/social/CommentsSheet";
+import CollapsibleCaption from "@/components/social/CollapsibleCaption";
+import { formatCount, commentsLinkLabel } from "@/lib/social/formatCount";
 
 const REACTIONS = ["❤️", "😂", "😮", "😢", "😡", "👍"];
 
