@@ -983,8 +983,8 @@ export default function ReelsFeedPage() {
                     <>
                       <div
                         data-testid="post-detail-header"
-                        className="sticky top-0 z-10 flex items-center gap-3 px-3 pb-2.5 bg-background/95 backdrop-blur-xl border-b border-border/30 cursor-grab active:cursor-grabbing select-none"
-                        style={{ paddingTop: 'var(--zivo-safe-top-overlay)', touchAction: 'none' }}
+                        className="sticky top-0 z-10 flex items-center gap-3 px-3 pt-1 pb-2.5 bg-background/95 backdrop-blur-xl border-b border-border/30 cursor-grab active:cursor-grabbing select-none"
+                        style={{ touchAction: 'none' }}
                         onPointerDown={(e) => {
                           const target = e.target as HTMLElement | null;
                           // Don't start drag from interactive children (buttons, links)
