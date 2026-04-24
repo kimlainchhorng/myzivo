@@ -18,7 +18,7 @@ export type LodgingQaInput = {
 export function runLodgingQa(input: LodgingQaInput) {
   const baseUrl = input.baseUrl || "";
   const storeId = input.storeId || "preview-store";
-  const criticalTabs: LodgingTabId[] = ["lodge-overview", "lodge-rate-plans", "lodge-addons", "lodge-guest-requests"];
+  const criticalTabs: LodgingTabId[] = ["lodge-overview", "lodge-rate-plans", "lodge-frontdesk", "lodge-addons", "lodge-guest-requests"];
   const deepLinks = [
     "/hotel-admin",
     buildStoreTabUrl(storeId, "lodge-overview"),
@@ -26,6 +26,7 @@ export function runLodgingQa(input: LodgingQaInput) {
     buildStoreTabUrl(storeId, "lodge-addons"),
     buildStoreTabUrl(storeId, "lodge-guest-requests"),
     "/admin/lodging/qa-checklist",
+    "/admin/lodging/completion-verification",
   ].map((path) => `${baseUrl}${path}`);
 
   const emptyStateAudit = auditLodgingSidebarTabs();
