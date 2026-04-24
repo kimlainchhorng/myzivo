@@ -411,258 +411,7 @@ const Profile = () => {
 
       {/* ── Scrollable content ── */}
       <div ref={scrollRef} className="relative z-10 h-screen overflow-y-auto pb-24 scroll-smooth" style={{ scrollbarWidth: 'none' }}>
-        <div className="px-4 pt-4 lg:pt-20 max-w-lg md:max-w-2xl lg:max-w-3xl mx-auto">
-
-          {/* ── Header with 3D parallax ── */}
-
-          {/* ── Language Selector & Notifications (compact pills) ── */}
-          <ParallaxSection index={0}>
-            <div className="relative mb-3 flex items-center gap-2">
-              <motion.button
-                ref={langTriggerRef}
-                whileTap={{ scale: 0.95 }}
-                onClick={() => setShowLangPicker(prev => !prev)}
-                className="relative z-20 flex min-h-[36px] items-center gap-1.5 px-3.5 py-2 rounded-xl bg-primary text-primary-foreground text-[11px] font-bold shadow-lg shadow-primary/25 touch-manipulation transition-all"
-                style={{ perspective: "800px", transformStyle: "preserve-3d", transform: "translateZ(24px)" }}
-              >
-                <Globe className="w-3.5 h-3.5" />
-                <img src={getFlagUrl(currentLang.cc)} alt="" className="w-4 h-3 rounded-[2px] object-cover shadow-sm" onError={(e) => { e.currentTarget.style.display = 'none'; }} />
-                <span>{currentLang.label}</span>
-                <ChevronDown className={`w-3 h-3 transition-transform duration-300 ${showLangPicker ? "rotate-180" : ""}`} />
-              </motion.button>
-
-              <motion.button
-                whileTap={{ scale: 0.95 }}
-                onClick={() => setShowNotifPanel(prev => !prev)}
-                className={cn(
-                  "relative z-20 flex min-h-[36px] items-center gap-1.5 px-3.5 py-2 rounded-xl text-[11px] font-bold shadow-lg touch-manipulation transition-all",
-                  showNotifPanel
-                    ? "bg-primary text-primary-foreground shadow-primary/25"
-                    : "bg-card/70 backdrop-blur-xl border border-border/30 shadow-primary/[0.05] hover:bg-card/90"
-                )}
-                style={{ perspective: "800px", transformStyle: "preserve-3d", transform: "translateZ(24px)" }}
-              >
-                <span className="relative">
-                  <Bell className={cn("w-3.5 h-3.5", showNotifPanel ? "text-primary-foreground" : "text-destructive")} />
-                  {totalNotifCount > 0 && !showNotifPanel && (
-                    <span className="absolute -top-1.5 -right-2 flex h-4 min-w-[16px] items-center justify-center rounded-full bg-destructive text-[9px] font-bold text-destructive-foreground px-1 shadow-md shadow-destructive/30">
-                      {totalNotifCount > 99 ? '99+' : totalNotifCount}
-                    </span>
-                  )}
-                </span>
-                <span className="ml-1">Notifications</span>
-                <ChevronDown className={cn("w-3 h-3 transition-transform duration-300", showNotifPanel ? "rotate-180 text-primary-foreground/70" : "text-muted-foreground")} />
-              </motion.button>
-
-              <motion.button
-                whileTap={{ scale: 0.95 }}
-                onClick={() => navigate("/more")}
-                className={cn(
-                  "relative z-20 flex min-h-[36px] items-center gap-1.5 px-3 py-2 rounded-xl backdrop-blur-xl border text-[11px] font-bold shadow-lg touch-manipulation transition-all",
-                  "bg-card/70 border-border/30 shadow-primary/[0.05] hover:bg-card/90"
-                )}
-                style={{ perspective: "800px", transformStyle: "preserve-3d", transform: "translateZ(24px)" }}
-              >
-                <MoreHorizontal className={cn("w-3.5 h-3.5", "text-muted-foreground")} />
-                <span>More</span>
-                <ChevronRight className={cn("w-3 h-3 text-muted-foreground")} />
-              </motion.button>
-            </div>
-
-            {/* Inline Notifications Panel */}
-            <AnimatePresence>
-              {showNotifPanel && (
-                <motion.div
-                  initial={{ opacity: 0, height: 0 }}
-                  animate={{ opacity: 1, height: "auto" }}
-                  exit={{ opacity: 0, height: 0 }}
-                  transition={{ duration: 0.25, ease: "easeInOut" }}
-                  className="overflow-hidden"
-                >
-                  <div className="mt-2 rounded-2xl bg-card/80 backdrop-blur-xl border border-border/40 shadow-xl shadow-primary/[0.04] p-3">
-                    {/* Panel Header */}
-                    <div className="flex items-center justify-between mb-3">
-                      <div className="flex items-center gap-2">
-                        <Bell className="w-4 h-4 text-primary" />
-                        <span className="text-sm font-bold">Notifications</span>
-                        {totalNotifCount > 0 && (
-                          <Badge variant="secondary" className="text-[10px] h-5 px-1.5">{totalNotifCount} new</Badge>
-                        )}
-                      </div>
-                      <button
-                        onClick={() => setShowNotifPanel(false)}
-                        className="p-1.5 rounded-xl hover:bg-muted/50 transition-colors touch-manipulation active:scale-90"
-                        aria-label="Close notifications"
-                      >
-                        <X className="w-4 h-4 text-muted-foreground" />
-                      </button>
-                    </div>
-
-                    {/* Quick Notification Items */}
-                    <div className="space-y-1.5 mb-3">
-                      {totalNotifCount === 0 ? (
-                        <div className="text-center py-4">
-                          <Bell className="w-8 h-8 text-muted-foreground/30 mx-auto mb-2" />
-                          <p className="text-xs text-muted-foreground">No new notifications</p>
-                        </div>
-                      ) : (
-                        <>
-                          {socialCount > 0 && (
-                            <button
-                              onClick={() => { setShowNotifPanel(false); navigate('/notifications'); }}
-                              className="flex items-center gap-3 w-full p-2.5 rounded-xl bg-primary/5 border border-primary/15 hover:bg-primary/10 transition-colors text-left touch-manipulation"
-                            >
-                              <div className="w-8 h-8 rounded-full bg-primary/15 flex items-center justify-center shrink-0">
-                                <UserPlus className="w-4 h-4 text-primary" />
-                              </div>
-                              <div className="flex-1 min-w-0">
-                                <p className="text-xs font-semibold">Friend Requests</p>
-                                <p className="text-[10px] text-muted-foreground">{socialCount} pending</p>
-                              </div>
-                              <ChevronRight className="w-3.5 h-3.5 text-muted-foreground shrink-0" />
-                            </button>
-                          )}
-                          {(() => {
-                            const followNotifs = notifications.filter(n => !n.is_read && (n.template?.includes('follow') || n.title?.toLowerCase().includes('follow')));
-                            return followNotifs.length > 0 ? (
-                              <button
-                                onClick={() => { setShowNotifPanel(false); navigate('/notifications'); }}
-                                className="flex items-center gap-3 w-full p-2.5 rounded-xl bg-blue-500/5 border border-blue-500/15 hover:bg-blue-500/10 transition-colors text-left touch-manipulation"
-                              >
-                                <div className="w-8 h-8 rounded-full bg-blue-500/15 flex items-center justify-center shrink-0">
-                                  <UserCheck className="w-4 h-4 text-blue-500" />
-                                </div>
-                                <div className="flex-1 min-w-0">
-                                  <p className="text-xs font-semibold">New Followers</p>
-                                  <p className="text-[10px] text-muted-foreground">{followNotifs.length} new</p>
-                                </div>
-                                <ChevronRight className="w-3.5 h-3.5 text-muted-foreground shrink-0" />
-                              </button>
-                            ) : null;
-                          })()}
-                          {(() => {
-                            const paymentNotifs = notifications.filter(n => !n.is_read && (n.category === 'transactional' || n.template?.includes('payment') || n.template?.includes('order') || n.title?.toLowerCase().includes('payment') || n.title?.toLowerCase().includes('order')));
-                            return paymentNotifs.length > 0 ? (
-                              <button
-                                onClick={() => { setShowNotifPanel(false); navigate('/notifications'); }}
-                                className="flex items-center gap-3 w-full p-2.5 rounded-xl bg-emerald-500/5 border border-emerald-500/15 hover:bg-emerald-500/10 transition-colors text-left touch-manipulation"
-                              >
-                                <div className="w-8 h-8 rounded-full bg-emerald-500/15 flex items-center justify-center shrink-0">
-                                  <Wallet className="w-4 h-4 text-emerald-500" />
-                                </div>
-                                <div className="flex-1 min-w-0">
-                                  <p className="text-xs font-semibold">Payments & Orders</p>
-                                  <p className="text-[10px] text-muted-foreground">{paymentNotifs.length} updates</p>
-                                </div>
-                                <ChevronRight className="w-3.5 h-3.5 text-muted-foreground shrink-0" />
-                              </button>
-                            ) : null;
-                          })()}
-                          {(() => {
-                            const supportNotifs = notifications.filter(n => !n.is_read && (n.template?.includes('support') || n.template?.includes('ticket') || n.title?.toLowerCase().includes('support')));
-                            return supportNotifs.length > 0 ? (
-                              <button
-                                onClick={() => { setShowNotifPanel(false); navigate('/notifications'); }}
-                                className="flex items-center gap-3 w-full p-2.5 rounded-xl bg-amber-500/5 border border-amber-500/15 hover:bg-amber-500/10 transition-colors text-left touch-manipulation"
-                              >
-                                <div className="w-8 h-8 rounded-full bg-amber-500/15 flex items-center justify-center shrink-0">
-                                  <Phone className="w-4 h-4 text-amber-500" />
-                                </div>
-                                <div className="flex-1 min-w-0">
-                                  <p className="text-xs font-semibold">Support Tickets</p>
-                                  <p className="text-[10px] text-muted-foreground">{supportNotifs.length} updates</p>
-                                </div>
-                                <ChevronRight className="w-3.5 h-3.5 text-muted-foreground shrink-0" />
-                              </button>
-                            ) : null;
-                          })()}
-                          {(() => {
-                            const promoNotifs = notifications.filter(n => !n.is_read && (n.category === 'marketing' || n.template?.includes('promo') || n.title?.toLowerCase().includes('deal')));
-                            return promoNotifs.length > 0 ? (
-                              <button
-                                onClick={() => { setShowNotifPanel(false); navigate('/notifications'); }}
-                                className="flex items-center gap-3 w-full p-2.5 rounded-xl bg-purple-500/5 border border-purple-500/15 hover:bg-purple-500/10 transition-colors text-left touch-manipulation"
-                              >
-                                <div className="w-8 h-8 rounded-full bg-purple-500/15 flex items-center justify-center shrink-0">
-                                  <Sparkles className="w-4 h-4 text-purple-500" />
-                                </div>
-                                <div className="flex-1 min-w-0">
-                                  <p className="text-xs font-semibold">Deals & Promos</p>
-                                  <p className="text-[10px] text-muted-foreground">{promoNotifs.length} new</p>
-                                </div>
-                                <ChevronRight className="w-3.5 h-3.5 text-muted-foreground shrink-0" />
-                              </button>
-                            ) : null;
-                          })()}
-                          {(() => {
-                            const accountNotifs = notifications.filter(n => !n.is_read && n.category === 'account' && !n.template?.includes('follow') && !n.template?.includes('support'));
-                            return accountNotifs.length > 0 ? (
-                              <button
-                                onClick={() => { setShowNotifPanel(false); navigate('/notifications'); }}
-                                className="flex items-center gap-3 w-full p-2.5 rounded-xl bg-muted/30 hover:bg-muted/50 transition-colors text-left touch-manipulation"
-                              >
-                                <div className="w-8 h-8 rounded-full bg-muted flex items-center justify-center shrink-0">
-                                  <Shield className="w-4 h-4 text-muted-foreground" />
-                                </div>
-                                <div className="flex-1 min-w-0">
-                                  <p className="text-xs font-semibold">Account Updates</p>
-                                  <p className="text-[10px] text-muted-foreground">{accountNotifs.length} updates</p>
-                                </div>
-                                <ChevronRight className="w-3.5 h-3.5 text-muted-foreground shrink-0" />
-                              </button>
-                            ) : null;
-                          })()}
-                          {(() => {
-                            // Show generic unread count for any remaining uncategorized
-                            const categorized = notifications.filter(n => !n.is_read).filter(n =>
-                              n.template?.includes('follow') || n.title?.toLowerCase().includes('follow') ||
-                              n.category === 'transactional' || n.template?.includes('payment') || n.template?.includes('order') || n.title?.toLowerCase().includes('payment') || n.title?.toLowerCase().includes('order') ||
-                              n.template?.includes('support') || n.template?.includes('ticket') || n.title?.toLowerCase().includes('support') ||
-                              n.category === 'marketing' || n.template?.includes('promo') || n.title?.toLowerCase().includes('deal') ||
-                              n.category === 'account'
-                            );
-                            const otherCount = notifUnreadCount - categorized.length;
-                            return otherCount > 0 ? (
-                              <button
-                                onClick={() => { setShowNotifPanel(false); navigate('/notifications'); }}
-                                className="flex items-center gap-3 w-full p-2.5 rounded-xl bg-muted/30 hover:bg-muted/50 transition-colors text-left touch-manipulation"
-                              >
-                                <div className="w-8 h-8 rounded-full bg-destructive/10 flex items-center justify-center shrink-0">
-                                  <Bell className="w-4 h-4 text-destructive" />
-                                </div>
-                                <div className="flex-1 min-w-0">
-                                  <p className="text-xs font-semibold">Other Alerts</p>
-                                  <p className="text-[10px] text-muted-foreground">{otherCount} notifications</p>
-                                </div>
-                                <ChevronRight className="w-3.5 h-3.5 text-muted-foreground shrink-0" />
-                              </button>
-                            ) : null;
-                          })()}
-                        </>
-                      )}
-                    </div>
-
-                    {/* View All + Close Buttons */}
-                    <div className="flex gap-2">
-                      <button
-                        onClick={() => { setShowNotifPanel(false); navigate('/notifications'); }}
-                        className="flex-1 py-2 rounded-xl bg-primary text-primary-foreground text-xs font-bold touch-manipulation active:scale-95 transition-transform"
-                      >
-                        View All
-                      </button>
-                      <button
-                        onClick={() => setShowNotifPanel(false)}
-                        className="px-4 py-2 rounded-xl bg-muted/50 text-muted-foreground text-xs font-bold touch-manipulation active:scale-95 transition-transform hover:bg-muted/70"
-                      >
-                        Close
-                      </button>
-                    </div>
-                  </div>
-                </motion.div>
-              )}
-            </AnimatePresence>
-          </ParallaxSection>
-
+        <div className="px-4 pt-2 lg:pt-20 max-w-lg md:max-w-2xl lg:max-w-3xl mx-auto">
 
           {profileLoading ? (
             <div className="flex items-center justify-center py-20">
@@ -671,31 +420,22 @@ const Profile = () => {
               </motion.div>
             </div>
           ) : (
-            <div className="space-y-4">
+            <div className="space-y-2.5">
               {/* ── ZIVO+ Upgrade (compact) ── */}
               {!isPlus && (
                 <ParallaxSection index={1.9}>
                   <Link to="/zivo-plus">
-                    <motion.div whileTap={{ scale: 0.97 }}>
-                      <div className="relative rounded-2xl overflow-hidden shadow-lg shadow-amber-500/10 group">
-                        <div className="absolute inset-0 bg-gradient-to-br from-amber-500/15 via-orange-500/10 to-amber-400/15 backdrop-blur-2xl" />
-                        <div className="absolute inset-0 bg-card/50" />
-                        <div className="pointer-events-none absolute inset-0 rounded-2xl ring-1 ring-inset ring-amber-500/15" />
-                        <div className="relative z-10 px-3.5 py-2.5">
-                          <div className="flex items-center justify-between gap-2.5">
-                            <div className="flex items-center gap-2.5">
-                              <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-amber-500 to-orange-500 flex items-center justify-center shadow-lg shadow-amber-500/25">
-                                <Crown className="w-4 h-4 text-white" />
-                              </div>
-                              <div>
-                                <p className="font-bold text-[12px]">{t("profile.upgrade_plus")}</p>
-                                <p className="text-[10px] text-muted-foreground">{t("profile.upgrade_desc")}</p>
-                              </div>
-                            </div>
-                            <ChevronRight className="w-4 h-4 text-amber-500/50 shrink-0" />
-                          </div>
+                    <motion.div whileTap={{ scale: 0.98 }} className="flex items-center justify-between gap-2 rounded-2xl border border-primary/15 bg-card/75 px-3 py-2 shadow-sm backdrop-blur-xl">
+                      <div className="flex min-w-0 items-center gap-2.5">
+                        <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-primary/12 text-primary">
+                          <Crown className="h-4 w-4" />
+                        </div>
+                        <div className="min-w-0">
+                          <p className="truncate text-[12px] font-bold">{t("profile.upgrade_plus")}</p>
+                          <p className="truncate text-[10px] text-muted-foreground">{t("profile.upgrade_desc")}</p>
                         </div>
                       </div>
+                      <ChevronRight className="h-4 w-4 shrink-0 text-muted-foreground" />
                     </motion.div>
                   </Link>
                 </ParallaxSection>
@@ -725,6 +465,112 @@ const Profile = () => {
                 <ProfileStories />
               </ParallaxSection>
 
+          {/* ── Account actions moved lower for clearer mobile layout ── */}
+          <ParallaxSection index={2.1}>
+            <div className="relative mb-2">
+              <div className="grid grid-cols-3 gap-2">
+                <motion.button
+                  ref={langTriggerRef}
+                  whileTap={{ scale: 0.96 }}
+                  onClick={() => setShowLangPicker(prev => !prev)}
+                  className="relative z-20 flex min-h-[42px] items-center justify-center gap-1.5 rounded-2xl border border-primary/20 bg-primary/10 px-2.5 text-[11px] font-bold text-primary shadow-sm touch-manipulation transition-all"
+                >
+                  <Globe className="h-3.5 w-3.5 shrink-0" />
+                  <img src={getFlagUrl(currentLang.cc)} alt="" className="h-3 w-4 rounded-[2px] object-cover shadow-sm" onError={(e) => { e.currentTarget.style.display = 'none'; }} />
+                  <span className="truncate">Translate</span>
+                  <ChevronDown className={`h-3 w-3 shrink-0 transition-transform duration-300 ${showLangPicker ? "rotate-180" : ""}`} />
+                </motion.button>
+
+                <motion.button
+                  whileTap={{ scale: 0.96 }}
+                  onClick={() => setShowNotifPanel(prev => !prev)}
+                  className={cn(
+                    "relative z-20 flex min-h-[42px] items-center justify-center gap-1.5 rounded-2xl border px-2.5 text-[11px] font-bold shadow-sm touch-manipulation transition-all",
+                    showNotifPanel
+                      ? "border-primary/25 bg-primary text-primary-foreground"
+                      : "border-border/40 bg-card/75 text-foreground backdrop-blur-xl hover:bg-card/90"
+                  )}
+                >
+                  <span className="relative shrink-0">
+                    <Bell className={cn("h-3.5 w-3.5", showNotifPanel ? "text-primary-foreground" : "text-primary")} />
+                    {totalNotifCount > 0 && !showNotifPanel && (
+                      <span className="absolute -right-2 -top-2 flex h-4 min-w-[16px] items-center justify-center rounded-full bg-destructive px-1 text-[9px] font-bold text-destructive-foreground shadow-sm">
+                        {totalNotifCount > 99 ? '99+' : totalNotifCount}
+                      </span>
+                    )}
+                  </span>
+                  <span className="truncate">Notifications</span>
+                </motion.button>
+
+                <motion.button
+                  whileTap={{ scale: 0.96 }}
+                  onClick={() => navigate("/more")}
+                  className="relative z-20 flex min-h-[42px] items-center justify-center gap-1.5 rounded-2xl border border-border/40 bg-card/75 px-2.5 text-[11px] font-bold text-foreground shadow-sm backdrop-blur-xl touch-manipulation transition-all hover:bg-card/90"
+                >
+                  <MoreHorizontal className="h-3.5 w-3.5 shrink-0 text-primary" />
+                  <span className="truncate">More</span>
+                  <ChevronRight className="h-3 w-3 shrink-0 text-muted-foreground" />
+                </motion.button>
+              </div>
+
+              <AnimatePresence>
+                {showNotifPanel && (
+                  <motion.div
+                    initial={{ opacity: 0, height: 0 }}
+                    animate={{ opacity: 1, height: "auto" }}
+                    exit={{ opacity: 0, height: 0 }}
+                    transition={{ duration: 0.22, ease: "easeInOut" }}
+                    className="overflow-hidden"
+                  >
+                    <div className="mt-2 rounded-2xl border border-border/40 bg-card/90 p-2.5 shadow-xl shadow-primary/[0.04] backdrop-blur-xl">
+                      <div className="mb-2 flex items-center justify-between">
+                        <div className="flex items-center gap-2">
+                          <Bell className="h-3.5 w-3.5 text-primary" />
+                          <span className="text-xs font-bold">Notifications</span>
+                          {totalNotifCount > 0 && <Badge variant="secondary" className="h-5 px-1.5 text-[10px]">{totalNotifCount} new</Badge>}
+                        </div>
+                        <button onClick={() => setShowNotifPanel(false)} className="rounded-xl p-1.5 transition-colors hover:bg-muted/50" aria-label="Close notifications">
+                          <X className="h-3.5 w-3.5 text-muted-foreground" />
+                        </button>
+                      </div>
+
+                      <div className="mb-2 max-h-[220px] space-y-1.5 overflow-y-auto pr-1">
+                        {totalNotifCount === 0 ? (
+                          <div className="py-3 text-center">
+                            <Bell className="mx-auto mb-1.5 h-6 w-6 text-muted-foreground/30" />
+                            <p className="text-xs text-muted-foreground">No new notifications</p>
+                          </div>
+                        ) : (
+                          <>
+                            {socialCount > 0 && (
+                              <button onClick={() => { setShowNotifPanel(false); navigate('/notifications'); }} className="flex w-full items-center gap-2.5 rounded-xl border border-primary/15 bg-primary/5 p-2 text-left transition-colors hover:bg-primary/10">
+                                <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-primary/15"><UserPlus className="h-3.5 w-3.5 text-primary" /></div>
+                                <div className="min-w-0 flex-1"><p className="text-xs font-semibold">Friend Requests</p><p className="text-[10px] text-muted-foreground">{socialCount} pending</p></div>
+                                <ChevronRight className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
+                              </button>
+                            )}
+                            {notifications.filter(n => !n.is_read).slice(0, 4).map((n) => (
+                              <button key={n.id} onClick={() => { setShowNotifPanel(false); navigate('/notifications'); }} className="flex w-full items-center gap-2.5 rounded-xl bg-muted/35 p-2 text-left transition-colors hover:bg-muted/55">
+                                <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-primary/10"><Bell className="h-3.5 w-3.5 text-primary" /></div>
+                                <div className="min-w-0 flex-1"><p className="truncate text-xs font-semibold">{n.title || 'Notification'}</p><p className="truncate text-[10px] text-muted-foreground">{n.body || n.template || 'New update'}</p></div>
+                                <ChevronRight className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
+                              </button>
+                            ))}
+                          </>
+                        )}
+                      </div>
+
+                      <div className="flex gap-2">
+                        <button onClick={() => { setShowNotifPanel(false); navigate('/notifications'); }} className="flex-1 rounded-xl bg-primary py-2 text-xs font-bold text-primary-foreground transition-transform active:scale-95">View All</button>
+                        <button onClick={() => setShowNotifPanel(false)} className="rounded-xl bg-muted/50 px-4 py-2 text-xs font-bold text-muted-foreground transition-transform active:scale-95 hover:bg-muted/70">Close</button>
+                      </div>
+                    </div>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            </div>
+          </ParallaxSection>
+
               {/* ── Profile Card with Cover Photo ── */}
               <ParallaxSection index={2}>
                 <motion.div
@@ -739,7 +585,7 @@ const Profile = () => {
                   <GlassCard3D glow className="shadow-2xl shadow-primary/[0.08] overflow-hidden">
                     {/* Cover Photo */}
                     <div
-                      className="relative h-44 sm:h-52 md:h-60 w-full overflow-hidden select-none"
+                      className="relative h-36 sm:h-44 md:h-52 w-full overflow-hidden select-none"
                       onMouseDown={coverRepositioning ? (e) => { e.preventDefault(); handleCoverDragStart(e.clientY); } : undefined}
                       onMouseMove={coverRepositioning ? (e) => handleCoverDragMove(e.clientY) : undefined}
                       onMouseUp={coverRepositioning ? handleCoverDragEnd : undefined}
@@ -812,7 +658,7 @@ const Profile = () => {
                     </div>
 
                     {/* Avatar overlapping cover */}
-                    <div className="relative px-6 -mt-14 z-10">
+                    <div className="relative z-10 -mt-11 px-6">
                       <div className="flex justify-center">
                         <motion.div
                           className="relative group/avatar"
@@ -820,7 +666,7 @@ const Profile = () => {
                           transition={{ type: "spring", stiffness: 300 }}
                         >
                           <div className="absolute -inset-2 bg-gradient-to-r from-primary via-primary/50 to-primary rounded-full blur-xl opacity-20 group-hover/avatar:opacity-40 transition-opacity" />
-                          <Avatar className="relative h-24 w-24 sm:h-28 sm:w-28 md:h-32 md:w-32 ring-4 ring-card shadow-2xl shadow-primary/20">
+                          <Avatar className="relative h-20 w-20 sm:h-24 sm:w-24 md:h-28 md:w-28 ring-4 ring-card shadow-2xl shadow-primary/20">
                             <AvatarImage src={avatarPreview || profile?.avatar_url || undefined} alt="Profile" />
                             <AvatarFallback className="bg-gradient-to-br from-primary to-primary/60 text-primary-foreground text-2xl font-bold">
                               {getInitials()}
@@ -841,8 +687,8 @@ const Profile = () => {
                     </div>
 
                     {/* Name & status */}
-                    <div className="text-center pt-3 pb-2 px-6">
-                      <CardTitle className="flex items-center justify-center gap-2 text-xl font-bold">
+                    <div className="px-6 pb-1.5 pt-2 text-center">
+                      <CardTitle className="flex items-center justify-center gap-2 text-lg font-bold">
                         <Sparkles className="h-4 w-4 text-primary" />
                         {profile?.full_name || t("profile.set_name")}
                         {profile?.is_verified && (
@@ -865,14 +711,14 @@ const Profile = () => {
                       </div>
 
                       {/* Bio */}
-                      <div className="mt-3 px-4 max-w-sm mx-auto">
+                      <div className="mx-auto mt-2 max-w-sm px-2">
                         <textarea
                           value={bioDraft}
                           onChange={(e) => setBioDraft(e.target.value)}
                           placeholder="Add bio..."
                           maxLength={160}
                           rows={2}
-                          className="w-full rounded-2xl border border-border/50 bg-background/80 px-4 py-3 text-sm text-foreground placeholder:text-muted-foreground resize-none outline-none focus:border-primary/40 focus:ring-2 focus:ring-primary/10"
+                          className="w-full resize-none rounded-2xl border border-border/50 bg-background/80 px-3 py-2 text-xs text-foreground outline-none placeholder:text-muted-foreground focus:border-primary/40 focus:ring-2 focus:ring-primary/10"
                         />
                         <div className="mt-2 flex justify-center">
                           <Button
@@ -888,7 +734,7 @@ const Profile = () => {
                       </div>
 
                       {/* Friend, Follower & Following stats — Facebook/TikTok style */}
-                      <div className="flex items-center justify-center gap-0 mt-4 mb-1">
+                      <div className="mb-1 mt-2 flex items-center justify-center gap-0">
                         <button className="flex-1 text-center py-1 group" onClick={() => setSocialModal({ open: true, tab: "friends" })}>
                           <p className="text-lg font-black text-foreground group-hover:text-primary transition-colors">{friendCount}</p>
                           <p className="text-[10px] text-muted-foreground font-medium">Friends</p>
@@ -963,7 +809,7 @@ const Profile = () => {
                       {/* Add Friend & Follow buttons — only shown when viewing other users' profiles */}
                     </div>
 
-                    <CardContent className="pt-3 pb-6 px-6">
+                    <CardContent className="px-6 pb-4 pt-2">
                     </CardContent>
                   </GlassCard3D>
                 </motion.div>
