@@ -7,7 +7,7 @@ import { useI18n } from "@/hooks/useI18n";
 import SEOHead from "@/components/SEOHead";
 import {
   User, ArrowLeft, Loader2, Sparkles, Camera, ImagePlus, Check, X, MoveVertical,
-  Shield, Star, ChevronRight, UserPlus, UserCheck, BadgeCheck,
+  Shield, Star, ChevronRight, UserPlus, BadgeCheck,
   Wallet, Store, ExternalLink, Users, Globe, ChevronDown, Crown, MapPin, ShoppingBag,
   Settings, Handshake, Car, Wrench, UtensilsCrossed, Building2, Truck, Phone, AlertCircle, Bell, MoreHorizontal,
 } from "lucide-react";
