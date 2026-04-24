@@ -87,6 +87,7 @@ import SwipeableSheet from "@/components/social/SwipeableSheet";
 const FeedSidebar = lazy(() => import("@/components/social/FeedSidebar"));
 import { optimizeAvatar } from "@/utils/optimizeAvatar";
 import { useSwipeDownClose } from "@/components/social/useSwipeDownClose";
+import { SwipeGrabHandle } from "@/components/social/SwipeGrabHandle";
 
 /**
  * Fullscreen post-detail overlay with swipe-down-to-close.
@@ -111,6 +112,16 @@ function PostDetailOverlay({
       {...motionProps}
       className="fixed inset-0 z-[100] bg-background flex flex-col"
     >
+      <div
+        className="shrink-0 bg-background/95 backdrop-blur-xl"
+        style={{ paddingTop: "var(--zivo-safe-top-overlay)" }}
+      >
+        <SwipeGrabHandle
+          onStartDrag={startDrag}
+          tone="dark"
+          testId="post-detail-grab-handle"
+        />
+      </div>
       {children(startDrag)}
     </motion.div>
   );
