@@ -543,6 +543,14 @@ const Profile = () => {
                           >
                             {coverUploading ? <Loader2 className="h-4 w-4 animate-spin" /> : <ImagePlus className="h-4 w-4" />}
                           </motion.button>
+                          <motion.button
+                            whileTap={{ scale: 0.9 }}
+                            onClick={() => navigate("/more")}
+                            aria-label="More"
+                            className="p-2 rounded-full bg-background/70 backdrop-blur-md text-foreground/80 hover:bg-background/90 shadow-lg border border-border/30"
+                          >
+                            <MoreHorizontal className="h-4 w-4" />
+                          </motion.button>
                         </div>
                       )}
 
