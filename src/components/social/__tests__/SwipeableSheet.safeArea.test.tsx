@@ -19,15 +19,16 @@ import {
   evaluateCssExpression,
 } from "@/lib/social/safeAreaEval";
 
-// ── Mock framer-motion: render motion.* as plain elements, keep style/children.
-//    AnimatePresence just renders children. This preserves every inline style
-//    we need to assert on, while skipping animation timing in jsdom.
+// ── Mock framer-motion: render motion.* as plain elements, keep children +
+//    mirror inline style values to data-* attributes (jsdom's CSSOM drops
+//    `env()`, `dvh`, etc., so we cannot read them back from el.style).
 vi.mock("framer-motion", () => {
   const passthrough = (tag: keyof JSX.IntrinsicElements = "div") =>
     React.forwardRef<HTMLElement, any>(
       (
         {
           children,
+          style,
           // strip framer-only props so React doesn't warn
           initial,
           animate,
@@ -45,13 +46,30 @@ vi.mock("framer-motion", () => {
           ...rest
         },
         ref,
-      ) => React.createElement(tag, { ...rest, ref }, children),
+      ) => {
+        const dataAttrs: Record<string, string> = {};
+        if (style && typeof style === "object") {
+          if (style.paddingTop != null)
+            dataAttrs["data-padding-top"] = String(style.paddingTop);
+          if (style.paddingBottom != null)
+            dataAttrs["data-padding-bottom"] = String(style.paddingBottom);
+          if (style.maxHeight != null)
+            dataAttrs["data-max-height"] = String(style.maxHeight);
+          if (style.top != null) dataAttrs["data-top"] = String(style.top);
+        }
+        return React.createElement(
+          tag,
+          { ...rest, ...dataAttrs, ref },
+          children,
+        );
+      },
     );
 
   const motionProxy = new Proxy(
     {},
     {
-      get: (_t, prop: string) => passthrough(prop as keyof JSX.IntrinsicElements),
+      get: (_t, prop: string) =>
+        passthrough(prop as keyof JSX.IntrinsicElements),
     },
   );
 
