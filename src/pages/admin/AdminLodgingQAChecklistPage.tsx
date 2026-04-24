@@ -1,12 +1,15 @@
 import { useNavigate } from "react-router-dom";
+import { useMemo, useState } from "react";
+import { jsPDF } from "jspdf";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { CheckCircle2, ClipboardCheck, ExternalLink, Hotel, ListChecks, Wrench } from "lucide-react";
+import { CheckCircle2, ClipboardCheck, Download, ExternalLink, Hotel, ListChecks, Printer, ShieldCheck, Wrench, XCircle } from "lucide-react";
 import { useOwnerStoreProfile } from "@/hooks/useOwnerStoreProfile";
 import { useLodgingOpsData } from "@/components/admin/store/lodging/LodgingOperationsShared";
 import { getLodgingCompletion } from "@/lib/lodging/lodgingCompletion";
 import { LODGING_TAB_IDS } from "@/lib/admin/storeTabRouting";
+import { runLodgingQa, type LodgingQaResult } from "@/lib/lodging/lodgingQa";
 
 const updatedFeatures = ["Direct /hotel-admin entry", "Hotel Operations quick menu", "Real completion progress", "Setup wizard", "Deep-link tab safety", "Unit tests added"];
 const routeChecks = ["/hotel-admin", "/admin/stores/:storeId?tab=lodge-overview", "/admin/stores/:storeId?tab=lodge-rate-plans", "/admin/lodging/wiring-check"];
@@ -17,7 +20,29 @@ export default function AdminLodgingQAChecklistPage() {
   const storeId = ownerStore?.isLodging ? ownerStore.id : "";
   const { rooms, profile, addons, reservations, isLoading } = useLodgingOpsData(storeId);
   const completion = getLodgingCompletion({ rooms, profile, addons, reservationsCount: reservations.length, housekeepingCount: 0, maintenanceReady: true });
+  const [qaResult, setQaResult] = useState<LodgingQaResult | null>(null);
+  const [qaRunning, setQaRunning] = useState(false);
+  const report = useMemo(() => qaResult || runLodgingQa({ storeId, storeName: ownerStore?.name, storeCategory: ownerStore?.category, completion }), [qaResult, storeId, ownerStore?.name, ownerStore?.category, completion]);
   const openTab = (tab: string) => storeId ? navigate(`/admin/stores/${storeId}?tab=${tab}`) : navigate("/hotel-admin");
+  const runQa = () => {
+    setQaRunning(true);
+    const next = runLodgingQa({ storeId, storeName: ownerStore?.name, storeCategory: ownerStore?.category, completion, baseUrl: window.location.origin });
+    setQaResult(next);
+    window.setTimeout(() => setQaRunning(false), 250);
+  };
+  const exportPdf = () => {
+    const pdf = new jsPDF();
+    pdf.setFontSize(16); pdf.text("Hotel/Resort Admin QA Report", 14, 18);
+    pdf.setFontSize(10); pdf.text(`Store: ${ownerStore?.name || storeId || "Preview"}`, 14, 28);
+    pdf.text(`Completion: ${completion.percent}% (${completion.complete}/${completion.total})`, 14, 36);
+    pdf.text(`QA: ${report.passedCount} pass / ${report.failedCount} fail / ${report.warningCount} warning`, 14, 44);
+    let y = 56;
+    pdf.text("Failing checks", 14, y); y += 8;
+    (report.failingChecks.length ? report.failingChecks : [{ name: "None", detail: "No failing checks in latest report." }]).forEach((check: any) => { pdf.text(`- ${check.name}: ${check.detail}`.slice(0, 105), 16, y); y += 7; });
+    y += 4; pdf.text("Deep links", 14, y); y += 8;
+    report.deepLinks.forEach((url) => { if (y > 280) { pdf.addPage(); y = 18; } pdf.text(url.slice(0, 110), 16, y); y += 7; });
+    pdf.save("hotel-resort-qa-report.pdf");
+  };
 
   return (
     <main className="min-h-screen bg-background px-4 py-6 text-foreground sm:px-6">
@@ -28,14 +53,25 @@ export default function AdminLodgingQAChecklistPage() {
             <h1 className="text-2xl font-bold">Hotel Admin QA Checklist</h1>
             <p className="mt-1 text-sm text-muted-foreground">One-click proof of updated sections, route safety, build/test coverage, and remaining setup data.</p>
           </div>
-          <Badge variant={completion.percent === 100 ? "secondary" : "outline"} className="w-fit text-sm">{storeLoading || isLoading ? "Checking…" : completion.status}</Badge>
+          <div className="flex flex-wrap gap-2"><Button onClick={runQa} disabled={qaRunning || storeLoading || isLoading}><ShieldCheck className="mr-2 h-4 w-4" /> {qaRunning ? "Running…" : "Run QA"}</Button><Button variant="outline" onClick={exportPdf}><Download className="mr-2 h-4 w-4" /> Export PDF</Button><Button variant="outline" onClick={() => window.print()}><Printer className="mr-2 h-4 w-4" /> Print Report</Button><Badge variant={report.overallStatus === "passed" ? "secondary" : "outline"} className="w-fit text-sm">{storeLoading || isLoading ? "Checking…" : qaResult ? report.overallStatus : completion.status}</Badge></div>
         </div>
 
         <div className="grid gap-3 sm:grid-cols-3">
-          <SummaryCard label="Build status" value="Production build verified" />
-          <SummaryCard label="Unit tests" value="Category + deep links" />
+          <SummaryCard label="QA status" value={qaResult ? `${report.passedCount} pass / ${report.failedCount} fail` : "Ready to run"} />
+          <SummaryCard label="Unit tests" value="Fixtures + deep links" />
           <SummaryCard label="Setup progress" value={`${completion.complete}/${completion.total} complete`} />
         </div>
+
+        <Card className="print:shadow-none" id="lodging-qa-report">
+          <CardHeader><CardTitle className="flex items-center gap-2"><ShieldCheck className="h-5 w-5 text-primary" /> Run QA results</CardTitle></CardHeader>
+          <CardContent className="space-y-3">
+            {!qaResult && <p className="text-sm text-muted-foreground">Click Run QA to audit routes, sidebar coverage, deep links, setup data, and empty-state fix buttons.</p>}
+            <div className="grid gap-2">
+              {report.checks.map((check) => <div key={check.id} className="flex flex-col gap-2 rounded-lg border border-border bg-card p-3 sm:flex-row sm:items-center sm:justify-between"><div className="min-w-0"><p className="flex items-center gap-2 text-sm font-semibold text-foreground">{check.status === "fail" ? <XCircle className="h-4 w-4 text-destructive" /> : <CheckCircle2 className="h-4 w-4 text-primary" />}{check.name}</p><p className="mt-1 text-xs text-muted-foreground">{check.detail}</p>{check.url && <p className="mt-1 truncate text-[10px] text-primary">{check.url}</p>}</div><div className="flex shrink-0 gap-2"><Badge variant={check.status === "pass" ? "secondary" : "outline"}>{check.status}</Badge>{check.fixTab && <Button size="sm" variant="outline" onClick={() => openTab(check.fixTab!)}>Fix</Button>}</div></div>)}
+            </div>
+            <div className="hidden print:block space-y-2 pt-4"><p className="text-sm font-bold">Deep-link URLs</p>{report.deepLinks.map((url) => <p key={url} className="text-xs">{url}</p>)}</div>
+          </CardContent>
+        </Card>
 
         <Card>
           <CardHeader><CardTitle className="flex items-center gap-2"><ListChecks className="h-5 w-5 text-primary" /> Real setup completion</CardTitle></CardHeader>
