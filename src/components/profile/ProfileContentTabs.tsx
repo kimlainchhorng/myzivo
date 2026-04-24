@@ -153,7 +153,8 @@ export default function ProfileContentTabs({ userId }: { userId?: string }) {
   const [showCommentSettingsSheet, setShowCommentSettingsSheet] = useState(false);
   const [commentControl, setCommentControl] = useState<"everyone" | "followers" | "off">("everyone");
 
-  const filtered = activeTab === "all" ? feed : feed.filter((i) => i.type === activeTab);
+  const visibleFeed = feed.filter((i) => !hiddenPosts.has(i.id));
+  const filtered = activeTab === "all" ? visibleFeed : visibleFeed.filter((i) => i.type === activeTab);
 
   useEffect(() => {
     let alive = true;
