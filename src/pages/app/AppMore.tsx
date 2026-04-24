@@ -69,6 +69,7 @@ const AppMore = () => {
   const navigate = useNavigate();
   const { user, signOut, isAdmin } = useAuth();
   const { data: access } = useUserAccess(user?.id);
+  const { isPlus } = useZivoPlus();
   const [showPartnerSheet, setShowPartnerSheet] = useState(false);
   const [showDriverDownloadSheet, setShowDriverDownloadSheet] = useState(false);
   const [showSwitchSheet, setShowSwitchSheet] = useState(false);
