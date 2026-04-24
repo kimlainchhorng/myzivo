@@ -164,6 +164,48 @@ export default function PostMenuRegressionPage() {
     { ok: 0, fail: 0 },
   );
 
+  const hasResults = summary.ok + summary.fail > 0;
+
+  const copyResults = useCallback(async () => {
+    const lines: string[] = [];
+    lines.push(`ZIVO post-menu regression — ${new Date().toISOString()}`);
+    if (typeof navigator !== "undefined") lines.push(`UA: ${navigator.userAgent}`);
+    lines.push(`Summary: ${summary.ok} OK · ${summary.fail} FAIL`);
+    lines.push("");
+    for (const row of ROWS) {
+      const r = results[row.id];
+      const tag =
+        r.state === "ok"
+          ? "[OK]  "
+          : r.state === "fail"
+          ? "[FAIL]"
+          : r.state === "running"
+          ? "[…]  "
+          : "[--] ";
+      const detail =
+        (r.state === "ok" || r.state === "fail") && r.detail ? ` — ${r.detail}` : "";
+      lines.push(`- ${tag} ${row.label}${detail}`);
+    }
+    const text = lines.join("\n");
+    try {
+      if (navigator.clipboard?.writeText) {
+        await navigator.clipboard.writeText(text);
+      } else {
+        const ta = document.createElement("textarea");
+        ta.value = text;
+        ta.style.position = "fixed";
+        ta.style.opacity = "0";
+        document.body.appendChild(ta);
+        ta.select();
+        document.execCommand("copy");
+        document.body.removeChild(ta);
+      }
+      toast.success("Regression results copied to clipboard");
+    } catch {
+      toast.error("Could not copy results");
+    }
+  }, [results, summary.ok, summary.fail]);
+
   return (
     <main className="mx-auto max-w-2xl px-4 py-8" data-testid="post-menu-regression-page">
       <header className="mb-6">
@@ -176,12 +218,20 @@ export default function PostMenuRegressionPage() {
           Use before shipping any change to <code className="text-xs">ProfileContentTabs</code> or{" "}
           <code className="text-xs">ReelsFeedPage</code> overlays.
         </p>
-        <div className="mt-4 flex items-center gap-3">
+        <div className="mt-4 flex flex-wrap items-center gap-3">
           <button
             onClick={runAll}
             className="inline-flex items-center gap-2 rounded-xl bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground hover:bg-primary/90"
           >
             <Play className="h-4 w-4" /> Run all checks
+          </button>
+          <button
+            data-testid="regression-copy-results"
+            onClick={copyResults}
+            disabled={!hasResults}
+            className="inline-flex items-center gap-2 rounded-xl border border-border bg-background px-4 py-2 text-sm font-semibold text-foreground hover:bg-muted disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            <Copy className="h-4 w-4" /> Copy results
           </button>
           <span className="text-sm text-muted-foreground">
             {summary.ok} OK · {summary.fail} failing
