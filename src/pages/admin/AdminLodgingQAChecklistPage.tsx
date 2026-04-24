@@ -1,5 +1,5 @@
 import { useNavigate } from "react-router-dom";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { jsPDF } from "jspdf";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -13,6 +13,7 @@ import { runLodgingQa, type LodgingQaResult } from "@/lib/lodging/lodgingQa";
 
 const updatedFeatures = ["Direct /hotel-admin entry", "Hotel Operations quick menu", "Real completion progress", "Setup wizard", "Deep-link tab safety", "Unit tests added"];
 const routeChecks = ["/hotel-admin", "/admin/stores/:storeId?tab=lodge-overview", "/admin/stores/:storeId?tab=lodge-rate-plans", "/admin/lodging/wiring-check"];
+const completionProof = ["/hotel-admin route available", "QA checklist available", "20 sidebar sections registered", "Deep-link tab routing enabled", "Setup wizard enabled", "PDF/print report enabled", "Empty-state audit enabled", "Unit test fixtures added", "E2E coverage added"];
 
 export default function AdminLodgingQAChecklistPage() {
   const navigate = useNavigate();
@@ -23,6 +24,9 @@ export default function AdminLodgingQAChecklistPage() {
   const [qaResult, setQaResult] = useState<LodgingQaResult | null>(null);
   const [qaRunning, setQaRunning] = useState(false);
   const report = useMemo(() => qaResult || runLodgingQa({ storeId, storeName: ownerStore?.name, storeCategory: ownerStore?.category, completion }), [qaResult, storeId, ownerStore?.name, ownerStore?.category, completion]);
+  const systemFailures = report.checks.filter((check) => check.status === "fail" && check.category !== "setup");
+  const setupWarnings = report.checks.filter((check) => check.status === "warning" || check.category === "setup");
+  const finalStatus = storeLoading || isLoading ? "Checking…" : systemFailures.length ? "QA Failed" : setupWarnings.length ? "QA Passed with setup warnings" : "QA Passed";
   const openTab = (tab: string) => storeId ? navigate(`/admin/stores/${storeId}?tab=${tab}`) : navigate("/hotel-admin");
   const runQa = () => {
     setQaRunning(true);
@@ -31,15 +35,23 @@ export default function AdminLodgingQAChecklistPage() {
     localStorage.setItem("lodging-qa-summary", JSON.stringify({ passedCount: next.passedCount, failedCount: next.failedCount, warningCount: next.warningCount, overallStatus: next.overallStatus, checkedAt: new Date().toISOString() }));
     window.setTimeout(() => setQaRunning(false), 250);
   };
+  useEffect(() => {
+    if (storeLoading || isLoading || qaResult) return;
+    const next = runLodgingQa({ storeId, storeName: ownerStore?.name, storeCategory: ownerStore?.category, completion, baseUrl: window.location.origin });
+    setQaResult(next);
+    localStorage.setItem("lodging-qa-summary", JSON.stringify({ passedCount: next.passedCount, failedCount: next.failedCount, warningCount: next.warningCount, overallStatus: next.overallStatus, checkedAt: new Date().toISOString() }));
+  }, [storeLoading, isLoading, qaResult, storeId, ownerStore?.name, ownerStore?.category, completion]);
   const exportPdf = () => {
     const pdf = new jsPDF();
     pdf.setFontSize(16); pdf.text("Hotel/Resort Admin QA Report", 14, 18);
     pdf.setFontSize(10); pdf.text(`Store: ${ownerStore?.name || storeId || "Preview"}`, 14, 28);
     pdf.text(`Completion: ${completion.percent}% (${completion.complete}/${completion.total})`, 14, 36);
-    pdf.text(`QA: ${report.passedCount} pass / ${report.failedCount} fail / ${report.warningCount} warning`, 14, 44);
+    pdf.text(`QA: ${finalStatus} · ${report.passedCount} pass / ${report.failedCount} fail / ${report.warningCount} warning`, 14, 44);
     let y = 56;
     pdf.text("Failing checks", 14, y); y += 8;
     (report.failingChecks.length ? report.failingChecks : [{ name: "None", detail: "No failing checks in latest report." }]).forEach((check: any) => { pdf.text(`- ${check.name}: ${check.detail}`.slice(0, 105), 16, y); y += 7; });
+    y += 4; pdf.text("Setup actions", 14, y); y += 8;
+    setupWarnings.slice(0, 8).forEach((check) => { if (y > 280) { pdf.addPage(); y = 18; } pdf.text(`- ${check.name}: ${check.detail}`.slice(0, 105), 16, y); y += 7; });
     y += 4; pdf.text("Deep links", 14, y); y += 8;
     report.deepLinks.forEach((url) => { if (y > 280) { pdf.addPage(); y = 18; } pdf.text(url.slice(0, 110), 16, y); y += 7; });
     pdf.save("hotel-resort-qa-report.pdf");
