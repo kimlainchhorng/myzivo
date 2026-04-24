@@ -1,196 +1,66 @@
 
-Plan to finish the Front Desk completion experience with shared empty states, real-time stats, PDF export, and verification page
+Plan to make the Account page cleaner and move the top controls lower
 
-1. Add a shared “Needs setup” empty-state component
-   - Create a reusable lodging component:
-     - `src/components/admin/store/lodging/LodgingNeedsSetupEmptyState.tsx`
-   - It will provide one consistent finished look for blank lodging screens:
-     - Status badge: “Section installed”
-     - Title
-     - Explanation text
-     - “No live records yet” / “Ready for hotel data” language
-     - Primary action button
-     - Secondary action button
-     - Optional QA/report action
-     - Optional “Next best action” banner
-   - Use existing project styling:
-     - Compact high-density layout
-     - Lucide icons only
-     - Emerald/primary accents
-     - Rounded bordered cards
-   - It will route by dispatching the existing `lodge-set-tab` event, so buttons open exact lodging tabs without a page reload.
+1. Redesign the Account page top area
+   - Update `src/pages/Profile.tsx`.
+   - Reduce the empty top space and make the first screen easier to read on mobile.
+   - Keep the design emerald, rounded, Apple-like, and compact.
+   - Remove the current oversized feel from the top action pills.
 
-2. Reuse the shared empty state across lodging blank screens
-   - Replace duplicated dashed empty panels in priority lodging sections with the shared component:
-     - `LodgingFrontDeskSection.tsx`
-     - `LodgingReservationsSection.tsx`
-     - `LodgingCalendarSection.tsx`
-     - `LodgingGuestRequestsSection.tsx`
-     - `LodgingGuestsSection.tsx`
-     - `LodgingReportsSection.tsx`
-     - Any other lodging section still using a plain blank/dashed empty state
-   - Each empty screen will show:
-     - What is installed
-     - Why the area is empty
-     - What setup action to take next
-     - Direct primary/secondary navigation buttons
+2. Move Translate, Notifications, and More down into a clear account actions row
+   - Move the language selector, Notifications button, and More button lower so they are not crowded at the very top.
+   - Place them under the ZIVO+ / story area or directly above the profile card, depending on what fits best on the 428px mobile viewport.
+   - Make each button smaller and easier to scan:
+     - Translate / language
+     - Notifications
+     - More
+   - Keep unread notification badge visible but compact.
 
-3. Add “Next best action” banners inside empty Front Desk columns
-   - Update `src/components/admin/store/lodging/LodgingFrontDeskSection.tsx`.
-   - Each empty Front Desk state will include a clear action banner:
-     - No arrivals today:
-       - Primary: `Create / review reservations` → `lodge-reservations`
-       - Secondary: `Open rooms` → `lodge-rooms`
-     - No in-house guests:
-       - Primary: `Review reservations` → `lodge-reservations`
-       - Secondary: `Open rate plans` → `lodge-rate-plans`
-     - No departures today:
-       - Primary: `Review departures` → `lodge-reservations`
-       - Secondary: `Open guest requests` → `lodge-guest-requests`
-   - Add contextual setup guidance when underlying setup is missing:
-     - No rooms → route to `lodge-rooms`
-     - No rate plans / rates → route to `lodge-rate-plans`
-     - No reservations → route to `lodge-reservations`
-     - No guest requests → route to `lodge-guest-requests`
+3. Improve the “Your story” section
+   - Make “Your story” clearer and more polished.
+   - Reduce large blank spacing around it.
+   - Use a compact horizontal story card/row so it does not push the profile card too far down.
+   - Keep the add story action easy to tap.
 
-4. Connect Front Desk live stats to backend events
-   - Update the Front Desk to use real-time invalidation for:
-     - `lodge_reservations`
-     - `lodge_reservation_change_requests`
-   - Reuse the existing Supabase realtime pattern already present in `useHostLodgingOpsToasts`.
-   - Add or extend a hook so Front Desk stats update automatically without refresh:
-     - Reservations inserted/updated/deleted update:
-       - Arrivals
-       - In-house
-       - Departures
-       - Active reservations
-     - Change requests inserted/updated/deleted update:
-       - Guest requests
-   - Keep React Query as the source of truth:
-     - Realtime event invalidates the relevant query keys
-     - Existing hooks refetch current data safely
-   - No new database tables are required.
+4. Improve the ZIVO+ upgrade banner
+   - Make the upgrade banner smaller and cleaner.
+   - Keep the crown icon and “Upgrade to ZIVO+” message.
+   - Reduce height, padding, and border weight.
+   - Position it so it feels like an account benefit card, not a large blocking banner.
 
-5. Add guest request count to Front Desk stats
-   - Update `LodgingFrontDeskSection.tsx` to call `useStoreChangeRequestInbox(storeId)`.
-   - Add a fifth stat card:
-     - `Open guest requests`
-   - Include this count in:
-     - Status banner
-     - “What this section does” panel
-     - PDF report
-     - Completion Verification page
+5. Make the profile card appear sooner
+   - Reduce vertical spacing between:
+     - Top actions
+     - ZIVO+ banner
+     - Story section
+     - Profile card
+   - On mobile, the user should see more of the profile card without scrolling.
+   - Keep avatar, name, status, bio, and stats readable.
 
-6. Add one-click “Export Front Desk QA Report (PDF)”
-   - Add a button on the Front Desk screen:
-     - `Export Front Desk QA Report`
-   - Generate a client-side PDF using the existing `jspdf` dependency.
-   - Report contents:
-     - Store name/id
-     - Generated timestamp
-     - Current Front Desk operational stats:
-       - Today’s arrivals
-       - In-house guests
-       - Today’s departures
-       - Active reservations
-       - Open guest requests
-     - Current completion percentage
-     - Latest QA status from `runLodgingQa`
-     - System failures
-     - Setup warnings
-     - Deep-link URLs for:
-       - Front Desk
-       - Rooms
-       - Rate Plans
-       - Reservations
-       - Guest Requests
-       - QA Checklist
-   - Save as:
-     - `front-desk-qa-report.pdf`
+6. Keep Notifications dropdown functional
+   - The Notifications button will still open the inline notification panel.
+   - The panel will stay visually aligned with the moved button.
+   - If the panel is too tall on mobile, make it compact with smaller rows and spacing.
 
-7. Share report-building logic where possible
-   - Add a small helper:
-     - `src/lib/lodging/frontDeskQaReport.ts`
-   - It will format:
-     - Operational stats
-     - QA checks
-     - Setup warnings
-     - Deep links
-   - Front Desk PDF export and the verification page can both use the same formatted data so results stay consistent.
+7. Keep language picker functional
+   - The Translate / language button will still open the language picker.
+   - The picker will remain reachable and not overlap the profile card badly.
+   - Current selected flag and language will still show.
 
-8. Add an in-app “Completion Verification” page
-   - Create:
-     - `src/pages/admin/AdminLodgingCompletionVerificationPage.tsx`
-   - Add route:
-     - `/admin/lodging/completion-verification`
-   - Page will auto-run Front Desk and lodging QA checks on load.
-   - Show separate sections:
-     - Technical/system status
-     - Front Desk checks
-     - Setup warnings
-     - Live operational stats
-     - Empty-state audit status
-     - Deep-link verification
-   - Clear status labels:
-     - `System passed`
-     - `Setup needed`
-     - `System failure`
-   - Include buttons:
-     - `Open Front Desk`
-     - `Open Rooms`
-     - `Open Rate Plans`
-     - `Open Reservations`
-     - `Open Guest Requests`
-     - `Run QA Checklist`
-     - `Export Front Desk QA Report`
+8. Keep More navigation functional
+   - The More button will still route to `/more`.
+   - Make it visually consistent with Translate and Notifications.
 
-9. Add Front Desk-specific QA checks
-   - Extend `src/lib/lodging/lodgingQa.ts` or add a companion helper:
-     - `src/lib/lodging/frontDeskQa.ts`
-   - Checks will include:
-     - Front Desk route exists
-     - `lodge-frontdesk` tab resolves correctly
-     - Front Desk section has a rendered panel/test id
-     - Live stats can be computed from reservation data
-     - Guest request count can be computed from inbox data
-     - Empty Front Desk states include primary and secondary fix actions
-     - Missing data is classified as setup warning, not system failure
-   - Preserve current separation:
-     - Code/routing/sidebar problems = `fail`
-     - Missing rooms/rates/reservations/requests = `warning`
-
-10. Add entry points to verification
-   - Add a “Completion Verification” button/link in:
-     - `LodgingFrontDeskSection.tsx`
-     - `AdminLodgingQAChecklistPage.tsx`
-     - `HotelAdminLaunchPage.tsx`
-     - Store owner lodging completion/sidebar area if there is room
-   - This gives the owner one obvious place to prove the Front Desk is complete.
-
-11. Update tests
-   - Add unit tests for the shared empty-state action configuration:
-     - Primary/secondary tabs are correct
-     - Front Desk empty states map to the correct setup tabs
-   - Add QA helper tests for:
-     - Front Desk stats calculation
-     - System failures vs setup warnings
-     - Deep-link URL generation
-   - Update existing lodging QA tests if the QA result shape is extended.
-
-12. Validation after implementation
-   - Run lodging unit tests.
-   - Run QA helper tests.
-   - Run production build.
-   - Confirm at the current route:
-     - `/admin/stores/7322b460-2c23-4d3d-bdc5-55a31cc65fab?tab=lodge-frontdesk`
-   - Verify:
-     - Empty Front Desk columns use the shared finished “Needs setup” design.
-     - Next best action banners route to exact setup tabs.
-     - Front Desk stats update after reservation/request changes without refresh.
-     - “Export Front Desk QA Report (PDF)” downloads a readable report.
-     - `/admin/lodging/completion-verification` loads and separates setup warnings from system failures.
-     - Missing live hotel data no longer looks like unfinished implementation.
+9. Mobile validation target
+   - Check the layout at the current viewport: `428x703`.
+   - Confirm:
+     - Top controls are lower and clearer.
+     - Your Story is not too large.
+     - Upgrade banner is smaller.
+     - Profile card is visible sooner.
+     - Bottom navigation is not blocked.
+     - The page looks cleaner and less crowded.
 
 Expected result
 
-The Front Desk and related lodging sections will no longer look incomplete when there is no live hotel data. Every blank state will use the same polished “Needs setup” component, live operating numbers will refresh automatically from backend events, the owner can export a Front Desk QA PDF in one click, and the new Completion Verification page will clearly prove what is technically complete versus what still needs hotel setup data.
+The Account page will feel cleaner and easier to use on mobile. Translate, Notifications, More, Your Story, and Upgrade will be moved into a clearer compact layout so the profile card is visible sooner and the screen no longer feels too big or crowded.
