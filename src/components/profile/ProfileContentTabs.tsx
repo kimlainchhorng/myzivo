@@ -25,6 +25,7 @@ import { isLocalDraftPostId, toUserPostInteractionId } from "@/lib/social/postIn
 import { useSwipeDownClose } from "@/components/social/useSwipeDownClose";
 import { SwipeGrabHandle } from "@/components/social/SwipeGrabHandle";
 import { logProfileActionError } from "@/lib/security/errorReporting";
+import { getE2ESeedPosts } from "@/lib/testing/e2eSeed";
 
 /**
  * Fullscreen post viewer wrapper with drag-down-to-close.
