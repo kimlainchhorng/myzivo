@@ -287,16 +287,12 @@ export default function ProfileFeedCard({
           {/* Caption */}
           {item.caption && (
             <div className="px-3 pb-2">
-              <p className={cn("text-[13px] text-foreground leading-snug whitespace-pre-wrap", !showOwnCaption && "line-clamp-3")}>
-                <span className="font-semibold mr-1">{item.user.name}</span>
-                {item.caption}
-                {!showOwnCaption && item.caption.length > 140 && (
-                  <span onClick={(e) => { e.stopPropagation(); setShowOwnCaption(true); }} className="text-muted-foreground ml-1 cursor-pointer">… See more</span>
-                )}
-              </p>
-              {showOwnCaption && item.caption.length > 140 && (
-                <span onClick={(e) => { e.stopPropagation(); setShowOwnCaption(false); }} className="text-[12px] text-muted-foreground cursor-pointer">See less</span>
-              )}
+              <CollapsibleCaption
+                text={item.caption}
+                lines={3}
+                className="text-[13px]"
+                prefix={<span className="font-semibold mr-1">{item.user.name}</span>}
+              />
             </div>
           )}
 
