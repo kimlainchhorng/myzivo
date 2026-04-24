@@ -550,8 +550,11 @@ function ReelCard({
                 </div>
               )}
             </div>
-            <span className="text-white font-bold text-sm drop-shadow-lg">
+            <span className="text-white font-bold text-sm drop-shadow-lg inline-flex items-center gap-1">
               {post.source === "user" ? post.author_name : post.store_name}
+              {((post.source === "user" && post.author_is_verified) || (post.source === "store" && post.store_is_verified)) && (
+                <VerifiedBadge size={14} />
+              )}
             </span>
           </button>
 
