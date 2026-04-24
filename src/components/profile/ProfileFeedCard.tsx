@@ -155,9 +155,9 @@ export default function ProfileFeedCard({
               </Avatar>
               <div className="flex-1 min-w-0 text-left">
                 <p className="text-[13px] font-semibold text-foreground truncate">{item.user.name}</p>
-                <div className="flex items-center gap-1">
+                <div className="flex items-center gap-1 leading-none mt-0.5">
                   <p className="text-[10px] text-muted-foreground">{timeAgo}</p>
-                  <span className="text-[10px] text-muted-foreground">·</span>
+                  <span className="text-[10px] text-muted-foreground leading-none">·</span>
                   <Globe className="h-2.5 w-2.5 text-muted-foreground" />
                 </div>
               </div>
@@ -169,12 +169,15 @@ export default function ProfileFeedCard({
 
           {/* Sharer's own caption */}
           {item.caption && item.caption !== item.sharedOrigin.caption && (
-            <div className="px-3 pb-2" onClick={(e) => { e.stopPropagation(); setShowSharerCaption((v) => !v); }}>
-              <p className={cn("text-[13px] text-foreground leading-snug whitespace-pre-wrap", !showSharerCaption && "line-clamp-3")}>{item.caption}</p>
-              {item.caption.length > 140 && (
-                <button type="button" onClick={(e) => { e.stopPropagation(); setShowSharerCaption((v) => !v); }} className="text-[12px] text-muted-foreground mt-0.5 font-medium">
-                  {showSharerCaption ? "See less" : "See more"}
-                </button>
+            <div className="px-3 pb-2">
+              <p className={cn("text-[13px] text-foreground leading-snug whitespace-pre-wrap", !showSharerCaption && "line-clamp-3")}>
+                {item.caption}
+                {!showSharerCaption && item.caption.length > 140 && (
+                  <span onClick={(e) => { e.stopPropagation(); setShowSharerCaption(true); }} className="text-muted-foreground ml-1 cursor-pointer">… See more</span>
+                )}
+              </p>
+              {showSharerCaption && item.caption.length > 140 && (
+                <span onClick={(e) => { e.stopPropagation(); setShowSharerCaption(false); }} className="text-[12px] text-muted-foreground cursor-pointer">See less</span>
               )}
             </div>
           )}
@@ -219,12 +222,15 @@ export default function ProfileFeedCard({
             </div>
 
             {item.sharedOrigin.caption && (
-              <div className="px-3 pb-2" onClick={(e) => { e.stopPropagation(); setShowOriginalCaption((v) => !v); }}>
-                <p className={cn("text-[13px] text-foreground leading-snug whitespace-pre-wrap", !showOriginalCaption && "line-clamp-3")}>{item.sharedOrigin.caption}</p>
-                {item.sharedOrigin.caption.length > 140 && (
-                  <button type="button" onClick={(e) => { e.stopPropagation(); setShowOriginalCaption((v) => !v); }} className="text-[12px] text-muted-foreground mt-0.5 font-medium">
-                    {showOriginalCaption ? "See less" : "See more"}
-                  </button>
+              <div className="px-3 pb-2">
+                <p className={cn("text-[13px] text-foreground leading-snug whitespace-pre-wrap", !showOriginalCaption && "line-clamp-3")}>
+                  {item.sharedOrigin.caption}
+                  {!showOriginalCaption && item.sharedOrigin.caption.length > 140 && (
+                    <span onClick={(e) => { e.stopPropagation(); setShowOriginalCaption(true); }} className="text-muted-foreground ml-1 cursor-pointer">… See more</span>
+                  )}
+                </p>
+                {showOriginalCaption && item.sharedOrigin.caption.length > 140 && (
+                  <span onClick={(e) => { e.stopPropagation(); setShowOriginalCaption(false); }} className="text-[12px] text-muted-foreground cursor-pointer">See less</span>
                 )}
               </div>
             )}
@@ -297,15 +303,16 @@ export default function ProfileFeedCard({
 
           {/* Caption */}
           {item.caption && (
-            <div className="px-3 pb-2" onClick={(e) => { e.stopPropagation(); setShowOwnCaption((v) => !v); }}>
+            <div className="px-3 pb-2">
               <p className={cn("text-[13px] text-foreground leading-snug whitespace-pre-wrap", !showOwnCaption && "line-clamp-3")}>
                 <span className="font-semibold mr-1">{item.user.name}</span>
                 {item.caption}
+                {!showOwnCaption && item.caption.length > 140 && (
+                  <span onClick={(e) => { e.stopPropagation(); setShowOwnCaption(true); }} className="text-muted-foreground ml-1 cursor-pointer">… See more</span>
+                )}
               </p>
-              {item.caption.length > 140 && (
-                <button type="button" onClick={(e) => { e.stopPropagation(); setShowOwnCaption((v) => !v); }} className="text-[12px] text-muted-foreground mt-0.5 font-medium">
-                  {showOwnCaption ? "See less" : "See more"}
-                </button>
+              {showOwnCaption && item.caption.length > 140 && (
+                <span onClick={(e) => { e.stopPropagation(); setShowOwnCaption(false); }} className="text-[12px] text-muted-foreground cursor-pointer">See less</span>
               )}
             </div>
           )}

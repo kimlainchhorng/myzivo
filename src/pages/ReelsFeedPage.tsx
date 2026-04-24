@@ -2112,20 +2112,17 @@ function FeedCard({ item, currentUserId, onOpenFullscreen, autoPlayVideo, detail
 
           {/* Sharer's own caption (not the original post's caption) */}
           {item.caption && item.caption !== item.shared_from_caption && (
-            <div className="px-3 pb-2" onClick={() => setShowSharerCaption((v) => !v)}>
+            <div className="px-3 pb-2">
               <div className={cn("text-[13px] text-foreground leading-snug", !showSharerCaption && "line-clamp-3")}>
                 <Suspense fallback={<span>{item.caption}</span>}>
                   <SafeCaption text={item.caption} />
                 </Suspense>
+                {!showSharerCaption && item.caption.length > 140 && (
+                  <span onClick={(e) => { e.stopPropagation(); setShowSharerCaption(true); }} className="text-muted-foreground ml-1 cursor-pointer">… See more</span>
+                )}
               </div>
-              {item.caption.length > 140 && (
-                <button
-                  type="button"
-                  onClick={(e) => { e.stopPropagation(); setShowSharerCaption((v) => !v); }}
-                  className="text-[12px] text-muted-foreground mt-0.5 font-medium"
-                >
-                  {showSharerCaption ? "See less" : "See more"}
-                </button>
+              {showSharerCaption && item.caption.length > 140 && (
+                <span onClick={(e) => { e.stopPropagation(); setShowSharerCaption(false); }} className="text-[12px] text-muted-foreground cursor-pointer">See less</span>
               )}
             </div>
           )}
@@ -2180,20 +2177,17 @@ function FeedCard({ item, currentUserId, onOpenFullscreen, autoPlayVideo, detail
 
             {/* Original post caption */}
             {item.shared_from_caption && (
-              <div className="px-3 pb-2" onClick={() => setShowOriginalCaption((v) => !v)}>
+              <div className="px-3 pb-2">
                 <div className={cn("text-[13px] text-foreground leading-snug", !showOriginalCaption && "line-clamp-3")}>
                   <Suspense fallback={<span>{item.shared_from_caption}</span>}>
                     <SafeCaption text={item.shared_from_caption} />
                   </Suspense>
+                  {!showOriginalCaption && item.shared_from_caption.length > 140 && (
+                    <span onClick={(e) => { e.stopPropagation(); setShowOriginalCaption(true); }} className="text-muted-foreground ml-1 cursor-pointer">… See more</span>
+                  )}
                 </div>
-                {item.shared_from_caption.length > 140 && (
-                  <button
-                    type="button"
-                    onClick={(e) => { e.stopPropagation(); setShowOriginalCaption((v) => !v); }}
-                    className="text-[12px] text-muted-foreground mt-0.5 font-medium"
-                  >
-                    {showOriginalCaption ? "See less" : "See more"}
-                  </button>
+                {showOriginalCaption && item.shared_from_caption.length > 140 && (
+                  <span onClick={(e) => { e.stopPropagation(); setShowOriginalCaption(false); }} className="text-[12px] text-muted-foreground cursor-pointer">See less</span>
                 )}
               </div>
             )}
