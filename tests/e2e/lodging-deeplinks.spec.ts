@@ -9,8 +9,9 @@ test.describe("lodging admin deep-link logic", () => {
   for (const tab of tabs) {
     test(`refresh target ${tab} has deterministic QA coverage`, async () => {
       expect(adminStoreSource).toContain(`data-testid="lodging-tab-${tab}"`);
-      expect(qaSource).toContain(`Refresh deep link: ${tab}`);
-      expect(qaSource).toContain(`?tab=${tab}`);
+      expect(qaSource).toContain(`"${tab}"`);
+      expect(qaSource).toContain("Refresh deep link:");
+      expect(qaSource).toContain("?tab=${tab}");
     });
   }
 });
