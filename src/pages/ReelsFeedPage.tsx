@@ -82,6 +82,7 @@ const SuggestedUsersCarousel = lazy(() => import("@/components/social/SuggestedU
 const CreatePostModal = lazy(() => import("@/components/social/CreatePostModal"));
 const SafeCaption = lazy(() => import("@/components/social/SafeCaption"));
 import CollapsibleCaption from "@/components/social/CollapsibleCaption";
+import VerifiedBadge from "@/components/VerifiedBadge";
 import { formatCount, commentsLinkLabel } from "@/lib/social/formatCount";
 import { EngagementSkeleton } from "@/components/social/EngagementSkeleton";
 import SwipeableSheet from "@/components/social/SwipeableSheet";
@@ -133,6 +134,7 @@ interface FeedItem {
   author_name: string;
   author_avatar: string | null;
   author_id?: string;
+  author_is_verified?: boolean;
   store_slug?: string;
   created_at: string;
   // Share tracking
@@ -334,6 +336,7 @@ export default function ReelsFeedPage() {
             author_name: store?.name || "Store",
             author_avatar: store?.logo_url || null,
             author_id: store?.id || post.store_id,
+            author_is_verified: true,
             store_slug: store?.slug || null,
             created_at: post.created_at,
           });
@@ -382,10 +385,10 @@ export default function ReelsFeedPage() {
               ? (supabase as any).from("public_profiles").select("id, user_id, full_name, avatar_url").in("user_id", allProfileIds)
               : Promise.resolve({ data: [] as any[] }),
             allProfileIds.length
-              ? (supabase as any).from("profiles").select("id, user_id, comment_control, hide_like_counts, allow_sharing, allow_mentions").in("id", allProfileIds)
+              ? (supabase as any).from("profiles").select("id, user_id, comment_control, hide_like_counts, allow_sharing, allow_mentions, is_verified").in("id", allProfileIds)
               : Promise.resolve({ data: [] as any[] }),
             allProfileIds.length
-              ? (supabase as any).from("profiles").select("id, user_id, comment_control, hide_like_counts, allow_sharing, allow_mentions").in("user_id", allProfileIds)
+              ? (supabase as any).from("profiles").select("id, user_id, comment_control, hide_like_counts, allow_sharing, allow_mentions, is_verified").in("user_id", allProfileIds)
               : Promise.resolve({ data: [] as any[] }),
           ]);
 
