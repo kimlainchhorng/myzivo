@@ -1333,7 +1333,7 @@ function ReelSlide({ item, currentUserId, onClose }: { item: FeedItem; currentUs
         aria-label="Close"
         className="absolute h-10 w-10 rounded-full bg-black/40 backdrop-blur-sm flex items-center justify-center"
         style={{
-          top: 'max(env(safe-area-inset-top, 0px), 12px)',
+          top: 'max(env(safe-area-inset-top, 0px), 2.75rem)',
           left: 'max(env(safe-area-inset-left, 0px), 16px)',
         }}
       >
