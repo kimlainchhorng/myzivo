@@ -17,6 +17,7 @@ import HostReservationOpsSummary from "@/components/lodging/host/HostReservation
 import { useStoreChangeRequestInbox } from "@/hooks/lodging/useReservationChangeRequests";
 import { useHostLodgingOpsToasts } from "@/hooks/lodging/useHostLodgingOpsToasts";
 import { reservationDateLabel, reservationMinutes, reservationTimeRangeLabel } from "@/lib/lodging/reservationTime";
+import LodgingNeedsSetupEmptyState from "./LodgingNeedsSetupEmptyState";
 
 type ReservationFilter = ReservationStatus | "active" | "all";
 const CLOSED_STATUSES = new Set<ReservationStatus>(["cancelled", "checked_out", "no_show"]);
@@ -136,12 +137,7 @@ export default function LodgingReservationsSection({ storeId }: { storeId: strin
         {isLoading ? (
           <p className="text-sm text-muted-foreground py-8 text-center">Loading…</p>
         ) : filtered.length === 0 ? (
-          <div className="rounded-lg border border-dashed border-border bg-muted/20 p-6 text-center">
-            <CalendarRange className="mx-auto h-7 w-7 text-primary" />
-            <p className="mt-3 text-sm font-semibold text-foreground">{q.trim() ? "No reservations match your search" : status === "active" ? "Reservation workspace is ready" : `No ${STATUS_LABEL[status].toLowerCase()} reservations`}</p>
-            <p className="mx-auto mt-1 max-w-md text-xs text-muted-foreground">No live records yet. This section is installed for booking review, check-in workflow, payments, requests, and guest history.</p>
-            <div className="mt-4 flex flex-wrap justify-center gap-2"><Button size="sm" variant="outline" onClick={() => window.dispatchEvent(new CustomEvent("lodge-set-tab", { detail: { tab: "lodge-rooms" } }))}>Open rooms</Button><Button size="sm" variant="outline" onClick={() => window.dispatchEvent(new CustomEvent("lodge-set-tab", { detail: { tab: "lodge-rate-plans" } }))}>Open rate plans</Button></div>
-          </div>
+          <LodgingNeedsSetupEmptyState icon={CalendarRange} title={q.trim() ? "No reservations match your search" : status === "active" ? "Reservation workspace is ready" : `No ${STATUS_LABEL[status].toLowerCase()} reservations`} description="No live records yet. This section is installed for booking review, check-in workflow, payments, requests, and guest history." primaryAction={{ label: "Open rooms", tab: "lodge-rooms" }} secondaryAction={{ label: "Open rate plans", tab: "lodge-rate-plans" }} nextBestAction="Set rooms and rates, then create or import reservations." />
         ) : (
           <div className="space-y-2">
             {filtered.map(r => {

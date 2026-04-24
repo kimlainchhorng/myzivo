@@ -8,6 +8,7 @@ import { useLodgePropertyProfile } from "@/hooks/lodging/useLodgePropertyProfile
 import { useLodgeReservations } from "@/hooks/lodging/useLodgeReservations";
 import { reservationTimeRangeLabel } from "@/lib/lodging/reservationTime";
 import { BedDouble, CalendarRange, CheckCircle2, ClipboardList, Hotel, Loader2, LucideIcon, PackagePlus, Sparkles } from "lucide-react";
+import LodgingNeedsSetupEmptyState from "./LodgingNeedsSetupEmptyState";
 
 type AddonView = LodgeAddon & { roomName: string; roomId: string };
 
@@ -66,12 +67,7 @@ export function SectionShell({ title, subtitle, icon: Icon, children, actions }:
 
 export function EmptyPanel({ title, body, actionLabel, tab }: { title: string; body: string; actionLabel: string; tab: string }) {
   return (
-    <div className="rounded-lg border border-dashed border-border bg-muted/20 p-6 text-center">
-      <Sparkles className="mx-auto h-6 w-6 text-primary" />
-      <p className="mt-3 text-sm font-semibold text-foreground">{title}</p>
-      <p className="mx-auto mt-1 max-w-md text-xs text-muted-foreground">{body}</p>
-      <Button size="sm" className="mt-4" onClick={() => goTab(tab)}>{actionLabel}</Button>
-    </div>
+    <LodgingNeedsSetupEmptyState icon={Sparkles} title={title} description={body} primaryAction={{ label: actionLabel, tab }} secondaryAction={{ label: "Open Front Desk", tab: "lodge-frontdesk" }} />
   );
 }
 

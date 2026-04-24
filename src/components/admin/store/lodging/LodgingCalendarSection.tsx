@@ -9,6 +9,7 @@ import { useLodgeRooms } from "@/hooks/lodging/useLodgeRooms";
 import { useLodgeBlocks } from "@/hooks/lodging/useLodgeBlocks";
 import { useLodgeReservations } from "@/hooks/lodging/useLodgeReservations";
 import { toast } from "sonner";
+import LodgingNeedsSetupEmptyState from "./LodgingNeedsSetupEmptyState";
 
 function ymd(d: Date) { return d.toISOString().slice(0, 10); }
 function daysInMonth(year: number, month: number) {
@@ -61,12 +62,7 @@ export default function LodgingCalendarSection({ storeId }: { storeId: string })
       </CardHeader>
       <CardContent className="space-y-4">
         {rooms.length === 0 ? (
-          <div className="rounded-lg border border-dashed border-border bg-muted/20 p-6 text-center">
-            <CalendarDays className="mx-auto h-7 w-7 text-primary" />
-            <p className="mt-3 text-sm font-semibold text-foreground">Availability calendar is ready</p>
-            <p className="mx-auto mt-1 max-w-md text-xs text-muted-foreground">Add rooms first, then this calendar will show booked nights, manual blocks, and available dates.</p>
-            <Button size="sm" className="mt-4" onClick={() => window.dispatchEvent(new CustomEvent("lodge-set-tab", { detail: { tab: "lodge-rooms" } }))}>Open rooms</Button>
-          </div>
+          <LodgingNeedsSetupEmptyState icon={CalendarDays} title="Availability calendar is ready" description="Add rooms first, then this calendar will show booked nights, manual blocks, and available dates." primaryAction={{ label: "Open rooms", tab: "lodge-rooms" }} secondaryAction={{ label: "Open rate plans", tab: "lodge-rate-plans" }} nextBestAction="Create rooms before blocking dates or reviewing availability." />
         ) : (
           <>
             <div className="flex flex-wrap gap-2">

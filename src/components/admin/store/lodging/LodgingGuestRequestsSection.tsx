@@ -4,6 +4,7 @@ import { MessageSquareText, PackagePlus } from "lucide-react";
 import { EmptyPanel, LoadingPanel, NextActions, SectionShell, StatCard, money } from "./LodgingOperationsShared";
 import { useStoreChangeRequestInbox } from "@/hooks/lodging/useReservationChangeRequests";
 import { useLodgeReservations } from "@/hooks/lodging/useLodgeReservations";
+import LodgingNeedsSetupEmptyState from "./LodgingNeedsSetupEmptyState";
 
 const goReservations = () => window.dispatchEvent(new CustomEvent("lodge-set-tab", { detail: { tab: "lodge-reservations" } }));
 
@@ -25,7 +26,7 @@ export default function LodgingGuestRequestsSection({ storeId }: { storeId: stri
           <StatCard label="Failed / cancelled" value={String(failedServices.length)} icon={MessageSquareText} />
           <StatCard label="Completed services" value={String(completedServices.length)} icon={MessageSquareText} />
         </div>
-        {pending.length === 0 && addonReservations.length === 0 ? <EmptyPanel title="Guest request workspace is ready" body="Approved add-ons, change requests, service follow-ups, and reservation-linked guest needs will appear here for front-desk action." actionLabel="Configure guest add-ons" tab="lodge-addons" /> : (
+        {pending.length === 0 && addonReservations.length === 0 ? <LodgingNeedsSetupEmptyState icon={MessageSquareText} title="Guest request workspace is ready" description="Approved add-ons, change requests, service follow-ups, and reservation-linked guest needs will appear here for front-desk action." primaryAction={{ label: "Configure guest add-ons", tab: "lodge-addons" }} secondaryAction={{ label: "Review reservations", tab: "lodge-reservations" }} nextBestAction="Create reservations or add-ons so guest requests can flow into this queue." /> : (
           <div className="space-y-2">
             {[...pending.slice(0, 8), ...activeServices.slice(0, 4).map((reservation: any) => ({ id: `res-${reservation.id}`, type: "addon", status: "approved", reservation, price_delta_cents: reservation.extras_cents || 0, created_at: reservation.updated_at }))].map((item: any) => (
               <div key={item.id} className="rounded-lg border border-border bg-card p-3">

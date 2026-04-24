@@ -8,6 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { BarChart3, CreditCard, Download, PackagePlus } from "lucide-react";
 import { useLodgeReports } from "@/hooks/lodging/useLodgeReports";
+import LodgingNeedsSetupEmptyState from "./LodgingNeedsSetupEmptyState";
 
 function ymd(d: Date) { return d.toISOString().slice(0, 10); }
 
@@ -93,7 +94,7 @@ export default function LodgingReportsSection({ storeId }: { storeId: string }) 
                 <div className="grid grid-cols-3 px-3 py-2 bg-muted/50 text-xs font-semibold">
                   <span>Room</span><span className="text-right">Nights</span><span className="text-right">Revenue</span>
                 </div>
-                {data.perRoomType.length === 0 ? <p className="px-3 py-3 text-xs text-muted-foreground">No live records yet — reports are ready once rooms and reservations exist.</p>
+                {data.perRoomType.length === 0 ? <div className="p-3"><LodgingNeedsSetupEmptyState icon={BarChart3} title="Room revenue report is ready" description="No live records yet. Reports populate once rooms and reservations exist." primaryAction={{ label: "Open rooms", tab: "lodge-rooms" }} secondaryAction={{ label: "Review reservations", tab: "lodge-reservations" }} compact /></div>
                   : data.perRoomType.map(r => (
                     <div key={r.name} className="grid grid-cols-3 px-3 py-2 border-t text-xs">
                       <span className="truncate">{r.name}</span><span className="text-right">{r.nights}</span><span className="text-right">{usd(r.revenue)}</span>
@@ -108,7 +109,7 @@ export default function LodgingReportsSection({ storeId }: { storeId: string }) 
                 <div className="grid grid-cols-3 px-3 py-2 bg-muted/50 text-xs font-semibold">
                   <span>Source</span><span className="text-right">Nights</span><span className="text-right">Revenue</span>
                 </div>
-                {data.perSource.length === 0 ? <p className="px-3 py-3 text-xs text-muted-foreground">No live records yet — booking sources appear after reservations are added.</p>
+                {data.perSource.length === 0 ? <div className="p-3"><LodgingNeedsSetupEmptyState icon={BarChart3} title="Booking source report is ready" description="No live records yet. Booking sources appear after reservations are added." primaryAction={{ label: "Review reservations", tab: "lodge-reservations" }} secondaryAction={{ label: "Open Front Desk", tab: "lodge-frontdesk" }} compact /></div>
                   : data.perSource.map(r => (
                     <div key={r.source} className="grid grid-cols-3 px-3 py-2 border-t text-xs">
                       <span className="capitalize">{r.source}</span><span className="text-right">{r.nights}</span><span className="text-right">{usd(r.revenue)}</span>

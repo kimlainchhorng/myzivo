@@ -80,7 +80,7 @@ export default function AdminLodgingQAChecklistPage() {
           <CardContent className="space-y-3">
             <div className="grid gap-3 sm:grid-cols-3"><SummaryCard label="Technical status" value={systemFailures.length ? "Needs fix" : "Installed"} /><SummaryCard label="Setup data" value={setupWarnings.length ? "Needs setup" : "Ready"} /><SummaryCard label="Store" value={ownerStore?.name || "Hotel/Resort"} /></div>
             <p className="text-sm text-muted-foreground">Missing arrivals/reservations means there is no live hotel data yet, not that the admin is incomplete.</p>
-            <div className="flex flex-wrap gap-2"><Button onClick={() => openTab("lodge-frontdesk")}><KeyRound className="mr-2 h-4 w-4" /> Back to Front Desk</Button><Button variant="outline" onClick={() => openTab(completion.nextBestAction.tab)}>{completion.nextBestAction.actionLabel}</Button></div>
+            <div className="flex flex-wrap gap-2"><Button onClick={() => openTab("lodge-frontdesk")}><KeyRound className="mr-2 h-4 w-4" /> Back to Front Desk</Button><Button variant="outline" onClick={() => navigate("/admin/lodging/completion-verification")}><ShieldCheck className="mr-2 h-4 w-4" /> Completion Verification</Button><Button variant="outline" onClick={() => openTab(completion.nextBestAction.tab)}>{completion.nextBestAction.actionLabel}</Button></div>
           </CardContent>
         </Card>
 
