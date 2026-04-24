@@ -30,6 +30,7 @@ import ReelThumbnail from "@/components/social/ReelThumbnail";
 import { resolveSharedOrigins, type SharedOriginInfo } from "@/lib/social/resolveSharedOrigins";
 import { toUserPostInteractionId } from "@/lib/social/postInteraction";
 import CreatorTiersSubscribe from "@/components/creator/CreatorTiersSubscribe";
+import { useSwipeDownClose } from "@/components/social/useSwipeDownClose";
 
 type PostTab = "all" | "photos" | "videos";
 
