@@ -42,7 +42,7 @@ export default function StoreOwnerLayout({ children, title, storeId, storeName, 
   const navigate = useNavigate();
   const location = useLocation();
   const [sidebarOpen, setSidebarOpen] = useState(false);
-  const [qaSummary, setQaSummary] = useState<{ passedCount: number; failedCount: number; warningCount: number; overallStatus: string } | null>(null);
+  const [qaSummary, setQaSummary] = useState<{ passedCount: number; failedCount: number; warningCount: number; overallStatus: string; checkedAt?: string } | null>(null);
   const asideRef = useRef<HTMLElement | null>(null);
   const navRef = useRef<HTMLElement | null>(null);
   const scrollMemoryRef = useRef<Record<string, number>>({});
@@ -320,7 +320,7 @@ export default function StoreOwnerLayout({ children, title, storeId, storeName, 
           <p id="sidebar-group-manage" className="px-3 pb-1.5 text-[10px] uppercase tracking-[0.12em] font-semibold text-muted-foreground/70">Manage</p>
           {isLodging && (
             <div className="mb-2 rounded-lg border border-primary/20 bg-primary/8 px-3 py-2 text-primary">
-              <div className="flex items-center gap-2 text-xs font-semibold"><Hotel className="h-3.5 w-3.5" /> Completion Center</div>
+              <div className="flex items-center gap-2 text-xs font-semibold"><Hotel className="h-3.5 w-3.5" /> Hotel Admin Complete</div>
               <p className="mt-0.5 text-[10px] text-primary/80">Setup progress: {lodgingSetupProgress ? `${lodgingSetupProgress.complete}/${lodgingSetupProgress.total} ready` : "open Hotel Overview"}.</p>
               {lodgingSetupProgress && <div className="mt-1.5 h-1.5 overflow-hidden rounded-full bg-primary/15"><div className="h-full rounded-full bg-primary" style={{ width: `${lodgingSetupProgress.percent}%` }} /></div>}
               <div className="mt-1.5 space-y-1">
@@ -331,8 +331,11 @@ export default function StoreOwnerLayout({ children, title, storeId, storeName, 
                 <Button size="sm" variant="secondary" className="h-7 px-2 text-[10px]" onClick={() => { onTabChange?.("lodge-overview"); closeSidebar(); }}>Open Overview</Button>
                 <Button size="sm" className="h-7 px-2 text-[10px]" onClick={() => { onTabChange?.(lodgingSetupProgress?.nextBestAction?.tab || "lodge-rooms"); closeSidebar(); }}>Continue Setup</Button>
               </div>
-              {qaSummary && <p className="mt-1.5 rounded-md bg-background px-2 py-1 text-[10px] font-semibold text-primary ring-1 ring-primary/15">QA: {qaSummary.passedCount} pass / {qaSummary.failedCount} fail{qaSummary.failedCount ? " · Fix required" : ""}</p>}
-              <button onClick={() => { navigate("/admin/lodging/qa-checklist"); closeSidebar(); }} className="mt-1.5 w-full rounded-md border border-primary/20 bg-background px-2 py-1.5 text-[10px] font-semibold text-primary">Run QA / Checklist</button>
+              <div className="mt-1.5 rounded-md bg-background px-2 py-1 text-[10px] font-semibold text-primary ring-1 ring-primary/15">
+                <p>QA: {qaSummary ? `${qaSummary.passedCount} pass / ${qaSummary.failedCount} fail / ${qaSummary.warningCount} setup` : "not run yet"}</p>
+                <p className="font-medium text-primary/70">{qaSummary?.checkedAt ? `Last checked ${new Date(qaSummary.checkedAt).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}` : "Open QA to auto-check now"}</p>
+              </div>
+              <button onClick={() => { navigate("/admin/lodging/qa-checklist"); closeSidebar(); }} className="mt-1.5 w-full rounded-md border border-primary/20 bg-background px-2 py-1.5 text-[10px] font-semibold text-primary">Run QA / View Report</button>
             </div>
           )}
           <div className="space-y-0.5" role="group" aria-labelledby="sidebar-group-manage">
