@@ -87,7 +87,7 @@ import LodgingReviewsSection from "@/components/admin/store/lodging/LodgingRevie
 import LodgingRatePlansSection from "@/components/admin/store/lodging/LodgingRatePlansSection";
 import LodgingGuestRequestsSection from "@/components/admin/store/lodging/LodgingGuestRequestsSection";
 import { getLodgingCompletion } from "@/lib/lodging/lodgingCompletion";
-import { LODGING_TAB_IDS, resolveStoreTab } from "@/lib/admin/storeTabRouting";
+import { LODGING_TAB_IDS, resolveStoreTab, resolveStoreTabFromSearch } from "@/lib/admin/storeTabRouting";
 import { useLodgeRooms } from "@/hooks/lodging/useLodgeRooms";
 import { useLodgePropertyProfile } from "@/hooks/lodging/useLodgePropertyProfile";
 import { isLodgingStoreCategory } from "@/hooks/useOwnerStoreProfile";
@@ -594,7 +594,7 @@ export default function AdminStoreEditPage() {
   useEffect(() => {
     const isStoreLodging = isLodgingStoreCategory(store?.category);
     const requestedTab = searchParams.get("tab");
-    const resolvedTab = resolveStoreTab(requestedTab, isStoreLodging);
+    const resolvedTab = resolveStoreTabFromSearch(searchParams, isStoreLodging);
     if (requestedTab !== resolvedTab && (requestedTab || isStoreLodging)) {
       handleTabChange(resolvedTab);
       return;
@@ -3733,17 +3733,17 @@ export default function AdminStoreEditPage() {
 
           {isLodging && (
             <>
-              <TabsContent value="lodge-overview"><LodgingOverviewSection storeId={storeId!} /></TabsContent>
-              <TabsContent value="lodge-rooms"><LodgingRoomsSection storeId={storeId!} /></TabsContent>
-              <TabsContent value="lodge-rate-plans"><LodgingRatePlansSection storeId={storeId!} /></TabsContent>
+              <TabsContent value="lodge-overview" data-testid="lodging-tab-lodge-overview"><LodgingOverviewSection storeId={storeId!} /></TabsContent>
+              <TabsContent value="lodge-rooms" data-testid="lodging-tab-lodge-rooms"><LodgingRoomsSection storeId={storeId!} /></TabsContent>
+              <TabsContent value="lodge-rate-plans" data-testid="lodging-tab-lodge-rate-plans"><LodgingRatePlansSection storeId={storeId!} /></TabsContent>
               <TabsContent value="lodge-reservations"><LodgingReservationsSection storeId={storeId!} /></TabsContent>
               <TabsContent value="lodge-calendar"><LodgingCalendarSection storeId={storeId!} /></TabsContent>
               <TabsContent value="lodge-guests"><LodgingGuestsSection storeId={storeId!} /></TabsContent>
               <TabsContent value="lodge-frontdesk"><LodgingFrontDeskSection storeId={storeId!} /></TabsContent>
               <TabsContent value="lodge-housekeeping"><LodgingHousekeepingSection storeId={storeId!} /></TabsContent>
               <TabsContent value="lodge-maintenance"><LodgingMaintenanceSection storeId={storeId!} /></TabsContent>
-              <TabsContent value="lodge-addons"><LodgingAddOnsSection storeId={storeId!} /></TabsContent>
-              <TabsContent value="lodge-guest-requests"><LodgingGuestRequestsSection storeId={storeId!} /></TabsContent>
+              <TabsContent value="lodge-addons" data-testid="lodging-tab-lodge-addons"><LodgingAddOnsSection storeId={storeId!} /></TabsContent>
+              <TabsContent value="lodge-guest-requests" data-testid="lodging-tab-lodge-guest-requests"><LodgingGuestRequestsSection storeId={storeId!} /></TabsContent>
               <TabsContent value="lodge-dining"><LodgingDiningSection storeId={storeId!} /></TabsContent>
               <TabsContent value="lodge-experiences"><LodgingExperiencesSection storeId={storeId!} /></TabsContent>
               <TabsContent value="lodge-transport"><LodgingTransportSection storeId={storeId!} /></TabsContent>
