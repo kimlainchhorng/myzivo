@@ -53,7 +53,7 @@ const quickActions = [
   { icon: Heart, label: "Saved", href: "/saved", accent: "hsl(340 75% 55%)" },
   { icon: Ticket, label: "Support", href: "/support/tickets", accent: "hsl(38 92% 50%)" },
   { icon: QrCode, label: "QR Code", href: "/qr-profile", accent: "hsl(263 70% 58%)" },
-  { icon: Search, label: "Search", href: "/smart-search", accent: "hsl(199 89% 48%)" },
+  { icon: Gift, label: "Invite", href: "/referrals", accent: "hsl(199 89% 48%)" },
 ];
 
 /* ============================================= */
