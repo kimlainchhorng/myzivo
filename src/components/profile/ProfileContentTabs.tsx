@@ -954,6 +954,7 @@ export default function ProfileContentTabs({ userId }: { userId?: string }) {
                       toast.success(isOn ? "Notifications turned off" : "Notifications turned on for this post");
                       setShowPostMenu(false);
                     }}
+                    data-testid="profile-menu-notifications"
                     className="w-full flex items-center gap-4 px-5 py-3.5 min-h-[48px] text-sm text-foreground hover:bg-muted/50 transition-colors"
                   >
                     <Bell className="w-5 h-5" />
@@ -982,6 +983,7 @@ export default function ProfileContentTabs({ userId }: { userId?: string }) {
                       setSelectedPost(null);
                       toast.success("You won't see this post anymore");
                     }}
+                    data-testid="profile-menu-not-interested"
                     className="w-full flex items-center gap-4 px-5 py-3.5 min-h-[48px] text-sm text-foreground hover:bg-muted/50 transition-colors"
                   >
                     <EyeOff className="w-5 h-5" />
@@ -997,6 +999,7 @@ export default function ProfileContentTabs({ userId }: { userId?: string }) {
                   {profileOwnerId === user?.id && (
                     <button
                       onClick={() => { setShowPostMenu(false); setShowCommentSettingsSheet(true); }}
+                      data-testid="profile-menu-comment-settings"
                       className="w-full flex items-center gap-4 px-5 py-3.5 min-h-[48px] text-sm text-foreground hover:bg-muted/50 transition-colors"
                     >
                       <Settings2 className="w-5 h-5" />
