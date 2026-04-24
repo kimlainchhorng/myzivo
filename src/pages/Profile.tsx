@@ -802,7 +802,7 @@ const Profile = () => {
           {/* ── Account actions moved lower for clearer mobile layout ── */}
           <ParallaxSection index={2.1}>
             <div className="relative mb-2">
-              <div className="grid grid-cols-2 gap-2">
+              <div className="grid grid-cols-1 gap-2">
                 <motion.button
                   ref={langTriggerRef}
                   whileTap={{ scale: 0.96 }}
@@ -814,28 +814,6 @@ const Profile = () => {
                   <span className="truncate">Translate</span>
                   <ChevronDown className={`h-3 w-3 shrink-0 transition-transform duration-300 ${showLangPicker ? "rotate-180" : ""}`} />
                 </motion.button>
-
-                <motion.button
-                  whileTap={{ scale: 0.96 }}
-                  onClick={() => setShowNotifPanel(prev => !prev)}
-                  className={cn(
-                    "relative z-20 flex min-h-[42px] items-center justify-center gap-1.5 rounded-2xl border px-2.5 text-[11px] font-bold shadow-sm touch-manipulation transition-all",
-                    showNotifPanel
-                      ? "border-primary/25 bg-primary text-primary-foreground"
-                      : "border-border/40 bg-card/75 text-foreground backdrop-blur-xl hover:bg-card/90"
-                  )}
-                >
-                  <span className="relative shrink-0">
-                    <Bell className={cn("h-3.5 w-3.5", showNotifPanel ? "text-primary-foreground" : "text-primary")} />
-                    {totalNotifCount > 0 && !showNotifPanel && (
-                      <span className="absolute -right-2 -top-2 flex h-4 min-w-[16px] items-center justify-center rounded-full bg-destructive px-1 text-[9px] font-bold text-destructive-foreground shadow-sm">
-                        {totalNotifCount > 99 ? '99+' : totalNotifCount}
-                      </span>
-                    )}
-                  </span>
-                  <span className="truncate">Notifications</span>
-                </motion.button>
-
               </div>
 
               <AnimatePresence>
