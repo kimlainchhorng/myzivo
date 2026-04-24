@@ -12,6 +12,7 @@ import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 import { CommentRowsSkeleton } from "@/components/social/EngagementSkeleton";
 import SwipeableSheet from "@/components/social/SwipeableSheet";
+import VerifiedBadge from "@/components/VerifiedBadge";
 
 const REACTION_EMOJIS = ["❤️", "😂", "😮", "😢", "🔥"];
 
@@ -178,7 +179,10 @@ function CommentItem({
         <div className="flex items-start gap-1.5">
           <div className="flex-1">
             <p className="text-[13px] leading-snug">
-              <span className="font-semibold mr-1.5">{comment.author_name}</span>
+              <span className="font-semibold mr-1.5 inline-flex items-center gap-0.5 align-middle">
+                {comment.author_name}
+                {comment.author_is_verified && <VerifiedBadge size={12} />}
+              </span>
               {comment.content}
             </p>
           </div>
