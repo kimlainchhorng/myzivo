@@ -189,34 +189,34 @@ const ProfileStories = () => {
       <div className="relative">
         <div
           ref={scrollRef}
-          className="flex gap-3 overflow-x-auto pb-2 scrollbar-none"
+          className="flex gap-2 overflow-x-auto pb-1 scrollbar-none"
           style={{ scrollbarWidth: "none" }}
         >
           <motion.button
             whileTap={{ scale: 0.93 }}
             onClick={handleAddStory}
-            className="flex flex-col items-center gap-1.5 shrink-0"
+            className="flex shrink-0 items-center gap-2 rounded-2xl border border-primary/15 bg-card/75 px-2.5 py-2 shadow-sm backdrop-blur-xl"
           >
             <div className="relative">
-              <div className="w-16 h-16 rounded-full bg-muted/60 border-2 border-dashed border-primary/40 flex items-center justify-center">
+              <div className="flex h-11 w-11 items-center justify-center rounded-full border border-dashed border-primary/40 bg-muted/60">
                 {profile?.avatar_url ? (
-                  <Avatar className="w-14 h-14">
+                  <Avatar className="h-10 w-10">
                     <AvatarImage src={profile.avatar_url} />
-                    <AvatarFallback className="bg-primary/10 text-primary text-lg font-bold">
+                    <AvatarFallback className="bg-primary/10 text-sm font-bold text-primary">
                       {profile?.full_name?.[0] || "Y"}
                     </AvatarFallback>
                   </Avatar>
                 ) : (
-                  <div className="w-14 h-14 rounded-full bg-primary/10 flex items-center justify-center">
-                    <Camera className="w-5 h-5 text-primary/60" />
+                  <div className="flex h-10 w-10 items-center justify-center rounded-full bg-primary/10">
+                    <Camera className="h-4 w-4 text-primary/60" />
                   </div>
                 )}
               </div>
-              <div className="absolute -bottom-0.5 -right-0.5 w-6 h-6 rounded-full bg-primary flex items-center justify-center border-2 border-background shadow-md">
-                <Plus className="w-3.5 h-3.5 text-primary-foreground" />
+              <div className="absolute -bottom-0.5 -right-0.5 flex h-5 w-5 items-center justify-center rounded-full border-2 border-background bg-primary shadow-md">
+                <Plus className="h-3 w-3 text-primary-foreground" />
               </div>
             </div>
-            <span className="text-[10px] font-medium text-muted-foreground w-16 text-center truncate">Your story</span>
+            <span className="w-14 truncate text-left text-[11px] font-bold text-foreground">Your story</span>
           </motion.button>
 
           {storyGroups.map((group) => (
@@ -224,9 +224,9 @@ const ProfileStories = () => {
               key={group.user_id}
               whileTap={{ scale: 0.93 }}
               onClick={() => openStory(group)}
-              className="flex flex-col items-center gap-1.5 shrink-0"
+              className="flex shrink-0 flex-col items-center gap-1"
             >
-              <div className={`w-16 h-16 rounded-full p-[2.5px] ${
+              <div className={`h-12 w-12 rounded-full p-[2px] ${
                 group.hasUnviewed
                   ? "bg-gradient-to-br from-primary via-green-400 to-emerald-500"
                   : "bg-muted-foreground/20"
@@ -239,13 +239,13 @@ const ProfileStories = () => {
                       className="w-full h-full object-cover"
                     />
                   ) : (
-                    <div className="w-full h-full flex items-center justify-center bg-primary/10 text-primary font-bold text-sm">
+                  <div className="flex h-full w-full items-center justify-center bg-primary/10 text-xs font-bold text-primary">
                       {group.user_name[0]}
                     </div>
                   )}
                 </div>
               </div>
-              <span className="text-[10px] font-medium text-foreground/70 w-16 text-center truncate">
+              <span className="w-12 truncate text-center text-[9px] font-medium text-foreground/70">
                 {group.user_name}
               </span>
             </motion.button>
