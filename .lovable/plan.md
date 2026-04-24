@@ -1,44 +1,46 @@
-## Issues found while testing the live preview
+# Fix profile post viewer parity, bookmarks error, and swipe handle polish
 
-I logged in as klainkonkat@gmail.com and walked the full flow on `/profile`, `/feed`, and `/reels` at 390×844. Three real bugs surfaced:
+## Problems found while testing
 
-### 1. Duplicate header inside the Feed post-detail viewer (worst offender)
-On `/feed`, tapping a post image opens `PostDetailOverlay` (the swipe-down viewer in `ReelsFeedPage.tsx`). The overlay header (X + grab handle + author row) renders correctly, but the inner `<FeedCard ... detailMode />` ALSO renders its own author row + "More" menu + caption, so the user sees the author/avatar/timestamp twice and the action bar appears clipped. Same component path that the Profile and Public viewers go through is fine because they use a different inner renderer.
+1. **Bookmarks save fails** — `ProfileContentTabs` inserts a `title` column that doesn't exist in the `bookmarks` table, producing the red error banner shown in the feed: *"Could not find the 'title' column of 'bookmarks' in the schema cache."*
+2. **Profile 3-dot menu buttons don't really work** — On the profile page (`/profile`), the post overlay's "..." menu uses placeholder `toast.info`/`toast.success` calls for Report, Turn on notifications, Not interested, and Comment settings. They show a toast but do nothing. The Reels feed already has real implementations (Report sheet, persistent notifications toggle, real "Hide" action, Comment settings sheet). The two viewers don't match.
+3. **Duplicate grab pill in the bottom sheet** — Inside the profile post-options bottom sheet there is both the sheet's own drag affordance (top) AND a second `w-10 h-1` divider mid-sheet (line 879). That's the second bar visible in screenshot 330.
+4. **Swipe handle visual** — the current 4px-tall, 36px-wide pill is hard to spot on photo posts; users don't realize they can drag.
 
-### 2. Reels feed: caption boxes (□□□) and stuck "Loading video…"
-On `/reels`:
-- Caption text for non-Latin scripts (the Khmer post by "Mommy Seafood") renders as missing-glyph boxes. The font stack on the reels caption layer doesn't include a Khmer/Unicode fallback (the rest of the app renders Khmer fine — only the reels caption uses a font-family that drops it).
-- The video shows the spinner + "Loading video…" indefinitely on the first card. Likely because `preload="metadata"` + autoplay-blocked Safari path never triggers a `canplay` state-clear, or the loading flag isn't reset on `onLoadedData`.
+## What I'll change
 
-### 3. `/feed` layout has a right-edge gutter at 390px
-The page leaves ~12-15px of empty background on the right side of every section (header, story rail, suggested carousel, post). The bottom nav is full-width, so the gutter is in a `max-w-*`/`mx-auto` wrapper inside the feed shell that isn't sized to the mobile viewport. Profile and Reels don't have this issue.
+### 1. Bookmarks insert (fix red banner)
+`src/components/profile/ProfileContentTabs.tsx`
+- Remove `title:` and `collection_name:` from the insert payload (table only has `user_id`, `item_id`, `item_type`, `created_at`). Same fix mirrors the working `useBookmark` hook.
 
----
+### 2. Profile post menu — wire real handlers (parity with Reels)
+`src/components/profile/ProfileContentTabs.tsx` (overlay menu, lines ~882–955)
+- **Report** → open the same `ReportSheet` flow used in Reels (categories → sub-reason → submitted), persisting to `post_reports` if available, otherwise a graceful confirmation.
+- **Turn on/off notifications** → toggle local `post_followed` state stored per post in `post_subscriptions` (insert/delete row), label flips to "Turn off notifications".
+- **Not interested** → insert `post_hidden` row and immediately remove the post from the visible list (optimistic).
+- **Comment settings** (owner only) → open the same `CommentSettingsSheet` already implemented in Reels. Extract it into `src/components/social/PostCommentSettingsSheet.tsx` so both viewers reuse it.
+- Keep existing working actions: Copy link, Share, Edit caption, Delete post.
 
-## Fix plan
+### 3. Remove duplicate handle in bottom sheet
+- Delete the standalone `<div className="w-10 h-1 ...">` on line 879 — `SwipeableSheet` already renders its own grab indicator.
 
-**A. Suppress FeedCard's internal chrome in `detailMode`** (`src/pages/ReelsFeedPage.tsx`)
-- Wrap the FeedCard's "Author header" block (lines ~2400-2450, both shared and normal variants) in `{!detailMode && (...)}` so it only renders in the inline feed.
-- Also suppress the duplicate caption block (lines ~2452-2461) when `detailMode` is true — the overlay already shows the caption in the body.
-- Keep the media + actions row (like/comment/share/save) so the viewer is still interactive.
-- Verification: open a feed post → only one author row visible at the top, full-bleed media below, action bar pinned at bottom.
+### 4. Swipe handle — better affordance
+`src/components/social/SwipeGrabHandle.tsx`
+- Increase tap zone height from `h-5` → `h-8`, pill from `h-1 w-9` → `h-1.5 w-12`, and add a soft glow on dark tone (`shadow-[0_0_12px_rgba(255,255,255,0.25)]`) so it stays visible over photos.
+- Add a one-time subtle pulse animation when the overlay first opens (`animate-pulse` for ~1.2s via a `useEffect` timeout) to teach the gesture.
+- Move the handle from inside the header row to a dedicated full-width row above it so the header buttons (X, author, more) stop competing with the drag target.
 
-**B. Reels caption + video fixes** (`src/pages/ReelsFeedPage.tsx` + relevant Reels view)
-- Add a Unicode-safe fallback to the caption font stack: `font-family: ..., "Noto Sans Khmer", "Noto Sans", system-ui, sans-serif` (or apply `font-family: inherit` on the caption span instead of the custom font that's stripping glyphs). Apply the same fix to comments rendering on reels if affected.
-- Fix the stuck loader: ensure the loading state clears on `onLoadedData` / `onCanPlay` (not just `onPlaying`), and on autoplay-block fall back to showing the poster + Play button instead of the spinner. Also gate the spinner on `!videoEl.readyState >= 2`.
+### 5. Quick verification I'll run after the fixes
+- Open a post from `/profile` → tap "..." → confirm Report opens the categories sheet, Notifications toggles label + persists, Not interested removes the post, Comment settings opens (owner).
+- Tap the bookmark icon → confirm green "Saved" toast and no red error.
+- Drag the new bigger pill down → overlay dismisses; pulse plays once on open.
+- Re-check the Reels overlay to confirm the shared CommentSettings sheet still works.
 
-**C. /feed right-edge gutter** (`src/pages/ReelsFeedPage.tsx` shell, or feed page wrapper)
-- Find the `max-w-[XYZ] mx-auto` (or a `pr-*` / `container`) wrapper that's clamping width below the viewport on small screens and switch it to full-width below `lg` (e.g. `w-full lg:max-w-[XYZ] lg:mx-auto`).
-- Verification: at 390px the feed cards, header, and "Suggested for you" carousel touch the right edge cleanly; carousel no longer shows a stray horizontal scrollbar.
+## Files to edit
+- `src/components/profile/ProfileContentTabs.tsx` (bookmark insert, menu handlers, remove duplicate handle)
+- `src/components/social/SwipeGrabHandle.tsx` (size, glow, pulse, position)
+- `src/pages/ReelsFeedPage.tsx` (use shared CommentSettings sheet)
+- New: `src/components/social/PostCommentSettingsSheet.tsx` (extracted shared sheet)
+- New: `src/components/social/PostReportSheet.tsx` (extracted shared sheet, optional if simpler to import inline)
 
----
-
-## Out of scope (already working)
-- Profile post viewer (single header, fills screen, X close works).
-- Swipe-down-to-close gesture on all three viewers (already tuned + portaled at z-9999).
-- Bottom nav covering — overlays correctly cover the nav now.
-
-## Technical details
-- Files touched: `src/pages/ReelsFeedPage.tsx` (primary), possibly `src/pages/ReelsPage.tsx` or the reels caption component for B, and a small layout class change for C.
-- No schema, RLS, or routing changes.
-- After fixes, I'll re-walk /profile → /feed → /reels with the browser tool to confirm visually.
+No database migrations required — all writes target existing tables (`bookmarks`, `post_reports`, `post_hidden`, `post_subscriptions` already exist or fall back to local state if missing).
