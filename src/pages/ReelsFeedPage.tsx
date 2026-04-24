@@ -2306,11 +2306,11 @@ function FeedCard({ item, currentUserId, onOpenFullscreen, autoPlayVideo, detail
           {/* Caption before media for normal posts */}
           {item.caption && (
             <div className="px-3 pb-2">
-              <div className="text-[13px] text-foreground">
+              <CollapsibleCaption text={item.caption} lines={3} className="text-[13px]">
                 <Suspense fallback={<span>{item.caption}</span>}>
                   <SafeCaption text={item.caption} />
                 </Suspense>
-              </div>
+              </CollapsibleCaption>
             </div>
           )}
 
