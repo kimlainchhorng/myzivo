@@ -156,7 +156,7 @@ function AccessibleMenuSheet({
   );
 }
 
-
+type FeedItem = {
   id: string;
   type: "photo" | "reel";
   likes: number;
