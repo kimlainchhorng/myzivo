@@ -4,7 +4,7 @@ import { jsPDF } from "jspdf";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { CheckCircle2, ClipboardCheck, Download, ExternalLink, Hotel, ListChecks, Printer, ShieldCheck, Wrench, XCircle } from "lucide-react";
+import { CheckCircle2, ClipboardCheck, Download, ExternalLink, Hotel, KeyRound, ListChecks, Printer, ShieldCheck, Wrench, XCircle } from "lucide-react";
 import { useOwnerStoreProfile } from "@/hooks/useOwnerStoreProfile";
 import { useLodgingOpsData } from "@/components/admin/store/lodging/LodgingOperationsShared";
 import { getLodgingCompletion } from "@/lib/lodging/lodgingCompletion";
