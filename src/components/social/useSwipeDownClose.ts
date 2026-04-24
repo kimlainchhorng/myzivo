@@ -61,13 +61,38 @@ export function shouldDismiss(
 
 export function useSwipeDownClose(onClose: () => void) {
   const dragControls = useDragControls();
-  const thresholds = useMemo(() => getSwipeThresholds(), []);
+  const platform = useMemo(() => detectPlatform(), []);
+  const thresholds = useMemo(() => getSwipeThresholds(platform), [platform]);
 
   const handleDragEnd = useCallback(
     (_: unknown, info: PanInfo) => {
-      if (shouldDismiss(info, thresholds)) onClose();
+      if (shouldDismiss(info, thresholds)) {
+        // Sample 1/10 successful dismissals to keep a baseline volume
+        // without flooding analytics_events.
+        if (Math.random() < 0.1) {
+          logGestureEvent("gesture.dismissed", {
+            offsetY: Math.round(info.offset.y),
+            velocityY: Math.round(info.velocity.y),
+            platform,
+          });
+        }
+        onClose();
+        return;
+      }
+      // User attempted to swipe but didn't pass threshold — useful signal
+      // for tuning. Skip noise from accidental sub-minimum drags.
+      if (info.offset.y >= thresholds.minDragDistance) {
+        logGestureEvent("gesture.swipe_aborted", {
+          offsetY: Math.round(info.offset.y),
+          offsetX: Math.round(info.offset.x),
+          velocityY: Math.round(info.velocity.y),
+          platform,
+          requiredOffset: thresholds.offset,
+          requiredVelocity: thresholds.velocity,
+        });
+      }
     },
-    [onClose, thresholds],
+    [onClose, thresholds, platform],
   );
 
   const motionProps = {
@@ -81,9 +106,16 @@ export function useSwipeDownClose(onClose: () => void) {
 
   const startDrag = useCallback(
     (e: React.PointerEvent) => {
-      dragControls.start(e);
+      try {
+        dragControls.start(e);
+      } catch (err) {
+        logGestureEvent("gesture.start_failed", {
+          platform,
+          message: err instanceof Error ? err.message : String(err),
+        });
+      }
     },
-    [dragControls],
+    [dragControls, platform],
   );
 
   return { dragControls, motionProps, startDrag, thresholds };
