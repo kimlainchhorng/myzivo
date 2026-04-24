@@ -755,25 +755,7 @@ const Profile = () => {
                 </motion.div>
               </ParallaxSection>
 
-              {/* ── ZIVO+ Upgrade (compact) ── */}
-              {!isPlus && (
-                <ParallaxSection index={1.9}>
-                  <Link to="/zivo-plus">
-                    <motion.div whileTap={{ scale: 0.98 }} className="flex items-center justify-between gap-2 rounded-2xl border border-primary/15 bg-card/75 px-3 py-2 shadow-sm backdrop-blur-xl">
-                      <div className="flex min-w-0 items-center gap-2.5">
-                        <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-primary/12 text-primary">
-                          <Crown className="h-4 w-4" />
-                        </div>
-                        <div className="min-w-0">
-                          <p className="truncate text-[12px] font-bold">{t("profile.upgrade_plus")}</p>
-                          <p className="truncate text-[10px] text-muted-foreground">{t("profile.upgrade_desc")}</p>
-                        </div>
-                      </div>
-                      <ChevronRight className="h-4 w-4 shrink-0 text-muted-foreground" />
-                    </motion.div>
-                  </Link>
-                </ParallaxSection>
-              )}
+              {/* ZIVO+ upgrade moved to /more page */}
 
               {/* ── Phone Required Card ── */}
               {!profile?.phone?.trim() && (
