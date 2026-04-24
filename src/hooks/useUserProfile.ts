@@ -54,9 +54,10 @@ export const useUserProfile = () => {
       return data as unknown as UserProfile | null;
     },
     enabled: !!user?.id,
-    staleTime: 60_000,
+    staleTime: 10_000,
     gcTime: 5 * 60_000,
-    refetchOnWindowFocus: false,
+    refetchOnWindowFocus: true,
+    refetchOnReconnect: true,
   });
 };
 
