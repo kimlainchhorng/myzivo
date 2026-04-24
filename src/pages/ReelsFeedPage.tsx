@@ -104,7 +104,8 @@ function PostDetailOverlay({
   children: (startDrag: (e: React.PointerEvent) => void) => React.ReactNode;
 }) {
   const { motionProps, startDrag } = useSwipeDownClose(onClose);
-  return (
+  if (typeof document === "undefined") return null;
+  return createPortal(
     <motion.div
       initial={{ opacity: 0, y: 40 }}
       animate={{ opacity: 1, y: 0 }}
@@ -114,7 +115,8 @@ function PostDetailOverlay({
       className="fixed inset-0 z-[9999] bg-background flex flex-col overflow-hidden"
     >
       {children(startDrag)}
-    </motion.div>
+    </motion.div>,
+    document.body,
   );
 }
 
