@@ -83,6 +83,7 @@ const SafeCaption = lazy(() => import("@/components/social/SafeCaption"));
 import CollapsibleCaption from "@/components/social/CollapsibleCaption";
 import { formatCount, commentsLinkLabel } from "@/lib/social/formatCount";
 import { EngagementSkeleton } from "@/components/social/EngagementSkeleton";
+import SwipeableSheet from "@/components/social/SwipeableSheet";
 const FeedSidebar = lazy(() => import("@/components/social/FeedSidebar"));
 import { optimizeAvatar } from "@/utils/optimizeAvatar";
 
