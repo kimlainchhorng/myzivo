@@ -10,7 +10,7 @@ import {
   Volume2, VolumeX, Eye,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { formatDistanceToNow } from "date-fns";
 import { toUserPostInteractionId } from "@/lib/social/postInteraction";
@@ -70,6 +70,7 @@ export default function ProfileFeedCard({
   onSelectPost,
 }: ProfileFeedCardProps) {
   const navigate = useNavigate();
+  const [searchParams, setSearchParams] = useSearchParams();
   const videoRef = useRef<HTMLVideoElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const [isPlaying, setIsPlaying] = useState(false);
@@ -79,6 +80,34 @@ export default function ProfileFeedCard({
   const [selectedReaction, setSelectedReaction] = useState<string | null>(null);
   const [showComments, setShowComments] = useState(false);
   const lastTapRef = useRef(0);
+
+  // Deep link: open comments when URL contains ?post=<id>&comments=1
+  useEffect(() => {
+    if (
+      searchParams.get("comments") === "1" &&
+      searchParams.get("post") === item.id
+    ) {
+      setShowComments(true);
+    }
+  }, [searchParams, item.id]);
+
+  const openComments = useCallback(() => {
+    const next = new URLSearchParams(searchParams);
+    next.set("post", item.id);
+    next.set("src", "user");
+    next.set("comments", "1");
+    setSearchParams(next, { replace: false });
+    setShowComments(true);
+  }, [searchParams, setSearchParams, item.id]);
+
+  const closeComments = useCallback(() => {
+    setShowComments(false);
+    const next = new URLSearchParams(searchParams);
+    next.delete("post");
+    next.delete("src");
+    next.delete("comments");
+    setSearchParams(next, { replace: true });
+  }, [searchParams, setSearchParams]);
 
   const isVideo = item.type === "reel";
   const hasMedia = Boolean(item.url);
