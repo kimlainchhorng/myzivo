@@ -3,7 +3,7 @@ import type { LodgingCompletionItem } from "@/lib/lodging/lodgingCompletion";
 import { auditLodgingSidebarTabs } from "@/lib/lodging/lodgingSidebarAudit";
 
 export type LodgingQaStatus = "pass" | "fail" | "warning";
-export type LodgingQaCheck = { id: string; name: string; status: LodgingQaStatus; detail: string; fixTab?: LodgingTabId; url?: string };
+export type LodgingQaCheck = { id: string; name: string; status: LodgingQaStatus; detail: string; fixTab?: LodgingTabId; url?: string; category?: "system" | "setup" | "route" | "empty-state" };
 
 export type LodgingQaInput = {
   storeId?: string | null;
@@ -32,6 +32,7 @@ export function runLodgingQa(input: LodgingQaInput) {
     name: `Sidebar tab: ${tab.replace("lodge-", "")}`,
     status: "pass",
     detail: `${tab} is registered and has a matching rendered TabsContent panel.`,
+    category: "system",
     fixTab: tab,
     url: `${baseUrl}${buildStoreTabUrl(storeId, tab)}`,
   }));
@@ -40,6 +41,7 @@ export function runLodgingQa(input: LodgingQaInput) {
     name: `Refresh deep link: ${tab}`,
     status: resolveStoreTabFromSearch(`?tab=${tab}`, true) === tab ? "pass" : "fail",
     detail: `Refreshing ${buildStoreTabUrl(storeId, tab)} resolves directly to ${tab}.`,
+    category: "route",
     fixTab: tab,
     url: `${baseUrl}${buildStoreTabUrl(storeId, tab)}`,
   }));
@@ -48,6 +50,7 @@ export function runLodgingQa(input: LodgingQaInput) {
     name: `Setup item: ${item.label}`,
     status: "warning",
     detail: item.hint,
+    category: "setup",
     fixTab: item.tab,
     url: `${baseUrl}${buildStoreTabUrl(storeId, item.tab)}`,
   }));
@@ -56,17 +59,18 @@ export function runLodgingQa(input: LodgingQaInput) {
     name: `Empty state: ${item.label}`,
     status: item.passes ? "pass" : "fail",
     detail: `${item.emptyTitle} · ${item.fixButtonLabel} → ${item.fixTab}`,
+    category: "empty-state",
     fixTab: item.fixTab,
     url: `${baseUrl}${buildStoreTabUrl(storeId, item.fixTab)}`,
   }));
   const checks: LodgingQaCheck[] = [
-    { id: "route-hotel-admin", name: "Direct Hotel Admin route", status: "pass", detail: "/hotel-admin is registered for owner launch access.", url: deepLinks[0] },
-    { id: "route-qa", name: "QA checklist route", status: "pass", detail: "/admin/lodging/qa-checklist is available for one-click verification.", url: deepLinks[5] },
-    { id: "sidebar-tabs", name: "All lodging sidebar tabs registered", status: LODGING_TAB_IDS.length === 20 ? "pass" : "fail", detail: `${LODGING_TAB_IDS.length}/20 lodging tabs are registered.` },
-    { id: "deep-link-refresh", name: "Deep-link tab refresh safety", status: resolveStoreTabFromSearch("?tab=lodge-rate-plans", true) === "lodge-rate-plans" ? "pass" : "fail", detail: "Known ?tab= links resolve to the same lodging section after refresh." },
-    { id: "non-lodging-block", name: "Non-lodging tab protection", status: resolveStoreTabFromSearch("?tab=lodge-overview", false) === "profile" ? "pass" : "fail", detail: "Lodging-only tabs fall back to Profile for non-lodging stores." },
-    { id: "completion-data", name: "Real data readiness", status: input.completion.percent >= 100 ? "pass" : input.completion.percent >= 50 ? "warning" : "fail", detail: `${input.completion.complete}/${input.completion.total} setup items complete (${input.completion.percent}%).`, fixTab: input.completion.incompleteItems[0]?.tab },
-    { id: "empty-states", name: "Empty-state fix buttons", status: emptyStateAudit.every((item) => item.passes) ? "pass" : "fail", detail: `${emptyStateAudit.filter((item) => item.passes).length}/${emptyStateAudit.length} lodging sections define a meaningful empty state and fix target.` },
+    { id: "route-hotel-admin", name: "Direct Hotel Admin route", status: "pass", detail: "/hotel-admin is registered for owner launch access.", url: deepLinks[0], category: "route" },
+    { id: "route-qa", name: "QA checklist route", status: "pass", detail: "/admin/lodging/qa-checklist is available for one-click verification.", url: deepLinks[5], category: "route" },
+    { id: "sidebar-tabs", name: "All lodging sidebar tabs registered", status: LODGING_TAB_IDS.length === 20 ? "pass" : "fail", detail: `${LODGING_TAB_IDS.length}/20 lodging tabs are registered.`, category: "system" },
+    { id: "deep-link-refresh", name: "Deep-link tab refresh safety", status: resolveStoreTabFromSearch("?tab=lodge-rate-plans", true) === "lodge-rate-plans" ? "pass" : "fail", detail: "Known ?tab= links resolve to the same lodging section after refresh.", category: "route" },
+    { id: "non-lodging-block", name: "Non-lodging tab protection", status: resolveStoreTabFromSearch("?tab=lodge-overview", false) === "profile" ? "pass" : "fail", detail: "Lodging-only tabs fall back to Profile for non-lodging stores.", category: "system" },
+    { id: "completion-data", name: "Hotel setup data readiness", status: input.completion.percent >= 100 ? "pass" : "warning", detail: `${input.completion.complete}/${input.completion.total} setup items complete (${input.completion.percent}%). Missing hotel data is an owner setup action, not a broken implementation.`, fixTab: input.completion.incompleteItems[0]?.tab, category: "setup" },
+    { id: "empty-states", name: "Empty-state fix buttons", status: emptyStateAudit.every((item) => item.passes) ? "pass" : "fail", detail: `${emptyStateAudit.filter((item) => item.passes).length}/${emptyStateAudit.length} lodging sections define a meaningful empty state and fix target.`, category: "empty-state" },
     ...deepLinkChecks,
     ...sidebarChecks,
     ...emptyStateChecks,
