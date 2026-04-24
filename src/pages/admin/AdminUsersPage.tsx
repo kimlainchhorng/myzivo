@@ -52,6 +52,24 @@ export default function AdminUsersPage() {
     onError: (err: any) => toast.error(err.message || "Failed to update verification"),
   });
 
+  const reviewRequestMutation = useMutation({
+    mutationFn: async ({ requestId, approved, reason }: { requestId: string; approved: boolean; reason?: string }) => {
+      const { error } = await (supabase as any).rpc("set_profile_blue_verified_from_request", {
+        _request_id: requestId,
+        _approved: approved,
+        _rejection_reason: reason || null,
+      });
+      if (error) throw error;
+    },
+    onSuccess: (_, { approved }) => {
+      qc.invalidateQueries({ queryKey: ["admin-users"] });
+      qc.invalidateQueries({ queryKey: ["admin-verification-requests"] });
+      setSelectedUser(null);
+      toast.success(approved ? "Blue verified badge approved" : "Verification request rejected");
+    },
+    onError: (err: any) => toast.error(err.message || "Failed to review request"),
+  });
+
   // Fetch all profiles
   const { data: profiles, isLoading } = useQuery({
     queryKey: ["admin-users", isAdmin],
@@ -74,6 +92,20 @@ export default function AdminUsersPage() {
       const { data, error } = await supabase
         .from("user_roles")
         .select("user_id, role");
+      if (error) throw error;
+      return data || [];
+    },
+    enabled: isAdmin && !authLoading,
+  });
+
+  const { data: verificationRequests } = useQuery({
+    queryKey: ["admin-verification-requests", isAdmin],
+    queryFn: async () => {
+      const { data, error } = await (supabase as any)
+        .from("verification_requests")
+        .select("id, user_id, full_name, category, additional_info, status, rejection_reason, created_at")
+        .order("created_at", { ascending: false })
+        .limit(200);
       if (error) throw error;
       return data || [];
     },
@@ -119,13 +151,14 @@ export default function AdminUsersPage() {
 
   const totalPages = Math.ceil((filtered?.length || 0) / PAGE_SIZE);
   const paginated = filtered.slice(page * PAGE_SIZE, (page + 1) * PAGE_SIZE);
+  const pendingVerificationRequests = (verificationRequests || []).filter((request: any) => request.status === "pending");
 
   // Stats
   const stats = useMemo(() => {
     if (!customerProfiles.length) return { total: 0, verified: 0, setupComplete: 0 };
     return {
       total: customerProfiles.length,
-      verified: customerProfiles.filter((p) => p.email_verified).length,
+      verified: customerProfiles.filter((p) => p.is_verified).length,
       setupComplete: customerProfiles.filter((p) => p.setup_complete).length,
     };
   }, [customerProfiles]);
