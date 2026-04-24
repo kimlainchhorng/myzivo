@@ -186,7 +186,15 @@ const Profile = () => {
       .on("postgres_changes", { event: "*", schema: "public", table: "profiles", filter: `id=eq.${user.id}` }, refreshBlueVerified)
       .subscribe();
 
-    return () => { supabase.removeChannel(channel); };
+    // Fallback: re-check when tab regains focus or network reconnects
+    window.addEventListener("focus", refreshBlueVerified);
+    window.addEventListener("online", refreshBlueVerified);
+
+    return () => {
+      supabase.removeChannel(channel);
+      window.removeEventListener("focus", refreshBlueVerified);
+      window.removeEventListener("online", refreshBlueVerified);
+    };
   }, [queryClient, user?.id]);
   
   // Count pending friend requests + new followers
@@ -605,38 +613,34 @@ const Profile = () => {
                         )}
                       </div>
 
-                      <button
-                        type="button"
-                        onClick={() => navigate("/account/verification")}
-                        className={cn(
-                          "group mt-3 inline-flex min-h-[36px] items-center gap-2 rounded-full border px-4 py-1.5 text-xs font-bold shadow-sm transition-all duration-200 active:scale-95 hover:shadow-md hover:-translate-y-0.5",
-                          profile?.is_verified
-                            ? "border-[hsl(var(--flights)/0.35)] bg-gradient-to-r from-[hsl(var(--flights)/0.18)] via-[hsl(var(--flights)/0.10)] to-[hsl(var(--flights)/0.18)] text-[hsl(var(--flights))] shadow-[0_4px_14px_-4px_hsl(var(--flights)/0.45)]"
-                            : latestVerificationRequest?.status === "pending"
+                      {!profile?.is_verified && (
+                        <button
+                          type="button"
+                          onClick={() => navigate("/account/verification")}
+                          className={cn(
+                            "group mt-3 inline-flex min-h-[36px] items-center gap-2 rounded-full border px-4 py-1.5 text-xs font-bold shadow-sm transition-all duration-200 active:scale-95 hover:shadow-md hover:-translate-y-0.5",
+                            latestVerificationRequest?.status === "pending"
                               ? "border-amber-500/30 bg-gradient-to-r from-amber-500/15 to-amber-500/5 text-amber-600"
                               : latestVerificationRequest?.status === "rejected"
                                 ? "border-destructive/25 bg-destructive/5 text-destructive"
                                 : "border-[hsl(var(--flights)/0.35)] bg-gradient-to-r from-[hsl(var(--flights)/0.14)] via-[hsl(var(--flights)/0.06)] to-[hsl(var(--flights)/0.14)] text-[hsl(var(--flights))] shadow-[0_4px_14px_-6px_hsl(var(--flights)/0.5)]"
-                        )}
-                      >
-                        {profile?.is_verified ? (
-                          <>
-                            <BlueVerifiedBadge className="h-4 w-4" /> Blue verified
-                          </>
-                        ) : latestVerificationRequest?.status === "pending" ? (
-                          <>
-                            <Loader2 className="h-3.5 w-3.5 animate-spin" /> Verification pending
-                          </>
-                        ) : latestVerificationRequest?.status === "rejected" ? (
-                          <>
-                            <AlertCircle className="h-3.5 w-3.5" /> Reapply for blue verified
-                          </>
-                        ) : (
-                          <>
-                            <BlueVerifiedBadge className="h-4 w-4 transition-transform duration-300 group-hover:rotate-12" /> Get blue verified
-                          </>
-                        )}
-                      </button>
+                          )}
+                        >
+                          {latestVerificationRequest?.status === "pending" ? (
+                            <>
+                              <Loader2 className="h-3.5 w-3.5 animate-spin" /> Verification pending
+                            </>
+                          ) : latestVerificationRequest?.status === "rejected" ? (
+                            <>
+                              <AlertCircle className="h-3.5 w-3.5" /> Reapply for blue verified
+                            </>
+                          ) : (
+                            <>
+                              <BlueVerifiedBadge className="h-4 w-4 transition-transform duration-300 group-hover:rotate-12" /> Get blue verified
+                            </>
+                          )}
+                        </button>
+                      )}
 
                       {/* Bio */}
                       <div className="mt-2 max-w-sm">
