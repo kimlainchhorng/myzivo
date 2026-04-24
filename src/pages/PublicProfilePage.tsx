@@ -12,6 +12,7 @@ import { getPublicOrigin, getProfileShareUrl } from "@/lib/getPublicOrigin";
 import ZivoMobileNav from "@/components/app/ZivoMobileNav";
 import NavBar from "@/components/home/NavBar";
 import VerifiedBadge from "@/components/VerifiedBadge";
+import { isBlueVerified } from "@/lib/verification";
 import {
   ArrowLeft, Loader2, User, ImageIcon, Film, Grid3X3, UserPlus, UserCheck, UserX,
   Heart, MessageCircle, Lock, ShieldCheck, Users, Share2, Play, Eye, Bookmark, Globe,
@@ -853,7 +854,7 @@ export default function PublicProfilePage() {
           <div className="flex flex-col items-center pt-16 sm:pt-20 pb-4 px-4 max-w-3xl mx-auto">
             <h2 className="text-xl font-bold text-foreground inline-flex items-center gap-1.5">
               {resolvedProfile.full_name}
-              {resolvedProfile.is_verified && <VerifiedBadge size={18} />}
+              {isBlueVerified(resolvedProfile.is_verified) && <VerifiedBadge size={18} />}
             </h2>
             {resolvedProfile.bio && (
               <p className="mt-2 max-w-md text-center text-sm text-muted-foreground whitespace-pre-wrap break-words">

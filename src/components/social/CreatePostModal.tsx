@@ -14,6 +14,7 @@ import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import VerifiedBadge from "@/components/VerifiedBadge";
+import { isBlueVerified } from "@/lib/verification";
 import { uploadWithProgress } from "@/utils/uploadWithProgress";
 
 interface CreatePostModalProps {
@@ -611,7 +612,7 @@ export default function CreatePostModal({
                         </div>
                         <span className="text-xs font-medium text-foreground flex-1 text-left truncate inline-flex items-center gap-1">
                           <span className="truncate">{u.full_name}</span>
-                          {u.is_verified && <VerifiedBadge size={11} />}
+                          {isBlueVerified(u.is_verified) && <VerifiedBadge size={11} interactive={false} />}
                         </span>
                         {isTagged && <span className="text-primary text-xs">✓</span>}
                       </button>
@@ -714,7 +715,7 @@ export default function CreatePostModal({
                     </div>
                     <span className="text-xs font-medium text-foreground inline-flex items-center gap-1">
                       <span>{u.full_name}</span>
-                      {u.is_verified && <VerifiedBadge size={11} />}
+                      {isBlueVerified(u.is_verified) && <VerifiedBadge size={11} interactive={false} />}
                     </span>
                   </button>
                 ))}

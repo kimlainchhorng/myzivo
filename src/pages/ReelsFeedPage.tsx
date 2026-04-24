@@ -83,6 +83,7 @@ const CreatePostModal = lazy(() => import("@/components/social/CreatePostModal")
 const SafeCaption = lazy(() => import("@/components/social/SafeCaption"));
 import CollapsibleCaption from "@/components/social/CollapsibleCaption";
 import VerifiedBadge from "@/components/VerifiedBadge";
+import { isBlueVerified } from "@/lib/verification";
 import { formatCount, commentsLinkLabel } from "@/lib/social/formatCount";
 import { EngagementSkeleton } from "@/components/social/EngagementSkeleton";
 import SwipeableSheet from "@/components/social/SwipeableSheet";
@@ -1032,7 +1033,7 @@ export default function ReelsFeedPage() {
                             <div className="flex-1 min-w-0 leading-tight">
                               <p className="text-sm font-semibold text-foreground truncate flex items-center gap-1">
                                 <span className="truncate">{post.author_name}</span>
-                                {post.author_is_verified && <VerifiedBadge size={14} />}
+                                {isBlueVerified(post.author_is_verified) && <VerifiedBadge size={14} />}
                               </p>
                               <p className="text-[11px] text-muted-foreground truncate">
                                 {(() => {
@@ -1592,7 +1593,7 @@ function ReelSlide({ item, currentUserId, onClose }: { item: FeedItem; currentUs
               {isShared && (
                 <p className="text-white/50 text-[11px] mb-1 drop-shadow flex items-center gap-1">
                   <Share2 className="h-3 w-3" />
-                  Shared by {item.author_name}{item.author_is_verified && <VerifiedBadge size={11} className="ml-0.5" />}
+                  Shared by {item.author_name}{isBlueVerified(item.author_is_verified) && <VerifiedBadge size={11} className="ml-0.5" interactive={false} />}
                 </p>
               )}
             </>
@@ -2237,7 +2238,7 @@ function FeedCard({ item, currentUserId, onOpenFullscreen, autoPlayVideo, detail
                 <div className="flex-1 min-w-0 text-left">
                   <p className="text-[13px] font-semibold text-foreground truncate flex items-center gap-1">
                     <span className="truncate">{item.author_name}</span>
-                    {item.author_is_verified && <VerifiedBadge size={13} />}
+                    {isBlueVerified(item.author_is_verified) && <VerifiedBadge size={13} />}
                   </p>
                   <div className="flex items-center gap-1">
                     <p className="text-[10px] text-muted-foreground">{timeAgo}</p>
@@ -2436,7 +2437,7 @@ function FeedCard({ item, currentUserId, onOpenFullscreen, autoPlayVideo, detail
                 <div className="flex-1 min-w-0 text-left">
                   <p className="text-[13px] font-semibold text-foreground truncate flex items-center gap-1">
                     <span className="truncate">{item.author_name}</span>
-                    {item.author_is_verified && <VerifiedBadge size={13} />}
+                    {isBlueVerified(item.author_is_verified) && <VerifiedBadge size={13} />}
                   </p>
                   <p className="text-[10px] text-muted-foreground">{timeAgo}</p>
                 </div>

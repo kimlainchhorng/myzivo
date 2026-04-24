@@ -13,6 +13,7 @@ import { toast } from "sonner";
 import { CommentRowsSkeleton } from "@/components/social/EngagementSkeleton";
 import SwipeableSheet from "@/components/social/SwipeableSheet";
 import VerifiedBadge from "@/components/VerifiedBadge";
+import { isBlueVerified } from "@/lib/verification";
 
 const REACTION_EMOJIS = ["❤️", "😂", "😮", "😢", "🔥"];
 
@@ -181,7 +182,7 @@ function CommentItem({
             <p className="text-[13px] leading-snug">
               <span className="font-semibold mr-1.5 inline-flex items-center gap-0.5 align-middle">
                 {comment.author_name}
-                {comment.author_is_verified && <VerifiedBadge size={12} />}
+                {isBlueVerified(comment.author_is_verified) && <VerifiedBadge size={12} />}
               </span>
               {comment.content}
             </p>
