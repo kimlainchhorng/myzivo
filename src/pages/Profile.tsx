@@ -509,7 +509,7 @@ const Profile = () => {
 
                     {/* Avatar overlapping cover */}
                     <div className="relative z-10 -mt-11 px-6">
-                      <div className="flex justify-center">
+                      <div className="flex justify-start">
                         <motion.div
                           className="relative group/avatar"
                           whileHover={{ scale: 1.05 }}
@@ -537,8 +537,8 @@ const Profile = () => {
                     </div>
 
                     {/* Name & status */}
-                    <div className="px-6 pb-1.5 pt-2 text-center">
-                      <CardTitle className="flex items-center justify-center gap-2 text-lg font-bold">
+                    <div className="px-6 pb-1.5 pt-2 text-left">
+                      <CardTitle className="flex items-center justify-start gap-2 text-lg font-bold">
                         <Sparkles className="h-4 w-4 text-primary" />
                         {profile?.full_name || t("profile.set_name")}
                         {profile?.is_verified && (
@@ -549,7 +549,7 @@ const Profile = () => {
                         )}
                       </CardTitle>
                       {/* Email hidden — only visible to account owner in settings */}
-                      <div className="flex items-center justify-center gap-2 mt-3">
+                      <div className="flex flex-wrap items-center justify-start gap-2 mt-3">
                         <Badge className="bg-primary/12 text-primary border-primary/25 font-semibold rounded-full px-3 py-1 shadow-sm">
                           <Star className="w-3 h-3 mr-1 fill-primary" /> {profile?.status || t("profile.active_member")}
                         </Badge>
@@ -561,7 +561,7 @@ const Profile = () => {
                       </div>
 
                       {/* Bio */}
-                      <div className="mx-auto mt-2 max-w-sm px-2">
+                      <div className="mt-2 max-w-sm">
                         <textarea
                           value={bioDraft}
                           onChange={(e) => setBioDraft(e.target.value)}
@@ -570,7 +570,7 @@ const Profile = () => {
                           rows={2}
                           className="w-full resize-none rounded-2xl border border-border/50 bg-background/80 px-3 py-2 text-xs text-foreground outline-none placeholder:text-muted-foreground focus:border-primary/40 focus:ring-2 focus:ring-primary/10"
                         />
-                        <div className="mt-2 flex justify-center">
+                        <div className="mt-2 flex justify-start">
                           <Button
                             type="button"
                             size="sm"
