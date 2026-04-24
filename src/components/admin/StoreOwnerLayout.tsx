@@ -311,6 +311,10 @@ export default function StoreOwnerLayout({ children, title, storeId, storeName, 
               <p className="mt-0.5 text-[10px] text-primary/80">Setup progress: {lodgingSetupProgress ? `${lodgingSetupProgress.complete}/${lodgingSetupProgress.total} ready` : "open Hotel Overview"}.</p>
               {lodgingSetupProgress && <div className="mt-1.5 h-1.5 overflow-hidden rounded-full bg-primary/15"><div className="h-full rounded-full bg-primary" style={{ width: `${lodgingSetupProgress.percent}%` }} /></div>}
               <div className="mt-1.5 flex items-center gap-1 text-[10px] font-medium text-primary/90"><ListChecks className="h-3 w-3" /> Rate plans and guest requests enabled</div>
+              <div className="mt-2 grid grid-cols-2 gap-1.5">
+                <Button size="sm" variant="secondary" className="h-7 px-2 text-[10px]" onClick={() => { onTabChange?.("lodge-overview"); closeSidebar(); }}>Open Overview</Button>
+                <Button size="sm" className="h-7 px-2 text-[10px]" onClick={() => { onTabChange?.("lodge-rooms"); closeSidebar(); }}>Continue Setup</Button>
+              </div>
             </div>
           )}
           <div className="space-y-0.5" role="group" aria-labelledby="sidebar-group-manage">
