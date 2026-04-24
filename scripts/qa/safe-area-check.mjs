@@ -37,6 +37,15 @@ const DEVICES = [
   { name: "iPad Pro 11\" landscape", top: 24, bottom: 20, left: 20, right: 20 },
 ];
 
+// ── Shared safe-area tokens (mirrored from src/index.css `:root`) ────────
+// Keep in sync with --zivo-safe-top-* CSS custom properties.
+const SAFE_TOKENS = {
+  "--zivo-safe-top-overlay": "max(env(safe-area-inset-top, 0px), 60px)",
+  "--zivo-safe-top-sheet": "max(env(safe-area-inset-top, 0px), 44px)",
+  "--zivo-safe-top-sticky":
+    "max(calc(env(safe-area-inset-top, 0px) + 0.625rem), 48px)",
+};
+
 // ── Targets: files + named selectors with the inline style snippet ───────
 const TARGETS = [
   {
@@ -44,10 +53,11 @@ const TARGETS = [
     elements: [
       {
         name: "Sheet panel paddingTop",
-        // inside style={{ ... paddingTop: safeAreaTop ? "..." : undefined ...
         property: "paddingTop",
-        // The actual expression we ship:
-        expression: 'max(env(safe-area-inset-top, 0px), 0px)',
+        // We ship `var(--zivo-safe-top-sheet)`. The QA evaluator resolves the
+        // underlying CSS expression so it matches what the browser computes.
+        shipped: "var(--zivo-safe-top-sheet)",
+        expression: SAFE_TOKENS["--zivo-safe-top-sheet"],
       },
     ],
   },
@@ -57,24 +67,43 @@ const TARGETS = [
       {
         name: "Feed sticky header",
         property: "paddingTop",
-        expression:
-          "max(calc(env(safe-area-inset-top, 0px) + 0.625rem), 3rem)",
+        shipped: "var(--zivo-safe-top-sticky)",
+        expression: SAFE_TOKENS["--zivo-safe-top-sticky"],
       },
       {
         name: "Search overlay header",
         property: "paddingTop",
-        expression:
-          "max(calc(env(safe-area-inset-top, 0px) + 0.5rem), 3rem)",
+        shipped: "var(--zivo-safe-top-sticky)",
+        expression: SAFE_TOKENS["--zivo-safe-top-sticky"],
       },
       {
         name: "Post-detail viewer header",
         property: "paddingTop",
-        expression: "max(env(safe-area-inset-top, 0px), 3.75rem)",
+        shipped: "var(--zivo-safe-top-overlay)",
+        expression: SAFE_TOKENS["--zivo-safe-top-overlay"],
       },
       {
         name: "ReelSlide close button (top)",
         property: "top",
-        expression: "max(env(safe-area-inset-top, 0px), 3.75rem)",
+        shipped: "var(--zivo-safe-top-overlay)",
+        expression: SAFE_TOKENS["--zivo-safe-top-overlay"],
+      },
+    ],
+  },
+  {
+    file: "src/index.css",
+    elements: [
+      {
+        name: "--zivo-safe-top-overlay token",
+        property: "var",
+        shipped: SAFE_TOKENS["--zivo-safe-top-overlay"],
+        expression: SAFE_TOKENS["--zivo-safe-top-overlay"],
+      },
+      {
+        name: "--zivo-safe-top-sheet token",
+        property: "var",
+        shipped: SAFE_TOKENS["--zivo-safe-top-sheet"],
+        expression: SAFE_TOKENS["--zivo-safe-top-sheet"],
       },
     ],
   },
@@ -201,7 +230,7 @@ const rows = [];
 
 for (const target of TARGETS) {
   for (const el of target.elements) {
-    const present = verifyPresent(target.file, el.expression);
+    const present = verifyPresent(target.file, el.shipped || el.expression);
     if (!present) {
       rows.push({
         device: "—",
