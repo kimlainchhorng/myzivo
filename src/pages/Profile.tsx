@@ -581,6 +581,39 @@ const Profile = () => {
                         )}
                       </div>
 
+                      <button
+                        type="button"
+                        onClick={() => navigate("/account/verification")}
+                        className={cn(
+                          "mt-3 inline-flex min-h-[34px] items-center gap-2 rounded-full border px-3.5 py-1.5 text-xs font-bold shadow-sm transition-transform active:scale-95",
+                          profile?.is_verified
+                            ? "border-[hsl(var(--flights)/0.28)] bg-[hsl(var(--flights)/0.10)] text-[hsl(var(--flights))]"
+                            : latestVerificationRequest?.status === "pending"
+                              ? "border-amber-500/25 bg-amber-500/10 text-amber-600"
+                              : latestVerificationRequest?.status === "rejected"
+                                ? "border-destructive/20 bg-destructive/5 text-destructive"
+                                : "border-[hsl(var(--flights)/0.25)] bg-[hsl(var(--flights)/0.08)] text-[hsl(var(--flights))]"
+                        )}
+                      >
+                        {profile?.is_verified ? (
+                          <>
+                            <BlueVerifiedBadge className="h-4 w-4 ring-0" /> Blue verified
+                          </>
+                        ) : latestVerificationRequest?.status === "pending" ? (
+                          <>
+                            <Loader2 className="h-3.5 w-3.5 animate-spin" /> Verification pending
+                          </>
+                        ) : latestVerificationRequest?.status === "rejected" ? (
+                          <>
+                            <AlertCircle className="h-3.5 w-3.5" /> Reapply for blue verified
+                          </>
+                        ) : (
+                          <>
+                            <BadgeCheck className="h-4 w-4" /> Get blue verified
+                          </>
+                        )}
+                      </button>
+
                       {/* Bio */}
                       <div className="mt-2 max-w-sm">
                         <textarea
