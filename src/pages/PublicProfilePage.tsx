@@ -1163,9 +1163,10 @@ export default function PublicProfilePage() {
                     animate={{ opacity: 1 }}
                     exit={{ opacity: 0 }}
                     className="fixed inset-0 z-50 bg-background/95 backdrop-blur-sm flex flex-col overflow-y-auto"
+                    style={{ paddingTop: 'var(--zivo-safe-top-overlay)' }}
                   >
                     {/* Header bar */}
-                    <div className="sticky top-0 z-10 flex items-center gap-3 px-4 py-2 bg-background/80 backdrop-blur-lg border-b border-border safe-area-top">
+                    <div className="sticky top-0 z-10 flex items-center gap-3 px-4 py-2 bg-background/80 backdrop-blur-lg border-b border-border">
                       <button onClick={() => setSelectedPost(null)} className="min-h-[44px] min-w-[44px] flex items-center justify-center -ml-2">
                         <ArrowLeft className="h-5 w-5 text-foreground" />
                       </button>

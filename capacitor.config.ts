@@ -16,7 +16,7 @@ const config: CapacitorConfig = {
     : {}),
   plugins: {
     StatusBar: {
-      overlaysWebView: true,
+      overlaysWebView: false,
     },
     SplashScreen: {
       launchAutoHide: true,

@@ -596,10 +596,11 @@ export default function ProfileContentTabs({ userId }: { userId?: string }) {
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
               className="fixed inset-0 z-[9999] bg-black flex flex-col"
+              style={{ paddingTop: "var(--zivo-safe-top-overlay)" }}
             >
               {/* Header */}
-              <div className="flex items-center gap-3 p-3 shrink-0">
-                <button onClick={() => { setSelectedPost(null); setShowPostMenu(false); setEditingCaption(false); }} className="text-white/80 p-1">
+              <div className="flex items-center gap-3 px-3 pb-3 shrink-0">
+                <button onClick={() => { setSelectedPost(null); setShowPostMenu(false); setEditingCaption(false); }} className="text-white/80 p-1 min-h-[44px] min-w-[44px] flex items-center justify-center">
                   <X className="w-6 h-6" />
                 </button>
                 {selectedPost.user.avatar ? (
@@ -660,7 +661,7 @@ export default function ProfileContentTabs({ userId }: { userId?: string }) {
               </div>
 
               {/* Bottom bar */}
-              <div className="p-4 space-y-3 shrink-0 bg-gradient-to-t from-black/80 to-transparent">
+              <div className="p-4 space-y-3 shrink-0 bg-gradient-to-t from-black/80 to-transparent" style={{ paddingBottom: "max(calc(env(safe-area-inset-bottom, 0px) + 1rem), 1rem)" }}>
                 {editingCaption ? (
                   <div className="flex items-center gap-2">
                     <input
