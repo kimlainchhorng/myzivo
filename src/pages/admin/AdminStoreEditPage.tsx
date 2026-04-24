@@ -3736,23 +3736,23 @@ export default function AdminStoreEditPage() {
               <TabsContent value="lodge-overview" data-testid="lodging-tab-lodge-overview"><LodgingOverviewSection storeId={storeId!} /></TabsContent>
               <TabsContent value="lodge-rooms" data-testid="lodging-tab-lodge-rooms"><LodgingRoomsSection storeId={storeId!} /></TabsContent>
               <TabsContent value="lodge-rate-plans" data-testid="lodging-tab-lodge-rate-plans"><LodgingRatePlansSection storeId={storeId!} /></TabsContent>
-              <TabsContent value="lodge-reservations"><LodgingReservationsSection storeId={storeId!} /></TabsContent>
-              <TabsContent value="lodge-calendar"><LodgingCalendarSection storeId={storeId!} /></TabsContent>
-              <TabsContent value="lodge-guests"><LodgingGuestsSection storeId={storeId!} /></TabsContent>
-              <TabsContent value="lodge-frontdesk"><LodgingFrontDeskSection storeId={storeId!} /></TabsContent>
-              <TabsContent value="lodge-housekeeping"><LodgingHousekeepingSection storeId={storeId!} /></TabsContent>
-              <TabsContent value="lodge-maintenance"><LodgingMaintenanceSection storeId={storeId!} /></TabsContent>
+              <TabsContent value="lodge-reservations" data-testid="lodging-tab-lodge-reservations"><LodgingReservationsSection storeId={storeId!} /></TabsContent>
+              <TabsContent value="lodge-calendar" data-testid="lodging-tab-lodge-calendar"><LodgingCalendarSection storeId={storeId!} /></TabsContent>
+              <TabsContent value="lodge-guests" data-testid="lodging-tab-lodge-guests"><LodgingGuestsSection storeId={storeId!} /></TabsContent>
+              <TabsContent value="lodge-frontdesk" data-testid="lodging-tab-lodge-frontdesk"><LodgingFrontDeskSection storeId={storeId!} /></TabsContent>
+              <TabsContent value="lodge-housekeeping" data-testid="lodging-tab-lodge-housekeeping"><LodgingHousekeepingSection storeId={storeId!} /></TabsContent>
+              <TabsContent value="lodge-maintenance" data-testid="lodging-tab-lodge-maintenance"><LodgingMaintenanceSection storeId={storeId!} /></TabsContent>
               <TabsContent value="lodge-addons" data-testid="lodging-tab-lodge-addons"><LodgingAddOnsSection storeId={storeId!} /></TabsContent>
               <TabsContent value="lodge-guest-requests" data-testid="lodging-tab-lodge-guest-requests"><LodgingGuestRequestsSection storeId={storeId!} /></TabsContent>
-              <TabsContent value="lodge-dining"><LodgingDiningSection storeId={storeId!} /></TabsContent>
-              <TabsContent value="lodge-experiences"><LodgingExperiencesSection storeId={storeId!} /></TabsContent>
-              <TabsContent value="lodge-transport"><LodgingTransportSection storeId={storeId!} /></TabsContent>
-              <TabsContent value="lodge-wellness"><LodgingWellnessSection storeId={storeId!} /></TabsContent>
-              <TabsContent value="lodge-amenities"><LodgingAmenitiesSection storeId={storeId!} /></TabsContent>
-              <TabsContent value="lodge-property"><LodgingPropertyProfileSection storeId={storeId!} /></TabsContent>
-              <TabsContent value="lodge-policies"><LodgingPoliciesSection storeId={storeId!} /></TabsContent>
-              <TabsContent value="lodge-reviews"><LodgingReviewsSection storeId={storeId!} /></TabsContent>
-              <TabsContent value="lodge-reports"><LodgingReportsSection storeId={storeId!} /></TabsContent>
+              <TabsContent value="lodge-dining" data-testid="lodging-tab-lodge-dining"><LodgingDiningSection storeId={storeId!} /></TabsContent>
+              <TabsContent value="lodge-experiences" data-testid="lodging-tab-lodge-experiences"><LodgingExperiencesSection storeId={storeId!} /></TabsContent>
+              <TabsContent value="lodge-transport" data-testid="lodging-tab-lodge-transport"><LodgingTransportSection storeId={storeId!} /></TabsContent>
+              <TabsContent value="lodge-wellness" data-testid="lodging-tab-lodge-wellness"><LodgingWellnessSection storeId={storeId!} /></TabsContent>
+              <TabsContent value="lodge-amenities" data-testid="lodging-tab-lodge-amenities"><LodgingAmenitiesSection storeId={storeId!} /></TabsContent>
+              <TabsContent value="lodge-property" data-testid="lodging-tab-lodge-property"><LodgingPropertyProfileSection storeId={storeId!} /></TabsContent>
+              <TabsContent value="lodge-policies" data-testid="lodging-tab-lodge-policies"><LodgingPoliciesSection storeId={storeId!} /></TabsContent>
+              <TabsContent value="lodge-reviews" data-testid="lodging-tab-lodge-reviews"><LodgingReviewsSection storeId={storeId!} /></TabsContent>
+              <TabsContent value="lodge-reports" data-testid="lodging-tab-lodge-reports"><LodgingReportsSection storeId={storeId!} /></TabsContent>
             </>
           )}
 
