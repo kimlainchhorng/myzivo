@@ -31,6 +31,7 @@ import {
   Sheet, SheetContent, SheetHeader, SheetTitle,
 } from "@/components/ui/sheet";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
+import VerifiedBadge from "@/components/VerifiedBadge";
 
 /* ============================================= */
 /*  PARTNER OPTIONS                              */
