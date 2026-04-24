@@ -191,7 +191,21 @@ export default function MorePage() {
     enabled: !!user,
   });
 
-  // Real follower count
+  // Real friend count (accepted friendships) — matches /profile
+  const { data: friendCount = 0 } = useQuery({
+    queryKey: ["more-friends", user?.id],
+    queryFn: async () => {
+      const { count } = await (supabase as any)
+        .from("friendships")
+        .select("*", { count: "exact", head: true })
+        .eq("status", "accepted")
+        .or(`user_id.eq.${user!.id},friend_id.eq.${user!.id}`);
+      return count || 0;
+    },
+    enabled: !!user,
+  });
+
+  // Real follower count (people following this user)
   const { data: followerCount = 0 } = useQuery({
     queryKey: ["more-followers", user?.id],
     queryFn: async () => {
@@ -204,20 +218,24 @@ export default function MorePage() {
     enabled: !!user,
   });
 
-  // Real post count
-  const { data: postCount = 0 } = useQuery({
-    queryKey: ["more-posts", user?.id],
+  // Real following count (people this user follows)
+  const { data: followingCount = 0 } = useQuery({
+    queryKey: ["more-following", user?.id],
     queryFn: async () => {
       const { count } = await (supabase as any)
-        .from("user_posts")
+        .from("followers")
         .select("*", { count: "exact", head: true })
-        .eq("user_id", user!.id);
+        .eq("follower_id", user!.id);
       return count || 0;
     },
     enabled: !!user,
   });
 
-  const displayName = profile?.display_name || user?.email?.split("@")[0] || "User";
+  const displayName =
+    profile?.display_name?.trim() ||
+    profile?.username?.trim() ||
+    user?.email?.split("@")[0] ||
+    "User";
   const avatarUrl = profile?.avatar_url;
   const username = profile?.username;
   const isVerified = profile?.is_verified;
@@ -239,21 +257,38 @@ export default function MorePage() {
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-1.5">
             <p className="font-bold text-[15px] truncate">{displayName}</p>
-            {isVerified && <BadgeCheck className="h-4 w-4 text-primary shrink-0" />}
+            {isVerified && (
+              <span className="relative inline-flex h-4 w-4 items-center justify-center shrink-0" aria-label="Verified" title="Verified">
+                <svg viewBox="0 0 24 24" className="h-full w-full" aria-hidden="true">
+                  <path
+                    d="M12 1.5l2.39 1.74 2.95-.13.78 2.85 2.55 1.5-1.07 2.74 1.07 2.74-2.55 1.5-.78 2.85-2.95-.13L12 22.5l-2.39-1.74-2.95.13-.78-2.85-2.55-1.5 1.07-2.74-1.07-2.74 2.55-1.5.78-2.85 2.95.13L12 1.5z"
+                    fill="#1d9bf0"
+                  />
+                  <path
+                    d="M9.5 12.5l1.8 1.8 3.7-4.3"
+                    fill="none"
+                    stroke="#fff"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  />
+                </svg>
+              </span>
+            )}
           </div>
           {username && <p className="text-xs text-muted-foreground">@{username}</p>}
           <div className="flex gap-4 mt-1.5">
             <div className="text-center">
-              <p className="text-xs font-bold">{postCount}</p>
-              <p className="text-[9px] text-muted-foreground">Posts</p>
+              <p className="text-xs font-bold">{friendCount}</p>
+              <p className="text-[9px] text-muted-foreground">Friends</p>
             </div>
             <div className="text-center">
               <p className="text-xs font-bold">{followerCount}</p>
               <p className="text-[9px] text-muted-foreground">Followers</p>
             </div>
             <div className="text-center">
-              <p className="text-xs font-bold">{(profile?.profile_views || 0).toLocaleString()}</p>
-              <p className="text-[9px] text-muted-foreground">Views</p>
+              <p className="text-xs font-bold">{followingCount}</p>
+              <p className="text-[9px] text-muted-foreground">Following</p>
             </div>
           </div>
         </div>
