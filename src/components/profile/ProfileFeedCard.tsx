@@ -370,9 +370,12 @@ export default function ProfileFeedCard({
         {showReactionPicker && (
           <motion.div initial={{ opacity: 0, y: 10, scale: 0.9 }} animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 10, scale: 0.9 }}
+            role="toolbar" aria-label="Reactions"
             className="flex items-center gap-1 px-3 py-2 mx-3 mt-1 bg-card rounded-full shadow-lg border border-border/30 w-fit">
             {REACTIONS.map((emoji) => (
               <button key={emoji} onClick={() => handleReaction(emoji)}
+                aria-label={`React with ${emoji}`}
+                aria-pressed={selectedReaction === emoji}
                 className={cn("text-xl p-1.5 rounded-full transition-all active:scale-125 hover:bg-muted",
                   selectedReaction === emoji && "bg-primary/10 ring-2 ring-primary/30")}>
                 {emoji}
@@ -383,54 +386,74 @@ export default function ProfileFeedCard({
       </AnimatePresence>
 
       {/* Action buttons with counts */}
-      <div className="flex items-center px-3 py-1.5">
+      <div className="flex items-center px-2.5 sm:px-3 py-1.5">
         <div className="flex items-center gap-1 flex-1">
           <button
             onClick={() => onToggleLike(item)}
             onContextMenu={(e) => { e.preventDefault(); setShowReactionPicker(!showReactionPicker); }}
-            className="min-h-[44px] min-w-[40px] flex items-center justify-center gap-1 group"
+            aria-label={isLiked ? `Unlike post${formatCount(item.likes) ? `, ${formatCount(item.likes)} likes` : ""}` : `Like post${formatCount(item.likes) ? `, ${formatCount(item.likes)} likes` : ""}`}
+            aria-pressed={isLiked}
+            className="min-h-[44px] min-w-[36px] sm:min-w-[40px] flex items-center justify-center gap-1 group"
           >
             {selectedReaction ? (
-              <span className="text-lg">{selectedReaction}</span>
+              <span className="text-lg" aria-hidden>{selectedReaction}</span>
             ) : (
-              <Heart className={cn("h-[22px] w-[22px] transition-all", isLiked ? "text-destructive fill-destructive scale-110" : "text-foreground group-active:scale-125")} />
+              <Heart aria-hidden className={cn("h-[22px] w-[22px] transition-all", isLiked ? "text-destructive fill-destructive scale-110" : "text-foreground group-active:scale-125")} />
             )}
             {formatCount(item.likes) && (
-              <span className={cn("text-[12px] font-semibold", isLiked || selectedReaction ? "text-destructive" : "text-muted-foreground")}>
+              <span aria-hidden className={cn("text-[12px] font-semibold whitespace-nowrap", isLiked || selectedReaction ? "text-destructive" : "text-muted-foreground")}>
                 {formatCount(item.likes)}
               </span>
             )}
           </button>
-          <button onClick={() => setShowComments(true)} className="min-h-[44px] min-w-[40px] flex items-center justify-center text-foreground gap-1">
-            <MessageCircle className="h-[22px] w-[22px]" />
+          <button
+            onClick={openComments}
+            aria-label={`Open comments${formatCount(item.comments) ? `, ${formatCount(item.comments)} comments` : ""}`}
+            className="min-h-[44px] min-w-[36px] sm:min-w-[40px] flex items-center justify-center text-foreground gap-1"
+          >
+            <MessageCircle aria-hidden className="h-[22px] w-[22px]" />
             {formatCount(item.comments) && (
-              <span className="text-[12px] text-muted-foreground font-semibold">
+              <span aria-hidden className="text-[12px] text-muted-foreground font-semibold whitespace-nowrap">
                 {formatCount(item.comments)}
               </span>
             )}
           </button>
-          <button onClick={() => onShare(item.id)} className="min-h-[44px] min-w-[40px] flex items-center justify-center text-foreground gap-1">
-            <Share2 className="h-[22px] w-[22px]" />
+          <button
+            onClick={() => onShare(item.id)}
+            aria-label="Share post"
+            className="min-h-[44px] min-w-[36px] sm:min-w-[40px] flex items-center justify-center text-foreground gap-1"
+          >
+            <Share2 aria-hidden className="h-[22px] w-[22px]" />
           </button>
         </div>
-        <button onClick={() => onToggleBookmark(item)} className="min-h-[44px] min-w-[44px] flex items-center justify-center">
-          <Bookmark className={cn("h-[22px] w-[22px] transition-all", isBookmarked ? "text-primary fill-primary" : "text-foreground")} />
+        <button
+          onClick={() => onToggleBookmark(item)}
+          aria-label={isBookmarked ? "Remove bookmark" : "Save post"}
+          aria-pressed={isBookmarked}
+          className="min-h-[44px] min-w-[44px] flex items-center justify-center"
+        >
+          <Bookmark aria-hidden className={cn("h-[22px] w-[22px] transition-all", isBookmarked ? "text-primary fill-primary" : "text-foreground")} />
         </button>
       </div>
 
-      {/* View all comments */}
+      {/* View all comments — deep-linkable */}
       {item.comments > 0 && (
-        <button onClick={() => setShowComments(true)} className="px-3 pb-2 text-left active:opacity-70">
+        <a
+          href={`?post=${encodeURIComponent(item.id)}&src=user&comments=1`}
+          onClick={(e) => { e.preventDefault(); openComments(); }}
+          aria-label={`View all ${formatCount(item.comments) ?? item.comments} comments on this post`}
+          className="block px-3 pb-2 text-left active:opacity-70"
+        >
           <p className="text-[13px] text-muted-foreground font-medium hover:text-foreground transition-colors">
             {commentsLinkLabel(item.comments)}
           </p>
-        </button>
+        </a>
       )}
 
       {/* Views for videos */}
       {isVideo && (item.views || 0) > 0 && (
         <div className="px-3 pb-2 flex items-center gap-1">
-          <Eye className="h-3 w-3 text-muted-foreground" />
+          <Eye aria-hidden className="h-3 w-3 text-muted-foreground" />
           <p className="text-[11px] text-muted-foreground">{(item.views || 0).toLocaleString()} views</p>
         </div>
       )}
@@ -438,7 +461,7 @@ export default function ProfileFeedCard({
       {/* Comments Sheet */}
       <CommentsSheet
         open={showComments}
-        onClose={() => setShowComments(false)}
+        onClose={closeComments}
         postId={toUserPostInteractionId(item.id)}
         postSource="user"
         currentUserId={currentUserId || null}
