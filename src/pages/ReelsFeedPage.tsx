@@ -2112,17 +2112,11 @@ function FeedCard({ item, currentUserId, onOpenFullscreen, autoPlayVideo, detail
           {/* Sharer's own caption (not the original post's caption) */}
           {item.caption && item.caption !== item.shared_from_caption && (
             <div className="px-3 pb-2">
-              <div className={cn("text-[13px] text-foreground leading-snug", !showSharerCaption && "line-clamp-3")}>
+              <CollapsibleCaption text={item.caption} lines={3} className="text-[13px]">
                 <Suspense fallback={<span>{item.caption}</span>}>
                   <SafeCaption text={item.caption} />
                 </Suspense>
-                {!showSharerCaption && item.caption.length > 140 && (
-                  <span onClick={(e) => { e.stopPropagation(); setShowSharerCaption(true); }} className="text-muted-foreground ml-1 cursor-pointer">… See more</span>
-                )}
-              </div>
-              {showSharerCaption && item.caption.length > 140 && (
-                <span onClick={(e) => { e.stopPropagation(); setShowSharerCaption(false); }} className="text-[12px] text-muted-foreground cursor-pointer">See less</span>
-              )}
+              </CollapsibleCaption>
             </div>
           )}
 
