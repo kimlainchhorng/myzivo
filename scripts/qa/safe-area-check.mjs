@@ -55,26 +55,26 @@ const TARGETS = [
     file: "src/pages/ReelsFeedPage.tsx",
     elements: [
       {
-        name: "Post-detail sticky header",
+        name: "Feed sticky header",
         property: "paddingTop",
         expression:
-          "max(calc(env(safe-area-inset-top, 0px) + 0.625rem), 0.625rem)",
+          "max(calc(env(safe-area-inset-top, 0px) + 0.625rem), 2.25rem)",
+      },
+      {
+        name: "Search overlay header",
+        property: "paddingTop",
+        expression:
+          "max(calc(env(safe-area-inset-top, 0px) + 0.5rem), 2.25rem)",
       },
       {
         name: "Post-detail viewer header",
         property: "paddingTop",
-        expression:
-          "max(calc(env(safe-area-inset-top, 0px) + 0.5rem), 0.5rem)",
+        expression: "max(env(safe-area-inset-top, 0px), 2.75rem)",
       },
       {
         name: "ReelSlide close button (top)",
         property: "top",
-        expression: "max(env(safe-area-inset-top, 0px), 12px)",
-      },
-      {
-        name: "Reels overlay paddingTop",
-        property: "paddingTop",
-        expression: "max(env(safe-area-inset-top, 0px), 0.75rem)",
+        expression: "max(env(safe-area-inset-top, 0px), 2.75rem)",
       },
     ],
   },
