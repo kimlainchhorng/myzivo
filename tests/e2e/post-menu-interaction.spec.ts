@@ -20,6 +20,7 @@
  * data.
  */
 import { test, expect, devices, type Page, type Locator } from "@playwright/test";
+import { seedProfilePosts } from "./fixtures/seedProfilePosts";
 
 const DEVICE_PROFILES = [
   { label: "iPhone 13 (iOS Safari)", device: devices["iPhone 13"] },
