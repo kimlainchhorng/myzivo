@@ -593,11 +593,20 @@ export default function AdminStoreEditPage() {
 
   useEffect(() => {
     const isStoreLodging = isLodgingStoreCategory(store?.category);
-    if (!appliedLodgingDefaultTabRef.current && isStoreLodging && activeTab === "profile") {
+    const requestedTab = searchParams.get("tab");
+    if (requestedTab?.startsWith("lodge-") && !isStoreLodging) {
+      handleTabChange("profile");
+      return;
+    }
+    if (isStoreLodging && requestedTab && ![...BASE_TAB_IDS, ...LODGING_TAB_IDS].includes(requestedTab)) {
+      handleTabChange("lodge-overview");
+      return;
+    }
+    if (!appliedLodgingDefaultTabRef.current && isStoreLodging && activeTab === "profile" && !requestedTab) {
       appliedLodgingDefaultTabRef.current = true;
       handleTabChange("lodge-overview");
     }
-  }, [store?.category, activeTab, handleTabChange]);
+  }, [store?.category, activeTab, searchParams, handleTabChange]);
 
   const saveProfile = useMutation({
     mutationFn: async () => {
