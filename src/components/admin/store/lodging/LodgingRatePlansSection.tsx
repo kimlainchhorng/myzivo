@@ -1,7 +1,7 @@
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { BedDouble, CalendarDays, DollarSign } from "lucide-react";
-import { EmptyPanel, LoadingPanel, SectionShell, StatCard, money } from "./LodgingOperationsShared";
+import { EmptyPanel, LoadingPanel, NextActions, SectionShell, StatCard, money } from "./LodgingOperationsShared";
 import { useLodgeRooms } from "@/hooks/lodging/useLodgeRooms";
 
 const weekdays = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
@@ -16,6 +16,7 @@ export default function LodgingRatePlansSection({ storeId }: { storeId: string }
   return (
     <SectionShell title="Rate Plans & Availability" subtitle="Room pricing, inventory, seasonal rates, discounts, and stay restrictions from Rooms & Rates." icon={CalendarDays} actions={<Button size="sm" onClick={goRooms}>Edit Rooms & Rates</Button>}>
       {isLoading ? <LoadingPanel /> : rooms.length === 0 ? <EmptyPanel title="No rooms to price yet" body="Create room types first, then add base rates, weekend pricing, seasonal rules, and unit inventory." actionLabel="Open Rooms & Rates" tab="lodge-rooms" /> : <>
+        {activeRooms.some((room) => !room.base_rate_cents || !room.units_total) && <div className="rounded-lg border border-primary/20 bg-primary/5 p-3"><p className="text-sm font-semibold text-foreground">Rate readiness needs attention</p><p className="mt-1 text-xs text-muted-foreground">Add base rates and unit inventory to every active room so availability and booking flows stay accurate.</p><Button size="sm" className="mt-3 h-8" onClick={goRooms}>Update room pricing</Button></div>}
         <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
           <StatCard label="Active room types" value={String(activeRooms.length)} icon={BedDouble} />
           <StatCard label="Total units" value={String(rooms.reduce((sum, room) => sum + (room.units_total || 0), 0))} icon={BedDouble} />
@@ -47,6 +48,7 @@ export default function LodgingRatePlansSection({ storeId }: { storeId: string }
             </div>
           ))}
         </div>
+        <NextActions actions={[{ label: "Edit room inventory", tab: "lodge-rooms", hint: "Update units, base rates, discounts, and stay rules." }, { label: "Open availability calendar", tab: "lodge-calendar", hint: "Review active inventory and arrival restrictions." }, { label: "Check reservations", tab: "lodge-reservations", hint: "Confirm rates are visible in booking workflows." }]} />
       </>}
     </SectionShell>
   );

@@ -38,7 +38,7 @@ export default function LodgingAddOnsSection({ storeId }: { storeId: string }) {
           <FilterRow values={["All", ...addonCategories]} current={category} onChange={setCategory} />
           <FilterRow values={statusFilters} current={status} onChange={setStatus} />
         </div>
-        {addons.length === 0 ? <EmptyPanel title="No add-ons yet" body="Add breakfast, transfers, spa, tours, late check-out, and packages inside each room type." actionLabel="Open Rooms & Rates" tab="lodge-rooms" /> : filtered.length === 0 ? <EmptyPanel title="No add-ons match these filters" body="Change the search, category, or status filter to review more room add-ons." actionLabel="Reset in Rooms & Rates" tab="lodge-rooms" /> : addonCategories.map((cat) => {
+        {addons.length === 0 ? <EmptyPanel title="Guest service catalog is ready to fill" body="Create breakfast, transfers, spa, tours, late check-out, celebration packages, and free perks from each room type." actionLabel="Add room add-ons" tab="lodge-rooms" /> : filtered.length === 0 ? <EmptyPanel title="No add-ons match these filters" body="Change the search, category, or status filter to review more room add-ons." actionLabel="Edit add-ons in Rooms" tab="lodge-rooms" /> : addonCategories.map((cat) => {
           const items = filtered.filter((a) => a.category === cat);
           if (!items.length) return null;
           return <div key={cat} className="space-y-2"><div className="flex items-center justify-between"><p className="text-sm font-semibold text-foreground">{cat}</p><Badge variant="outline">{items.length}</Badge></div><AddonList addons={items} emptyTitle="" emptyBody="" /><Button size="sm" variant="outline" className="h-8 text-xs" onClick={goRooms}>Edit in Rooms & Rates</Button></div>;
