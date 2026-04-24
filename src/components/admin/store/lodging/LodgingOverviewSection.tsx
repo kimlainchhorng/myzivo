@@ -1,5 +1,5 @@
 import { Button } from "@/components/ui/button";
-import { BedDouble, CheckCircle2, Hotel, KeyRound, PackagePlus } from "lucide-react";
+import { BedDouble, CheckCircle2, Hotel, KeyRound, ListChecks, PackagePlus } from "lucide-react";
 import { AddonList, LoadingPanel, NextActions, OpsSnapshot, SectionShell, StatCard, useLodgingOpsData } from "./LodgingOperationsShared";
 import LodgingSetupChecklist from "./LodgingSetupChecklist";
 import { useLodgeHousekeeping } from "@/hooks/lodging/useLodgeHousekeeping";
