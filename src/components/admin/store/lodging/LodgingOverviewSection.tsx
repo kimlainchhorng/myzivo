@@ -4,6 +4,8 @@ import { AddonList, LoadingPanel, NextActions, OpsSnapshot, SectionShell, StatCa
 import LodgingSetupChecklist, { getLodgingSetupItems } from "./LodgingSetupChecklist";
 import { useLodgeHousekeeping } from "@/hooks/lodging/useLodgeHousekeeping";
 
+const goTab = (tab: string) => window.dispatchEvent(new CustomEvent("lodge-set-tab", { detail: { tab } }));
+
 export default function LodgingOverviewSection({ storeId }: { storeId: string }) {
   const { rooms, profile, addons, reservations, isLoading } = useLodgingOpsData(storeId);
   const { data: housekeeping = [] } = useLodgeHousekeeping(storeId);
@@ -13,6 +15,13 @@ export default function LodgingOverviewSection({ storeId }: { storeId: string })
   const guestServicesReady = activeAddons > 0 || Boolean(profile?.facilities?.length || profile?.meal_plans?.length);
   const setupItems = getLodgingSetupItems({ rooms, profile, addons, housekeepingCount: housekeeping.length, maintenanceReady: true, reportsReady: reservations.length > 0 || rooms.length > 0 });
   const hasRates = rooms.some((r) => (r.base_rate_cents || 0) > 0 && (r.units_total || 0) > 0);
+  const nextAction = rooms.length === 0
+    ? { label: "Add first room", tab: "lodge-rooms", hint: "Create the first sellable room type and unit count." }
+    : !hasRates
+      ? { label: "Add base rates", tab: "lodge-rooms", hint: "Set base pricing and inventory for active room types." }
+      : activeAddons === 0
+        ? { label: "Add guest services", tab: "lodge-addons", hint: "Offer transfers, meals, spa, tours, and packages." }
+        : { label: "Open front desk", tab: "lodge-frontdesk", hint: "Run arrivals, in-house stays, and departures." };
   const setupMessage = rooms.length === 0
     ? "Hotel admin is installed. Add your first room to start."
     : !hasRates
@@ -28,21 +37,26 @@ export default function LodgingOverviewSection({ storeId }: { storeId: string })
           <div className="flex items-start gap-3">
             <span className="rounded-lg bg-primary/12 p-2 text-primary"><CheckCircle2 className="h-5 w-5" /></span>
             <div className="min-w-0 flex-1">
-              <p className="text-sm font-semibold text-foreground">Hotel admin is active</p>
+              <p className="text-sm font-semibold text-foreground">Hotel / Resort Admin Installed</p>
               <p className="mt-1 text-xs text-muted-foreground">{setupMessage}</p>
               <div className="mt-3 flex flex-wrap gap-1.5">
-                {["Hotel sidebar sections", "Rate plans", "Guest requests", "Add-ons manager", "Front desk", "Housekeeping", "Reports", "Folio & charges"].map((label) => <span key={label} className="rounded-full bg-background px-2.5 py-1 text-[10px] font-medium text-primary ring-1 ring-primary/15">{label}</span>)}
+                {["Admin sections enabled", "Deep links enabled", "Setup checklist enabled", "Rate plans enabled", "Guest requests enabled", "Folio & charges enabled"].map((label) => <span key={label} className="rounded-full bg-background px-2.5 py-1 text-[10px] font-medium text-primary ring-1 ring-primary/15">{label}</span>)}
+              </div>
+              <div className="mt-3 rounded-lg border border-primary/20 bg-background p-3">
+                <p className="text-xs font-semibold text-foreground">Next best action</p>
+                <p className="mt-1 text-xs text-muted-foreground">{nextAction.hint}</p>
+                <Button size="sm" className="mt-3 h-8" onClick={() => goTab(nextAction.tab)}>{nextAction.label}</Button>
               </div>
               <div className="mt-3 grid gap-2 sm:grid-cols-4">
-                <Button size="sm" variant="outline" onClick={() => window.dispatchEvent(new CustomEvent("lodge-set-tab", { detail: { tab: "lodge-overview" } }))}><CheckCircle2 className="mr-1.5 h-3.5 w-3.5" /> Checklist</Button>
-                <Button size="sm" variant="outline" onClick={() => window.dispatchEvent(new CustomEvent("lodge-set-tab", { detail: { tab: "lodge-rooms" } }))}><BedDouble className="mr-1.5 h-3.5 w-3.5" /> Rooms</Button>
-                <Button size="sm" variant="outline" onClick={() => window.dispatchEvent(new CustomEvent("lodge-set-tab", { detail: { tab: "lodge-addons" } }))}><PackagePlus className="mr-1.5 h-3.5 w-3.5" /> Add-ons</Button>
-                <Button size="sm" variant="outline" onClick={() => window.dispatchEvent(new CustomEvent("lodge-set-tab", { detail: { tab: "lodge-frontdesk" } }))}><KeyRound className="mr-1.5 h-3.5 w-3.5" /> Front desk</Button>
+                <Button size="sm" variant="outline" onClick={() => goTab("lodge-overview")}><CheckCircle2 className="mr-1.5 h-3.5 w-3.5" /> Checklist</Button>
+                <Button size="sm" variant="outline" onClick={() => goTab("lodge-rooms")}><BedDouble className="mr-1.5 h-3.5 w-3.5" /> Rooms</Button>
+                <Button size="sm" variant="outline" onClick={() => goTab("lodge-addons")}><PackagePlus className="mr-1.5 h-3.5 w-3.5" /> Add-ons</Button>
+                <Button size="sm" variant="outline" onClick={() => goTab("lodge-frontdesk")}><KeyRound className="mr-1.5 h-3.5 w-3.5" /> Front desk</Button>
               </div>
             </div>
           </div>
         </div>
-        <LodgingSetupChecklist items={setupItems} />
+        <LodgingSetupChecklist items={setupItems} wizard />
         <OpsSnapshot rooms={rooms} addons={addons} reservations={reservations} />
         <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
           <StatCard label="Rooms configured" value={String(rooms.length)} icon={Hotel} />

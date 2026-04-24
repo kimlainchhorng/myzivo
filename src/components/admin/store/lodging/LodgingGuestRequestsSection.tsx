@@ -25,7 +25,7 @@ export default function LodgingGuestRequestsSection({ storeId }: { storeId: stri
           <StatCard label="Failed / cancelled" value={String(failedServices.length)} icon={MessageSquareText} />
           <StatCard label="Completed services" value={String(completedServices.length)} icon={MessageSquareText} />
         </div>
-        {pending.length === 0 && addonReservations.length === 0 ? <EmptyPanel title="No guest service requests yet" body="When guests request add-ons, changes, or services, this workspace will summarize what needs review." actionLabel="Manage Add-ons" tab="lodge-addons" /> : (
+        {pending.length === 0 && addonReservations.length === 0 ? <EmptyPanel title="Guest request workspace is ready" body="Approved add-ons, change requests, service follow-ups, and reservation-linked guest needs will appear here for front-desk action." actionLabel="Configure guest add-ons" tab="lodge-addons" /> : (
           <div className="space-y-2">
             {[...pending.slice(0, 8), ...activeServices.slice(0, 4).map((reservation: any) => ({ id: `res-${reservation.id}`, type: "addon", status: "approved", reservation, price_delta_cents: reservation.extras_cents || 0, created_at: reservation.updated_at }))].map((item: any) => (
               <div key={item.id} className="rounded-lg border border-border bg-card p-3">

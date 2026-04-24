@@ -40,17 +40,17 @@ export function setupProgress(items: LodgingSetupItem[]) {
   return { complete, total: items.length, percent: items.length ? Math.round((complete / items.length) * 100) : 0 };
 }
 
-export default function LodgingSetupChecklist({ items, compact = false }: { items: LodgingSetupItem[]; compact?: boolean }) {
+export default function LodgingSetupChecklist({ items, compact = false, wizard = false }: { items: LodgingSetupItem[]; compact?: boolean; wizard?: boolean }) {
   const progress = setupProgress(items);
   return (
     <Card className="border-primary/20 bg-primary/5">
       <CardHeader className="pb-3">
         <CardTitle className="flex items-center justify-between gap-3 text-sm">
-          <span className="flex items-center gap-2"><ListChecks className="h-4 w-4 text-primary" /> Next Setup Steps</span>
+          <span className="flex items-center gap-2"><ListChecks className="h-4 w-4 text-primary" /> {wizard ? "Setup Wizard" : "Next Setup Steps"}</span>
           <Badge variant="secondary">{progress.complete}/{progress.total} ready</Badge>
         </CardTitle>
       </CardHeader>
-      <CardContent className={compact ? "space-y-1.5" : "grid gap-2 md:grid-cols-3"}>
+      <CardContent className={compact ? "space-y-1.5" : wizard ? "grid gap-2 sm:grid-cols-2" : "grid gap-2 md:grid-cols-3"}>
         {items.map((item) => (
           <div key={item.label} className="rounded-lg border border-border bg-card p-3">
             <div className="flex items-start justify-between gap-2">
@@ -63,7 +63,7 @@ export default function LodgingSetupChecklist({ items, compact = false }: { item
               </div>
               <Badge variant={item.ready ? "secondary" : "outline"} className="text-[10px]">{item.ready ? "Ready" : "Setup"}</Badge>
             </div>
-            {!compact && <Button size="sm" variant="outline" className="mt-3 h-8 w-full text-xs" onClick={() => goTab(item.tab)}>Open</Button>}
+            {!compact && <Button size="sm" variant={wizard && !item.ready ? "default" : "outline"} className="mt-3 h-8 w-full text-xs" onClick={() => goTab(item.tab)}>{item.ready ? "Review" : "Set up"}</Button>}
           </div>
         ))}
       </CardContent>

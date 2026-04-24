@@ -271,7 +271,7 @@ const AppHome = () => {
   }
   const { recommended, favorites, orderAgain } = usePersonalizedHome();
   const { data: profile } = useUserProfile();
-  const { data: ownerStore } = useOwnerStoreProfile();
+  const { data: ownerStore, isLoading: ownerStoreLoading } = useOwnerStoreProfile();
   const lodgingRooms = useLodgeRooms(ownerStore?.isLodging ? ownerStore.id : "");
   const lodgingProfile = useLodgePropertyProfile(ownerStore?.isLodging ? ownerStore.id : "");
   const lodgingProgress = ownerStore?.isLodging ? setupProgress(getLodgingSetupItems({
@@ -471,6 +471,38 @@ const AppHome = () => {
             </motion.button>
           </div>
 
+          <div className="px-5 pb-4">
+            {ownerStoreLoading ? (
+              <div className="rounded-2xl border border-border bg-card p-4 shadow-sm">
+                <div className="h-4 w-36 rounded-full bg-muted animate-pulse" />
+                <div className="mt-3 h-2 rounded-full bg-muted animate-pulse" />
+              </div>
+            ) : ownerStore?.isLodging ? (
+              <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="rounded-2xl border border-primary/20 bg-primary/8 p-4 shadow-sm">
+                <div className="flex items-start gap-3">
+                  <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-primary/12 text-primary"><Hotel className="h-5 w-5" /></div>
+                  <div className="min-w-0 flex-1">
+                    <div className="flex items-center gap-2"><p className="truncate text-sm font-bold text-foreground">Hotel / Resort Admin</p><Badge variant="secondary" className="shrink-0 text-[9px]">Ready</Badge></div>
+                    <p className="mt-0.5 truncate text-xs text-muted-foreground">{ownerStore.name}</p>
+                    <div className="mt-3 flex flex-wrap gap-1.5">
+                      {["Rooms", "Rates", "Guest Requests"].map((label) => <span key={label} className="rounded-full bg-background px-2 py-0.5 text-[10px] font-semibold text-primary ring-1 ring-primary/15">{label}</span>)}
+                    </div>
+                    <div className="mt-3">
+                      <div className="mb-1 flex items-center justify-between text-[10px] font-semibold text-primary"><span>Setup progress</span><span>{lodgingProgress ? `${lodgingProgress.complete}/${lodgingProgress.total} ready` : "Loading"}</span></div>
+                      <Progress value={lodgingProgress?.percent || 0} className="h-1.5 bg-primary/15" />
+                    </div>
+                    <Button size="sm" className="mt-3 h-9 w-full" onClick={() => navigate(`/admin/stores/${ownerStore.id}?tab=lodge-overview`)}>Open Hotel Operations <ArrowRight className="ml-1.5 h-3.5 w-3.5" /></Button>
+                  </div>
+                </div>
+              </motion.div>
+            ) : (
+              <button onClick={() => navigate("/partner-login")} className="flex w-full items-center justify-between rounded-2xl border border-border bg-card p-4 text-left shadow-sm active:scale-[0.99]">
+                <span className="flex items-center gap-3"><span className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary/10 text-primary"><Briefcase className="h-5 w-5" /></span><span><span className="block text-sm font-bold text-foreground">Partner Admin</span><span className="block text-xs text-muted-foreground">Manage your business account</span></span></span>
+                <ArrowRight className="h-4 w-4 text-muted-foreground" />
+              </button>
+            )}
+          </div>
+
 
 
 
@@ -534,37 +566,6 @@ const AppHome = () => {
 
         {/* ─── MAIN CONTENT ─── */}
         <div className="px-5 space-y-8">
-
-          {ownerStore?.isLodging && (
-            <motion.div
-              initial={{ opacity: 0, y: 12 }}
-              animate={{ opacity: 1, y: 0 }}
-              className="rounded-2xl border border-primary/20 bg-primary/8 p-4 shadow-sm"
-            >
-              <div className="flex items-start gap-3">
-                <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-primary/12 text-primary">
-                  <Hotel className="h-5 w-5" />
-                </div>
-                <div className="min-w-0 flex-1">
-                  <div className="flex items-center gap-2">
-                    <p className="truncate text-sm font-bold text-foreground">Hotel / Resort Admin</p>
-                    <Badge variant="secondary" className="shrink-0 text-[9px]">Active</Badge>
-                  </div>
-                  <p className="mt-0.5 truncate text-xs text-muted-foreground">{ownerStore.name}</p>
-                  <div className="mt-3">
-                    <div className="mb-1 flex items-center justify-between text-[10px] font-semibold text-primary">
-                      <span>Setup progress</span>
-                      <span>{lodgingProgress ? `${lodgingProgress.complete}/${lodgingProgress.total} ready` : "Loading"}</span>
-                    </div>
-                    <Progress value={lodgingProgress?.percent || 0} className="h-1.5 bg-primary/15" />
-                  </div>
-                  <Button size="sm" className="mt-3 h-9 w-full" onClick={() => navigate(`/admin/stores/${ownerStore.id}?tab=lodge-overview`)}>
-                    Open Hotel Operations <ArrowRight className="ml-1.5 h-3.5 w-3.5" />
-                  </Button>
-                </div>
-              </div>
-            </motion.div>
-          )}
 
           {/* ─── LIVE TRIP TRACKER ─── */}
           <Suspense fallback={null}><LiveTripTracker /></Suspense>

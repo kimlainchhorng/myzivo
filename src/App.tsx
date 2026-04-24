@@ -181,6 +181,7 @@ const AdminFlightApiMonitoring = lazy(() => import("./pages/admin/AdminFlightApi
 const AdminFlightPriceAlerts = lazy(() => import("./pages/admin/AdminFlightPriceAlerts"));
 const AdminStoresPage = lazy(() => import("./pages/admin/AdminStoresPage"));
 const AdminStoreEditPage = lazy(() => import("./pages/admin/AdminStoreEditPage"));
+const HotelAdminLaunchPage = lazy(() => import("./pages/admin/HotelAdminLaunchPage"));
 const AdminLodgingReservationDetailPage = lazy(() => import("./pages/admin/lodging/AdminLodgingReservationDetailPage"));
 const AdminLodgingWiringCheckPage = lazy(() => import("./pages/admin/AdminLodgingWiringCheckPage"));
 const AdminLodgingWebhookEventsPage = lazy(() => import("./pages/admin/AdminLodgingWebhookEventsPage"));
@@ -581,6 +582,8 @@ const App = () => (
                 {/* App Dashboard */}
                 <Route path="/app" element={<ProtectedRoute><UnifiedDashboard /></ProtectedRoute>} />
                 <Route path="/app/home" element={<ProtectedRoute><AppHome /></ProtectedRoute>} />
+                <Route path="/index" element={<ProtectedRoute><AppHome /></ProtectedRoute>} />
+                <Route path="/hotel-admin" element={<ProtectedRoute><HotelAdminLaunchPage /></ProtectedRoute>} />
                 <Route path="/my-trips" element={<ProtectedRoute><MyTripsPage /></ProtectedRoute>} />
                 <Route path="/wallet" element={<ProtectedRoute><AccountWalletPage /></ProtectedRoute>} />
                 <Route path="/wallet/coins/success" element={<ProtectedRoute><CoinPurchaseSuccess /></ProtectedRoute>} />
