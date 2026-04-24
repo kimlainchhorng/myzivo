@@ -28,6 +28,7 @@ export default function AdminLodgingQAChecklistPage() {
     setQaRunning(true);
     const next = runLodgingQa({ storeId, storeName: ownerStore?.name, storeCategory: ownerStore?.category, completion, baseUrl: window.location.origin });
     setQaResult(next);
+    localStorage.setItem("lodging-qa-summary", JSON.stringify({ passedCount: next.passedCount, failedCount: next.failedCount, warningCount: next.warningCount, overallStatus: next.overallStatus, checkedAt: new Date().toISOString() }));
     window.setTimeout(() => setQaRunning(false), 250);
   };
   const exportPdf = () => {
