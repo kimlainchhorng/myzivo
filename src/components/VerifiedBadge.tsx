@@ -14,14 +14,15 @@ type Props = {
   title?: string;
 };
 
-const VerifiedBadge = ({ size = 18, className = "", title = "Verified" }: Props) => {
+const VerifiedBadge = ({ size, className = "", title = "Verified" }: Props) => {
   // unique id so multiple instances don't collide on the gradient/filter defs
   const uid = `vb-${Math.random().toString(36).slice(2, 8)}`;
+  const sizeStyle = size ? { width: size, height: size } : undefined;
 
   return (
     <span
       className={`relative inline-flex items-center justify-center shrink-0 align-middle ${className}`}
-      style={{ width: size, height: size }}
+      style={sizeStyle}
       aria-label={title}
       title={title}
     >
