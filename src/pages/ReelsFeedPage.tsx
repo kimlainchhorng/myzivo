@@ -939,24 +939,37 @@ export default function ReelsFeedPage() {
               if (!post) return null;
               return (
                 <motion.div
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  exit={{ opacity: 0 }}
+                  initial={{ opacity: 0, y: 40 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: 40 }}
+                  drag="y"
+                  dragConstraints={{ top: 0, bottom: 0 }}
+                  dragElastic={{ top: 0, bottom: 0.4 }}
+                  onDragEnd={(_, info) => {
+                    if (info.offset.y > 120 || info.velocity.y > 600) {
+                      setFullscreenIndex(null);
+                    }
+                  }}
                   className="fixed inset-0 z-[100] bg-background flex flex-col"
                 >
-                  <div className="sticky top-0 z-10 flex items-center gap-3 px-3 py-2 bg-background/95 backdrop-blur-xl border-b border-border/30" style={{ paddingTop: 'max(calc(env(safe-area-inset-top, 0px) + 0.5rem), 0.5rem)' }}>
+                  <div
+                    className="sticky top-0 z-10 flex items-center gap-2 px-3 pb-2 bg-background/95 backdrop-blur-xl border-b border-border/30"
+                    style={{ paddingTop: 'max(env(safe-area-inset-top, 0px), 0.75rem)', touchAction: 'none' }}
+                  >
                     <button
                       onClick={() => setFullscreenIndex(null)}
-                      className="min-h-[44px] min-w-[44px] flex items-center justify-center"
+                      aria-label="Close post"
+                      className="min-h-[40px] min-w-[40px] flex items-center justify-center rounded-full hover:bg-muted/50 active:bg-muted"
                     >
-                      <ChevronLeft className="h-5 w-5 text-foreground" />
+                      <XIcon className="h-5 w-5 text-foreground" />
                     </button>
-                    <h2 className="text-base font-semibold text-foreground">Post</h2>
+                    <h2 className="text-base font-semibold text-foreground flex-1">Post</h2>
+                    <div className="w-10 h-1.5 rounded-full bg-muted-foreground/30" aria-hidden />
                   </div>
                   <div
                     ref={fullscreenScrollRef}
                     className="flex-1 overflow-y-auto"
-                    style={{ paddingBottom: 'max(calc(env(safe-area-inset-bottom, 0px) + 6rem), 6rem)' }}
+                    style={{ paddingBottom: 'max(calc(env(safe-area-inset-bottom, 0px) + 6rem), 6rem)', touchAction: 'pan-y' }}
                   >
                     <FeedCard key={post.id} item={post} currentUserId={userId} detailMode />
                   </div>
