@@ -412,21 +412,6 @@ export default function StoreOwnerLayout({ children, title, storeId, storeName, 
           </div>
         </nav>
 
-        {/* User card */}
-        <div className="border-t border-border px-2 py-1 shrink-0 bg-muted/30">
-          <div className="flex items-center gap-1.5">
-            <div className="w-6 h-6 rounded-full bg-primary/15 flex items-center justify-center shrink-0">
-              <span className="text-[10px] font-bold text-primary">
-                {(user?.email || "?").charAt(0).toUpperCase()}
-              </span>
-            </div>
-            <div className="min-w-0 flex-1">
-              <p className="text-[10px] font-semibold text-foreground truncate leading-none">{user?.email}</p>
-              <p className="text-[8px] text-muted-foreground leading-tight">Store Owner</p>
-            </div>
-          </div>
-        </div>
-
         {/* Footer actions */}
         <div
           className="border-t border-border p-1 space-y-0.5 shrink-0"
