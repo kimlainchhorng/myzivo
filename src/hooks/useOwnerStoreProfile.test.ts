@@ -11,6 +11,6 @@ describe("lodging store category detection", () => {
   });
 
   it("normalizes spacing, symbols, and casing", () => {
-    expect(normalizeStoreCategory(" Guesthouse / B&B ")).toBe("guesthouse and b and b");
+    expect(normalizeStoreCategory(" Guesthouse / B&B ")).toBe("guesthouse bed and breakfast");
   });
 });
