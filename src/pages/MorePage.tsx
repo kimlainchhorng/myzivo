@@ -222,12 +222,10 @@ export default function MorePage() {
   });
 
   const displayName =
-    profile?.display_name?.trim() ||
-    profile?.username?.trim() ||
+    profile?.full_name?.trim() ||
     user?.email?.split("@")[0] ||
     "User";
   const avatarUrl = profile?.avatar_url;
-  const username = profile?.username;
   const isVerified = profile?.is_verified;
 
   /* --- Profile Card --- */
@@ -266,7 +264,6 @@ export default function MorePage() {
               </span>
             )}
           </div>
-          {username && <p className="text-xs text-muted-foreground">@{username}</p>}
           <div className="flex gap-4 mt-1.5">
             <div className="text-center">
               <p className="text-xs font-bold">{friendCount}</p>
