@@ -2719,116 +2719,104 @@ function FeedCard({ item, currentUserId, onOpenFullscreen, autoPlayVideo, detail
       </AnimatePresence>
 
       {/* Post Options Menu */}
-      <AnimatePresence>
-        {showPostMenu && (
-          <motion.div
-            initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-            className="fixed inset-0 z-[200] flex items-end justify-center bg-black/40"
-            onClick={() => setShowPostMenu(false)}
+      <SwipeableSheet
+        open={showPostMenu}
+        onClose={() => setShowPostMenu(false)}
+        ariaLabel="Post options"
+        zIndex={200}
+        hideCloseButton
+      >
+        <div className="px-2 pb-4">
+          <button
+            onClick={() => { setShowPostMenu(false); setShowReportSheet(true); setReportStep("categories"); setReportCategory(""); }}
+            className="flex items-center gap-4 w-full px-4 py-3.5 hover:bg-muted/50 rounded-xl min-h-[48px]"
           >
-            <motion.div
-              initial={{ y: "100%" }} animate={{ y: 0 }} exit={{ y: "100%" }}
-              transition={{ type: "spring", damping: 28, stiffness: 300 }}
-              onClick={(e) => e.stopPropagation()}
-              className="w-full max-w-md bg-background rounded-t-2xl pb-8 overflow-hidden"
+            <Flag className="h-5 w-5 text-destructive" />
+            <span className="text-sm font-medium text-destructive">Report</span>
+          </button>
+          <button
+            onClick={() => { setNotificationsOn(!notificationsOn); setShowPostMenu(false); toast.success(notificationsOn ? "Notifications turned off" : "Notifications turned on for this post"); }}
+            className="flex items-center gap-4 w-full px-4 py-3.5 hover:bg-muted/50 rounded-xl min-h-[48px]"
+          >
+            {notificationsOn ? <BellOff className="h-5 w-5 text-foreground" /> : <Bell className="h-5 w-5 text-foreground" />}
+            <span className="text-sm font-medium text-foreground">{notificationsOn ? "Turn off notifications" : "Turn on notifications"}</span>
+          </button>
+          <button
+            onClick={() => { setShowPostMenu(false); handleCopyLink(); }}
+            className="flex items-center gap-4 w-full px-4 py-3.5 hover:bg-muted/50 rounded-xl min-h-[48px]"
+          >
+            <Link2 className="h-5 w-5 text-foreground" />
+            <span className="text-sm font-medium text-foreground">Copy link</span>
+          </button>
+          <button
+            onClick={() => { setShowPostMenu(false); toast.success("You won't see posts like this anymore"); }}
+            className="flex items-center gap-4 w-full px-4 py-3.5 hover:bg-muted/50 rounded-xl min-h-[48px]"
+          >
+            <EyeOff className="h-5 w-5 text-foreground" />
+            <span className="text-sm font-medium text-foreground">Not interested</span>
+          </button>
+          <button
+            onClick={() => { setShowPostMenu(false); setShowShareSheet(true); }}
+            className="flex items-center gap-4 w-full px-4 py-3.5 hover:bg-muted/50 rounded-xl min-h-[48px]"
+          >
+            <Share2 className="h-5 w-5 text-foreground" />
+            <span className="text-sm font-medium text-foreground">Share</span>
+          </button>
+
+          {/* Tip creator */}
+          {!isOwner && item.author_id && (
+            <button
+              onClick={() => { setShowPostMenu(false); setTipTarget({ id: item.author_id!, name: item.author_name }); }}
+              className="flex items-center gap-4 w-full px-4 py-3.5 hover:bg-muted/50 rounded-xl min-h-[48px]"
             >
-              <div className="flex justify-center py-3">
-                <div className="w-10 h-1 rounded-full bg-muted-foreground/30" />
-              </div>
-              <div className="px-2">
-                <button
-                  onClick={() => { setShowPostMenu(false); setShowReportSheet(true); setReportStep("categories"); setReportCategory(""); }}
-                  className="flex items-center gap-4 w-full px-4 py-3.5 hover:bg-muted/50 rounded-xl min-h-[48px]"
-                >
-                  <Flag className="h-5 w-5 text-destructive" />
-                  <span className="text-sm font-medium text-destructive">Report</span>
-                </button>
-                <button
-                  onClick={() => { setNotificationsOn(!notificationsOn); setShowPostMenu(false); toast.success(notificationsOn ? "Notifications turned off" : "Notifications turned on for this post"); }}
-                  className="flex items-center gap-4 w-full px-4 py-3.5 hover:bg-muted/50 rounded-xl min-h-[48px]"
-                >
-                  {notificationsOn ? <BellOff className="h-5 w-5 text-foreground" /> : <Bell className="h-5 w-5 text-foreground" />}
-                  <span className="text-sm font-medium text-foreground">{notificationsOn ? "Turn off notifications" : "Turn on notifications"}</span>
-                </button>
-                <button
-                  onClick={() => { setShowPostMenu(false); handleCopyLink(); }}
-                  className="flex items-center gap-4 w-full px-4 py-3.5 hover:bg-muted/50 rounded-xl min-h-[48px]"
-                >
-                  <Link2 className="h-5 w-5 text-foreground" />
-                  <span className="text-sm font-medium text-foreground">Copy link</span>
-                </button>
-                <button
-                  onClick={() => { setShowPostMenu(false); toast.success("You won't see posts like this anymore"); }}
-                  className="flex items-center gap-4 w-full px-4 py-3.5 hover:bg-muted/50 rounded-xl min-h-[48px]"
-                >
-                  <EyeOff className="h-5 w-5 text-foreground" />
-                  <span className="text-sm font-medium text-foreground">Not interested</span>
-                </button>
-                <button
-                  onClick={() => { setShowPostMenu(false); setShowShareSheet(true); }}
-                  className="flex items-center gap-4 w-full px-4 py-3.5 hover:bg-muted/50 rounded-xl min-h-[48px]"
-                >
-                  <Share2 className="h-5 w-5 text-foreground" />
-                  <span className="text-sm font-medium text-foreground">Share</span>
-                </button>
+              <Heart className="h-5 w-5 text-amber-500" />
+              <span className="text-sm font-medium text-foreground">Send Tip</span>
+            </button>
+          )}
 
-                {/* Tip creator */}
-                {!isOwner && item.author_id && (
-                  <button
-                    onClick={() => { setShowPostMenu(false); setTipTarget({ id: item.author_id!, name: item.author_name }); }}
-                    className="flex items-center gap-4 w-full px-4 py-3.5 hover:bg-muted/50 rounded-xl min-h-[48px]"
-                  >
-                    <Heart className="h-5 w-5 text-amber-500" />
-                    <span className="text-sm font-medium text-foreground">Send Tip</span>
-                  </button>
-                )}
+          {isOwner && (
+            <button
+              onClick={() => { setShowPostMenu(false); setShowCommentSettings(true); }}
+              className="flex items-center gap-4 w-full px-4 py-3.5 hover:bg-muted/50 rounded-xl min-h-[48px]"
+            >
+              <Settings2 className="h-5 w-5 text-foreground" />
+              <span className="text-sm font-medium text-foreground">Comment settings</span>
+            </button>
+          )}
 
-                {isOwner && (
-                  <button
-                    onClick={() => { setShowPostMenu(false); setShowCommentSettings(true); }}
-                    className="flex items-center gap-4 w-full px-4 py-3.5 hover:bg-muted/50 rounded-xl min-h-[48px]"
-                  >
-                    <Settings2 className="h-5 w-5 text-foreground" />
-                    <span className="text-sm font-medium text-foreground">Comment settings</span>
-                  </button>
-                )}
+          {/* Owner-only: Edit caption */}
+          {isOwner && (
+            <button
+              onClick={() => { setShowPostMenu(false); setEditCaptionText(item.caption || ""); setShowEditCaption(true); }}
+              className="flex items-center gap-4 w-full px-4 py-3.5 hover:bg-muted/50 rounded-xl min-h-[48px]"
+            >
+              <Settings2 className="h-5 w-5 text-foreground" />
+              <span className="text-sm font-medium text-foreground">Edit caption</span>
+            </button>
+          )}
 
-                {/* Owner-only: Delete post */}
-                {isOwner && (
-                  <button
-                    onClick={() => { setShowPostMenu(false); setEditCaptionText(item.caption || ""); setShowEditCaption(true); }}
-                    className="flex items-center gap-4 w-full px-4 py-3.5 hover:bg-muted/50 rounded-xl min-h-[48px]"
-                  >
-                    <Settings2 className="h-5 w-5 text-foreground" />
-                    <span className="text-sm font-medium text-foreground">Edit caption</span>
-                  </button>
-                )}
-
-                {/* Owner-only: Delete post */}
-                {isOwner && (
-                  <button
-                    onClick={async () => {
-                      setShowPostMenu(false);
-                      const realId = item.id.replace(/^u-/, "");
-                      const { error } = await supabase.from("user_posts").delete().eq("id", realId).eq("user_id", currentUserId);
-                      if (error) {
-                        toast.error("Failed to delete post");
-                      } else {
-                        toast.success("Post deleted");
-                        queryClient.invalidateQueries({ queryKey: ["reels-feed-grid"] });
-                      }
-                    }}
-                    className="flex items-center gap-4 w-full px-4 py-3.5 hover:bg-muted/50 rounded-xl min-h-[48px]"
-                  >
-                    <Trash2 className="h-5 w-5 text-destructive" />
-                    <span className="text-sm font-medium text-destructive">Delete post</span>
-                  </button>
-                )}
-              </div>
-            </motion.div>
-          </motion.div>
-        )}
-      </AnimatePresence>
+          {/* Owner-only: Delete post */}
+          {isOwner && (
+            <button
+              onClick={async () => {
+                setShowPostMenu(false);
+                const realId = item.id.replace(/^u-/, "");
+                const { error } = await supabase.from("user_posts").delete().eq("id", realId).eq("user_id", currentUserId);
+                if (error) {
+                  toast.error("Failed to delete post");
+                } else {
+                  toast.success("Post deleted");
+                  queryClient.invalidateQueries({ queryKey: ["reels-feed-grid"] });
+                }
+              }}
+              className="flex items-center gap-4 w-full px-4 py-3.5 hover:bg-muted/50 rounded-xl min-h-[48px]"
+            >
+              <Trash2 className="h-5 w-5 text-destructive" />
+              <span className="text-sm font-medium text-destructive">Delete post</span>
+            </button>
+          )}
+        </div>
+      </SwipeableSheet>
 
       {/* Report Sheet */}
       <AnimatePresence>
