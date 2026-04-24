@@ -522,6 +522,11 @@ export default function ProfileContentTabs({ userId }: { userId?: string }) {
         else next.delete(interactionId);
         return next;
       });
+      logProfileActionError(
+        "bookmark.toggle",
+        { postId: interactionId, op: wasBookmarked ? "delete" : "insert", userId: user?.id },
+        error,
+      );
       toast.error(error?.message || "Bookmark failed");
     }
   }, [bookmarkedPosts, user?.id]);
