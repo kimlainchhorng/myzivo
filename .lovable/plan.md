@@ -1,64 +1,63 @@
-# Bottom-sheet polish: safe-area headers + swipe-down-to-close
+# Finish Swipeable Sheet Rollout & Safe-Area Hardening
 
-The screenshot shows the post Options sheet over a post-detail view. Two issues to fix across every bottom sheet in the social feed:
+Wrap up the bottom-sheet unification by porting the two remaining sheets onto the shared `SwipeableSheet` primitive, fix the notched-device overlap on the Reel close button, and verify everything across viewports with a clean type-check.
 
-1. The sheet's top controls (X, profile preview, drag handle) collide with the iOS notch / Android status bar — they sit inside the safe zone.
-2. Sheets only close on backdrop tap. Users expect to **drag the sheet down** to dismiss, like Instagram / Facebook.
+## 1. Refactor `CommentsSheet.tsx` onto `SwipeableSheet`
 
-## What changes
+- Replace the hand-rolled overlay/backdrop/handle/header in `src/components/social/CommentsSheet.tsx` with `<SwipeableSheet>`:
+  - Pass `open`, `onClose`, `maxHeightVh={70}`, `safeAreaTop`, `ariaLabel="Comments"`.
+  - Use `title={`Comments${totalComments > 0 ? ` (${totalComments})` : ""}`}` so the X close button comes from the primitive (drop the local handle + header markup).
+  - For `dark` mode, pass a `className` so the panel keeps `bg-black/95 text-white` styling and the input/list keep their existing dark variants. (We'll override the panel bg via `className` since `SwipeableSheet` already forwards it.)
+- Keep all inner behavior unchanged: comments list, reply indicator, input row with safe-area-aware bottom padding, real-time updates, reactions, deletion.
+- Remove the now-redundant `AnimatePresence`, `motion.div` wrappers, and outer `if (!open) return null;` guard — `SwipeableSheet` handles open/close animation.
+- Keep auto-focus of the input on open (existing `useEffect`).
 
-### A. New shared primitive `SwipeableSheet`
+## 2. Refactor `ShareSheet.tsx` onto `SwipeableSheet`
 
-Create `src/components/social/SwipeableSheet.tsx` — a thin wrapper around the existing `motion.div` bottom-sheet pattern that:
+- In `src/components/shared/ShareSheet.tsx`, replace the outer `motion.div` overlay + sheet panel with `<SwipeableSheet>`:
+  - `title="Share to"`, `ariaLabel="Share options"`, `maxHeightVh={85}`, `zIndex` from prop (default 60).
+  - Honor the `positioning` prop: `SwipeableSheet` is `fixed` by default. When callers pass `positioning="absolute"` (Reels overlay context), wrap the sheet in a positioned container or extend `SwipeableSheet` with an optional `positioning` prop forwarded to its outer `motion.div`. Simplest: add a `positioning?: "fixed" | "absolute"` prop to `SwipeableSheet` (default `"fixed"`).
+- Keep all share logic intact: `handleCopyLink`, `handleShareToChat`, `handleShareToProfile`, `handleShareAuthorProfile`, `handleOptionClick`, in-app row, external row, "More options" toggle.
+- Remove the local handle bar and X header (provided by primitive).
 
-- Renders the backdrop + animated sheet container exactly like the current sheets (so visuals stay identical).
-- Uses framer-motion `drag="y"` with `dragConstraints={{ top: 0, bottom: 0 }}` and `dragElastic={{ top: 0, bottom: 0.5 }}`. On `onDragEnd`, if `offset.y > 100` OR `velocity.y > 500`, calls `onClose()`.
-- Drag handle (the gray pill) sits in a dedicated `cursor-grab` zone with `touch-action: none` so the drag is reliably captured even when the body scrolls.
-- The whole header strip (drag handle + optional title row) is the drag region; the scrollable content below uses `touch-action: pan-y` so list scrolling still works without hijacking the close gesture.
-- Accepts a `safeAreaTop` boolean (default true) that adds `paddingTop: max(env(safe-area-inset-top), 0.5rem)` so headers never hide behind the notch when the sheet is full-height.
-- Accepts `maxHeightVh` (default 85) to cap height; sheet uses `pb-[env(safe-area-inset-bottom)]` for bottom inset.
+## 3. Extend `SwipeableSheet` with `positioning` prop
 
-Props: `{ open, onClose, children, title?, ariaLabel, maxHeightVh?, safeAreaTop? }`.
+- Add `positioning?: "fixed" | "absolute"` (default `"fixed"`).
+- Apply it to the outer overlay `motion.div`'s class (`fixed inset-0` vs `absolute inset-0`). No other changes.
 
-### B. Adopt `SwipeableSheet` across the social sheets
+## 4. Fix `ReelSlide` close button safe-area
 
-Replace the hand-rolled motion-div sheets in these spots — same content, just wrapped:
+In `src/pages/ReelsFeedPage.tsx` around line 1291:
+- Change icon from `ChevronLeft` to `X` to match the "X close" pattern requested earlier.
+- Replace `top-0 ... marginTop: max(env(safe-area-inset-top) + 0.75rem, 1rem)` with a direct `top` value that always clears the notch on Android + iOS:
+  - `style={{ top: 'max(env(safe-area-inset-top, 0px), 12px)', left: 'max(env(safe-area-inset-left, 0px), 16px)' }}`
+  - Drop the `marginTop` hack and `left-4` class to avoid the double-offset that pushes the button into the notch on some devices.
+- Keep tap target ≥40×40.
 
-- `src/pages/ReelsFeedPage.tsx`
-  - Post Options menu (`showPostMenu`, ~L2722)
-  - Report Sheet (`showReportSheet`, ~L2834)
-  - Comment Settings (`showCommentSettings`)
-  - Edit Caption (`showEditCaption`)
-  - Reaction picker is inline (not a sheet) — leave alone.
-- `src/components/social/CommentsSheet.tsx` — wrap the existing sheet body. Keep the input bar pinned to the bottom; the drag-region is just the header (handle + title). The comment list keeps `touch-action: pan-y` so vertical scrolling never triggers close.
-- `src/components/shared/ShareSheet.tsx` — wrap so it gets the same drag-down + safe-area treatment.
-- `src/components/profile/ProfileFeedCard.tsx` — its menu also routes through the shared share-sheet, so it inherits automatically.
+## 5. Verify post-detail header & sheets across breakpoints
 
-### C. Header / safe-area fix on the Post Detail viewer
+Read-only verification (no code changes if all clear):
+- Confirm the post-detail header (lines ~675 and ~704 in `ReelsFeedPage.tsx`) uses `paddingTop: max(env(safe-area-inset-top) + N, N)` — already correct.
+- Confirm `SwipeableSheet`'s top padding is sufficient when sheets render at `maxHeightVh={100}` (e.g., comment-settings full-height sheet) so the header strip never sits under the notch.
+- Spot-check the four sheets (Post Options, Report, Comment Settings, Edit Caption, Comments, Share) at 360×800, 390×844, 768×1024 by reading their JSX configuration only — adjust paddings if any sheet uses `safeAreaTop={false}` while exposing a header.
 
-The screenshot's top strip ("X · avatar · name · ⋮") is the **fullscreen Post Detail** viewer (`fullscreenIndex`, ReelsFeedPage L946). It already has `paddingTop: max(env(safe-area-inset-top) + 0.5rem, 0.5rem)` but the close icon is `ChevronLeft` and small. Update to:
+## 6. Type-check & runtime fixes
 
-- Replace `ChevronLeft` with `X` (matches screenshot expectation).
-- Wrap header in a row with `min-h-[56px]` and ensure the X button is `h-10 w-10 rounded-full bg-background/60 backdrop-blur` so it's visible over media.
-- Add a thin downward drag handle below the header that mirrors the sheet pattern: dragging the entire viewer down >120px closes it (`setFullscreenIndex(null)`). Same framer-motion drag logic as `SwipeableSheet`.
+- Run `bunx tsc --noEmit` (or project's `tsc -p`) and fix any errors surfaced by:
+  - The new `positioning` prop on `SwipeableSheet`
+  - Removed local props/types in `CommentsSheet` / `ShareSheet`
+  - Any lingering imports (`X`, `motion`, `AnimatePresence`) that become unused after the refactor.
+- Open `/reels` and `/profile` mentally (via the existing flow) to confirm no runtime regressions: drag-to-close, backdrop tap, X tap, focus-on-open for comments input, share buttons all firing.
 
-### D. Reels fullscreen viewer (`ReelSlide`) — top-left close button
+## Files to edit
 
-The vertical reels viewer's close button (`L1278`) uses `marginTop: max(env(safe-area-inset-top) + 0.75rem, 1rem)` but its `top-0 left-4` parent doesn't account for safe area on Android with display cutouts. Switch to `style={{ top: 'max(env(safe-area-inset-top, 0px) + 12px, 16px)' }}` and remove `top-0` to make it more reliable.
+- `src/components/social/SwipeableSheet.tsx` — add `positioning` prop.
+- `src/components/social/CommentsSheet.tsx` — refactor onto `SwipeableSheet`.
+- `src/components/shared/ShareSheet.tsx` — refactor onto `SwipeableSheet`, forward `positioning`.
+- `src/pages/ReelsFeedPage.tsx` — fix `ReelSlide` close button (X + safe-area inset).
 
-## Technical notes
+## Out of scope
 
-- No new dependencies — `framer-motion` already provides `drag`, `dragConstraints`, `onDragEnd` with `info.offset.y` and `info.velocity.y`.
-- Keep the existing `AnimatePresence` + `initial={{ y: "100%" }} animate={{ y: 0 }} exit={{ y: "100%" }}` so opening animations are unchanged.
-- `touch-action` is the key to stopping iOS Safari from scrolling the page while dragging the sheet handle.
-- All sheets keep their current backdrop `onClick={onClose}` so tap-outside still works.
-- `CommentsSheet` already has an `<input>` inside it — keep `dragListener={false}` on the framer drag and only enable drag on the header strip via a manual `dragControls.start(e)` so typing never triggers a drag.
-
-## Files changed
-
-```text
-NEW   src/components/social/SwipeableSheet.tsx
-EDIT  src/pages/ReelsFeedPage.tsx               (4 sheets + post detail header + ReelSlide close)
-EDIT  src/components/social/CommentsSheet.tsx   (wrap with SwipeableSheet)
-EDIT  src/components/shared/ShareSheet.tsx      (wrap with SwipeableSheet)
-```
+- No changes to the comment/share business logic or APIs.
+- No changes to engagement skeletons, caption truncation, or the previously-shipped a11y labels.
+- No changes to the global `AppLayout` safe-area system.
