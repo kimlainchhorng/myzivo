@@ -174,10 +174,13 @@ describe.each(NOTCHED_DEVICES)(
       const panel = getPanel(dialog);
 
       const padTop = panel.getAttribute("data-padding-top") || "";
-      expect(padTop).toMatch(/safe-area-inset-top/);
+      // Either ships the raw env() expression or the shared --zivo-safe-top-* token.
+      expect(padTop).toMatch(/safe-area-inset-top|--zivo-safe-top/);
 
       const resolvedPx = evaluateCssExpression(padTop, device);
-      expect(resolvedPx).toBeGreaterThanOrEqual(device.top);
+      // Sheet headers must clear at least 44px so the close button never sits
+      // under the status bar / Dynamic Island when env() reports 0.
+      expect(resolvedPx).toBeGreaterThanOrEqual(Math.max(device.top, 44));
 
       // The snap-point max-height also bounds the sheet inside the viewport
       const maxHeight = panel.getAttribute("data-max-height") || "";
@@ -225,10 +228,10 @@ describe.each(NOTCHED_DEVICES)(
       const panel = getPanel(dialog);
 
       const padTop = panel.getAttribute("data-padding-top") || "";
-      expect(padTop).toMatch(/safe-area-inset-top/);
+      expect(padTop).toMatch(/safe-area-inset-top|--zivo-safe-top/);
 
       const resolvedPx = evaluateCssExpression(padTop, device);
-      expect(resolvedPx).toBeGreaterThanOrEqual(device.top);
+      expect(resolvedPx).toBeGreaterThanOrEqual(Math.max(device.top, 44));
     });
 
     it("ShareSheet: close button is labelled and Escape dismisses", () => {

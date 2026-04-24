@@ -48,6 +48,27 @@ function parseUnit(token: string): number {
   throw new Error(`Cannot parse CSS unit: "${token}"`);
 }
 
+/**
+ * Resolve known `--zivo-safe-top-*` design tokens to the underlying CSS
+ * expression they represent in `src/index.css`. Keep this map in sync with
+ * the `:root` declarations in that file.
+ */
+const ZIVO_SAFE_TOKENS: Record<string, string> = {
+  "--zivo-safe-top": "env(safe-area-inset-top, 0px)",
+  "--zivo-safe-bottom": "env(safe-area-inset-bottom, 0px)",
+  "--zivo-safe-top-overlay": "max(env(safe-area-inset-top, 0px), 60px)",
+  "--zivo-safe-top-sheet": "max(env(safe-area-inset-top, 0px), 44px)",
+  "--zivo-safe-top-sticky":
+    "max(calc(env(safe-area-inset-top, 0px) + 0.625rem), 48px)",
+};
+
+function substituteVars(expr: string): string {
+  return expr.replace(/var\(\s*(--[a-z0-9-]+)(?:\s*,\s*[^)]+)?\s*\)/gi, (_m, name) => {
+    const repl = ZIVO_SAFE_TOKENS[name];
+    return repl != null ? repl : "0px";
+  });
+}
+
 /** Substitute every env(safe-area-inset-*) in expr with the device's value. */
 function substituteEnv(expr: string, device: DeviceProfile): string {
   return expr.replace(
@@ -115,7 +136,8 @@ export function evaluateCssExpression(
   rawExpr: string,
   device: DeviceProfile,
 ): number {
-  const expr = substituteEnv(rawExpr, device).trim();
+  const withVars = substituteVars(rawExpr);
+  const expr = substituteEnv(withVars, device).trim();
   return evalInner(expr);
 }
 

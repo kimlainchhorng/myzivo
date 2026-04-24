@@ -213,10 +213,12 @@ export default function SwipeableSheet({
             style={{
               maxHeight: maxHeightStyle,
               paddingTop: safeAreaTop
-                ? "max(env(safe-area-inset-top, 0px), 0px)"
+                ? "var(--zivo-safe-top-sheet)"
                 : undefined,
               paddingBottom: "env(safe-area-inset-bottom, 0px)",
             }}
+            data-padding-top={safeAreaTop ? "var(--zivo-safe-top-sheet)" : ""}
+            data-max-height={maxHeightStyle}
           >
             {/* Drag handle + optional header — this strip is the only drag region */}
             <div
