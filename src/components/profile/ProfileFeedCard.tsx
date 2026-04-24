@@ -76,6 +76,9 @@ export default function ProfileFeedCard({
   const [showReactionPicker, setShowReactionPicker] = useState(false);
   const [selectedReaction, setSelectedReaction] = useState<string | null>(null);
   const [showComments, setShowComments] = useState(false);
+  const [showSharerCaption, setShowSharerCaption] = useState(false);
+  const [showOriginalCaption, setShowOriginalCaption] = useState(false);
+  const [showOwnCaption, setShowOwnCaption] = useState(false);
   const lastTapRef = useRef(0);
 
   const isVideo = item.type === "reel";
@@ -166,8 +169,13 @@ export default function ProfileFeedCard({
 
           {/* Sharer's own caption */}
           {item.caption && item.caption !== item.sharedOrigin.caption && (
-            <div className="px-3 pb-2">
-              <p className="text-[13px] text-foreground">{item.caption}</p>
+            <div className="px-3 pb-2" onClick={(e) => { e.stopPropagation(); setShowSharerCaption((v) => !v); }}>
+              <p className={cn("text-[13px] text-foreground leading-snug whitespace-pre-wrap", !showSharerCaption && "line-clamp-3")}>{item.caption}</p>
+              {item.caption.length > 140 && (
+                <button type="button" onClick={(e) => { e.stopPropagation(); setShowSharerCaption((v) => !v); }} className="text-[12px] text-muted-foreground mt-0.5 font-medium">
+                  {showSharerCaption ? "See less" : "See more"}
+                </button>
+              )}
             </div>
           )}
 
@@ -211,8 +219,13 @@ export default function ProfileFeedCard({
             </div>
 
             {item.sharedOrigin.caption && (
-              <div className="px-3 pb-2">
-                <p className="text-[13px] text-foreground">{item.sharedOrigin.caption}</p>
+              <div className="px-3 pb-2" onClick={(e) => { e.stopPropagation(); setShowOriginalCaption((v) => !v); }}>
+                <p className={cn("text-[13px] text-foreground leading-snug whitespace-pre-wrap", !showOriginalCaption && "line-clamp-3")}>{item.sharedOrigin.caption}</p>
+                {item.sharedOrigin.caption.length > 140 && (
+                  <button type="button" onClick={(e) => { e.stopPropagation(); setShowOriginalCaption((v) => !v); }} className="text-[12px] text-muted-foreground mt-0.5 font-medium">
+                    {showOriginalCaption ? "See less" : "See more"}
+                  </button>
+                )}
               </div>
             )}
 
@@ -284,11 +297,16 @@ export default function ProfileFeedCard({
 
           {/* Caption */}
           {item.caption && (
-            <div className="px-3 pb-2">
-              <p className="text-[13px] text-foreground">
+            <div className="px-3 pb-2" onClick={(e) => { e.stopPropagation(); setShowOwnCaption((v) => !v); }}>
+              <p className={cn("text-[13px] text-foreground leading-snug whitespace-pre-wrap", !showOwnCaption && "line-clamp-3")}>
                 <span className="font-semibold mr-1">{item.user.name}</span>
                 {item.caption}
               </p>
+              {item.caption.length > 140 && (
+                <button type="button" onClick={(e) => { e.stopPropagation(); setShowOwnCaption((v) => !v); }} className="text-[12px] text-muted-foreground mt-0.5 font-medium">
+                  {showOwnCaption ? "See less" : "See more"}
+                </button>
+              )}
             </div>
           )}
 
