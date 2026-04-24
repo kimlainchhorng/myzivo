@@ -551,6 +551,11 @@ function RouteAwareGlobalUI() {
 }
 
 
+const VerificationRealtimeBridge = () => {
+  useVerificationRealtime();
+  return null;
+};
+
 const App = () => (
   <ErrorBoundary>
     <HelmetProvider>
