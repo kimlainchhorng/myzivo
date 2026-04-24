@@ -11,7 +11,8 @@
  * glance.
  */
 import { useCallback, useState } from "react";
-import { CheckCircle2, XCircle, Loader2, Play } from "lucide-react";
+import { CheckCircle2, XCircle, Loader2, Play, Copy } from "lucide-react";
+import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { logProfileActionError } from "@/lib/security/errorReporting";
