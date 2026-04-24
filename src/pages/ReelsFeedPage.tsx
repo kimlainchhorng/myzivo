@@ -2819,115 +2819,107 @@ function FeedCard({ item, currentUserId, onOpenFullscreen, autoPlayVideo, detail
       </SwipeableSheet>
 
       {/* Report Sheet */}
-      <AnimatePresence>
-        {showReportSheet && (
-          <motion.div
-            initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-            className="fixed inset-0 z-[210] flex items-end justify-center bg-black/40"
-            onClick={() => setShowReportSheet(false)}
-          >
-            <motion.div
-              initial={{ y: "100%" }} animate={{ y: 0 }} exit={{ y: "100%" }}
-              transition={{ type: "spring", damping: 28, stiffness: 300 }}
-              onClick={(e) => e.stopPropagation()}
-              className="w-full max-w-md bg-background rounded-t-2xl pb-8 overflow-hidden max-h-[80vh] flex flex-col"
+      <SwipeableSheet
+        open={showReportSheet}
+        onClose={() => setShowReportSheet(false)}
+        ariaLabel="Report post"
+        zIndex={210}
+        hideCloseButton
+        title={
+          reportStep === "categories" ? (
+            <h3 className="text-base font-bold text-foreground text-center">Report</h3>
+          ) : reportStep === "sub" ? (
+            <div className="flex items-center gap-2">
+              <button
+                type="button"
+                onClick={() => setReportStep("categories")}
+                aria-label="Back"
+                className="min-h-[40px] min-w-[40px] flex items-center justify-center -ml-2"
+              >
+                <ChevronLeft className="h-5 w-5 text-foreground" />
+              </button>
+              <h3 className="text-base font-bold text-foreground truncate">{reportCategory}</h3>
+            </div>
+          ) : null
+        }
+      >
+        {reportStep === "categories" ? (
+          <>
+            <p className="px-6 pb-4 text-xs text-muted-foreground">Why are you reporting this post? Your report is anonymous.</p>
+            <div className="px-2 pb-6">
+              {[
+                { icon: AlertTriangle, label: "Spam" , desc: "Misleading or repetitive content" },
+                { icon: ShieldAlert, label: "Scam or fraud", desc: "Trying to steal money or personal info" },
+                { icon: UserX, label: "Fake account", desc: "Pretending to be someone else" },
+                { icon: Ban, label: "Harassment or bullying", desc: "Targeting or intimidating someone" },
+                { icon: Skull, label: "Violence or dangerous acts", desc: "Threatening or promoting violence" },
+                { icon: EyeOff, label: "Nudity or sexual content", desc: "Inappropriate images or language" },
+                { icon: Flag, label: "Hate speech", desc: "Attacking a group or individual" },
+                { icon: ShieldAlert, label: "Intellectual property", desc: "Using content without permission" },
+                { icon: HelpCircle, label: "Something else", desc: "Other issue not listed above" },
+              ].map((r) => (
+                <button
+                  key={r.label}
+                  onClick={() => { setReportCategory(r.label); setReportStep("sub"); }}
+                  className="flex items-center gap-4 w-full px-4 py-3.5 hover:bg-muted/50 rounded-xl min-h-[48px] text-left"
+                >
+                  <r.icon className="h-5 w-5 text-muted-foreground shrink-0" />
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-medium text-foreground">{r.label}</p>
+                    <p className="text-[11px] text-muted-foreground">{r.desc}</p>
+                  </div>
+                  <ChevronDown className="h-4 w-4 text-muted-foreground -rotate-90 shrink-0" />
+                </button>
+              ))}
+            </div>
+          </>
+        ) : reportStep === "sub" ? (
+          <>
+            <p className="px-6 pb-4 text-xs text-muted-foreground">Select the option that best describes the issue.</p>
+            <div className="px-2 pb-6">
+              {((): { label: string }[] => {
+                const subMap: Record<string, string[]> = {
+                  "Spam": ["Promotional content", "Repetitive posts", "Bot activity", "Clickbait", "Misleading information"],
+                  "Scam or fraud": ["Phishing attempt", "Financial scam", "Fake giveaway", "Identity theft", "Cryptocurrency scam", "Impersonating a business"],
+                  "Fake account": ["Impersonating me", "Impersonating someone I know", "Impersonating a celebrity", "Impersonating a business or brand", "Bot or fake engagement"],
+                  "Harassment or bullying": ["Threatening language", "Unwanted contact", "Intimidation", "Stalking behavior", "Revealing private info (doxxing)", "Encouraging self-harm"],
+                  "Violence or dangerous acts": ["Graphic violence", "Threatening harm", "Glorifying violence", "Dangerous challenges", "Animal cruelty", "Terrorist content"],
+                  "Nudity or sexual content": ["Nudity", "Sexual activity", "Sexual exploitation", "Non-consensual imagery", "Content involving minors"],
+                  "Hate speech": ["Racism", "Religious discrimination", "Sexism or misogyny", "Homophobia or transphobia", "Disability discrimination", "Xenophobia"],
+                  "Intellectual property": ["Copyright infringement", "Trademark violation", "Stolen content", "Unauthorized use of my work"],
+                  "Something else": ["Misinformation", "Self-injury or suicide", "Drug sales", "Unauthorized sales", "Privacy violation", "Other"],
+                };
+                return (subMap[reportCategory] || ["Other"]).map((s) => ({ label: s }));
+              })().map((sub) => (
+                <button
+                  key={sub.label}
+                  onClick={() => setReportStep("submitted")}
+                  className="flex items-center justify-between w-full px-4 py-3.5 hover:bg-muted/50 rounded-xl min-h-[48px] text-left"
+                >
+                  <span className="text-sm font-medium text-foreground">{sub.label}</span>
+                  <ChevronDown className="h-4 w-4 text-muted-foreground -rotate-90 shrink-0" />
+                </button>
+              ))}
+            </div>
+          </>
+        ) : (
+          <div className="flex flex-col items-center justify-center py-12 px-6 gap-4">
+            <div className="h-16 w-16 rounded-full bg-primary/10 flex items-center justify-center">
+              <Flag className="h-8 w-8 text-primary" />
+            </div>
+            <h3 className="text-lg font-bold text-foreground">Thanks for reporting</h3>
+            <p className="text-sm text-muted-foreground text-center max-w-[260px]">
+              We'll review this post and take action if it violates our community guidelines.
+            </p>
+            <button
+              onClick={() => setShowReportSheet(false)}
+              className="mt-4 px-8 py-3 rounded-full bg-primary text-primary-foreground font-semibold text-sm min-h-[48px]"
             >
-              <div className="flex justify-center py-3">
-                <div className="w-10 h-1 rounded-full bg-muted-foreground/30" />
-              </div>
-
-              {reportStep === "categories" ? (
-                <>
-                  <div className="flex items-center px-4 pb-3">
-                    <button onClick={() => setShowReportSheet(false)} className="min-h-[44px] min-w-[44px] flex items-center justify-center">
-                      <ChevronLeft className="h-5 w-5 text-foreground" />
-                    </button>
-                    <h3 className="flex-1 text-center text-base font-bold text-foreground pr-11">Report</h3>
-                  </div>
-                  <p className="px-6 pb-4 text-xs text-muted-foreground">Why are you reporting this post? Your report is anonymous.</p>
-                  <div className="overflow-y-auto px-2 flex-1">
-                    {[
-                      { icon: AlertTriangle, label: "Spam" , desc: "Misleading or repetitive content" },
-                      { icon: ShieldAlert, label: "Scam or fraud", desc: "Trying to steal money or personal info" },
-                      { icon: UserX, label: "Fake account", desc: "Pretending to be someone else" },
-                      { icon: Ban, label: "Harassment or bullying", desc: "Targeting or intimidating someone" },
-                      { icon: Skull, label: "Violence or dangerous acts", desc: "Threatening or promoting violence" },
-                      { icon: EyeOff, label: "Nudity or sexual content", desc: "Inappropriate images or language" },
-                      { icon: Flag, label: "Hate speech", desc: "Attacking a group or individual" },
-                      { icon: ShieldAlert, label: "Intellectual property", desc: "Using content without permission" },
-                      { icon: HelpCircle, label: "Something else", desc: "Other issue not listed above" },
-                    ].map((r) => (
-                      <button
-                        key={r.label}
-                        onClick={() => { setReportCategory(r.label); setReportStep("sub"); }}
-                        className="flex items-center gap-4 w-full px-4 py-3.5 hover:bg-muted/50 rounded-xl min-h-[48px] text-left"
-                      >
-                        <r.icon className="h-5 w-5 text-muted-foreground shrink-0" />
-                        <div className="flex-1 min-w-0">
-                          <p className="text-sm font-medium text-foreground">{r.label}</p>
-                          <p className="text-[11px] text-muted-foreground">{r.desc}</p>
-                        </div>
-                        <ChevronDown className="h-4 w-4 text-muted-foreground -rotate-90 shrink-0" />
-                      </button>
-                    ))}
-                  </div>
-                </>
-              ) : reportStep === "sub" ? (
-                <>
-                  <div className="flex items-center px-4 pb-3">
-                    <button onClick={() => setReportStep("categories")} className="min-h-[44px] min-w-[44px] flex items-center justify-center">
-                      <ChevronLeft className="h-5 w-5 text-foreground" />
-                    </button>
-                    <h3 className="flex-1 text-center text-base font-bold text-foreground pr-11">{reportCategory}</h3>
-                  </div>
-                  <p className="px-6 pb-4 text-xs text-muted-foreground">Select the option that best describes the issue.</p>
-                  <div className="overflow-y-auto px-2 flex-1">
-                    {((): { label: string }[] => {
-                      const subMap: Record<string, string[]> = {
-                        "Spam": ["Promotional content", "Repetitive posts", "Bot activity", "Clickbait", "Misleading information"],
-                        "Scam or fraud": ["Phishing attempt", "Financial scam", "Fake giveaway", "Identity theft", "Cryptocurrency scam", "Impersonating a business"],
-                        "Fake account": ["Impersonating me", "Impersonating someone I know", "Impersonating a celebrity", "Impersonating a business or brand", "Bot or fake engagement"],
-                        "Harassment or bullying": ["Threatening language", "Unwanted contact", "Intimidation", "Stalking behavior", "Revealing private info (doxxing)", "Encouraging self-harm"],
-                        "Violence or dangerous acts": ["Graphic violence", "Threatening harm", "Glorifying violence", "Dangerous challenges", "Animal cruelty", "Terrorist content"],
-                        "Nudity or sexual content": ["Nudity", "Sexual activity", "Sexual exploitation", "Non-consensual imagery", "Content involving minors"],
-                        "Hate speech": ["Racism", "Religious discrimination", "Sexism or misogyny", "Homophobia or transphobia", "Disability discrimination", "Xenophobia"],
-                        "Intellectual property": ["Copyright infringement", "Trademark violation", "Stolen content", "Unauthorized use of my work"],
-                        "Something else": ["Misinformation", "Self-injury or suicide", "Drug sales", "Unauthorized sales", "Privacy violation", "Other"],
-                      };
-                      return (subMap[reportCategory] || ["Other"]).map((s) => ({ label: s }));
-                    })().map((sub) => (
-                      <button
-                        key={sub.label}
-                        onClick={() => setReportStep("submitted")}
-                        className="flex items-center justify-between w-full px-4 py-3.5 hover:bg-muted/50 rounded-xl min-h-[48px] text-left"
-                      >
-                        <span className="text-sm font-medium text-foreground">{sub.label}</span>
-                        <ChevronDown className="h-4 w-4 text-muted-foreground -rotate-90 shrink-0" />
-                      </button>
-                    ))}
-                  </div>
-                </>
-              ) : (
-                <div className="flex flex-col items-center justify-center py-12 px-6 gap-4">
-                  <div className="h-16 w-16 rounded-full bg-primary/10 flex items-center justify-center">
-                    <Flag className="h-8 w-8 text-primary" />
-                  </div>
-                  <h3 className="text-lg font-bold text-foreground">Thanks for reporting</h3>
-                  <p className="text-sm text-muted-foreground text-center max-w-[260px]">
-                    We'll review this post and take action if it violates our community guidelines.
-                  </p>
-                  <button
-                    onClick={() => setShowReportSheet(false)}
-                    className="mt-4 px-8 py-3 rounded-full bg-primary text-primary-foreground font-semibold text-sm min-h-[48px]"
-                  >
-                    Done
-                  </button>
-                </div>
-              )}
-            </motion.div>
-          </motion.div>
+              Done
+            </button>
+          </div>
         )}
-      </AnimatePresence>
+      </SwipeableSheet>
 
       {/* Comment Settings Sheet (Owner only) */}
       <AnimatePresence>
