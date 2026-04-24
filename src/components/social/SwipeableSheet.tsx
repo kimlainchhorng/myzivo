@@ -39,6 +39,10 @@ interface SwipeableSheetProps {
   className?: string;
   /** Hide the default close X button in the header */
   hideCloseButton?: boolean;
+  /** Outer overlay positioning. Use "absolute" when rendered inside a relative container (e.g. Reels overlay). */
+  positioning?: "fixed" | "absolute";
+  /** Extra classes for the drag-handle/header strip (e.g. dark mode borders) */
+  headerClassName?: string;
 }
 
 const CLOSE_OFFSET_PX = 100;
@@ -56,6 +60,8 @@ export default function SwipeableSheet({
   zIndex = 100,
   className,
   hideCloseButton,
+  positioning = "fixed",
+  headerClassName,
 }: SwipeableSheetProps) {
   const dragControls = useDragControls();
   const constraintsRef = useRef<HTMLDivElement>(null);
@@ -74,7 +80,10 @@ export default function SwipeableSheet({
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
-          className="fixed inset-0 flex items-end justify-center"
+          className={cn(
+            positioning === "absolute" ? "absolute" : "fixed",
+            "inset-0 flex items-end justify-center",
+          )}
           style={{ zIndex }}
           onClick={onClose}
           role="dialog"
@@ -111,7 +120,10 @@ export default function SwipeableSheet({
             <div
               onPointerDown={(e) => dragControls.start(e)}
               style={{ touchAction: "none" }}
-              className="shrink-0 cursor-grab active:cursor-grabbing select-none"
+              className={cn(
+                "shrink-0 cursor-grab active:cursor-grabbing select-none",
+                headerClassName,
+              )}
             >
               <div className="flex justify-center pt-2.5 pb-2">
                 <div className="w-10 h-1.5 rounded-full bg-muted-foreground/30" />

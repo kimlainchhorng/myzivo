@@ -1288,13 +1288,17 @@ function ReelSlide({ item, currentUserId, onClose }: { item: FeedItem; currentUs
         )}
       </AnimatePresence>
 
-      {/* Close button - top left */}
+      {/* Close button - top left, safe-area aware */}
       <button
         onClick={onClose}
-        className="absolute top-0 left-4 h-10 w-10 rounded-full bg-black/30 backdrop-blur-sm flex items-center justify-center"
-        style={{ marginTop: 'max(calc(env(safe-area-inset-top, 0px) + 0.75rem), 1rem)' }}
+        aria-label="Close"
+        className="absolute h-10 w-10 rounded-full bg-black/40 backdrop-blur-sm flex items-center justify-center"
+        style={{
+          top: 'max(env(safe-area-inset-top, 0px), 12px)',
+          left: 'max(env(safe-area-inset-left, 0px), 16px)',
+        }}
       >
-        <ChevronLeft className="h-5 w-5 text-white" />
+        <XIcon className="h-5 w-5 text-white" />
       </button>
 
       {/* Right side action buttons */}

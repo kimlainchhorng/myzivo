@@ -1,10 +1,11 @@
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { MoreHorizontal, X, MessageCircle, User, UserCircle, Share2 } from "lucide-react";
+import { MoreHorizontal, MessageCircle, User, UserCircle, Share2 } from "lucide-react";
 import { toast } from "sonner";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { getPostShareUrl, getProfileShareUrl, getPublicOrigin } from "@/lib/getPublicOrigin";
+import SwipeableSheet from "@/components/social/SwipeableSheet";
 
 interface ShareSheetProps {
   shareUrl: string;
@@ -230,31 +231,15 @@ export default function ShareSheet({
   ];
 
   return (
-    <motion.div
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      exit={{ opacity: 0 }}
-      className={`${positioning} inset-0 flex items-end justify-center`}
-      style={{ zIndex }}
-      onClick={onClose}
+    <SwipeableSheet
+      open
+      onClose={onClose}
+      title="Share to"
+      ariaLabel="Share options"
+      maxHeightVh={85}
+      zIndex={zIndex}
+      positioning={positioning}
     >
-      <div className="absolute inset-0 bg-black/50" />
-      <motion.div
-        initial={{ y: 300 }}
-        animate={{ y: 0 }}
-        exit={{ y: 300 }}
-        transition={{ type: "spring", damping: 28, stiffness: 300 }}
-        className="relative w-full max-w-md bg-background rounded-t-2xl pb-6 pt-3 px-0"
-        onClick={(e) => e.stopPropagation()}
-      >
-        <div className="w-10 h-1 rounded-full bg-muted-foreground/30 mx-auto mb-2" />
-
-        <div className="flex items-center justify-between px-4 py-3 border-b border-border/30">
-          <h3 className="text-sm font-bold text-foreground">Share to</h3>
-          <button onClick={onClose} className="min-h-[44px] min-w-[44px] flex items-center justify-center">
-            <X className="h-5 w-5 text-muted-foreground" />
-          </button>
-        </div>
 
         {/* In-app sharing row */}
         <div className="grid grid-cols-4 gap-4 px-6 py-4">
@@ -324,8 +309,7 @@ export default function ShareSheet({
               </div>
             </motion.div>
           )}
-        </AnimatePresence>
-      </motion.div>
-    </motion.div>
+      </AnimatePresence>
+    </SwipeableSheet>
   );
 }
