@@ -240,28 +240,8 @@ export default function MorePage() {
     .toLowerCase()
     .replace(/\s+/g, "");
 
-  const VerifiedCheck = ({ size = 16 }: { size?: number }) => (
-    <span
-      className="relative inline-flex items-center justify-center shrink-0"
-      style={{ width: size, height: size }}
-      aria-label="Verified"
-      title="Verified"
-    >
-      <svg viewBox="0 0 24 24" className="h-full w-full" aria-hidden="true">
-        <path
-          d="M12 1.5l2.39 1.74 2.95-.13.78 2.85 2.55 1.5-1.07 2.74 1.07 2.74-2.55 1.5-.78 2.85-2.95-.13L12 22.5l-2.39-1.74-2.95.13-.78-2.85-2.55-1.5 1.07-2.74-1.07-2.74 2.55-1.5.78-2.85 2.95.13L12 1.5z"
-          fill="#1d9bf0"
-        />
-        <path
-          d="M9.5 12.5l1.8 1.8 3.7-4.3"
-          fill="none"
-          stroke="#fff"
-          strokeWidth="2"
-          strokeLinecap="round"
-          strokeLinejoin="round"
-        />
-      </svg>
-    </span>
+  const VerifiedCheck = ({ size = 18 }: { size?: number }) => (
+    <VerifiedBadge size={size} />
   );
 
   /* --- Profile Card --- */
