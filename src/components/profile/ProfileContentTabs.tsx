@@ -192,8 +192,10 @@ export default function ProfileContentTabs({ userId }: { userId?: string }) {
   useEffect(() => {
     let alive = true;
 
-    // Reset feed when profile owner changes
-    setFeed([]);
+    // Reset feed when profile owner changes — but keep E2E seed posts so
+    // tests don't lose their fixture data after the first effect tick.
+    const seeded = getE2ESeedPosts();
+    setFeed(seeded && seeded.length > 0 ? (seeded as FeedItem[]) : []);
 
     const mergeFeed = (incoming: FeedItem[]) => {
       setFeed((prev) => {
