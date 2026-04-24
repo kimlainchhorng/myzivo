@@ -308,9 +308,7 @@ export default function AdminUsersPage() {
                               <div className="min-w-0">
                                 <div className="flex items-center gap-1">
                                   <p className="font-medium text-foreground truncate">{user.full_name || "—"}</p>
-                                  {user.is_verified && (
-                                    <BadgeCheck className="w-4 h-4 text-primary shrink-0" />
-                                  )}
+                                  {user.is_verified && <BadgeCheck className="w-4 h-4 text-[hsl(var(--flights))] shrink-0" />}
                                 </div>
                                 {user.phone && <p className="text-xs text-muted-foreground">{user.phone}</p>}
                               </div>
@@ -379,6 +377,9 @@ export default function AdminUsersPage() {
                           <p className="font-medium text-foreground text-sm truncate">{user.full_name || "No Name"}</p>
                           <p className="text-xs text-muted-foreground truncate">{user.email || "—"}</p>
                           <div className="flex gap-1 mt-1">
+                            {user.is_verified && (
+                              <Badge variant="secondary" className="text-[9px] bg-[hsl(var(--flights)/0.10)] text-[hsl(var(--flights))] border-0 px-1.5 py-0">Blue Verified</Badge>
+                            )}
                             {user.email_verified ? (
                               <Badge variant="secondary" className="text-[9px] bg-emerald-500/10 text-emerald-500 border-0 px-1.5 py-0">Verified</Badge>
                             ) : (
@@ -483,18 +484,18 @@ export default function AdminUsersPage() {
                   >
                     {selectedUser.is_verified ? (
                       <>
-                        <ShieldCheck className="w-4 h-4 text-primary" />
-                        Verified — Remove Badge
+                        <BadgeCheck className="w-4 h-4 text-[hsl(var(--flights))]" />
+                        Blue Verified — Remove Badge
                       </>
                     ) : (
                       <>
                         <BadgeCheck className="w-4 h-4" />
-                        Verify Account
+                        Give Blue Verified
                       </>
                     )}
                   </Button>
                   {selectedUser.is_verified && (
-                    <p className="text-[10px] text-muted-foreground mt-1.5">This account has been verified by an admin.</p>
+                    <p className="text-[10px] text-muted-foreground mt-1.5">This account has an active blue verified badge.</p>
                   )}
                 </div>
               </div>
