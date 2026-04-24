@@ -35,6 +35,8 @@ const DEVICES = [
   { name: "Galaxy S24 (cutout)", top: 36, bottom: 18, left: 0, right: 0 },
   { name: "iPad Pro 11\" portrait", top: 24, bottom: 20, left: 0, right: 0 },
   { name: "iPad Pro 11\" landscape", top: 24, bottom: 20, left: 20, right: 20 },
+  // The bug we keep hitting: native WKWebView reports 0 even on Dynamic Island
+  { name: "iOS Dynamic Island (broken inset=0)", top: 0, bottom: 0, left: 0, right: 0, expectFloor: 60 },
 ];
 
 // ── Shared safe-area tokens (mirrored from src/index.css `:root`) ────────
