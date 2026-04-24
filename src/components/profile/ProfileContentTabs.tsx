@@ -24,6 +24,7 @@ import { resolveSharedOrigins, type SharedOriginInfo } from "@/lib/social/resolv
 import { isLocalDraftPostId, toUserPostInteractionId } from "@/lib/social/postInteraction";
 import { useSwipeDownClose } from "@/components/social/useSwipeDownClose";
 import { SwipeGrabHandle } from "@/components/social/SwipeGrabHandle";
+import { logProfileActionError } from "@/lib/security/errorReporting";
 
 /**
  * Fullscreen post viewer wrapper with drag-down-to-close.
