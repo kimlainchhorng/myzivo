@@ -34,9 +34,13 @@ vi.mock("@/hooks/useUserProfile", () => ({
 }));
 
 // Persistence helper — spy without going through Supabase.
-const persistMock = vi.fn(async () => ({ id: "store-1" }));
+type PersistArgs = { userId: string; storeId: string | null; snapshot: any; persistProfile?: boolean };
+type PersistResult = { id: string | null; error?: string };
+const persistMock = vi.fn<(args: PersistArgs) => Promise<PersistResult>>(
+  async () => ({ id: "store-1" })
+);
 vi.mock("./wizardPersistence", () => ({
-  persistWizardPartial: (args: any) => persistMock(args),
+  persistWizardPartial: (args: PersistArgs) => persistMock(args),
   slugify: (s: string) => s.toLowerCase().replace(/\s+/g, "-"),
   findAvailableSlug: async () => "any",
   SLUG_TAKEN_MESSAGE: "taken",
