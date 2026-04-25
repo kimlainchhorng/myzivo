@@ -19,6 +19,32 @@ const KEYS_TO_INVALIDATE: Array<readonly unknown[]> = [
   ["feed"],
   ["feed-posts"],
   ["reels-feed"],
+  // Chat surfaces
+  ["chat-hub-personal"],
+  ["chat-hub-shop"],
+  ["chat-hub-ride"],
+  ["chat-hub-support"],
+  ["chat-hub-groups"],
+  ["personal-chat-peer"],
+  // Notifications + social
+  ["social-notifications"],
+  ["notifications"],
+  ["activity-feed"],
+  // Discovery
+  ["explore-users"],
+  ["explore-trending"],
+  ["smart-search-users"],
+  ["smart-search"],
+  // Live
+  ["live-stream-host"],
+  ["live-stream-viewers"],
+  ["live-chat"],
+  ["live-streams"],
+  // Other surfaces
+  ["dating-profiles"],
+  ["sound-posts"],
+  ["leaderboard"],
+  ["qr-profile"],
 ];
 
 export function useVerificationRealtime() {

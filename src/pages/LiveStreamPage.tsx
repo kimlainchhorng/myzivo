@@ -102,7 +102,9 @@ function LiveWatcher({ stream, onLeave }: { stream: LiveStream; onLeave: () => v
   const [showRechargeSheet, setShowRechargeSheet] = useState(false);
   const [sending, setSending] = useState(false);
   const [showViewerList, setShowViewerList] = useState(false);
-  const [viewerNames, setViewerNames] = useState<{ user_id: string; name: string; avatar: string | null }[]>([]);
+  const [viewerNames, setViewerNames] = useState<{ user_id: string; name: string; avatar: string | null; is_verified?: boolean }[]>([]);
+  // Cache of resolved verified flags so chat/gift inserts can hydrate the badge without flicker
+  const verifiedCacheRef = useRef<Map<string, boolean>>(new Map());
   const [elapsed, setElapsed] = useState(0);
   const [streamEnded, setStreamEnded] = useState(stream.status === "ended");
 
@@ -160,6 +162,7 @@ function LiveWatcher({ stream, onLeave }: { stream: LiveStream; onLeave: () => v
           .in("user_id", Array.from(userIds));
         for (const p of profs ?? []) {
           profileMap.set((p as any).user_id, { full_name: (p as any).full_name, avatar_url: (p as any).avatar_url, is_verified: (p as any).is_verified });
+          verifiedCacheRef.current.set((p as any).user_id, (p as any).is_verified === true);
         }
       }
 
@@ -180,6 +183,7 @@ function LiveWatcher({ stream, onLeave }: { stream: LiveStream; onLeave: () => v
           user_id: v.user_id,
           name: profileMap.get(v.user_id)?.full_name || "Guest",
           avatar: profileMap.get(v.user_id)?.avatar_url ?? null,
+          is_verified: profileMap.get(v.user_id)?.is_verified === true,
         }))
       );
     })();
@@ -263,7 +267,7 @@ function LiveWatcher({ stream, onLeave }: { stream: LiveStream; onLeave: () => v
       .on(
         "postgres_changes",
         { event: "INSERT", schema: "public", table: "live_gift_displays", filter: `stream_id=eq.${stream.id}` },
-        (payload: any) => {
+        async (payload: any) => {
           const g = payload.new;
           // Premium animation when applicable
           if (hasGiftVideo(g.gift_name)) {
@@ -274,6 +278,17 @@ function LiveWatcher({ stream, onLeave }: { stream: LiveStream; onLeave: () => v
             else if (g.coins >= 500) playPremiumGiftSound();
             else playGiftSound(1, g.coins);
           }
+          // Resolve sender verified flag (cache → fetch). Awaited so the row never flickers.
+          let senderVerified = verifiedCacheRef.current.get(g.sender_id);
+          if (senderVerified === undefined) {
+            const { data: prof } = await (supabase as any)
+              .from("profiles")
+              .select("is_verified")
+              .eq("user_id", g.sender_id)
+              .maybeSingle();
+            senderVerified = (prof as any)?.is_verified === true;
+            verifiedCacheRef.current.set(g.sender_id, senderVerified);
+          }
           // Add to chat as a "gift" line
           setChatMessages((prev) => [
             ...prev.slice(-39),
@@ -282,6 +297,7 @@ function LiveWatcher({ stream, onLeave }: { stream: LiveStream; onLeave: () => v
               user_id: g.sender_id,
               user_name: g.sender_name,
               user_avatar: null,
+              user_is_verified: senderVerified,
               text: `sent ${g.gift_name}`,
               created_at: g.created_at,
             },
@@ -574,7 +590,10 @@ function LiveWatcher({ stream, onLeave }: { stream: LiveStream; onLeave: () => v
                 viewerNames.slice(0, 25).map((v) => (
                   <div key={v.user_id} className="flex items-center gap-2 px-2 py-1.5 rounded-xl hover:bg-white/5">
                     <Avatar className="h-6 w-6"><AvatarImage src={v.avatar || undefined} /><AvatarFallback className="text-[9px]">{v.name[0]}</AvatarFallback></Avatar>
-                    <span className="text-[11px] text-white font-medium truncate">{v.name}</span>
+                    <span className="text-[11px] text-white font-medium truncate inline-flex items-center gap-1 min-w-0">
+                      <span className="truncate">{v.name}</span>
+                      {isBlueVerified(v.is_verified) && <VerifiedBadge size={11} interactive={false} />}
+                    </span>
                   </div>
                 ))
               )}
