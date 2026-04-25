@@ -13,7 +13,7 @@
  *  5. ?story=missing returns null (no viewer mounted) — caller handles missing.
  */
 import { describe, it, expect, beforeEach, vi } from "vitest";
-import { render, screen, act } from "@testing-library/react";
+import { render, screen, act, waitFor } from "@testing-library/react";
 import { MemoryRouter, BrowserRouter, Route, Routes } from "react-router-dom";
 import {
   useStoryDeepLink,
@@ -132,19 +132,18 @@ describe("Story deep-link back/forward navigation", () => {
     expect(screen.getByTestId("viewer-story").textContent).toBe("B");
 
     // 3) Back -> should show A. history.back() dispatches popstate
-    // asynchronously; wait for the next tick so React Router can process it.
-    await act(async () => {
-      window.history.back();
-      await new Promise((r) => setTimeout(r, 0));
+    // asynchronously; wait until React Router commits the new URL.
+    window.history.back();
+    await waitFor(() => {
+      expect(screen.getByTestId("viewer-story").textContent).toBe("A");
     });
     const afterBack = container.querySelector("[data-testid='viewer-story']");
     expect(afterBack?.textContent).toBe("A");
 
     // 4) Forward -> should show B again
-    await act(async () => {
-      window.history.forward();
-      await new Promise((r) => setTimeout(r, 0));
+    window.history.forward();
+    await waitFor(() => {
+      expect(screen.getByTestId("viewer-story").textContent).toBe("B");
     });
-    expect(screen.getByTestId("viewer-story").textContent).toBe("B");
   });
 });
