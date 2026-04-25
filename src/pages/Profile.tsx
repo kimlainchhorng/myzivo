@@ -591,7 +591,10 @@ const Profile = () => {
                     <div className="hidden lg:block absolute inset-0 bg-gradient-to-br from-primary/[0.04] via-transparent to-primary/[0.02] rounded-3xl" />
                     <div className="hidden lg:block pointer-events-none absolute inset-0 rounded-3xl ring-1 ring-inset ring-white/[0.08] shadow-[inset_0_1px_0_0_rgba(255,255,255,0.06)]" />
                     <div className="relative z-10">
-                    {/* Cover Photo — full-bleed on mobile, taller like Facebook */}
+                    {/* Cover Photo — full-bleed on mobile, taller like Facebook.
+                        On mobile, the cover extends behind the iOS/Android status bar.
+                        We add safe-area top padding + a subtle status-bar scrim so
+                        the system clock/battery stay legible over any cover image. */}
                     <div
                       className="relative h-48 sm:h-56 md:h-60 lg:h-52 w-full overflow-hidden select-none"
 
@@ -603,8 +606,17 @@ const Profile = () => {
                       onTouchMove={coverRepositioning ? (e) => handleCoverDragMove(e.touches[0].clientY) : undefined}
                       onTouchEnd={coverRepositioning ? handleCoverDragEnd : undefined}
                       onDoubleClick={coverRepositioning ? () => { impact("medium"); setCoverPosition(50); } : undefined}
-                      style={{ cursor: coverRepositioning ? "ns-resize" : "default" }}
+                      style={{
+                        cursor: coverRepositioning ? "ns-resize" : "default",
+                        paddingTop: "var(--zivo-safe-top, 0px)",
+                      }}
                     >
+                      {/* Status-bar legibility scrim (mobile only) */}
+                      <div
+                        aria-hidden="true"
+                        className="lg:hidden pointer-events-none absolute inset-x-0 top-0 z-10 bg-gradient-to-b from-black/45 via-black/15 to-transparent"
+                        style={{ height: "calc(var(--zivo-safe-top, 0px) + 16px)" }}
+                      />
                       <motion.div
                         className="absolute inset-0 lg:!translate-y-0 lg:!scale-100"
                         style={coverRepositioning ? undefined : { y: coverY, scale: coverScale }}
