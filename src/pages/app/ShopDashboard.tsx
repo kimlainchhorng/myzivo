@@ -4,6 +4,7 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
+import { toast } from "sonner";
 import {
   ArrowLeft, Package, ShoppingBag, BarChart3, Settings, Tag, Truck,
   Plus, TrendingUp, DollarSign, Box, Users, Calendar, Clock, Wallet, Shield, ChevronRight,
@@ -12,6 +13,41 @@ import {
 import { useAuth } from "@/contexts/AuthContext";
 import AppLayout from "@/components/app/AppLayout";
 import { cn } from "@/lib/utils";
+
+// Routes that exist in App.tsx — anything else shows a "Coming soon" toast
+// instead of dropping the user on a 404 page.
+const IMPLEMENTED_SHOP_ROUTES = new Set<string>([
+  "/shop-dashboard/employees",
+  "/shop-dashboard/payroll",
+  "/shop-dashboard/employee-schedule",
+  "/shop-dashboard/time-clock",
+  "/shop-dashboard/employee-rules",
+  "/shop-dashboard/truck",
+  "/shop-dashboard/attribution",
+  "/shop-dashboard/sandbox",
+  "/shop-dashboard/roi",
+  "/shop-dashboard/refer",
+  "/shop-dashboard/boost",
+  "/shop-dashboard/boost-engine",
+  "/shop-dashboard/ai-creative",
+  "/shop-dashboard/ai-content",
+  "/shop-dashboard/wallet",
+  "/shop-dashboard/tax-reports",
+]);
+
+const safeNavigate = (
+  navigate: (to: string) => void,
+  to: string,
+  label: string,
+) => {
+  if (IMPLEMENTED_SHOP_ROUTES.has(to)) {
+    navigate(to);
+  } else {
+    toast.info(`${label} — coming soon`, {
+      description: "We're polishing this section. Check back shortly.",
+    });
+  }
+};
 
 const ShopDashboard = () => {
   const navigate = useNavigate();
@@ -25,29 +61,29 @@ const ShopDashboard = () => {
   ];
 
   const actions = [
-    { icon: Package, label: "Products", description: "Manage your inventory", color: "from-blue-500 to-blue-600", onClick: () => navigate("/shop-dashboard/products") },
-    { icon: ShoppingBag, label: "Orders", description: "View & manage orders", color: "from-orange-500 to-amber-500", onClick: () => navigate("/shop-dashboard/orders") },
-    { icon: Tag, label: "Promotions", description: "Discounts & deals", color: "from-rose-500 to-pink-500", onClick: () => navigate("/shop-dashboard/promotions") },
-    { icon: Truck, label: "Delivery", description: "Shipping settings", color: "from-emerald-500 to-green-500", onClick: () => navigate("/shop-dashboard/delivery") },
-    { icon: BarChart3, label: "Analytics", description: "Sales & performance", color: "from-purple-500 to-purple-600", onClick: () => navigate("/shop-dashboard/analytics") },
-    { icon: Rocket, label: "Sales Attribution", description: "Reel-to-purchase funnel", color: "from-amber-500 to-orange-500", onClick: () => navigate("/shop-dashboard/attribution") },
-    { icon: BarChart3, label: "Merchant ROI", description: "Views, clicks & revenue", color: "from-indigo-500 to-blue-500", onClick: () => navigate("/shop-dashboard/roi") },
-    { icon: Truck, label: "Truck Dashboard", description: "GPS inventory & sales", color: "from-teal-500 to-cyan-500", onClick: () => navigate("/shop-dashboard/truck") },
-    { icon: TestTube, label: "Sandbox Mode", description: "Test transactions & CAPI", color: "from-yellow-500 to-amber-500", onClick: () => navigate("/shop-dashboard/sandbox") },
-    { icon: Users, label: "Refer a Shop", description: "Invite shops, both get boosted", color: "from-pink-500 to-rose-500", onClick: () => navigate("/shop-dashboard/refer") },
-    { icon: Settings, label: "Shop Settings", description: "Store profile & config", color: "from-slate-500 to-slate-600", onClick: () => navigate("/shop-dashboard/settings") },
+    { icon: Package, label: "Products", description: "Manage your inventory", color: "from-blue-500 to-blue-600", onClick: () => safeNavigate(navigate, "/shop-dashboard/products", "Products") },
+    { icon: ShoppingBag, label: "Orders", description: "View & manage orders", color: "from-orange-500 to-amber-500", onClick: () => safeNavigate(navigate, "/shop-dashboard/orders", "Orders") },
+    { icon: Tag, label: "Promotions", description: "Discounts & deals", color: "from-rose-500 to-pink-500", onClick: () => safeNavigate(navigate, "/shop-dashboard/promotions", "Promotions") },
+    { icon: Truck, label: "Delivery", description: "Shipping settings", color: "from-emerald-500 to-green-500", onClick: () => safeNavigate(navigate, "/shop-dashboard/delivery", "Delivery") },
+    { icon: BarChart3, label: "Analytics", description: "Sales & performance", color: "from-purple-500 to-purple-600", onClick: () => safeNavigate(navigate, "/shop-dashboard/analytics", "Analytics") },
+    { icon: Rocket, label: "Sales Attribution", description: "Reel-to-purchase funnel", color: "from-amber-500 to-orange-500", onClick: () => safeNavigate(navigate, "/shop-dashboard/attribution", "Sales Attribution") },
+    { icon: BarChart3, label: "Merchant ROI", description: "Views, clicks & revenue", color: "from-indigo-500 to-blue-500", onClick: () => safeNavigate(navigate, "/shop-dashboard/roi", "Merchant ROI") },
+    { icon: Truck, label: "Truck Dashboard", description: "GPS inventory & sales", color: "from-teal-500 to-cyan-500", onClick: () => safeNavigate(navigate, "/shop-dashboard/truck", "Truck Dashboard") },
+    { icon: TestTube, label: "Sandbox Mode", description: "Test transactions & CAPI", color: "from-yellow-500 to-amber-500", onClick: () => safeNavigate(navigate, "/shop-dashboard/sandbox", "Sandbox Mode") },
+    { icon: Users, label: "Refer a Shop", description: "Invite shops, both get boosted", color: "from-pink-500 to-rose-500", onClick: () => safeNavigate(navigate, "/shop-dashboard/refer", "Refer a Shop") },
+    { icon: Settings, label: "Shop Settings", description: "Store profile & config", color: "from-slate-500 to-slate-600", onClick: () => safeNavigate(navigate, "/shop-dashboard/settings", "Shop Settings") },
   ];
 
   const employeeActions = [
-    { icon: Users, label: "Employees", description: "Manage staff members", color: "text-blue-500", bg: "bg-blue-500/10", onClick: () => navigate("/shop-dashboard/employees") },
-    { icon: Wallet, label: "Payroll", description: "Wages & pay runs", color: "text-emerald-500", bg: "bg-emerald-500/10", onClick: () => navigate("/shop-dashboard/payroll") },
-    { icon: Calendar, label: "Schedule", description: "Shift planning", color: "text-purple-500", bg: "bg-purple-500/10", onClick: () => navigate("/shop-dashboard/employee-schedule") },
-    { icon: Clock, label: "Time Clock", description: "Clock in & out records", color: "text-amber-500", bg: "bg-amber-500/10", onClick: () => navigate("/shop-dashboard/time-clock") },
-    { icon: CalendarCheck, label: "Attendance & Leave", description: "Track attendance & vacation", color: "text-teal-500", bg: "bg-teal-500/10", onClick: () => navigate("/shop-dashboard/attendance") },
-    { icon: GraduationCap, label: "Training", description: "Onboarding & training", color: "text-indigo-500", bg: "bg-indigo-500/10", onClick: () => navigate("/shop-dashboard/training") },
-    { icon: Star, label: "Performance", description: "Reviews & evaluations", color: "text-yellow-500", bg: "bg-yellow-500/10", onClick: () => navigate("/shop-dashboard/performance") },
-    { icon: FolderOpen, label: "Documents", description: "Contracts & files", color: "text-sky-500", bg: "bg-sky-500/10", onClick: () => navigate("/shop-dashboard/documents") },
-    { icon: Shield, label: "Employee Rules", description: "Policies & permissions", color: "text-rose-500", bg: "bg-rose-500/10", onClick: () => navigate("/shop-dashboard/employee-rules") },
+    { icon: Users, label: "Employees", description: "Manage staff members", color: "text-blue-500", bg: "bg-blue-500/10", onClick: () => safeNavigate(navigate, "/shop-dashboard/employees", "Employees") },
+    { icon: Wallet, label: "Payroll", description: "Wages & pay runs", color: "text-emerald-500", bg: "bg-emerald-500/10", onClick: () => safeNavigate(navigate, "/shop-dashboard/payroll", "Payroll") },
+    { icon: Calendar, label: "Schedule", description: "Shift planning", color: "text-purple-500", bg: "bg-purple-500/10", onClick: () => safeNavigate(navigate, "/shop-dashboard/employee-schedule", "Schedule") },
+    { icon: Clock, label: "Time Clock", description: "Clock in & out records", color: "text-amber-500", bg: "bg-amber-500/10", onClick: () => safeNavigate(navigate, "/shop-dashboard/time-clock", "Time Clock") },
+    { icon: CalendarCheck, label: "Attendance & Leave", description: "Track attendance & vacation", color: "text-teal-500", bg: "bg-teal-500/10", onClick: () => safeNavigate(navigate, "/shop-dashboard/attendance", "Attendance & Leave") },
+    { icon: GraduationCap, label: "Training", description: "Onboarding & training", color: "text-indigo-500", bg: "bg-indigo-500/10", onClick: () => safeNavigate(navigate, "/shop-dashboard/training", "Training") },
+    { icon: Star, label: "Performance", description: "Reviews & evaluations", color: "text-yellow-500", bg: "bg-yellow-500/10", onClick: () => safeNavigate(navigate, "/shop-dashboard/performance", "Performance") },
+    { icon: FolderOpen, label: "Documents", description: "Contracts & files", color: "text-sky-500", bg: "bg-sky-500/10", onClick: () => safeNavigate(navigate, "/shop-dashboard/documents", "Documents") },
+    { icon: Shield, label: "Employee Rules", description: "Policies & permissions", color: "text-rose-500", bg: "bg-rose-500/10", onClick: () => safeNavigate(navigate, "/shop-dashboard/employee-rules", "Employee Rules") },
   ];
 
   return (
