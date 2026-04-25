@@ -30,6 +30,7 @@ import { invalidateAllStoryCaches } from "@/lib/storiesCache";
 interface Props {
   open: boolean;
   onClose: () => void;
+  onPublished?: () => void;
 }
 
 type Step = "choose" | "preview-media" | "compose-text";
@@ -51,7 +52,7 @@ const TEXT_BACKGROUNDS = [
   "linear-gradient(135deg,#1e293b,#334155)",
 ];
 
-export default function CreateStorySheet({ open, onClose }: Props) {
+export default function CreateStorySheet({ open, onClose, onPublished }: Props) {
   const { user } = useAuth();
   const { data: profile } = useUserProfile();
   const queryClient = useQueryClient();
