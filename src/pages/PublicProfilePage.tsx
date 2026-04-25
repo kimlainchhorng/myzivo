@@ -858,20 +858,29 @@ export default function PublicProfilePage() {
             )}
 
             {!isLocked ? (
-              <div className="flex gap-6 mt-4">
-                {[{ count: posts.length, label: "Posts" }, { count: followerCount, label: "Followers" }, { count: followingCount, label: "Following" }, { count: friendCount, label: "Friends" }].map((s) => (
-                  <div key={s.label} className="text-center">
-                    <p className="text-lg font-bold text-foreground">{s.count}</p>
-                    <p className="text-[11px] text-muted-foreground">{s.label}</p>
-                  </div>
-                ))}
+              <div className="mt-3 flex flex-wrap items-center justify-center gap-x-1.5 gap-y-1 text-sm">
+                <span className="inline-flex items-baseline gap-1">
+                  <span className="font-bold text-foreground">{formatCount(followerCount) ?? "0"}</span>
+                  <span className="font-medium text-muted-foreground">followers</span>
+                </span>
+                <span aria-hidden="true" className="text-muted-foreground/70">·</span>
+                <span className="inline-flex items-baseline gap-1">
+                  <span className="font-bold text-foreground">{formatCount(followingCount) ?? "0"}</span>
+                  <span className="font-medium text-muted-foreground">following</span>
+                </span>
+                <span aria-hidden="true" className="text-muted-foreground/70">·</span>
+                <span className="inline-flex items-baseline gap-1">
+                  <span className="font-bold text-foreground">{formatCount(posts.length) ?? "0"}</span>
+                  <span className="font-medium text-muted-foreground">posts</span>
+                </span>
+                <span aria-hidden="true" className="text-muted-foreground/70">·</span>
+                <span className="inline-flex items-baseline gap-1">
+                  <span className="font-bold text-foreground">{formatCount(friendCount) ?? "0"}</span>
+                  <span className="font-medium text-muted-foreground">friends</span>
+                </span>
               </div>
             ) : (
-              <div className="flex gap-6 mt-4">
-                {["Posts", "Followers", "Following", "Friends"].map((l) => (
-                  <div key={l} className="text-center"><p className="text-lg font-bold text-foreground">—</p><p className="text-[11px] text-muted-foreground">{l}</p></div>
-                ))}
-              </div>
+              <div className="mt-3 text-sm text-muted-foreground">— followers · — following · — posts</div>
             )}
 
             {/* Actions */}
