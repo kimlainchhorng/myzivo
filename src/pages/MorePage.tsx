@@ -189,8 +189,11 @@ export default function MorePage() {
   const { t } = useI18n();
   const navigate = useNavigate();
   const { user, signOut, isAdmin } = useAuth();
+  const { theme, setTheme, resolvedTheme } = useTheme();
   const [showPartnerSheet, setShowPartnerSheet] = useState(false);
   const [expandedSection, setExpandedSection] = useState<string | null>("Essentials");
+  const [search, setSearch] = useState("");
+  const [confirmAction, setConfirmAction] = useState<null | "signout" | "switch">(null);
 
   // Shared profile data — same source as /profile, so the name/badge stay in sync
   const { data: profile } = useUserProfile();
