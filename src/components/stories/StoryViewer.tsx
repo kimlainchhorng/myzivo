@@ -153,7 +153,73 @@ export default function StoryViewer({ groups, startGroupIndex, startStoryIndex =
     },
   });
 
-  // ---- Record view ----
+  // ---- My reaction on the current story (real persistence) ----
+  const { data: myReaction } = useQuery({
+    queryKey: ["story-my-reaction", currentStory?.id, user?.id],
+    enabled: !!currentStory && !!user,
+    queryFn: async () => {
+      const { data } = await supabase
+        .from("story_reactions" as any)
+        .select("emoji")
+        .eq("story_id", currentStory!.id)
+        .eq("user_id", user!.id)
+        .maybeSingle();
+      return (data as any)?.emoji ?? null;
+    },
+  });
+
+  const reactToStory = useMutation({
+    mutationFn: async (emoji: string | null) => {
+      if (!currentStory || !user) return;
+      if (emoji === null) {
+        const { error } = await supabase
+          .from("story_reactions" as any)
+          .delete()
+          .eq("story_id", currentStory.id)
+          .eq("user_id", user.id);
+        if (error) throw error;
+        return;
+      }
+      const { data: existing } = await supabase
+        .from("story_reactions" as any)
+        .select("id")
+        .eq("story_id", currentStory.id)
+        .eq("user_id", user.id)
+        .maybeSingle();
+      if (existing) {
+        const { error } = await supabase
+          .from("story_reactions" as any)
+          .update({ emoji })
+          .eq("id", (existing as any).id);
+        if (error) throw error;
+      } else {
+        const { error } = await supabase
+          .from("story_reactions" as any)
+          .insert({ story_id: currentStory.id, user_id: user.id, emoji });
+        if (error) throw error;
+      }
+    },
+    onSuccess: (_data, emoji) => {
+      queryClient.invalidateQueries({
+        queryKey: ["story-my-reaction", currentStory?.id, user?.id],
+      });
+      if (emoji) {
+        setReactionBurst(emoji);
+        window.setTimeout(() => setReactionBurst(null), 800);
+      }
+    },
+    onError: (err: any) => toast.error(err?.message || "Could not save reaction"),
+  });
+
+  const toggleLike = useCallback(() => {
+    if (!user) {
+      toast.error("Please sign in");
+      return;
+    }
+    reactToStory.mutate(myReaction === "❤️" ? null : "❤️");
+  }, [myReaction, reactToStory, user]);
+
+
   useEffect(() => {
     if (!currentStory || !user || isOwner) return;
     void supabase
