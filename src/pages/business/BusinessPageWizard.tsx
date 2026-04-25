@@ -199,7 +199,7 @@ export default function BusinessPageWizard() {
         const { error } = await supabase.from("store_profiles").update(payload).eq("id", storeId);
         if (error) throw error;
       } else {
-        const { data, error } = await supabase
+        const { data, error } = await (supabase as any)
           .from("store_profiles")
           .insert(payload)
           .select("id")
