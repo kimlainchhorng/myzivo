@@ -887,16 +887,26 @@ const Profile = () => {
                         </button>
                       </div>
 
-                      {/* Edit profile (mobile-only quick CTA) */}
-                      <div className="lg:hidden mt-3">
-                        <button
-                          type="button"
-                          onClick={() => navigate("/account/profile-edit")}
-                          className="inline-flex items-center gap-1.5 rounded-full border border-border/60 bg-muted/30 px-3.5 py-1.5 text-xs font-semibold text-foreground hover:bg-muted/50 focus-visible:ring-2 focus-visible:ring-primary/60 focus-visible:outline-none transition-colors"
-                        >
-                          <Pencil className="h-3 w-3" />
-                          Edit profile
-                        </button>
+                      {/* Quick Actions row (mobile-only) — keeps the most-used
+                          account actions one tap away so users don't have to
+                          scroll or open /more for the basics. */}
+                      <div className="lg:hidden mt-3 grid grid-cols-4 gap-2">
+                        {[
+                          { label: "Edit", icon: Pencil, onClick: () => navigate("/account/profile-edit") },
+                          { label: "Share", icon: Share2, onClick: () => setShareOpen(true) },
+                          { label: "Insights", icon: BarChart3, onClick: () => navigate("/account/analytics") },
+                          { label: "Settings", icon: Settings, onClick: () => navigate("/more") },
+                        ].map((a) => (
+                          <button
+                            key={a.label}
+                            type="button"
+                            onClick={a.onClick}
+                            className="flex flex-col items-center gap-1 rounded-2xl border border-border/50 bg-muted/25 px-2 py-2 text-[11px] font-semibold text-foreground hover:bg-muted/50 active:scale-[0.97] focus-visible:ring-2 focus-visible:ring-primary/60 focus-visible:outline-none transition-all"
+                          >
+                            <a.icon className="h-4 w-4 text-primary" />
+                            <span>{a.label}</span>
+                          </button>
+                        ))}
                       </div>
 
                       {/* Social Links Row */}
