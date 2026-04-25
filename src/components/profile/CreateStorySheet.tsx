@@ -307,7 +307,7 @@ export default function CreateStorySheet({ open, onClose, onPublished }: Props) 
         user_id: user.id,
         media_url: urlData.publicUrl,
         media_type: mediaType,
-        caption: captionToSave,
+        text_overlay: captionToSave,
         audio_url: audioTrack?.url || null,
       });
       if (insErr) {

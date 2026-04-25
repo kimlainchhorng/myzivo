@@ -28,11 +28,11 @@ interface RawStory {
   user_id: string;
   media_url: string;
   media_type: string;
-  caption: string | null;
+  text_overlay: string | null;
   audio_url: string | null;
   created_at: string;
   expires_at: string;
-  views_count: number | null;
+  view_count: number | null;
 }
 
 export default function FeedStoryRing() {
@@ -49,7 +49,7 @@ export default function FeedStoryRing() {
     queryFn: async () => {
       const { data } = await (supabase as any)
         .from("stories")
-        .select("id, user_id, media_url, media_type, caption, audio_url, created_at, expires_at, views_count")
+        .select("id, user_id, media_url, media_type, text_overlay, audio_url, created_at, expires_at, view_count")
         .gt("expires_at", new Date().toISOString())
         .order("created_at", { ascending: true });
       return ((data as any[]) || []) as RawStory[];
@@ -95,10 +95,10 @@ export default function FeedStoryRing() {
           id: s.id,
           mediaUrl: s.media_url,
           mediaType: s.media_type,
-          caption: s.caption || undefined,
+          caption: s.text_overlay || undefined,
           audioUrl: s.audio_url || undefined,
           createdAt: s.created_at,
-          viewsCount: s.views_count ?? 0,
+          viewsCount: s.view_count ?? 0,
         })),
       });
     }
