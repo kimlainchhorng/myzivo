@@ -48,11 +48,18 @@ export interface StoryGroup {
 
 const STORY_DURATION = 5000;
 
+export interface StoryCloseMeta {
+  story_id: string;
+  segment_index: number;
+  total_segments: number;
+  completed: boolean;
+}
+
 interface Props {
   groups: StoryGroup[];
   startGroupIndex: number;
   startStoryIndex?: number;
-  onClose: () => void;
+  onClose: (meta?: StoryCloseMeta) => void;
   onStoryChange?: (storyId: string) => void;
 }
 
