@@ -499,9 +499,10 @@ const Profile = () => {
 
   // Cover photo upload
   const handleCoverUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file || !user?.id) return;
-    if (file.size > 10 * 1024 * 1024) { toast.error("Cover image must be under 10MB"); return; }
+    const input = e.target;
+    const file = input.files?.[0];
+    if (!file || !user?.id) { input.value = ""; return; }
+    if (file.size > 10 * 1024 * 1024) { toast.error("Cover image must be under 10MB"); input.value = ""; return; }
     setCoverUploading(true);
     try {
       const ext = file.name.split(".").pop();
@@ -516,12 +517,14 @@ const Profile = () => {
       toast.error(err.message || "Failed to upload cover");
     } finally {
       setCoverUploading(false);
+      input.value = "";
     }
   };
 
   // Avatar upload
   const handleAvatarUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
+    const input = e.target;
+    const file = input.files?.[0];
     if (!file) return;
     try {
       const reader = new FileReader();
@@ -530,6 +533,7 @@ const Profile = () => {
       await uploadAvatar.mutateAsync(file);
       setAvatarPreview(null);
     } catch { setAvatarPreview(null); }
+    finally { input.value = ""; }
   };
 
   // Cover repositioning handlers
@@ -965,36 +969,42 @@ const Profile = () => {
                       <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-card/40 via-transparent to-transparent lg:from-card/90 lg:via-card/20" />
                       </motion.div>
 
-                      {/* Cover action buttons — kept minimal: reposition + change.
-                          Use a real <label htmlFor> for the file input so the picker
-                          opens reliably on iOS / Android (ref.click() can be blocked
-                          inside transformed/animated ancestors). */}
+                      {/* Cover action button — Facebook-style.
+                          Pinned to the BOTTOM-RIGHT of the cover (clear of the
+                          status bar, the sticky header, and the avatar). Uses
+                          a native <label htmlFor> so the file picker reliably
+                          opens on iOS / Android Capacitor. */}
                       {user && !coverRepositioning && (
-                        <div
-                          className="absolute right-2 z-30 flex gap-1.5"
-                          style={{ top: "calc(var(--zivo-safe-top, 0px) + 0.75rem)" }}
-                        >
+                        <div className="absolute right-3 bottom-3 z-30 flex items-center gap-1.5 pointer-events-auto">
                           {profile?.cover_url && (
                             <motion.button
                               type="button"
                               whileTap={{ scale: 0.88 }}
                               onClick={() => { setCoverPosition(profile?.cover_position ?? 50); setCoverRepositioning(true); }}
                               aria-label="Reposition cover photo"
-                              className="h-9 w-9 flex items-center justify-center rounded-full bg-background/70 backdrop-blur-md text-foreground/90 hover:bg-background/95 shadow-md border border-border/30 focus-visible:ring-2 focus-visible:ring-primary/60 focus-visible:outline-none"
+                              className="h-9 w-9 flex items-center justify-center rounded-full bg-background/85 backdrop-blur-md text-foreground hover:bg-background shadow-lg border border-border/40 focus-visible:ring-2 focus-visible:ring-primary/60 focus-visible:outline-none"
                             >
                               <MoveVertical className="h-4 w-4" />
                             </motion.button>
                           )}
                           <label
                             htmlFor="profile-cover-input"
-                            aria-label="Change cover photo"
+                            aria-label={profile?.cover_url ? "Change cover photo" : "Add cover photo"}
                             aria-disabled={coverUploading}
                             className={cn(
-                              "h-9 w-9 flex items-center justify-center rounded-full bg-background/70 backdrop-blur-md text-foreground/90 hover:bg-background/95 shadow-md border border-border/30 cursor-pointer active:scale-90 transition focus-visible:ring-2 focus-visible:ring-primary/60 focus-visible:outline-none",
-                              coverUploading && "opacity-50 pointer-events-none"
+                              "inline-flex items-center gap-1.5 h-9 rounded-full bg-background/90 backdrop-blur-md text-foreground hover:bg-background shadow-lg border border-border/40 cursor-pointer active:scale-95 transition focus-visible:ring-2 focus-visible:ring-primary/60 focus-visible:outline-none",
+                              profile?.cover_url ? "w-9 justify-center" : "px-3 text-xs font-semibold",
+                              coverUploading && "opacity-60 pointer-events-none"
                             )}
                           >
-                            {coverUploading ? <Loader2 className="h-4 w-4 animate-spin" /> : <ImagePlus className="h-4 w-4" />}
+                            {coverUploading ? (
+                              <Loader2 className="h-4 w-4 animate-spin" />
+                            ) : (
+                              <>
+                                <Camera className="h-4 w-4" />
+                                {!profile?.cover_url && <span>Add cover</span>}
+                              </>
+                            )}
                           </label>
                         </div>
                       )}
@@ -1019,15 +1029,19 @@ const Profile = () => {
                         </div>
                       )}
 
-                      <input
-                        id="profile-cover-input"
-                        ref={coverInputRef}
-                        type="file"
-                        accept="image/jpeg,image/png,image/webp"
-                        onChange={handleCoverUpload}
-                        className="sr-only"
-                      />
                     </div>
+
+                    {/* Hidden cover file input — placed OUTSIDE the cover
+                        container (which has motion transforms) so iOS/Capacitor
+                        reliably opens the file picker via the <label htmlFor>. */}
+                    <input
+                      id="profile-cover-input"
+                      ref={coverInputRef}
+                      type="file"
+                      accept="image/jpeg,image/png,image/webp"
+                      onChange={handleCoverUpload}
+                      className="sr-only"
+                    />
 
                     {/* Avatar overlapping cover */}
                     <div className="relative z-10 -mt-11 px-6">
