@@ -242,6 +242,24 @@ export default function StoryViewer({
     },
   });
 
+  // Parse comments into threads keyed by reactionId.
+  // Convention: content starting with "[react:<uuid>] body" belongs to that
+  // reaction's thread. Plain comments (no prefix) go into the legacy bucket.
+  const REACT_PREFIX = /^\[react:([0-9a-f-]{36})\]\s*/i;
+  const commentsByReaction = new Map<string, any[]>();
+  const flatComments: any[] = [];
+  for (const c of comments as any[]) {
+    const m = REACT_PREFIX.exec(c.content || "");
+    if (m) {
+      const reactionId = m[1];
+      const cleaned = { ...c, content: c.content.replace(REACT_PREFIX, "") };
+      if (!commentsByReaction.has(reactionId)) commentsByReaction.set(reactionId, []);
+      commentsByReaction.get(reactionId)!.push(cleaned);
+    } else {
+      flatComments.push(c);
+    }
+  }
+
   // ---- My reaction on the current story (real persistence) ----
   const { data: myReaction } = useQuery({
     queryKey: ["story-my-reaction", currentStory?.id, user?.id],
