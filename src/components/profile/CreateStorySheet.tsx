@@ -191,22 +191,64 @@ export default function CreateStorySheet({ open, onClose }: Props) {
    * Upload via XHR PUT against a Supabase signed upload URL so we can
    * report real progress events.
    */
+  const getErrorMessage = async (err: any, fallback: string) => {
+    if (!err) return fallback;
+    if (typeof err === "string") return err;
+    if (err.message) return err.message;
+    try {
+      return JSON.stringify(err);
+    } catch {
+      return fallback;
+    }
+  };
+
+  const invalidateStoryQueries = async () => {
+    await Promise.all([
+      queryClient.invalidateQueries({ queryKey: ["user-stories"] }),
+      queryClient.invalidateQueries({ queryKey: ["feed-story-users"] }),
+      queryClient.invalidateQueries({ queryKey: ["profile-story-rings", user?.id] }),
+      queryClient.invalidateQueries({ queryKey: ["profile-story-rings"] }),
+      queryClient.invalidateQueries({ queryKey: ["profile-my-story", user?.id] }),
+      queryClient.invalidateQueries({ queryKey: ["profile-my-story"] }),
+      queryClient.invalidateQueries({ queryKey: ["my-story-views", user?.id] }),
+    ]);
+  };
+
   const xhrUpload = (url: string, blob: Blob, contentType: string) =>
     new Promise<void>((resolve, reject) => {
       const xhr = new XMLHttpRequest();
       xhr.open("PUT", url, true);
-      xhr.setRequestHeader("Content-Type", contentType);
       xhr.setRequestHeader("x-upsert", "true");
+      const formData = new FormData();
+      formData.append("cacheControl", "3600");
+      formData.append("", blob, `story.${contentType.includes("video") ? "mp4" : "jpg"}`);
+      activeUploadRef.current = xhr;
       xhr.upload.onprogress = (e) => {
         if (e.lengthComputable) setProgress(e.loaded / e.total);
       };
       xhr.onload = () => {
+        activeUploadRef.current = null;
         if (xhr.status >= 200 && xhr.status < 300) resolve();
-        else reject(new Error(`Upload failed (${xhr.status})`));
+        else {
+          let detail = xhr.responseText || xhr.statusText || "No response body";
+          try {
+            const parsed = JSON.parse(detail);
+            detail = parsed.message || parsed.error || detail;
+          } catch {
+            // keep raw response text
+          }
+          reject(new Error(`Storage upload failed (${xhr.status}): ${detail}`));
+        }
       };
-      xhr.onerror = () => reject(new Error("Network error during upload"));
-      xhr.onabort = () => reject(new Error("Upload aborted"));
-      xhr.send(blob);
+      xhr.onerror = () => {
+        activeUploadRef.current = null;
+        reject(new Error("Network error during storage upload"));
+      };
+      xhr.onabort = () => {
+        activeUploadRef.current = null;
+        reject(new Error("Storage upload was cancelled"));
+      };
+      xhr.send(formData);
     });
 
   const publish = useCallback(async () => {
