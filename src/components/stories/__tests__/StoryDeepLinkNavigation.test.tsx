@@ -14,7 +14,7 @@
  */
 import { describe, it, expect, beforeEach, vi } from "vitest";
 import { render, screen, act } from "@testing-library/react";
-import { MemoryRouter, Route, Routes } from "react-router-dom";
+import { MemoryRouter, BrowserRouter, Route, Routes } from "react-router-dom";
 import {
   useStoryDeepLink,
   useStoryViewerLocation,
@@ -109,12 +109,14 @@ describe("Story deep-link back/forward navigation", () => {
       );
     };
 
+    // BrowserRouter listens to window.history events, which jsdom implements.
+    window.history.replaceState({}, "", "/profile");
     const { container } = render(
-      <MemoryRouter initialEntries={["/profile"]}>
+      <BrowserRouter>
         <Routes>
           <Route path="/profile" element={<Nav />} />
         </Routes>
-      </MemoryRouter>,
+      </BrowserRouter>,
     );
 
     // 1) Open A
