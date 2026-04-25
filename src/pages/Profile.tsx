@@ -507,35 +507,45 @@ const Profile = () => {
           aria-label="Profile quick navigation"
           data-testid="profile-sticky-header"
           style={{
-            opacity: stickyOpacity,
-            y: stickyTranslate,
             paddingTop: "var(--zivo-safe-top-sticky)",
             height: "calc(var(--zivo-safe-top-sticky) + 3rem)",
-            pointerEvents: isStickyHeaderVisible ? "auto" : "none",
           }}
-          className={cn(
-            "lg:hidden fixed top-0 inset-x-0 z-40 px-3 flex items-center gap-3 bg-background/85 backdrop-blur-xl border-b border-border/40 transition-shadow duration-200",
-            isStickyHeaderVisible ? "shadow-sm shadow-background/20" : "shadow-none"
-          )}
+          className="lg:hidden fixed top-0 inset-x-0 z-40 px-3 flex items-center gap-3"
         >
+          {/* Adaptive background: gradient scrim over cover, solid blurred bar after scroll */}
+          <div
+            aria-hidden
+            className={cn(
+              "absolute inset-0 -z-10 transition-all duration-300",
+              overCover
+                ? "bg-gradient-to-b from-black/45 via-black/20 to-transparent"
+                : "bg-background/90 backdrop-blur-xl border-b border-border/40 shadow-sm shadow-background/20"
+            )}
+          />
           <motion.button
             onClick={handleBack}
             aria-label="Go back"
             whileTap={{ scale: 0.86 }}
             whileHover={{ scale: 1.04 }}
             transition={{ type: "spring", stiffness: 400, damping: 22 }}
-            className="h-9 w-9 -ml-1 flex items-center justify-center rounded-full hover:bg-muted/60 active:bg-muted/70 transition focus-visible:ring-2 focus-visible:ring-primary/70 focus-visible:outline-none focus-visible:ring-offset-2 focus-visible:ring-offset-background"
+            className={cn(
+              "h-9 w-9 -ml-1 flex items-center justify-center rounded-full transition focus-visible:ring-2 focus-visible:ring-primary/70 focus-visible:outline-none focus-visible:ring-offset-2 focus-visible:ring-offset-background",
+              overCover ? "hover:bg-white/15 active:bg-white/20" : "hover:bg-muted/60 active:bg-muted/70"
+            )}
           >
-            <ArrowLeft className="h-5 w-5 text-foreground" />
+            <ArrowLeft className={cn("h-5 w-5", overCover ? "text-white drop-shadow-md" : "text-foreground")} />
           </motion.button>
           <span aria-hidden="true">
-            <Avatar className="h-8 w-8 ring-1 ring-border/60">
+            <Avatar className={cn("h-8 w-8 ring-1", overCover ? "ring-white/60" : "ring-border/60")}>
               <AvatarImage src={profile?.avatar_url || undefined} alt="" />
               <AvatarFallback className="text-xs">{getInitials()}</AvatarFallback>
             </Avatar>
           </span>
           <div className="flex items-center gap-1 min-w-0 flex-1" aria-live="polite">
-            <span className="font-semibold text-sm text-foreground truncate">
+            <span className={cn(
+              "font-semibold text-sm truncate",
+              overCover ? "text-white drop-shadow-md" : "text-foreground"
+            )}>
               {profile?.full_name || "Profile"}
             </span>
             {profile?.is_verified && <VerifiedBadge size={14} />}
@@ -550,7 +560,11 @@ const Profile = () => {
             transition={{ type: "spring", stiffness: 400, damping: 22 }}
             className={cn(
               "relative h-9 w-9 flex items-center justify-center rounded-full transition focus-visible:ring-2 focus-visible:ring-primary/70 focus-visible:outline-none focus-visible:ring-offset-2 focus-visible:ring-offset-background",
-              showNotifPanel ? "bg-primary text-primary-foreground" : "hover:bg-muted/60 text-foreground"
+              showNotifPanel
+                ? "bg-primary text-primary-foreground"
+                : overCover
+                  ? "hover:bg-white/15 text-white drop-shadow-md"
+                  : "hover:bg-muted/60 text-foreground"
             )}
           >
             <Bell className="h-5 w-5" />
@@ -565,7 +579,10 @@ const Profile = () => {
             aria-label="More account options"
             whileTap={{ scale: 0.86 }}
             transition={{ type: "spring", stiffness: 400, damping: 22 }}
-            className="h-9 w-9 -mr-1 flex items-center justify-center rounded-full hover:bg-muted/60 text-foreground transition focus-visible:ring-2 focus-visible:ring-primary/70 focus-visible:outline-none focus-visible:ring-offset-2 focus-visible:ring-offset-background"
+            className={cn(
+              "h-9 w-9 -mr-1 flex items-center justify-center rounded-full transition focus-visible:ring-2 focus-visible:ring-primary/70 focus-visible:outline-none focus-visible:ring-offset-2 focus-visible:ring-offset-background",
+              overCover ? "hover:bg-white/15 text-white drop-shadow-md" : "hover:bg-muted/60 text-foreground"
+            )}
           >
             <MoreHorizontal className="h-5 w-5" />
           </motion.button>
