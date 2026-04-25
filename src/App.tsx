@@ -662,6 +662,7 @@ const App = () => (
                 <Route path="/reels/:postId" element={<FeedPage />} />
                 <Route path="/sound/:soundName" element={<SoundPage />} />
                 <Route path="/dl/:kind/:id" element={<DeepLinkLandingPage />} />
+                <Route path="/stories/:storyId" element={<StoryDeepLinkPage />} />
                 <Route path="/shop/:storeId" element={<StoreProfilePage />} />
                 <Route path="/refer" element={<ProtectedRoute><ReferAFriendPage /></ProtectedRoute>} />
                 <Route path="/chat" element={<ChatHubPage />} />
