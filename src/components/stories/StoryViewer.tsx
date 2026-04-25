@@ -687,6 +687,63 @@ export default function StoryViewer({
               </div>
             </>
           )}
+
+          {/* Owner toolbar — Instagram style: Activity · Facebook · Mention · Send · More */}
+          {isOwner && (
+            <div className="px-2 pb-3 pt-2">
+              <div className="flex items-end justify-around">
+                <button
+                  onClick={() => { setPaused(true); setShowViewers(true); }}
+                  className="flex flex-col items-center gap-1 px-2 py-1"
+                  aria-label="Activity"
+                >
+                  <BarChart2 className="w-6 h-6 text-white" strokeWidth={1.8} />
+                  <span className="text-white text-[11px] font-medium leading-none">
+                    Activity{currentStory.viewsCount ? ` ${currentStory.viewsCount}` : ""}
+                  </span>
+                </button>
+                <button
+                  onClick={() => {
+                    setPaused(true);
+                    const url = `${getPublicOrigin()}/stories/${currentStory.id}`;
+                    const fbUrl = `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(url)}`;
+                    window.open(fbUrl, "_blank", "noopener,noreferrer");
+                    setTimeout(() => setPaused(false), 600);
+                  }}
+                  className="flex flex-col items-center gap-1 px-2 py-1"
+                  aria-label="Share to Facebook"
+                >
+                  <Facebook className="w-6 h-6 text-white" strokeWidth={1.8} />
+                  <span className="text-white text-[11px] font-medium leading-none">Facebook</span>
+                </button>
+                <button
+                  onClick={() => { setPaused(true); setShowMention(true); }}
+                  className="flex flex-col items-center gap-1 px-2 py-1"
+                  aria-label="Mention"
+                >
+                  <AtSign className="w-6 h-6 text-white" strokeWidth={1.8} />
+                  <span className="text-white text-[11px] font-medium leading-none">Mention</span>
+                </button>
+                <button
+                  onClick={handleShare}
+                  className="flex flex-col items-center gap-1 px-2 py-1"
+                  aria-label="Send to"
+                >
+                  <Send className="w-6 h-6 text-white" strokeWidth={1.8} />
+                  <span className="text-white text-[11px] font-medium leading-none">Send</span>
+                </button>
+                <button
+                  onClick={() => { setPaused(true); setShowMore(true); }}
+                  className="flex flex-col items-center gap-1 px-2 py-1"
+                  aria-label="More"
+                >
+                  <MoreHorizontal className="w-6 h-6 text-white" strokeWidth={1.8} />
+                  <span className="text-white text-[11px] font-medium leading-none">More</span>
+                </button>
+              </div>
+            </div>
+          )}
+
         </div>
 
         {/* Viewers sheet */}
