@@ -243,7 +243,11 @@ const Profile = () => {
       document.removeEventListener("visibilitychange", restore);
     };
   }, []);
-  const handleBack = useCallback(() => { impact("light"); navigate(-1); }, [impact, navigate]);
+  const handleBack = useCallback(() => {
+    impact("light");
+    if (window.history.length > 1) navigate(-1);
+    else navigate("/feed");
+  }, [impact, navigate]);
   const handleToggleNotif = useCallback(() => { selectionChanged(); setShowNotifPanel(p => !p); }, [selectionChanged]);
   const handleResetCover = useCallback(() => { impact("light"); setCoverPosition(50); }, [impact]);
   
