@@ -166,7 +166,7 @@ type FeedItem = {
   url: string | null;
   filterCss?: string;
   views?: number;
-  user: { name: string; avatar: string };
+  user: { name: string; avatar: string; isVerified?: boolean };
   isShared?: boolean;
   sharedOrigin?: SharedOriginInfo | null;
   createdAt?: string;
