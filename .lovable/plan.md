@@ -1,81 +1,71 @@
-# Story Deep-Link Funnel: Tracking, Errors, Tests, Dashboard, Report
+# Stories: Full Audit, Cleanup & IG/FB-Class Polish
 
-## What you'll get
+## 1. Live test pass (Klainkonkat@gmail.com)
+Log in via the preview browser and walk every story surface, capturing screenshots + console/network for each:
 
-1. **Fix analytics persistence** — story events are currently being silently dropped (the helper writes to a non-existent `properties` column; the table actually has `meta`). Once fixed, every story event lands in `analytics_events` and powers the dashboard + report.
-2. **Close-event tracking** — emit `story_deeplink_close` with `story_id`, `source`, `segment_index`, `total_segments`, `completed`.
-3. **Granular missing-story UI + analytics** — the deep-link page distinguishes **not found**, **expired**, and **fetch error**, shows a tailored message for each, and logs `story_deeplink_missing` with `reason: "not_found" | "expired" | "fetch_error"` plus the HTTP/error message.
-4. **Funnel dashboard** at `/admin/stories-funnel` — opens → renders → completion, per source and per top story, with a missing-rate panel.
-5. **Automated back/forward test** — Vitest + Testing Library scenario that mounts the carousel + viewer in a `MemoryRouter`, simulates `?story=A` → `?story=B` → back → forward and asserts the rendered story id without flashing the previous segment.
-6. **Weekly cohort report generator** — a script (`scripts/storyDeeplinkWeeklyReport.ts`) that pulls the last 7 days of `analytics_events`, groups by source, and emits a CSV (top stories by open→view conversion) to `/mnt/documents/`.
+- **Create flow** (`CreateStorySheet`) on Profile, Feed and Chat triggers
+  - Photo pick, camera capture, text-only with gradient bg, music track
+  - Upload progress, retry on failure, signed-PUT error surfacing
+  - Cancel mid-upload (XHR abort)
+- **Carousels**: `ProfileStories`, `FeedStoryRing`, `ChatStories`
+  - Confirm same data shape, same ring style, same click → same `StoryViewer`
+  - Confirm react-query cache keys don't collide and invalidate after upload
+- **Viewer** (`StoryViewer`)
+  - Auto-progress, tap nav, hold-pause, swipe-down close
+  - Mute/unmute, music sync, viewers list (owner), delete (owner)
+  - Comments insert into `story_comments`, views into `story_views`
+- **Deep links**: `/story/:id` from each source, back/forward, missing/expired states, analytics events
+- **Admin**: `/admin/stories-funnel` renders with real `analytics_events`
 
-## Changes
+Document any defect found and fix it as part of step 2/3.
 
-### 1. Fix `src/lib/analytics.ts` insert payload
-The table has columns `event_name`, `meta` (jsonb), `created_at`, `page`, `value`, `order_id`, `session_id`, `device_type`, `country`, `traffic_source`. The helper currently inserts `properties` which silently fails. Change the insert to:
-```ts
-.insert({ event_name, meta: properties, page, value, order_id, created_at })
-```
-Pull `page` from `window.location.pathname` and let callers optionally pass `value` / `order_id`. Backfill the queue flush path to use the same shape. No DB migration needed.
+## 2. Fix the real gaps (current bugs)
 
-### 2. `story_deeplink_close` event
-`src/components/stories/StoryViewer.tsx` and `src/hooks/useStoryDeepLink.ts`:
-- Add `closeStory(meta?)` overload that accepts `{ story_id, segment_index, total_segments, completed }` and emits `story_deeplink_close` before removing the URL param.
-- `StoryViewer.onClose` is wrapped to compute `segment_index = viewIdx`, `total_segments = viewingGroup.stories.length`, and `completed = (viewIdx === total - 1 && progress >= 1)`.
+| Gap | Fix |
+|---|---|
+| Deleting a story removes the DB row but **leaves the file in `user-stories` bucket** | In `StoryViewer.deleteStoryMutation`, parse the storage path from `mediaUrl` and call `supabase.storage.from('user-stories').remove([path])` before/after the row delete. Same for `audioUrl` if it lives in our bucket. |
+| **No automatic 24h expiry / cleanup** | New SQL migration: `cleanup_expired_stories()` SECURITY DEFINER that (a) collects expired rows, (b) deletes their storage objects via `storage.objects` rows in `user-stories`, (c) deletes from `stories`, `story_views`, `story_comments`, `story_reactions`. Schedule via `pg_cron` hourly. |
+| `story_reactions` table exists but viewer only toggles a local `liked` state | Wire the heart button to upsert/delete in `story_reactions`; subscribe owner viewers list to reactions count. |
+| Carousels don't show **seen vs unseen** ring (FB/IG signature) | Compute per-group "all seen" from `story_views` for current user; render gray ring when fully seen, gradient ring otherwise. |
+| Profile/Feed/Chat sometimes desync after upload | Single shared invalidation helper `invalidateAllStoryCaches(qc)` called from `CreateStorySheet`, delete, and reactions. |
 
-### 3. Granular missing-story UI
-`src/pages/StoryDeepLinkPage.tsx`:
-- State becomes `{ status: "loading" | "ok" } | { status: "missing", reason: "not_found" | "expired" | "fetch_error", detail?: string }`.
-- Per-reason copy:
-  - **Not found**: "This story doesn't exist or was deleted."
-  - **Expired**: "This story has expired. Stories disappear 24 hours after they're posted."
-  - **Fetch error**: "We couldn't load this story. Check your connection and try again." + a Retry button.
-- Emit `story_deeplink_missing` with `{ story_id, reason, detail }`.
+## 3. Add the missing IG/FB features
+1. **Quick emoji reactions bar** at the bottom of the viewer (❤️🔥👏😂😮😢) writing to `story_reactions`.
+2. **Reply-to-story** input: sends a DM into the existing chat thread with a quoted preview of the story (uses current chat/messages tables).
+3. **Share / forward**: copy `/story/:id` link + native share sheet.
+4. **"Your story" tile** as the first ring in every carousel — when owner has none it opens `CreateStorySheet`; when owner has one it opens viewer; long-press = manage (delete / view insights).
+5. **Story highlights surfacing**: existing `story_highlights` table — show a small Highlights row under `ProfileStories` for the profile owner.
+6. **Mute account from stories** (long-press menu) — preference table entry to hide that user's stories from rings.
+7. **Progress segments + smooth crossfade** between segments and groups (polish).
 
-### 4. Funnel dashboard
-- New page: `src/pages/admin/AdminStoriesFunnelPage.tsx` mounted at `/admin/stories-funnel` (ProtectedRoute, same pattern as other admin pages).
-- New hook: `src/hooks/useStoryFunnel.ts` runs grouped queries against `analytics_events` filtered to `event_name IN ('story_deeplink_open','story_segment_view','story_deeplink_close','story_deeplink_missing')` for a selectable date range (default last 7 days).
-- Cards:
-  - **Funnel by source** — table: source × (opens, segment views, closes, completion %, missing %).
-  - **Top 10 stories** — by open → segment-view conversion, with story_id, source mix, completions.
-  - **Missing-rate panel** — bar chart of `not_found` / `expired` / `fetch_error` counts.
-- All queries filter by `created_at` window and group on `meta->>'source'` / `meta->>'story_id'` / `meta->>'reason'`. RLS: relies on existing admin-only read policy on `analytics_events`; if missing, falls back to an admin-only RPC `get_story_funnel(start_ts, end_ts)`.
+## 4. Visual polish (FB/IG-class)
+- Gradient ring tokens (`from-fuchsia-500 via-rose-500 to-amber-400`) with seen-state desaturation.
+- 56 px avatar in carousels, 64 px on Profile, consistent gap and snap-x scroll.
+- Viewer: rounded 24 px container on tablet+, blurred backdrop, spring transitions.
+- Empty states with friendly illustrations + "Add to story" CTA.
 
-### 5. Back/forward Vitest scenario
-`src/components/stories/__tests__/StoryDeepLinkNavigation.test.tsx`:
-- Mocks `supabase` and the `StoryViewer` (renders a stub that displays the resolved `story_id`).
-- Renders `<MemoryRouter initialEntries={["/profile?story=A"]}>` with a fixture carousel containing two groups (stories `A` and `B`).
-- Steps:
-  1. Assert `data-testid="story-viewer"` shows `A`.
-  2. Programmatically navigate to `?story=B` via the test's `useNavigate`. Assert it shows `B`.
-  3. Call `window.history.back()` (jsdom supports this with `MemoryRouter` swapped for `BrowserRouter` + `createMemoryHistory`-style harness; we use `unstable_HistoryRouter` from `react-router-dom` with `createMemoryHistory`). Assert it shows `A` again — and that the viewer's rendered `story_id` text never flips to `B` during the same render cycle (React's batched commits guarantee this; we also assert via `findByText("A")` directly after the navigation, with no prior `B` re-render check needed).
-  4. `history.forward()` → assert `B`.
-  5. Navigate to `?story=missing` → assert the missing-state element appears (the test version stubs `StoryDeepLinkPage` lookup to return `null`).
+## 5. Files to touch / add
 
-### 6. Weekly cohort report script
-`scripts/storyDeeplinkWeeklyReport.ts` — Node script run via `bun scripts/storyDeeplinkWeeklyReport.ts`:
-- Reads `VITE_SUPABASE_URL` + service-role key from env (operator runs locally; not deployed).
-- Queries `analytics_events` for `created_at >= now() - interval '7 days'` and the four story events.
-- Aggregates per `source`: opens, views, closes, completion rate, missing rate, top 10 stories by open → view conversion (min 5 opens).
-- Writes `/mnt/documents/story-deeplink-weekly-<YYYY-MM-DD>.csv` with sections per source.
-- Documented in `scripts/README.md` (created if missing).
+**New**
+- `supabase/migrations/<ts>_stories_cleanup_and_reactions.sql` — `cleanup_expired_stories()` + cron + RLS for reactions usage.
+- `src/components/stories/StoryReactionsBar.tsx`
+- `src/components/stories/StoryReplyInput.tsx`
+- `src/components/stories/YourStoryTile.tsx`
+- `src/lib/storiesCache.ts` — shared `invalidateAllStoryCaches` + `getSeenMap` helpers.
+
+**Edit**
+- `src/components/stories/StoryViewer.tsx` — storage delete on remove, real reactions, reply, share, polish.
+- `src/components/profile/CreateStorySheet.tsx` — use shared cache helper, polish.
+- `src/components/profile/ProfileStories.tsx` — seen state, YourStoryTile, highlights row.
+- `src/components/social/FeedStoryRing.tsx` — seen state, YourStoryTile.
+- `src/components/chat/ChatStories.tsx` — seen state, YourStoryTile.
 
 ## Technical notes
+- Storage path parsing: `media_url` is a public URL like `…/storage/v1/object/public/user-stories/<uid>/<file>`; split on `/user-stories/` and use the suffix.
+- Cron: hourly is enough since `expires_at` is enforced by RLS for reads; cleanup is just to free space.
+- Reactions RLS: insert/delete only own rows; read all on active stories.
+- All new analytics events reuse `meta` column.
 
-- **No DB migrations required** — the `meta` column already exists; we just stop sending the wrong column name. If the `analytics_events` SELECT policy doesn't allow admins to read all rows, the dashboard hook will fall back to a SECURITY DEFINER RPC; we'll add that migration only if the read fails (verified at runtime, not pre-emptively).
-- **No new event names beyond the four** — `open`, `segment_view`, `close`, `missing`. Dashboard derives "rendered" from `segment_view` ≥ 1 per `(session, story)`; "completion" from `close.completed = true`.
-- **Test isolation** — the navigation test stubs the network layer; it does not hit Supabase.
-- **Privacy** — meta payloads only contain story_id, source, segment indices, and error reason strings. No user content.
-
-## Files
-
-- create `src/pages/admin/AdminStoriesFunnelPage.tsx`
-- create `src/hooks/useStoryFunnel.ts`
-- create `src/components/stories/__tests__/StoryDeepLinkNavigation.test.tsx`
-- create `scripts/storyDeeplinkWeeklyReport.ts`
-- create/update `scripts/README.md`
-- edit `src/lib/analytics.ts` (column name fix + queue flush)
-- edit `src/hooks/useStoryDeepLink.ts` (close-meta overload)
-- edit `src/components/stories/StoryViewer.tsx` (pass close meta)
-- edit `src/pages/StoryDeepLinkPage.tsx` (granular reasons + retry)
-- edit `src/App.tsx` (admin route registration)
+## Out of scope
+- Native push for new story (covered by existing notifications system).
+- Story ads / sponsored placements.

@@ -24,6 +24,7 @@ import Music from "lucide-react/dist/esm/icons/music";
 import Play from "lucide-react/dist/esm/icons/play";
 import Pause from "lucide-react/dist/esm/icons/pause";
 import AlertCircle from "lucide-react/dist/esm/icons/alert-circle";
+import { invalidateAllStoryCaches } from "@/lib/storiesCache";
 
 interface Props {
   open: boolean;
@@ -203,13 +204,7 @@ export default function CreateStorySheet({ open, onClose }: Props) {
   };
 
   const invalidateStoryQueries = async () => {
-    await Promise.all([
-      queryClient.invalidateQueries({ queryKey: ["user-stories"], exact: true }),
-      queryClient.invalidateQueries({ queryKey: ["feed-story-users"], exact: true }),
-      queryClient.invalidateQueries({ queryKey: ["profile-story-rings", user?.id], exact: true }),
-      queryClient.invalidateQueries({ queryKey: ["profile-my-story", user?.id], exact: true }),
-      queryClient.invalidateQueries({ queryKey: ["my-story-views", user?.id], exact: true }),
-    ]);
+    invalidateAllStoryCaches(queryClient, user?.id);
   };
 
   const xhrUpload = (url: string, blob: Blob, contentType: string, accessToken?: string) =>

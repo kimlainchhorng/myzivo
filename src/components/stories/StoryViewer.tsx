@@ -17,6 +17,11 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import { formatDistanceToNow } from "date-fns";
+import {
+  invalidateAllStoryCaches,
+  parseStorageKeyFromPublicUrl,
+  STORIES_BUCKET,
+} from "@/lib/storiesCache";
 import X from "lucide-react/dist/esm/icons/x";
 import Eye from "lucide-react/dist/esm/icons/eye";
 import Trash2 from "lucide-react/dist/esm/icons/trash-2";
@@ -71,11 +76,11 @@ export default function StoryViewer({ groups, startGroupIndex, startStoryIndex =
   const [viewIdx, setViewIdx] = useState(startStoryIndex);
   const [paused, setPaused] = useState(false);
   const [progress, setProgress] = useState(0);
-  const [liked, setLiked] = useState(false);
   const [showViewers, setShowViewers] = useState(false);
   const [showComments, setShowComments] = useState(false);
   const [commentText, setCommentText] = useState("");
   const [muted, setMuted] = useState(true);
+  const [reactionBurst, setReactionBurst] = useState<string | null>(null);
 
   const timerRef = useRef<number | null>(null);
   const startTimeRef = useRef(0);
@@ -148,7 +153,73 @@ export default function StoryViewer({ groups, startGroupIndex, startStoryIndex =
     },
   });
 
-  // ---- Record view ----
+  // ---- My reaction on the current story (real persistence) ----
+  const { data: myReaction } = useQuery({
+    queryKey: ["story-my-reaction", currentStory?.id, user?.id],
+    enabled: !!currentStory && !!user,
+    queryFn: async () => {
+      const { data } = await supabase
+        .from("story_reactions" as any)
+        .select("emoji")
+        .eq("story_id", currentStory!.id)
+        .eq("user_id", user!.id)
+        .maybeSingle();
+      return (data as any)?.emoji ?? null;
+    },
+  });
+
+  const reactToStory = useMutation({
+    mutationFn: async (emoji: string | null) => {
+      if (!currentStory || !user) return;
+      if (emoji === null) {
+        const { error } = await supabase
+          .from("story_reactions" as any)
+          .delete()
+          .eq("story_id", currentStory.id)
+          .eq("user_id", user.id);
+        if (error) throw error;
+        return;
+      }
+      const { data: existing } = await supabase
+        .from("story_reactions" as any)
+        .select("id")
+        .eq("story_id", currentStory.id)
+        .eq("user_id", user.id)
+        .maybeSingle();
+      if (existing) {
+        const { error } = await supabase
+          .from("story_reactions" as any)
+          .update({ emoji })
+          .eq("id", (existing as any).id);
+        if (error) throw error;
+      } else {
+        const { error } = await supabase
+          .from("story_reactions" as any)
+          .insert({ story_id: currentStory.id, user_id: user.id, emoji });
+        if (error) throw error;
+      }
+    },
+    onSuccess: (_data, emoji) => {
+      queryClient.invalidateQueries({
+        queryKey: ["story-my-reaction", currentStory?.id, user?.id],
+      });
+      if (emoji) {
+        setReactionBurst(emoji);
+        window.setTimeout(() => setReactionBurst(null), 800);
+      }
+    },
+    onError: (err: any) => toast.error(err?.message || "Could not save reaction"),
+  });
+
+  const toggleLike = useCallback(() => {
+    if (!user) {
+      toast.error("Please sign in");
+      return;
+    }
+    reactToStory.mutate(myReaction === "❤️" ? null : "❤️");
+  }, [myReaction, reactToStory, user]);
+
+
   useEffect(() => {
     if (!currentStory || !user || isOwner) return;
     void supabase
@@ -212,19 +283,26 @@ export default function StoryViewer({ groups, startGroupIndex, startStoryIndex =
     },
   });
 
-  // ---- Delete (owner) ----
+  // ---- Delete (owner) — also removes media + audio from storage ----
   const deleteStory = useMutation({
     mutationFn: async (storyId: string) => {
+      const story = viewingGroup?.stories.find((s) => s.id === storyId);
+      const keys = [
+        parseStorageKeyFromPublicUrl(story?.mediaUrl),
+        parseStorageKeyFromPublicUrl(story?.audioUrl),
+      ].filter(Boolean) as string[];
       const { error } = await supabase.from("stories" as any).delete().eq("id", storyId);
       if (error) throw error;
+      if (keys.length > 0) {
+        // Best-effort: don't fail the deletion if storage cleanup errors
+        await supabase.storage.from(STORIES_BUCKET).remove(keys).catch(() => {});
+      }
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["user-stories"], exact: true });
-      queryClient.invalidateQueries({ queryKey: ["feed-story-users"], exact: true });
-      queryClient.invalidateQueries({ queryKey: ["profile-story-rings", user?.id], exact: true });
-      queryClient.invalidateQueries({ queryKey: ["profile-my-story", user?.id], exact: true });
+      invalidateAllStoryCaches(queryClient, user?.id);
       toast.success("Story deleted");
     },
+    onError: (err: any) => toast.error(err?.message || "Could not delete story"),
   });
 
   // ---- Auto-progress ----
@@ -252,7 +330,7 @@ export default function StoryViewer({ groups, startGroupIndex, startStoryIndex =
   const resetAndStart = useCallback(() => {
     elapsedRef.current = 0;
     setProgress(0);
-    setLiked(false);
+    setReactionBurst(null);
     startTimer();
   }, [startTimer]);
 
@@ -461,15 +539,16 @@ export default function StoryViewer({ groups, startGroupIndex, startStoryIndex =
 
         {/* Right-side actions */}
         <div className="absolute right-4 bottom-[160px] flex flex-col items-center gap-4 z-20">
-          <button onClick={() => setLiked((l) => !l)} className="flex flex-col items-center gap-1">
+          <button onClick={toggleLike} className="flex flex-col items-center gap-1" aria-label="Like story">
             <motion.div
-              animate={liked ? { scale: [1, 1.3, 1] } : {}}
+              key={myReaction || "none"}
+              animate={myReaction === "❤️" ? { scale: [1, 1.3, 1] } : {}}
               className={cn(
                 "w-11 h-11 rounded-full flex items-center justify-center backdrop-blur-sm transition-all",
-                liked ? "bg-destructive/80" : "bg-white/10"
+                myReaction === "❤️" ? "bg-destructive/80" : "bg-white/10"
               )}
             >
-              <Heart className={cn("w-5 h-5 transition-all", liked ? "text-white fill-white" : "text-white")} />
+              <Heart className={cn("w-5 h-5 transition-all", myReaction === "❤️" ? "text-white fill-white" : "text-white")} />
             </motion.div>
             <span className="text-white/80 text-[10px] font-medium">Like</span>
           </button>
@@ -525,6 +604,22 @@ export default function StoryViewer({ groups, startGroupIndex, startStoryIndex =
           )}
         </div>
 
+        {/* Floating reaction burst */}
+        <AnimatePresence>
+          {reactionBurst && (
+            <motion.div
+              key={reactionBurst}
+              initial={{ opacity: 0, y: 0, scale: 0.6 }}
+              animate={{ opacity: 1, y: -120, scale: 1.6 }}
+              exit={{ opacity: 0, scale: 0.5 }}
+              transition={{ duration: 0.7, ease: "easeOut" }}
+              className="absolute bottom-[200px] left-1/2 -translate-x-1/2 z-30 text-6xl pointer-events-none drop-shadow-[0_4px_20px_rgba(0,0,0,0.5)]"
+            >
+              {reactionBurst}
+            </motion.div>
+          )}
+        </AnimatePresence>
+
         {/* Bottom: caption + reactions + reply */}
         <div className="absolute bottom-0 left-0 right-0 z-20 pb-[env(safe-area-inset-bottom,16px)]">
           {currentStory.caption && (
@@ -539,15 +634,22 @@ export default function StoryViewer({ groups, startGroupIndex, startStoryIndex =
             <>
               <div className="px-4 pb-2">
                 <div className="flex items-center justify-center gap-3">
-                  {["❤️", "😂", "😮", "🔥", "😢", "👏"].map((emoji) => (
-                    <button
-                      key={emoji}
-                      onClick={() => toast.success(`Reacted with ${emoji}`)}
-                      className="text-2xl active:scale-150 transition-transform"
-                    >
-                      {emoji}
-                    </button>
-                  ))}
+                  {["❤️", "😂", "😮", "🔥", "😢", "👏"].map((emoji) => {
+                    const active = myReaction === emoji;
+                    return (
+                      <button
+                        key={emoji}
+                        onClick={() => reactToStory.mutate(active ? null : emoji)}
+                        className={cn(
+                          "text-2xl transition-transform active:scale-150",
+                          active && "drop-shadow-[0_0_10px_rgba(255,255,255,0.6)] scale-125"
+                        )}
+                        aria-label={`React with ${emoji}`}
+                      >
+                        {emoji}
+                      </button>
+                    );
+                  })}
                 </div>
               </div>
               <div className="px-4 pb-3">
