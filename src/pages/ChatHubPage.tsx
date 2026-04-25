@@ -194,13 +194,14 @@ export default function ChatHubPage({ embedded = false }: { embedded?: boolean }
     (async () => {
       const { data } = await supabase
         .from("profiles")
-        .select("full_name, avatar_url")
+        .select("full_name, avatar_url, is_verified")
         .eq("user_id", withId)
         .maybeSingle();
       setOpenPersonalChat({
         id: withId,
         name: data?.full_name || "Chat",
         avatar: data?.avatar_url || null,
+        isVerified: (data as any)?.is_verified === true,
       });
     })();
   }, [searchParams, user, setSearchParams]);
@@ -422,7 +423,7 @@ export default function ChatHubPage({ embedded = false }: { embedded?: boolean }
 
       const { data: profiles } = await supabase
         .from("profiles")
-        .select("user_id, full_name, avatar_url, last_seen")
+        .select("user_id, full_name, avatar_url, last_seen, is_verified")
         .in("user_id", otherIds);
 
       const profileMap = new Map<string, any>();
@@ -440,6 +441,7 @@ export default function ChatHubPage({ embedded = false }: { embedded?: boolean }
           id: otherId,
           name: profile?.full_name || "User",
           avatar: profile?.avatar_url || null,
+          isVerified: profile?.is_verified === true,
           lastMessage: entry.lastMsg.message || "📷 Image",
           lastTime: entry.lastMsg.created_at,
           unread: entry.unread,
@@ -540,7 +542,7 @@ export default function ChatHubPage({ embedded = false }: { embedded?: boolean }
         const term = `%${search.trim()}%`;
         const { data } = await supabase
           .from("profiles")
-          .select("user_id, full_name, avatar_url, email")
+          .select("user_id, full_name, avatar_url, email, is_verified")
           .or(`full_name.ilike.${term},email.ilike.${term}`)
           .neq("user_id", user!.id)
           .limit(15);
@@ -550,6 +552,7 @@ export default function ChatHubPage({ embedded = false }: { embedded?: boolean }
               id: p.user_id,
               name: p.full_name || p.email || "User",
               avatar: p.avatar_url,
+              isVerified: p.is_verified === true,
               lastMessage: "Tap to chat",
               lastTime: new Date().toISOString(),
               unread: 0,
@@ -870,10 +873,13 @@ export default function ChatHubPage({ embedded = false }: { embedded?: boolean }
                             <div className="flex items-center justify-between mb-1">
                               <span className={cn(
                                 embedded ? "text-sm" : "text-[15px]",
-                                "truncate leading-tight",
+                                "truncate leading-tight inline-flex items-center gap-1 min-w-0",
                                 chat.unread > 0 ? "font-bold text-foreground" : "font-semibold text-foreground"
                               )}>
-                                {chat.name}
+                                <span className="truncate">{chat.name}</span>
+                                {isBlueVerified((chat as any).isVerified) && (
+                                  <VerifiedBadge size={13} interactive={false} />
+                                )}
                               </span>
                               <span className={cn(
                                 "text-[11px] flex-shrink-0 ml-2 tabular-nums",
