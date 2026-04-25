@@ -144,6 +144,7 @@ const ProfileStories = () => {
         <div className="flex items-start gap-3 px-2 py-1 snap-x snap-mandatory">
           {/* Your story tile (Instagram-style) */}
           <button
+            data-testid="profile-story-ring"
             onClick={() => (hasMyStory ? openViewer(user!.id) : setShowCreate(true))}
             className="snap-start shrink-0 flex flex-col items-center gap-1 w-[72px]"
           >
