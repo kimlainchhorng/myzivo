@@ -100,6 +100,8 @@ export default function StoryViewer({
   const [muted, setMuted] = useState(true);
   const [reactionBurst, setReactionBurst] = useState<string | null>(null);
   const [showForward, setShowForward] = useState(false);
+  const [showMore, setShowMore] = useState(false);
+  const [showMention, setShowMention] = useState(false);
 
   const timerRef = useRef<number | null>(null);
   const startTimeRef = useRef(0);
