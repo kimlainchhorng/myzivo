@@ -275,12 +275,21 @@ const Profile = () => {
   }, [showNotifPanel]);
   const resolveNotifLink = useCallback((n: { action_url: string | null; metadata: Record<string, any>; template: string }) => {
     if (n.action_url) return n.action_url;
-    const dl = n.metadata?.deepLink || n.metadata?.deep_link || n.metadata?.url;
+    const md = n.metadata || {};
+    const dl = md.deepLink || md.deep_link || md.url;
     if (typeof dl === "string" && dl) return dl;
     const tpl = (n.template || "").toLowerCase();
-    if (tpl.includes("friend")) return "/notifications?tab=requests";
-    if (tpl.includes("message") || tpl.includes("chat")) return "/chat";
-    if (tpl.includes("ride") || tpl.includes("trip")) return "/rides";
+    if (tpl.includes("friend") || tpl.includes("follow")) return "/notifications?tab=requests";
+    if (tpl.includes("message") || tpl.includes("chat")) return md.thread_id ? `/chat/${md.thread_id}` : "/chat";
+    if (tpl.includes("comment") || tpl.includes("like") || tpl.includes("reaction") || tpl.includes("mention") || tpl.includes("post")) {
+      return md.post_id ? `/post/${md.post_id}` : "/feed";
+    }
+    if (tpl.includes("ride") || tpl.includes("trip") || tpl.includes("driver")) return md.job_id ? `/ride/track/${md.job_id}` : "/rides";
+    if (tpl.includes("order") || tpl.includes("delivery")) return md.order_id ? `/orders/${md.order_id}` : "/account/orders";
+    if (tpl.includes("wallet") || tpl.includes("payout") || tpl.includes("payment")) return "/wallet";
+    if (tpl.includes("verification") || tpl.includes("verify")) return "/account/verification";
+    if (tpl.includes("security") || tpl.includes("login")) return "/account/security";
+    if (tpl.includes("promo") || tpl.includes("coupon")) return "/wallet/promos";
     return "/notifications";
   }, []);
   const handleNotifClick = useCallback(async (n: { id: string; action_url: string | null; metadata: Record<string, any>; template: string; is_read: boolean }) => {
@@ -289,6 +298,16 @@ const Profile = () => {
     setShowNotifPanel(false);
     navigate(resolveNotifLink(n));
   }, [markAsRead, navigate, resolveNotifLink, selectionChanged]);
+  const handleMarkAllRead = useCallback(async () => {
+    if (notifUnreadCount === 0) return;
+    selectionChanged();
+    try {
+      await markAllAsRead();
+      toast.success("All notifications marked as read");
+    } catch {
+      toast.error("Couldn't mark all as read");
+    }
+  }, [markAllAsRead, notifUnreadCount, selectionChanged]);
   const handleResetCover = useCallback(() => { impact("light"); setCoverPosition(50); }, [impact]);
   
   const [showLangPicker, setShowLangPicker] = useState(false);

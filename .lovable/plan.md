@@ -1,70 +1,48 @@
-# Plan — Facebook-style Notifications Panel in Account
+# Plan — Notifications Panel Polish (Account)
 
-## Goal
-Replace the current mid-page notifications card on the Profile/Account screen with a polished, Facebook-style notifications popover that opens directly under the bell icon in the sticky header, stays inside the Account context, and feels native on mobile.
+The Facebook-style popover in `src/pages/Profile.tsx` is already live with: bell-anchored dropdown, in-place rendering, filter chips, mark-all action, rich rows with icon + relative time, unread dots, tap-to-mark-read, smart deep-link routing, and outside-click/Escape close. This plan adds the remaining polish requested.
 
-## Problems with current behavior
-- Panel renders far below the header (inserted between Stories and Content Tabs), so tapping the bell visually "jumps" the user mid-page.
-- Items are minimal (title + body), no avatar, no timestamp, no read state.
-- Tapping any item closes the panel and navigates away to `/notifications` — defeats the "stay in account" feel.
-- Footer has redundant "View All / Close" buttons (modal-like), unlike Facebook's quick popover.
-- No "Mark all as read", no per-item read styling, no grouping (Today / Earlier).
+## Changes (all in `src/pages/Profile.tsx`)
 
-## What we'll build (`src/pages/Profile.tsx`)
+### 1. Smarter deep-link routing
+Expand `resolveNotifLink` to cover all common Account notification types and use IDs from `metadata`:
+- `friend`/`follow` → `/notifications?tab=requests`
+- `message`/`chat` → `/chat/{thread_id}` or `/chat`
+- `comment`/`like`/`reaction`/`mention`/`post` → `/post/{post_id}` or `/feed`
+- `ride`/`trip`/`driver` → `/ride/track/{job_id}` or `/rides`
+- `order`/`delivery` → `/orders/{order_id}` or `/account/orders`
+- `wallet`/`payout`/`payment` → `/wallet`
+- `verification`/`verify` → `/account/verification`
+- `security`/`login` → `/account/security`
+- `promo`/`coupon` → `/wallet/promos`
+- Falls back to `n.action_url` first, then `metadata.deepLink/deep_link/url`.
 
-1. **Anchor the panel to the bell**
-   - Move the `<AnimatePresence>` notif panel out of the `ParallaxSection` between Stories and Tabs.
-   - Render it as a fixed/absolute popover positioned directly under the sticky header bell, with a small caret pointing up at the bell.
-   - Width: `min(92vw, 380px)`, right-aligned to the bell icon. On lg+ screens render as a normal dropdown.
+### 2. Visible "Mark all read" confirmation
+- Wrap `markAllAsRead()` in a `handleMarkAllRead` callback.
+- On success: `toast.success("All notifications marked as read")`.
+- On error: `toast.error("Couldn't mark all as read")`.
+- Button hidden once `notifUnreadCount === 0` (already gated).
 
-2. **Facebook-style header**
-   - Title row: "Notifications" (bold, 16px) + small "Mark all as read" text-button on the right (only when unread > 0).
-   - Optional segmented chips: `All` | `Unread` (defaults to All).
+### 3. Actor avatars in rows
+- For each notification, prefer `metadata.actor_avatar_url` / `metadata.avatar_url` / `metadata.image_url` and render a real `<Avatar>` with fallback initials from `metadata.actor_name` or the title.
+- When no actor image is available, keep the current category-coloured icon bubble (transactional/operational/marketing/account) so the row never feels empty.
 
-3. **Rich notification rows**
-   - Each row: avatar (actor or themed icon bubble) · 2-line title/body · relative timestamp (e.g. "3m", "1h", "Yesterday") · unread blue dot on the far right.
-   - Unread rows have subtle `bg-primary/5` tint; read rows are transparent.
-   - Long-press / kebab menu (3-dot) per row: "Mark as read", "Hide this notification" (UI only for now; mark-as-read wired to `markAsRead([id])`).
+### 4. Smooth in-place read transitions
+- Wrap the row list in `<AnimatePresence initial={false}>` and key each row by `n.id`.
+- Animate `bg-primary/[0.06] → transparent` and the unread dot's `opacity/scale` with a 180ms spring when `is_read` flips, so tapping a row visually "settles" without re-mounting.
+- Unread → read transition keeps the row in place; only the dot fades and the background tint relaxes.
 
-4. **Smart routing on tap**
-   - Tap a row: call `markAsRead([id])`, then route to the notification's deep link if present (use `n.data?.deepLink` / type-based fallback similar to `useRideNotifications.defaultDeepLink`).
-   - If the notification target is an in-account surface (friend requests, profile views, comments on own posts), navigate within the account stack so user stays in the Account tab.
-   - Friend Requests row keeps its dedicated entry pointing at `/notifications?tab=requests`.
+### 5. Consistent spacing and density
+- Standardize row padding to `p-2.5`, gap `gap-3`, avatar `h-10 w-10`, body `text-xs line-clamp-2`, time `text-[10px]` — matches Facebook's compact dropdown.
+- Sticky header inside the popover (`sticky top-0 bg-card`) so the title + Mark all read stay visible while scrolling long lists.
 
-5. **Empty + loading states**
-   - Empty: small bell illustration, "You're all caught up" copy.
-   - Loading: 3 skeleton rows.
-
-6. **Footer**
-   - Single subtle link: "See all notifications" → `/notifications` (replaces the View All / Close buttons).
-
-7. **Dismiss behavior (in-account feel)**
-   - Click outside / Escape closes the panel (use a lightweight outside-click handler).
-   - Bell tap toggles open/close.
-   - Panel persists across re-renders within the page (already using `sessionStorage` key `zivo:profile:notif-panel`).
-   - Removes the inline `ParallaxSection index={2.1}` wrapper so the page layout no longer reflows when opening.
-
-8. **Bell affordances**
-   - Keep unread dot/count badge on the bell.
-   - When panel is open, bell gets `bg-primary/15` ring to indicate active state (already partially implemented).
-
-9. **Accessibility**
-   - `role="dialog"` + `aria-label="Notifications"` on the popover container.
-   - Focus trap while open; return focus to bell on close.
-   - Each row is a real `<button>` with `aria-label` describing actor + action.
-
-## Technical notes
-- All work in `src/pages/Profile.tsx`. No new files needed.
-- Use existing `useNotifications(20)` hook — already exposes `markAsRead`, `markAllAsRead`, `notifications`, `unreadCount`.
-- Reuse `formatDistanceToNowStrict` from `date-fns` (already in deps) for relative time.
-- Position the popover with `absolute top-full right-0 mt-2` inside a `relative` wrapper around the bell button in the sticky header (the header is already `fixed`, so the popover will follow it during scroll — bonus Facebook-like behavior).
-- Add `useEffect` outside-click listener tied to a ref on the popover + bell.
-- Keep current scroll-based `overCover` styling intact; popover always uses solid `bg-card` regardless of cover state for legibility.
+### 6. Minor a11y / UX
+- Add `aria-live="polite"` region around the count badge so screen readers announce unread changes.
+- Friend Requests pinned row already has its own deep link (`/notifications?tab=requests`) — keep as-is.
 
 ## Files to edit
-- `src/pages/Profile.tsx` — replace mid-page notif `ParallaxSection` with header-anchored popover; refactor item rendering; wire `markAsRead`.
+- `src/pages/Profile.tsx` — only file touched.
 
 ## Out of scope
-- No DB migrations.
-- No changes to the dedicated `/notifications` page or `useNotifications` hook.
-- No new routes.
+- No DB / hook / route changes.
+- No new components.
