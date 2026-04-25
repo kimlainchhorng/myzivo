@@ -418,47 +418,59 @@ export default function CreateStorySheet({ open, onClose }: Props) {
           {/* Body */}
           <div className="flex-1 overflow-y-auto">
             {step === "choose" && (
-              <div className="p-4 space-y-3">
-                <button
+              <div className="p-4 space-y-2.5">
+                <motion.button
+                  initial={{ opacity: 0, y: 8 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.04, duration: 0.22 }}
                   onClick={() => fileInputRef.current?.click()}
-                  className="w-full flex items-center gap-3 rounded-2xl border border-border/60 p-4 text-left hover:bg-muted/40 transition-colors"
+                  className="group w-full flex items-center gap-4 rounded-2xl border border-border/60 bg-background/60 p-4 text-left hover:bg-muted/40 hover:border-border active:scale-[0.985] transition-all"
                 >
-                  <div className="w-12 h-12 rounded-full bg-emerald-500/15 text-emerald-500 flex items-center justify-center">
+                  <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-emerald-400 to-emerald-600 text-white flex items-center justify-center shadow-lg shadow-emerald-500/25">
                     <ImageIcon className="w-5 h-5" />
                   </div>
-                  <div className="flex-1">
-                    <p className="text-sm font-bold">Photo or video</p>
-                    <p className="text-xs text-muted-foreground">Pick from your gallery</p>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-[15px] font-bold leading-tight">Photo or video</p>
+                    <p className="text-xs text-muted-foreground mt-0.5">Pick from your gallery</p>
                   </div>
-                </button>
+                  <ChevronRight className="w-4 h-4 text-muted-foreground/60 group-hover:text-foreground group-hover:translate-x-0.5 transition" />
+                </motion.button>
 
-                <button
+                <motion.button
+                  initial={{ opacity: 0, y: 8 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.08, duration: 0.22 }}
                   onClick={() => cameraInputRef.current?.click()}
-                  className="w-full flex items-center gap-3 rounded-2xl border border-border/60 p-4 text-left hover:bg-muted/40 transition-colors"
+                  className="group w-full flex items-center gap-4 rounded-2xl border border-border/60 bg-background/60 p-4 text-left hover:bg-muted/40 hover:border-border active:scale-[0.985] transition-all"
                 >
-                  <div className="w-12 h-12 rounded-full bg-amber-500/15 text-amber-500 flex items-center justify-center">
+                  <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-amber-400 to-orange-500 text-white flex items-center justify-center shadow-lg shadow-orange-500/25">
                     <Camera className="w-5 h-5" />
                   </div>
-                  <div className="flex-1">
-                    <p className="text-sm font-bold">Take a photo</p>
-                    <p className="text-xs text-muted-foreground">Open the camera</p>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-[15px] font-bold leading-tight">Take a photo</p>
+                    <p className="text-xs text-muted-foreground mt-0.5">Open the camera</p>
                   </div>
-                </button>
+                  <ChevronRight className="w-4 h-4 text-muted-foreground/60 group-hover:text-foreground group-hover:translate-x-0.5 transition" />
+                </motion.button>
 
-                <button
+                <motion.button
+                  initial={{ opacity: 0, y: 8 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.12, duration: 0.22 }}
                   onClick={() => setStep("compose-text")}
-                  className="w-full flex items-center gap-3 rounded-2xl border border-border/60 p-4 text-left hover:bg-muted/40 transition-colors"
+                  className="group w-full flex items-center gap-4 rounded-2xl border border-border/60 bg-background/60 p-4 text-left hover:bg-muted/40 hover:border-border active:scale-[0.985] transition-all"
                 >
-                  <div className="w-12 h-12 rounded-full bg-fuchsia-500/15 text-fuchsia-500 flex items-center justify-center">
+                  <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-fuchsia-400 to-pink-500 text-white flex items-center justify-center shadow-lg shadow-pink-500/25">
                     <Type className="w-5 h-5" />
                   </div>
-                  <div className="flex-1">
-                    <p className="text-sm font-bold">Text</p>
-                    <p className="text-xs text-muted-foreground">Share what's on your mind</p>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-[15px] font-bold leading-tight">Text</p>
+                    <p className="text-xs text-muted-foreground mt-0.5">Share what's on your mind</p>
                   </div>
-                </button>
+                  <ChevronRight className="w-4 h-4 text-muted-foreground/60 group-hover:text-foreground group-hover:translate-x-0.5 transition" />
+                </motion.button>
 
-                <p className="text-[11px] text-muted-foreground text-center pt-2">
+                <p className="text-[11px] text-muted-foreground text-center pt-3 pb-1">
                   Stories disappear after 24 hours.
                 </p>
               </div>
