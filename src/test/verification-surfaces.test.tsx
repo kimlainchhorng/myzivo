@@ -16,7 +16,7 @@ import {
   userMissingFlag,
   verifiedStore,
   unverifiedStore,
-} from "./fixtures/profiles";
+} from "@/test/fixtures/profiles";
 
 const wrap = (ui: React.ReactElement) =>
   render(<TooltipProvider>{ui}</TooltipProvider>);
