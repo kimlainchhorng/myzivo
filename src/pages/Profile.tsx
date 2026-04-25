@@ -840,7 +840,7 @@ const Profile = () => {
               {!profile?.phone?.trim() && (
                 <ParallaxSection index={1.5}>
                   <div
-                    className="rounded-2xl border border-destructive/20 bg-destructive/5 p-4 flex items-center gap-3 cursor-pointer active:scale-[0.98] transition-transform"
+                    className="mx-3 lg:mx-0 rounded-2xl border border-destructive/20 bg-destructive/5 p-4 flex items-center gap-3 cursor-pointer active:scale-[0.98] transition-transform"
                     onClick={() => navigate("/account/profile-edit?focus=phone")}
                   >
                     <div className="w-10 h-10 rounded-full bg-destructive/10 flex items-center justify-center shrink-0">
