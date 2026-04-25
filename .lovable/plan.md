@@ -1,71 +1,41 @@
-# Stories: Full Audit, Cleanup & IG/FB-Class Polish
+# Add Instagram-style "Send to" forward sheet for stories
 
-## 1. Live test pass (Klainkonkat@gmail.com)
-Log in via the preview browser and walk every story surface, capturing screenshots + console/network for each:
+Items 2-5 from your request are already shipped and verified in the previous turn (seen/unseen rings, persisted reactions in `story_reactions`, storage cleanup on delete, hourly `cleanup_expired_stories()` cron). The only remaining gap is item 1: today the share button only does **copy link / native share** — there is no in-app **forward to another user** flow like Instagram's "Send to".
 
-- **Create flow** (`CreateStorySheet`) on Profile, Feed and Chat triggers
-  - Photo pick, camera capture, text-only with gradient bg, music track
-  - Upload progress, retry on failure, signed-PUT error surfacing
-  - Cancel mid-upload (XHR abort)
-- **Carousels**: `ProfileStories`, `FeedStoryRing`, `ChatStories`
-  - Confirm same data shape, same ring style, same click → same `StoryViewer`
-  - Confirm react-query cache keys don't collide and invalidate after upload
-- **Viewer** (`StoryViewer`)
-  - Auto-progress, tap nav, hold-pause, swipe-down close
-  - Mute/unmute, music sync, viewers list (owner), delete (owner)
-  - Comments insert into `story_comments`, views into `story_views`
-- **Deep links**: `/story/:id` from each source, back/forward, missing/expired states, analytics events
-- **Admin**: `/admin/stories-funnel` renders with real `analytics_events`
+## What gets added
 
-Document any defect found and fix it as part of step 2/3.
+A new `StoryForwardSheet` opened from the viewer's Share button. It contains:
 
-## 2. Fix the real gaps (current bugs)
+1. **Copy link** quick action at the top — copies `${origin}/stories/:id` (the same canonical deep link the rest of the system uses, so it routes through `StoryDeepLinkPage` correctly).
+2. **Friend picker** — lists accepted friends from `friendships` (status='accepted'), searchable, multi-select, with checkmark.
+3. **Optional note** input (auto-prefixed to the link, e.g. `"loved this 😍\nhttps://…/stories/<id>"`).
+4. **Send button** — inserts one row per recipient into `direct_messages` (sender_id, receiver_id, message, message_type='text'). The deep link is included so tapping it in chat opens `StoryDeepLinkPage` → real viewer.
 
-| Gap | Fix |
-|---|---|
-| Deleting a story removes the DB row but **leaves the file in `user-stories` bucket** | In `StoryViewer.deleteStoryMutation`, parse the storage path from `mediaUrl` and call `supabase.storage.from('user-stories').remove([path])` before/after the row delete. Same for `audioUrl` if it lives in our bucket. |
-| **No automatic 24h expiry / cleanup** | New SQL migration: `cleanup_expired_stories()` SECURITY DEFINER that (a) collects expired rows, (b) deletes their storage objects via `storage.objects` rows in `user-stories`, (c) deletes from `stories`, `story_views`, `story_comments`, `story_reactions`. Schedule via `pg_cron` hourly. |
-| `story_reactions` table exists but viewer only toggles a local `liked` state | Wire the heart button to upsert/delete in `story_reactions`; subscribe owner viewers list to reactions count. |
-| Carousels don't show **seen vs unseen** ring (FB/IG signature) | Compute per-group "all seen" from `story_views` for current user; render gray ring when fully seen, gradient ring otherwise. |
-| Profile/Feed/Chat sometimes desync after upload | Single shared invalidation helper `invalidateAllStoryCaches(qc)` called from `CreateStorySheet`, delete, and reactions. |
+## Analytics
 
-## 3. Add the missing IG/FB features
-1. **Quick emoji reactions bar** at the bottom of the viewer (❤️🔥👏😂😮😢) writing to `story_reactions`.
-2. **Reply-to-story** input: sends a DM into the existing chat thread with a quoted preview of the story (uses current chat/messages tables).
-3. **Share / forward**: copy `/story/:id` link + native share sheet.
-4. **"Your story" tile** as the first ring in every carousel — when owner has none it opens `CreateStorySheet`; when owner has one it opens viewer; long-press = manage (delete / view insights).
-5. **Story highlights surfacing**: existing `story_highlights` table — show a small Highlights row under `ProfileStories` for the profile owner.
-6. **Mute account from stories** (long-press menu) — preference table entry to hide that user's stories from rings.
-7. **Progress segments + smooth crossfade** between segments and groups (polish).
+Both paths emit `story_share` (new event) with `meta`:
+- `{ story_id, source, method: "copy_link" }`
+- `{ story_id, source, method: "forward", recipient_count }`
 
-## 4. Visual polish (FB/IG-class)
-- Gradient ring tokens (`from-fuchsia-500 via-rose-500 to-amber-400`) with seen-state desaturation.
-- 56 px avatar in carousels, 64 px on Profile, consistent gap and snap-x scroll.
-- Viewer: rounded 24 px container on tablet+, blurred backdrop, spring transitions.
-- Empty states with friendly illustrations + "Add to story" CTA.
+Where `source` is the carousel the viewer was opened from (`profile` / `feed` / `chat` / `shared-link`) — already passed into `StoryViewer` via `useStoryDeepLink`.
 
-## 5. Files to touch / add
+## Files
 
 **New**
-- `supabase/migrations/<ts>_stories_cleanup_and_reactions.sql` — `cleanup_expired_stories()` + cron + RLS for reactions usage.
-- `src/components/stories/StoryReactionsBar.tsx`
-- `src/components/stories/StoryReplyInput.tsx`
-- `src/components/stories/YourStoryTile.tsx`
-- `src/lib/storiesCache.ts` — shared `invalidateAllStoryCaches` + `getSeenMap` helpers.
+- `src/components/stories/StoryForwardSheet.tsx` — the sheet (portal, friend list, search, copy-link, send).
 
 **Edit**
-- `src/components/stories/StoryViewer.tsx` — storage delete on remove, real reactions, reply, share, polish.
-- `src/components/profile/CreateStorySheet.tsx` — use shared cache helper, polish.
-- `src/components/profile/ProfileStories.tsx` — seen state, YourStoryTile, highlights row.
-- `src/components/social/FeedStoryRing.tsx` — seen state, YourStoryTile.
-- `src/components/chat/ChatStories.tsx` — seen state, YourStoryTile.
+- `src/components/stories/StoryViewer.tsx`
+  - Accept a `source` prop so analytics knows which carousel opened the viewer.
+  - Replace `handleShare` (current native-share-with-clipboard-fallback) with: open the new `StoryForwardSheet`. Pause playback while open.
+- `src/components/profile/ProfileStories.tsx`, `src/components/social/FeedStoryRing.tsx`, `src/components/chat/ChatStories.tsx`, `src/pages/StoryDeepLinkPage.tsx` — pass their respective `source` ("profile" / "feed" / "chat" / "shared-link") into `<StoryViewer />`.
 
 ## Technical notes
-- Storage path parsing: `media_url` is a public URL like `…/storage/v1/object/public/user-stories/<uid>/<file>`; split on `/user-stories/` and use the suffix.
-- Cron: hourly is enough since `expires_at` is enforced by RLS for reads; cleanup is just to free space.
-- Reactions RLS: insert/delete only own rows; read all on active stories.
-- All new analytics events reuse `meta` column.
+- Friends loading copies the proven pattern from `CreateGroupModal`: `friendships` `or(user_id.eq.me,friend_id.eq.me)` + `status='accepted'`, then `profiles` lookup.
+- Deep link is built from `window.location.origin` so it works for preview, published, and custom domains (hizivo.com, zivollc.com).
+- Empty state when the user has no friends still surfaces the "Copy link" action.
+- Sheet uses the same portal + spring sheet pattern as `CreateStorySheet` for visual consistency.
 
 ## Out of scope
-- Native push for new story (covered by existing notifications system).
-- Story ads / sponsored placements.
+- Forwarding to chat groups (only 1:1 DMs in v1; can be added later).
+- Story-as-rich-card preview inside chat — for now the link auto-renders via the existing rich-link preview system the chat already has.

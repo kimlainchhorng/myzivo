@@ -214,6 +214,7 @@ export default function ChatStories() {
           startStoryIndex={viewerLocation.storyIndex}
           onClose={closeStory}
           onStoryChange={updateStory}
+          source="chat"
         />
       )}
     </>

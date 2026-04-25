@@ -256,6 +256,7 @@ const ProfileStories = () => {
           startStoryIndex={viewerLocation.storyIndex}
           onClose={handleViewerClose}
           onStoryChange={updateStory}
+          source="profile"
         />
       )}
     </>

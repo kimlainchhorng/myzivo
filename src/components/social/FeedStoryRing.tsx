@@ -263,6 +263,7 @@ export default function FeedStoryRing() {
           startStoryIndex={viewerLocation.storyIndex}
           onClose={handleViewerClose}
           onStoryChange={updateStory}
+          source="feed"
         />
       )}
     </>
