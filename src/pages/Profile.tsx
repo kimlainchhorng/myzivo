@@ -221,7 +221,31 @@ const Profile = () => {
   const updateProfile = useUpdateUserProfile();
   const uploadAvatar = useUploadAvatar();
   const langTriggerRef = useRef<HTMLButtonElement>(null);
-  const [showNotifPanel, setShowNotifPanel] = useState(false);
+  const { impact, selectionChanged } = useHaptics();
+  const [showNotifPanel, setShowNotifPanel] = useState<boolean>(() => {
+    if (typeof window === "undefined") return false;
+    try { return sessionStorage.getItem("zivo:profile:notif-panel") === "1"; } catch { return false; }
+  });
+  useEffect(() => {
+    try { sessionStorage.setItem("zivo:profile:notif-panel", showNotifPanel ? "1" : "0"); } catch {}
+  }, [showNotifPanel]);
+  useEffect(() => {
+    const restore = () => {
+      try {
+        const v = sessionStorage.getItem("zivo:profile:notif-panel") === "1";
+        setShowNotifPanel(v);
+      } catch {}
+    };
+    window.addEventListener("orientationchange", restore);
+    document.addEventListener("visibilitychange", restore);
+    return () => {
+      window.removeEventListener("orientationchange", restore);
+      document.removeEventListener("visibilitychange", restore);
+    };
+  }, []);
+  const handleBack = useCallback(() => { impact("light"); navigate(-1); }, [impact, navigate]);
+  const handleToggleNotif = useCallback(() => { selectionChanged(); setShowNotifPanel(p => !p); }, [selectionChanged]);
+  const handleResetCover = useCallback(() => { impact("light"); setCoverPosition(50); }, [impact]);
   
   const [showLangPicker, setShowLangPicker] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
