@@ -1,80 +1,121 @@
-## Goal
+# Phase 1B–E Mega-Drop: Verification Report ✅ + Shared Toolkit + Auth Hardening + Tests + Dashboard Shell
 
-Make all 10 `BusinessPageWizard` component tests pass reliably, eliminate `act()` warnings, harden the leave-guard (no infinite loop, no prompt after completion), and surface an inline "Unsaved changes" indicator in the wizard header so users can see when leaving will warn them.
+**Already done (no approval needed — used DB + artifact tools):**
+- ✅ Phase 1A DB indexes verified: **0 unindexed FKs**, all 16 composite/BRIN indexes present.
+- ✅ Verification report saved to `/mnt/documents/phase-1a-verification-report.md`.
 
----
-
-## Changes
-
-### 1. `src/pages/business/BusinessPageWizard.tsx`
-
-**a) Wrap async resume + baseline effects to be test-friendly**
-- The two `useEffect`s that run async work (resume from `store_profiles` and the baseline `setTimeout`) currently fire setStates outside any user-driven action, which is what's producing the `act()` warnings and the timing flakiness. Restructure:
-  - Move the baseline-setting from a `setTimeout(…, 0)` into a `useEffect` that runs **synchronously** once `checking === false` AND the prefill effect has had a chance to run. Use a `useLayoutEffect` (or a `useEffect` with no timer) keyed on `[checking, profile?.id, user?.id]` to set `baselineRef.current = JSON.stringify(snapshot)` and `setBaselineReady(true)` in one tick.
-  - This removes the artificial 5ms wait the tests need and removes the `setTimeout`-induced act warnings.
-
-**b) Save & exit on step 1 with empty form**
-- Currently the Save & exit button is disabled when `step === 1 && !canContinue()`. The test "persists progress and navigates to /account on Save & exit" fills only basics (which makes step 1 valid), so this should already pass — but only after the baseline timing fix. Keep the disabled rule (correct UX) and update the test (see test changes) to ensure step-1 fields are valid before clicking.
-- Make `saveAndExit` call `persist({ persistProfile: false })` when `step < 3` and not gate on `canContinue()` for steps ≥ 2.
-
-**c) Guard hardening — prevent infinite popstate loop**
-- Add `isLeavingRef` early-out at the **top** of the popstate handler (already present) AND set `isLeavingRef.current = true` synchronously inside `confirmLeave` **before** removing the listener via the effect's `armed` flag.
-- Move sentinel push to only happen the first time the guard arms; on re-arm (after Stay), don't double-push.
-- After `confirmLeave` and after `handleComplete` succeeds, also call a small `disarmGuard()` helper that clears the listener immediately (so the next `popstate` does nothing). This matches what the "Leave navigates exactly once" and "completion disarms guard" tests assert.
-
-**d) Inline "Unsaved changes" indicator**
-- In the header (next to the "Step X of 5" line), conditionally render a small chip when `isDirty` is true:
-  ```tsx
-  {isDirty && (
-    <span className="inline-flex items-center gap-1 rounded-full bg-amber-500/10 px-2 py-0.5 text-[10px] font-semibold text-amber-600">
-      <span className="h-1.5 w-1.5 rounded-full bg-amber-500" />
-      Unsaved changes
-    </span>
-  )}
-  ```
-- Hidden once the form matches baseline (e.g. right after a successful auto-save) or after completion.
-
-**e) Don't prompt after final step**
-- `completedRef.current = true` is already set at the top of `handleComplete`. Also set it the moment the user clicks "Go to dashboard" / Skip on step 5 → confirmed by the existing logic. Verify the popstate handler bails when `completedRef.current` is true (it does). No additional change required beyond ensuring `isDirty` returns false when `completedRef.current` is true (already the case).
+**This plan ships everything else in one coordinated release:**
 
 ---
 
-### 2. `src/pages/business/BusinessPageWizard.test.tsx`
+## 1. Shared edge-function API toolkit (`supabase/functions/_shared/`)
 
-**a) Replace the 5ms timer waits with `findBy*` queries**
-- Remove `await act(async () => { await new Promise((r) => setTimeout(r, 5)); });` lines.
-- Instead, in `waitReady()`, after asserting "business basics" is visible, wait for the baseline to be ready by waiting for an element that depends on it — e.g. `await waitFor(() => expect(screen.getByLabelText(/full business name/i)).toBeEnabled())` — or expose a `data-baseline-ready` attribute on the form root and `await screen.findByTestId('wizard-form[data-baseline-ready="true"]')`.
+Existing `cors.ts` + `deps.ts` are kept untouched. Adds:
 
-**b) Save & exit test — make persist trigger reliably**
-- After `await fillBasics()`, also fire-change to ensure the React state has flushed before clicking Back. Use `await waitFor(() => expect(screen.getByRole('button', { name: /save & exit/i })).toBeEnabled())` before the click.
-- This guarantees step-1 validity → button enabled → `persist` fires.
+- `auth.ts` — `requireUser(req)` returns `{ userId, claims, supabase, token }`. Uses `supabase.auth.getClaims(token)` (fast, no DB roundtrip), falls back to `getUser(token)`. Throws `UnauthorizedError` on missing/invalid bearer. Plus `getServiceRoleClient()` for post-auth privileged ops.
+- `errors.ts` — `UnauthorizedError`, `ValidationError`, `HttpError`, and `withErrorHandling(handler, fnName)` wrapper that translates them to 401/400/4xx JSON responses with CORS headers attached.
+- `validate.ts` — Zod-compatible `parseBody(req, schema)` / `parseQuery(req, schema)`. Plus a **tiny built-in `v` validator** (`v.object`, `v.email`, `v.minLength`, `v.exactDigits`, etc.) so functions don't need to bundle Zod just for shape checks. Schemas with `safeParse` from real Zod also work.
+- `respond.ts` — `ok(req, body, status?)`, `err(req, message, status?, extra?)`, `preflight(req)` — all auto-attach `getCorsHeaders(req)`.
+- `test-utils.ts` — `callFn(name, opts)`, `preflight(name)`, `assertCors(res)`, `assertUnauthorized(res)`, `assertValidationError(res, field)`. Loads `.env` via Deno dotenv, reads `VITE_SUPABASE_URL`/`VITE_SUPABASE_PUBLISHABLE_KEY` (falls back to `SUPABASE_*`), defaults Origin to `https://hizivo.com` so the existing CORS whitelist accepts it.
 
-**c) New test: leave dialog does NOT appear after final step (popstate after completion)**
-- Already covered by the "completion disarms guard" test. Strengthen it: also fire a header back click after completion and assert `screen.queryByText(/leave business setup/i)` is null.
+(All five files are written exactly as drafted in the previous turn — no Zod runtime dependency required.)
 
-**d) New test: rapid repeated popstate doesn't cause infinite loop**
-- After `fillBasics()`, dispatch 3 consecutive `popstate` events in `act(...)` and assert only **one** dialog is open and `navigateSpy` was not called. Then click Leave and dispatch another popstate; assert dialog stays closed and navigate count is exactly 1.
+## 2. Migrate the first 5 endpoints to the new toolkit
 
-**e) New test: "Unsaved changes" chip visibility**
-- On render: assert chip is NOT in the document.
-- After `fillBasics()`: assert `screen.findByText(/unsaved changes/i)` resolves.
-- After clicking Continue (which auto-saves and updates baseline): assert the chip disappears via `waitFor(() => expect(screen.queryByText(/unsaved changes/i)).not.toBeInTheDocument())`.
+Auth-related functions get hardened first:
 
-**f) Wrap any remaining state-causing dispatches in `act`**
-- Already used for `popstate`. Ensure all `fireEvent.click` on buttons that fire async `persist` are awaited via `await waitFor(...)` for the post-condition rather than fixed timers.
+| Function | Changes |
+|---|---|
+| `public-signup` | Replace inline CORS + manual checks with `withErrorHandling` + `parseBody(v.object({email, password (min 8), fullName, phone optional}))`. Same response shape on success. |
+| `send-otp-email` | `withErrorHandling` + `parseBody(v.object({email}))`. Public endpoint (no `requireUser`) — explicitly documented. |
+| `send-otp-sms` | `withErrorHandling` + `parseBody(v.object({phone (E.164)}))`. Public, documented. |
+| `verify-otp-code` | `withErrorHandling` + `parseBody(v.object({email, code (6 digits)}))`. Internal logic unchanged, response shape preserved. |
+| `verify-otp-sms` | Same pattern as `verify-otp-code` for phone+code. |
 
----
+For each: response shape on `200` is unchanged; only `400`/`401`/`500` envelopes are standardized to `{ error, fieldErrors? }`. CORS continues using the existing `getCorsHeaders(req)` whitelist (no behavior change for browsers).
 
-### 3. Run and iterate
+These five functions are NOT JWT-protected by design (signup + OTP request/verify happen *before* the user has a session). The `requireUser` helper is wired and ready, but only `account-summary`-style protected functions will use it in the next batch — auth functions only get **CORS + Zod + error standardization**.
 
-- Run `bunx vitest run src/pages/business/BusinessPageWizard.test.tsx src/pages/business/wizardPersistence.test.ts`.
-- Confirm all 10+ component tests + 10 persistence tests pass and no `act()` warnings appear.
+## 3. Automated tests (Deno) — `supabase/functions/<name>/index.test.ts`
 
----
+For each of the 5 hardened functions plus a `_shared/smoke_test.ts`:
 
-## Files
+- **OPTIONS preflight** → 204 with valid CORS allow-origin + allow-headers (incl. `authorization`).
+- **Invalid body** (missing required field, wrong type, malformed JSON) → 400 with `fieldErrors` mentioning the field.
+- **Wrong-origin preflight** (`Origin: https://evil.com`) → response either omits or empties `Access-Control-Allow-Origin`.
+- For protected fns (next batch): **missing/garbage Authorization** → 401.
+- **Happy path** is exercised against the public-signup test using a uniquely-generated email; response is 200/202 with `success: true`.
+- A `_shared/smoke_test.ts` loops over all hardened functions and asserts CORS+invalid-body behavior in one run — a single command via `supabase--test_edge_functions` produces the regression signal.
 
-- `src/pages/business/BusinessPageWizard.tsx` — baseline-effect fix, guard disarm helper, inline "Unsaved changes" chip in header.
-- `src/pages/business/BusinessPageWizard.test.tsx` — remove sleep-based waits, add chip visibility test, add infinite-loop test, harden Save & exit test.
+End-to-end coverage runs against the **deployed** functions through the Supabase functions URL (real CORS, real auth path). No mocks in transport layer.
 
-No new files. No schema changes.
+## 4. Unified Admin Dashboard Shell — Restaurant pilot
+
+New components under `src/components/admin/shell/`:
+
+- `AdminShell.tsx` — `SidebarProvider` + `min-h-screen flex w-full`, header with always-visible `SidebarTrigger`, content area, mobile safe-area aware. Wraps children.
+- `AdminSidebar.tsx` — uses shadcn `Sidebar collapsible="icon"` + `NavLink`. Reads `nav` config prop with `{ section, items: [{ title, url, icon }] }[]`. Active route highlight + auto-expanded group containing active item.
+- `AdminTopbar.tsx` — store switcher (placeholder dropdown ready for multi-store), command-palette trigger, notifications bell, profile menu.
+- `useAdminContext.tsx` — `{ vertical, currentStoreId, role }`, persists `currentStoreId` to localStorage.
+- `nav/restaurant.ts` — Restaurant nav config: Dashboard, Orders, Menu, Tables, Staff, Reviews, Promotions, Analytics, Settings — each pointing to existing `/eats/restaurant-dashboard` sub-routes (initially the dashboard route; sub-routes added in Phase 4b).
+
+**Restaurant page integration:**
+- Update `EatsRestaurantDashboard.tsx` to render its existing content inside `<AdminShell vertical="restaurant" nav={restaurantNav}>...</AdminShell>`. No content/logic changes, no route changes — purely a layout wrapper.
+- `BusinessDashboard.tsx` (generic business shell) gets the same wrapper as a second pilot, with a `business` nav config. Reverts cleanly by removing the wrapper.
+- Wrapped routes stay behind `<ProtectedRoute>` (already applied at `App.tsx` level).
+
+No new routes; everything is additive and behind the existing protected-route guard.
+
+## 5. Frontend tests for the shell
+
+- `src/components/admin/shell/AdminShell.test.tsx` — renders with mocked `react-router-dom` + `SidebarProvider`, asserts: SidebarTrigger present, nav items render, active item gets active class, ProtectedRoute integration left to existing app-level coverage.
+
+## Delivery order (single approval, all in this drop)
+
+1. Write `_shared/auth.ts`, `errors.ts`, `validate.ts`, `respond.ts`, `test-utils.ts`.
+2. Refactor 5 auth functions to use the toolkit (preserving response shapes).
+3. Write 5 per-function `*.test.ts` + 1 `_shared/smoke_test.ts`.
+4. Write `src/components/admin/shell/*` + `nav/restaurant.ts` + `nav/business.ts`.
+5. Wrap `EatsRestaurantDashboard.tsx` and `BusinessDashboard.tsx` in `<AdminShell>`.
+6. Add `AdminShell.test.tsx`.
+7. Run frontend tests (`vitest`) + edge-function tests (`supabase--test_edge_functions`).
+8. Append a "Stage B/C/D/E shipped" section to `/mnt/documents/phase-1-rollout-checklist.md`.
+
+## Files changed/created
+
+**New (12):**
+- `supabase/functions/_shared/auth.ts`
+- `supabase/functions/_shared/errors.ts`
+- `supabase/functions/_shared/validate.ts`
+- `supabase/functions/_shared/respond.ts`
+- `supabase/functions/_shared/test-utils.ts`
+- `supabase/functions/_shared/smoke_test.ts`
+- `supabase/functions/public-signup/index.test.ts`
+- `supabase/functions/send-otp-email/index.test.ts`
+- `supabase/functions/send-otp-sms/index.test.ts`
+- `supabase/functions/verify-otp-code/index.test.ts`
+- `supabase/functions/verify-otp-sms/index.test.ts`
+- `src/components/admin/shell/{AdminShell,AdminSidebar,AdminTopbar,useAdminContext}.tsx` + `nav/{restaurant,business}.ts` + `AdminShell.test.tsx`
+
+**Edited (7):**
+- `supabase/functions/public-signup/index.ts`
+- `supabase/functions/send-otp-email/index.ts`
+- `supabase/functions/send-otp-sms/index.ts`
+- `supabase/functions/verify-otp-code/index.ts`
+- `supabase/functions/verify-otp-sms/index.ts`
+- `src/pages/EatsRestaurantDashboard.tsx`
+- `src/pages/business/BusinessDashboard.tsx`
+
+## Risk and rollback
+
+- **Toolkit files are additive** — no existing function imports them yet, so adding them is zero-risk.
+- **Auth function refactors preserve `200` response shape exactly**; only error envelopes change. Rollback per-function = redeploy previous version.
+- **Dashboard shell is purely a wrapper** — remove `<AdminShell>` to instantly revert. No route changes, no DB changes.
+- **Tests** run via the Lovable test tools; no CI changes required.
+
+## Out of scope (next drop)
+
+- Hardening the next 25 edge functions (orders/payments/chat/admin batches).
+- Other vertical dashboards (Grocery/Retail/Cafe/Service/Mobility).
+- Store switcher backend (currently placeholder UI).
+- Command palette commands (palette is shipped empty, ready for registrations).
