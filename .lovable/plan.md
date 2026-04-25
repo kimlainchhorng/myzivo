@@ -1,121 +1,293 @@
-# Phase 1B–E Mega-Drop: Verification Report ✅ + Shared Toolkit + Auth Hardening + Tests + Dashboard Shell
+# Phase 2 — Security Hardening & Missing Infrastructure Upgrades
 
-**Already done (no approval needed — used DB + artifact tools):**
-- ✅ Phase 1A DB indexes verified: **0 unindexed FKs**, all 16 composite/BRIN indexes present.
-- ✅ Verification report saved to `/mnt/documents/phase-1a-verification-report.md`.
-
-**This plan ships everything else in one coordinated release:**
+Phase 1 shipped database indexes, the shared edge toolkit, auth hardening for 5 endpoints, edge tests, and the unified admin shell. Phase 2 closes the attacker surface across the full platform (163 edge functions, 100+ tables, 13 storage buckets) and adds the production-grade infrastructure ZIVO is currently missing.
 
 ---
 
-## 1. Shared edge-function API toolkit (`supabase/functions/_shared/`)
+## Part A — Anti-Attack Hardening (Defense-in-Depth)
 
-Existing `cors.ts` + `deps.ts` are kept untouched. Adds:
+### A1. Rate Limiting & Abuse Prevention (currently missing)
 
-- `auth.ts` — `requireUser(req)` returns `{ userId, claims, supabase, token }`. Uses `supabase.auth.getClaims(token)` (fast, no DB roundtrip), falls back to `getUser(token)`. Throws `UnauthorizedError` on missing/invalid bearer. Plus `getServiceRoleClient()` for post-auth privileged ops.
-- `errors.ts` — `UnauthorizedError`, `ValidationError`, `HttpError`, and `withErrorHandling(handler, fnName)` wrapper that translates them to 401/400/4xx JSON responses with CORS headers attached.
-- `validate.ts` — Zod-compatible `parseBody(req, schema)` / `parseQuery(req, schema)`. Plus a **tiny built-in `v` validator** (`v.object`, `v.email`, `v.minLength`, `v.exactDigits`, etc.) so functions don't need to bundle Zod just for shape checks. Schemas with `safeParse` from real Zod also work.
-- `respond.ts` — `ok(req, body, status?)`, `err(req, message, status?, extra?)`, `preflight(req)` — all auto-attach `getCorsHeaders(req)`.
-- `test-utils.ts` — `callFn(name, opts)`, `preflight(name)`, `assertCors(res)`, `assertUnauthorized(res)`, `assertValidationError(res, field)`. Loads `.env` via Deno dotenv, reads `VITE_SUPABASE_URL`/`VITE_SUPABASE_PUBLISHABLE_KEY` (falls back to `SUPABASE_*`), defaults Origin to `https://hizivo.com` so the existing CORS whitelist accepts it.
+Build a **shared rate-limit module** (`supabase/functions/_shared/rate-limit.ts`) backed by a new `api_rate_limits` table:
 
-(All five files are written exactly as drafted in the previous turn — no Zod runtime dependency required.)
+- Sliding-window counter per (ip, user_id, route, action)
+- Tiered limits: anonymous = 30 req/min, authenticated = 120 req/min, admin = 600 req/min
+- Sensitive routes (login, signup, OTP, password-reset, payment) = 5 req/min per IP + 10/hour per identifier
+- Returns standard `429 Too Many Requests` with `Retry-After` header
+- Auto-bans IPs after 50 failures in 10 minutes (`api_ip_blocklist` table)
 
-## 2. Migrate the first 5 endpoints to the new toolkit
+Apply to: all auth endpoints, OTP send/verify, password reset, public-signup, contact forms, payment endpoints.
 
-Auth-related functions get hardened first:
+### A2. Web Application Firewall Layer
 
-| Function | Changes |
-|---|---|
-| `public-signup` | Replace inline CORS + manual checks with `withErrorHandling` + `parseBody(v.object({email, password (min 8), fullName, phone optional}))`. Same response shape on success. |
-| `send-otp-email` | `withErrorHandling` + `parseBody(v.object({email}))`. Public endpoint (no `requireUser`) — explicitly documented. |
-| `send-otp-sms` | `withErrorHandling` + `parseBody(v.object({phone (E.164)}))`. Public, documented. |
-| `verify-otp-code` | `withErrorHandling` + `parseBody(v.object({email, code (6 digits)}))`. Internal logic unchanged, response shape preserved. |
-| `verify-otp-sms` | Same pattern as `verify-otp-code` for phone+code. |
+New `_shared/waf.ts` runs on every request:
 
-For each: response shape on `200` is unchanged; only `400`/`401`/`500` envelopes are standardized to `{ error, fieldErrors? }`. CORS continues using the existing `getCorsHeaders(req)` whitelist (no behavior change for browsers).
+- **SQL injection patterns** — block `';--`, `UNION SELECT`, `xp_cmdshell`, `pg_sleep` in any string field
+- **XSS patterns** — block `<script`, `javascript:`, `onerror=`, `onload=` in non-HTML inputs
+- **Path traversal** — block `../`, `..\\`, encoded variants in any path parameter
+- **Prototype pollution** — strip `__proto__`, `constructor`, `prototype` from JSON bodies
+- **Oversized payloads** — reject bodies > 1 MB (configurable per endpoint)
+- **Suspicious user agents** — block known scanners (sqlmap, nikto, nmap, masscan)
 
-These five functions are NOT JWT-protected by design (signup + OTP request/verify happen *before* the user has a session). The `requireUser` helper is wired and ready, but only `account-summary`-style protected functions will use it in the next batch — auth functions only get **CORS + Zod + error standardization**.
+All blocks are logged to `security_events` table for monitoring.
 
-## 3. Automated tests (Deno) — `supabase/functions/<name>/index.test.ts`
+### A3. Request Signing & Replay Protection
 
-For each of the 5 hardened functions plus a `_shared/smoke_test.ts`:
+For high-value endpoints (payments, admin actions, refunds, payout):
 
-- **OPTIONS preflight** → 204 with valid CORS allow-origin + allow-headers (incl. `authorization`).
-- **Invalid body** (missing required field, wrong type, malformed JSON) → 400 with `fieldErrors` mentioning the field.
-- **Wrong-origin preflight** (`Origin: https://evil.com`) → response either omits or empties `Access-Control-Allow-Origin`.
-- For protected fns (next batch): **missing/garbage Authorization** → 401.
-- **Happy path** is exercised against the public-signup test using a uniquely-generated email; response is 200/202 with `success: true`.
-- A `_shared/smoke_test.ts` loops over all hardened functions and asserts CORS+invalid-body behavior in one run — a single command via `supabase--test_edge_functions` produces the regression signal.
+- Require `X-Request-Signature` header (HMAC-SHA256 of body + timestamp using session-derived secret)
+- Reject requests with timestamp drift > 60 seconds (replay protection)
+- Nonce table (`api_request_nonces`) to reject duplicate requests within 5-minute window
 
-End-to-end coverage runs against the **deployed** functions through the Supabase functions URL (real CORS, real auth path). No mocks in transport layer.
+### A4. Brute-Force & Credential Stuffing Defense
 
-## 4. Unified Admin Dashboard Shell — Restaurant pilot
+Extend existing `auth_precheck_login` with:
 
-New components under `src/components/admin/shell/`:
+- **Device fingerprinting** — track (IP, user-agent, screen resolution, language) hashes
+- **Impossible-travel detection** — flag logins from > 500 km away within 1 hour
+- **Breached-password check** — call k-anonymity API (haveibeenpwned) on signup/password-change
+- **Account lockout escalation** — 5 failures = 15 min lock, 10 = 1 hr, 20 = require admin unlock + email user
+- **Captcha trigger** — after 3 failures, require Cloudflare Turnstile (already free, no SDK needed)
 
-- `AdminShell.tsx` — `SidebarProvider` + `min-h-screen flex w-full`, header with always-visible `SidebarTrigger`, content area, mobile safe-area aware. Wraps children.
-- `AdminSidebar.tsx` — uses shadcn `Sidebar collapsible="icon"` + `NavLink`. Reads `nav` config prop with `{ section, items: [{ title, url, icon }] }[]`. Active route highlight + auto-expanded group containing active item.
-- `AdminTopbar.tsx` — store switcher (placeholder dropdown ready for multi-store), command-palette trigger, notifications bell, profile menu.
-- `useAdminContext.tsx` — `{ vertical, currentStoreId, role }`, persists `currentStoreId` to localStorage.
-- `nav/restaurant.ts` — Restaurant nav config: Dashboard, Orders, Menu, Tables, Staff, Reviews, Promotions, Analytics, Settings — each pointing to existing `/eats/restaurant-dashboard` sub-routes (initially the dashboard route; sub-routes added in Phase 4b).
+### A5. Storage Bucket Hardening
 
-**Restaurant page integration:**
-- Update `EatsRestaurantDashboard.tsx` to render its existing content inside `<AdminShell vertical="restaurant" nav={restaurantNav}>...</AdminShell>`. No content/logic changes, no route changes — purely a layout wrapper.
-- `BusinessDashboard.tsx` (generic business shell) gets the same wrapper as a second pilot, with a `business` nav config. Reverts cleanly by removing the wrapper.
-- Wrapped routes stay behind `<ProtectedRoute>` (already applied at `App.tsx` level).
+The linter flagged **13 public buckets allowing listing**. Fix:
 
-No new routes; everything is additive and behind the existing protected-route guard.
+- Replace `USING (bucket_id = 'X')` SELECT policies with `USING (bucket_id = 'X' AND (storage.foldername(name))[1] = auth.uid()::text)` for user-scoped buckets
+- For genuinely public buckets (avatars, post media, stickers): keep public read but **disable LIST operation** by removing `objects` SELECT policy and forcing direct-URL access only
+- Add `Content-Disposition: attachment` headers via storage transformations to prevent inline HTML/SVG XSS
+- Reject uploads with executable MIME types (`application/x-*`, `text/html`, `image/svg+xml` unless sanitized)
+- Enforce per-user upload quotas (`storage_quotas` table; default 5 GB)
 
-## 5. Frontend tests for the shell
+### A6. Database Linter Cleanup (25 outstanding warnings)
 
-- `src/components/admin/shell/AdminShell.test.tsx` — renders with mocked `react-router-dom` + `SidebarProvider`, asserts: SidebarTrigger present, nav items render, active item gets active class, ProtectedRoute integration left to existing app-level coverage.
+| Issue | Count | Fix |
+|---|---|---|
+| `RLS Enabled No Policy` | 6 tables | Audit each, add explicit deny-all policy or owner-scoped policy |
+| `Function Search Path Mutable` | 1 function | Add `SET search_path = public` |
+| `Extension in Public` | 1 (likely `pg_trgm`/`unaccent`) | Move to `extensions` schema |
+| `RLS Policy Always True` (UPDATE/DELETE/INSERT) | 4 policies | Replace with owner-scoped or service-role-only checks |
+| `Public Bucket Allows Listing` | 13 buckets | Apply A5 fixes |
 
-## Delivery order (single approval, all in this drop)
+### A7. Content Security Policy + Frontend Hardening
 
-1. Write `_shared/auth.ts`, `errors.ts`, `validate.ts`, `respond.ts`, `test-utils.ts`.
-2. Refactor 5 auth functions to use the toolkit (preserving response shapes).
-3. Write 5 per-function `*.test.ts` + 1 `_shared/smoke_test.ts`.
-4. Write `src/components/admin/shell/*` + `nav/restaurant.ts` + `nav/business.ts`.
-5. Wrap `EatsRestaurantDashboard.tsx` and `BusinessDashboard.tsx` in `<AdminShell>`.
-6. Add `AdminShell.test.tsx`.
-7. Run frontend tests (`vitest`) + edge-function tests (`supabase--test_edge_functions`).
-8. Append a "Stage B/C/D/E shipped" section to `/mnt/documents/phase-1-rollout-checklist.md`.
+Add to `index.html` and a Vite plugin generating per-route headers:
 
-## Files changed/created
+- **CSP**: `default-src 'self'; img-src 'self' data: https://*.supabase.co https://lh3.googleusercontent.com; script-src 'self' 'wasm-unsafe-eval'; connect-src 'self' wss://*.supabase.co https://*.supabase.co; frame-ancestors 'none'; form-action 'self'`
+- **Subresource Integrity (SRI)** on any third-party scripts (Stripe, Google Maps, Twilio)
+- **HSTS**: `max-age=31536000; includeSubDomains; preload`
+- **X-Frame-Options: DENY**, **X-Content-Type-Options: nosniff**, **Referrer-Policy: strict-origin-when-cross-origin**, **Permissions-Policy** restricting camera/mic/geolocation to same-origin
+- **Trusted Types** policy to block DOM XSS sinks (innerHTML, eval)
 
-**New (12):**
-- `supabase/functions/_shared/auth.ts`
-- `supabase/functions/_shared/errors.ts`
-- `supabase/functions/_shared/validate.ts`
-- `supabase/functions/_shared/respond.ts`
-- `supabase/functions/_shared/test-utils.ts`
-- `supabase/functions/_shared/smoke_test.ts`
-- `supabase/functions/public-signup/index.test.ts`
-- `supabase/functions/send-otp-email/index.test.ts`
-- `supabase/functions/send-otp-sms/index.test.ts`
-- `supabase/functions/verify-otp-code/index.test.ts`
-- `supabase/functions/verify-otp-sms/index.test.ts`
-- `src/components/admin/shell/{AdminShell,AdminSidebar,AdminTopbar,useAdminContext}.tsx` + `nav/{restaurant,business}.ts` + `AdminShell.test.tsx`
+### A8. PII & Secret Leak Prevention
 
-**Edited (7):**
-- `supabase/functions/public-signup/index.ts`
-- `supabase/functions/send-otp-email/index.ts`
-- `supabase/functions/send-otp-sms/index.ts`
-- `supabase/functions/verify-otp-code/index.ts`
-- `supabase/functions/verify-otp-sms/index.ts`
-- `src/pages/EatsRestaurantDashboard.tsx`
-- `src/pages/business/BusinessDashboard.tsx`
+- Add `_shared/redact.ts` that auto-redacts emails, phone numbers, card numbers, JWTs, API keys from all log outputs
+- Replace every `console.log(error)` in edge functions with `logger.error(redact(error))`
+- Pre-commit hook (already supported by Lovable) scans for hardcoded `sk_`, `eyJ`, `AIza` patterns
 
-## Risk and rollback
+---
 
-- **Toolkit files are additive** — no existing function imports them yet, so adding them is zero-risk.
-- **Auth function refactors preserve `200` response shape exactly**; only error envelopes change. Rollback per-function = redeploy previous version.
-- **Dashboard shell is purely a wrapper** — remove `<AdminShell>` to instantly revert. No route changes, no DB changes.
-- **Tests** run via the Lovable test tools; no CI changes required.
+## Part B — Missing Production Infrastructure
 
-## Out of scope (next drop)
+### B1. Centralized Audit Log (currently fragmented)
 
-- Hardening the next 25 edge functions (orders/payments/chat/admin batches).
-- Other vertical dashboards (Grocery/Retail/Cafe/Service/Mobility).
-- Store switcher backend (currently placeholder UI).
-- Command palette commands (palette is shipped empty, ready for registrations).
+Single `audit_logs` table (already exists) but only 6 functions write to it. Refactor to:
+
+- Wrap **all admin actions, payment ops, role changes, profile changes, content moderation** in `_shared/audit.ts` `recordAudit()` helper
+- Capture: actor_id, target_id, action, resource_type, resource_id, old_values, new_values, ip, user_agent, request_id
+- Immutable via trigger (`BEFORE UPDATE/DELETE` raise exception, except for `service_role`)
+- Admin UI page `/admin/audit-log` with filters by actor, resource, time range
+
+### B2. Observability Stack
+
+- **Request correlation IDs**: Inject `X-Request-Id` (UUID) at edge entry, propagate through all DB calls and logs
+- **Structured logging**: `_shared/logger.ts` outputs JSON `{ level, ts, request_id, user_id, route, msg, ctx }` consumed by Supabase analytics
+- **Error budget tracking**: New `error_budget_daily` view aggregating 4xx/5xx by function for SLO dashboard
+- **Performance traces**: Wrap slow operations (> 500 ms) in `withTrace()` that records to `performance_traces` table
+
+### B3. Secret Rotation & Key Management
+
+- Document all 40+ secrets in `mem://security/secrets-inventory` with owner, rotation schedule, last rotated
+- Add quarterly rotation reminder script (`scripts/check-secret-age.ts`)
+- Move sensitive secrets behind a secret-broker function instead of direct `Deno.env.get()` in business logic — reduces blast radius if a function is compromised
+- Implement JWT signing key rotation playbook (Supabase signing-keys system)
+
+### B4. Distributed Idempotency Keys
+
+For payment, refund, payout, OTP-send operations:
+
+- Require `Idempotency-Key` header (UUID v4)
+- New `idempotency_records` table caches the response for 24 hours
+- Replays return the cached response instead of executing again
+- Prevents double-charges from network retries
+
+### B5. Fraud-Detection Service Extension
+
+Extend existing `assess-fraud` function with:
+
+- Velocity rules (orders/hour, payments/hour per user, IP, device)
+- New-account risk scoring (account age + verification level + first-purchase amount)
+- Geo-mismatch detection (billing country ≠ IP country ≠ device locale)
+- Outputs `fraud_signals` table; high-risk transactions require manual review
+
+### B6. Backup, Recovery & Data Retention
+
+- Automated daily DB snapshot verification job (Supabase already snapshots; we add a restore-test edge function `verify-backup-restore` running weekly)
+- Storage bucket lifecycle: move objects > 90 days old to cold storage
+- GDPR-compliant **data-export** function (`/account/export-data` returning ZIP of user's records)
+- GDPR **right-to-erasure** function (`/account/delete-account` cascading deletes + audit trail)
+- Configurable retention policies per table (chat messages: 2 years, audit logs: 7 years, telemetry: 90 days)
+
+### B7. Admin Role Granularity
+
+Currently roles are coarse. Add fine-grained permissions:
+
+- `permissions` table: `(role, resource, action)` — e.g. `(support, food_orders, refund)`
+- `has_permission(_user_id, _resource, _action)` security-definer function
+- Replace blunt `isAdmin` checks in edge functions with `requirePermission(claims.sub, 'food_orders', 'refund')`
+- Roles to add: `support`, `finance`, `moderator`, `dispatcher`, `merchant_manager` (each with curated permission sets)
+
+### B8. Real-Time Anomaly Alerts
+
+New `security-monitor` edge function (cron every 5 min) that:
+
+- Detects spikes in 4xx/5xx, login failures, payment failures
+- Detects new admin role grants (any user gaining `admin` triggers immediate alert)
+- Detects mass-deletion patterns (> 100 row deletes by single user in 1 minute)
+- Sends to a webhook configurable per environment (Slack/Discord/Email)
+
+### B9. Continue Auth-Endpoint Hardening (Phase 1 batch 2)
+
+Apply the shared toolkit to the **next 5 endpoints**:
+
+- `auth-precheck-login` — already partially hardened, migrate to shared toolkit
+- `auth-refresh-session` (if exists; otherwise create)
+- `reset-password` / `request-password-reset`
+- `change-email` / `confirm-email-change`
+- `admin-create-user`, `admin-delete-user`, `admin-update-profile`
+
+Each gets: shared CORS, `withErrorHandling`, Zod validation, rate-limit decorator, audit log entry, Deno test suite.
+
+### B10. Edge-Function Test Coverage Expansion
+
+Currently 5 functions have tests. Target: top 25 highest-traffic functions.
+
+- Generate test scaffolds via a `scripts/scaffold-edge-tests.ts` helper
+- Add CI job `bun run test:edge` that runs all `*.test.ts` files
+- Add **mutation testing** for the shared toolkit (`_shared/`) to catch regressions
+- Add **fuzz tests** on Zod schemas using `fast-check`-equivalent for Deno
+
+---
+
+## Part C — Net-New Features the Platform Lacks
+
+### C1. Two-Factor Authentication (TOTP)
+
+- New `user_mfa_factors` table (encrypted secret, recovery codes)
+- `enroll-mfa`, `verify-mfa`, `disable-mfa` edge functions
+- UI in `/account/security` with QR code (using `otpauth` lib client-side)
+- Enforced for admin/finance roles; optional for users
+- Backup codes (10 single-use codes per user)
+
+### C2. Session Management UI
+
+- `/account/security/sessions` page listing active sessions (device, IP, last seen, location)
+- One-click "revoke session" and "revoke all other sessions"
+- Email notification on every new device login
+
+### C3. API Key System (for enterprise/business customers)
+
+- `/business/api-keys` page to mint scoped API keys
+- `api_keys` table with hashed key, scopes, rate limit override, expiration
+- `_shared/api-key-auth.ts` accepts either JWT or `X-API-Key` header
+
+### C4. Webhook Outbox Pattern
+
+For external integrations (Stripe, Twilio, Duffel, partners):
+
+- All outbound webhooks queued in `webhook_outbox` table
+- Worker function processes with exponential backoff (max 5 retries over 24 hrs)
+- Dead-letter queue for failed deliveries
+- Replay UI for admins
+
+### C5. Feature Flag System
+
+- `feature_flags` table (name, rollout_percentage, allowlist_user_ids, enabled)
+- React hook `useFeatureFlag(name)` + edge helper `isFeatureEnabled(name, userId)`
+- Admin UI `/admin/feature-flags` for toggling
+- Enables safe gradual rollout of dashboards, payment changes, AI features
+
+### C6. Background Job Queue
+
+Currently jobs run inline. Add:
+
+- `jobs_queue` table (priority, payload, attempts, scheduled_for, status)
+- `job-worker` cron edge function processing queue every 30 sec
+- Standard job types: `send-email`, `process-payout`, `recompute-analytics`, `expire-otp`, `cleanup-storage`
+
+---
+
+## Technical Details
+
+**New shared modules:**
+```
+supabase/functions/_shared/
+  rate-limit.ts      # Sliding-window limiter
+  waf.ts             # Pattern blocker
+  audit.ts           # recordAudit() helper
+  logger.ts          # Structured JSON logger
+  redact.ts          # PII/secret redaction
+  api-key-auth.ts    # Dual JWT/API-key auth
+  idempotency.ts     # Idempotency-Key handler
+  permissions.ts     # requirePermission()
+  signing.ts         # HMAC request signing
+```
+
+**New tables (migration):**
+```
+api_rate_limits, api_ip_blocklist, security_events,
+api_request_nonces, idempotency_records, fraud_signals,
+permissions, user_mfa_factors, mfa_recovery_codes,
+api_keys, webhook_outbox, feature_flags, jobs_queue,
+storage_quotas, performance_traces, login_history
+```
+
+**Frontend additions:**
+```
+src/lib/security/
+  csp.ts, sri.ts, trustedTypes.ts
+src/pages/account/security/
+  SessionsPage.tsx, MfaPage.tsx, ApiKeysPage.tsx
+src/pages/admin/
+  AuditLogPage.tsx, FeatureFlagsPage.tsx, SecurityEventsPage.tsx
+```
+
+**Migrations:** ~6 phased SQL migrations (one per concern group) so each can be reviewed and rolled back independently.
+
+---
+
+## Phased Rollout (recommended order)
+
+| Phase | Scope | Risk | Est. duration |
+|---|---|---|---|
+| **2A** | A6 linter cleanup + A5 storage policies + B7 permissions | Low | 1 turn |
+| **2B** | A1 rate-limit + A2 WAF + A3 signing + A4 brute-force | Medium | 2 turns |
+| **2C** | B1 audit + B2 observability + B4 idempotency + B8 alerts | Medium | 2 turns |
+| **2D** | B9 next-5 auth endpoints + B10 test expansion | Low | 1 turn |
+| **2E** | A7 CSP/SRI/security headers + A8 PII redaction | Low | 1 turn |
+| **2F** | B3 secret rotation + B5 fraud + B6 backup/GDPR | Medium | 1 turn |
+| **2G** | C1 MFA + C2 sessions UI + C5 feature flags | Medium | 2 turns |
+| **2H** | C3 API keys + C4 webhook outbox + C6 job queue | Medium | 2 turns |
+
+Total: ~12 implementation turns, fully reversible per phase.
+
+---
+
+## What gets delivered with approval
+
+On approval, I will execute **Phase 2A immediately** in a single turn:
+- Resolve all 25 Supabase linter warnings (6 RLS gaps, 13 storage policies, 4 always-true policies, 1 search-path, 1 extension)
+- Ship the `permissions` table + `has_permission()` function
+- Generate `/mnt/documents/phase-2a-security-report.md`
+
+Then prompt for which subsequent phase (2B → 2H) to ship next, or `"go all"` to execute the full roadmap sequentially.
