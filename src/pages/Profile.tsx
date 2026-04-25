@@ -969,22 +969,25 @@ const Profile = () => {
                       <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-card/40 via-transparent to-transparent lg:from-card/90 lg:via-card/20" />
                       </motion.div>
 
-                      {/* Cover action button — Facebook-style.
-                          Pinned to the BOTTOM-RIGHT of the cover (clear of the
-                          status bar, the sticky header, and the avatar). Uses
-                          a native <label htmlFor> so the file picker reliably
-                          opens on iOS / Android Capacitor. */}
+                      {/* Cover action buttons — Facebook-style top-right.
+                          Positioned BELOW the sticky header (which occupies
+                          safe-top + 3rem) so they never overlap with back/bell/more.
+                          Uses a native <label htmlFor> so the file picker
+                          reliably opens on iOS / Android Capacitor. */}
                       {user && !coverRepositioning && (
-                        <div className="absolute right-3 bottom-3 z-30 flex items-center gap-1.5 pointer-events-auto">
+                        <div
+                          className="absolute right-3 z-40 flex items-center gap-2 pointer-events-auto"
+                          style={{ top: "calc(var(--zivo-safe-top-sticky, 3.5rem) + 3.25rem)" }}
+                        >
                           {profile?.cover_url && (
                             <motion.button
                               type="button"
                               whileTap={{ scale: 0.88 }}
                               onClick={() => { setCoverPosition(profile?.cover_position ?? 50); setCoverRepositioning(true); }}
                               aria-label="Reposition cover photo"
-                              className="h-9 w-9 flex items-center justify-center rounded-full bg-background/85 backdrop-blur-md text-foreground hover:bg-background shadow-lg border border-border/40 focus-visible:ring-2 focus-visible:ring-primary/60 focus-visible:outline-none"
+                              className="h-10 w-10 flex items-center justify-center rounded-full bg-background/90 backdrop-blur-md text-foreground hover:bg-background shadow-lg border border-border/40 focus-visible:ring-2 focus-visible:ring-primary/60 focus-visible:outline-none"
                             >
-                              <MoveVertical className="h-4 w-4" />
+                              <MoveVertical className="h-[18px] w-[18px]" />
                             </motion.button>
                           )}
                           <label
@@ -992,16 +995,16 @@ const Profile = () => {
                             aria-label={profile?.cover_url ? "Change cover photo" : "Add cover photo"}
                             aria-disabled={coverUploading}
                             className={cn(
-                              "inline-flex items-center gap-1.5 h-9 rounded-full bg-background/90 backdrop-blur-md text-foreground hover:bg-background shadow-lg border border-border/40 cursor-pointer active:scale-95 transition focus-visible:ring-2 focus-visible:ring-primary/60 focus-visible:outline-none",
-                              profile?.cover_url ? "w-9 justify-center" : "px-3 text-xs font-semibold",
+                              "inline-flex items-center gap-1.5 h-10 rounded-full bg-background/90 backdrop-blur-md text-foreground hover:bg-background shadow-lg border border-border/40 cursor-pointer active:scale-95 transition focus-visible:ring-2 focus-visible:ring-primary/60 focus-visible:outline-none",
+                              profile?.cover_url ? "w-10 justify-center" : "px-3.5 text-xs font-semibold",
                               coverUploading && "opacity-60 pointer-events-none"
                             )}
                           >
                             {coverUploading ? (
-                              <Loader2 className="h-4 w-4 animate-spin" />
+                              <Loader2 className="h-[18px] w-[18px] animate-spin" />
                             ) : (
                               <>
-                                <Camera className="h-4 w-4" />
+                                <ImagePlus className="h-[18px] w-[18px]" />
                                 {!profile?.cover_url && <span>Add cover</span>}
                               </>
                             )}
