@@ -570,12 +570,12 @@ const App = () => (
               <SkipToContent />
               <Toaster />
               <Sonner />
-              <StoryDebugPanel />
               <BrowserRouter>
                 <PageViewTracker />
                 <GeoDetector />
                 <Suspense fallback={null}><RoutePrefetcher /></Suspense>
                 <AuthProvider>
+                  <StoryDebugPanel />
                   <VerificationRealtimeBridge />
                   <PushNotificationsBootstrap />
                   <Suspense fallback={null}><GeofenceBootstrap /></Suspense>
