@@ -509,6 +509,28 @@ export default function MorePage() {
   /* --- Total link count --- */
   const totalLinks = sections.reduce((sum, s) => sum + s.links.length, 0);
 
+  /* --- Flat search across all sections --- */
+  const searchResults = useMemo(() => {
+    const q = search.trim().toLowerCase();
+    if (!q) return null;
+    const all = sections.flatMap((s) => s.links);
+    return all.filter(
+      (l) =>
+        l.label.toLowerCase().includes(q) ||
+        l.description.toLowerCase().includes(q),
+    );
+  }, [search]);
+
+  const handleConfirm = () => {
+    if (confirmAction === "switch") {
+      signOut();
+      navigate("/auth?intent=switch");
+    } else if (confirmAction === "signout") {
+      signOut();
+    }
+    setConfirmAction(null);
+  };
+
   return (
     <div className="min-h-[100dvh] flex flex-col bg-background safe-area-bottom">
       <SEOHead title="More – ZIVO" description="Quick access to all ZIVO features and settings." noIndex />
