@@ -741,7 +741,7 @@ export default function StoreMapPage() {
 
       {/* ── Selected store card ── */}
       <AnimatePresence>
-        {selectedStore && (
+        {selectedStore && !drawerStore && (
           <motion.div
             initial={{ y: 140, opacity: 0, scale: 0.92 }}
             animate={{ y: 0, opacity: 1, scale: 1 }}
