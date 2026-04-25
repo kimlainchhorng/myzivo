@@ -1,71 +1,78 @@
-# Store Discovery — Type-check, QA, and Map/List Parity
+## Goal
 
-Tighten typing around the new open-now logic, verify the shared drawer on mobile, and bring the Map page fully in line with the List page (Open-now chip, parity actions, drawer reuse).
+Turn the home-screen "Partner Admin" card into a **"Business Page"** entry point. Because the user is already signed into Zivo, skip partner-login entirely and walk them through a clean 5-step setup wizard (Business → Type → Contact → Profile → Cover → Done). Wizard auto-routes them to the correct dashboard based on the business type they pick.
 
-## 1. Type-check sweep
+## UX Flow
 
-- Run `bunx tsc --noEmit` (and `bun run lint` if available) and fix anything introduced by:
-  - `src/lib/store/storeHours.ts` — confirm `WeekIndex` indexing into `WeekSchedule` (currently `Partial<Record<WeekIndex, DayWindow[]>>`) is consistent; tighten `parseClock` return and `inWindow` parameter types; export `WeekSchedule` if other modules need it.
-  - `src/components/store/StoreDetailsDrawer.tsx` — verify `StoreDetailsDrawerProps` matches every call site; fix the non-null assertion on `store.rating!` by narrowing with `showRating &&` already in scope (drop the `!`).
-  - `src/pages/StoresListPage.tsx` — ensure `useStoreFavorites()` destructure (`favoriteIds`, `toggle`, etc.) matches the hook signature; ensure `isOpenNow` `null` return is handled in the filter (`openNowOnly && isOpenNow(...) !== true` → exclude).
-- No behavior change beyond making the build green.
+```text
+AppHome → "Business Page" card  ──▶  /business/new
+   (only shown when user has no       │
+    existing partner role)            ▼
+                          ┌──────────────────────────────┐
+                          │ 1. Business basics           │  full business name
+                          │                              │  business phone
+                          │                              │  business email
+                          ├──────────────────────────────┤
+                          │ 2. Business type             │  pick from grouped
+                          │   "Set type of business"     │  STORE_CATEGORY_OPTIONS
+                          │                              │  (Stay / Food / Shop /
+                          │                              │   Auto / Beauty / Services)
+                          │                              │  → drives dashboard route
+                          ├──────────────────────────────┤
+                          │ 3. Contact person            │  first + last name
+                          │                              │  phone, email
+                          │                              │  (prefilled from profile)
+                          ├──────────────────────────────┤
+                          │ 4. Profile photo  [Skip]     │  optional logo upload
+                          ├──────────────────────────────┤
+                          │ 5. Cover photo    [Skip]     │  optional banner upload
+                          ├──────────────────────────────┤
+                          │ ✓ Complete → Go to dashboard │
+                          └──────────────────────────────┘
+                                       │
+              ┌────────────────────────┼─────────────────────────────┐
+              ▼                        ▼                             ▼
+      hotel/resort/guesthouse   restaurant/cafe/bakery/drink   everything else
+      → /admin/stores/:id            → /restaurant/dashboard    → /admin/stores/:id
+        ?tab=lodge-overview          (creates restaurants row    (creates store_profiles
+                                      when category=restaurant)   row, setup_complete=true)
+```
 
-## 2. Mobile QA of `StoreDetailsDrawer`
+Key UX rules:
+- Steps 4 and 5 have a visible **Skip** button alongside Continue.
+- Steps 1–3 require their fields; inline validation, no toasts on every keystroke.
+- Top progress bar (5 dots) + Back button on every step except step 1.
+- Auto-save draft to `store_profiles` on each step transition so users can resume.
+- On completion: `setup_complete = true`, success toast, route to dashboard.
 
-After parity edits land, manually verify on the 428×703 preview on both routes:
+## Changes
 
-- `/store-map/list` (List page) — open drawer from a row.
-- `/store-map` (Map page) — open drawer from the new "More" button on the selected-store card.
+### 1. `src/pages/app/AppHome.tsx`
+- Rename the fallback card label "Partner Admin" → **"Business Page"**, subtitle → **"Create your business page on Zivo"**.
+- Change `onClick` from `navigate("/partner-login")` → `navigate("/business/new")`.
+- Keep the existing "owner store detected" branch unchanged (users who already have a store still see ops).
 
-Checklist:
-- 44px minimum tap targets on every action button (View, Ride, Directions, Share, Favorite, Promo Apply, Close).
-- Drawer respects `env(safe-area-inset-bottom)` and is not clipped by `ZivoMobileNav`.
-- Two-column action grid wraps cleanly; Favorite button spans both columns.
-- Promo input expands without pushing actions off-screen; long store names truncate.
-- Drawer scroll works when address/hours/phone are all present.
-- Backdrop tap closes; inner taps do not.
+### 2. New page `src/pages/business/BusinessPageWizard.tsx`
+- 5-step wizard component using existing `Card`, `Button`, `Input`, `Label`, `framer-motion` patterns from `StoreSetup.tsx`.
+- Reuses `STORE_CATEGORY_OPTIONS` (grouped chips) for the "Set type of business" step.
+- Reuses `formatPhone` and the `store-assets` storage bucket upload pattern from `StoreSetup.tsx` for logo/banner.
+- On submit, upserts `store_profiles` (owner_id = auth.uid, category, name, phone, email, logo_url, banner_url, setup_complete=true) and:
+  - if category is `restaurant|cafe|bakery|drink`, also inserts a minimal `restaurants` row and routes to `/restaurant/dashboard`,
+  - if category is lodging (`hotel|resort|guesthouse`), routes to `/admin/stores/:id?tab=lodge-overview`,
+  - else routes to `/admin/stores/:id`.
+- Prefills contact step with `profiles.full_name`, `profiles.phone`, `user.email`.
+- If the user already has a `store_profiles` row with `setup_complete=true`, redirect straight to the dashboard (no double-setup).
 
-## 3. Open-now chip on `StoreMapPage`
+### 3. `src/App.tsx`
+- Add lazy route: `<Route path="/business/new" element={<ProtectedRoute><BusinessPageWizard /></ProtectedRoute>} />`.
 
-- Add an "Open now" pill into the existing category-chip row (between "All" and category chips). Use the same chip styling as List page for visual consistency.
-- New state `openNowOnly` (default from `?open=1` URL param).
-- Apply to `filteredStores` via `isOpenNow(store.hours) === true` so unknowns stay hidden when filter is on.
-- Update marker rendering effect so toggling re-clusters the pins.
-- Pass the filter through the "See all" navigation: append `&open=1` when active so the List page mounts with the same filter.
-- Reflect state in URL (`setSearchParams`) so deep-links from List ↔ Map keep the chip in sync.
+### 4. (No DB migration needed)
+All target tables (`store_profiles`, `restaurants`, `profiles`) already exist with the required columns.
 
-## 4. Map selected-store card → full action parity
+## Technical Notes
 
-Two changes on `StoreMapPage`:
-
-a) **Add inline buttons to the existing pinned card** (matches List drawer set):
-   - Favorite (heart, filled when saved) — calls `useStoreFavorites().toggle`.
-   - Directions — calls `openDirections({ lat, lng, label, address })`.
-   - Share — uses `shareStoreWithCard` (same util as List) with toast variants.
-   - More — opens `<StoreDetailsDrawer>` for the selected store.
-   - Keep existing Ride / View / Call but compact them so the row fits 428px without wrap-bleed.
-
-b) **Mount `<StoreDetailsDrawer>` on the Map page**, controlled by a `drawerStore` state. Reuse the shared component with the same props the List page passes:
-   - `onView` → `navigate(/grocery/shop/:slug)`
-   - `onRide` → existing ride-book handler with promo passthrough
-   - `onDirections` → `openDirections(...)`
-   - `onShare` → `shareStoreWithCard(...)`
-   - `onToggleFavorite` → `toggle(store)`
-   - `onOpenInMap` → omit on Map page (not relevant)
-   - `onPromoApplied` → `toast.success(\`Promo \${code} applied\`)`
-- When the drawer is open, hide the floating selected-store card and the right FAB stack to avoid overlap.
-
-## Technical notes
-
-- Files touched:
-  - `src/pages/StoreMapPage.tsx` (chip + parity buttons + drawer mount)
-  - `src/components/store/StoreDetailsDrawer.tsx` (small typing fix)
-  - `src/lib/store/storeHours.ts` (export types if needed)
-  - Possibly `src/pages/StoresListPage.tsx` for the small typing fix on `openNowOnly` filter
-- No DB or RLS changes. No new dependencies.
-- After edits, screenshot `/store-map` and `/store-map/list` at 428×703 to confirm spacing.
-
-## Out of scope
-
-- Changing marker visuals or clustering behavior.
-- Persisting Open-now toggle to `localStorage` (URL param is sufficient for cross-page sync).
+- Reuse existing routing convention (`isLodgingStoreCategory`) used by `PartnerLogin.tsx` so dashboard handoff stays consistent.
+- Restaurant branch: only insert into `restaurants` if no row with `owner_id = auth.uid` exists yet (mirrors `PartnerLogin` lookup).
+- Skip buttons set the field to `null` server-side so users can fill it in later from the dashboard's profile page.
+- Wizard layout follows existing mobile-native patterns: safe-area top padding, sticky bottom action bar with Back / Skip / Continue.
+- Fallback unchanged for unauthenticated users — `ProtectedRoute` will redirect to `/auth?redirect=/business/new`.
