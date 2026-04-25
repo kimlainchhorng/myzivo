@@ -592,6 +592,7 @@ const Profile = () => {
                       onTouchStart={coverRepositioning ? (e) => handleCoverDragStart(e.touches[0].clientY) : undefined}
                       onTouchMove={coverRepositioning ? (e) => handleCoverDragMove(e.touches[0].clientY) : undefined}
                       onTouchEnd={coverRepositioning ? handleCoverDragEnd : undefined}
+                      onDoubleClick={coverRepositioning ? () => { impact("medium"); setCoverPosition(50); } : undefined}
                       style={{ cursor: coverRepositioning ? "ns-resize" : "default" }}
                     >
                       <motion.div
