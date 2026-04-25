@@ -18,6 +18,7 @@ import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sh
 import { cn } from "@/lib/utils";
 import { optimizeAvatar } from "@/utils/optimizeAvatar";
 import StoryViewer, { StoryGroup } from "@/components/stories/StoryViewer";
+import StoryTextTile from "@/components/stories/StoryTextTile";
 import { useStoryDeepLink, useStoryViewerLocation } from "@/hooks/useStoryDeepLink";
 import { invalidateAllStoryCaches } from "@/lib/storiesCache";
 import { useMyStoryViews } from "@/hooks/useMyStoryViews";
@@ -175,11 +176,7 @@ export default function FeedStoryRing() {
                     preload="metadata"
                   />
                 ) : myLatestStory && (myLatestStory.mediaType === "text" || !myLatestStory.mediaUrl) ? (
-                  <div className="h-full w-full flex items-center justify-center bg-gradient-to-br from-primary/80 to-primary px-1">
-                    <span className="text-[8px] font-bold text-primary-foreground text-center leading-tight line-clamp-2">
-                      {myLatestStory.caption || "Story"}
-                    </span>
-                  </div>
+                  <StoryTextTile text={myLatestStory.caption || ""} />
                 ) : (
                   <Avatar className="h-full w-full">
                     <AvatarImage src={optimizeAvatar(myGroup?.avatarUrl, 64)} loading="lazy" />

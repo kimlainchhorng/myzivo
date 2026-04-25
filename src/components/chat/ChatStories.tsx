@@ -13,6 +13,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { cn } from "@/lib/utils";
 import StoryViewer, { StoryGroup } from "@/components/stories/StoryViewer";
+import StoryTextTile from "@/components/stories/StoryTextTile";
 import { useStoryDeepLink, useStoryViewerLocation } from "@/hooks/useStoryDeepLink";
 import { invalidateAllStoryCaches } from "@/lib/storiesCache";
 
@@ -117,13 +118,7 @@ export default function ChatStories() {
                       return <video src={latest.mediaUrl} className="h-full w-full object-cover" muted playsInline preload="metadata" />;
                     }
                     if (latest && (latest.mediaType === "text" || !latest.mediaUrl)) {
-                      return (
-                        <div className="h-full w-full flex items-center justify-center bg-gradient-to-br from-primary/80 to-primary px-1">
-                          <span className="text-[8px] font-bold text-primary-foreground text-center leading-tight line-clamp-2">
-                            {latest.caption || "Story"}
-                          </span>
-                        </div>
-                      );
+                      return <StoryTextTile text={latest.caption || ""} />;
                     }
                     if (myStories?.avatarUrl) {
                       return <img src={myStories.avatarUrl} alt="" className="w-full h-full object-cover" />;
