@@ -1170,10 +1170,10 @@ const Profile = () => {
                           shortcuts: Shop, Employees, Mode switch, Monetization. */}
                       <div className="lg:hidden mt-3 grid grid-cols-4 gap-2">
                         {[
-                          { label: "Shop", icon: Store, onClick: () => navigate("/shop-dashboard") },
-                          { label: "Employees", icon: Users, onClick: () => navigate("/shop-dashboard/employees") },
-                          { label: "Mode", icon: Repeat, onClick: () => setModeOpen(true) },
-                          { label: "Monetization", icon: DollarSign, onClick: () => navigate("/monetization") },
+                          { label: "Shop", icon: Store, onClick: () => { selectionChanged(); if (!user) { toast.info("Sign in to open Shop Dashboard"); navigate("/login?redirect=/shop-dashboard"); return; } navigate("/shop-dashboard"); } },
+                          { label: "Employees", icon: Users, onClick: () => { selectionChanged(); if (!user) { toast.info("Sign in to manage employees"); navigate("/login?redirect=/shop-dashboard/employees"); return; } navigate("/shop-dashboard/employees"); } },
+                          { label: "Mode", icon: Repeat, onClick: () => { selectionChanged(); setModeOpen(true); } },
+                          { label: "Monetization", icon: DollarSign, onClick: () => { selectionChanged(); navigate("/monetization"); } },
                         ].map((a) => (
                           <button
                             key={a.label}
