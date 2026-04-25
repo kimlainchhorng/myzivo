@@ -254,6 +254,7 @@ export default function CreateStorySheet({ open, onClose }: Props) {
   const publish = useCallback(async () => {
     if (!user) return;
     setUploading(true);
+    setUploadPhase("preparing");
     setUploadError(null);
     setProgress(0);
 
@@ -292,15 +293,18 @@ export default function CreateStorySheet({ open, onClose }: Props) {
       // Get signed upload URL for progress-tracked PUT
       const { data: signed, error: signErr } = await supabase.storage
         .from("user-stories")
-        .createSignedUploadUrl(path);
+        .createSignedUploadUrl(path, { upsert: true });
       if (signErr || !signed?.signedUrl) {
-        throw new Error(signErr?.message || "Could not prepare upload");
+        throw new Error(`Could not prepare storage upload: ${await getErrorMessage(signErr, "No signed URL returned")}`);
       }
 
+      setUploadPhase("uploading");
       await xhrUpload(signed.signedUrl, blob, contentType);
+      setProgress(1);
 
       const { data: urlData } = supabase.storage.from("user-stories").getPublicUrl(path);
 
+      setUploadPhase("saving");
       const { error: insErr } = await supabase.from("stories" as any).insert({
         user_id: user.id,
         media_url: urlData.publicUrl,
@@ -308,19 +312,19 @@ export default function CreateStorySheet({ open, onClose }: Props) {
         caption: captionToSave,
         audio_url: audioTrack?.url || null,
       });
-      if (insErr) throw insErr;
+      if (insErr) {
+        throw new Error(`Story saved to storage but database insert failed: ${await getErrorMessage(insErr, "Unknown database error")}`);
+      }
 
-      queryClient.invalidateQueries({ queryKey: ["user-stories"] });
-      queryClient.invalidateQueries({ queryKey: ["feed-story-users"] });
-      queryClient.invalidateQueries({ queryKey: ["profile-story-rings"] });
-      queryClient.invalidateQueries({ queryKey: ["profile-my-story"] });
-      queryClient.invalidateQueries({ queryKey: ["my-story-views"] });
+      await invalidateStoryQueries();
       toast.success("Story shared 🎉");
       setUploading(false);
+      setUploadPhase("idle");
       onClose();
     } catch (err: any) {
       setUploading(false);
-      setUploadError(err?.message || "Failed to share story");
+      setUploadPhase("idle");
+      setUploadError(await getErrorMessage(err, "Failed to share story"));
     }
   }, [user, step, text, pickedFile, caption, audioTrack, onClose, queryClient]);
 
