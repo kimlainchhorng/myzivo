@@ -620,7 +620,7 @@ export default function MorePage() {
           {user && (
             <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.25 }} className="mt-4">
               <button
-                onClick={() => signOut()}
+                onClick={() => setConfirmAction("signout")}
                 className="w-full py-3 rounded-2xl border border-border/50 bg-card text-foreground font-semibold text-sm touch-manipulation active:scale-[0.98] transition-all flex items-center justify-center gap-2"
               >
                 <LogOut className="w-4 h-4" />
