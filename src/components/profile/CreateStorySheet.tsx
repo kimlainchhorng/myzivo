@@ -364,47 +364,52 @@ export default function CreateStorySheet({ open, onClose }: Props) {
         animate={{ opacity: 1 }}
         exit={{ opacity: 0 }}
         transition={{ duration: 0.18 }}
-        className="fixed inset-0 z-[120] bg-background/60 backdrop-blur-sm flex items-end sm:items-center justify-center"
+        className="fixed inset-0 z-[1500] bg-background/85 backdrop-blur-xl flex items-end sm:items-center justify-center"
         onClick={handleAttemptClose}
       >
         <motion.div
           initial={{ y: "100%" }}
           animate={{ y: 0 }}
           exit={{ y: "100%" }}
-          transition={{ type: "spring", damping: 28, stiffness: 320 }}
+          transition={{ type: "spring", damping: 30, stiffness: 340 }}
           onClick={(e) => e.stopPropagation()}
-          className="w-full max-w-md max-h-[92vh] overflow-hidden rounded-t-3xl sm:rounded-3xl border border-border/60 bg-card text-card-foreground shadow-2xl flex flex-col"
+          className="w-full max-w-md max-h-[92vh] overflow-hidden rounded-t-[28px] sm:rounded-3xl border border-border/60 bg-card text-card-foreground shadow-[0_-12px_60px_-12px_hsl(var(--foreground)/0.35)] flex flex-col pb-[env(safe-area-inset-bottom)]"
         >
+          {/* Drag handle (mobile only) */}
+          <div className="sm:hidden flex justify-center pt-2.5 pb-1">
+            <div className="w-10 h-1.5 rounded-full bg-muted-foreground/25" />
+          </div>
+
           {/* Header */}
-          <div className="flex items-center justify-between px-4 pt-3 pb-2 border-b border-border/40">
-            <div className="flex items-center gap-2">
+          <div className="flex items-center justify-between px-5 pt-2 pb-3 border-b border-border/40">
+            <div className="flex items-center gap-3">
               {step !== "choose" && !uploading && (
                 <button
                   onClick={() => setStep("choose")}
-                  className="w-8 h-8 -ml-1 flex items-center justify-center rounded-full hover:bg-muted/60"
+                  className="w-9 h-9 -ml-1 flex items-center justify-center rounded-full hover:bg-muted/60 active:scale-95 transition"
                   aria-label="Back"
                 >
                   <ChevronLeft className="w-5 h-5" />
                 </button>
               )}
-              <div className="flex items-center gap-2">
-                <div className="w-8 h-8 rounded-full overflow-hidden bg-primary/15 flex items-center justify-center text-primary text-xs font-bold">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-full overflow-hidden bg-primary/15 flex items-center justify-center text-primary text-sm font-bold ring-2 ring-primary/20">
                   {profile?.avatar_url ? (
                     <img src={profile.avatar_url} alt="" className="w-full h-full object-cover" />
                   ) : initials}
                 </div>
                 <div className="leading-tight">
-                  <p className="text-sm font-bold">Create story</p>
-                  <p className="text-[11px] text-muted-foreground flex items-center gap-1">
+                  <p className="text-lg font-bold tracking-tight">Create story</p>
+                  <span className="inline-flex items-center gap-1 text-[11px] font-medium text-muted-foreground bg-muted/60 rounded-full px-2 py-0.5 mt-0.5">
                     <Globe className="w-3 h-3" /> Public · 24h
-                  </p>
+                  </span>
                 </div>
               </div>
             </div>
             <button
               onClick={handleAttemptClose}
               aria-label="Close"
-              className="w-8 h-8 flex items-center justify-center rounded-full hover:bg-muted/60"
+              className="w-10 h-10 flex items-center justify-center rounded-full hover:bg-muted/60 active:scale-95 transition"
             >
               <X className="w-5 h-5" />
             </button>
