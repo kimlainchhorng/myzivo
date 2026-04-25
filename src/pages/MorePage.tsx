@@ -398,15 +398,24 @@ export default function MorePage() {
   const renderLink = (link: QuickLink, i: number) => {
     const isPartner = link.href === "#partner";
     const isSwitch = link.href === "#switch-account";
-    const isAction = isPartner || isSwitch;
+    const isTheme = link.href === "#theme-toggle";
+    const isAction = isPartner || isSwitch || isTheme;
 
     const handleAction = () => {
       if (isPartner) setShowPartnerSheet(true);
-      else if (isSwitch) {
-        signOut();
-        navigate("/auth?intent=switch");
+      else if (isSwitch) setConfirmAction("switch");
+      else if (isTheme) {
+        const next = (resolvedTheme ?? theme) === "dark" ? "light" : "dark";
+        setTheme(next);
       }
     };
+
+    // Dynamic right-side content: theme row shows current theme label
+    const rightSlot = isTheme ? (
+      <span className="text-[11px] font-semibold text-muted-foreground capitalize mr-1">
+        {resolvedTheme ?? theme ?? "system"}
+      </span>
+    ) : null;
 
     const inner = (
       <motion.div
