@@ -582,9 +582,11 @@ const Profile = () => {
               </motion.div>
             </div>
           ) : (
-            <div className="space-y-2.5 pt-0 lg:pt-1">
-              {/* ── Profile Card with Cover Photo ── */}
-              <ParallaxSection index={2}>
+            <div className="space-y-2 pt-0 lg:pt-1">
+              {/* ── Profile Card with Cover Photo ──
+                  No ParallaxSection here: the hero card must paint immediately
+                  to avoid a giant blank area at the top of the viewport. */}
+              <div>
                 <motion.div
                   ref={profileCardRef}
                   onMouseMove={profileTilt.handleMove as any}
