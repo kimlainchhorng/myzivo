@@ -1,85 +1,43 @@
-# Finish blue-verified badge rollout
+# Profile page mobile polish — sticky header + parallax cover
 
-Wraps up the remaining surfaces and adds the safety net (realtime keys, loading state, e2e test) so the blue check is consistent everywhere and updates live.
+Bring the mobile Account/Profile scroll experience closer to Facebook by adding two effects that activate only below the `lg` breakpoint, leaving the desktop layout untouched.
 
-## 1. DatingPage — replace custom star with real `VerifiedBadge`
+## What you'll see on mobile
 
-`src/pages/DatingPage.tsx` already selects `is_verified` but renders a custom `Star` icon at line ~136.
+1. **Parallax cover photo** — as you scroll, the cover image moves up slightly slower than the page and gently scales/fades, giving a subtle depth effect (same trick Facebook/Instagram use).
+2. **Sticky compact top bar** — once you scroll past the cover (~140px), a thin glass bar slides down from the top showing:
+   - Back button (left)
+   - Small avatar + display name + verified badge (center-left)
+   - Notifications button (right, mirrors the existing one in the cover)
+   The bar fades/slides out when you scroll back up to the top.
 
-- Import `VerifiedBadge` and `isBlueVerified`.
-- Replace the custom `<div className="h-5 w-5 rounded-full bg-primary"><Star/></div>` block with:
-  ```tsx
-  {isBlueVerified(currentProfile.is_verified) && <VerifiedBadge size={16} interactive={false} />}
-  ```
-- Remove the now-unused `Star` import if not used elsewhere.
+Desktop (`lg+`) is unchanged — same centered glass card, same existing parallax background.
 
-## 2. LiveStreamPage — gift-line chat rows + viewers list
+## Technical changes (single file: `src/pages/Profile.tsx`)
 
-`src/pages/LiveStreamPage.tsx`:
+1. **New scroll progress hook for sticky bar**
+   - Add `const { scrollY } = useScroll({ container: scrollRef })` alongside the existing `scrollYProgress`.
+   - Derive `stickyOpacity = useTransform(scrollY, [80, 160], [0, 1])` and `stickyY = useTransform(scrollY, [80, 160], [-12, 0])`.
+   - Derive `coverY = useTransform(scrollY, [0, 240], [0, -60])` and `coverScale = useTransform(scrollY, [-100, 0], [1.15, 1])` for the parallax/rubber-band effect.
 
-- **Gift chat rows**: Gift messages are pushed into the same `chatMessages` array (with `isGift: true`) at line ~283. The render path that shows `user_name` already uses `isBlueVerified(msg.user_is_verified)`, but the gift-insert path doesn't populate `user_is_verified`. Fix by resolving the sender's verified status from the existing `profileMap` (or a fresh `profiles.select('is_verified').eq('user_id', g.sender_id)` lookup) when building the gift chat row, and include `user_is_verified` in the inserted object.
-- **Viewers list** (`viewerNames`, line ~105 / ~571): extend the type to `{ user_id; name; avatar; is_verified }`, include `is_verified` in the `profiles` select used to resolve viewer names (line ~154 area), and render the badge next to each viewer name in the list.
+2. **Wrap the cover `<img>` / placeholder in a `motion.div`**
+   - Apply `style={{ y: coverY, scale: coverScale }}` only on mobile by gating with a `lg:!translate-y-0 lg:!scale-100` override (or render a separate motion wrapper conditionally via `useIsMobile`).
+   - Keep the existing reposition drag handlers on the outer container so cover repositioning still works.
 
-## 3. GoLivePage — chat + gift rows
+3. **Add sticky compact header (mobile only)**
+   - Insert a `motion.header` as the first child of the `PullToRefresh` container, positioned `fixed top-0 inset-x-0 z-40 lg:hidden`.
+   - Apply `style={{ opacity: stickyOpacity, y: stickyY }}` and `pointer-events-none` when `stickyOpacity` ≈ 0 (use `useMotionValueEvent` to toggle a state, or just rely on opacity + `pointer-events-auto` always — acceptable since buttons under it remain reachable below threshold).
+   - Layout: `h-14 px-3 flex items-center gap-3 bg-background/85 backdrop-blur-xl border-b border-border/40 safe-area-top`.
+   - Contents:
+     - Back button → `navigate(-1)` (uses existing `useNavigate`).
+     - `Avatar` (size 8) with `profile?.avatar_url`.
+     - `<span className="font-semibold text-sm truncate">{profile?.display_name}</span>` + `{profile?.is_verified && <VerifiedBadge size={14} />}`.
+     - Right-aligned notifications bell that toggles `showNotifPanel` (reusing existing state).
 
-`src/pages/GoLivePage.tsx`:
+4. **No new dependencies, no new files, no API changes.** Existing `framer-motion`, `VerifiedBadge`, `Avatar`, `ArrowLeft`, and `useNavigate` are already imported.
 
-- Extend `ChatRow` (line 84) with `user_is_verified?: boolean`.
-- In the `live_comments` INSERT handler (~line 384) and the `live_gift_displays` INSERT handler (~line 415), resolve the sender's `is_verified` via a small `profiles` lookup (cache via a `Map` ref to avoid repeated queries) and pass it through.
-- In the chat render block (~line 969), wrap the `user_name` span in `inline-flex items-center gap-1` and render `<VerifiedBadge size={11} interactive={false} />` when verified. Apply to both regular and `isGift` rows.
-
-## 4. Loading / null-safety for badge data
-
-Avoid badge flicker when `is_verified` is momentarily `null`:
-
-- `isBlueVerified()` already returns `false` for `null` / `undefined`, so flicker only happens if a row renders before `is_verified` arrives. In LiveStreamPage chat insert paths and GoLivePage, **don't insert the chat row until the profile lookup resolves** (await the small `profiles.select('is_verified')` query inline before `setChatMessages`). Falls back to `false` on error so the row still renders.
-- In `PersonalChat.tsx` header, when `peerProfile` is still loading, render the name without the badge slot rather than reserving space — current code already handles this; just confirm the badge is only rendered when `peerProfile?.is_verified === true` (no skeleton needed since names render below anyway).
-
-## 5. Realtime invalidation keys
-
-`src/hooks/useVerificationRealtime.ts` — extend `KEYS_TO_INVALIDATE` with the keys touched by the new surfaces:
-
-```ts
-["chat-conversations"],
-["personal-chat-peer"],
-["social-notifications"],
-["explore-users"],
-["smart-search-users"],
-["live-stream-host"],
-["live-stream-viewers"],
-["live-chat"],
-["dating-profiles"],
-["sound-posts"],
-["leaderboard"],
-["qr-profile"],
-```
-
-Audit the new query keys actually used in `ChatHubPage`, `PersonalChat`, `useSocialNotifications`, `ExplorePage`, `LiveStreamPage`, `DatingPage`, `QRProfilePage` and align the strings exactly. Where a page uses inline `useEffect` fetches (no react-query key), no change needed — realtime postgres subscription already runs in those components.
-
-## 6. End-to-end verification test
-
-Extend `src/test/verification-surfaces.test.tsx` (already exists) with one assertion per surface, mocking Supabase to return `is_verified: true` and asserting `data-testid="verified-badge"` is present:
-
-- ChatHubPage — search result row
-- PersonalChat — header peer name
-- NotificationsPage — friend-request row
-- ExplorePage — people search result
-- QRProfilePage — share card name
-- LiveStreamPage — chat message + host header + viewer row + gift row
-- DatingPage — current profile card
-
-Each test renders the component with a mocked Supabase client returning a verified profile and asserts at least one `getByTestId('verified-badge')` resolves.
-
-## Files to edit
-
-- `src/pages/DatingPage.tsx`
-- `src/pages/LiveStreamPage.tsx`
-- `src/pages/GoLivePage.tsx`
-- `src/hooks/useVerificationRealtime.ts`
-- `src/test/verification-surfaces.test.tsx`
-
-## Out of scope
-
-- No DB migrations (`is_verified` columns already exist).
-- No new design tokens — using existing `VerifiedBadge`.
-- Admin verification UI unchanged.
+## QA checklist after implementation
+- Mobile (≤1023px): sticky bar appears around 140px scroll, hides at top; cover image translates up while scrolling and rubber-bands on overscroll pull-to-refresh.
+- Desktop (≥1024px): no sticky bar, cover unchanged, existing background parallax still works.
+- Cover reposition mode still drags correctly (parallax should disable while `coverRepositioning` is true — gate `coverY`/`coverScale` to `0`/`1` when repositioning).
+- Verified badge renders next to the name in the sticky bar when `is_verified` is true.

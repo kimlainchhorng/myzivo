@@ -364,10 +364,16 @@ const Profile = () => {
     }
   }, [location.pathname]);
 
-  const { scrollYProgress } = useScroll({ container: scrollRef });
+  const { scrollYProgress, scrollY } = useScroll({ container: scrollRef });
   const headerY = useTransform(scrollYProgress, [0, 0.3], [0, -30]);
   const headerScale = useTransform(scrollYProgress, [0, 0.3], [1, 0.95]);
   const bgParallax = useTransform(scrollYProgress, [0, 1], [0, -80]);
+  // Mobile sticky compact header (Facebook-style)
+  const stickyOpacity = useTransform(scrollY, [80, 160], [0, 1]);
+  const stickyTranslate = useTransform(scrollY, [80, 160], [-12, 0]);
+  // Mobile cover parallax + rubber-band
+  const coverY = useTransform(scrollY, [0, 240], [0, -60]);
+  const coverScale = useTransform(scrollY, [-100, 0], [1.15, 1]);
 
   const getInitials = () => {
     if (profile?.full_name) return profile.full_name.split(" ").map(n => n[0]).join("").toUpperCase().slice(0, 2);
@@ -462,6 +468,41 @@ const Profile = () => {
         <BokehParticle delay={1.2} size={45} x="40%" y="10%" color="hsl(var(--primary) / 0.06)" />
       </motion.div>
 
+      {/* ── Mobile sticky compact header (Facebook-style) ── */}
+      <motion.header
+        style={{ opacity: stickyOpacity, y: stickyTranslate }}
+        className="lg:hidden fixed top-0 inset-x-0 z-40 h-14 px-3 flex items-center gap-3 bg-background/85 backdrop-blur-xl border-b border-border/40 safe-area-top"
+      >
+        <button
+          onClick={() => navigate(-1)}
+          aria-label="Back"
+          className="h-9 w-9 -ml-1 flex items-center justify-center rounded-full hover:bg-muted/60 active:scale-95 transition"
+        >
+          <ArrowLeft className="h-5 w-5 text-foreground" />
+        </button>
+        <Avatar className="h-8 w-8 ring-1 ring-border/60">
+          <AvatarImage src={profile?.avatar_url || undefined} alt={profile?.full_name || "Profile"} />
+          <AvatarFallback className="text-xs">{getInitials()}</AvatarFallback>
+        </Avatar>
+        <div className="flex items-center gap-1 min-w-0 flex-1">
+          <span className="font-semibold text-sm text-foreground truncate">
+            {profile?.full_name || "Profile"}
+          </span>
+          {profile?.is_verified && <VerifiedBadge size={14} />}
+        </div>
+        <button
+          onClick={() => setShowNotifPanel(prev => !prev)}
+          aria-label={showNotifPanel ? "Close notifications" : "Open notifications"}
+          aria-pressed={showNotifPanel}
+          className={cn(
+            "h-9 w-9 flex items-center justify-center rounded-full transition active:scale-95",
+            showNotifPanel ? "bg-primary text-primary-foreground" : "hover:bg-muted/60 text-foreground"
+          )}
+        >
+          <Bell className="h-5 w-5" />
+        </button>
+      </motion.header>
+
       {/* ── Scrollable content ── */}
       <div ref={scrollRef} className="relative z-10 h-screen overflow-y-auto pb-24 scroll-smooth bg-background" style={{ scrollbarWidth: 'none' }}>
         {/* Mobile: edge-to-edge full-screen (Facebook-style). Desktop: centered card. */}
@@ -505,6 +546,10 @@ const Profile = () => {
                       onTouchEnd={coverRepositioning ? handleCoverDragEnd : undefined}
                       style={{ cursor: coverRepositioning ? "ns-resize" : "default" }}
                     >
+                      <motion.div
+                        className="absolute inset-0 lg:!translate-y-0 lg:!scale-100"
+                        style={coverRepositioning ? undefined : { y: coverY, scale: coverScale }}
+                      >
                       {profile?.cover_url ? (
                         <img
                           src={profile.cover_url}
@@ -523,6 +568,7 @@ const Profile = () => {
                       )}
                       {/* Gradient overlay (subtle on mobile so cover stays vivid like Facebook) */}
                       <div className="absolute inset-0 bg-gradient-to-t from-card/40 via-transparent to-transparent lg:from-card/90 lg:via-card/20" />
+                      </motion.div>
 
                       {/* Cover action buttons */}
                       {user && !coverRepositioning && (
