@@ -556,6 +556,15 @@ const Profile = () => {
               </span>
             )}
           </motion.button>
+          <motion.button
+            onClick={() => navigate("/more")}
+            aria-label="More account options"
+            whileTap={{ scale: 0.86 }}
+            transition={{ type: "spring", stiffness: 400, damping: 22 }}
+            className="h-9 w-9 -mr-1 flex items-center justify-center rounded-full hover:bg-muted/60 text-foreground transition focus-visible:ring-2 focus-visible:ring-primary/70 focus-visible:outline-none focus-visible:ring-offset-2 focus-visible:ring-offset-background"
+          >
+            <MoreHorizontal className="h-5 w-5" />
+          </motion.button>
         </motion.header>,
         document.body
       )}
