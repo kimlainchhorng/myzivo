@@ -26,7 +26,7 @@ export default function ChatStories() {
     queryFn: async () => {
       const { data } = await supabase
         .from("stories" as any)
-        .select("id, user_id, media_url, media_type, caption, created_at, expires_at, views_count")
+        .select("id, user_id, media_url, media_type, caption, audio_url, created_at, expires_at, views_count")
         .gt("expires_at", new Date().toISOString())
         .order("created_at", { ascending: true });
 
