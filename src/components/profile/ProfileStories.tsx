@@ -150,25 +150,46 @@ const ProfileStories = () => {
             <motion.div whileTap={{ scale: 0.92 }} className="relative">
               <div
                 className={cn(
-                  "h-16 w-16 rounded-full p-[2.5px]",
+                  "h-16 w-16 rounded-full p-[2.5px] box-border",
                   hasMyStory
                     ? "bg-[conic-gradient(from_180deg,#f09433,#e6683c,#dc2743,#cc2366,#bc1888,#f09433)]"
                     : "bg-muted-foreground/25"
                 )}
               >
-                <div className="h-full w-full rounded-full overflow-hidden border-2 border-background bg-card">
-                  {profile?.avatar_url ? (
-                    <Avatar className="h-full w-full">
-                      <AvatarImage src={profile.avatar_url} />
-                      <AvatarFallback className="bg-primary/10 text-base font-bold text-primary">
-                        {(profile?.full_name || "Y")[0]}
-                      </AvatarFallback>
-                    </Avatar>
-                  ) : (
-                    <div className="flex h-full w-full items-center justify-center bg-primary/10">
-                      <Camera className="h-5 w-5 text-primary/60" />
-                    </div>
-                  )}
+                <div className="h-full w-full rounded-full overflow-hidden border-2 border-background bg-card flex items-center justify-center">
+                  {(() => {
+                    const latest = myGroup?.stories[myGroup.stories.length - 1];
+                    if (latest && latest.mediaType === "image" && latest.mediaUrl) {
+                      return <img src={latest.mediaUrl} alt="Your story" className="h-full w-full object-cover" loading="lazy" />;
+                    }
+                    if (latest && latest.mediaType === "video" && latest.mediaUrl) {
+                      return <video src={latest.mediaUrl} className="h-full w-full object-cover" muted playsInline preload="metadata" />;
+                    }
+                    if (latest && (latest.mediaType === "text" || !latest.mediaUrl)) {
+                      return (
+                        <div className="h-full w-full flex items-center justify-center bg-gradient-to-br from-primary/80 to-primary px-1">
+                          <span className="text-[8px] font-bold text-primary-foreground text-center leading-tight line-clamp-2">
+                            {latest.caption || "Story"}
+                          </span>
+                        </div>
+                      );
+                    }
+                    if (profile?.avatar_url) {
+                      return (
+                        <Avatar className="h-full w-full">
+                          <AvatarImage src={profile.avatar_url} />
+                          <AvatarFallback className="bg-primary/10 text-base font-bold text-primary">
+                            {(profile?.full_name || "Y")[0]}
+                          </AvatarFallback>
+                        </Avatar>
+                      );
+                    }
+                    return (
+                      <div className="flex h-full w-full items-center justify-center bg-primary/10">
+                        <Camera className="h-5 w-5 text-primary/60" />
+                      </div>
+                    );
+                  })()}
                 </div>
               </div>
               {/* Black + badge — always shown on Your story so adding more segments is one tap */}
