@@ -827,7 +827,8 @@ const Profile = () => {
                     See all notifications
                   </button>
                 </div>
-              </motion.div>
+                </motion.div>
+              </>
             )}
           </AnimatePresence>
           </div>
