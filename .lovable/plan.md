@@ -1,74 +1,99 @@
 ## Goal
 
-Right now the polished blue verified badge only appears on `/more` (Account) and `/profile`. The screenshot of the Feed shows "ZIVO Platform" with no badge, and the same is true across reels, comments, suggestions, public profiles, and share UIs. This plan rolls the shared `VerifiedBadge` out to every author/name surface so verified accounts (users + ZIVO/store accounts) are clearly marked everywhere.
+Take the verified-badge work end-to-end: a single source of truth for "is this account blue-verified?", an admin control that works for both **users and stores**, live propagation to every client, accessibility, safe fallbacks for missing data, and tests covering all the surfaces.
+
+The good news: most of the user side already exists — `profiles.is_verified`, the `set_profile_blue_verified_manual` RPC, the audit log, and the verify/unverify button in `AdminUsersPage`. We're closing the remaining gaps.
 
 ## What will change
 
-### 1. Treat ZIVO/Store accounts as always verified
-- In `ReelsFeedPage.tsx` and `FeedPage.tsx`, when a post's `source === "store"` (e.g. "ZIVO Platform"), render the badge unconditionally next to the store name.
-- For `source === "user"` posts, fetch `is_verified` alongside `full_name, avatar_url` in the existing profile lookups (lines ~261, ~379–382, ~469 in ReelsFeedPage; lines ~730, ~1384, ~1428 in FeedPage) and add `author_is_verified?: boolean` to the post type. Render the badge when true.
+### 1. Schema — add verification to stores
+Migration:
+- Add `store_profiles.is_verified boolean not null default false`.
+- Add `store_profiles.verified_at timestamptz`, `verified_by uuid`.
+- New RPC `set_store_blue_verified_manual(_store_id uuid, _verified boolean, _reason text)`:
+  - `security definer`, asserts `has_role(auth.uid(), 'admin')`.
+  - Updates the store, writes a row to the existing `blue_verified_audit_log` (extend it with optional `target_store_id` if it doesn't already accept stores; otherwise log as JSON metadata).
+- RLS: `store_profiles` already publicly readable; only the new RPC mutates `is_verified`.
 
-### 2. Add the badge to every place an author name renders
+### 2. Single source of truth — `useVerification`
+New file `src/lib/verification.ts`:
+```ts
+export type VerifiedSource = "user" | "store" | "platform";
+export interface Verifiable { id?: string | null; is_verified?: boolean | null; source?: VerifiedSource; }
+export const isBlueVerified = (v?: Verifiable | null): boolean =>
+  !!v && v.is_verified === true;            // strict — missing data → false
+export const VERIFIED_LABEL = "Verified account";
+export const VERIFIED_TOOLTIP = "ZIVO has confirmed this account is authentic.";
+```
+New hook `src/hooks/useVerifiedStatus.ts` — given a `userId` or `storeId`, returns `{ verified, loading }` from a small react-query cache (5-min stale). Used as a fallback wherever the post payload didn't include the flag.
 
-**Feed (mobile card view — the screenshot)** — `src/pages/ReelsFeedPage.tsx`
-- Author header in post card (~line 1029): `{author_name} <VerifiedBadge size={14} />`
-- Shared-by line (~1588), original-sound line (~1617)
-- Repost / shop sheet author rows (~2231, ~2427)
-- Unfollow dialog text stays plain (no badge in dialog body)
+### 3. Realtime propagation
+- New hook `src/hooks/useVerificationRealtime.ts` mounted once in `App.tsx`. Subscribes to:
+  - `postgres_changes` on `profiles` filtered to `is_verified` updates
+  - `postgres_changes` on `store_profiles` filtered to `is_verified` updates
+- On any event, invalidate react-query keys: `["admin-users"]`, `["suggested-users"]`, `["follow-suggestions"]`, `["public-profile", id]`, `["verified-status", id]`, plus the feed/reels caches. Net effect: when an admin toggles verification, every open client updates within ~1 s without a refresh.
 
-**Reels overlay** — `src/pages/FeedPage.tsx`
-- Author name in the floating overlay (~line 551): badge next to `author_name` / `store_name`
-- "ZIVO" branded sound-author label kept as-is
+### 4. Accessible badge
+Update `src/components/VerifiedBadge.tsx`:
+- Wrap in shadcn `Tooltip` (`TooltipProvider` already in `App.tsx`).
+- `role="img"`, `aria-label={VERIFIED_LABEL}`.
+- The hidden checkmark `<title>` inside the SVG for older AT.
+- Add a `tooltipText?: string` prop (default = `VERIFIED_TOOLTIP`) so context-specific copy is possible (e.g. "Verified business").
+- `interactive?: boolean` (default true) — when false (e.g. inside a button row), suppress the tooltip wrapper to avoid nested interactives.
 
-**Comments** — `src/components/social/CommentsSheet.tsx`
-- Fetch `is_verified` with the comment author, render badge after each commenter's name and after the post-author header.
+### 5. Safe fallbacks
+- Every render site uses `isBlueVerified(...)` instead of raw `&&` on possibly-`undefined` flags.
+- For surfaces that may not have fetched verification yet (e.g. share sheet author label), call `useVerifiedStatus(authorId)` with `enabled: !explicitFlag` so we never render a wrong state — when unknown, render **nothing** (no half-state, no skeleton).
+- Store posts default to **unverified unless the column says true** — we no longer hard-code `store_is_verified: true`. The previous "all stores are verified" shortcut is removed; the `ZIVO Platform` store will get verified once an admin flips the new switch.
 
-**Suggestions** — `src/components/social/SuggestedUsersCarousel.tsx`
-- Replace the existing `Shield` icon (lines 102, 170) with `VerifiedBadge` at `size={12}` / `size={14}`.
+### 6. Admin UI for stores
+Extend `AdminUsersPage.tsx` (or add a small `AdminStoresVerification` section):
+- New tab/segment "Stores" listing `store_profiles` (id, name, slug, is_verified, owner).
+- Verify / Unverify toggle calling `set_store_blue_verified_manual`.
+- Search by name/slug, same look as the existing users table.
 
-**Public profile** — `src/pages/PublicProfilePage.tsx`
-- Replace the inline custom SVG at line 842–846 with `<VerifiedBadge />` (kept on the avatar corner) AND add a small inline badge after the display name on line 853 so it shows in the name row too.
+### 7. Tests
+New `src/components/__tests__/VerifiedBadge.test.tsx`:
+- Renders SVG with `aria-label="Verified account"`.
+- Tooltip text appears on hover.
+- Honors `size`, `className`, custom `tooltipText`.
+- Snapshot for default render.
 
-**Other author surfaces** (light pass, badge after the name where `is_verified` is available):
-- `src/components/social/FollowSuggestions.tsx`
-- `src/components/social/CreatePostModal.tsx` (people search results)
-- `src/pages/SmartSearchPage.tsx` people results
-- `src/components/home/NavBar.tsx` desktop search-people dropdown
-- Tip/share sheets that show the recipient name (`TipSheet`, share author label)
+New `src/test/verification-surfaces.test.tsx` — integration-ish using react-testing-library + fixture data:
+- Feed card shows badge when `author_is_verified`.
+- Reels overlay shows badge for both verified user and verified store.
+- CommentsSheet shows badge per-commenter.
+- SuggestedUsersCarousel shows badge.
+- PublicProfilePage shows badge in name row + on avatar corner.
+- Negative case: when `is_verified` is `null`/`undefined`/`false` → no badge rendered.
 
-### 3. Shared component tweak
-- `VerifiedBadge.tsx`: replace the `Math.random()`-based `uid` with `React.useId()` so SSR/hydration is stable and multiple badges in a list don't collide.
-- Add an `inline` default sizing (1em) so it scales with the surrounding text when `size`/`className` aren't passed — makes it trivial to drop next to any name: `Name <VerifiedBadge />`.
+Helper: `src/test/fixtures/profiles.ts` exporting `verifiedUser`, `unverifiedUser`, `verifiedStore`.
 
-### 4. Data plumbing
-- One small helper `getProfileVerifiedMap(userIds[]): Record<string, boolean>` in `src/lib/` (or inline in the existing profile fetches) so feed/reels/comments don't each re-write the same `select("is_verified")` logic.
-- Store/platform accounts: treat `source === "store"` as verified by convention (no DB column needed). If later we want a real flag, a `store_profiles.is_verified` column can be added — out of scope for this pass.
+## Files
 
-## Technical notes
+**New**
+- `src/lib/verification.ts`
+- `src/hooks/useVerifiedStatus.ts`
+- `src/hooks/useVerificationRealtime.ts`
+- `src/components/__tests__/VerifiedBadge.test.tsx`
+- `src/test/verification-surfaces.test.tsx`
+- `src/test/fixtures/profiles.ts`
 
-- No schema changes required for users — `profiles.is_verified` already exists and is already selected in several places (FeedPage line 1230, SuggestedUsersCarousel line 32).
-- Badge sizing convention going forward:
-  - Inline next to a name in body text: `size={14}`
-  - Inline next to a name in headers / card titles: `size={16}`
-  - On avatar corner (profile page): `size={20}`
-  - Account status tiles: `size={20}` (already in MorePage)
-- All instances import the single `src/components/VerifiedBadge.tsx` — no more inline SVGs.
+**Edited**
+- `src/components/VerifiedBadge.tsx` (tooltip + aria + props)
+- `src/App.tsx` (mount realtime hook)
+- `src/pages/admin/AdminUsersPage.tsx` (add stores section)
+- `src/pages/ReelsFeedPage.tsx` (drop hard-coded store-verified, use `isBlueVerified`, fetch store `is_verified`)
+- `src/pages/FeedPage.tsx` (same — fetch from `store_profiles.is_verified`)
+- `src/pages/PublicProfilePage.tsx` (use helper)
+- `src/components/social/CommentsSheet.tsx`, `SuggestedUsersCarousel.tsx`, `FollowSuggestions.tsx`, `CreatePostModal.tsx` (use `isBlueVerified`)
 
-## Files to edit
-
-- `src/components/VerifiedBadge.tsx` (stable id, default inline sizing)
-- `src/pages/ReelsFeedPage.tsx`
-- `src/pages/FeedPage.tsx`
-- `src/components/social/CommentsSheet.tsx`
-- `src/components/social/SuggestedUsersCarousel.tsx`
-- `src/components/social/FollowSuggestions.tsx`
-- `src/components/social/CreatePostModal.tsx`
-- `src/pages/PublicProfilePage.tsx`
-- `src/pages/SmartSearchPage.tsx`
-- `src/components/home/NavBar.tsx`
-- `src/components/social/TipSheet.tsx` (recipient label)
+**Migration**
+- `store_profiles.is_verified/verified_at/verified_by` columns
+- `set_store_blue_verified_manual` RPC
 
 ## Out of scope
 
-- Adding admin tooling to grant/revoke verification (separate request).
-- Visual redesign of the badge itself — already approved in the previous round.
+- A user-facing "request verification" form for stores (the backend is ready; UI can ship later).
+- Changing the badge visual — already approved.
+- Verification badges for non-account entities (rides, products, etc).

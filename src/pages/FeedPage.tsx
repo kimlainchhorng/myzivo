@@ -14,6 +14,7 @@ const ZivoMobileNav = lazy(() => import("@/components/app/ZivoMobileNav"));
 const NavBar = lazy(() => import("@/components/home/NavBar"));
 import SEOHead from "@/components/SEOHead";
 import VerifiedBadge from "@/components/VerifiedBadge";
+import { isBlueVerified } from "@/lib/verification";
 const CreatePostModal = lazy(() => import("@/components/social/CreatePostModal"));
 const FeedSidebar = lazy(() => import("@/components/social/FeedSidebar"));
 const SuggestedUsersCarousel = lazy(() => import("@/components/social/SuggestedUsersCarousel"));
@@ -552,7 +553,7 @@ function ReelCard({
             </div>
             <span className="text-white font-bold text-sm drop-shadow-lg inline-flex items-center gap-1">
               {post.source === "user" ? post.author_name : post.store_name}
-              {((post.source === "user" && post.author_is_verified) || (post.source === "store" && post.store_is_verified)) && (
+              {(post.source === "user" ? isBlueVerified(post.author_is_verified) : isBlueVerified(post.store_is_verified)) && (
                 <VerifiedBadge size={14} />
               )}
             </span>
@@ -1384,7 +1385,7 @@ export default function FeedPage() {
 
       const [{ data: stores }, { data: profiles }] = await Promise.all([
         storeIds.length
-          ? supabase.from("store_profiles").select("id, name, logo_url, slug").in("id", storeIds)
+          ? supabase.from("store_profiles").select("id, name, logo_url, slug, is_verified").in("id", storeIds)
           : Promise.resolve({ data: [] as any[] }),
         userIds.length
           ? supabase.from("profiles").select("id, user_id, full_name, avatar_url, is_verified").in("id", userIds as string[])
@@ -1407,7 +1408,7 @@ export default function FeedPage() {
           store_name: store?.name || "Store",
           store_logo: store?.logo_url,
           store_slug: store?.slug,
-          store_is_verified: true,
+          store_is_verified: (store as any)?.is_verified === true,
         });
       }
 

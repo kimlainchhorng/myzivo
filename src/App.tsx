@@ -5,6 +5,7 @@ import { HelmetProvider } from "react-helmet-async";
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
+import { useVerificationRealtime } from "@/hooks/useVerificationRealtime";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, useLocation, useSearchParams } from "react-router-dom";
 import { ThemeProvider } from "next-themes";
@@ -550,6 +551,11 @@ function RouteAwareGlobalUI() {
 }
 
 
+const VerificationRealtimeBridge = () => {
+  useVerificationRealtime();
+  return null;
+};
+
 const App = () => (
   <ErrorBoundary>
     <HelmetProvider>
@@ -566,6 +572,7 @@ const App = () => (
                 <GeoDetector />
                 <Suspense fallback={null}><RoutePrefetcher /></Suspense>
                 <AuthProvider>
+                  <VerificationRealtimeBridge />
                   <PushNotificationsBootstrap />
                   <Suspense fallback={null}><GeofenceBootstrap /></Suspense>
                   <Suspense fallback={null}><DeletionReturnDialog /></Suspense>

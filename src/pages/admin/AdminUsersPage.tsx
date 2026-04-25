@@ -17,6 +17,7 @@ import {
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import AdminLayout from "@/components/admin/AdminLayout";
+import AdminStoresVerification from "@/components/admin/AdminStoresVerification";
 import { format } from "date-fns";
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription
@@ -423,6 +424,8 @@ export default function AdminUsersPage() {
             )}
           </CardContent>
         </Card>
+
+        <AdminStoresVerification />
 
         <div className="relative">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />

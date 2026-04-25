@@ -9,6 +9,7 @@ import { useNavigate } from "react-router-dom";
 import { UserPlus, X } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import VerifiedBadge from "@/components/VerifiedBadge";
+import { isBlueVerified } from "@/lib/verification";
 import { useState } from "react";
 import { toast } from "sonner";
 
@@ -73,7 +74,7 @@ export default function FollowSuggestions() {
             </Avatar>
             <p className="text-xs font-medium text-foreground truncate mb-2 inline-flex items-center justify-center gap-1 w-full">
               <span className="truncate">{s.full_name || "User"}</span>
-              {s.is_verified && <VerifiedBadge size={11} />}
+              {isBlueVerified(s.is_verified) && <VerifiedBadge size={11} interactive={false} />}
             </p>
             <button
               onClick={() => followUser(s.id)}
