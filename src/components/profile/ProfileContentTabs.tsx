@@ -26,6 +26,7 @@ import { useSwipeDownClose } from "@/components/social/useSwipeDownClose";
 import { SwipeGrabHandle } from "@/components/social/SwipeGrabHandle";
 import { logProfileActionError } from "@/lib/security/errorReporting";
 import { getE2ESeedPosts } from "@/lib/testing/e2eSeed";
+import { track } from "@/lib/analytics";
 
 /**
  * Fullscreen post viewer wrapper with drag-down-to-close.
