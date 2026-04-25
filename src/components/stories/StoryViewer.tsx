@@ -728,58 +728,47 @@ export default function StoryViewer({
             </>
           )}
 
-          {/* Owner toolbar — ZIVO Verdant capsule (single elevated glass pill) */}
+          {/* Owner action bar — ZIVO Verdant (insights pill + hero Boost button) */}
           {isOwner && (
-            <div className="px-3 pb-3 pt-2">
-              <div className="rounded-2xl bg-black/40 backdrop-blur-2xl border border-white/10 ring-1 ring-[hsl(160_84%_55%)/0.28] shadow-[0_10px_40px_-12px_hsl(160_84%_45%/0.55)] overflow-hidden">
-                <div className="flex items-stretch divide-x divide-white/10">
-                  <button
-                    onClick={() => { setPaused(true); setShowViewers(true); }}
-                    className="flex-1 flex items-center justify-center gap-1.5 px-2 py-2.5 hover:bg-white/5 active:bg-white/10 transition"
-                    aria-label="Activity"
-                  >
-                    <BarChart2 className="w-4 h-4 text-[hsl(160_84%_65%)]" strokeWidth={2} />
-                    <span className="text-white text-[12px] font-semibold leading-none">
-                      {currentStory.viewsCount || 0}
-                    </span>
-                  </button>
-                  <button
-                    onClick={() => {
-                      setPaused(true);
-                      const url = `${getPublicOrigin()}/stories/${currentStory.id}`;
-                      const fbUrl = `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(url)}`;
-                      window.open(fbUrl, "_blank", "noopener,noreferrer");
-                      setTimeout(() => setPaused(false), 600);
-                    }}
-                    className="shrink-0 flex items-center justify-center px-3.5 py-2.5 hover:bg-white/5 active:bg-white/10 transition"
-                    aria-label="Share to Facebook"
-                  >
-                    <Facebook className="w-4 h-4 text-white/85" strokeWidth={2} />
-                  </button>
-                  <button
-                    onClick={() => { setPaused(true); setShowMention(true); }}
-                    className="shrink-0 flex items-center justify-center px-3.5 py-2.5 hover:bg-white/5 active:bg-white/10 transition"
-                    aria-label="Mention"
-                  >
-                    <AtSign className="w-4 h-4 text-white/85" strokeWidth={2} />
-                  </button>
-                  <button
-                    onClick={handleShare}
-                    className="flex-1 flex items-center justify-center gap-1.5 px-3.5 py-2.5 bg-gradient-to-r from-[hsl(160_84%_45%)]/30 to-[hsl(174_72%_40%)]/30 hover:from-[hsl(160_84%_45%)]/45 hover:to-[hsl(174_72%_40%)]/45 active:from-[hsl(160_84%_45%)]/60 active:to-[hsl(174_72%_40%)]/60 transition"
-                    aria-label="Send"
-                  >
-                    <Send className="w-4 h-4 text-white" strokeWidth={2} />
-                    <span className="text-white text-[12px] font-bold leading-none">Send</span>
-                  </button>
-                  <button
-                    onClick={() => { setPaused(true); setShowMore(true); }}
-                    className="shrink-0 flex items-center justify-center px-3.5 py-2.5 hover:bg-white/5 active:bg-white/10 transition"
-                    aria-label="More"
-                  >
-                    <MoreHorizontal className="w-4 h-4 text-white/85" strokeWidth={2} />
-                  </button>
-                </div>
-              </div>
+            <div className="px-3 pb-3 pt-2 flex items-center gap-2.5">
+              {/* Insights pill — tap for viewers */}
+              <button
+                onClick={() => { setPaused(true); setShowViewers(true); }}
+                className="group flex items-center gap-2 pl-3 pr-3.5 py-2.5 rounded-full bg-black/45 backdrop-blur-2xl border border-white/10 ring-1 ring-[hsl(160_84%_55%)/0.22] hover:ring-[hsl(160_84%_55%)/0.45] active:scale-[0.97] transition"
+                aria-label="Story insights"
+              >
+                <span className="relative flex items-center justify-center w-6 h-6 rounded-full bg-gradient-to-br from-[hsl(160_84%_45%)] to-[hsl(190_85%_55%)] shadow-[0_0_10px_-2px_hsl(160_84%_45%/0.7)]">
+                  <BarChart2 className="w-3.5 h-3.5 text-white" strokeWidth={2.5} />
+                </span>
+                <span className="flex flex-col items-start leading-none">
+                  <span className="text-white text-[13px] font-bold">{currentStory.viewsCount || 0}</span>
+                  <span className="text-white/55 text-[9px] font-medium tracking-wider uppercase mt-0.5">Views</span>
+                </span>
+              </button>
+
+              {/* Hero Boost / Share button */}
+              <button
+                onClick={handleShare}
+                className="flex-1 relative h-[46px] rounded-full overflow-hidden active:scale-[0.98] transition shadow-[0_8px_28px_-6px_hsl(160_84%_45%/0.65)]"
+                aria-label="Boost story"
+              >
+                <span className="absolute inset-0 bg-[linear-gradient(135deg,hsl(160_84%_42%)_0%,hsl(174_72%_42%)_50%,hsl(190_85%_50%)_100%)]" />
+                <span className="absolute inset-x-0 top-0 h-1/2 bg-gradient-to-b from-white/25 to-transparent" />
+                <span className="absolute inset-0 ring-1 ring-inset ring-white/20 rounded-full" />
+                <span className="relative flex items-center justify-center gap-2 h-full">
+                  <Send className="w-4 h-4 text-white" strokeWidth={2.5} />
+                  <span className="text-white text-[13px] font-bold tracking-wide">Boost story</span>
+                </span>
+              </button>
+
+              {/* More — single subtle glass dot */}
+              <button
+                onClick={() => { setPaused(true); setShowMore(true); }}
+                className="shrink-0 w-11 h-11 flex items-center justify-center rounded-full bg-black/45 backdrop-blur-2xl border border-white/10 ring-1 ring-[hsl(160_84%_55%)/0.22] hover:ring-[hsl(160_84%_55%)/0.45] active:scale-[0.95] transition"
+                aria-label="More options"
+              >
+                <MoreHorizontal className="w-[18px] h-[18px] text-white/90" strokeWidth={2} />
+              </button>
             </div>
           )}
 
