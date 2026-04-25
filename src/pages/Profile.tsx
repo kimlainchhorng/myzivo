@@ -556,6 +556,15 @@ const Profile = () => {
               </span>
             )}
           </motion.button>
+          <motion.button
+            onClick={() => navigate("/more")}
+            aria-label="More account options"
+            whileTap={{ scale: 0.86 }}
+            transition={{ type: "spring", stiffness: 400, damping: 22 }}
+            className="h-9 w-9 -mr-1 flex items-center justify-center rounded-full hover:bg-muted/60 text-foreground transition focus-visible:ring-2 focus-visible:ring-primary/70 focus-visible:outline-none focus-visible:ring-offset-2 focus-visible:ring-offset-background"
+          >
+            <MoreHorizontal className="h-5 w-5" />
+          </motion.button>
         </motion.header>,
         document.body
       )}
@@ -591,7 +600,10 @@ const Profile = () => {
                     <div className="hidden lg:block absolute inset-0 bg-gradient-to-br from-primary/[0.04] via-transparent to-primary/[0.02] rounded-3xl" />
                     <div className="hidden lg:block pointer-events-none absolute inset-0 rounded-3xl ring-1 ring-inset ring-white/[0.08] shadow-[inset_0_1px_0_0_rgba(255,255,255,0.06)]" />
                     <div className="relative z-10">
-                    {/* Cover Photo — full-bleed on mobile, taller like Facebook */}
+                    {/* Cover Photo — full-bleed on mobile, taller like Facebook.
+                        On mobile, the cover extends behind the iOS/Android status bar.
+                        We add safe-area top padding + a subtle status-bar scrim so
+                        the system clock/battery stay legible over any cover image. */}
                     <div
                       className="relative h-48 sm:h-56 md:h-60 lg:h-52 w-full overflow-hidden select-none"
 
@@ -603,8 +615,17 @@ const Profile = () => {
                       onTouchMove={coverRepositioning ? (e) => handleCoverDragMove(e.touches[0].clientY) : undefined}
                       onTouchEnd={coverRepositioning ? handleCoverDragEnd : undefined}
                       onDoubleClick={coverRepositioning ? () => { impact("medium"); setCoverPosition(50); } : undefined}
-                      style={{ cursor: coverRepositioning ? "ns-resize" : "default" }}
+                      style={{
+                        cursor: coverRepositioning ? "ns-resize" : "default",
+                        paddingTop: "var(--zivo-safe-top, 0px)",
+                      }}
                     >
+                      {/* Status-bar legibility scrim (mobile only) */}
+                      <div
+                        aria-hidden="true"
+                        className="lg:hidden pointer-events-none absolute inset-x-0 top-0 z-10 bg-gradient-to-b from-black/45 via-black/15 to-transparent"
+                        style={{ height: "calc(var(--zivo-safe-top, 0px) + 16px)" }}
+                      />
                       <motion.div
                         className="absolute inset-0 lg:!translate-y-0 lg:!scale-100"
                         style={coverRepositioning ? undefined : { y: coverY, scale: coverScale }}
@@ -629,15 +650,19 @@ const Profile = () => {
                       <div className="absolute inset-0 bg-gradient-to-t from-card/40 via-transparent to-transparent lg:from-card/90 lg:via-card/20" />
                       </motion.div>
 
-                      {/* Cover action buttons */}
+                      {/* Cover action buttons — kept minimal: reposition + change.
+                          Notifications and "more" live in the sticky header / bottom nav. */}
                       {user && !coverRepositioning && (
-                        <div className="absolute top-2 right-2 flex gap-1.5 z-20">
+                        <div
+                          className="absolute right-2 z-20 flex gap-1.5"
+                          style={{ top: "calc(var(--zivo-safe-top, 0px) + 0.5rem)" }}
+                        >
                           {profile?.cover_url && (
                             <motion.button
                               whileTap={{ scale: 0.88 }}
                               onClick={() => { setCoverPosition(profile?.cover_position ?? 50); setCoverRepositioning(true); }}
                               aria-label="Reposition cover photo"
-                              className="h-10 w-10 flex items-center justify-center rounded-full bg-background/65 backdrop-blur-md text-foreground/80 hover:bg-background/90 shadow-md border border-border/25 focus-visible:ring-2 focus-visible:ring-primary/60 focus-visible:outline-none"
+                              className="h-9 w-9 flex items-center justify-center rounded-full bg-background/65 backdrop-blur-md text-foreground/85 hover:bg-background/90 shadow-md border border-border/25 focus-visible:ring-2 focus-visible:ring-primary/60 focus-visible:outline-none"
                             >
                               <MoveVertical className="h-3.5 w-3.5" />
                             </motion.button>
@@ -647,36 +672,9 @@ const Profile = () => {
                             onClick={() => coverInputRef.current?.click()}
                             disabled={coverUploading}
                             aria-label="Change cover photo"
-                            className="h-10 w-10 flex items-center justify-center rounded-full bg-background/65 backdrop-blur-md text-foreground/80 hover:bg-background/90 shadow-md border border-border/25 disabled:opacity-50 focus-visible:ring-2 focus-visible:ring-primary/60 focus-visible:outline-none"
+                            className="h-9 w-9 flex items-center justify-center rounded-full bg-background/65 backdrop-blur-md text-foreground/85 hover:bg-background/90 shadow-md border border-border/25 disabled:opacity-50 focus-visible:ring-2 focus-visible:ring-primary/60 focus-visible:outline-none"
                           >
                             {coverUploading ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <ImagePlus className="h-3.5 w-3.5" />}
-                          </motion.button>
-                          <motion.button
-                            whileTap={{ scale: 0.88 }}
-                            onClick={() => setShowNotifPanel(prev => !prev)}
-                            aria-label={showNotifPanel ? "Close notifications" : "Open notifications"}
-                            aria-pressed={showNotifPanel}
-                            className={cn(
-                              "relative h-10 w-10 flex items-center justify-center rounded-full backdrop-blur-md shadow-md border focus-visible:ring-2 focus-visible:ring-primary/60 focus-visible:outline-none",
-                              showNotifPanel
-                                ? "bg-primary text-primary-foreground border-primary/40"
-                                : "bg-background/65 text-foreground/80 hover:bg-background/90 border-border/25"
-                            )}
-                          >
-                            <Bell className="h-3.5 w-3.5" />
-                            {totalNotifCount > 0 && !showNotifPanel && (
-                              <span className="absolute -right-0.5 -top-0.5 flex h-4 min-w-[16px] items-center justify-center rounded-full bg-destructive px-1 text-[9px] font-bold text-destructive-foreground shadow-sm">
-                                {totalNotifCount > 99 ? '99+' : totalNotifCount}
-                              </span>
-                            )}
-                          </motion.button>
-                          <motion.button
-                            whileTap={{ scale: 0.88 }}
-                            onClick={() => navigate("/more")}
-                            aria-label="More account options"
-                            className="h-10 w-10 flex items-center justify-center rounded-full bg-background/65 backdrop-blur-md text-foreground/80 hover:bg-background/90 shadow-md border border-border/25 focus-visible:ring-2 focus-visible:ring-primary/60 focus-visible:outline-none"
-                          >
-                            <MoreHorizontal className="h-3.5 w-3.5" />
                           </motion.button>
                         </div>
                       )}
