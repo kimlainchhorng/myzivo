@@ -869,6 +869,127 @@ export default function StoryViewer({
             </motion.div>
           )}
         </AnimatePresence>
+
+        {/* Owner: "More" action sheet */}
+        <AnimatePresence>
+          {showMore && isOwner && (
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="absolute inset-0 z-40 bg-black/60 flex items-end"
+              onClick={() => { setShowMore(false); setPaused(false); }}
+            >
+              <motion.div
+                initial={{ y: "100%" }}
+                animate={{ y: 0 }}
+                exit={{ y: "100%" }}
+                transition={{ type: "spring", damping: 28, stiffness: 320 }}
+                className="w-full bg-card rounded-t-2xl p-2 pb-[env(safe-area-inset-bottom,16px)]"
+                onClick={(e) => e.stopPropagation()}
+              >
+                <div className="mx-auto h-1 w-10 rounded-full bg-muted-foreground/30 my-2" />
+                <button
+                  onClick={async () => {
+                    try {
+                      const res = await fetch(currentStory.mediaUrl, { mode: "cors" });
+                      const blob = await res.blob();
+                      const a = document.createElement("a");
+                      a.href = URL.createObjectURL(blob);
+                      a.download = `story-${currentStory.id}.${(currentStory.mediaType === "video" ? "mp4" : "jpg")}`;
+                      document.body.appendChild(a); a.click(); a.remove();
+                      URL.revokeObjectURL(a.href);
+                      toast.success("Saved");
+                    } catch { toast.error("Couldn't save"); }
+                    setShowMore(false); setPaused(false);
+                  }}
+                  className="w-full flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-muted text-left"
+                >
+                  <Download className="w-5 h-5 text-foreground" />
+                  <span className="text-sm font-medium text-foreground">Save to device</span>
+                </button>
+                <button
+                  onClick={() => {
+                    const url = `${getPublicOrigin()}/stories/${currentStory.id}`;
+                    if (navigator.share) navigator.share({ url }).catch(() => {});
+                    else { navigator.clipboard?.writeText(url); toast.success("Link copied"); }
+                    setShowMore(false); setPaused(false);
+                  }}
+                  className="w-full flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-muted text-left"
+                >
+                  <Share2 className="w-5 h-5 text-foreground" />
+                  <span className="text-sm font-medium text-foreground">Share link</span>
+                </button>
+                <button
+                  onClick={() => {
+                    if (!currentStory) return;
+                    const last = viewingGroup.stories.length <= 1;
+                    deleteStory.mutate(currentStory.id);
+                    setShowMore(false);
+                    if (last) closeWithMeta(); else goNext();
+                  }}
+                  className="w-full flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-destructive/10 text-left"
+                >
+                  <Trash2 className="w-5 h-5 text-destructive" />
+                  <span className="text-sm font-semibold text-destructive">Delete story</span>
+                </button>
+                <button
+                  onClick={() => { setShowMore(false); setPaused(false); }}
+                  className="w-full px-4 py-3 mt-1 rounded-xl text-sm font-medium text-muted-foreground hover:bg-muted"
+                >
+                  Cancel
+                </button>
+              </motion.div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+
+        {/* Owner: simple Mention sheet — posts an @mention as a story comment */}
+        <AnimatePresence>
+          {showMention && isOwner && (
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="absolute inset-0 z-40 bg-black/60 flex items-end"
+              onClick={() => { setShowMention(false); setPaused(false); }}
+            >
+              <motion.div
+                initial={{ y: "100%" }}
+                animate={{ y: 0 }}
+                exit={{ y: "100%" }}
+                transition={{ type: "spring", damping: 28, stiffness: 320 }}
+                className="w-full bg-card rounded-t-2xl p-4 pb-[env(safe-area-inset-bottom,16px)]"
+                onClick={(e) => e.stopPropagation()}
+              >
+                <div className="mx-auto h-1 w-10 rounded-full bg-muted-foreground/30 mb-3" />
+                <p className="text-sm font-bold text-foreground mb-2">Mention someone</p>
+                <div className="flex items-center gap-2 bg-muted rounded-full px-4 py-2">
+                  <AtSign className="w-4 h-4 text-muted-foreground" />
+                  <input
+                    type="text"
+                    value={commentText}
+                    onChange={(e) => setCommentText(e.target.value)}
+                    placeholder="username"
+                    className="flex-1 bg-transparent text-sm outline-none text-foreground placeholder:text-muted-foreground"
+                    autoFocus
+                  />
+                  <button
+                    className="text-primary text-sm font-semibold disabled:opacity-40"
+                    disabled={!commentText.trim() || postComment.isPending}
+                    onClick={() => {
+                      const handle = commentText.trim().replace(/^@/, "");
+                      if (handle) postComment.mutate(`@${handle}`);
+                      setShowMention(false); setPaused(false);
+                    }}
+                  >
+                    Send
+                  </button>
+                </div>
+              </motion.div>
+            </motion.div>
+          )}
+        </AnimatePresence>
       </motion.div>
 
       {/* Instagram-style "Send to" sheet */}
