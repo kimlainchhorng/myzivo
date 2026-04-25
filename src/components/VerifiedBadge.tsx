@@ -1,4 +1,4 @@
-import { useId, type ReactElement } from "react";
+import { type ReactElement } from "react";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { VERIFIED_LABEL, VERIFIED_TOOLTIP } from "@/lib/verification";
 
@@ -26,8 +26,6 @@ const VerifiedBadge = ({
   tooltipText = VERIFIED_TOOLTIP,
   interactive = true,
 }: Props): ReactElement => {
-  const reactId = useId().replace(/[:]/g, "");
-  const uid = `vb-${reactId}`;
   const sizeStyle = size
     ? { width: size, height: size }
     : { width: "1em", height: "1em" };
