@@ -1,64 +1,24 @@
 /**
- * ChatStories — TikTok/Facebook-style ephemeral stories
- * Full-screen immersive viewer with auto-progress, swipe navigation
+ * ChatStories — Stories row for the Chat hub.
+ * Uses the shared `StoryViewer` for the fullscreen viewer experience.
  */
-import { useState, useRef, useEffect, useCallback } from "react";
+import { useState, useRef } from "react";
 import Plus from "lucide-react/dist/esm/icons/plus";
-import X from "lucide-react/dist/esm/icons/x";
-import Eye from "lucide-react/dist/esm/icons/eye";
-import Trash2 from "lucide-react/dist/esm/icons/trash-2";
 import Camera from "lucide-react/dist/esm/icons/camera";
-import Heart from "lucide-react/dist/esm/icons/heart";
-import Send from "lucide-react/dist/esm/icons/send";
-import ChevronUp from "lucide-react/dist/esm/icons/chevron-up";
-import MessageCircle from "lucide-react/dist/esm/icons/message-circle";
-import Pause from "lucide-react/dist/esm/icons/pause";
-import Play from "lucide-react/dist/esm/icons/play";
-import Users from "lucide-react/dist/esm/icons/users";
-import { motion, AnimatePresence } from "framer-motion";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
-import { formatDistanceToNow } from "date-fns";
-
-interface StoryItem {
-  id: string;
-  mediaUrl: string;
-  mediaType: string;
-  caption?: string;
-  createdAt: string;
-  viewsCount: number;
-}
-
-interface StoryGroup {
-  userId: string;
-  userName: string;
-  avatarUrl?: string;
-  stories: StoryItem[];
-}
-
-const STORY_DURATION = 5000; // 5s per image story
+import StoryViewer, { StoryGroup } from "@/components/stories/StoryViewer";
 
 export default function ChatStories() {
   const { user } = useAuth();
   const queryClient = useQueryClient();
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const [viewingGroup, setViewingGroup] = useState<StoryGroup | null>(null);
-  const [viewIdx, setViewIdx] = useState(0);
   const [uploading, setUploading] = useState(false);
-  const [paused, setPaused] = useState(false);
-  const [progress, setProgress] = useState(0);
-  const [liked, setLiked] = useState(false);
-  const [allGroups, setAllGroups] = useState<StoryGroup[]>([]);
-  const [groupIdx, setGroupIdx] = useState(0);
-  const [showViewers, setShowViewers] = useState(false);
-  const [showComments, setShowComments] = useState(false);
-  const [commentText, setCommentText] = useState("");
-  const timerRef = useRef<number | null>(null);
-  const startTimeRef = useRef(0);
-  const elapsedRef = useRef(0);
+  const [viewing, setViewing] = useState<{ groups: StoryGroup[]; startIdx: number } | null>(null);
+
 
   const { data: storyGroups = [] } = useQuery({
     queryKey: ["user-stories"],
