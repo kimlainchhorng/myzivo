@@ -2,20 +2,26 @@
  * FeedStoryRing — Horizontal scrollable story rings for the feed page.
  * Tapping a ring opens the shared StoryViewer via a deep-linked URL
  * (`?story=<story_id>`), so the same link can be shared and reopened anywhere.
+ *
+ * The "Add story" affordance opens the shared `CreateStorySheet` (the same
+ * premium bottom sheet used on Profile) instead of launching the raw native
+ * iOS/Android file chooser, which on Safari renders as a floating top-left
+ * popover detached from any trigger.
  */
-import { useMemo, useRef, useState } from "react";
-import { Plus, Loader2 } from "lucide-react";
+import { lazy, Suspense, useMemo, useState } from "react";
+import { Plus } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { cn } from "@/lib/utils";
 import { optimizeAvatar } from "@/utils/optimizeAvatar";
-import { toast } from "sonner";
 import StoryViewer, { StoryGroup } from "@/components/stories/StoryViewer";
 import { useStoryDeepLink, useStoryViewerLocation } from "@/hooks/useStoryDeepLink";
 import { invalidateAllStoryCaches } from "@/lib/storiesCache";
 import { useMyStoryViews } from "@/hooks/useMyStoryViews";
+
+const CreateStorySheet = lazy(() => import("@/components/profile/CreateStorySheet"));
 
 interface RawStory {
   id: string;
@@ -32,8 +38,7 @@ interface RawStory {
 export default function FeedStoryRing() {
   const { user } = useAuth();
   const queryClient = useQueryClient();
-  const fileRef = useRef<HTMLInputElement>(null);
-  const [uploading, setUploading] = useState(false);
+  const [showCreate, setShowCreate] = useState(false);
   const { activeStoryId, openStory, closeStory, updateStory } = useStoryDeepLink({ source: "feed" });
 
   const { data: rawStories = [] } = useQuery({
@@ -109,44 +114,6 @@ export default function FeedStoryRing() {
 
   const hasMyStory = groups.some((g) => g.userId === user?.id);
 
-  const handleAddStory = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file || !user) return;
-
-    const isVideo = file.type.startsWith("video/");
-    const maxSize = isVideo ? 20 * 1024 * 1024 : 5 * 1024 * 1024;
-    if (file.size > maxSize) {
-      toast.error(isVideo ? "Video must be under 20MB" : "Image must be under 5MB");
-      return;
-    }
-
-    setUploading(true);
-    try {
-      const ext = file.name.split(".").pop() || "jpg";
-      const path = `${user.id}/${Date.now()}.${ext}`;
-      const { error: uploadError } = await supabase.storage
-        .from("user-stories")
-        .upload(path, file, { contentType: file.type });
-      if (uploadError) throw uploadError;
-
-      const { data: urlData } = supabase.storage.from("user-stories").getPublicUrl(path);
-      const { error: insertError } = await (supabase as any).from("stories").insert({
-        user_id: user.id,
-        media_url: urlData.publicUrl,
-        media_type: isVideo ? "video" : "image",
-      });
-      if (insertError) throw insertError;
-
-      invalidateAllStoryCaches(queryClient, user.id);
-      toast.success("Story added! ✨");
-    } catch (err: any) {
-      toast.error(err.message || "Failed to upload story");
-    } finally {
-      setUploading(false);
-      if (fileRef.current) fileRef.current.value = "";
-    }
-  };
-
   const handleRingClick = (group: StoryGroup) => {
     if (group.stories.length === 0) return;
     openStory(group.stories[0].id);
@@ -170,10 +137,9 @@ export default function FeedStoryRing() {
           onClick={() => {
             const myGroup = groups.find((g) => g.userId === user.id);
             if (myGroup) handleRingClick(myGroup);
-            else fileRef.current?.click();
+            else setShowCreate(true);
           }}
           className="flex flex-col items-center gap-0.5 shrink-0"
-          disabled={uploading}
         >
           <div className="relative">
             <div className={cn(
@@ -189,8 +155,6 @@ export default function FeedStoryRing() {
                     <AvatarFallback className="text-xs font-bold">{user.email?.[0]}</AvatarFallback>
                   </Avatar>
                 </div>
-              ) : uploading ? (
-                <Loader2 className="h-4 w-4 animate-spin text-primary" />
               ) : (
                 <Plus className="h-4 w-4 text-primary" />
               )}
@@ -239,13 +203,11 @@ export default function FeedStoryRing() {
         })}
       </div>
 
-      <input
-        ref={fileRef}
-        type="file"
-        accept="image/*,video/*"
-        className="hidden"
-        onChange={handleAddStory}
-      />
+      {showCreate && (
+        <Suspense fallback={null}>
+          <CreateStorySheet open={showCreate} onClose={() => setShowCreate(false)} />
+        </Suspense>
+      )}
 
       {viewerLocation && (
         <StoryViewer

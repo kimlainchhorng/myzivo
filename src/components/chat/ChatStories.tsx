@@ -1,24 +1,27 @@
 /**
  * ChatStories — Stories row for the Chat hub.
- * Uses the shared `StoryViewer` for the fullscreen viewer experience.
+ * Uses the shared `StoryViewer` for the fullscreen viewer experience and the
+ * shared `CreateStorySheet` (same premium bottom sheet used on Profile/Feed)
+ * for the "Add story" flow — so Chat no longer pops the floating top-left
+ * native iOS file chooser.
  */
-import { useState, useRef, useMemo } from "react";
+import { lazy, Suspense, useState } from "react";
 import Plus from "lucide-react/dist/esm/icons/plus";
 import Camera from "lucide-react/dist/esm/icons/camera";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import StoryViewer, { StoryGroup } from "@/components/stories/StoryViewer";
 import { useStoryDeepLink, useStoryViewerLocation } from "@/hooks/useStoryDeepLink";
 import { invalidateAllStoryCaches } from "@/lib/storiesCache";
 
+const CreateStorySheet = lazy(() => import("@/components/profile/CreateStorySheet"));
+
 export default function ChatStories() {
   const { user } = useAuth();
   const queryClient = useQueryClient();
-  const fileInputRef = useRef<HTMLInputElement>(null);
-  const [uploading, setUploading] = useState(false);
+  const [showCreate, setShowCreate] = useState(false);
   const { activeStoryId, openStory, closeStory, updateStory } = useStoryDeepLink({ source: "chat" });
 
   const { data: storyGroups = [] } = useQuery({
@@ -74,46 +77,6 @@ export default function ChatStories() {
     },
   });
 
-  const handleFileSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file || !user) return;
-
-    const isVideo = file.type.startsWith("video/");
-    const maxSize = isVideo ? 20 * 1024 * 1024 : 5 * 1024 * 1024;
-    if (file.size > maxSize) {
-      toast.error(isVideo ? "Video must be under 20MB" : "Image must be under 5MB");
-      return;
-    }
-
-    setUploading(true);
-    try {
-      const ext = file.name.split(".").pop() || "jpg";
-      const path = `${user.id}/${Date.now()}.${ext}`;
-
-      const { error: uploadError } = await supabase.storage
-        .from("user-stories")
-        .upload(path, file, { contentType: file.type });
-      if (uploadError) throw uploadError;
-
-      const { data: urlData } = supabase.storage.from("user-stories").getPublicUrl(path);
-
-      const { error: insertError } = await supabase.from("stories" as any).insert({
-        user_id: user.id,
-        media_url: urlData.publicUrl,
-        media_type: isVideo ? "video" : "image",
-      });
-      if (insertError) throw insertError;
-
-      invalidateAllStoryCaches(queryClient, user.id);
-      toast.success("Story added!");
-    } catch (err: any) {
-      toast.error(err.message || "Failed to upload story");
-    } finally {
-      setUploading(false);
-      if (fileInputRef.current) fileInputRef.current.value = "";
-    }
-  };
-
   const myStories = storyGroups.find((g) => g.userId === user?.id);
   const hasMyStory = !!myStories && myStories.stories.length > 0;
 
@@ -135,9 +98,8 @@ export default function ChatStories() {
               <button
                 onClick={() => {
                   if (hasMyStory) openViewer(myStories!);
-                  else fileInputRef.current?.click();
+                  else setShowCreate(true);
                 }}
-                disabled={uploading}
                 className="w-full h-full rounded-full overflow-hidden"
               >
                 <div className={cn(
@@ -154,32 +116,15 @@ export default function ChatStories() {
                 </div>
               </button>
               <button
-                onClick={(e) => { e.stopPropagation(); fileInputRef.current?.click(); }}
-                disabled={uploading}
+                onClick={(e) => { e.stopPropagation(); setShowCreate(true); }}
                 aria-label="Add story"
-                className="absolute -bottom-0.5 -right-0.5 w-5 h-5 bg-primary rounded-full flex items-center justify-center border-2 border-background z-10 overflow-hidden"
+                className="absolute -bottom-0.5 -right-0.5 w-5 h-5 bg-primary rounded-full flex items-center justify-center border-2 border-background z-10"
               >
-                {uploading ? (
-                  <div className="w-2.5 h-2.5 border border-primary-foreground border-t-transparent rounded-full animate-spin" />
-                ) : (
-                  <Plus className="w-3 h-3 text-primary-foreground" />
-                )}
-                {/* Native file input lives INSIDE the trigger so iOS anchors
-                    its Photo Library / Take Photo / Choose File chooser
-                    here instead of the top-left of the page. */}
-                <input
-                  ref={fileInputRef}
-                  type="file"
-                  accept="image/*,video/*"
-                  onChange={handleFileSelect}
-                  className="absolute inset-0 opacity-0 pointer-events-none"
-                  tabIndex={-1}
-                  aria-hidden="true"
-                />
+                <Plus className="w-3 h-3 text-primary-foreground" />
               </button>
             </div>
             <span className="text-[10px] text-muted-foreground font-medium">
-              {uploading ? "Uploading..." : "Your story"}
+              Your story
             </span>
           </div>
 
@@ -210,6 +155,12 @@ export default function ChatStories() {
             ))}
         </div>
       </div>
+
+      {showCreate && (
+        <Suspense fallback={null}>
+          <CreateStorySheet open={showCreate} onClose={() => setShowCreate(false)} />
+        </Suspense>
+      )}
 
       {viewerLocation && (
         <StoryViewer
