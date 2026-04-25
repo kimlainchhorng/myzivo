@@ -364,10 +364,16 @@ const Profile = () => {
     }
   }, [location.pathname]);
 
-  const { scrollYProgress } = useScroll({ container: scrollRef });
+  const { scrollYProgress, scrollY } = useScroll({ container: scrollRef });
   const headerY = useTransform(scrollYProgress, [0, 0.3], [0, -30]);
   const headerScale = useTransform(scrollYProgress, [0, 0.3], [1, 0.95]);
   const bgParallax = useTransform(scrollYProgress, [0, 1], [0, -80]);
+  // Mobile sticky compact header (Facebook-style)
+  const stickyOpacity = useTransform(scrollY, [80, 160], [0, 1]);
+  const stickyTranslate = useTransform(scrollY, [80, 160], [-12, 0]);
+  // Mobile cover parallax + rubber-band
+  const coverY = useTransform(scrollY, [0, 240], [0, -60]);
+  const coverScale = useTransform(scrollY, [-100, 0], [1.15, 1]);
 
   const getInitials = () => {
     if (profile?.full_name) return profile.full_name.split(" ").map(n => n[0]).join("").toUpperCase().slice(0, 2);
