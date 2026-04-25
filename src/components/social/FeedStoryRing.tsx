@@ -50,17 +50,7 @@ export default function FeedStoryRing() {
     },
   });
 
-  const { data: viewedIds = new Set<string>() } = useQuery({
-    queryKey: ["my-story-views", user?.id],
-    enabled: !!user?.id,
-    queryFn: async () => {
-      const { data } = await (supabase as any)
-        .from("story_views")
-        .select("story_id")
-        .eq("viewer_id", user!.id);
-      return new Set(((data as any[]) || []).map((v: any) => v.story_id));
-    },
-  });
+  const { viewedIds } = useMyStoryViews();
 
   const userIds = useMemo(() => [...new Set(rawStories.map((s) => s.user_id))], [rawStories]);
   const profileKey = useMemo(() => [...userIds].sort().join(","), [userIds]);
