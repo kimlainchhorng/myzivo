@@ -35,6 +35,7 @@ const ChatNotificationListener = lazy(() => import("@/components/chat/ChatNotifi
 const RuntimeSecurityGuard = lazy(() => import("@/components/security/RuntimeSecurityGuard"));
 const SpatialCursor = lazy(() => import("./components/ui/SpatialCursor").then(m => ({ default: m.SpatialCursor })));
 const PostMenuRegressionPage = lazy(() => import("./pages/dev/PostMenuRegressionPage"));
+const SafeAreaQAPage = lazy(() => import("./pages/dev/SafeAreaQAPage"));
 
 import { SkipToContent } from "./components/shared/SkipToContent";
 const RoutePrefetcher = lazy(() => import("./components/shared/RoutePrefetcher"));
@@ -1041,6 +1042,7 @@ const App = () => (
 
                 {/* Dev-only QA — page itself 404s in production */}
                 <Route path="/dev/post-menu-check" element={<PostMenuRegressionPage />} />
+                <Route path="/dev/qa/safe-area" element={<SafeAreaQAPage />} />
 
                 {/* Catch-all */}
                 <Route path="*" element={<NotFound />} />

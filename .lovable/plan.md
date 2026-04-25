@@ -1,121 +1,75 @@
-# Phase 1B–E Mega-Drop: Verification Report ✅ + Shared Toolkit + Auth Hardening + Tests + Dashboard Shell
+# Safe-Area Hardening: Docs, Audit, Tests, Debug Overlay & QA
 
-**Already done (no approval needed — used DB + artifact tools):**
-- ✅ Phase 1A DB indexes verified: **0 unindexed FKs**, all 16 composite/BRIN indexes present.
-- ✅ Verification report saved to `/mnt/documents/phase-1a-verification-report.md`.
+Five deliverables to lock in the recent safe-area fix and prevent the double-padding gap from coming back.
 
-**This plan ships everything else in one coordinated release:**
+## 1. Developer Doc — Capacitor Safe-Area Behavior
 
----
+Create `docs/dev/capacitor-safe-area.md` covering:
+- Why `StatusBar.overlaysWebView: false` (in `capacitor.config.ts`) means the native shell already insets the WebView below the status bar.
+- Therefore `env(safe-area-inset-top)` returns `0` on iOS Capacitor (no notch reported to CSS).
+- The forbidden anti-pattern: `max(env(safe-area-inset-top), 44px)` — this re-adds 44px on top of the already-inset WebView, producing the white gap shown in the user's "Picture 1".
+- Correct pattern: rely strictly on `env()` values, no minimum floors.
+- When you DO want a floor (true browser PWAs only): use the existing `--zivo-safe-top-overlay` token, never inline `max()`.
+- Quick decision table: Capacitor iOS / Capacitor Android / iOS Safari PWA / Mobile web → expected `env()` value and recommended class.
+- Link to memory `mem://style/mobile-native-ux-standards`.
 
-## 1. Shared edge-function API toolkit (`supabase/functions/_shared/`)
+## 2. Bottom-Nav Padding Audit
 
-Existing `cors.ts` + `deps.ts` are kept untouched. Adds:
+Two custom inline `paddingBottom` usages remain — replace with the shared utility:
+- `src/components/app/ZivoMobileNav.tsx` line 74 → remove inline style, add `pb-safe` class.
+- `src/components/navigation/MobileNavMenu.tsx` line 225 → replace inline `calc(env(...) + 1rem)` with `className="pb-safe pb-4"` (Tailwind composition handles the +1rem).
+- Grep all `pages/*` for any `style={{ paddingBottom: "env(...)` or `pb-[env(...)]` patterns and convert each to `pb-safe`.
+- Verify `MobileBottomNav.tsx` (already uses utility — confirm only).
 
-- `auth.ts` — `requireUser(req)` returns `{ userId, claims, supabase, token }`. Uses `supabase.auth.getClaims(token)` (fast, no DB roundtrip), falls back to `getUser(token)`. Throws `UnauthorizedError` on missing/invalid bearer. Plus `getServiceRoleClient()` for post-auth privileged ops.
-- `errors.ts` — `UnauthorizedError`, `ValidationError`, `HttpError`, and `withErrorHandling(handler, fnName)` wrapper that translates them to 401/400/4xx JSON responses with CORS headers attached.
-- `validate.ts` — Zod-compatible `parseBody(req, schema)` / `parseQuery(req, schema)`. Plus a **tiny built-in `v` validator** (`v.object`, `v.email`, `v.minLength`, `v.exactDigits`, etc.) so functions don't need to bundle Zod just for shape checks. Schemas with `safeParse` from real Zod also work.
-- `respond.ts` — `ok(req, body, status?)`, `err(req, message, status?, extra?)`, `preflight(req)` — all auto-attach `getCorsHeaders(req)`.
-- `test-utils.ts` — `callFn(name, opts)`, `preflight(name)`, `assertCors(res)`, `assertUnauthorized(res)`, `assertValidationError(res, field)`. Loads `.env` via Deno dotenv, reads `VITE_SUPABASE_URL`/`VITE_SUPABASE_PUBLISHABLE_KEY` (falls back to `SUPABASE_*`), defaults Origin to `https://hizivo.com` so the existing CORS whitelist accepts it.
+## 3. Visual Regression Tests
 
-(All five files are written exactly as drafted in the previous turn — no Zod runtime dependency required.)
+Add Playwright-based screenshot tests in `tests/visual/safe-area.spec.ts`:
+- Devices: iPhone SE (375x667), iPhone 13 (390x844), iPhone 14 Pro Max (430x932).
+- Routes: `/account`, `/profile`, `/chat`, `/` (Home).
+- Capture full-page screenshots, store baselines under `tests/visual/__screenshots__/`.
+- Assert top 100px region pixel-diff < 0.1% vs. baseline (catches white-gap regressions specifically).
+- Add `bun run test:visual` script to `package.json`.
+- CI-ready but runnable locally; baselines committed.
 
-## 2. Migrate the first 5 endpoints to the new toolkit
+## 4. In-App Safe-Area Debug Overlay
 
-Auth-related functions get hardened first:
+Create `src/components/dev/SafeAreaDebugOverlay.tsx`:
+- Fixed full-screen overlay with translucent colored bands at each inset edge (top = red, bottom = blue, left/right = green).
+- Floating HUD card showing live numeric values for all four `env(safe-area-inset-*)` plus viewport size and `devicePixelRatio`.
+- Toggle persisted in `localStorage` under `zivo:debug:safe-area`.
+- Exposed in **Account → Developer Settings** (gated behind existing dev-mode check) as a Switch row "Show safe-area overlay".
+- Also bind keyboard shortcut `Ctrl+Shift+S` on web for fast toggling.
+- Mounted globally in `AppLayout.tsx` so it overlays every route.
 
-| Function | Changes |
-|---|---|
-| `public-signup` | Replace inline CORS + manual checks with `withErrorHandling` + `parseBody(v.object({email, password (min 8), fullName, phone optional}))`. Same response shape on success. |
-| `send-otp-email` | `withErrorHandling` + `parseBody(v.object({email}))`. Public endpoint (no `requireUser`) — explicitly documented. |
-| `send-otp-sms` | `withErrorHandling` + `parseBody(v.object({phone (E.164)}))`. Public, documented. |
-| `verify-otp-code` | `withErrorHandling` + `parseBody(v.object({email, code (6 digits)}))`. Internal logic unchanged, response shape preserved. |
-| `verify-otp-sms` | Same pattern as `verify-otp-code` for phone+code. |
+## 5. QA Checklist Page
 
-For each: response shape on `200` is unchanged; only `400`/`401`/`500` envelopes are standardized to `{ error, fieldErrors? }`. CORS continues using the existing `getCorsHeaders(req)` whitelist (no behavior change for browsers).
+Create `src/pages/dev/SafeAreaQAPage.tsx` at route `/dev/qa/safe-area`:
+- Interactive checklist (state in localStorage) with rows for: Profile top gap, Account top gap, Chat header flush, Home status-bar flush, bottom nav home-indicator clearance, MobileNavMenu sheet bottom — each on iPhone SE / 13 / 15 Pro Max.
+- "Open page" button next to each row that navigates to the target route.
+- "Toggle debug overlay" button wired to deliverable #4.
+- Auto-detects platform (Capacitor vs web) and shows expected `env()` values to compare against.
+- Export results as Markdown via a copy-to-clipboard button (for sharing QA reports).
+- Linked from Account → Developer Settings.
 
-These five functions are NOT JWT-protected by design (signup + OTP request/verify happen *before* the user has a session). The `requireUser` helper is wired and ready, but only `account-summary`-style protected functions will use it in the next batch — auth functions only get **CORS + Zod + error standardization**.
+## Technical Details
 
-## 3. Automated tests (Deno) — `supabase/functions/<name>/index.test.ts`
+**Files created**
+- `docs/dev/capacitor-safe-area.md`
+- `tests/visual/safe-area.spec.ts` (+ `playwright.config.ts` if not present)
+- `src/components/dev/SafeAreaDebugOverlay.tsx`
+- `src/pages/dev/SafeAreaQAPage.tsx`
 
-For each of the 5 hardened functions plus a `_shared/smoke_test.ts`:
+**Files modified**
+- `src/components/app/ZivoMobileNav.tsx` — remove inline padding
+- `src/components/navigation/MobileNavMenu.tsx` — remove inline padding
+- `src/components/app/AppLayout.tsx` — mount `<SafeAreaDebugOverlay />`
+- `src/App.tsx` — add `/dev/qa/safe-area` route
+- `src/pages/account/...` (Developer Settings) — add overlay toggle + QA page link
+- `package.json` — add `test:visual` script + `@playwright/test` devDep
 
-- **OPTIONS preflight** → 204 with valid CORS allow-origin + allow-headers (incl. `authorization`).
-- **Invalid body** (missing required field, wrong type, malformed JSON) → 400 with `fieldErrors` mentioning the field.
-- **Wrong-origin preflight** (`Origin: https://evil.com`) → response either omits or empties `Access-Control-Allow-Origin`.
-- For protected fns (next batch): **missing/garbage Authorization** → 401.
-- **Happy path** is exercised against the public-signup test using a uniquely-generated email; response is 200/202 with `success: true`.
-- A `_shared/smoke_test.ts` loops over all hardened functions and asserts CORS+invalid-body behavior in one run — a single command via `supabase--test_edge_functions` produces the regression signal.
+**Memory updates**
+- Append safe-area rule to `mem://style/mobile-native-ux-standards`: "Never use `max(env(safe-area-inset-*), Npx)`. Use `pb-safe`/`pt-safe` only. See `docs/dev/capacitor-safe-area.md`."
 
-End-to-end coverage runs against the **deployed** functions through the Supabase functions URL (real CORS, real auth path). No mocks in transport layer.
-
-## 4. Unified Admin Dashboard Shell — Restaurant pilot
-
-New components under `src/components/admin/shell/`:
-
-- `AdminShell.tsx` — `SidebarProvider` + `min-h-screen flex w-full`, header with always-visible `SidebarTrigger`, content area, mobile safe-area aware. Wraps children.
-- `AdminSidebar.tsx` — uses shadcn `Sidebar collapsible="icon"` + `NavLink`. Reads `nav` config prop with `{ section, items: [{ title, url, icon }] }[]`. Active route highlight + auto-expanded group containing active item.
-- `AdminTopbar.tsx` — store switcher (placeholder dropdown ready for multi-store), command-palette trigger, notifications bell, profile menu.
-- `useAdminContext.tsx` — `{ vertical, currentStoreId, role }`, persists `currentStoreId` to localStorage.
-- `nav/restaurant.ts` — Restaurant nav config: Dashboard, Orders, Menu, Tables, Staff, Reviews, Promotions, Analytics, Settings — each pointing to existing `/eats/restaurant-dashboard` sub-routes (initially the dashboard route; sub-routes added in Phase 4b).
-
-**Restaurant page integration:**
-- Update `EatsRestaurantDashboard.tsx` to render its existing content inside `<AdminShell vertical="restaurant" nav={restaurantNav}>...</AdminShell>`. No content/logic changes, no route changes — purely a layout wrapper.
-- `BusinessDashboard.tsx` (generic business shell) gets the same wrapper as a second pilot, with a `business` nav config. Reverts cleanly by removing the wrapper.
-- Wrapped routes stay behind `<ProtectedRoute>` (already applied at `App.tsx` level).
-
-No new routes; everything is additive and behind the existing protected-route guard.
-
-## 5. Frontend tests for the shell
-
-- `src/components/admin/shell/AdminShell.test.tsx` — renders with mocked `react-router-dom` + `SidebarProvider`, asserts: SidebarTrigger present, nav items render, active item gets active class, ProtectedRoute integration left to existing app-level coverage.
-
-## Delivery order (single approval, all in this drop)
-
-1. Write `_shared/auth.ts`, `errors.ts`, `validate.ts`, `respond.ts`, `test-utils.ts`.
-2. Refactor 5 auth functions to use the toolkit (preserving response shapes).
-3. Write 5 per-function `*.test.ts` + 1 `_shared/smoke_test.ts`.
-4. Write `src/components/admin/shell/*` + `nav/restaurant.ts` + `nav/business.ts`.
-5. Wrap `EatsRestaurantDashboard.tsx` and `BusinessDashboard.tsx` in `<AdminShell>`.
-6. Add `AdminShell.test.tsx`.
-7. Run frontend tests (`vitest`) + edge-function tests (`supabase--test_edge_functions`).
-8. Append a "Stage B/C/D/E shipped" section to `/mnt/documents/phase-1-rollout-checklist.md`.
-
-## Files changed/created
-
-**New (12):**
-- `supabase/functions/_shared/auth.ts`
-- `supabase/functions/_shared/errors.ts`
-- `supabase/functions/_shared/validate.ts`
-- `supabase/functions/_shared/respond.ts`
-- `supabase/functions/_shared/test-utils.ts`
-- `supabase/functions/_shared/smoke_test.ts`
-- `supabase/functions/public-signup/index.test.ts`
-- `supabase/functions/send-otp-email/index.test.ts`
-- `supabase/functions/send-otp-sms/index.test.ts`
-- `supabase/functions/verify-otp-code/index.test.ts`
-- `supabase/functions/verify-otp-sms/index.test.ts`
-- `src/components/admin/shell/{AdminShell,AdminSidebar,AdminTopbar,useAdminContext}.tsx` + `nav/{restaurant,business}.ts` + `AdminShell.test.tsx`
-
-**Edited (7):**
-- `supabase/functions/public-signup/index.ts`
-- `supabase/functions/send-otp-email/index.ts`
-- `supabase/functions/send-otp-sms/index.ts`
-- `supabase/functions/verify-otp-code/index.ts`
-- `supabase/functions/verify-otp-sms/index.ts`
-- `src/pages/EatsRestaurantDashboard.tsx`
-- `src/pages/business/BusinessDashboard.tsx`
-
-## Risk and rollback
-
-- **Toolkit files are additive** — no existing function imports them yet, so adding them is zero-risk.
-- **Auth function refactors preserve `200` response shape exactly**; only error envelopes change. Rollback per-function = redeploy previous version.
-- **Dashboard shell is purely a wrapper** — remove `<AdminShell>` to instantly revert. No route changes, no DB changes.
-- **Tests** run via the Lovable test tools; no CI changes required.
-
-## Out of scope (next drop)
-
-- Hardening the next 25 edge functions (orders/payments/chat/admin batches).
-- Other vertical dashboards (Grocery/Retail/Cafe/Service/Mobility).
-- Store switcher backend (currently placeholder UI).
-- Command palette commands (palette is shipped empty, ready for registrations).
+**Out of scope**
+- Android edge-to-edge changes (current config keeps WebView inset).
+- Reworking the design tokens in `index.css` (already correct after last fix).
