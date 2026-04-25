@@ -433,7 +433,7 @@ export default function StoryViewer({ groups, startGroupIndex, startStoryIndex =
               {paused ? <Play className="w-4 h-4 text-white" /> : <Pause className="w-4 h-4 text-white" />}
             </button>
             <button
-              onClick={onClose}
+              onClick={() => closeWithMeta()}
               aria-label="Close"
               className="w-9 h-9 flex items-center justify-center rounded-full bg-white/10 backdrop-blur-sm"
             >
