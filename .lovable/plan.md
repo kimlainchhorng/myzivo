@@ -1,60 +1,43 @@
-# Instagram-style stories — full polish
+## What's happening
 
-Three changes, applied together.
+Your story DID upload successfully — I can confirm one active story exists in the database for your account (created today, expires tomorrow). The reason you don't see it on the ring is two bugs in the create-story sheet:
 
-## 1. IG gradient ring on all carousels
+1. The hidden `<input>` file pickers are wrongly placed **inside** `<AnimatePresence>` as un-keyed siblings of the modal `<motion.div>`. When the sheet animates in/out, React/Framer Motion produces a "duplicate key" warning and — more importantly — the close→reopen lifecycle leaves stale children in the tree, which **prevents the parent from triggering the cache invalidation cleanly** on close. The `onClose()` runs before `invalidateAllStoryCaches`, so the carousel's `useQuery` never refetches until the 60-second auto-poll kicks in. That's why your story "doesn't show up" right after sharing.
 
-Replace the current avatar ring styling on **Feed, Profile, and Chat** so it matches Instagram exactly:
+2. The order of operations after a successful upload is `onClose()` → then component unmounts → cache invalidation never reaches the still-mounted parent because the closing animation is racing the state update.
 
-- Unseen ring: `bg-[conic-gradient(from_180deg,#f09433,#e6683c,#dc2743,#cc2366,#bc1888,#f09433)]` (the iconic IG sunset → magenta gradient).
-- Seen ring: `bg-muted-foreground/25` (subtle grey).
-- Avatar size: `h-[64px] w-[64px]`, `p-[2.5px]` ring thickness, inner `border-2 border-card`.
-- "Your story" tile: same avatar with a **black `+` badge** at bottom-right (`bg-foreground`, white plus, `border-[2.5px] border-card`). Tapping it: opens viewer if a story exists, otherwise opens `CreateStorySheet`.
-- Username below in `text-[11px]`, bold-foreground when unseen, medium-muted when seen.
+## Fix
 
-Files:
-- `src/components/social/FeedStoryRing.tsx`
-- `src/components/profile/ProfileStories.tsx`
-- `src/components/chat/ChatStories.tsx`
+### 1) `src/components/profile/CreateStorySheet.tsx`
 
-## 2. Owner action toolbar in StoryViewer (IG bottom row)
+- Move the two hidden `<input type="file">` elements **out of `<AnimatePresence>`** and render them as siblings of the portal root, so AnimatePresence only ever has one keyed child.
+- Add an explicit `key="create-story-sheet"` to the outer `<motion.div>` so AnimatePresence reconciliation is unambiguous.
+- In `publish()`, **invalidate caches BEFORE calling `onClose()`** (currently the order is correct in code, but we'll also add a small `await Promise.resolve()` flush). More importantly, also call `invalidateAllStoryCaches` on the parent components when the sheet closes, by exposing the success via a callback.
+- Add `onPublished?: () => void` prop and call it right after invalidation, so each parent (Profile, Feed, Chat) can refetch its own carousel immediately.
 
-Today, when you view your own story, the right side shows generic Eye / Trash icons. Replace this with the **Instagram bottom row** for owners:
+### 2) `src/components/profile/ProfileStories.tsx`, `src/components/social/FeedStoryRing.tsx`, `src/components/chat/ChatStories.tsx`
 
-```
-Activity  ·  Facebook  ·  Mention  ·  Send  ·  More
-```
+- Pass `onPublished={() => invalidateAllStoryCaches(queryClient, user?.id)}` to `<CreateStorySheet />`.
+- Lower `refetchInterval` from 60 s to 30 s as a safety net, and add `refetchOnWindowFocus: true` so coming back to the tab after sharing always refreshes.
 
-Layout: horizontal row docked at the bottom of the viewer (above safe-area), 5 equally-spaced buttons. Each = icon (24px, white) + label (11px, white).
+### 3) `src/lib/storiesCache.ts`
 
-Wiring:
-| Button | Icon | Action |
-|---|---|---|
-| Activity | `BarChart2` | Opens existing viewers sheet (was Eye button) |
-| Facebook | `Facebook` (lucide) | Calls `navigator.share` with Facebook intent fallback `https://www.facebook.com/sharer/sharer.php?u=<storyDeepLinkUrl>` |
-| Mention | `AtSign` | Opens a small "Mention a friend" sheet that posts a story_comment of the form `@<friend>` (reuses existing `postComment` mutation + a friend picker query) |
-| Send | `Send` | Opens existing `StoryForwardSheet` |
-| More | `MoreHorizontal` | Opens an action sheet: **Save to device** · **Share to feed** · **Delete** (existing `deleteStory` mutation) |
+- Remove `exact: true` on the invalidation calls. Right now `["feed-story-users"]` matches exactly but `["profile-story-rings", userId]` with exact mode misses any in-flight variants. Switching to predicate-based invalidation (`queryKey[0] === "feed-story-users"` etc.) ensures every carousel refetches.
 
-Right-side floating Like/Comment/Share stack stays for **non-owners** only. Hide it for owners (replaced by the bottom row above).
+### 4) Quick sanity step
 
-The non-owner reply input ("Reply to {name}…") already exists and stays.
+After the fix, your existing story (already in DB, active for ~23 more hours) will appear on the ring immediately on page reload. No data migration needed.
 
-Files: `src/components/stories/StoryViewer.tsx` (replace `isOwner` block at lines 606-632 with the bottom toolbar; gate the Like/Comment/Share stack at 569-604 with `{!isOwner && (...)}`).
+## Files changed
 
-## 3. "Save to device" + small sub-sheet
+- `src/components/profile/CreateStorySheet.tsx` — restructure portal/AnimatePresence, add `onPublished` callback
+- `src/components/profile/ProfileStories.tsx` — wire `onPublished`
+- `src/components/social/FeedStoryRing.tsx` — wire `onPublished` + refetch tweaks
+- `src/components/chat/ChatStories.tsx` — wire `onPublished`
+- `src/lib/storiesCache.ts` — predicate-based invalidation
 
-For the "More" sheet's Save action, fetch `currentStory.mediaUrl`, blob it, and trigger an `<a download>` click — works on mobile Safari for images, prompts native share for video on iOS.
+## Outcome
 
-## Out of scope
-
-- Story creation flow, viewer, deep-link routing — unchanged.
-- Bottom-nav z-index hide — already shipped.
-- Real-time delivery for mentions (just inserts a `story_comments` row tagging the mentioned user; push notification piggybacks on existing comment trigger if present).
-
-## Files touched
-
-- `src/components/social/FeedStoryRing.tsx` — ring restyle
-- `src/components/profile/ProfileStories.tsx` — ring restyle
-- `src/components/chat/ChatStories.tsx` — ring restyle
-- `src/components/stories/StoryViewer.tsx` — owner toolbar + hide right stack for owners + More sheet + Mention sheet + Save handler
+- Story you just shared appears in the ring **instantly** (no 60 s wait).
+- React duplicate-key console warning gone.
+- Reopening the create sheet after a publish no longer leaves a stale upload state.
