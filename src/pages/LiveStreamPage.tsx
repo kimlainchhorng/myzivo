@@ -590,7 +590,10 @@ function LiveWatcher({ stream, onLeave }: { stream: LiveStream; onLeave: () => v
                 viewerNames.slice(0, 25).map((v) => (
                   <div key={v.user_id} className="flex items-center gap-2 px-2 py-1.5 rounded-xl hover:bg-white/5">
                     <Avatar className="h-6 w-6"><AvatarImage src={v.avatar || undefined} /><AvatarFallback className="text-[9px]">{v.name[0]}</AvatarFallback></Avatar>
-                    <span className="text-[11px] text-white font-medium truncate">{v.name}</span>
+                    <span className="text-[11px] text-white font-medium truncate inline-flex items-center gap-1 min-w-0">
+                      <span className="truncate">{v.name}</span>
+                      {isBlueVerified(v.is_verified) && <VerifiedBadge size={11} interactive={false} />}
+                    </span>
                   </div>
                 ))
               )}
