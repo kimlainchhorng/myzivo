@@ -5,7 +5,9 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import ZivoMobileNav from "@/components/app/ZivoMobileNav";
-import { ArrowLeft, Heart, X, Star, MapPin, Sparkles, MessageCircle } from "lucide-react";
+import { ArrowLeft, Heart, X, MapPin, Sparkles, MessageCircle } from "lucide-react";
+import VerifiedBadge from "@/components/VerifiedBadge";
+import { isBlueVerified } from "@/lib/verification";
 import { useNavigate } from "react-router-dom";
 import { motion, AnimatePresence, useMotionValue, useTransform, PanInfo } from "framer-motion";
 import { useState, useCallback } from "react";
@@ -133,10 +135,8 @@ export default function DatingPage() {
                   <div className="p-5">
                     <div className="flex items-center gap-2 mb-1">
                       <h2 className="text-xl font-bold text-foreground">{currentProfile.full_name}</h2>
-                      {currentProfile.is_verified && (
-                        <div className="h-5 w-5 rounded-full bg-primary flex items-center justify-center">
-                          <Star className="h-3 w-3 text-primary-foreground" />
-                        </div>
+                      {isBlueVerified(currentProfile.is_verified) && (
+                        <VerifiedBadge size={16} interactive={false} />
                       )}
                     </div>
 
