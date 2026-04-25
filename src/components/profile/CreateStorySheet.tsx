@@ -204,13 +204,11 @@ export default function CreateStorySheet({ open, onClose }: Props) {
 
   const invalidateStoryQueries = async () => {
     await Promise.all([
-      queryClient.invalidateQueries({ queryKey: ["user-stories"] }),
-      queryClient.invalidateQueries({ queryKey: ["feed-story-users"] }),
-      queryClient.invalidateQueries({ queryKey: ["profile-story-rings", user?.id] }),
-      queryClient.invalidateQueries({ queryKey: ["profile-story-rings"] }),
-      queryClient.invalidateQueries({ queryKey: ["profile-my-story", user?.id] }),
-      queryClient.invalidateQueries({ queryKey: ["profile-my-story"] }),
-      queryClient.invalidateQueries({ queryKey: ["my-story-views", user?.id] }),
+      queryClient.invalidateQueries({ queryKey: ["user-stories"], exact: true }),
+      queryClient.invalidateQueries({ queryKey: ["feed-story-users"], exact: true }),
+      queryClient.invalidateQueries({ queryKey: ["profile-story-rings", user?.id], exact: true }),
+      queryClient.invalidateQueries({ queryKey: ["profile-my-story", user?.id], exact: true }),
+      queryClient.invalidateQueries({ queryKey: ["my-story-views", user?.id], exact: true }),
     ]);
   };
 
