@@ -267,7 +267,7 @@ function LiveWatcher({ stream, onLeave }: { stream: LiveStream; onLeave: () => v
       .on(
         "postgres_changes",
         { event: "INSERT", schema: "public", table: "live_gift_displays", filter: `stream_id=eq.${stream.id}` },
-        (payload: any) => {
+        async (payload: any) => {
           const g = payload.new;
           // Premium animation when applicable
           if (hasGiftVideo(g.gift_name)) {
@@ -278,6 +278,17 @@ function LiveWatcher({ stream, onLeave }: { stream: LiveStream; onLeave: () => v
             else if (g.coins >= 500) playPremiumGiftSound();
             else playGiftSound(1, g.coins);
           }
+          // Resolve sender verified flag (cache → fetch). Awaited so the row never flickers.
+          let senderVerified = verifiedCacheRef.current.get(g.sender_id);
+          if (senderVerified === undefined) {
+            const { data: prof } = await (supabase as any)
+              .from("profiles")
+              .select("is_verified")
+              .eq("user_id", g.sender_id)
+              .maybeSingle();
+            senderVerified = (prof as any)?.is_verified === true;
+            verifiedCacheRef.current.set(g.sender_id, senderVerified);
+          }
           // Add to chat as a "gift" line
           setChatMessages((prev) => [
             ...prev.slice(-39),
@@ -286,6 +297,7 @@ function LiveWatcher({ stream, onLeave }: { stream: LiveStream; onLeave: () => v
               user_id: g.sender_id,
               user_name: g.sender_name,
               user_avatar: null,
+              user_is_verified: senderVerified,
               text: `sent ${g.gift_name}`,
               created_at: g.created_at,
             },
