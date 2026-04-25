@@ -650,9 +650,9 @@ const Profile = () => {
               >
                 {/* Caret */}
                 <div className="absolute -top-1.5 right-3 h-3 w-3 rotate-45 rounded-sm border-l border-t border-border/60 bg-card" />
-                {/* Header */}
-                <div className="flex items-center justify-between gap-2 border-b border-border/40 px-4 pt-3 pb-2.5">
-                  <div className="flex items-center gap-2">
+                {/* Header (sticky) */}
+                <div className="sticky top-0 z-10 flex items-center justify-between gap-2 border-b border-border/40 bg-card/95 px-4 pt-3 pb-2.5 backdrop-blur">
+                  <div className="flex items-center gap-2" aria-live="polite">
                     <h3 className="text-base font-bold leading-none">Notifications</h3>
                     {totalNotifCount > 0 && (
                       <Badge variant="secondary" className="h-5 px-1.5 text-[10px]">{totalNotifCount}</Badge>
@@ -660,8 +660,8 @@ const Profile = () => {
                   </div>
                   {notifUnreadCount > 0 && (
                     <button
-                      onClick={() => { void markAllAsRead(); }}
-                      className="text-xs font-semibold text-primary hover:underline"
+                      onClick={handleMarkAllRead}
+                      className="rounded-full px-2 py-1 text-xs font-semibold text-primary transition-colors hover:bg-primary/10"
                     >
                       Mark all read
                     </button>
@@ -730,44 +730,77 @@ const Profile = () => {
                         </div>
                       );
                     }
-                    return filtered.slice(0, 12).map((n) => {
-                      let timeLabel = "";
-                      try { timeLabel = formatDistanceToNowStrict(new Date(n.created_at), { addSuffix: false }); } catch {}
-                      return (
-                        <button
-                          key={n.id}
-                          onClick={() => handleNotifClick(n)}
-                          className={cn(
-                            "group flex w-full items-start gap-3 rounded-xl p-2.5 text-left transition-colors",
-                            n.is_read ? "hover:bg-muted/40" : "bg-primary/[0.06] hover:bg-primary/[0.10]"
-                          )}
-                        >
-                          <div className={cn(
-                            "flex h-10 w-10 shrink-0 items-center justify-center rounded-full",
-                            n.category === "transactional" ? "bg-emerald-500/15 text-emerald-500"
-                              : n.category === "operational" ? "bg-amber-500/15 text-amber-500"
-                              : n.category === "marketing" ? "bg-fuchsia-500/15 text-fuchsia-500"
-                              : "bg-primary/15 text-primary"
-                          )}>
-                            <Bell className="h-5 w-5" />
-                          </div>
-                          <div className="min-w-0 flex-1">
-                            <p className={cn("truncate text-sm", n.is_read ? "font-medium text-foreground/90" : "font-semibold text-foreground")}>
-                              {n.title || "Notification"}
-                            </p>
-                            {n.body && (
-                              <p className="line-clamp-2 text-xs text-muted-foreground">{n.body}</p>
-                            )}
-                            {timeLabel && (
-                              <p className={cn("mt-0.5 text-[10px] font-medium", n.is_read ? "text-muted-foreground" : "text-primary")}>
-                                {timeLabel} ago
-                              </p>
-                            )}
-                          </div>
-                          {!n.is_read && <span className="mt-1.5 h-2 w-2 shrink-0 rounded-full bg-primary" aria-label="Unread" />}
-                        </button>
-                      );
-                    });
+                    return (
+                      <AnimatePresence initial={false}>
+                        {filtered.slice(0, 12).map((n) => {
+                          let timeLabel = "";
+                          try { timeLabel = formatDistanceToNowStrict(new Date(n.created_at), { addSuffix: false }); } catch {}
+                          const md: Record<string, any> = n.metadata || {};
+                          const actorAvatar: string | undefined = md.actor_avatar_url || md.avatar_url || md.image_url;
+                          const actorName: string = md.actor_name || md.actor || n.title || "?";
+                          const initials = actorName
+                            .split(/\s+/)
+                            .map((s: string) => s[0])
+                            .filter(Boolean)
+                            .slice(0, 2)
+                            .join("")
+                            .toUpperCase() || "Z";
+                          return (
+                            <motion.button
+                              key={n.id}
+                              layout
+                              initial={{ opacity: 0, y: -4 }}
+                              animate={{ opacity: 1, y: 0 }}
+                              exit={{ opacity: 0, y: -4 }}
+                              transition={{ type: "spring", stiffness: 380, damping: 30, mass: 0.6 }}
+                              onClick={() => handleNotifClick(n)}
+                              className="group flex w-full items-start gap-3 rounded-xl p-2.5 text-left"
+                              style={{
+                                backgroundColor: n.is_read ? "transparent" : "hsl(var(--primary) / 0.06)",
+                                transition: "background-color 200ms ease",
+                              }}
+                            >
+                              {actorAvatar ? (
+                                <Avatar className="h-10 w-10 shrink-0">
+                                  <AvatarImage src={actorAvatar} alt="" />
+                                  <AvatarFallback className="text-xs">{initials}</AvatarFallback>
+                                </Avatar>
+                              ) : (
+                                <div className={cn(
+                                  "flex h-10 w-10 shrink-0 items-center justify-center rounded-full",
+                                  n.category === "transactional" ? "bg-emerald-500/15 text-emerald-500"
+                                    : n.category === "operational" ? "bg-amber-500/15 text-amber-500"
+                                    : n.category === "marketing" ? "bg-fuchsia-500/15 text-fuchsia-500"
+                                    : "bg-primary/15 text-primary"
+                                )}>
+                                  <Bell className="h-5 w-5" />
+                                </div>
+                              )}
+                              <div className="min-w-0 flex-1">
+                                <p className={cn("truncate text-sm transition-all", n.is_read ? "font-medium text-foreground/90" : "font-semibold text-foreground")}>
+                                  {n.title || "Notification"}
+                                </p>
+                                {n.body && (
+                                  <p className="line-clamp-2 text-xs text-muted-foreground">{n.body}</p>
+                                )}
+                                {timeLabel && (
+                                  <p className={cn("mt-0.5 text-[10px] font-medium", n.is_read ? "text-muted-foreground" : "text-primary")}>
+                                    {timeLabel} ago
+                                  </p>
+                                )}
+                              </div>
+                              <motion.span
+                                initial={false}
+                                animate={{ opacity: n.is_read ? 0 : 1, scale: n.is_read ? 0.4 : 1 }}
+                                transition={{ duration: 0.18 }}
+                                className="mt-1.5 h-2 w-2 shrink-0 rounded-full bg-primary"
+                                aria-label={n.is_read ? "Read" : "Unread"}
+                              />
+                            </motion.button>
+                          );
+                        })}
+                      </AnimatePresence>
+                    );
                   })()}
                 </div>
                 {/* Footer */}
