@@ -385,13 +385,15 @@
   }
 
   .pt-safe {
-    padding-top: max(env(safe-area-inset-top, 0px), 20px);
+    /* Same rule as .safe-area-top — never inflate to 44px because the iOS
+       Capacitor WebView already sits below the status bar (overlaysWebView=false). */
+    padding-top: env(safe-area-inset-top, 0px);
   }
 
   @media (max-width: 480px) {
     @supports (-webkit-touch-callout: none) {
       .pt-safe {
-        padding-top: max(env(safe-area-inset-top, 0px), 44px);
+        padding-top: env(safe-area-inset-top, 0px);
       }
     }
   }
