@@ -147,7 +147,7 @@ const Profile = () => {
   const { user, isAdmin } = useAuth();
   const { data: profile, isLoading: profileLoading } = useUserProfile();
   const { data: merchantData } = useMerchantRole();
-  const { unreadCount: notifUnreadCount, notifications } = useNotifications(20);
+  const { unreadCount: notifUnreadCount, notifications, isLoading: notifLoading, markAsRead, markAllAsRead } = useNotifications(20);
   const { data: latestVerificationRequest } = useQuery({
     queryKey: ["verification-request", user?.id, "latest"],
     queryFn: async () => {
