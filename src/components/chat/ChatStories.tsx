@@ -126,14 +126,6 @@ export default function ChatStories() {
 
   return (
     <>
-      <input
-        ref={fileInputRef}
-        type="file"
-        accept="image/*,video/*"
-        className="hidden"
-        onChange={handleFileSelect}
-      />
-
       {/* Stories Row */}
       <div className="px-5 pt-3 pb-1">
         <div className="flex gap-3 overflow-x-auto scrollbar-hide pb-1">
@@ -165,13 +157,25 @@ export default function ChatStories() {
                 onClick={(e) => { e.stopPropagation(); fileInputRef.current?.click(); }}
                 disabled={uploading}
                 aria-label="Add story"
-                className="absolute -bottom-0.5 -right-0.5 w-5 h-5 bg-primary rounded-full flex items-center justify-center border-2 border-background z-10"
+                className="absolute -bottom-0.5 -right-0.5 w-5 h-5 bg-primary rounded-full flex items-center justify-center border-2 border-background z-10 overflow-hidden"
               >
                 {uploading ? (
                   <div className="w-2.5 h-2.5 border border-primary-foreground border-t-transparent rounded-full animate-spin" />
                 ) : (
                   <Plus className="w-3 h-3 text-primary-foreground" />
                 )}
+                {/* Native file input lives INSIDE the trigger so iOS anchors
+                    its Photo Library / Take Photo / Choose File chooser
+                    here instead of the top-left of the page. */}
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  accept="image/*,video/*"
+                  onChange={handleFileSelect}
+                  className="absolute inset-0 opacity-0 pointer-events-none"
+                  tabIndex={-1}
+                  aria-hidden="true"
+                />
               </button>
             </div>
             <span className="text-[10px] text-muted-foreground font-medium">
