@@ -151,7 +151,6 @@ const quickLinksBusiness: QuickLink[] = [
   { icon: Building2, label: "Store Map", href: "/store-map", description: "Map view", accent: "hsl(263 70% 58%)" },
   { icon: Wrench, label: "Store Setup", href: "/store/setup", description: "Configure", accent: "hsl(0 84% 60%)" },
   { icon: BarChart3, label: "Business Insights", href: "/business/insights", description: "Data analytics", accent: "hsl(198 93% 59%)" },
-  { icon: Banknote, label: "Referral Program", href: "/referrals", description: "Earn rewards", accent: "hsl(142 71% 45%)" },
   { icon: GraduationCap, label: "Marketplace", href: "/marketplace", description: "Buy & sell", accent: "hsl(38 92% 50%)" },
 ];
 
