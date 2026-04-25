@@ -1,67 +1,85 @@
-# Story Viewer Polish + E2E Coverage
+# Premium Story Ring Tile Redesign
 
-Tighten the fullscreen story overlay so nothing underneath leaks through during the open animation, make sure the "Your story" ring renders correctly for text-only and media stories at every breakpoint, harden the portal against SSR/build edge cases, and add a Playwright test that locks in the single-header / single-control invariants.
+The current text-only story tile renders a flat emerald-green disc with a small "Test story 1234" label. It looks generic, clashes with the Instagram-style conic ring, and doesn't match ZIVO's signature visual identity. The same issue shows up on the Profile, Feed, and Chat carousels.
 
----
+## Goal
 
-## 1. Block underlying UI during the entrance animation
+Replace the flat green text tile with a premium, ZIVO-branded preview that:
 
-File: `src/components/stories/StoryViewer.tsx`
+- Reads as a proper "story preview" — not a colored avatar.
+- Uses the project's design tokens (no hardcoded `bg-primary` flat fills).
+- Has depth: layered gradient + soft inner glow + subtle noise/sparkle texture.
+- Renders the caption legibly at 64×64 px (auto-shrinks for longer text, max 3 lines).
+- Stays visually consistent across image / video / text / avatar states.
 
-- The motion wrapper currently animates `opacity 0 → 1` + `scale 0.95 → 1`. During that 200ms the Profile page (parallax sections, action buttons) is partially visible and still receives pointer events.
-- Wrap the portal in a non-animated `fixed inset-0 z-[1600]` shell that is opaque (`bg-black`) from frame 0, then run the existing `motion.div` (with the media + chrome) inside it. The shell guarantees the underlying page is covered and clicks are captured the instant the viewer mounts, even before Framer's first animation frame.
-- Add `pointer-events-auto` and `touch-none` on the shell, and `overscroll-contain` so background scroll cannot bleed through on mobile Safari.
-- Ensure `data-story-open="true"` is set synchronously on `document.body` in a `useLayoutEffect` (not `useEffect`) so the bottom mobile nav hides on the same paint as the viewer appears.
+## Design direction
 
-## 2. SSR-safe portal
+Reference: ZIVO Signature Identity (emerald brand) + Instagram text-story aesthetic.
 
-File: `src/components/stories/StoryViewer.tsx`
+```text
++--------------------+
+|  ◢ deep emerald ◣  |   ← angled gradient (brand emerald → teal → indigo)
+|   "Test story"     |   ← bold display text, drop-shadow, auto-fit
+|  ◣ subtle glow  ◢  |   ← inner radial highlight top-left
++--------------------+
+```
 
-- Before calling `createPortal`, guard with `typeof document === "undefined" || !document.body` → return `null`. This prevents runtime errors in any SSR/prerender/build pipeline that imports the component.
+- Background: diagonal gradient using `hsl(var(--primary))` → a darker tonal stop → `hsl(var(--accent))`. Pulled from `index.css` tokens, not hardcoded hex.
+- Overlay: soft radial highlight (top-left, white/15) for dimensionality.
+- Text: 1–3 lines, `font-bold`, white, drop-shadow, `text-balance`. Font size auto-scales based on caption length (≤8 chars: `text-[11px]`, ≤20: `text-[9px]`, else: `text-[7.5px]`).
+- Slight inner ring (`shadow-[inset_0_0_0_1px_rgba(255,255,255,0.15)]`) so the tile reads as a glass disc inside the IG conic ring.
 
-## 3. Story ring thumbnail sizing
+## Implementation
 
-File: `src/components/social/FeedStoryRing.tsx` (and `src/components/profile/ProfileStories.tsx`, `src/components/chat/ChatStories.tsx` if they share the same pattern)
+Single shared component used by all three carousels.
 
-- The "Your story" ring renders the latest media (`<img>` / `<video>`) inside a 64×64 circular container, but text-only stories (no `media_url`, only `text_overlay`) currently fall through to the avatar. Treat text-only stories explicitly:
-  - If `mediaType === "text"` (or `mediaUrl` is empty), render a centered gradient tile with a clamped 1-line preview of `caption` / `text_overlay` instead of the avatar.
-- Normalize the inner container so all three states (image, video, text) share identical sizing:
-  - Outer ring stays `h-[64px] w-[64px] p-[2.5px]`.
-  - Inner tile uses `h-full w-full rounded-full overflow-hidden` with `object-cover` on media and `flex items-center justify-center` for text.
-- Audit the ProfileStories carousel for the same pattern at its responsive sizes (compact mobile vs. desktop) and apply the same normalization so padding/scale don't shift between breakpoints.
+### 1. New component
 
-## 4. Playwright test: single header & controls
+`src/components/stories/StoryTextTile.tsx`
 
-New file: `tests/e2e/story-viewer.spec.ts`
+```tsx
+interface Props { text: string; className?: string; }
+export default function StoryTextTile({ text, className }: Props) {
+  const len = text.trim().length;
+  const size =
+    len <= 8 ? "text-[11px] leading-[12px]" :
+    len <= 20 ? "text-[9px] leading-[11px]" :
+    "text-[7.5px] leading-[10px]";
+  return (
+    <div className={cn(
+      "relative h-full w-full overflow-hidden flex items-center justify-center",
+      "bg-gradient-to-br from-primary via-primary/85 to-accent",
+      "shadow-[inset_0_0_0_1px_rgba(255,255,255,0.18)]",
+      className,
+    )}>
+      <div className="absolute inset-0 bg-[radial-gradient(circle_at_25%_20%,rgba(255,255,255,0.25),transparent_60%)]" />
+      <span className={cn(
+        "relative z-10 px-1.5 text-center font-bold text-primary-foreground",
+        "drop-shadow-[0_1px_2px_rgba(0,0,0,0.45)] line-clamp-3 break-words",
+        size,
+      )}>
+        {text || "Story"}
+      </span>
+    </div>
+  );
+}
+```
 
-- Use the existing config (`baseURL` + dev server). Sign in via storage state if the suite already has a fixture; otherwise stub `localStorage` auth using the same approach as `swipe-close.spec.ts`.
-- Test flow:
-  1. Navigate to `/profile`.
-  2. Click the user's story ring (or a known seeded ring via `data-testid`).
-  3. Wait for the viewer (`[data-testid="story-viewer"]`) — add this `data-testid` on the motion shell.
-  4. Assert exactly one of each:
-     - `await expect(page.locator('[data-testid="story-close"]')).toHaveCount(1)`
-     - `await expect(page.locator('[data-testid="story-pause"]')).toHaveCount(1)`
-     - `await expect(page.locator('[data-testid="story-header"]')).toHaveCount(1)`
-- Add the corresponding `data-testid` attributes in `StoryViewer.tsx` (header bar, close button, pause/play button) so the test has stable selectors. No visual change.
+### 2. Wire it into the three ring components
 
-## 5. Manual re-verification (after build)
+Replace the inline `<div className="...bg-gradient-to-br from-primary/80 to-primary...">` text branch in:
 
-After the changes deploy, run a quick browser pass on:
-- `/profile` — open own story, confirm overlay is opaque from first frame, only one header / close / pause is visible.
-- `/feed` — open another user's story from the rings.
-- `/chat` — open a story from `ChatStories`.
+- `src/components/social/FeedStoryRing.tsx`
+- `src/components/profile/ProfileStories.tsx`
+- `src/components/chat/ChatStories.tsx`
 
-Confirm in each: no duplicate header, no underlying buttons clickable, fullscreen on iPhone-sized viewport (390×844).
-
----
+with `<StoryTextTile text={latest.caption ?? ""} />`. No other ring logic changes.
 
 ## Files touched
 
-- `src/components/stories/StoryViewer.tsx` — opaque shell wrapper, SSR-safe portal guard, `useLayoutEffect` for body flag, `data-testid`s.
-- `src/components/social/FeedStoryRing.tsx` — text-only ring state, normalized sizing.
-- `src/components/profile/ProfileStories.tsx` — same ring normalization (if pattern present).
-- `src/components/chat/ChatStories.tsx` — same ring normalization (if pattern present).
-- `tests/e2e/story-viewer.spec.ts` — new Playwright spec.
+- `src/components/stories/StoryTextTile.tsx` (new, ~25 lines)
+- `src/components/social/FeedStoryRing.tsx` (1 branch swap)
+- `src/components/profile/ProfileStories.tsx` (1 branch swap)
+- `src/components/chat/ChatStories.tsx` (1 branch swap)
 
-No database, RLS, or edge-function changes required.
+No DB, RLS, or test changes required. Existing Playwright spec keeps working.
