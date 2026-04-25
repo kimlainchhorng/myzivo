@@ -24,6 +24,7 @@ const INTERACTIVE_SELECTOR = [
   "label",
   "[role='button']",
   "[data-disable-pull-to-refresh='true']",
+  "[data-disable-pull-to-refresh='true'] *",
 ].join(", ");
 
 export default function PullToRefresh({ onRefresh, children, className, enabled = true }: PullToRefreshProps) {
