@@ -64,12 +64,29 @@ export function useStoryDeepLink({ source }: Options) {
     [searchParams, setSearchParams, emitOpen]
   );
 
-  const closeStory = useCallback(() => {
-    const next = new URLSearchParams(searchParams);
-    next.delete("story");
-    setSearchParams(next, { replace: false });
-    lastTrackedRef.current = null;
-  }, [searchParams, setSearchParams]);
+  const closeStory = useCallback(
+    (closeMeta?: {
+      story_id?: string;
+      segment_index?: number;
+      total_segments?: number;
+      completed?: boolean;
+    }) => {
+      if (closeMeta?.story_id) {
+        track("story_deeplink_close", {
+          source,
+          story_id: closeMeta.story_id,
+          segment_index: closeMeta.segment_index,
+          total_segments: closeMeta.total_segments,
+          completed: !!closeMeta.completed,
+        });
+      }
+      const next = new URLSearchParams(searchParams);
+      next.delete("story");
+      setSearchParams(next, { replace: false });
+      lastTrackedRef.current = null;
+    },
+    [searchParams, setSearchParams, source]
+  );
 
   return { activeStoryId, openStory, updateStory, closeStory };
 }
