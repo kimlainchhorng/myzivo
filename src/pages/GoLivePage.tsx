@@ -81,7 +81,7 @@ const CoinRechargeSheet = lazy(() => import("@/components/live/CoinRechargeSheet
 
 type LivePhase = "setup" | "countdown" | "live" | "ended";
 
-interface ChatRow { id: string; user_id: string; user_name: string; text: string; created_at: string; isGift?: boolean }
+interface ChatRow { id: string; user_id: string; user_name: string; text: string; created_at: string; isGift?: boolean; user_is_verified?: boolean }
 
 const TOPICS = [
   { name: "General", icon: Globe },
