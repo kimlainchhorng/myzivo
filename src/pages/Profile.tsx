@@ -1319,6 +1319,53 @@ const Profile = () => {
         }}
       />
 
+      {/* Mode Switch bottom sheet — placeholder for future per-mode routing */}
+      <Sheet open={modeOpen} onOpenChange={setModeOpen}>
+        <SheetContent side="bottom" className="rounded-t-3xl pb-10">
+          <SheetHeader className="pb-3">
+            <SheetTitle className="text-base font-bold">Switch mode</SheetTitle>
+          </SheetHeader>
+          <div className="flex flex-col gap-2">
+            {[
+              { id: "personal", label: "Personal", desc: "Your everyday account", icon: UserIcon },
+              { id: "business", label: "Business", desc: "Manage company travel & teams", icon: Briefcase },
+              { id: "driver", label: "Driver", desc: "Go online and accept rides", icon: Car },
+              { id: "shop", label: "Shop Partner", desc: "Manage your store & staff", icon: Store },
+            ].map((m) => {
+              const active = activeMode === m.id;
+              const Icon = m.icon;
+              return (
+                <button
+                  key={m.id}
+                  type="button"
+                  onClick={() => {
+                    setActiveMode(m.id);
+                    try { localStorage.setItem("zivo:active_mode", m.id); } catch {}
+                    toast.success(`Switched to ${m.label} mode`);
+                    setModeOpen(false);
+                  }}
+                  className={`flex items-center gap-3 rounded-2xl border px-3 py-3 text-left transition-all active:scale-[0.99] ${
+                    active ? "border-primary/60 bg-primary/5" : "border-border/50 bg-muted/25 hover:bg-muted/50"
+                  }`}
+                >
+                  <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-background border border-border/40">
+                    <Icon className="h-4 w-4 text-primary" />
+                  </span>
+                  <span className="flex-1 min-w-0">
+                    <span className="block text-sm font-semibold text-foreground">{m.label}</span>
+                    <span className="block text-[11px] text-muted-foreground truncate">{m.desc}</span>
+                  </span>
+                  {active && <BadgeCheck className="h-4 w-4 text-primary shrink-0" />}
+                </button>
+              );
+            })}
+          </div>
+          <p className="mt-4 text-[11px] text-muted-foreground text-center">
+            More modes coming soon.
+          </p>
+        </SheetContent>
+      </Sheet>
+
       {/* Share Profile bottom sheet */}
       <Sheet open={shareOpen} onOpenChange={setShareOpen}>
         <SheetContent side="bottom" className="rounded-t-3xl pb-10">
