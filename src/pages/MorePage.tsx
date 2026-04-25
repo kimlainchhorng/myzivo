@@ -277,10 +277,6 @@ export default function MorePage() {
           <p className="text-[11px] text-muted-foreground truncate mt-0.5">@{handle}</p>
           <div className="flex gap-4 mt-1.5">
             <div className="text-center">
-              <p className="text-xs font-bold">{friendCount}</p>
-              <p className="text-[9px] text-muted-foreground">Friends</p>
-            </div>
-            <div className="text-center">
               <p className="text-xs font-bold">{followerCount}</p>
               <p className="text-[9px] text-muted-foreground">Followers</p>
             </div>
@@ -288,10 +284,14 @@ export default function MorePage() {
               <p className="text-xs font-bold">{followingCount}</p>
               <p className="text-[9px] text-muted-foreground">Following</p>
             </div>
+            <div className="text-center">
+              <p className="text-xs font-bold">{friendCount}</p>
+              <p className="text-[9px] text-muted-foreground">Friends</p>
+            </div>
           </div>
         </Link>
         <Link
-          to="/account/settings"
+          to="/account/profile-edit"
           className="shrink-0 text-[11px] font-semibold px-2.5 py-1.5 rounded-full bg-primary/10 text-primary active:scale-95 transition-transform"
         >
           Edit
