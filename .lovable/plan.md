@@ -1,34 +1,33 @@
-I found two likely causes for why it still looks wrong and why Add Cover is hard/impossible to click:
+I can see the problem now from the mobile profile screenshot: the cover image is full-width, but the cover edit/add buttons are placed at the top-right of the cover, underneath the fixed profile header layer. That makes them look unlike Facebook and can block taps, especially on iPhone/Capacitor.
 
-1. `capacitor.config.ts` says the app should be edge-to-edge, but `src/main.tsx` overrides it at runtime with `StatusBar.setOverlaysWebView({ overlay: false })`. That prevents the cover from truly crossing into the status bar area on iOS.
-2. The cover upload uses a hidden file input triggered by `ref.click()`. On mobile/iOS this can be unreliable when nested inside animated/transformed wrappers, so the Add Cover button may not open the picker.
+Plan:
 
-Plan to fix it:
+1. Move cover controls to the Facebook position
+   - Put the cover edit/add button at the bottom-right of the cover photo, not at the top safe-area.
+   - Keep the cover photo itself full-bleed at the top.
+   - Keep header buttons (back, avatar, bell, menu) in the safe area only.
 
-1. Make the native status bar match the Facebook-style cover behavior
-   - Update the runtime Capacitor status bar setup so iOS keeps `overlay: true` instead of forcing `false`.
-   - Keep status-bar icon color readable over the cover.
+2. Fix the click issue
+   - Remove the cover upload control from the sticky header’s touch zone.
+   - Give the cover controls their own higher, isolated interactive layer.
+   - Keep decorative gradients and cover image wrappers as `pointer-events-none` so they cannot steal taps.
 
-2. Rebuild the profile cover top area like the Facebook reference
-   - Cover image starts at the very top of the screen and fills the status/safe-area region.
-   - Buttons stay inside the safe area, not under the clock/battery.
-   - Remove the current negative-margin workaround and use a cleaner full-bleed mobile cover height: `cover height + safe top`.
-   - Keep desktop layout unchanged.
+3. Make the upload control more reliable on mobile
+   - Keep the native `<label htmlFor="profile-cover-input">` upload pattern.
+   - Move the hidden file input outside the transformed/parallax cover area where possible, so iOS does not swallow the file-picker tap.
+   - Reset the input value after upload so choosing the same photo again works.
 
-3. Fix Add Cover click on mobile
-   - Replace the hidden-input/ref-click pattern for cover upload with a real clickable `<label>` tied to the file input.
-   - Position the actual input/label above overlays with proper `z-index`, so tapping the camera/image button always opens the file picker.
-   - Apply the same reliability pattern to the avatar camera button if needed.
+4. Adjust the visual layout to match Facebook more closely
+   - Cover photo: visual layer reaches the very top / safe-area region.
+   - Header: floats over the cover only for navigation, not for cover editing.
+   - Cover edit button: small camera/image button over the lower-right of the cover, clear of avatar and header.
+   - If there is no cover photo, show a clear “Add cover photo” button inside the lower part of the cover, not under the top bar.
 
-4. Reduce click blockers in the cover area
-   - Disable pointer events on decorative cover layers, gradients, and scrims.
-   - Keep only real controls clickable.
-   - Make PullToRefresh ignore touches that start on file-upload controls.
+5. Test after implementation
+   - Log in with the test account and open `/profile` at the same mobile viewport.
+   - Confirm the cover starts at the top, the header stays safe, and the cover upload button is visible/clickable.
+   - Confirm the button is no longer underneath the sticky header layer.
 
-5. Verify after implementation
-   - Test `/profile` in mobile viewport.
-   - Confirm the cover visually reaches the top like Facebook.
-   - Confirm action buttons are below the status bar.
-   - Confirm tapping Add/Change Cover opens the file picker.
-
-After approval, I’ll apply these changes. For the native iPhone/Android app, you will also need to pull the updated project and run `npx cap sync ios` / `npx cap sync android` so the native status bar change is included.
+Files to update:
+- `src/pages/Profile.tsx`
+- Possibly a small safe-area/CSS adjustment in `src/index.css` only if needed
