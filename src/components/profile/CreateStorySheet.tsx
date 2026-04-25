@@ -31,6 +31,7 @@ interface Props {
 }
 
 type Step = "choose" | "preview-media" | "compose-text";
+type UploadPhase = "idle" | "preparing" | "uploading" | "saving";
 
 interface Track {
   id: string;
@@ -56,6 +57,7 @@ export default function CreateStorySheet({ open, onClose }: Props) {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const cameraInputRef = useRef<HTMLInputElement>(null);
   const previewAudioRef = useRef<HTMLAudioElement | null>(null);
+  const activeUploadRef = useRef<XMLHttpRequest | null>(null);
 
   const [step, setStep] = useState<Step>("choose");
   const [pickedFile, setPickedFile] = useState<File | null>(null);
@@ -70,6 +72,7 @@ export default function CreateStorySheet({ open, onClose }: Props) {
 
   // Upload state
   const [uploading, setUploading] = useState(false);
+  const [uploadPhase, setUploadPhase] = useState<UploadPhase>("idle");
   const [progress, setProgress] = useState(0); // 0..1
   const [uploadError, setUploadError] = useState<string | null>(null);
   const [showQuitConfirm, setShowQuitConfirm] = useState(false);
@@ -86,6 +89,7 @@ export default function CreateStorySheet({ open, onClose }: Props) {
         setBgIdx(0);
         setAudioTrack(null);
         setShowMusicSheet(false);
+        setUploadPhase("idle");
         setProgress(0);
         setUploadError(null);
         setShowQuitConfirm(false);
