@@ -338,12 +338,28 @@ export default function StoryViewer({ groups, startGroupIndex, onClose }: Props)
             </div>
             <div>
               <p className="text-white text-sm font-bold drop-shadow-lg">{viewingGroup.userName}</p>
-              <p className="text-white/70 text-[11px] drop-shadow">
+              <p className="text-white/70 text-[11px] drop-shadow flex items-center gap-1">
                 {formatDistanceToNow(new Date(currentStory.createdAt), { addSuffix: true })}
+                {currentStory.audioUrl && (
+                  <>
+                    <span className="opacity-50">·</span>
+                    <Music className="w-3 h-3" />
+                    <span>Music</span>
+                  </>
+                )}
               </p>
             </div>
           </div>
           <div className="flex items-center gap-1">
+            {currentStory.audioUrl && (
+              <button
+                onClick={() => setMuted((m) => !m)}
+                aria-label={muted ? "Unmute" : "Mute"}
+                className="w-9 h-9 flex items-center justify-center rounded-full bg-white/10 backdrop-blur-sm"
+              >
+                {muted ? <VolumeX className="w-4 h-4 text-white" /> : <Volume2 className="w-4 h-4 text-white" />}
+              </button>
+            )}
             <button
               onClick={() => setPaused((p) => !p)}
               aria-label={paused ? "Play" : "Pause"}
@@ -360,6 +376,19 @@ export default function StoryViewer({ groups, startGroupIndex, onClose }: Props)
             </button>
           </div>
         </div>
+
+        {/* Audio (background music) */}
+        {currentStory.audioUrl && (
+          <audio
+            ref={audioRef}
+            key={currentStory.id}
+            src={currentStory.audioUrl}
+            loop
+            autoPlay
+            muted={muted}
+            playsInline
+          />
+        )}
 
         {/* Tap zones */}
         <div className="absolute left-0 top-0 bottom-0 w-1/3 z-10" onClick={goPrev} />
