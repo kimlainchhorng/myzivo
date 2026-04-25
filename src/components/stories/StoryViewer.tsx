@@ -25,12 +25,16 @@ import Send from "lucide-react/dist/esm/icons/send";
 import MessageCircle from "lucide-react/dist/esm/icons/message-circle";
 import Pause from "lucide-react/dist/esm/icons/pause";
 import Play from "lucide-react/dist/esm/icons/play";
+import Volume2 from "lucide-react/dist/esm/icons/volume-2";
+import VolumeX from "lucide-react/dist/esm/icons/volume-x";
+import Music from "lucide-react/dist/esm/icons/music";
 
 export interface StoryItem {
   id: string;
   mediaUrl: string;
   mediaType: string;
   caption?: string;
+  audioUrl?: string;
   createdAt: string;
   viewsCount: number;
 }
