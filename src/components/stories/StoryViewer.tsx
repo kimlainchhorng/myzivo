@@ -256,6 +256,29 @@ export default function StoryViewer({ groups, startGroupIndex, startStoryIndex =
     startTimer();
   }, [startTimer]);
 
+  // Close handler that always reports current segment metadata so the
+  // story_deeplink_close analytics event can attribute drop-off accurately.
+  const closeWithMeta = useCallback(
+    (completedOverride?: boolean) => {
+      if (!currentStory || !viewingGroup) {
+        onClose();
+        return;
+      }
+      const total = viewingGroup.stories.length;
+      const completed =
+        completedOverride !== undefined
+          ? completedOverride
+          : viewIdx === total - 1 && progress >= 1;
+      onClose({
+        story_id: currentStory.id,
+        segment_index: viewIdx,
+        total_segments: total,
+        completed,
+      });
+    },
+    [currentStory, viewingGroup, viewIdx, progress, onClose]
+  );
+
   const goNext = useCallback(() => {
     if (!viewingGroup) return;
     if (viewIdx < viewingGroup.stories.length - 1) {
