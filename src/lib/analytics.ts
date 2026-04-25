@@ -111,10 +111,48 @@ if (typeof window !== "undefined") {
   });
 }
 
+// In-memory dedupe keyed by `event_name + post_id` (when present).
+// Repeated taps within `dedupeMs` are dropped before insert.
+const recentEvents = new Map<string, number>();
+const DEFAULT_DEDUPE_MS = 1500;
+
+function dedupeKey(event: string, props: AnalyticsProps): string | null {
+  const postId = (props as any)?.post_id;
+  if (!postId) return null;
+  return `${event}::${postId}`;
+}
+
+function pruneRecent(now: number) {
+  // Cheap LRU: drop anything older than 30s.
+  for (const [k, t] of recentEvents) {
+    if (now - t > 30_000) recentEvents.delete(k);
+  }
+}
+
 export function track(event: string, props: AnalyticsProps = {}) {
+  const dedupeMs =
+    typeof (props as any).dedupeMs === "number" ? (props as any).dedupeMs : DEFAULT_DEDUPE_MS;
+  const now = Date.now();
+  const key = dedupeKey(event, props);
+
+  if (key && dedupeMs > 0) {
+    const last = recentEvents.get(key);
+    if (last !== undefined && now - last < dedupeMs) {
+      if (typeof window !== "undefined" && (window as any).__zivo_debug_analytics) {
+        // eslint-disable-next-line no-console
+        console.debug("[analytics] deduped", event, props);
+      }
+      return;
+    }
+    recentEvents.set(key, now);
+    pruneRecent(now);
+  }
+
   const event_id = uuid();
   const created_at = new Date().toISOString();
-  const properties: AnalyticsProps = { ...props, event_id };
+  // Strip dedupeMs from the persisted payload — it is a client-only hint.
+  const { dedupeMs: _omit, ...rest } = props as Record<string, unknown>;
+  const properties: AnalyticsProps = { ...rest, event_id };
   const page = typeof window !== "undefined" ? window.location.pathname : null;
 
   try {
@@ -147,4 +185,9 @@ export function track(event: string, props: AnalyticsProps = {}) {
     // eslint-disable-next-line no-console
     console.debug("[analytics]", event, properties);
   }
+}
+
+// Test-only helper to clear dedupe state between unit tests.
+export function __resetAnalyticsDedupe() {
+  recentEvents.clear();
 }
