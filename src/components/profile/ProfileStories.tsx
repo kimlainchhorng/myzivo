@@ -37,7 +37,7 @@ const ProfileStories = () => {
 
   // All active stories across friends + self (drives the ring carousel)
   const { data: allStories = [], isLoading } = useQuery({
-    queryKey: ["feed-story-users"],
+    queryKey: ["profile-story-rings", user?.id],
     enabled: !!user?.id,
     refetchInterval: 60000,
     queryFn: async () => {
@@ -129,6 +129,7 @@ const ProfileStories = () => {
   const handleViewerClose = () => {
     setViewing(null);
     queryClient.invalidateQueries({ queryKey: ["my-story-views"] });
+    queryClient.invalidateQueries({ queryKey: ["profile-story-rings"] });
     queryClient.invalidateQueries({ queryKey: ["feed-story-users"] });
   };
 

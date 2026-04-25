@@ -266,6 +266,7 @@ export default function CreateStorySheet({ open, onClose }: Props) {
 
       queryClient.invalidateQueries({ queryKey: ["user-stories"] });
       queryClient.invalidateQueries({ queryKey: ["feed-story-users"] });
+      queryClient.invalidateQueries({ queryKey: ["profile-story-rings"] });
       queryClient.invalidateQueries({ queryKey: ["profile-my-story"] });
       queryClient.invalidateQueries({ queryKey: ["my-story-views"] });
       toast.success("Story shared 🎉");
@@ -707,24 +708,24 @@ export default function CreateStorySheet({ open, onClose }: Props) {
             </motion.div>
           )}
         </AnimatePresence>
-
-        {/* Hidden inputs */}
-        <input
-          ref={fileInputRef}
-          type="file"
-          accept="image/*,video/*"
-          className="hidden"
-          onChange={handleFileChange}
-        />
-        <input
-          ref={cameraInputRef}
-          type="file"
-          accept="image/*"
-          capture="environment"
-          className="hidden"
-          onChange={handleFileChange}
-        />
       </motion.div>
+
+      {/* Hidden inputs (kept outside motion tree to avoid ref warnings) */}
+      <input
+        ref={fileInputRef}
+        type="file"
+        accept="image/*,video/*"
+        className="hidden"
+        onChange={handleFileChange}
+      />
+      <input
+        ref={cameraInputRef}
+        type="file"
+        accept="image/*"
+        capture="environment"
+        className="hidden"
+        onChange={handleFileChange}
+      />
     </AnimatePresence>
   );
 
