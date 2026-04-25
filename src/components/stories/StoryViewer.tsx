@@ -66,10 +66,24 @@ export default function StoryViewer({ groups, startGroupIndex, onClose }: Props)
   const [showViewers, setShowViewers] = useState(false);
   const [showComments, setShowComments] = useState(false);
   const [commentText, setCommentText] = useState("");
+  const [muted, setMuted] = useState(true);
 
   const timerRef = useRef<number | null>(null);
   const startTimeRef = useRef(0);
   const elapsedRef = useRef(0);
+  const audioRef = useRef<HTMLAudioElement | null>(null);
+
+  // Sync audio element with current story / pause state / mute
+  useEffect(() => {
+    const audio = audioRef.current;
+    if (!audio) return;
+    if (paused || showViewers || showComments) {
+      audio.pause();
+    } else {
+      audio.muted = muted;
+      audio.play().catch(() => {/* autoplay blocked; user can unmute */});
+    }
+  }, [paused, showViewers, showComments, muted]);
 
   const viewingGroup = groups[groupIdx] ?? null;
   const currentStory = viewingGroup?.stories[viewIdx] ?? null;
