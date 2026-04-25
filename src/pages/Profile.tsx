@@ -468,6 +468,41 @@ const Profile = () => {
         <BokehParticle delay={1.2} size={45} x="40%" y="10%" color="hsl(var(--primary) / 0.06)" />
       </motion.div>
 
+      {/* ── Mobile sticky compact header (Facebook-style) ── */}
+      <motion.header
+        style={{ opacity: stickyOpacity, y: stickyTranslate }}
+        className="lg:hidden fixed top-0 inset-x-0 z-40 h-14 px-3 flex items-center gap-3 bg-background/85 backdrop-blur-xl border-b border-border/40 safe-area-top"
+      >
+        <button
+          onClick={() => navigate(-1)}
+          aria-label="Back"
+          className="h-9 w-9 -ml-1 flex items-center justify-center rounded-full hover:bg-muted/60 active:scale-95 transition"
+        >
+          <ArrowLeft className="h-5 w-5 text-foreground" />
+        </button>
+        <Avatar className="h-8 w-8 ring-1 ring-border/60">
+          <AvatarImage src={profile?.avatar_url || undefined} alt={profile?.display_name || "Profile"} />
+          <AvatarFallback className="text-xs">{getInitials()}</AvatarFallback>
+        </Avatar>
+        <div className="flex items-center gap-1 min-w-0 flex-1">
+          <span className="font-semibold text-sm text-foreground truncate">
+            {profile?.display_name || "Profile"}
+          </span>
+          {profile?.is_verified && <VerifiedBadge size={14} />}
+        </div>
+        <button
+          onClick={() => setShowNotifPanel(prev => !prev)}
+          aria-label={showNotifPanel ? "Close notifications" : "Open notifications"}
+          aria-pressed={showNotifPanel}
+          className={cn(
+            "h-9 w-9 flex items-center justify-center rounded-full transition active:scale-95",
+            showNotifPanel ? "bg-primary text-primary-foreground" : "hover:bg-muted/60 text-foreground"
+          )}
+        >
+          <Bell className="h-5 w-5" />
+        </button>
+      </motion.header>
+
       {/* ── Scrollable content ── */}
       <div ref={scrollRef} className="relative z-10 h-screen overflow-y-auto pb-24 scroll-smooth bg-background" style={{ scrollbarWidth: 'none' }}>
         {/* Mobile: edge-to-edge full-screen (Facebook-style). Desktop: centered card. */}
