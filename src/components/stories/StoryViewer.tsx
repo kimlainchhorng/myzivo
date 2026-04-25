@@ -194,7 +194,7 @@ export default function StoryViewer({
     queryFn: async () => {
       const { data } = await supabase
         .from("story_reactions" as any)
-        .select("user_id, emoji, created_at")
+        .select("id, user_id, emoji, created_at")
         .eq("story_id", currentStory!.id)
         .order("created_at", { ascending: false });
       if (!data || data.length === 0) return [];
