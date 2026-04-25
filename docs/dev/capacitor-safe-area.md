@@ -1,39 +1,41 @@
 # Capacitor Safe-Area Handling — Read Before Touching CSS Insets
 
-> TL;DR — On ZIVO's iOS Capacitor build, `env(safe-area-inset-top)` is **`0px`** by design.
-> Never write `max(env(safe-area-inset-*), Npx)` in this codebase. Use the shared
-> `.pt-safe` / `.pb-safe` / `.safe-area-top` / `.safe-area-bottom` utilities from
-> `src/index.css`. If you re-add a hard floor like `44px`, you will reproduce
-> the white-bar regression we fixed on 2026-04-25.
+> **UPDATED 2026-04-25 (edge-to-edge):** We switched `StatusBar.overlaysWebView`
+> to **`true`** so cover photos, gradients, and page backgrounds reach the very
+> top of the screen. `env(safe-area-inset-top)` now returns the **real** notch /
+> status-bar height on iOS (≈47–59px) and Android (≈24–32px).
+>
+> **Rules:**
+> - **Visual content** (images, gradients, full-bleed backgrounds) → no top
+>   padding; let it flow under the status bar for an immersive look.
+> - **Interactive controls** (buttons, tabs, sticky headers, nav bars) → use
+>   `.pt-safe`, `.safe-area-top`, or `var(--zivo-safe-top-sticky)` so they
+>   sit below the status bar.
+> - **Bottom nav / home indicator** → use `.pb-safe` or
+>   `var(--zivo-safe-bottom)`.
+>
+> Never add a hardcoded pixel floor like `max(env(...), 44px)` — the env()
+> value is now accurate and a floor will double-pad on notch devices.
 
 ---
 
-## Why `env(safe-area-inset-top)` is 0 in our app
+## Why `env(safe-area-inset-top)` is now non-zero
 
 Our `capacitor.config.ts` sets:
 
 ```ts
 plugins: {
   StatusBar: {
-    overlaysWebView: false, // ← critical
+    overlaysWebView: true, // edge-to-edge
+    style: 'DARK',
   },
 }
 ```
 
-When `overlaysWebView: false`, the **native iOS shell** moves the WebView's
-origin **below** the status bar / notch. The browser engine inside the WebView
-therefore sees a viewport that already starts at the safe area, so it
-correctly reports `env(safe-area-inset-top) === 0px`.
-
-If you then write CSS like:
-
-```css
-/* ❌ DO NOT DO THIS */
-padding-top: max(env(safe-area-inset-top), 44px);
-```
-
-…you add **44px on top of an already-inset WebView** → giant white gap above
-the header. This is exactly what users reported in "Picture 1" before the fix.
+The WebView fills the entire screen (including under the status bar). The
+browser correctly reports `env(safe-area-inset-top)` as the status-bar height,
+and our `.pt-safe` / `.safe-area-top` utilities push interactive UI down by
+exactly that amount — no hardcoded floor required.
 
 ## When `env()` is non-zero
 
