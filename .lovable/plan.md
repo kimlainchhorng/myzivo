@@ -1,75 +1,107 @@
-# Safe-Area Hardening: Docs, Audit, Tests, Debug Overlay & QA
+# Safe-Area Hardening — Round 2
 
-Five deliverables to lock in the recent safe-area fix and prevent the double-padding gap from coming back.
+Five additions that build directly on the existing safe-area infrastructure.
 
-## 1. Developer Doc — Capacitor Safe-Area Behavior
+## 1. Expand visual regression routes
 
-Create `docs/dev/capacitor-safe-area.md` covering:
-- Why `StatusBar.overlaysWebView: false` (in `capacitor.config.ts`) means the native shell already insets the WebView below the status bar.
-- Therefore `env(safe-area-inset-top)` returns `0` on iOS Capacitor (no notch reported to CSS).
-- The forbidden anti-pattern: `max(env(safe-area-inset-top), 44px)` — this re-adds 44px on top of the already-inset WebView, producing the white gap shown in the user's "Picture 1".
-- Correct pattern: rely strictly on `env()` values, no minimum floors.
-- When you DO want a floor (true browser PWAs only): use the existing `--zivo-safe-top-overlay` token, never inline `max()`.
-- Quick decision table: Capacitor iOS / Capacitor Android / iOS Safari PWA / Mobile web → expected `env()` value and recommended class.
-- Link to memory `mem://style/mobile-native-ux-standards`.
+Update `tests/visual/safe-area.spec.ts` to cover the screens where bottom-padding issues are most likely to reappear (the ones with sheets, footers, and long scrollers).
 
-## 2. Bottom-Nav Padding Audit
+New routes added to the existing matrix:
+- `/more` (MorePage — sticky bottom CTA region)
+- `/settings` (AppSettingsPage)
+- `/account/settings` (AccountSettingsPage)
+- `/wallet` (AccountWalletPage — fixed bottom action bar)
+- `/menu` synthetic case — opens `MobileNavMenu` sheet on `/account` via a `?openMenu=1` query param then screenshots the bottom 120px
 
-Two custom inline `paddingBottom` usages remain — replace with the shared utility:
-- `src/components/app/ZivoMobileNav.tsx` line 74 → remove inline style, add `pb-safe` class.
-- `src/components/navigation/MobileNavMenu.tsx` line 225 → replace inline `calc(env(...) + 1rem)` with `className="pb-safe pb-4"` (Tailwind composition handles the +1rem).
-- Grep all `pages/*` for any `style={{ paddingBottom: "env(...)` or `pb-[env(...)]` patterns and convert each to `pb-safe`.
-- Verify `MobileBottomNav.tsx` (already uses utility — confirm only).
+For each route, capture **two** clips per viewport:
+- Top 120px (status-bar region)
+- Bottom 140px (home-indicator region — catches `pb-safe` regressions)
 
-## 3. Visual Regression Tests
+Authenticated routes use a shared Playwright `storageState` fixture (`tests/visual/auth.setup.ts`) seeded from a `QA_TEST_EMAIL`/`QA_TEST_PASSWORD` secret pair. Devices unchanged: iPhone SE / 13 / 14 Pro Max.
 
-Add Playwright-based screenshot tests in `tests/visual/safe-area.spec.ts`:
-- Devices: iPhone SE (375x667), iPhone 13 (390x844), iPhone 14 Pro Max (430x932).
-- Routes: `/account`, `/profile`, `/chat`, `/` (Home).
-- Capture full-page screenshots, store baselines under `tests/visual/__screenshots__/`.
-- Assert top 100px region pixel-diff < 0.1% vs. baseline (catches white-gap regressions specifically).
-- Add `bun run test:visual` script to `package.json`.
-- CI-ready but runnable locally; baselines committed.
+## 2. Quick-reference table in the developer doc
 
-## 4. In-App Safe-Area Debug Overlay
+Append a "Decision Cheatsheet" section to `docs/dev/capacitor-safe-area.md`:
 
-Create `src/components/dev/SafeAreaDebugOverlay.tsx`:
-- Fixed full-screen overlay with translucent colored bands at each inset edge (top = red, bottom = blue, left/right = green).
-- Floating HUD card showing live numeric values for all four `env(safe-area-inset-*)` plus viewport size and `devicePixelRatio`.
-- Toggle persisted in `localStorage` under `zivo:debug:safe-area`.
-- Exposed in **Account → Developer Settings** (gated behind existing dev-mode check) as a Switch row "Show safe-area overlay".
-- Also bind keyboard shortcut `Ctrl+Shift+S` on web for fast toggling.
-- Mounted globally in `AppLayout.tsx` so it overlays every route.
+```text
+┌─────────────────────────┬───────────────────────────────────────────┐
+│ Use this                │ When                                       │
+├─────────────────────────┼───────────────────────────────────────────┤
+│ .safe-area-top          │ Header is the FIRST child of the page     │
+│                         │ AND no AppLayout wrapper handles it       │
+│ .pt-safe                │ Adding top inset to a non-header element  │
+│                         │ (e.g. fullscreen overlay starting at top) │
+│ .pb-safe                │ Fixed/sticky bottom navs, action bars,    │
+│                         │ bottom sheets, FABs                       │
+│ var(--zivo-safe-top-*)  │ Browser-PWA only, when you need a         │
+│                         │ minimum floor (Dynamic Island bug)        │
+│ Nothing                 │ Inside <AppLayout> — it already pads main │
+└─────────────────────────┴───────────────────────────────────────────┘
+```
 
-## 5. QA Checklist Page
+Plus a "Common mistakes" subsection with three before/after code samples (double-padding, stacked classes, raw `max(env(...), 44px)`).
 
-Create `src/pages/dev/SafeAreaQAPage.tsx` at route `/dev/qa/safe-area`:
-- Interactive checklist (state in localStorage) with rows for: Profile top gap, Account top gap, Chat header flush, Home status-bar flush, bottom nav home-indicator clearance, MobileNavMenu sheet bottom — each on iPhone SE / 13 / 15 Pro Max.
-- "Open page" button next to each row that navigates to the target route.
-- "Toggle debug overlay" button wired to deliverable #4.
-- Auto-detects platform (Capacitor vs web) and shows expected `env()` values to compare against.
-- Export results as Markdown via a copy-to-clipboard button (for sharing QA reports).
-- Linked from Account → Developer Settings.
+## 3. CI workflow with PR comments
+
+Create `.github/workflows/safe-area-visual.yml` (separate from the existing `safe-area-qa.yml` so failures stay attributable):
+
+- Triggers: `pull_request` on changes to `src/**`, `tests/visual/**`, `index.html`, `capacitor.config.ts`, the workflow file itself.
+- Steps: checkout → Node 20 → `npm ci` → `npx playwright install --with-deps chromium` → `npx playwright test tests/visual/safe-area.spec.ts --reporter=html,json`.
+- On failure: upload `playwright-report/` and `test-results/` as artifacts.
+- PR comment (using `actions/github-script`) posts:
+  - Pass/fail summary line
+  - Per-route table (status × device)
+  - Direct link to the uploaded HTML report artifact
+  - Link to the diff images for any failing snapshots
+  - Sticky-update behavior (one comment per PR, edited in place via marker `<!-- safe-area-visual -->`)
+
+No external services — uses GitHub Actions artifacts only.
+
+## 4. QA checklist run history (JSON + CSV export)
+
+Extend `src/pages/dev/SafeAreaQAPage.tsx`:
+
+- Add a "Save run" button that snapshots current checklist results into `localStorage` under `zivo:debug:safe-area-qa-runs` (capped at 20 runs, FIFO).
+- Each run record stores: timestamp, platform info, live `env()` insets, viewport, per-row × per-device results, and a derived `passRate`.
+- New "Run history" section lists saved runs with download buttons:
+  - **JSON** — full structured payload via `Blob` download
+  - **CSV** — flattened row-per-check (run_id, timestamp, page, route, device, passed)
+  - **Delete** — removes a single run
+- Existing "Export" button kept; renamed to "Copy current as Markdown" for clarity.
+- File names use ISO timestamp: `safe-area-qa-2026-04-25T22-15-00.json`.
+
+No backend — all client-side, survives across sessions, works offline.
+
+## 5. iPhone-notch emulator in the debug overlay
+
+Extend `src/components/dev/SafeAreaDebugOverlay.tsx` with a "Simulate device" picker in the HUD:
+
+- Presets: `Off (real device)`, `iPhone SE (0/0)`, `iPhone 13 (47/34)`, `iPhone 14 Pro (59/34)`, `iPhone 15 Pro Max (59/34)`, `Custom…` (numeric inputs for top/bottom/left/right).
+- When a preset is active:
+  - Inject a `<style id="zivo-safe-area-emu">` block that overrides the design tokens AND patches the `env()` consumers via custom properties (`--zivo-emu-top` etc. applied as `padding-top` overrides on `.safe-area-top`, `.pt-safe`, `.pb-safe`, `.safe-area-bottom`).
+  - Render a notch silhouette (rounded black pill) and home-indicator bar at the simulated positions so the visual matches the device.
+  - Show a yellow "EMULATING <preset>" banner so the mode can never be left on accidentally.
+- Selection persisted under `zivo:debug:safe-area-emu`; auto-clears on hard reload of production builds (only active in dev mode or when the overlay is enabled).
+- HUD shows both **Reported** (real `env()` value) and **Effective** (after emulation) so you can confirm the override is working.
 
 ## Technical Details
 
 **Files created**
-- `docs/dev/capacitor-safe-area.md`
-- `tests/visual/safe-area.spec.ts` (+ `playwright.config.ts` if not present)
-- `src/components/dev/SafeAreaDebugOverlay.tsx`
-- `src/pages/dev/SafeAreaQAPage.tsx`
+- `tests/visual/auth.setup.ts` — Playwright auth fixture
+- `.github/workflows/safe-area-visual.yml` — CI pipeline + PR comment
+- (no other new files; everything else extends existing ones)
 
 **Files modified**
-- `src/components/app/ZivoMobileNav.tsx` — remove inline padding
-- `src/components/navigation/MobileNavMenu.tsx` — remove inline padding
-- `src/components/app/AppLayout.tsx` — mount `<SafeAreaDebugOverlay />`
-- `src/App.tsx` — add `/dev/qa/safe-area` route
-- `src/pages/account/...` (Developer Settings) — add overlay toggle + QA page link
-- `package.json` — add `test:visual` script + `@playwright/test` devDep
+- `tests/visual/safe-area.spec.ts` — new routes + bottom clips + auth state
+- `docs/dev/capacitor-safe-area.md` — Decision Cheatsheet + Common Mistakes
+- `src/pages/dev/SafeAreaQAPage.tsx` — run history, JSON/CSV export
+- `src/components/dev/SafeAreaDebugOverlay.tsx` — device emulator + HUD
+- `playwright.config.ts` — register `tests/visual` as a second project so unit/e2e configs stay separate
+- `package.json` — add `test:visual` script wired to the new project
 
 **Memory updates**
-- Append safe-area rule to `mem://style/mobile-native-ux-standards`: "Never use `max(env(safe-area-inset-*), Npx)`. Use `pb-safe`/`pt-safe` only. See `docs/dev/capacitor-safe-area.md`."
+- Append to `mem://style/mobile-native-ux-standards`: emulator mode usage + new CI workflow name + extended route coverage.
 
 **Out of scope**
-- Android edge-to-edge changes (current config keeps WebView inset).
-- Reworking the design tokens in `index.css` (already correct after last fix).
+- Device emulator does NOT change `window.innerWidth` (would require iframe-based simulation; not needed for safe-area verification).
+- No cloud sync of QA runs (kept local per "no backend churn" preference).
