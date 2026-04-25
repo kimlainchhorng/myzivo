@@ -477,6 +477,7 @@ export default function ProfileContentTabs({ userId }: { userId?: string }) {
               user: {
                 name: displayName,
                 avatar: prof?.avatar_url || "",
+                isVerified: prof?.is_verified === true,
               },
               isShared: Boolean(row.shared_from_post_id || row.shared_from_user_id),
               sharedOrigin,
