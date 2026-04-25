@@ -49,7 +49,7 @@ export default function FeedStoryRing() {
     queryFn: async () => {
       const { data } = await (supabase as any)
         .from("stories")
-        .select("id, user_id, media_url, media_type, caption, audio_url, created_at, expires_at, views_count")
+        .select("id, user_id, media_url, media_type, text_overlay, audio_url, created_at, expires_at, view_count")
         .gt("expires_at", new Date().toISOString())
         .order("created_at", { ascending: true });
       return ((data as any[]) || []) as RawStory[];
