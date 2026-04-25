@@ -6,7 +6,7 @@
 import { useState, useRef, useEffect, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
-  Heart, MessageCircle, Share2, Play, Bookmark, Globe, MoreVertical,
+  Heart, MessageCircle, Send, Play, Bookmark, Globe, MoreVertical,
   Volume2, VolumeX, Eye,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -393,55 +393,76 @@ export default function ProfileFeedCard({
         )}
       </AnimatePresence>
 
-      {/* Action buttons with counts */}
+      {/* Action buttons — v2026 chip-style icons */}
       <div className="flex items-center px-2.5 sm:px-3 py-1.5">
-        <div className="flex items-center gap-1 flex-1">
-          <button
+        <div className="flex items-center gap-1.5 flex-1">
+          {/* Like */}
+          <motion.button
+            whileTap={{ scale: 0.88 }}
             onClick={() => onToggleLike(item)}
             onContextMenu={(e) => { e.preventDefault(); setShowReactionPicker(!showReactionPicker); }}
             aria-label={isLiked ? `Unlike post${formatCount(item.likes) ? `, ${formatCount(item.likes)} likes` : ""}` : `Like post${formatCount(item.likes) ? `, ${formatCount(item.likes)} likes` : ""}`}
             aria-pressed={isLiked}
-            className="min-h-[44px] min-w-[36px] sm:min-w-[40px] flex items-center justify-center gap-1 group"
+            className={cn(
+              "min-h-[40px] h-10 inline-flex items-center justify-center gap-1.5 px-2.5 rounded-full transition-all",
+              isLiked
+                ? "bg-rose-500/12 text-rose-500 shadow-[0_0_18px_-6px_hsl(347_77%_55%/0.55)]"
+                : "text-foreground hover:bg-muted/50",
+            )}
           >
             {selectedReaction ? (
-              <span className="text-lg" aria-hidden>{selectedReaction}</span>
+              <span className="text-lg leading-none" aria-hidden>{selectedReaction}</span>
             ) : (
-              <Heart aria-hidden className={cn("h-[22px] w-[22px] transition-all", isLiked ? "text-destructive fill-destructive scale-110" : "text-foreground group-active:scale-125")} />
+              <Heart aria-hidden strokeWidth={2.2} className={cn("h-[22px] w-[22px] transition-transform", isLiked && "fill-rose-500 scale-110")} />
             )}
             {formatCount(item.likes) && (
-              <span aria-hidden className={cn("text-[12px] font-semibold whitespace-nowrap", isLiked || selectedReaction ? "text-destructive" : "text-muted-foreground")}>
+              <span aria-hidden className={cn("text-[12px] font-semibold tabular-nums", isLiked || selectedReaction ? "text-rose-500" : "text-muted-foreground")}>
                 {formatCount(item.likes)}
               </span>
             )}
-          </button>
-          <button
+          </motion.button>
+
+          {/* Comment */}
+          <motion.button
+            whileTap={{ scale: 0.88 }}
             onClick={openComments}
             aria-label={`Open comments${formatCount(item.comments) ? `, ${formatCount(item.comments)} comments` : ""}`}
-            className="min-h-[44px] min-w-[36px] sm:min-w-[40px] flex items-center justify-center text-foreground gap-1"
+            className="min-h-[40px] h-10 inline-flex items-center justify-center gap-1.5 px-2.5 rounded-full text-foreground hover:bg-muted/50 transition-all"
           >
-            <MessageCircle aria-hidden className="h-[22px] w-[22px]" />
+            <MessageCircle aria-hidden strokeWidth={2.2} className="h-[22px] w-[22px]" />
             {formatCount(item.comments) && (
-              <span aria-hidden className="text-[12px] text-muted-foreground font-semibold whitespace-nowrap">
+              <span aria-hidden className="text-[12px] text-muted-foreground font-semibold tabular-nums">
                 {formatCount(item.comments)}
               </span>
             )}
-          </button>
-          <button
+          </motion.button>
+
+          {/* Share — paper-plane (Send) */}
+          <motion.button
+            whileTap={{ scale: 0.88 }}
             onClick={() => onShare(item.id)}
             aria-label="Share post"
-            className="min-h-[44px] min-w-[36px] sm:min-w-[40px] flex items-center justify-center text-foreground gap-1"
+            className="min-h-[40px] h-10 w-10 inline-flex items-center justify-center rounded-full text-foreground hover:bg-muted/50 transition-all"
           >
-            <Share2 aria-hidden className="h-[22px] w-[22px]" />
-          </button>
+            <Send aria-hidden strokeWidth={2.2} className="h-[21px] w-[21px] -rotate-12" />
+          </motion.button>
         </div>
-        <button
+
+        {/* Save / Bookmark */}
+        <motion.button
+          whileTap={{ scale: 0.88 }}
           onClick={() => onToggleBookmark(item)}
           aria-label={isBookmarked ? "Remove bookmark" : "Save post"}
           aria-pressed={isBookmarked}
-          className="min-h-[44px] min-w-[44px] flex items-center justify-center"
+          className={cn(
+            "min-h-[40px] h-10 w-10 inline-flex items-center justify-center rounded-full transition-all",
+            isBookmarked
+              ? "bg-emerald-500/12 text-emerald-500"
+              : "text-foreground hover:bg-muted/50",
+          )}
         >
-          <Bookmark aria-hidden className={cn("h-[22px] w-[22px] transition-all", isBookmarked ? "text-primary fill-primary" : "text-foreground")} />
-        </button>
+          <Bookmark aria-hidden strokeWidth={2.2} className={cn("h-[22px] w-[22px] transition-transform", isBookmarked && "fill-emerald-500 scale-110")} />
+        </motion.button>
       </div>
 
       {/* View all comments — deep-linkable */}
