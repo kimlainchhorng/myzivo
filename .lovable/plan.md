@@ -1,70 +1,60 @@
-# Story Workflow Audit — what's solid, what's missing
+# Story Reactions & Replies — 5-feature upgrade
 
-## ✅ What already works (verified end-to-end)
+Implements all 5 requested items as one coordinated change to `StoryViewer.tsx` (plus one tiny shared hook for realtime). No DB migration is required — everything reuses existing tables (`story_reactions`, `story_comments`, `direct_messages`).
 
-**Create flow** (`CreateStorySheet.tsx`)
-- Photo / Video / Camera / Text-on-gradient (3-stop premium canvas)
-- Music track picker, real upload progress (XHR), retry, quit-confirm
-- Uploads to `user-stories` bucket → inserts into `stories` → invalidates all caches
+## What you get
 
-**Viewer** (`StoryViewer.tsx`)
-- Fullscreen portal, swipe-down close, tap zones, hold-to-pause, keyboard nav
-- Auto-progress (5s images, video-driven)
-- ZIVO Aurora progress bars + glass header capsule
-- Owner: insights pill + emerald "Boost story" hero + More dot (✅ no longer IG-style)
-- Non-owner: like/comment/share stack, 6-emoji reactor row, reply input
-- Real persistence: `story_views`, `story_comments`, `story_reactions`
-- Owner More sheet: Save / Share link / Delete (with storage sweep)
-- Forward sheet, deep-linking, analytics close-meta
+### 1. Edit / remove your own reaction (instant counts)
+- In the bottom emoji row, your active emoji shows a small **× chip** to clear it in one tap.
+- Tapping a different emoji **switches** your reaction (already supported server-side; UI now confirms it visually with an animated swap).
+- Owner's "Reactions" count in the insights pill + tab badge update **optimistically** so the number changes the instant you tap, then reconciles with the server.
 
-**Entry tiles** — Profile, Feed, Chat all use shared `StoryViewer` ✅
+### 2. Threaded replies under each reaction
+- In the owner's **Reactions tab**, each reactor row gets a "Reply" affordance and a chevron to expand a thread underneath.
+- Threads use the existing `story_comments` table with a content convention: `[react:<reactionId>] body` (no schema change). The viewer parses & groups them under the matching reaction.
+- Both the **story owner** AND the **original reactor** can post into a thread. Other viewers don't see other people's threads.
+- Renders inline with avatar + relative time; auto-scrolls to newest.
 
----
+### 3. Tap-to-react quick picker (no leaving screen)
+- Adds a `+` chip at the end of the 6-emoji row (non-owner). Tapping it (or long-pressing any emoji) opens a **floating glass picker** above the row with a 24-emoji palette: 😍🥹🤩😎😭🤣👏🙌💯🔥✨💖🥳😱😤🫶🤝👀🌟⚡🎉🍿🤔🙏
+- Picking one fires the same `reactToStory` mutation, animates a burst, and closes the picker.
+- Tapping outside or the close icon dismisses without sending.
 
-## ❌ What's still missing (the gaps that make it feel incomplete)
+### 4. Live updates (Supabase realtime)
+- New hook `useStoryRealtime(storyId)` opens a Supabase channel subscribing to `story_reactions` and `story_comments` filtered to the active story.
+- On any INSERT / UPDATE / DELETE event, it invalidates the four query keys (`story-reactions-list`, `story-my-reaction`, `story-comments`, `story-viewers`) so the owner sees new reactions, removed reactions, and new threaded replies in real time without a refresh.
+- Channel is cleaned up automatically when the viewer unmounts or the story changes.
 
-### 1. Owner can't see WHO reacted (only viewers)
-Today the viewers sheet shows views, but story_reactions are invisible to the owner. Add a **"Reactions" tab** to the viewers sheet showing emoji + reactor name + when. This is what makes stories feel alive on real platforms.
+### 5. DM-style story replies (no more orphan comments)
+- The non-owner reply input at the bottom of the viewer **no longer writes to `story_comments`** for free-text replies.
+- Pressing Send (or Enter) inserts a row into `direct_messages` with:
+  - `sender_id` = current user
+  - `receiver_id` = story owner
+  - `message` = `"💬 Replied to your story\n<typed text>\n<deep-link to the story>"`
+  - `message_type = "text"`
+- Toast: **"Reply sent — open chat to continue"** with a tappable action that navigates to `/chat`.
+- Threaded reactions (item 2) still use `story_comments` because they live inside the story-insights surface, not the inbox.
 
-### 2. No DM replies — text replies vanish into `story_comments`
-When a non-owner types a reply, it goes into `story_comments` (visible only inside viewer). Real story replies should land as a **chat message** in the owner's inbox with a story-thumbnail attachment ("replied to your story"). Wire reply input → `messages` table with `story_reply_id` reference.
+## Files touched
 
-### 3. No mute/hide-from-feed for individual users
-Long-press on a friend's ring should offer **"Mute [name]'s stories"** (hides them from your ring without unfollowing). Persist in a new `story_mutes` table; filter in `useQuery` for ring carousels.
+| File | Change |
+|---|---|
+| `src/components/stories/StoryViewer.tsx` | All 5 features wired in (state, mutations, UI for picker + thread + DM reply) |
+| `src/hooks/useStoryRealtime.ts` (new) | Tiny hook: subscribes to reactions/comments channels, invalidates queries on change |
 
-### 4. No "Close Friends" / audience selector on create
-ZIVO has follow/friendship system but stories are public to everyone. Add an **audience picker** at publish time: Public / Friends only / Close Friends (custom list). Add `audience` enum + `close_friends` table; enforce in RLS.
+## Technical notes
 
-### 5. No Highlights (saved past stories)
-Stories expire at 24h. Real differentiation = **Highlights** — owner can pin expired stories to a profile section ("Travel", "Food"). New `story_highlights` table, profile-page row of highlight covers, viewer reuses StoryViewer.
+- **No DB migration needed.** Realtime works on existing tables; thread parent-id is encoded in `content` prefix (cleanly stripped before display).
+- **RLS unchanged.** `direct_messages` already accepts inserts where `sender_id = auth.uid()`. `story_comments` policy already restricts who can write.
+- **Optimistic updates** use `queryClient.setQueryData` for the reactor's own row so taps feel instant; realtime then reconciles for the owner.
+- Quick picker is rendered inside the existing portal overlay — no new portal/z-index conflicts.
 
-### 6. No screenshot / download notification to owner
-For private stories (Friends/Close Friends), owner should be **notified when someone screenshots or downloads**. Hook into the More-sheet "Save to device" path → insert a `story_alerts` row → push notification to owner.
+## Build order (single pass)
+1. Add `useStoryRealtime.ts` hook.
+2. Wire it inside `StoryViewer` next to existing queries.
+3. Replace non-owner reply input handler → `direct_messages` insert + navigate-to-chat toast.
+4. Add `+` quick-pick chip and floating picker overlay.
+5. Add per-reactor "Reply" + chevron + thread renderer in Reactions tab.
+6. Add active-emoji × clear button + optimistic count update.
 
----
-
-## 🛠️ Technical changes (per gap)
-
-| # | DB / API | Component touch | Effort |
-|---|---|---|---|
-| 1 | Read existing `story_reactions` | `StoryViewer` viewers sheet → tabs | S |
-| 2 | New: link in `messages` (`story_reply_id` uuid nullable, RLS) | `StoryViewer` reply input handler | M |
-| 3 | New table `story_mutes(user_id, muted_user_id)` + RLS | `ProfileStories` + `FeedStoryRing` long-press menu, query filter | M |
-| 4 | New: `stories.audience` enum, `close_friends(user_id, friend_user_id)`, update RLS on `stories` | `CreateStorySheet` audience step before publish | M |
-| 5 | New table `story_highlights(id, user_id, title, cover_url, story_ids[])` + RLS | New `ProfileHighlights.tsx` row on `/profile`; reuse `StoryViewer` | L |
-| 6 | New table `story_alerts(story_id, actor_id, type)` + push trigger | Hook into More-sheet save + add browser screenshot listener (best-effort) | M |
-
-All new tables follow ZIVO RLS pattern: owner-write, owner-read for alerts/views; participants-only for reply messages. No client-side role checks.
-
----
-
-## 📋 Recommended build order
-
-1. **Reactions tab in viewers sheet** (quick win, uses existing data)
-2. **DM-style replies** (kills the orphan story_comments confusion)
-3. **Audience selector + Close Friends** (privacy = trust)
-4. **Mute friend's stories** (table-stakes feedback control)
-5. **Highlights row on profile** (the big differentiator)
-6. **Screenshot/download alerts** (premium polish)
-
-Each step is independently shippable. Approve and I'll start with #1, then continue down the list — or pick a subset (e.g. "just 1, 2, 5") and I'll scope to that.
+Ready to ship as one approved change.
