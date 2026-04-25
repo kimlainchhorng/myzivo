@@ -481,12 +481,12 @@ const Profile = () => {
           <ArrowLeft className="h-5 w-5 text-foreground" />
         </button>
         <Avatar className="h-8 w-8 ring-1 ring-border/60">
-          <AvatarImage src={profile?.avatar_url || undefined} alt={profile?.display_name || "Profile"} />
+          <AvatarImage src={profile?.avatar_url || undefined} alt={profile?.full_name || "Profile"} />
           <AvatarFallback className="text-xs">{getInitials()}</AvatarFallback>
         </Avatar>
         <div className="flex items-center gap-1 min-w-0 flex-1">
           <span className="font-semibold text-sm text-foreground truncate">
-            {profile?.display_name || "Profile"}
+            {profile?.full_name || "Profile"}
           </span>
           {profile?.is_verified && <VerifiedBadge size={14} />}
         </div>
