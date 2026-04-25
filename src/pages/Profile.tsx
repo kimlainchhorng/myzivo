@@ -22,6 +22,7 @@ import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sh
 import { useAuth } from "@/contexts/AuthContext";
 import { useUserProfile, useUpdateUserProfile, useUploadAvatar } from "@/hooks/useUserProfile";
 import { useMerchantRole } from "@/hooks/useMerchantRole";
+import { useOwnerStoreProfile } from "@/hooks/useOwnerStoreProfile";
 import { useAffiliateAttribution } from "@/hooks/useAffiliateAttribution";
 import { useZivoPlus } from "@/contexts/ZivoPlusContext";
 import { MERCHANT_APP_URL } from "@/lib/eatsTables";
@@ -148,6 +149,7 @@ const Profile = () => {
   const { user, isAdmin } = useAuth();
   const { data: profile, isLoading: profileLoading } = useUserProfile();
   const { data: merchantData } = useMerchantRole();
+  const { data: ownerStore, isLoading: ownerStoreLoading } = useOwnerStoreProfile();
   const { unreadCount: notifUnreadCount, notifications, isLoading: notifLoading, markAsRead, markAllAsRead } = useNotifications(20);
   const { data: latestVerificationRequest } = useQuery({
     queryKey: ["verification-request", user?.id, "latest"],
@@ -343,6 +345,27 @@ const Profile = () => {
     if (typeof window === "undefined") return "personal";
     return localStorage.getItem("zivo:active_mode") || "personal";
   });
+
+  const getShopDashboardPath = useCallback(() => {
+    if (!ownerStore?.id) return "/shop-dashboard";
+    return ownerStore.isLodging
+      ? `/admin/stores/${ownerStore.id}?tab=lodge-overview`
+      : `/admin/stores/${ownerStore.id}`;
+  }, [ownerStore]);
+
+  const openShopDashboard = useCallback(() => {
+    selectionChanged();
+    if (!user) {
+      toast.info("Sign in to open Shop Dashboard");
+      navigate("/login?redirect=/shop-dashboard");
+      return;
+    }
+    if (ownerStoreLoading) {
+      toast.info("Loading your shop dashboard");
+      return;
+    }
+    navigate(getShopDashboardPath());
+  }, [getShopDashboardPath, navigate, ownerStoreLoading, selectionChanged, user]);
 
   // Load real friendship status, friend count & follower count
   useEffect(() => {
@@ -1170,7 +1193,7 @@ const Profile = () => {
                           shortcuts: Shop, Employees, Mode switch, Monetization. */}
                       <div className="lg:hidden mt-3 grid grid-cols-4 gap-2">
                         {[
-                          { label: "Shop", icon: Store, onClick: () => { selectionChanged(); if (!user) { toast.info("Sign in to open Shop Dashboard"); navigate("/login?redirect=/shop-dashboard"); return; } navigate("/shop-dashboard"); } },
+                          { label: "Shop", icon: Store, onClick: openShopDashboard },
                           { label: "Employees", icon: Users, onClick: () => { selectionChanged(); if (!user) { toast.info("Sign in to manage employees"); navigate("/login?redirect=/shop-dashboard/employees"); return; } navigate("/shop-dashboard/employees"); } },
                           { label: "Mode", icon: Repeat, onClick: () => { selectionChanged(); setModeOpen(true); } },
                           { label: "Monetization", icon: DollarSign, onClick: () => { selectionChanged(); navigate("/monetization"); } },
@@ -1330,7 +1353,7 @@ const Profile = () => {
               { id: "personal", label: "Personal", desc: "Your everyday account", icon: UserIcon, route: "/profile" },
               { id: "business", label: "Business", desc: "Manage company travel & teams", icon: Briefcase, route: "/business" },
               { id: "driver", label: "Driver", desc: "Go online and accept rides", icon: Car, route: "/driver" },
-              { id: "shop", label: "Shop Partner", desc: "Open your store dashboard", icon: Store, route: "/shop-dashboard" },
+              { id: "shop", label: "Shop Partner", desc: "Open your store dashboard", icon: Store, route: getShopDashboardPath() },
             ].map((m) => {
               const active = activeMode === m.id;
               const Icon = m.icon;
@@ -1343,7 +1366,8 @@ const Profile = () => {
                     try { localStorage.setItem("zivo:active_mode", m.id); } catch {}
                     toast.success(`Switched to ${m.label} mode`);
                     setModeOpen(false);
-                    if (m.route && m.id !== "personal") navigate(m.route);
+                    if (m.id === "shop") openShopDashboard();
+                    else if (m.route && m.id !== "personal") navigate(m.route);
                   }}
                   className={`flex items-center gap-3 rounded-2xl border px-3 py-3 text-left transition-all active:scale-[0.99] ${
                     active ? "border-primary/60 bg-primary/5" : "border-border/50 bg-muted/25 hover:bg-muted/50"
