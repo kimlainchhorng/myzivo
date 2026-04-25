@@ -338,6 +338,11 @@ const Profile = () => {
   const [followingCount, setFollowingCount] = useState(0);
   const [socialModal, setSocialModal] = useState<{ open: boolean; tab: "friends" | "followers" | "following" }>({ open: false, tab: "friends" });
   const [shareOpen, setShareOpen] = useState(false);
+  const [modeOpen, setModeOpen] = useState(false);
+  const [activeMode, setActiveMode] = useState<string>(() => {
+    if (typeof window === "undefined") return "personal";
+    return localStorage.getItem("zivo:active_mode") || "personal";
+  });
 
   // Load real friendship status, friend count & follower count
   useEffect(() => {
