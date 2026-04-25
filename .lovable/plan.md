@@ -1,53 +1,71 @@
-## Fixes & follow-ups for Like / Comment / Share / Save
+## Engagement tracking polish + in-app analytics view
 
-Based on the screenshot error and your QA list.
+### 1. Client-side dedupe in `track()`
 
-### 1. Fix "duplicate key value violates unique constraint post_likes_post_id_user_id_key"
+In `src/lib/analytics.ts`, add a small in-memory dedupe map keyed by `event_name + post_id` (when present) with a configurable TTL window (default **1500 ms**, override via `dedupeMs` in props). Repeated taps within the window are dropped before insert. The map is cleaned lazily.
 
-Cause: in `handleLikeToggle` (ProfileContentTabs.tsx), the optimistic UI flips `likedPosts` first, then sends an `insert`. If the row already exists in DB (stale hydration, fast double-tap, or another tab), the insert collides with the unique `(post_id, user_id)` constraint and Supabase throws → toast error → state rolls back to "unliked", confusing the user.
+```text
+track("post_liked", { post_id, dedupeMs: 1500 })  // first tap inserts
+track("post_liked", { post_id })                  // dropped (within window)
+```
 
-Fix:
-- Treat Postgres error code `23505` (unique_violation) as **success-no-op** — desired end state already reached.
-- Same idea for delete: if no row matched, that's also a success-no-op.
-- Keep the optimistic UI exactly as it is now.
+This is purely client-side — server queries stay clean even if the network retries.
 
-### 2. Add engagement tracking
+### 2. Share funnel events
 
-Use the existing `track()` helper in `src/lib/analytics.ts` (already writes to the `analytics_events` table with `event_id` dedupe + offline queue). Fire one event per action with a consistent shape:
+Replace the single `post_share_opened` with four events so you can measure drop-off:
 
-| Event | Fired in | Payload |
-|---|---|---|
-| `post_liked` | handleLikeToggle (insert path) | `{ post_id, author_id, surface: "profile_feed" }` |
-| `post_unliked` | handleLikeToggle (delete path) | `{ post_id, author_id, surface: "profile_feed" }` |
-| `post_comment_opened` | openComments | `{ post_id, author_id }` |
-| `post_comment_added` | onCommentsCountChange when count rises | `{ post_id, author_id, total: count }` |
-| `post_share_opened` | onShare | `{ post_id, author_id }` |
-| `post_bookmarked` / `post_unbookmarked` | handleBookmarkToggle | `{ post_id, author_id }` |
+| Event | Where |
+|---|---|
+| `share_button_tapped` | `onShare` in ProfileContentTabs / ProfileFeedCard |
+| `share_sheet_opened` | `UnifiedShareSheet` mount effect |
+| `share_completed` | success callbacks: copy-link, native share, channel click |
+| `share_failed` | catch blocks in those same handlers, with `reason` |
 
-These flow into `analytics_events` and you can already group by `event_name` + `properties->>post_id` and `date_trunc('day', created_at)` for per-post / per-day metrics.
+All carry `{ post_id, author_id, surface, channel? }`.
 
-### 3. Validate share sheet
+### 3. Local-timezone date filter for analytics queries
 
-`UnifiedShareSheet` (already used) calls `onClose` for cancel + after copy/native-share success — `setSharePostId(null)` dismisses cleanly. No code change needed; will confirm by tap-test after rebuild. If a residual issue appears we can add a defensive `key={sharePostId}` to force remount.
+Add a small helper `src/lib/analytics/dateBuckets.ts` that returns `{ since, until, tzOffsetMinutes }` for "today", "this week", "this month" anchored to the **device's local timezone** (uses `Intl.DateTimeFormat().resolvedOptions().timeZone` and `getTimezoneOffset()`). The query then filters `created_at >= since && < until`, and the SQL groups by `date_trunc('day', created_at AT TIME ZONE $tz)` so the daily buckets line up with what the user sees on their phone.
 
-### 4. Comment count via `onCommentsCountChange`
+### 4. In-app "Top posts" analytics view
 
-Already wired in the previous turn — the `feed[item].comments` updates in place when `usePostComments` reports a new total (covers both add and delete).
+Extend `src/pages/account/AccountAnalyticsPage.tsx` with a new **"Top Posts"** section below the existing metric cards:
 
-### 5. New action row QA (iOS / Android safe-area + a11y)
+- Tabs: **Today / This week** (defaults to Today, uses helper from step 3).
+- Sub-tabs: **Likes / Comments / Shares / Saves**.
+- Pulls aggregated counts from `analytics_events` filtered to the four engagement events for posts authored by the current user, grouped by `post_id`, ordered desc, top 10.
+- Each row: thumbnail (`user_posts.media_url`), short caption, count, sparkline-free (kept lightweight).
+- Uses TanStack Query with 60s stale time.
+- Empty state: "No engagement yet today — share a post to get started."
 
-Already passes — h-10 = 40px which is below the 44pt iOS minimum. Bump tap targets to `min-h-[44px]` to match Apple's HIG and Android Material guidance, while keeping the visual chip the same size by using inner padding. Add `focus-visible:ring-2 ring-primary/40` for keyboard a11y.
+No DB schema changes — `analytics_events.meta->>'post_id'` is already populated by step 2 of the prior turn. We'll add a covering index recommendation as a comment but no migration needed (Supabase auto-indexes JSONB GIN by default isn't on, but volume is low enough for now).
 
-### 6. Like persistence verified after refresh
+### 5. Automated tracking-payload tests
 
-`useEffect` hydrating `likedPosts` from `post_likes` was added in the previous turn — heart starts filled on reload for posts the user liked. With (1) above, repeat taps no longer error.
+Add `src/lib/analytics/__tests__/track.test.ts` (Vitest, already in repo):
+
+- Mocks the supabase client `.from("analytics_events").insert()` and asserts the payload for each call.
+- For each user-visible action (like, unlike, comment open, comment add, share tap, share open, share complete, bookmark, unbookmark) it imports the actual handler, fires it with a fixture post, and verifies the captured insert has:
+  - correct `event_name`
+  - `meta.post_id` present and equals fixture id
+  - `meta.surface === "profile_feed"`
+  - `meta.event_id` is a UUID
+- A second describe-block covers dedupe: two rapid `track()` calls with same key insert once.
+
+These run in CI on every push and cover both iOS and Android because they exercise the platform-agnostic `track()` core (the UI shells just call the same handler).
 
 ## Files
 
-- `src/components/profile/ProfileContentTabs.tsx` — make like insert/delete idempotent (treat 23505 / 0 rows as success); add `track()` calls for like/unlike/comment open/comment added/share/bookmark.
-- `src/components/profile/ProfileFeedCard.tsx` — bump button heights to `min-h-[44px]`, add `focus-visible` ring.
+- `src/lib/analytics.ts` — add dedupe map + `dedupeMs` prop.
+- `src/lib/analytics/dateBuckets.ts` (new) — local-tz "today" / "this week" range helpers.
+- `src/components/profile/ProfileContentTabs.tsx` — split share into `share_button_tapped`; pass `surface` consistently.
+- `src/components/shared/ShareSheet.tsx` (UnifiedShareSheet) — emit `share_sheet_opened`, `share_completed`, `share_failed`.
+- `src/pages/account/AccountAnalyticsPage.tsx` — add Top Posts panel with Today/Week + Likes/Comments/Shares/Saves tabs.
+- `src/lib/analytics/__tests__/track.test.ts` (new) — payload + dedupe tests.
 
 ## Out of scope
 
-- No DB schema changes. Existing `analytics_events`, `post_likes`, `post_comments`, `bookmarks` tables are sufficient.
-- No new dashboard UI; raw events land in `analytics_events` for query.
+- No DB migrations.
+- No native (Capacitor) plugin work — tracking remains pure JS, so iOS/Android share the same code path.
+- No new charts/sparkline libs; keep bundle size flat.
