@@ -7,6 +7,7 @@
  */
 import { lazy, Suspense, useState } from "react";
 import Plus from "lucide-react/dist/esm/icons/plus";
+import Sparkles from "lucide-react/dist/esm/icons/sparkles";
 import Camera from "lucide-react/dist/esm/icons/camera";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
@@ -135,9 +136,13 @@ export default function ChatStories() {
                 onClick={(e) => { e.stopPropagation(); setShowCreate(true); }}
                 role="button"
                 aria-label="Add story"
-                className="absolute -bottom-0.5 -right-0.5 h-[22px] w-[22px] rounded-full bg-foreground flex items-center justify-center border-[2.5px] border-background"
+                className="absolute -bottom-0.5 -right-0.5 h-[22px] w-[22px] rounded-full bg-gradient-to-br from-[hsl(160_84%_45%)] to-[hsl(174_72%_40%)] flex items-center justify-center border-[2.5px] border-background shadow-[0_2px_6px_-1px_hsl(160_84%_45%/0.6)]"
               >
-                <Plus className="w-3 h-3 text-background" strokeWidth={3} />
+                {hasMyStory ? (
+                  <Sparkles className="w-3 h-3 text-white" strokeWidth={2.5} />
+                ) : (
+                  <Plus className="w-3 h-3 text-white" strokeWidth={3} />
+                )}
               </span>
             </div>
             <span className="text-[11px] text-foreground font-medium max-w-[68px] truncate">
