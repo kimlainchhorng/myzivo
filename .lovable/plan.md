@@ -1,80 +1,154 @@
 ## Goal
 
-Make all 10 `BusinessPageWizard` component tests pass reliably, eliminate `act()` warnings, harden the leave-guard (no infinite loop, no prompt after completion), and surface an inline "Unsaved changes" indicator in the wizard header so users can see when leaving will warn them.
+A multi-phase platform upgrade across **all** ZIVO shop dashboards (Restaurant, Grocery/Store, Cafe, Retail, Service, Truck/Mobility, Generic Business) plus the underlying database, edge-function API, and end-to-end performance — both web and app. Each phase ships independently. Breaking schema/API changes are allowed, with migration scripts and a versioned API surface.
+
+> Scope is large (~161 edge functions, ~40+ dashboards). This plan is the **roadmap**. After approval, each phase becomes its own implementation request so we can review and ship in safe slices.
 
 ---
 
-## Changes
+## Phase 0 — Audit & guardrails (1 short request)
 
-### 1. `src/pages/business/BusinessPageWizard.tsx`
+Before touching anything:
 
-**a) Wrap async resume + baseline effects to be test-friendly**
-- The two `useEffect`s that run async work (resume from `store_profiles` and the baseline `setTimeout`) currently fire setStates outside any user-driven action, which is what's producing the `act()` warnings and the timing flakiness. Restructure:
-  - Move the baseline-setting from a `setTimeout(…, 0)` into a `useEffect` that runs **synchronously** once `checking === false` AND the prefill effect has had a chance to run. Use a `useLayoutEffect` (or a `useEffect` with no timer) keyed on `[checking, profile?.id, user?.id]` to set `baselineRef.current = JSON.stringify(snapshot)` and `setBaselineReady(true)` in one tick.
-  - This removes the artificial 5ms wait the tests need and removes the `setTimeout`-induced act warnings.
+1. **DB inventory** — run a script that dumps, per public table: row count, table+index size, sequential-scan ratio (`pg_stat_user_tables`), missing indexes (foreign keys without index, columns frequently in `WHERE`), tables without RLS, RLS policies referencing the same table (recursion risk).
+2. **Edge function inventory** — categorize all 161 functions by: caller (client / cron / webhook), auth strategy (JWT-verified vs service-role), CORS hygiene, input validation present (Zod or none), shared module usage. Output a CSV at `/mnt/documents/edge-fn-audit.csv`.
+3. **Dashboard inventory** — list every dashboard page, its data sources, and current queries. Output `/mnt/documents/dashboard-inventory.md`.
+4. **Performance baseline** — Lighthouse + bundle analyzer numbers for: marketing pages, app shell, each dashboard. Saved as a baseline to compare after each phase.
 
-**b) Save & exit on step 1 with empty form**
-- Currently the Save & exit button is disabled when `step === 1 && !canContinue()`. The test "persists progress and navigates to /account on Save & exit" fills only basics (which makes step 1 valid), so this should already pass — but only after the baseline timing fix. Keep the disabled rule (correct UX) and update the test (see test changes) to ensure step-1 fields are valid before clicking.
-- Make `saveAndExit` call `persist({ persistProfile: false })` when `step < 3` and not gate on `canContinue()` for steps ≥ 2.
-
-**c) Guard hardening — prevent infinite popstate loop**
-- Add `isLeavingRef` early-out at the **top** of the popstate handler (already present) AND set `isLeavingRef.current = true` synchronously inside `confirmLeave` **before** removing the listener via the effect's `armed` flag.
-- Move sentinel push to only happen the first time the guard arms; on re-arm (after Stay), don't double-push.
-- After `confirmLeave` and after `handleComplete` succeeds, also call a small `disarmGuard()` helper that clears the listener immediately (so the next `popstate` does nothing). This matches what the "Leave navigates exactly once" and "completion disarms guard" tests assert.
-
-**d) Inline "Unsaved changes" indicator**
-- In the header (next to the "Step X of 5" line), conditionally render a small chip when `isDirty` is true:
-  ```tsx
-  {isDirty && (
-    <span className="inline-flex items-center gap-1 rounded-full bg-amber-500/10 px-2 py-0.5 text-[10px] font-semibold text-amber-600">
-      <span className="h-1.5 w-1.5 rounded-full bg-amber-500" />
-      Unsaved changes
-    </span>
-  )}
-  ```
-- Hidden once the form matches baseline (e.g. right after a successful auto-save) or after completion.
-
-**e) Don't prompt after final step**
-- `completedRef.current = true` is already set at the top of `handleComplete`. Also set it the moment the user clicks "Go to dashboard" / Skip on step 5 → confirmed by the existing logic. Verify the popstate handler bails when `completedRef.current` is true (it does). No additional change required beyond ensuring `isDirty` returns false when `completedRef.current` is true (already the case).
+Deliverable: 3 audit files in `/mnt/documents/`. No code changes.
 
 ---
 
-### 2. `src/pages/business/BusinessPageWizard.test.tsx`
+## Phase 1 — Database restructure (foundation)
 
-**a) Replace the 5ms timer waits with `findBy*` queries**
-- Remove `await act(async () => { await new Promise((r) => setTimeout(r, 5)); });` lines.
-- Instead, in `waitReady()`, after asserting "business basics" is visible, wait for the baseline to be ready by waiting for an element that depends on it — e.g. `await waitFor(() => expect(screen.getByLabelText(/full business name/i)).toBeEnabled())` — or expose a `data-baseline-ready` attribute on the form root and `await screen.findByTestId('wizard-form[data-baseline-ready="true"]')`.
+### 1a. Schema cleanup migration
+- Consolidate overlapping tables (e.g. `store_profiles` + `restaurants` overlap revealed by the wizard work — unify under `store_profiles` with `category`-driven extensions in a `restaurant_settings` child table).
+- Move all role checks to the `user_roles` + `has_role()` pattern (audit any role columns still on `profiles`).
+- Drop unused/empty tables flagged in the audit (with a one-week soft-deprecation window: rename to `_deprecated_` first, drop in Phase 1c).
+- Standardize timestamp columns (`created_at`, `updated_at` with trigger-driven `updated_at`).
 
-**b) Save & exit test — make persist trigger reliably**
-- After `await fillBasics()`, also fire-change to ensure the React state has flushed before clicking Back. Use `await waitFor(() => expect(screen.getByRole('button', { name: /save & exit/i })).toBeEnabled())` before the click.
-- This guarantees step-1 validity → button enabled → `persist` fires.
+### 1b. Indexes & partitioning
+- Add covering indexes on all FK columns missing them.
+- Composite indexes for the top 20 hot queries (orders by store + status + date, messages by chat + created_at, etc.).
+- Partition large append-only tables by month: `orders`, `messages`, `notifications`, `analytics_events`, `audit_logs`.
+- Add `BRIN` indexes on partitioned timestamp columns.
 
-**c) New test: leave dialog does NOT appear after final step (popstate after completion)**
-- Already covered by the "completion disarms guard" test. Strengthen it: also fire a header back click after completion and assert `screen.queryByText(/leave business setup/i)` is null.
+### 1c. RLS hardening
+- Replace any inline `SELECT … FROM same_table` policies with `SECURITY DEFINER` helper functions (recursion risk).
+- For every table with RLS enabled, ensure all four operations (SELECT/INSERT/UPDATE/DELETE) have an explicit policy or an explicit "deny all" comment.
+- Add a tested `is_store_owner(_store_id)` and `is_store_staff(_store_id, _role)` helper to centralize dashboard authorization.
 
-**d) New test: rapid repeated popstate doesn't cause infinite loop**
-- After `fillBasics()`, dispatch 3 consecutive `popstate` events in `act(...)` and assert only **one** dialog is open and `navigateSpy` was not called. Then click Leave and dispatch another popstate; assert dialog stays closed and navigate count is exactly 1.
+### 1d. Data archival
+- Move rows older than 18 months from hot tables (`messages`, `notifications`, `analytics_events`) into `_archive` schema tables. Read paths fall back to UNION when needed.
 
-**e) New test: "Unsaved changes" chip visibility**
-- On render: assert chip is NOT in the document.
-- After `fillBasics()`: assert `screen.findByText(/unsaved changes/i)` resolves.
-- After clicking Continue (which auto-saves and updates baseline): assert the chip disappears via `waitFor(() => expect(screen.queryByText(/unsaved changes/i)).not.toBeInTheDocument())`.
-
-**f) Wrap any remaining state-causing dispatches in `act`**
-- Already used for `popstate`. Ensure all `fireEvent.click` on buttons that fire async `persist` are awaited via `await waitFor(...)` for the post-condition rather than fixed timers.
-
----
-
-### 3. Run and iterate
-
-- Run `bunx vitest run src/pages/business/BusinessPageWizard.test.tsx src/pages/business/wizardPersistence.test.ts`.
-- Confirm all 10+ component tests + 10 persistence tests pass and no `act()` warnings appear.
+Deliverables: SQL migrations + updated `types.ts` (auto-regenerated) + RLS policy doc.
 
 ---
 
-## Files
+## Phase 2 — API / Edge Function modernization
 
-- `src/pages/business/BusinessPageWizard.tsx` — baseline-effect fix, guard disarm helper, inline "Unsaved changes" chip in header.
-- `src/pages/business/BusinessPageWizard.test.tsx` — remove sleep-based waits, add chip visibility test, add infinite-loop test, harden Save & exit test.
+### 2a. Shared toolkit (`supabase/functions/_shared/`)
+- `cors.ts` — single source of CORS headers.
+- `validate.ts` — Zod helpers + standard 400 envelope `{ error: { code, message, fields } }`.
+- `auth.ts` — `requireUser(req)`, `requireStoreOwner(req, storeId)`, `requireRole(req, role)`.
+- `rateLimit.ts` — Redis-backed (Upstash) limiter with in-memory fallback.
+- `gateway.ts` — typed wrapper for connector-gateway calls (`LOVABLE_API_KEY` + connection key headers).
+- `logger.ts` — structured JSON logging with request_id propagation.
 
-No new files. No schema changes.
+### 2b. Versioning
+- Group functions by domain (`v2-orders-*`, `v2-shop-*`, `v2-payments-*`).
+- Old `v1` endpoints stay alive but log a deprecation warning header `X-Deprecated: true` and an EOL date.
+
+### 2c. Refactor critical functions
+Top-10 traffic functions (from edge logs) get rewritten on the new toolkit first:
+- order placement, payment capture, dispatch matching, push send, search, chat send, notification fanout, analytics ingest, cron summarizers, OTP send.
+Each gains: Zod validation, rate limit, structured logs, JWT verification, unit tests with `Deno.test`.
+
+### 2d. Webhooks reliability
+- All inbound webhooks (Stripe, Twilio, Duffel) get an `inbound_webhook_events` table with idempotency-key dedup + replay endpoint for support.
+
+Deliverables: new `_shared/` modules, ~10 refactored functions per sub-phase, deprecation log in `mem://`.
+
+---
+
+## Phase 3 — Speed / Performance
+
+### 3a. Frontend bundle
+- Convert remaining eager imports to `lazy()` route splits — target every page > 30KB gzipped.
+- Add `vite-plugin-compression` (brotli) and ensure published host serves `br`.
+- Replace heavy deps where possible (audit `moment`, full-icon imports, etc.).
+- Image pipeline: switch all `<img>` to a `<SmartImage>` component that emits `srcSet` from Supabase Storage transform URLs (`?width=…&quality=…&format=webp`).
+
+### 3b. Data fetching
+- Standardize on TanStack Query with shared `staleTime` defaults (lists: 30s, details: 5m, configs: 1h).
+- Add `prefetchQuery` on hover for primary nav links.
+- Realtime subscriptions: dedupe via a single `useRealtimeChannel(channel)` hook to stop the N-tab fanout.
+
+### 3c. Backend hot paths
+- Materialized view `mv_store_dashboard_stats` (orders today / 7d / 30d, revenue, top items, avg prep time) refreshed every 60s by a cron edge function. Dashboard SELECTs hit the MV instead of recomputing.
+- Add `EXPLAIN ANALYZE`-based fixes for the slowest 20 queries surfaced by `pg_stat_statements`.
+
+### 3d. CDN & caching
+- Cache `GET` responses for public read endpoints with `Cache-Control: s-maxage=…` headers + ETag support.
+
+Targets: **LCP < 2.5s on 4G** (public/marketing) and **dashboard tab switches < 800ms p95**.
+
+---
+
+## Phase 4 — Unified Shop Dashboard shell + per-vertical workflows
+
+### 4a. Shared `<DashboardShell>`
+- Single layout: collapsible sidebar (desktop) / bottom tab bar (mobile), command palette (`Cmd+K`), global notification tray, store switcher (for owners with multiple stores), real-time presence dot.
+- Per-vertical config object drives nav items, actions, and KPI cards — so all six dashboards reuse the same shell.
+
+### 4b. Per-vertical screens (each ships as its own request)
+1. **Restaurant** (`EatsRestaurantDashboard`): live order rail (KDS-style), menu manager with bulk price edit, prep-time tracker, table/QR ordering, daily close summary.
+2. **Grocery / Store** (`StoreDashboard`): inventory with low-stock alerts + CSV import, picker assignments, shelf labels print, real-time order picking screen.
+3. **Cafe**: simplified Restaurant variant — quick-tap menu, loyalty stamp manager.
+4. **Retail**: catalog manager, variant matrix, barcode scanner (web BarcodeDetector + native plugin), POS-lite session.
+5. **Service** (bookings): calendar week view, staff/resource scheduler, service-add-on builder, deposit collection.
+6. **Truck / Mobility**: live driver map, dispatch board, surge controls, payout summary.
+7. **Generic Business**: lightweight CRM + simple "products / services / hours / messages" tabs (fallback dashboard).
+
+Each vertical shares: orders table, customer drawer, messaging panel, analytics card, settings modal.
+
+### 4c. Cross-cutting workflow upgrades
+- **Bulk actions** everywhere lists exist (accept/reject N orders, bulk price edit, bulk message customers).
+- **Saved views** per dashboard (filters + columns persist to `user_dashboard_views` table).
+- **Inline editing** in tables (no modal round-trip for trivial edits).
+- **Export to CSV/PDF** on every list.
+- **Activity log drawer** per entity (who changed what, when).
+- **Empty/loading/error states** standardized via `<DataState>` component.
+
+---
+
+## Phase 5 — Software / Tooling
+
+- **Testing**: extend Vitest suites to every refactored page; add Playwright smoke tests for the critical flow per vertical.
+- **CI**: lint + typecheck + test on every push (already partially in place — verify and harden).
+- **Feature flags**: lightweight `feature_flags` table + `useFlag('flag_name')` hook so each Phase-4 dashboard can roll out behind a switch.
+- **Error monitoring**: Sentry-style capture in `_shared/logger.ts` + a frontend `ErrorBoundary` per route group.
+- **Docs**: living `/docs` route inside the admin area auto-generated from edge-function Zod schemas.
+
+---
+
+## Suggested order & estimated requests
+
+| Phase | What ships | Approx. requests |
+|---|---|---|
+| 0 | Audit files in `/mnt/documents/` | 1 |
+| 1a–d | DB restructure + RLS + archival | 3–4 |
+| 2a–d | API toolkit + 10-fn refactor + webhook log | 3 |
+| 3a–d | Bundle + data fetching + MV + CDN | 2–3 |
+| 4a | Shared DashboardShell | 1 |
+| 4b | One vertical per request | 7 |
+| 4c | Cross-cutting workflow upgrades | 2 |
+| 5 | Tests + flags + monitoring + docs | 2 |
+
+Total: ~22–24 focused requests. Each is independently shippable and reversible.
+
+---
+
+## What I need from you to start Phase 0
+
+Just say "go" and I'll run the audit (read-only DB queries + filesystem scan) and produce the three audit files. From there, you pick which phase to attack next based on what the audit surfaces.
