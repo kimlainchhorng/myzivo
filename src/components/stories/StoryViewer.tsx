@@ -338,7 +338,7 @@ export default function StoryViewer({
     setShowForward(true);
   }, [currentStory]);
 
-  // ---- Post comment ----
+  // ---- Post comment (used for threaded replies under reactions) ----
   const postComment = useMutation({
     mutationFn: async (content: string) => {
       const { error } = await supabase.from("story_comments" as any).insert({
@@ -351,14 +351,47 @@ export default function StoryViewer({
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["story-comments", currentStory?.id] });
       setCommentText("");
+      setThreadDraft("");
     },
     onError: (err: any) => {
       if (err?.message?.includes("violates row-level security")) {
-        toast.error("Only friends can comment on this story");
+        toast.error("Only the story owner or original reactor can reply here");
       } else {
-        toast.error("Failed to post comment");
+        toast.error("Failed to post reply");
       }
     },
+  });
+
+  // ---- DM-style story reply (non-owner) — lands in the owner's chat inbox ----
+  const sendDmReply = useMutation({
+    mutationFn: async (text: string) => {
+      if (!currentStory || !viewingGroup || !user) throw new Error("Not ready");
+      const ownerId = viewingGroup.userId;
+      if (ownerId === user.id) throw new Error("Cannot reply to your own story");
+      const deepLink = `${getPublicOrigin()}/stories/${currentStory.id}`;
+      const body = `💬 Replied to your story\n${text}\n${deepLink}`;
+      const { error } = await (supabase as any).from("direct_messages").insert({
+        sender_id: user.id,
+        receiver_id: ownerId,
+        message: body,
+        message_type: "text",
+      });
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      setCommentText("");
+      toast.success("Reply sent", {
+        description: "Continue the conversation in chat.",
+        action: {
+          label: "Open chat",
+          onClick: () => {
+            closeWithMeta();
+            navigate("/chat");
+          },
+        },
+      });
+    },
+    onError: (err: any) => toast.error(err?.message || "Could not send reply"),
   });
 
   // ---- Delete (owner) — also removes media + audio from storage ----
