@@ -48,7 +48,9 @@ vi.mock("./wizardPersistence", () => ({
 
 // Supabase: only resume-query + final completion need to behave.
 let resumeRow: any = null;
-const updateSetupCompleteSpy = vi.fn(async () => ({ error: null }));
+const updateSetupCompleteSpy = vi.fn<(arg: { id: string; payload: any }) => Promise<{ error: null }>>(
+  async () => ({ error: null })
+);
 
 vi.mock("@/integrations/supabase/client", () => {
   return {
