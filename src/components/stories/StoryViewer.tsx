@@ -76,11 +76,11 @@ export default function StoryViewer({ groups, startGroupIndex, startStoryIndex =
   const [viewIdx, setViewIdx] = useState(startStoryIndex);
   const [paused, setPaused] = useState(false);
   const [progress, setProgress] = useState(0);
-  const [liked, setLiked] = useState(false);
   const [showViewers, setShowViewers] = useState(false);
   const [showComments, setShowComments] = useState(false);
   const [commentText, setCommentText] = useState("");
   const [muted, setMuted] = useState(true);
+  const [reactionBurst, setReactionBurst] = useState<string | null>(null);
 
   const timerRef = useRef<number | null>(null);
   const startTimeRef = useRef(0);
