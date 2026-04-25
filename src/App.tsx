@@ -244,6 +244,7 @@ const PublicProfilePage = lazy(() => import("./pages/PublicProfilePage"));
 const DeleteAccountPage = lazy(() => import("./pages/profile/DeleteAccountPage"));
 const ShareProfileRedirect = lazy(() => import("./pages/ShareProfileRedirect"));
 const DeepLinkLandingPage = lazy(() => import("./pages/DeepLinkLandingPage"));
+const StoryDeepLinkPage = lazy(() => import("./pages/StoryDeepLinkPage"));
 
 // Customer Loyalty
 const LoyaltyPage = lazy(() => import("./pages/account/LoyaltyPage"));
