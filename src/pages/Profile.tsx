@@ -1193,7 +1193,7 @@ const Profile = () => {
                           shortcuts: Shop, Employees, Mode switch, Monetization. */}
                       <div className="lg:hidden mt-3 grid grid-cols-4 gap-2">
                         {[
-                          { label: "Shop", icon: Store, onClick: () => { selectionChanged(); if (!user) { toast.info("Sign in to open Shop Dashboard"); navigate("/login?redirect=/shop-dashboard"); return; } navigate("/shop-dashboard"); } },
+                          { label: "Shop", icon: Store, onClick: openShopDashboard },
                           { label: "Employees", icon: Users, onClick: () => { selectionChanged(); if (!user) { toast.info("Sign in to manage employees"); navigate("/login?redirect=/shop-dashboard/employees"); return; } navigate("/shop-dashboard/employees"); } },
                           { label: "Mode", icon: Repeat, onClick: () => { selectionChanged(); setModeOpen(true); } },
                           { label: "Monetization", icon: DollarSign, onClick: () => { selectionChanged(); navigate("/monetization"); } },
@@ -1353,7 +1353,7 @@ const Profile = () => {
               { id: "personal", label: "Personal", desc: "Your everyday account", icon: UserIcon, route: "/profile" },
               { id: "business", label: "Business", desc: "Manage company travel & teams", icon: Briefcase, route: "/business" },
               { id: "driver", label: "Driver", desc: "Go online and accept rides", icon: Car, route: "/driver" },
-              { id: "shop", label: "Shop Partner", desc: "Open your store dashboard", icon: Store, route: "/shop-dashboard" },
+              { id: "shop", label: "Shop Partner", desc: "Open your store dashboard", icon: Store, route: getShopDashboardPath() },
             ].map((m) => {
               const active = activeMode === m.id;
               const Icon = m.icon;
@@ -1366,7 +1366,8 @@ const Profile = () => {
                     try { localStorage.setItem("zivo:active_mode", m.id); } catch {}
                     toast.success(`Switched to ${m.label} mode`);
                     setModeOpen(false);
-                    if (m.route && m.id !== "personal") navigate(m.route);
+                    if (m.id === "shop") openShopDashboard();
+                    else if (m.route && m.id !== "personal") navigate(m.route);
                   }}
                   className={`flex items-center gap-3 rounded-2xl border px-3 py-3 text-left transition-all active:scale-[0.99] ${
                     active ? "border-primary/60 bg-primary/5" : "border-border/50 bg-muted/25 hover:bg-muted/50"
