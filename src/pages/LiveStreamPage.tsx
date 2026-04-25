@@ -102,7 +102,9 @@ function LiveWatcher({ stream, onLeave }: { stream: LiveStream; onLeave: () => v
   const [showRechargeSheet, setShowRechargeSheet] = useState(false);
   const [sending, setSending] = useState(false);
   const [showViewerList, setShowViewerList] = useState(false);
-  const [viewerNames, setViewerNames] = useState<{ user_id: string; name: string; avatar: string | null }[]>([]);
+  const [viewerNames, setViewerNames] = useState<{ user_id: string; name: string; avatar: string | null; is_verified?: boolean }[]>([]);
+  // Cache of resolved verified flags so chat/gift inserts can hydrate the badge without flicker
+  const verifiedCacheRef = useRef<Map<string, boolean>>(new Map());
   const [elapsed, setElapsed] = useState(0);
   const [streamEnded, setStreamEnded] = useState(stream.status === "ended");
 
