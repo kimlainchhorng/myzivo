@@ -152,6 +152,9 @@ export default function StoryViewer({
   const currentStory = viewingGroup?.stories[viewIdx] ?? null;
   const isOwner = viewingGroup?.userId === user?.id;
 
+  // Live updates: subscribe to reactions / comments / views for the active story
+  useStoryRealtime(currentStory?.id);
+
   // ---- Viewers (owner only) ----
   const { data: viewers = [] } = useQuery({
     queryKey: ["story-viewers", currentStory?.id],
