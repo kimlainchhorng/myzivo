@@ -17,6 +17,8 @@ import { toUserPostInteractionId } from "@/lib/social/postInteraction";
 import CommentsSheet from "@/components/social/CommentsSheet";
 import CollapsibleCaption from "@/components/social/CollapsibleCaption";
 import { formatCount, commentsLinkLabel } from "@/lib/social/formatCount";
+import VerifiedBadge from "@/components/VerifiedBadge";
+import { isBlueVerified } from "@/lib/verification";
 
 const REACTIONS = ["❤️", "😂", "😮", "😢", "😡", "👍"];
 
@@ -30,7 +32,7 @@ export type ProfileFeedItem = {
   url: string | null;
   filterCss?: string;
   views?: number;
-  user: { name: string; avatar: string };
+  user: { name: string; avatar: string; isVerified?: boolean };
   isShared?: boolean;
   sharedOrigin?: {
     name: string;
@@ -182,7 +184,10 @@ export default function ProfileFeedCard({
                 <AvatarFallback className="text-xs font-bold">{item.user.name?.[0]?.toUpperCase() || "Z"}</AvatarFallback>
               </Avatar>
               <div className="flex-1 min-w-0 text-left">
-                <p className="text-[13px] font-semibold text-foreground truncate">{item.user.name}</p>
+                <p className="text-[13px] font-semibold text-foreground truncate inline-flex items-center gap-1">
+                  <span className="truncate">{item.user.name}</span>
+                  {isBlueVerified(item.user.isVerified) && <VerifiedBadge size={14} interactive={false} />}
+                </p>
                 <div className="flex items-center gap-1 leading-none mt-0.5">
                   <p className="text-[10px] text-muted-foreground">{timeAgo}</p>
                   <span className="text-[10px] text-muted-foreground leading-none">·</span>
