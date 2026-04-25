@@ -501,10 +501,14 @@ const Profile = () => {
         style={{
           opacity: stickyOpacity,
           y: stickyTranslate,
-          paddingTop: "var(--zivo-safe-top, env(safe-area-inset-top, 0px))",
-          height: "calc(56px + var(--zivo-safe-top, env(safe-area-inset-top, 0px)))",
+          paddingTop: "var(--zivo-safe-top-sticky)",
+          height: "calc(var(--zivo-safe-top-sticky) + 3rem)",
+          pointerEvents: isStickyHeaderVisible ? "auto" : "none",
         }}
-        className="lg:hidden fixed top-0 inset-x-0 z-40 px-3 flex items-center gap-3 bg-background/85 backdrop-blur-xl border-b border-border/40"
+        className={cn(
+          "lg:hidden fixed top-0 inset-x-0 z-40 px-3 flex items-center gap-3 bg-background/85 backdrop-blur-xl border-b border-border/40 transition-shadow duration-200",
+          isStickyHeaderVisible ? "shadow-sm shadow-background/20" : "shadow-none"
+        )}
       >
         <motion.button
           onClick={handleBack}
@@ -552,7 +556,7 @@ const Profile = () => {
 
 
       {/* ── Scrollable content ── */}
-      <div ref={scrollRef} className="relative z-10 h-screen overflow-y-auto pb-24 scroll-smooth bg-background" style={{ scrollbarWidth: 'none' }}>
+      <div className="relative z-10 min-h-screen pb-24 scroll-smooth bg-background" style={{ scrollbarWidth: 'none' }}>
         {/* Mobile: edge-to-edge full-screen (Facebook-style). Desktop: centered card. */}
         <div className="px-0 lg:px-4 pt-0 lg:pt-20 max-w-none lg:max-w-3xl mx-auto">
 
