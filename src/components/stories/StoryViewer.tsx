@@ -800,6 +800,20 @@ export default function StoryViewer({
           )}
         </AnimatePresence>
       </motion.div>
+
+      {/* Instagram-style "Send to" sheet */}
+      {currentStory && (
+        <StoryForwardSheet
+          open={showForward}
+          onClose={() => {
+            setShowForward(false);
+            setPaused(false);
+          }}
+          storyId={currentStory.id}
+          storyOwnerName={viewingGroup?.userName}
+          source={source}
+        />
+      )}
     </AnimatePresence>
   );
 }
