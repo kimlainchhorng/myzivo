@@ -61,6 +61,8 @@ import { toast } from "sonner";
 import { useChatPresence } from "@/hooks/useChatPresence";
 import { useVoiceRecorder } from "@/hooks/useVoiceRecorder";
 import { useChatDraft } from "@/hooks/useChatDraft";
+import VerifiedBadge from "@/components/VerifiedBadge";
+import { isBlueVerified } from "@/lib/verification";
 
 const StickerKeyboard = lazy(() => import("./StickerKeyboard"));
 
@@ -71,6 +73,7 @@ interface PersonalChatProps {
   recipientId: string;
   recipientName: string;
   recipientAvatar?: string | null;
+  recipientIsVerified?: boolean;
   onClose: () => void;
   autoStartCall?: "voice" | "video" | null;
   onCallStarted?: () => void;
@@ -123,7 +126,7 @@ function formatMsgTime(dateStr: string) {
   return format(d, "MMM d, h:mm a");
 }
 
-export default function PersonalChat({ recipientId, recipientName, recipientAvatar, onClose, autoStartCall, onCallStarted, inline = false }: PersonalChatProps) {
+export default function PersonalChat({ recipientId, recipientName, recipientAvatar, recipientIsVerified, onClose, autoStartCall, onCallStarted, inline = false }: PersonalChatProps) {
   const { user } = useAuth();
 
   // Notify global listener that this chat is open
@@ -924,7 +927,10 @@ export default function PersonalChat({ recipientId, recipientName, recipientAvat
             )}
           </div>
           <div className="min-w-0 flex-1 cursor-pointer" onClick={() => setShowContactInfo(true)}>
-            <p className="text-[15px] font-semibold text-foreground truncate leading-tight">{recipientName}</p>
+            <p className="text-[15px] font-semibold text-foreground truncate leading-tight inline-flex items-center gap-1">
+              <span className="truncate">{recipientName}</span>
+              {isBlueVerified(recipientIsVerified) && <VerifiedBadge size={14} interactive={false} />}
+            </p>
             <p className="text-[11px] text-muted-foreground/70 leading-tight mt-0.5">
               {recipientTyping ? (
                 <span className="text-primary font-medium animate-pulse">typing...</span>

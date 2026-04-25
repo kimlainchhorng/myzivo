@@ -1,53 +1,59 @@
-## Facebook-style inline stats row under the name
+## Goal
 
-Match the Kim Thai reference exactly: under the bold name + blue check, show one tight inline row — `7K followers · 550 following · 370 posts` — replacing the current bulky 3-column "Friends / Followers / Following" grid. Cleaner, denser, more "real Facebook".
+Make sure the blue verified badge renders **next to every name**, everywhere in the app — not just feed/profile. Audit every surface, fix the ones missing it, and keep using the single `VerifiedBadge` + `isBlueVerified()` helpers so nothing diverges.
 
-### Visual outcome
+## Audit results
 
-**Before (current)**
-```text
-ZIVO Platform ✓
-[ Add bio ]
-   0          0          0
-Friends   Followers   Following
-```
+**Already correct (no change):**
+- Feed (`FeedPage`), Reels (`ReelsFeedPage`), Profile, PublicProfilePage
+- Comments sheet, Suggested users, Follow suggestions, Create post modal
+- Profile feed cards (just fixed)
 
-**After (Facebook-style)**
-```text
-ZIVO Platform ✓
-0 followers  ·  0 following  ·  0 posts        ← compact inline row
-[ Add bio ]
-```
+**Missing the badge — to fix:**
 
-### Design details
+| Surface | File |
+|---|---|
+| Chat list (conversations) | `src/pages/ChatHubPage.tsx` |
+| Chat header + message bubbles | `src/components/chat/PersonalChat.tsx`, `src/components/chat/ChatMessageBubble.tsx` |
+| Notifications (friend requests, social) | `src/pages/NotificationsPage.tsx`, `src/pages/NotificationCenterPage.tsx`, `src/pages/ActivityFeedPage.tsx` |
+| Smart search results | `src/pages/SmartSearchPage.tsx` |
+| Explore people search | `src/pages/ExplorePage.tsx` |
+| Live stream chat / viewer / host | `src/pages/LiveStreamPage.tsx`, `src/pages/GoLivePage.tsx` |
+| Sound page (post authors) | `src/pages/SoundPage.tsx` |
+| QR profile share card | `src/pages/QRProfilePage.tsx` |
+| Shared trip page (driver name) | `src/pages/public/SharedTripPage.tsx` |
+| Leaderboard rows | `src/pages/LeaderboardPage.tsx` |
+| Marketplace review author | `src/components/marketplace/MarketplaceReviewSheet.tsx` |
+| Dating profile cards | `src/pages/DatingPage.tsx` |
+| Communities member rows | `src/pages/CommunitiesPage.tsx` |
 
-- **One line, single row** — `text-sm`, `font-semibold` for the count, `font-medium text-muted-foreground` for the label.
-- **Bullet separators** (`·`) between stats with `gap-1.5`, identical to Facebook.
-- **Tap targets**: each stat is a `<button>` with `min-h-[36px]` and `focus-visible` ring — opens the same Followers/Following/Posts modal as today.
-- **Smart number formatting**: reuse existing `formatCount` (`src/lib/social/formatCount.ts`) so 7000 → `7K`, 1500000 → `1.5M`. (Already used in Reels — keeps the platform consistent.)
-- **Order matches Facebook**: followers → following → posts.
-- **Posts count** comes from `post_count` already loaded in the profile query (or fallback to `userPostsCount` hook used by the feed grid).
+## Changes
 
-### Files to change
+For each file above:
 
-**1. `src/pages/Profile.tsx`** (the big chunky grid lives at lines 730–746)
-- Delete the 3-column `Friends / Followers / Following` button grid.
-- Replace with a single `<div className="flex items-center gap-1.5 text-sm">` row containing 3 inline buttons + bullet separators.
-- Friends count moves OUT of this row (Facebook doesn't show it here) — it stays accessible via the existing "Friends" tab/section lower on the page; no functional loss.
-- Wire each button to the existing `setSocialModal({ open: true, tab: ... })` handler — zero new logic.
-- Use `formatCount()` for all three numbers.
+1. **Query** — add `is_verified` to every `profiles` / `store_profiles` `.select(...)` that returns a name.
+2. **Type** — extend the local row/state type with `is_verified?: boolean | null` (or `isVerified` for component props).
+3. **Render** — wherever the name is displayed, render it as:
+   ```tsx
+   <span className="inline-flex items-center gap-1">
+     <span className="truncate">{name}</span>
+     {isBlueVerified(is_verified) && <VerifiedBadge size={14} interactive={false} />}
+   </span>
+   ```
+   - `size={12}` in dense lists (chat list, comments-style rows, leaderboard)
+   - `size={14}` in standard rows (notifications, search results, live chat)
+   - `size={16}` in headers (chat header, story header, profile cards)
+   - Use `interactive={false}` whenever the row is itself a button/link.
 
-**2. `src/pages/PublicProfilePage.tsx`**
-- Apply the identical inline row directly under the name + badge `<h2>` (around line 853), so other people's profiles match.
-- Same modal handlers it already uses.
+4. **Realtime** — `useVerificationRealtime` already invalidates `feed`, `public-profile`, `suggested-users`, etc. Add the new query keys we touch (`chat-conversations`, `notifications`, `smart-search`, `explore-users`, `live-viewers`, `live-chat`, `sound-posts`, `leaderboard`) to `KEYS_TO_INVALIDATE` in `src/hooks/useVerificationRealtime.ts` so the badge updates live everywhere.
 
-### What stays the same
+## Out of scope
 
-- Bio editor, "Get blue verified" pill, social-links row, Friends section lower down, all modals — untouched.
-- Verified badge SVG, sizing (28px inline next to name), tooltip — untouched.
-- All data fetching — we already have `followerCount`, `followingCount`, `friendCount`, and post count in scope; only the rendering changes.
-- No DB migration, no new component file, no new hook.
+- No DB migrations needed — `profiles.is_verified` and `store_profiles.is_verified` already exist.
+- No design-system changes — using the existing `VerifiedBadge` component.
+- Admin pages are out of scope (they already manage verification via dedicated UI).
 
-### Why this is the right call
+## Verification
 
-The current grid eats ~80px of vertical space and visually competes with the name. Facebook collapses it to one ~20px line so the name + badge are the unmistakable focal point. Same data, much higher signal-to-noise.
+- Manually open each surface above with a verified test account and confirm the blue check shows next to the name.
+- Run existing `verification-surfaces.test.tsx`; extend it with one assertion per new surface (chat list row, notification row, search result, live chat row).

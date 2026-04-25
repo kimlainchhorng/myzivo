@@ -37,6 +37,8 @@ import PullToRefresh from "@/components/shared/PullToRefresh";
 import { useCallback } from "react";
 import { assessChatMessageRisk, sanitizeOutgoingMessage } from "@/lib/security/chatContentSafety";
 import { validateExternalUrl } from "@/lib/urlSafety";
+import VerifiedBadge from "@/components/VerifiedBadge";
+import { isBlueVerified } from "@/lib/verification";
 
 // Lazy-load heavy sub-pages/components
 const GroupChat = lazy(() => import("@/components/chat/GroupChat"));
@@ -137,7 +139,7 @@ export default function ChatHubPage({ embedded = false }: { embedded?: boolean }
   const [deleteConfirm, setDeleteConfirm] = useState<{ id: string; name: string; category: ChatCategory } | null>(null);
   const [swipedId, setSwipedId] = useState<string | null>(null);
   const [openShopChat, setOpenShopChat] = useState<{ storeId: string; name: string; logo?: string | null } | null>(null);
-  const [openPersonalChat, setOpenPersonalChat] = useState<{ id: string; name: string; avatar?: string | null } | null>(null);
+  const [openPersonalChat, setOpenPersonalChat] = useState<{ id: string; name: string; avatar?: string | null; isVerified?: boolean } | null>(null);
   const [openGroupChat, setOpenGroupChat] = useState<{ id: string; name: string; avatar?: string | null } | null>(null);
   const [showCreateGroup, setShowCreateGroup] = useState(false);
   const location = useLocation();
@@ -194,13 +196,14 @@ export default function ChatHubPage({ embedded = false }: { embedded?: boolean }
     (async () => {
       const { data } = await supabase
         .from("profiles")
-        .select("full_name, avatar_url")
+        .select("full_name, avatar_url, is_verified")
         .eq("user_id", withId)
         .maybeSingle();
       setOpenPersonalChat({
         id: withId,
         name: data?.full_name || "Chat",
         avatar: data?.avatar_url || null,
+        isVerified: (data as any)?.is_verified === true,
       });
     })();
   }, [searchParams, user, setSearchParams]);
@@ -422,7 +425,7 @@ export default function ChatHubPage({ embedded = false }: { embedded?: boolean }
 
       const { data: profiles } = await supabase
         .from("profiles")
-        .select("user_id, full_name, avatar_url, last_seen")
+        .select("user_id, full_name, avatar_url, last_seen, is_verified")
         .in("user_id", otherIds);
 
       const profileMap = new Map<string, any>();
@@ -440,6 +443,7 @@ export default function ChatHubPage({ embedded = false }: { embedded?: boolean }
           id: otherId,
           name: profile?.full_name || "User",
           avatar: profile?.avatar_url || null,
+          isVerified: profile?.is_verified === true,
           lastMessage: entry.lastMsg.message || "📷 Image",
           lastTime: entry.lastMsg.created_at,
           unread: entry.unread,
@@ -540,7 +544,7 @@ export default function ChatHubPage({ embedded = false }: { embedded?: boolean }
         const term = `%${search.trim()}%`;
         const { data } = await supabase
           .from("profiles")
-          .select("user_id, full_name, avatar_url, email")
+          .select("user_id, full_name, avatar_url, email, is_verified")
           .or(`full_name.ilike.${term},email.ilike.${term}`)
           .neq("user_id", user!.id)
           .limit(15);
@@ -550,6 +554,7 @@ export default function ChatHubPage({ embedded = false }: { embedded?: boolean }
               id: p.user_id,
               name: p.full_name || p.email || "User",
               avatar: p.avatar_url,
+              isVerified: p.is_verified === true,
               lastMessage: "Tap to chat",
               lastTime: new Date().toISOString(),
               unread: 0,
@@ -819,7 +824,7 @@ export default function ChatHubPage({ embedded = false }: { embedded?: boolean }
                               if ((chat as any).isGroup) {
                                 setOpenGroupChat({ id: chat.id, name: chat.name, avatar: chat.avatar });
                               } else {
-                                setOpenPersonalChat({ id: chat.id, name: chat.name, avatar: chat.avatar });
+                                setOpenPersonalChat({ id: chat.id, name: chat.name, avatar: chat.avatar, isVerified: (chat as any).isVerified === true });
                               }
                             } else if (active === "support") {
                               navigate(`/support`);
@@ -870,10 +875,13 @@ export default function ChatHubPage({ embedded = false }: { embedded?: boolean }
                             <div className="flex items-center justify-between mb-1">
                               <span className={cn(
                                 embedded ? "text-sm" : "text-[15px]",
-                                "truncate leading-tight",
+                                "truncate leading-tight inline-flex items-center gap-1 min-w-0",
                                 chat.unread > 0 ? "font-bold text-foreground" : "font-semibold text-foreground"
                               )}>
-                                {chat.name}
+                                <span className="truncate">{chat.name}</span>
+                                {isBlueVerified((chat as any).isVerified) && (
+                                  <VerifiedBadge size={13} interactive={false} />
+                                )}
                               </span>
                               <span className={cn(
                                 "text-[11px] flex-shrink-0 ml-2 tabular-nums",
@@ -1030,6 +1038,7 @@ export default function ChatHubPage({ embedded = false }: { embedded?: boolean }
               recipientId={openPersonalChat.id}
               recipientName={openPersonalChat.name}
               recipientAvatar={openPersonalChat.avatar}
+              recipientIsVerified={openPersonalChat.isVerified === true}
               onClose={() => { setOpenPersonalChat(null); setPendingCall(null); queryClient.invalidateQueries({ queryKey: ["chat-hub-personal"] }); }}
               autoStartCall={pendingCall}
               onCallStarted={() => setPendingCall(null)}

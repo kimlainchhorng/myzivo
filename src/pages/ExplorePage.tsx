@@ -14,6 +14,8 @@ import { cn } from "@/lib/utils";
 import { normalizeStorePostMediaUrl } from "@/utils/normalizeStorePostMediaUrl";
 import ZivoMobileNav from "@/components/app/ZivoMobileNav";
 import PullToRefresh from "@/components/shared/PullToRefresh";
+import VerifiedBadge from "@/components/VerifiedBadge";
+import { isBlueVerified } from "@/lib/verification";
 
 type Tab = "trending" | "users" | "hashtags";
 
@@ -47,7 +49,7 @@ export default function ExplorePage() {
       if (!search.trim()) return [];
       const { data } = await supabase
         .from("profiles")
-        .select("id, full_name, avatar_url")
+        .select("id, full_name, avatar_url, is_verified")
         .ilike("full_name", `%${search}%`)
         .limit(20);
       return data || [];
@@ -124,7 +126,10 @@ export default function ExplorePage() {
                   <AvatarImage src={u.avatar_url} />
                   <AvatarFallback>{(u.full_name || "U")[0]}</AvatarFallback>
                 </Avatar>
-                <span className="text-sm font-medium text-foreground">{u.full_name || "Unknown"}</span>
+                <span className="text-sm font-medium text-foreground inline-flex items-center gap-1 min-w-0">
+                  <span className="truncate">{u.full_name || "Unknown"}</span>
+                  {isBlueVerified((u as any).is_verified) && <VerifiedBadge size={13} interactive={false} />}
+                </span>
               </button>
             ))}
             {!loadingUsers && searchResults.length === 0 && (

@@ -11,6 +11,8 @@ import { useState, useMemo } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import CreatePostModal from "@/components/social/CreatePostModal";
 import { Helmet } from "react-helmet-async";
+import VerifiedBadge from "@/components/VerifiedBadge";
+import { isBlueVerified } from "@/lib/verification";
 
 /** Convert a URL slug like "midnight-drive" into "Midnight Drive" */
 function humanizeSlug(slug: string): string {
@@ -63,7 +65,7 @@ export default function SoundPage() {
       for (const term of searchTerms) {
         const { data: storePosts } = await db
           .from("store_posts")
-          .select("id, store_id, caption, media_urls, media_type, created_at, audio_name, view_count, store_profiles(store_name, logo_url, slug)")
+          .select("id, store_id, caption, media_urls, media_type, created_at, audio_name, view_count, store_profiles(store_name, logo_url, slug, is_verified)")
           .eq("is_published", true)
           .eq("audio_name", term)
           .order("created_at", { ascending: false })
@@ -72,7 +74,7 @@ export default function SoundPage() {
 
         const { data: userPosts } = await db
           .from("user_posts")
-          .select("id, user_id, caption, media_urls, media_type, created_at, audio_name, profiles(display_name, avatar_url)")
+          .select("id, user_id, caption, media_urls, media_type, created_at, audio_name, profiles(display_name, avatar_url, is_verified)")
           .eq("audio_name", term)
           .order("created_at", { ascending: false })
           .limit(50);
@@ -92,6 +94,7 @@ export default function SoundPage() {
           view_count: p.view_count || 0,
           author_name: p.store_profiles?.store_name || "Shop",
           author_avatar: p.store_profiles?.logo_url,
+          author_is_verified: p.store_profiles?.is_verified === true,
           type: "store" as const,
         }));
 
@@ -106,6 +109,7 @@ export default function SoundPage() {
           view_count: 0,
           author_name: p.profiles?.display_name || "User",
           author_avatar: p.profiles?.avatar_url,
+          author_is_verified: p.profiles?.is_verified === true,
           type: "user" as const,
         }));
 
