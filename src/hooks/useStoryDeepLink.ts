@@ -9,7 +9,7 @@
  * Also emits analytics for every deep-link open so we can attribute story
  * viewing back to its source carousel (profile / feed / chat / shared-link).
  */
-import { useCallback, useMemo, useRef } from "react";
+import { useCallback, useEffect, useMemo, useRef } from "react";
 import { useSearchParams } from "react-router-dom";
 import { track } from "@/lib/analytics";
 import type { StoryGroup } from "@/components/stories/StoryViewer";
