@@ -182,3 +182,30 @@ className="pt-[max(env(safe-area-inset-top),44px)]"
 - Memory: `mem://style/mobile-native-ux-standards`
 - Fix history: 2026-04-25 — removed `max(env(...), 44px)` floors from
   `.safe-area-top`, `.pt-safe`, `.pb-safe` in `src/index.css`.
+
+## 2026-04-25 update — edge-to-edge mode
+
+We switched `StatusBar.overlaysWebView` to **`true`** (`capacitor.config.ts`).
+The webview now extends under the status bar and home indicator so visual
+content (cover photos, gradients, feed backgrounds, home tab pills) renders
+full-bleed. To compensate, `.pt-safe` and `.pb-safe` now have a **12px floor**:
+
+```css
+.pt-safe { padding-top: max(env(safe-area-inset-top, 0px), 12px); }
+.pb-safe { padding-bottom: max(env(safe-area-inset-bottom, 0px), 12px); }
+```
+
+This guarantees that any wrapper carrying `.pt-safe` / `.pb-safe` (the bottom
+tab bar, home service chips, sticky headers) keeps interactive controls inside
+the safe zone — even when `env(safe-area-inset-*)` returns 0 (browser/PWA).
+
+### The two-layer rule
+
+| Layer | Examples | What to use |
+|-------|----------|-------------|
+| **Visual** (full-bleed) | Cover photo, feed background, gradient orbs, home tab pill backgrounds | No safe-area class — let it extend edge-to-edge |
+| **Interactive** (inside safe zone) | Bottom tab bar, top action buttons, sticky headers, search bars, service chips | `.pt-safe` / `.pb-safe` / `var(--zivo-safe-top-sticky)` |
+
+Never apply a safe-area class to a visual layer — it creates an empty gap.
+Never omit the safe-area class from an interactive layer — buttons will sit
+under the notch or home indicator.

@@ -366,11 +366,11 @@ const AppHome = () => {
         {/* ─── HEADER ─── */}
         <div className="bg-background relative">
           {/* Service Tabs — 3D Pill Chips
-              NOTE: Capacitor uses overlaysWebView:false, so env(safe-area-inset-top) = 0.
-              We add a small fixed pt-3 so interactive buttons aren't flush against the
-              native status bar. Visuals (background, gradients) still extend full-bleed. */}
+              Edge-to-edge mode (overlaysWebView:true). Use .pt-safe so the
+              interactive chips always clear the notch / status bar, while the
+              container background still extends full-bleed visually. */}
           <div
-            className="flex items-center gap-2 px-4 pt-3 pb-2 overflow-hidden preserve-3d"
+            className="flex items-center gap-2 px-4 pt-safe pb-2 overflow-hidden preserve-3d"
           >
             {homeTabs.map((tab) => {
               const isActive = activeHomeTab === tab.id;

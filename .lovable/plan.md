@@ -1,107 +1,46 @@
-# Safe-Area Hardening — Round 2
+# Full-bleed visuals, buttons inside safe zone
 
-Five additions that build directly on the existing safe-area infrastructure.
+## What you want (from your screenshots)
 
-## 1. Expand visual regression routes
+- **Visual content** — cover photos, feed background, Home tab pills, gradients → continue to **fill all the way to the very top and very bottom edge** of the screen (full-bleed under the notch and home indicator). ✅ already correct.
+- **Buttons / interactive controls** — bottom tab bar (Live, Feed, Reel, Home, Map, Chat, Account), top action buttons on Profile (← back, ↕, ＋, 🔔, ⋯), Feed search bar, Home service tabs → **must sit inside the safe zone** so the iPhone notch and the home-indicator bar never overlap them.
 
-Update `tests/visual/safe-area.spec.ts` to cover the screens where bottom-padding issues are most likely to reappear (the ones with sheets, footers, and long scrollers).
+The visual layer is already correct. The bug is that the **buttons are still being clipped/overlapped** because our `.pb-safe` and `.pt-safe` utilities have no minimum floor — they only honor `env(safe-area-inset-*)`, which is fine on real iOS but produces 0px in browser/PWA and unreliable values in some Capacitor states. Result: tab labels touch the home-indicator bar; profile icons touch the status bar.
 
-New routes added to the existing matrix:
-- `/more` (MorePage — sticky bottom CTA region)
-- `/settings` (AppSettingsPage)
-- `/account/settings` (AccountSettingsPage)
-- `/wallet` (AccountWalletPage — fixed bottom action bar)
-- `/menu` synthetic case — opens `MobileNavMenu` sheet on `/account` via a `?openMenu=1` query param then screenshots the bottom 120px
+## Fix — add a guaranteed minimum to the safe-area utilities
 
-For each route, capture **two** clips per viewport:
-- Top 120px (status-bar region)
-- Bottom 140px (home-indicator region — catches `pb-safe` regressions)
+Update `src/index.css`:
 
-Authenticated routes use a shared Playwright `storageState` fixture (`tests/visual/auth.setup.ts`) seeded from a `QA_TEST_EMAIL`/`QA_TEST_PASSWORD` secret pair. Devices unchanged: iPhone SE / 13 / 14 Pro Max.
+```css
+/* Buttons must always clear the home indicator, even when env() = 0. */
+.pb-safe {
+  padding-bottom: max(env(safe-area-inset-bottom, 0px), 12px);
+}
 
-## 2. Quick-reference table in the developer doc
-
-Append a "Decision Cheatsheet" section to `docs/dev/capacitor-safe-area.md`:
-
-```text
-┌─────────────────────────┬───────────────────────────────────────────┐
-│ Use this                │ When                                       │
-├─────────────────────────┼───────────────────────────────────────────┤
-│ .safe-area-top          │ Header is the FIRST child of the page     │
-│                         │ AND no AppLayout wrapper handles it       │
-│ .pt-safe                │ Adding top inset to a non-header element  │
-│                         │ (e.g. fullscreen overlay starting at top) │
-│ .pb-safe                │ Fixed/sticky bottom navs, action bars,    │
-│                         │ bottom sheets, FABs                       │
-│ var(--zivo-safe-top-*)  │ Browser-PWA only, when you need a         │
-│                         │ minimum floor (Dynamic Island bug)        │
-│ Nothing                 │ Inside <AppLayout> — it already pads main │
-└─────────────────────────┴───────────────────────────────────────────┘
+/* Buttons must always clear the notch / status bar, even when env() = 0. */
+.pt-safe {
+  padding-top: max(env(safe-area-inset-top, 0px), 12px);
+}
 ```
 
-Plus a "Common mistakes" subsection with three before/after code samples (double-padding, stacked classes, raw `max(env(...), 44px)`).
+This keeps the visual layer full-bleed (we're only padding the **interactive containers** that already use `.pb-safe` / `.pt-safe` / `--zivo-safe-top-sticky`) while guaranteeing buttons never sit under the notch or home indicator on any device or preview.
 
-## 3. CI workflow with PR comments
+## Components touched
 
-Create `.github/workflows/safe-area-visual.yml` (separate from the existing `safe-area-qa.yml` so failures stay attributable):
+1. **`src/index.css`** — add the `max(..., 12px)` floors to `.pb-safe` and `.pt-safe`. Update the inline comments (they still reference the old `overlaysWebView=false` rule).
+2. **`src/components/app/ZivoMobileNav.tsx`** — already uses `pb-safe`; will inherit the new floor automatically. No structural change.
+3. **`src/pages/Profile.tsx`** — sticky header already uses `--zivo-safe-top-sticky` (which has a 48px floor). Verify the four top-right action buttons (↕, ＋, 🔔, ⋯ shown in IMG_2197) are nested inside that sticky header so they get the safe-top padding. If any of them are positioned independently with `absolute top-2`, wrap them in a container that uses `pt-safe` or `style={{ top: 'var(--zivo-safe-top-sticky)' }}`.
+4. **`src/pages/FeedPage.tsx`** — confirm the top "Feed / Search people…" header sits inside a wrapper with `pt-safe` (or `--zivo-safe-top-sticky`). If not, add it.
+5. **`src/pages/app/AppHome.tsx`** — the Rides/Eats/Flights/Hotels chip row already has `pt-3`; add `pt-safe` to the same container so the chips clear the notch on edge-to-edge mode.
+6. **`docs/dev/capacitor-safe-area.md`** — update the "Decision Cheatsheet" to document the new 12px floor, and clarify the rule:
+   - **Visual layer (cover photos, gradients, feed bg)** → no padding, full-bleed.
+   - **Interactive layer (buttons, nav, tabs, headers)** → always wrap in `.pt-safe` / `.pb-safe` / `--zivo-safe-top-sticky`. Never use raw `top-0` or `bottom-0` for buttons.
 
-- Triggers: `pull_request` on changes to `src/**`, `tests/visual/**`, `index.html`, `capacitor.config.ts`, the workflow file itself.
-- Steps: checkout → Node 20 → `npm ci` → `npx playwright install --with-deps chromium` → `npx playwright test tests/visual/safe-area.spec.ts --reporter=html,json`.
-- On failure: upload `playwright-report/` and `test-results/` as artifacts.
-- PR comment (using `actions/github-script`) posts:
-  - Pass/fail summary line
-  - Per-route table (status × device)
-  - Direct link to the uploaded HTML report artifact
-  - Link to the diff images for any failing snapshots
-  - Sticky-update behavior (one comment per PR, edited in place via marker `<!-- safe-area-visual -->`)
+## Why this works
 
-No external services — uses GitHub Actions artifacts only.
+- The cover photo, home-tab pill row backgrounds, and feed page background are all in the **visual layer** — they never had the safe-area class applied, so they continue to extend edge-to-edge. They are unaffected by this change.
+- Only the **wrappers around buttons** carry `.pb-safe` / `.pt-safe` / `--zivo-safe-top-sticky`. Adding the 12px floor moves *only those buttons* down/up into the safe zone — exactly what your screenshots show is needed.
 
-## 4. QA checklist run history (JSON + CSV export)
+## After approval
 
-Extend `src/pages/dev/SafeAreaQAPage.tsx`:
-
-- Add a "Save run" button that snapshots current checklist results into `localStorage` under `zivo:debug:safe-area-qa-runs` (capped at 20 runs, FIFO).
-- Each run record stores: timestamp, platform info, live `env()` insets, viewport, per-row × per-device results, and a derived `passRate`.
-- New "Run history" section lists saved runs with download buttons:
-  - **JSON** — full structured payload via `Blob` download
-  - **CSV** — flattened row-per-check (run_id, timestamp, page, route, device, passed)
-  - **Delete** — removes a single run
-- Existing "Export" button kept; renamed to "Copy current as Markdown" for clarity.
-- File names use ISO timestamp: `safe-area-qa-2026-04-25T22-15-00.json`.
-
-No backend — all client-side, survives across sessions, works offline.
-
-## 5. iPhone-notch emulator in the debug overlay
-
-Extend `src/components/dev/SafeAreaDebugOverlay.tsx` with a "Simulate device" picker in the HUD:
-
-- Presets: `Off (real device)`, `iPhone SE (0/0)`, `iPhone 13 (47/34)`, `iPhone 14 Pro (59/34)`, `iPhone 15 Pro Max (59/34)`, `Custom…` (numeric inputs for top/bottom/left/right).
-- When a preset is active:
-  - Inject a `<style id="zivo-safe-area-emu">` block that overrides the design tokens AND patches the `env()` consumers via custom properties (`--zivo-emu-top` etc. applied as `padding-top` overrides on `.safe-area-top`, `.pt-safe`, `.pb-safe`, `.safe-area-bottom`).
-  - Render a notch silhouette (rounded black pill) and home-indicator bar at the simulated positions so the visual matches the device.
-  - Show a yellow "EMULATING <preset>" banner so the mode can never be left on accidentally.
-- Selection persisted under `zivo:debug:safe-area-emu`; auto-clears on hard reload of production builds (only active in dev mode or when the overlay is enabled).
-- HUD shows both **Reported** (real `env()` value) and **Effective** (after emulation) so you can confirm the override is working.
-
-## Technical Details
-
-**Files created**
-- `tests/visual/auth.setup.ts` — Playwright auth fixture
-- `.github/workflows/safe-area-visual.yml` — CI pipeline + PR comment
-- (no other new files; everything else extends existing ones)
-
-**Files modified**
-- `tests/visual/safe-area.spec.ts` — new routes + bottom clips + auth state
-- `docs/dev/capacitor-safe-area.md` — Decision Cheatsheet + Common Mistakes
-- `src/pages/dev/SafeAreaQAPage.tsx` — run history, JSON/CSV export
-- `src/components/dev/SafeAreaDebugOverlay.tsx` — device emulator + HUD
-- `playwright.config.ts` — register `tests/visual` as a second project so unit/e2e configs stay separate
-- `package.json` — add `test:visual` script wired to the new project
-
-**Memory updates**
-- Append to `mem://style/mobile-native-ux-standards`: emulator mode usage + new CI workflow name + extended route coverage.
-
-**Out of scope**
-- Device emulator does NOT change `window.innerWidth` (would require iframe-based simulation; not needed for safe-area verification).
-- No cloud sync of QA runs (kept local per "no backend churn" preference).
+After the changes, you'll need to run `npx cap sync ios` and rebuild in Xcode for the iOS build to pick up the CSS update (or just refresh if you're using the live-reload server URL).

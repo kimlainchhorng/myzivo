@@ -379,25 +379,17 @@
     padding-bottom: calc(var(--_safe-bottom) + 5rem) !important;
   }
 
-  /* Enhanced safe area with fallback for bottom nav */
+  /* Edge-to-edge mode (Capacitor StatusBar.overlaysWebView = true):
+     visual content goes full-bleed, but interactive containers wrapped in
+     .pt-safe / .pb-safe must always clear the notch and home indicator —
+     even in browser/PWA contexts where env(safe-area-inset-*) returns 0.
+     A 12px floor guarantees buttons never touch the screen edge. */
   .pb-safe {
-    /* Honor the device-reported home-indicator inset only (no forced 20px floor),
-       so Capacitor iOS doesn't double-pad below the bottom navigation. */
-    padding-bottom: env(safe-area-inset-bottom, 0px);
+    padding-bottom: max(env(safe-area-inset-bottom, 0px), 12px);
   }
 
   .pt-safe {
-    /* Same rule as .safe-area-top — never inflate to 44px because the iOS
-       Capacitor WebView already sits below the status bar (overlaysWebView=false). */
-    padding-top: env(safe-area-inset-top, 0px);
-  }
-
-  @media (max-width: 480px) {
-    @supports (-webkit-touch-callout: none) {
-      .pt-safe {
-        padding-top: env(safe-area-inset-top, 0px);
-      }
-    }
+    padding-top: max(env(safe-area-inset-top, 0px), 12px);
   }
 
   /* Mobile-native overscroll behavior */
