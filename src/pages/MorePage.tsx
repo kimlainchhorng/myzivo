@@ -2,10 +2,11 @@
  * MorePage — ZIVO Signature Design (2026)
  * Full hub with real user profile, quick actions, 70+ links, and organic design.
  */
-import { Fragment, useState } from "react";
+import { Fragment, useMemo, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { useQuery } from "@tanstack/react-query";
+import { useTheme } from "next-themes";
 import { supabase } from "@/integrations/supabase/client";
 import {
   ChevronRight, LogOut, Settings, ShoppingBag, Wallet, MapPin, Handshake,
@@ -18,7 +19,13 @@ import {
   Gem, Rocket, Layers, CircleDot, User, CreditCard, Map, Package,
   Clock, Receipt, Ticket, ShieldCheck, Flame, AlertCircle, Inbox,
   Search, Vote, Clapperboard, GraduationCap, Trophy, Banknote, ArrowLeft,
+  Sun, Moon, Trash2, X,
 } from "lucide-react";
+import { Input } from "@/components/ui/input";
+import {
+  AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
+  AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { useI18n } from "@/hooks/useI18n";
 import { useAuth } from "@/contexts/AuthContext";
 import { useUserProfile } from "@/hooks/useUserProfile";
