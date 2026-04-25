@@ -783,8 +783,9 @@ export default function CreateStorySheet({ open, onClose, onPublished }: Props) 
           )}
         </AnimatePresence>
       </motion.div>
+      </AnimatePresence>
 
-      {/* Hidden inputs (kept outside motion tree to avoid ref warnings) */}
+      {/* Hidden inputs (outside AnimatePresence to avoid duplicate-key warnings) */}
       <input
         ref={fileInputRef}
         type="file"
@@ -800,7 +801,7 @@ export default function CreateStorySheet({ open, onClose, onPublished }: Props) 
         className="hidden"
         onChange={handleFileChange}
       />
-    </AnimatePresence>
+    </>
   );
 
   return createPortal(sheet, document.body);
