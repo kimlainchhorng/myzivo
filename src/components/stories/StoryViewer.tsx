@@ -48,11 +48,18 @@ export interface StoryGroup {
 
 const STORY_DURATION = 5000;
 
+export interface StoryCloseMeta {
+  story_id: string;
+  segment_index: number;
+  total_segments: number;
+  completed: boolean;
+}
+
 interface Props {
   groups: StoryGroup[];
   startGroupIndex: number;
   startStoryIndex?: number;
-  onClose: () => void;
+  onClose: (meta?: StoryCloseMeta) => void;
   onStoryChange?: (storyId: string) => void;
 }
 
@@ -249,6 +256,29 @@ export default function StoryViewer({ groups, startGroupIndex, startStoryIndex =
     startTimer();
   }, [startTimer]);
 
+  // Close handler that always reports current segment metadata so the
+  // story_deeplink_close analytics event can attribute drop-off accurately.
+  const closeWithMeta = useCallback(
+    (completedOverride?: boolean) => {
+      if (!currentStory || !viewingGroup) {
+        onClose();
+        return;
+      }
+      const total = viewingGroup.stories.length;
+      const completed =
+        completedOverride !== undefined
+          ? completedOverride
+          : viewIdx === total - 1 && progress >= 1;
+      onClose({
+        story_id: currentStory.id,
+        segment_index: viewIdx,
+        total_segments: total,
+        completed,
+      });
+    },
+    [currentStory, viewingGroup, viewIdx, progress, onClose]
+  );
+
   const goNext = useCallback(() => {
     if (!viewingGroup) return;
     if (viewIdx < viewingGroup.stories.length - 1) {
@@ -261,10 +291,10 @@ export default function StoryViewer({ groups, startGroupIndex, startStoryIndex =
         setViewIdx(0);
         elapsedRef.current = 0;
       } else {
-        onClose();
+        closeWithMeta(true); // reached end of all stories
       }
     }
-  }, [viewingGroup, viewIdx, groupIdx, groups.length, onClose]);
+  }, [viewingGroup, viewIdx, groupIdx, groups.length, closeWithMeta]);
 
   const goPrev = useCallback(() => {
     if (viewIdx > 0) {
@@ -294,17 +324,17 @@ export default function StoryViewer({ groups, startGroupIndex, startStoryIndex =
   // Keyboard
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
-      if (e.key === "Escape") onClose();
+      if (e.key === "Escape") closeWithMeta();
       else if (e.key === "ArrowRight") goNext();
       else if (e.key === "ArrowLeft") goPrev();
     };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-  }, [onClose, goNext, goPrev]);
+  }, [closeWithMeta, goNext, goPrev]);
 
   // Swipe-down to close
   const handleDragEnd = (_: any, info: PanInfo) => {
-    if (info.offset.y > 120 || info.velocity.y > 600) onClose();
+    if (info.offset.y > 120 || info.velocity.y > 600) closeWithMeta();
   };
 
   if (!viewingGroup || !currentStory) return null;
@@ -403,7 +433,7 @@ export default function StoryViewer({ groups, startGroupIndex, startStoryIndex =
               {paused ? <Play className="w-4 h-4 text-white" /> : <Pause className="w-4 h-4 text-white" />}
             </button>
             <button
-              onClick={onClose}
+              onClick={() => closeWithMeta()}
               aria-label="Close"
               className="w-9 h-9 flex items-center justify-center rounded-full bg-white/10 backdrop-blur-sm"
             >
@@ -481,7 +511,7 @@ export default function StoryViewer({ groups, startGroupIndex, startStoryIndex =
                 onClick={() => {
                   if (!currentStory) return;
                   deleteStory.mutate(currentStory.id);
-                  if (viewingGroup.stories.length <= 1) onClose();
+                  if (viewingGroup.stories.length <= 1) closeWithMeta();
                   else goNext();
                 }}
                 className="flex flex-col items-center gap-1"

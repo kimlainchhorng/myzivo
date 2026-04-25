@@ -80,7 +80,8 @@ async function flushQueue() {
       batch.map((ev) =>
         sb.from("analytics_events").insert({
           event_name: ev.event_name,
-          properties: { ...ev.properties, flushed_at: new Date().toISOString() },
+          meta: { ...ev.properties, flushed_at: new Date().toISOString() },
+          page: typeof window !== "undefined" ? window.location.pathname : null,
           created_at: ev.created_at,
         }),
       ),
@@ -114,13 +115,15 @@ export function track(event: string, props: AnalyticsProps = {}) {
   const event_id = uuid();
   const created_at = new Date().toISOString();
   const properties: AnalyticsProps = { ...props, event_id };
+  const page = typeof window !== "undefined" ? window.location.pathname : null;
 
   try {
     void (supabase as any)
       .from("analytics_events")
       .insert({
         event_name: event,
-        properties,
+        meta: properties,
+        page,
         created_at,
       })
       .then(
