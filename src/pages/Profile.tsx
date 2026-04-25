@@ -75,6 +75,7 @@ const LANGS = [
 const getFlagUrl = (cc: string) => `/flags/${cc}.svg`;
 
 import VerifiedBadge from "@/components/VerifiedBadge";
+import { formatCount } from "@/lib/social/formatCount";
 
 const BlueVerifiedBadge = ({ className = "h-5 w-5" }: { className?: string }) => (
   <VerifiedBadge className={className} />
