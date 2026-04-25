@@ -12,6 +12,7 @@ import { getPublicOrigin, getProfileShareUrl } from "@/lib/getPublicOrigin";
 import ZivoMobileNav from "@/components/app/ZivoMobileNav";
 import NavBar from "@/components/home/NavBar";
 import VerifiedBadge from "@/components/VerifiedBadge";
+import { formatCount } from "@/lib/social/formatCount";
 import { isBlueVerified } from "@/lib/verification";
 import {
   ArrowLeft, Loader2, User, ImageIcon, Film, Grid3X3, UserPlus, UserCheck, UserX,
