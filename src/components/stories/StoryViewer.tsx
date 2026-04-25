@@ -147,9 +147,9 @@ export default function StoryViewer({ groups, startGroupIndex, onClose }: Props)
       .upsert({ story_id: currentStory.id, viewer_id: user.id }, { onConflict: "story_id,viewer_id" })
       .then(({ error }) => {
         if (!error) {
-          queryClient.invalidateQueries({ queryKey: ["my-story-views", user.id] });
-          queryClient.invalidateQueries({ queryKey: ["profile-story-rings", user.id] });
-          queryClient.invalidateQueries({ queryKey: ["feed-story-users"] });
+          queryClient.invalidateQueries({ queryKey: ["my-story-views", user.id], exact: true });
+          queryClient.invalidateQueries({ queryKey: ["profile-story-rings", user.id], exact: true });
+          queryClient.invalidateQueries({ queryKey: ["feed-story-users"], exact: true });
         }
       });
   }, [currentStory?.id, user?.id, isOwner, queryClient]);
@@ -184,10 +184,10 @@ export default function StoryViewer({ groups, startGroupIndex, onClose }: Props)
       if (error) throw error;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["user-stories"] });
-      queryClient.invalidateQueries({ queryKey: ["feed-story-users"] });
-      queryClient.invalidateQueries({ queryKey: ["profile-story-rings", user?.id] });
-      queryClient.invalidateQueries({ queryKey: ["profile-my-story", user?.id] });
+      queryClient.invalidateQueries({ queryKey: ["user-stories"], exact: true });
+      queryClient.invalidateQueries({ queryKey: ["feed-story-users"], exact: true });
+      queryClient.invalidateQueries({ queryKey: ["profile-story-rings", user?.id], exact: true });
+      queryClient.invalidateQueries({ queryKey: ["profile-my-story", user?.id], exact: true });
       toast.success("Story deleted");
     },
   });
