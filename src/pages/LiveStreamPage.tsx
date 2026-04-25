@@ -162,6 +162,7 @@ function LiveWatcher({ stream, onLeave }: { stream: LiveStream; onLeave: () => v
           .in("user_id", Array.from(userIds));
         for (const p of profs ?? []) {
           profileMap.set((p as any).user_id, { full_name: (p as any).full_name, avatar_url: (p as any).avatar_url, is_verified: (p as any).is_verified });
+          verifiedCacheRef.current.set((p as any).user_id, (p as any).is_verified === true);
         }
       }
 
@@ -182,6 +183,7 @@ function LiveWatcher({ stream, onLeave }: { stream: LiveStream; onLeave: () => v
           user_id: v.user_id,
           name: profileMap.get(v.user_id)?.full_name || "Guest",
           avatar: profileMap.get(v.user_id)?.avatar_url ?? null,
+          is_verified: profileMap.get(v.user_id)?.is_verified === true,
         }))
       );
     })();
