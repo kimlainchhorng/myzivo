@@ -16,7 +16,13 @@ const config: CapacitorConfig = {
     : {}),
   plugins: {
     StatusBar: {
-      overlaysWebView: false,
+      // Edge-to-edge: webview extends under the native status bar so cover
+      // photos, gradients, and headers reach the very top of the screen.
+      // Interactive controls must use env(safe-area-inset-top) (or the
+      // .pt-safe / --zivo-safe-top-sticky tokens) to stay clear of the
+      // status bar area.
+      overlaysWebView: true,
+      style: 'DARK',
     },
     SplashScreen: {
       launchAutoHide: true,
