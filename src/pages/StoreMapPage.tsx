@@ -684,10 +684,10 @@ export default function StoreMapPage() {
                     >
                       {getCategoryLabel(selectedStore.category)}
                     </span>
-                    {selectedStore.rating && (
+                    {typeof selectedStore.rating === "number" && selectedStore.rating > 0 && (
                       <span className="flex items-center gap-0.5 text-[11px] font-bold text-amber-500">
                         <Star className="w-3 h-3 fill-current" />
-                        {selectedStore.rating}
+                        {selectedStore.rating.toFixed(1)}
                       </span>
                     )}
                   </div>
