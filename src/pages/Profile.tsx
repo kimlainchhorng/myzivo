@@ -1102,6 +1102,59 @@ const Profile = () => {
           if (socialModal.tab === "following") setFollowingCount(fg);
         }}
       />
+
+      {/* Share Profile bottom sheet */}
+      <Sheet open={shareOpen} onOpenChange={setShareOpen}>
+        <SheetContent side="bottom" className="rounded-t-3xl pb-10">
+          <SheetHeader className="pb-3">
+            <SheetTitle className="text-base font-bold">Share your profile</SheetTitle>
+          </SheetHeader>
+          <div className="grid grid-cols-3 gap-3">
+            <button
+              type="button"
+              onClick={async () => {
+                const url = `${window.location.origin}/u/${profile?.username || user?.id}`;
+                try {
+                  await navigator.clipboard.writeText(url);
+                  toast.success("Profile link copied");
+                } catch {
+                  toast.error("Could not copy link");
+                }
+                setShareOpen(false);
+              }}
+              className="flex flex-col items-center gap-1.5 rounded-2xl border border-border/40 bg-muted/30 p-3 active:scale-[0.97] transition-transform"
+            >
+              <Copy className="h-5 w-5 text-primary" />
+              <span className="text-[11px] font-semibold">Copy link</span>
+            </button>
+            <button
+              type="button"
+              onClick={() => { setShareOpen(false); navigate("/qr-profile"); }}
+              className="flex flex-col items-center gap-1.5 rounded-2xl border border-border/40 bg-muted/30 p-3 active:scale-[0.97] transition-transform"
+            >
+              <QrCode className="h-5 w-5 text-primary" />
+              <span className="text-[11px] font-semibold">QR code</span>
+            </button>
+            <button
+              type="button"
+              onClick={async () => {
+                const url = `${window.location.origin}/u/${profile?.username || user?.id}`;
+                const title = profile?.full_name || "My ZIVO profile";
+                if (navigator.share) {
+                  try { await navigator.share({ title, url }); } catch { /* user cancelled */ }
+                } else {
+                  try { await navigator.clipboard.writeText(url); toast.success("Profile link copied"); } catch { toast.error("Sharing not supported"); }
+                }
+                setShareOpen(false);
+              }}
+              className="flex flex-col items-center gap-1.5 rounded-2xl border border-border/40 bg-muted/30 p-3 active:scale-[0.97] transition-transform"
+            >
+              <Share2 className="h-5 w-5 text-primary" />
+              <span className="text-[11px] font-semibold">Share to…</span>
+            </button>
+          </div>
+        </SheetContent>
+      </Sheet>
     </PullToRefresh>
   );
 };
