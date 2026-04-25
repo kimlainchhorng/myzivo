@@ -1,43 +1,49 @@
-## What's happening
+## Findings (already verified)
 
-Your story DID upload successfully — I can confirm one active story exists in the database for your account (created today, expires tomorrow). The reason you don't see it on the ring is two bugs in the create-story sheet:
+- **RLS SELECT policy on `stories`** — already correct: `Anyone can read active stories USING (expires_at > now())`. Both your own sessions and the feed can read it. **No DB change needed.**
+- **Your story IS in the DB** — confirmed earlier (1 active row, expires in ~23 h).
+- **`invalidateAllStoryCaches`** — already rewritten last turn to use predicate-based invalidation + active refetch on every story-related cache key (`feed-story-users`, `user-stories`, `profile-story-rings`, `profile-my-story`, `my-story-views`, `chat-story-rings`, `story-author-profiles`, `feed-story-profiles`). Will add `chat-story-rings` and confirm it covers `my-story-views`.
+- **Duplicate-key warning** — root cause was hidden file `<input>` elements rendered as un-keyed siblings inside `<AnimatePresence>`. Already moved them outside and added an explicit `key="create-story-sheet"` to the outer motion.div.
+- **Auto refresh after publish** — `CreateStorySheet` already calls `invalidateStoryQueries()` then fires the new `onPublished?.()` callback; all three parents (Profile, Feed, Chat) wire it to `invalidateAllStoryCaches`. Carousels also dropped to 30 s polling + `refetchOnWindowFocus`.
 
-1. The hidden `<input>` file pickers are wrongly placed **inside** `<AnimatePresence>` as un-keyed siblings of the modal `<motion.div>`. When the sheet animates in/out, React/Framer Motion produces a "duplicate key" warning and — more importantly — the close→reopen lifecycle leaves stale children in the tree, which **prevents the parent from triggering the cache invalidation cleanly** on close. The `onClose()` runs before `invalidateAllStoryCaches`, so the carousel's `useQuery` never refetches until the 60-second auto-poll kicks in. That's why your story "doesn't show up" right after sharing.
+## What still needs to ship
 
-2. The order of operations after a successful upload is `onClose()` → then component unmounts → cache invalidation never reaches the still-mounted parent because the closing animation is racing the state update.
+### 1) Add `StoryDebugPanel` (new file)
 
-## Fix
+`src/components/stories/StoryDebugPanel.tsx` — floating bug-icon button (bottom-right, above the mobile nav). Opens a 320 px panel that shows in real time:
 
-### 1) `src/components/profile/CreateStorySheet.tsx`
+- **Database (direct)**: bypasses every cache and queries `stories` for the current user where `expires_at > now()`. Shows count, latest story id, expiry timestamp, last fetch time, and a "Refetch" button.
+- **Carousel caches**: reads `queryClient.getQueryState` for `["feed-story-users"]`, `["profile-story-rings", userId]`, and `["user-stories"]`. For each, shows: cache status, row count, last update time, and a green/amber dot indicating whether your story id is present in that cache.
+- **Force refresh all** button → calls `invalidateAllStoryCaches` + refetches the direct DB query.
 
-- Move the two hidden `<input type="file">` elements **out of `<AnimatePresence>`** and render them as siblings of the portal root, so AnimatePresence only ever has one keyed child.
-- Add an explicit `key="create-story-sheet"` to the outer `<motion.div>` so AnimatePresence reconciliation is unambiguous.
-- In `publish()`, **invalidate caches BEFORE calling `onClose()`** (currently the order is correct in code, but we'll also add a small `await Promise.resolve()` flush). More importantly, also call `invalidateAllStoryCaches` on the parent components when the sheet closes, by exposing the success via a callback.
-- Add `onPublished?: () => void` prop and call it right after invalidation, so each parent (Profile, Feed, Chat) can refetch its own carousel immediately.
+Visibility gate: only renders when `?debug=stories` is in the URL OR `localStorage.zivo_debug_stories === '1'`. Includes a "disable debug" link inside the panel.
 
-### 2) `src/components/profile/ProfileStories.tsx`, `src/components/social/FeedStoryRing.tsx`, `src/components/chat/ChatStories.tsx`
+### 2) Mount the debug panel app-wide
 
-- Pass `onPublished={() => invalidateAllStoryCaches(queryClient, user?.id)}` to `<CreateStorySheet />`.
-- Lower `refetchInterval` from 60 s to 30 s as a safety net, and add `refetchOnWindowFocus: true` so coming back to the tab after sharing always refreshes.
+In `src/App.tsx`, render `<StoryDebugPanel />` once near the top level (after providers, alongside the toaster). It self-gates so it's invisible by default.
 
-### 3) `src/lib/storiesCache.ts`
+### 3) Confirm `invalidateAllStoryCaches` keys are exhaustive
 
-- Remove `exact: true` on the invalidation calls. Right now `["feed-story-users"]` matches exactly but `["profile-story-rings", userId]` with exact mode misses any in-flight variants. Switching to predicate-based invalidation (`queryKey[0] === "feed-story-users"` etc.) ensures every carousel refetches.
+Audit pass already done. Final key set:
+`feed-story-users`, `user-stories`, `profile-story-rings`, `profile-my-story`, `my-story-views`, `chat-story-rings`, `story-author-profiles`, `feed-story-profiles`. No edit unless something's missing — will re-grep before saving.
 
-### 4) Quick sanity step
+### 4) Re-verify the duplicate-key fix
 
-After the fix, your existing story (already in DB, active for ~23 more hours) will appear on the ring immediately on page reload. No data migration needed.
+Open `CreateStorySheet.tsx` after the previous edit and confirm:
+- Outer `<AnimatePresence>` wraps a single keyed `<motion.div key="create-story-sheet">`.
+- Inner `<AnimatePresence>` blocks for `showMusicSheet` / `showQuitConfirm` each wrap a single conditional motion.div (already keyed by presence/absence, fine).
+- The two hidden file inputs are outside `<AnimatePresence>`. Already done.
 
-## Files changed
+### 5) Auto-refresh-on-publish
 
-- `src/components/profile/CreateStorySheet.tsx` — restructure portal/AnimatePresence, add `onPublished` callback
-- `src/components/profile/ProfileStories.tsx` — wire `onPublished`
-- `src/components/social/FeedStoryRing.tsx` — wire `onPublished` + refetch tweaks
-- `src/components/chat/ChatStories.tsx` — wire `onPublished`
-- `src/lib/storiesCache.ts` — predicate-based invalidation
+Already wired: `CreateStorySheet.publish()` → `invalidateStoryQueries()` → `onPublished?.()` → `onClose()`. Each parent passes `onPublished={() => invalidateAllStoryCaches(queryClient, user?.id)}`. Will leave as-is; the new debug panel will let you visually confirm the cache flips green within ~1 second of publish.
 
-## Outcome
+## How to use the debug panel
 
-- Story you just shared appears in the ring **instantly** (no 60 s wait).
-- React duplicate-key console warning gone.
-- Reopening the create sheet after a publish no longer leaves a stale upload state.
+Open the app with `?debug=stories` appended to the URL (e.g. `/feed?debug=stories`), or run `localStorage.setItem('zivo_debug_stories','1')` once in the console. A small bug button appears bottom-right; tap to expand. Publish a story and watch the three carousel rows flip from amber → green.
+
+## Files
+
+- **New**: `src/components/stories/StoryDebugPanel.tsx`
+- **Edit**: `src/App.tsx` — mount `<StoryDebugPanel />`
+- (No DB / RLS changes; previous turn's edits already cover items 2, 4, 5.)

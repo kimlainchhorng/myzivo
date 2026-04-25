@@ -4,6 +4,7 @@ import { useGeoDetect } from "@/hooks/useGeoDetect";
 import { HelmetProvider } from "react-helmet-async";
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
+import StoryDebugPanel from "@/components/stories/StoryDebugPanel";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { useVerificationRealtime } from "@/hooks/useVerificationRealtime";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
@@ -569,6 +570,7 @@ const App = () => (
               <SkipToContent />
               <Toaster />
               <Sonner />
+              <StoryDebugPanel />
               <BrowserRouter>
                 <PageViewTracker />
                 <GeoDetector />
