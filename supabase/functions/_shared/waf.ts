@@ -29,7 +29,8 @@ function scan(text: string): WafResult {
 export async function inspectRequest(req: Request): Promise<WafResult> {
   try {
     const url = new URL(req.url);
-    const target = `${url.pathname}?${url.search}`;
+    let target = `${url.pathname}${url.search}`;
+    try { target = decodeURIComponent(target); } catch { /* keep raw */ }
     const headCheck = scan(target);
     if (!headCheck.ok) return headCheck;
 
