@@ -317,6 +317,7 @@ export default function CreateStorySheet({ open, onClose, onPublished }: Props) 
       }
 
       await invalidateStoryQueries();
+      onPublished?.();
       toast.success("Story shared 🎉");
       setUploading(false);
       setUploadPhase("idle");
@@ -326,7 +327,7 @@ export default function CreateStorySheet({ open, onClose, onPublished }: Props) 
       setUploadPhase("idle");
       setUploadError(await getErrorMessage(err, "Failed to share story"));
     }
-  }, [user, step, text, pickedFile, caption, audioTrack, onClose, queryClient]);
+  }, [user, step, text, pickedFile, caption, audioTrack, onClose, onPublished, queryClient]);
 
   const toggleAudioPreview = (track: Track) => {
     if (previewAudioRef.current && audioPreviewing && audioTrack?.id === track.id) {
