@@ -469,7 +469,9 @@ export default function StoryViewer({
 
   if (!viewingGroup || !currentStory) return null;
 
-  return (
+  // Portal to <body> so transformed ancestors (e.g. Profile's ParallaxSection)
+  // can't trap our `position: fixed` viewer inside their bounding box.
+  return createPortal(
     <AnimatePresence>
       <motion.div
         key={currentStory.id}
