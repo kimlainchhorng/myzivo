@@ -573,6 +573,7 @@ export default function StoreMapPage() {
                       const p = new URLSearchParams();
                       if (activeCategory !== "all") p.set("cat", activeCategory);
                       if (searchQuery.trim()) p.set("q", searchQuery.trim());
+                      if (openNowOnly) p.set("open", "1");
                       navigate(`/store-map/list${p.toString() ? `?${p.toString()}` : ""}`);
                     }}
                     className="h-10 px-3 inline-flex items-center gap-1 rounded-xl bg-primary text-primary-foreground text-[12px] font-bold shadow-sm"
