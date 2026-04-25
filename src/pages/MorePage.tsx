@@ -388,6 +388,16 @@ export default function MorePage() {
   /* --- Link Row --- */
   const renderLink = (link: QuickLink, i: number) => {
     const isPartner = link.href === "#partner";
+    const isSwitch = link.href === "#switch-account";
+    const isAction = isPartner || isSwitch;
+
+    const handleAction = () => {
+      if (isPartner) setShowPartnerSheet(true);
+      else if (isSwitch) {
+        signOut();
+        navigate("/auth?intent=switch");
+      }
+    };
 
     const inner = (
       <motion.div
@@ -395,7 +405,7 @@ export default function MorePage() {
         animate={{ opacity: 1, x: 0 }}
         transition={{ delay: i * 0.02, duration: 0.2 }}
         whileTap={{ scale: 0.97 }}
-        onClick={isPartner ? () => setShowPartnerSheet(true) : undefined}
+        onClick={isAction ? handleAction : undefined}
         className="zivo-card-organic flex items-center gap-3.5 p-3 cursor-pointer"
       >
         <div
@@ -415,7 +425,7 @@ export default function MorePage() {
       </motion.div>
     );
 
-    if (isPartner) return <Fragment key={link.label}>{inner}</Fragment>;
+    if (isAction) return <Fragment key={link.label}>{inner}</Fragment>;
     return <Link key={link.label} to={link.href} className="contents">{inner}</Link>;
   };
 
