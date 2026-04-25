@@ -153,20 +153,20 @@ export default function FeedStoryRing() {
         >
           <div className="relative">
             <div className={cn(
-              "h-[64px] w-[64px] rounded-full p-[2.5px]",
+              "h-[64px] w-[64px] rounded-full p-[2.5px] box-border",
               hasMyStory
                 ? "bg-[conic-gradient(from_180deg,#f09433,#e6683c,#dc2743,#cc2366,#bc1888,#f09433)]"
                 : "bg-muted-foreground/25"
             )}>
-              <div className="h-full w-full rounded-full overflow-hidden border-2 border-card bg-card relative">
-                {myLatestStory && myLatestStory.mediaType !== "video" ? (
+              <div className="h-full w-full rounded-full overflow-hidden border-2 border-card bg-card relative flex items-center justify-center">
+                {myLatestStory && myLatestStory.mediaType === "image" && myLatestStory.mediaUrl ? (
                   <img
                     src={myLatestStory.mediaUrl}
                     alt="Your story"
                     className="h-full w-full object-cover"
                     loading="lazy"
                   />
-                ) : myLatestStory && myLatestStory.mediaType === "video" ? (
+                ) : myLatestStory && myLatestStory.mediaType === "video" && myLatestStory.mediaUrl ? (
                   <video
                     src={myLatestStory.mediaUrl}
                     className="h-full w-full object-cover"
@@ -174,6 +174,12 @@ export default function FeedStoryRing() {
                     playsInline
                     preload="metadata"
                   />
+                ) : myLatestStory && (myLatestStory.mediaType === "text" || !myLatestStory.mediaUrl) ? (
+                  <div className="h-full w-full flex items-center justify-center bg-gradient-to-br from-primary/80 to-primary px-1">
+                    <span className="text-[8px] font-bold text-primary-foreground text-center leading-tight line-clamp-2">
+                      {myLatestStory.caption || "Story"}
+                    </span>
+                  </div>
                 ) : (
                   <Avatar className="h-full w-full">
                     <AvatarImage src={optimizeAvatar(myGroup?.avatarUrl, 64)} loading="lazy" />
