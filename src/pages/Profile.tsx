@@ -874,6 +874,18 @@ const Profile = () => {
                         </button>
                       </div>
 
+                      {/* Edit profile (mobile-only quick CTA) */}
+                      <div className="lg:hidden mt-3">
+                        <button
+                          type="button"
+                          onClick={() => navigate("/account/profile-edit")}
+                          className="inline-flex items-center gap-1.5 rounded-full border border-border/60 bg-muted/30 px-3.5 py-1.5 text-xs font-semibold text-foreground hover:bg-muted/50 focus-visible:ring-2 focus-visible:ring-primary/60 focus-visible:outline-none transition-colors"
+                        >
+                          <Pencil className="h-3 w-3" />
+                          Edit profile
+                        </button>
+                      </div>
+
                       {/* Social Links Row */}
                       {profile?.social_links_visible !== false && (() => {
                         const socials = [

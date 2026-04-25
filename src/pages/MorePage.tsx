@@ -17,7 +17,7 @@ import {
   TrendingUp, Target, Lightbulb, PenTool, Share2, Compass, ArrowRight,
   Gem, Rocket, Layers, CircleDot, User, CreditCard, Map, Package,
   Clock, Receipt, Ticket, ShieldCheck, Flame, AlertCircle, Inbox,
-  Search, Vote, Clapperboard, GraduationCap, Trophy, Banknote,
+  Search, Vote, Clapperboard, GraduationCap, Trophy, Banknote, ArrowLeft,
 } from "lucide-react";
 import { useI18n } from "@/hooks/useI18n";
 import { useAuth } from "@/contexts/AuthContext";
@@ -83,7 +83,7 @@ const quickLinksMain: QuickLink[] = [
   { icon: User, label: "My Profile", href: "/profile", description: "View & edit", accent: "hsl(199 89% 48%)" },
   { icon: Gift, label: "Refer a Friend", href: "/referrals", description: "Earn rewards", accent: "hsl(142 71% 45%)", badge: "Earn" },
   { icon: Clock, label: "Activity Log", href: "/activity", description: "Recent actions", accent: "hsl(198 93% 59%)" },
-  { icon: Users, label: "Switch Account", href: "/auth", description: "Add or change", accent: "hsl(263 70% 58%)" },
+  { icon: Users, label: "Switch Account", href: "#switch-account", description: "Add or change", accent: "hsl(263 70% 58%)" },
   { icon: Settings, label: "Settings", href: "/account/settings", description: "App preferences", accent: "hsl(var(--muted-foreground))" },
   { icon: ShoppingBag, label: "My Orders", href: "/grocery/orders", description: "Order history", accent: "hsl(221 83% 53%)" },
   { icon: Wallet, label: "Wallet", href: "/wallet", description: "Balance & pay", accent: "hsl(142 71% 45%)" },
@@ -388,6 +388,16 @@ export default function MorePage() {
   /* --- Link Row --- */
   const renderLink = (link: QuickLink, i: number) => {
     const isPartner = link.href === "#partner";
+    const isSwitch = link.href === "#switch-account";
+    const isAction = isPartner || isSwitch;
+
+    const handleAction = () => {
+      if (isPartner) setShowPartnerSheet(true);
+      else if (isSwitch) {
+        signOut();
+        navigate("/auth?intent=switch");
+      }
+    };
 
     const inner = (
       <motion.div
@@ -395,7 +405,7 @@ export default function MorePage() {
         animate={{ opacity: 1, x: 0 }}
         transition={{ delay: i * 0.02, duration: 0.2 }}
         whileTap={{ scale: 0.97 }}
-        onClick={isPartner ? () => setShowPartnerSheet(true) : undefined}
+        onClick={isAction ? handleAction : undefined}
         className="zivo-card-organic flex items-center gap-3.5 p-3 cursor-pointer"
       >
         <div
@@ -415,7 +425,7 @@ export default function MorePage() {
       </motion.div>
     );
 
-    if (isPartner) return <Fragment key={link.label}>{inner}</Fragment>;
+    if (isAction) return <Fragment key={link.label}>{inner}</Fragment>;
     return <Link key={link.label} to={link.href} className="contents">{inner}</Link>;
   };
 
@@ -475,15 +485,30 @@ export default function MorePage() {
   const totalLinks = sections.reduce((sum, s) => sum + s.links.length, 0);
 
   return (
-    <div className="min-h-[100dvh] flex flex-col bg-background safe-area-top safe-area-bottom">
+    <div className="min-h-[100dvh] flex flex-col bg-background safe-area-bottom">
       <SEOHead title="More – ZIVO" description="Quick access to all ZIVO features and settings." noIndex />
 
       <div className="hidden lg:block"><NavBar /></div>
 
+      {/* Mobile sticky header with back button */}
+      <header
+        className="lg:hidden sticky top-0 z-30 bg-background/85 backdrop-blur-xl border-b border-border/40 flex items-center gap-2 px-3 pb-2"
+        style={{ paddingTop: "var(--zivo-safe-top-sticky, env(safe-area-inset-top, 0px))" }}
+      >
+        <button
+          onClick={() => (window.history.length > 1 ? navigate(-1) : navigate("/profile"))}
+          aria-label="Go back"
+          className="h-10 w-10 flex items-center justify-center rounded-full hover:bg-muted/60 active:scale-90 transition-transform text-foreground"
+        >
+          <ArrowLeft className="h-5 w-5" />
+        </button>
+        <h1 className="font-bold text-[17px] flex-1">More</h1>
+      </header>
+
       <div className="flex-1 lg:flex lg:pt-16">
         <FeedSidebar />
 
-        <main className="flex-1 flex flex-col px-5 pb-28 pt-6 lg:pb-8 lg:max-w-3xl lg:mx-auto zivo-aurora">
+        <main className="flex-1 flex flex-col px-5 pb-28 pt-4 lg:pt-6 lg:pb-8 lg:max-w-3xl lg:mx-auto zivo-aurora">
           {/* Profile Card */}
           {user && renderProfileCard()}
 
@@ -514,14 +539,7 @@ export default function MorePage() {
 
           {/* Sign Out */}
           {user && (
-            <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.25 }} className="mt-4 space-y-2">
-              <button
-                onClick={() => { signOut(); navigate("/auth"); }}
-                className="w-full py-3 rounded-2xl border border-border/50 bg-muted/40 text-foreground font-semibold text-sm touch-manipulation active:scale-[0.98] transition-all flex items-center justify-center gap-2"
-              >
-                <Lock className="w-4 h-4" />
-                Lock app
-              </button>
+            <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.25 }} className="mt-4">
               <button
                 onClick={() => signOut()}
                 className="w-full py-3 rounded-2xl border border-border/50 bg-card text-foreground font-semibold text-sm touch-manipulation active:scale-[0.98] transition-all flex items-center justify-center gap-2"
@@ -531,13 +549,6 @@ export default function MorePage() {
               </button>
             </motion.div>
           )}
-
-          {/* Close (mobile) */}
-          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.3 }} className="mt-3 text-center lg:hidden">
-            <button onClick={() => navigate(-1)} className="text-muted-foreground text-sm font-medium touch-manipulation">
-              Close
-            </button>
-          </motion.div>
 
           {/* ZIVO Watermark */}
           <div className="relative mt-8 flex flex-col items-center gap-1">
