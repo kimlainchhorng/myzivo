@@ -1,7 +1,10 @@
 /**
  * StoresListPage — Full list of nearby stores (See All from /store-map)
  * Features: skeletons + retry, GPS error banner, share toasts, favorites
- * filter + per-row heart, recenter button, store details drawer.
+ * filter + per-row heart, recenter button, store details drawer,
+ * Manage favorites (bulk un-favorite), offline cache + offline pill,
+ * shareable image card, Open directions, and a promo code field that
+ * forwards to the next ride/order flow.
  */
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
@@ -12,7 +15,6 @@ import {
   X,
   Star,
   MapPin,
-  ChevronRight,
   Store,
   Phone,
   Car,
@@ -24,9 +26,17 @@ import {
   RefreshCw,
   Clock,
   Map as MapIcon,
+  Navigation,
+  Tag,
+  CheckSquare,
+  CloudOff,
+  Trash2,
+  CheckCircle2,
 } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Checkbox } from "@/components/ui/checkbox";
 import { useStorePins, distanceMiles, type StorePin } from "@/hooks/useStorePins";
 import { useStoreFavorites } from "@/hooks/useStoreFavorites";
 import { STORE_CATEGORY_OPTIONS } from "@/config/groceryStores";
@@ -35,6 +45,8 @@ import { trackInitiateCheckout } from "@/services/metaConversion";
 import { supabase } from "@/integrations/supabase/client";
 import ZivoMobileNav from "@/components/app/ZivoMobileNav";
 import NavBar from "@/components/home/NavBar";
+import { shareStoreWithCard } from "@/lib/social/storeShareCard";
+import { openDirections } from "@/lib/maps/openDirections";
 
 const CATEGORY_ICONS: Record<string, string> = {
   "food-market": "🛒", "grocery": "🛒", "restaurant": "🍽️", "fashion": "👗",
@@ -43,28 +55,46 @@ const CATEGORY_ICONS: Record<string, string> = {
   "auto-repair": "🔧", "tire-shop": "🛞", "auto-parts": "⚙️", "other": "📍", "default": "📍",
 };
 
+const PROMO_KEY = "zivo:pending-promo";
+const PROMO_TTL_MS = 15 * 60 * 1000;
+
 const getIcon = (c: string) => CATEGORY_ICONS[c] || CATEGORY_ICONS.default;
 const getLabel = (c: string) => STORE_CATEGORY_OPTIONS.find((o) => o.value === c)?.label || c;
 
-async function shareStore(s: StorePin) {
-  const url = buildShopDeepLink(s.slug);
-  const text = `Check out ${s.name} on ZiVo`;
+async function shareStore(s: StorePin, distanceMi: number | null) {
   try {
-    if (navigator.share) {
-      await navigator.share({ title: s.name, text, url });
-      toast.success("Shared!");
-      return;
-    }
-    await navigator.clipboard.writeText(url);
-    toast.success("Link copied to clipboard");
-  } catch (err: any) {
-    if (err?.name === "AbortError") return; // user cancelled
+    const result = await shareStoreWithCard(s, {
+      distanceMi: distanceMi ?? undefined,
+      categoryLabel: getLabel(s.category),
+    });
+    if (result.mode === "shared-with-image") toast.success("Shared with image");
+    else if (result.mode === "shared-link") toast.success("Link shared");
+    else if (result.mode === "downloaded") toast.success("Image saved · link copied");
+    else if (result.mode === "copied") toast.success("Link copied to clipboard");
+    else if (result.mode === "error") toast.error("Couldn't share — try again");
+  } catch {
     try {
-      await navigator.clipboard.writeText(url);
+      await navigator.clipboard.writeText(buildShopDeepLink(s.slug));
       toast.success("Link copied to clipboard");
     } catch {
       toast.error("Couldn't share — try again");
     }
+  }
+}
+
+function savePendingPromo(code: string, store: StorePin) {
+  try {
+    sessionStorage.setItem(
+      PROMO_KEY,
+      JSON.stringify({
+        code,
+        storeId: store.id,
+        storeSlug: store.slug,
+        ts: Date.now(),
+      })
+    );
+  } catch {
+    /* noop */
   }
 }
 
@@ -83,8 +113,19 @@ export default function StoresListPage() {
   const [currentUserId, setCurrentUserId] = useState<string | null>(null);
   const searchInputRef = useRef<HTMLInputElement>(null);
 
-  const { stores: allStores, isLoading, error, refetch, isFetching } = useStorePins();
-  const { isFavorite, toggleFavorite, isAuthed, favoriteIds } = useStoreFavorites();
+  // Manage mode state
+  const [manageMode, setManageMode] = useState(false);
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+  const [removingFavs, setRemovingFavs] = useState(false);
+
+  // Promo code (per-drawer)
+  const [promoOpen, setPromoOpen] = useState(false);
+  const [promoCode, setPromoCode] = useState("");
+  const [promoApplied, setPromoApplied] = useState<string | null>(null);
+
+  const { stores: allStores, isLoading, error, refetch, isFetching, isOffline } = useStorePins();
+  const { isFavorite, toggleFavorite, removeFavorites, isAuthed, favoriteIds } =
+    useStoreFavorites();
 
   useEffect(() => {
     supabase.auth.getUser().then(({ data }) => setCurrentUserId(data.user?.id || null));
@@ -117,12 +158,10 @@ export default function StoresListPage() {
     );
   }, []);
 
-  // Initial silent GPS attempt
   useEffect(() => {
     requestGps({ silent: true });
   }, [requestGps]);
 
-  // Persist filters back to URL
   useEffect(() => {
     const next = new URLSearchParams();
     if (activeCategory !== "all") next.set("cat", activeCategory);
@@ -130,6 +169,13 @@ export default function StoresListPage() {
     if (showFavorites) next.set("fav", "1");
     setParams(next, { replace: true });
   }, [activeCategory, searchQuery, showFavorites, setParams]);
+
+  // Reset promo state whenever drawer opens for a new store
+  useEffect(() => {
+    setPromoOpen(false);
+    setPromoCode("");
+    setPromoApplied(null);
+  }, [drawerStore?.id]);
 
   const usedCategories = useMemo(() => {
     const present = new Set(allStores.map((s) => s.category));
@@ -159,24 +205,42 @@ export default function StoresListPage() {
     return list;
   }, [allStores, activeCategory, searchQuery, userLoc, showFavorites, favoriteIds]);
 
+  const visibleFavoriteIds = useMemo(
+    () => filtered.filter((s) => favoriteIds.has(s.id)).map((s) => s.id),
+    [filtered, favoriteIds]
+  );
+
   const goBackToMap = () => {
     const next = new URLSearchParams();
     if (activeCategory !== "all") next.set("cat", activeCategory);
     navigate(`/store-map${next.toString() ? `?${next.toString()}` : ""}`);
   };
 
-  const handleRide = (s: StorePin) => {
+  const buildRideUrl = (s: StorePin, promo?: string | null) => {
+    const qp = new URLSearchParams({
+      destination: s.address || s.name,
+      destLat: String(s.latitude),
+      destLng: String(s.longitude),
+    });
+    if (promo) qp.set("promo", promo);
+    return `/rides/hub?${qp.toString()}`;
+  };
+
+  const handleRide = (s: StorePin, promo?: string | null) => {
     trackInitiateCheckout({
       eventId: `ride-book-${s.id}-${Date.now()}`,
       externalId: currentUserId || undefined,
       sourceType: "ride_book",
       sourceTable: "store_profiles",
       sourceId: s.id,
-      payload: { destination: s.address || s.name },
+      payload: { destination: s.address || s.name, promo: promo || undefined },
     });
-    navigate(
-      `/rides/hub?destination=${encodeURIComponent(s.address || s.name)}&destLat=${s.latitude}&destLng=${s.longitude}`
-    );
+    navigate(buildRideUrl(s, promo));
+  };
+
+  const handleViewStore = (s: StorePin, promo?: string | null) => {
+    const path = `/grocery/shop/${s.slug}${promo ? `?promo=${encodeURIComponent(promo)}` : ""}`;
+    navigate(path);
   };
 
   const handleToggleFavorite = async (s: StorePin) => {
@@ -194,19 +258,90 @@ export default function StoresListPage() {
       toast.error("Couldn't update favorites");
       return;
     }
+    if (res.queued) {
+      toast.success(res.added ? "Saved offline — syncs later" : "Removed offline — syncs later");
+      return;
+    }
     toast.success(res.added ? "Added to favorites" : "Removed from favorites");
+  };
+
+  const enterManageMode = () => {
+    setShowFavorites(true);
+    setManageMode(true);
+    setSelectedIds(new Set());
+  };
+  const exitManageMode = () => {
+    setManageMode(false);
+    setSelectedIds(new Set());
+  };
+  const toggleSelected = (id: string) => {
+    setSelectedIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  };
+  const selectAllVisible = () => {
+    if (selectedIds.size === visibleFavoriteIds.length) {
+      setSelectedIds(new Set());
+    } else {
+      setSelectedIds(new Set(visibleFavoriteIds));
+    }
+  };
+  const handleBulkRemove = async () => {
+    const ids = Array.from(selectedIds);
+    if (ids.length === 0) return;
+    setRemovingFavs(true);
+    const res = await removeFavorites(ids);
+    setRemovingFavs(false);
+    if (res.failed > 0) {
+      toast.error("Couldn't remove some favorites");
+      return;
+    }
+    toast.success(
+      res.removed === 1 ? "Removed 1 favorite" : `Removed ${res.removed} favorites`
+    );
+    exitManageMode();
+  };
+
+  const handleApplyPromo = () => {
+    const code = promoCode.trim().toUpperCase();
+    if (!code || !drawerStore) return;
+    setPromoApplied(code);
+    savePendingPromo(code, drawerStore);
+    toast.success(`Promo ${code} ready for your next ride or order`);
+  };
+
+  const handleOpenDirections = (s: StorePin) => {
+    openDirections({
+      lat: s.latitude,
+      lng: s.longitude,
+      label: s.name,
+      address: s.address,
+    });
   };
 
   const renderRow = (s: StorePin) => {
     const dist = userLoc ? distanceMiles(userLoc, { lat: s.latitude, lng: s.longitude }) : null;
     const fav = isFavorite(s.id);
+    const selected = selectedIds.has(s.id);
+    const inManage = manageMode && fav;
+
     return (
       <motion.div
         whileTap={{ scale: 0.985 }}
-        className="rounded-2xl bg-card border border-border/40 shadow-sm overflow-hidden"
+        className={`rounded-2xl border shadow-sm overflow-hidden transition-colors ${
+          selected
+            ? "bg-rose-50 border-rose-300"
+            : "bg-card border-border/40"
+        }`}
       >
         <button
-          onClick={() => setDrawerStore(s)}
+          onClick={() => {
+            if (inManage) toggleSelected(s.id);
+            else setDrawerStore(s);
+          }}
           className="w-full p-3.5 flex items-center gap-3 text-left"
         >
           <div className="w-14 h-14 rounded-2xl flex items-center justify-center shrink-0 overflow-hidden bg-muted/40">
@@ -243,42 +378,53 @@ export default function StoresListPage() {
               </p>
             )}
           </div>
-          <button
-            onClick={(e) => { e.stopPropagation(); handleToggleFavorite(s); }}
-            className={`w-10 h-10 rounded-full inline-flex items-center justify-center shrink-0 transition ${
-              fav ? "bg-rose-50 text-rose-500" : "bg-muted/40 text-muted-foreground hover:bg-muted"
-            }`}
-            aria-label={fav ? "Remove from favorites" : "Add to favorites"}
-          >
-            <Heart className={`w-4 h-4 ${fav ? "fill-current" : ""}`} />
-          </button>
-        </button>
-        <div className="flex border-t border-border/30">
-          <button
-            onClick={(e) => { e.stopPropagation(); handleRide(s); }}
-            className="flex-1 h-10 inline-flex items-center justify-center gap-1.5 text-[12px] font-semibold text-primary hover:bg-primary/5 transition"
-          >
-            <Car className="w-3.5 h-3.5" /> Ride
-          </button>
-          <div className="w-px bg-border/30" />
-          <button
-            onClick={(e) => { e.stopPropagation(); shareStore(s); }}
-            className="flex-1 h-10 inline-flex items-center justify-center gap-1.5 text-[12px] font-semibold text-primary hover:bg-primary/5 transition"
-          >
-            <Share2 className="w-3.5 h-3.5" /> Share
-          </button>
-          {s.phone && (
-            <>
-              <div className="w-px bg-border/30" />
-              <button
-                onClick={(e) => { e.stopPropagation(); window.open(`tel:${s.phone}`, "_self"); }}
-                className="flex-1 h-10 inline-flex items-center justify-center gap-1.5 text-[12px] font-semibold text-primary hover:bg-primary/5 transition"
-              >
-                <Phone className="w-3.5 h-3.5" /> Call
-              </button>
-            </>
+          {inManage ? (
+            <div
+              className="w-10 h-10 rounded-full inline-flex items-center justify-center shrink-0 bg-card border border-border/50"
+              aria-label={selected ? "Selected" : "Not selected"}
+            >
+              <Checkbox checked={selected} onCheckedChange={() => toggleSelected(s.id)} />
+            </div>
+          ) : (
+            <button
+              onClick={(e) => { e.stopPropagation(); handleToggleFavorite(s); }}
+              className={`w-10 h-10 rounded-full inline-flex items-center justify-center shrink-0 transition ${
+                fav ? "bg-rose-50 text-rose-500" : "bg-muted/40 text-muted-foreground hover:bg-muted"
+              }`}
+              aria-label={fav ? "Remove from favorites" : "Add to favorites"}
+            >
+              <Heart className={`w-4 h-4 ${fav ? "fill-current" : ""}`} />
+            </button>
           )}
-        </div>
+        </button>
+        {!inManage && (
+          <div className="flex border-t border-border/30">
+            <button
+              onClick={(e) => { e.stopPropagation(); handleRide(s); }}
+              className="flex-1 h-10 inline-flex items-center justify-center gap-1.5 text-[12px] font-semibold text-primary hover:bg-primary/5 transition"
+            >
+              <Car className="w-3.5 h-3.5" /> Ride
+            </button>
+            <div className="w-px bg-border/30" />
+            <button
+              onClick={(e) => { e.stopPropagation(); shareStore(s, dist); }}
+              className="flex-1 h-10 inline-flex items-center justify-center gap-1.5 text-[12px] font-semibold text-primary hover:bg-primary/5 transition"
+            >
+              <Share2 className="w-3.5 h-3.5" /> Share
+            </button>
+            {s.phone && (
+              <>
+                <div className="w-px bg-border/30" />
+                <button
+                  onClick={(e) => { e.stopPropagation(); window.open(`tel:${s.phone}`, "_self"); }}
+                  className="flex-1 h-10 inline-flex items-center justify-center gap-1.5 text-[12px] font-semibold text-primary hover:bg-primary/5 transition"
+                >
+                  <Phone className="w-3.5 h-3.5" /> Call
+                </button>
+              </>
+            )}
+          </div>
+        )}
       </motion.div>
     );
   };
@@ -340,47 +486,69 @@ export default function StoresListPage() {
                 className="flex items-center gap-2"
               >
                 <button
-                  onClick={goBackToMap}
+                  onClick={manageMode ? exitManageMode : goBackToMap}
                   className="w-10 h-10 rounded-full flex items-center justify-center bg-card border border-border/40 shadow-sm text-foreground hover:bg-muted transition"
-                  aria-label="Back to map"
+                  aria-label={manageMode ? "Exit manage mode" : "Back to map"}
                 >
-                  <ArrowLeft className="w-5 h-5" />
+                  {manageMode ? <X className="w-5 h-5" /> : <ArrowLeft className="w-5 h-5" />}
                 </button>
                 <div className="flex-1 min-w-0">
-                  <h1 className="text-[16px] font-bold leading-tight text-foreground">All Stores</h1>
+                  <h1 className="text-[16px] font-bold leading-tight text-foreground flex items-center gap-1.5">
+                    {manageMode ? "Manage favorites" : "All Stores"}
+                    {isOffline && (
+                      <span className="inline-flex items-center gap-1 text-[10px] font-bold uppercase px-1.5 py-0.5 rounded-md bg-amber-100 text-amber-800">
+                        <CloudOff className="w-3 h-3" /> Offline
+                      </span>
+                    )}
+                  </h1>
                   <p className="text-[12px] text-muted-foreground mt-0.5 truncate">
-                    {filtered.length} {filtered.length === 1 ? "store" : "stores"}
-                    {userLoc ? " · sorted by distance" : ""}
+                    {manageMode
+                      ? `${selectedIds.size} selected · tap rows to choose`
+                      : `${filtered.length} ${filtered.length === 1 ? "store" : "stores"}${userLoc ? " · sorted by distance" : ""}`}
                   </p>
                 </div>
-                <button
-                  onClick={() => requestGps()}
-                  disabled={recentering}
-                  className="h-10 px-3 inline-flex items-center gap-1.5 rounded-full bg-card border border-border/40 shadow-sm text-foreground text-[12px] font-semibold disabled:opacity-60"
-                  aria-label="Recenter distance"
-                  title="Re-fetch GPS and re-sort"
-                >
-                  {recentering ? (
-                    <Loader2 className="w-4 h-4 animate-spin" />
-                  ) : (
-                    <Locate className="w-4 h-4" />
-                  )}
-                  <span className="hidden xs:inline">Recenter</span>
-                </button>
-                <button
-                  onClick={() => { setSearchOpen(true); setTimeout(() => searchInputRef.current?.focus(), 80); }}
-                  className="w-10 h-10 rounded-full flex items-center justify-center bg-card border border-border/40 shadow-sm text-muted-foreground hover:bg-muted transition"
-                  aria-label="Search"
-                >
-                  <Search className="w-[18px] h-[18px]" />
-                </button>
+                {!manageMode && favoriteIds.size > 0 && (
+                  <button
+                    onClick={enterManageMode}
+                    className="h-10 px-3 inline-flex items-center gap-1.5 rounded-full bg-card border border-border/40 shadow-sm text-foreground text-[12px] font-semibold"
+                    aria-label="Manage favorites"
+                  >
+                    <CheckSquare className="w-4 h-4" />
+                    <span className="hidden xs:inline">Manage</span>
+                  </button>
+                )}
+                {!manageMode && (
+                  <>
+                    <button
+                      onClick={() => requestGps()}
+                      disabled={recentering}
+                      className="h-10 px-3 inline-flex items-center gap-1.5 rounded-full bg-card border border-border/40 shadow-sm text-foreground text-[12px] font-semibold disabled:opacity-60"
+                      aria-label="Recenter distance"
+                      title="Re-fetch GPS and re-sort"
+                    >
+                      {recentering ? (
+                        <Loader2 className="w-4 h-4 animate-spin" />
+                      ) : (
+                        <Locate className="w-4 h-4" />
+                      )}
+                      <span className="hidden xs:inline">Recenter</span>
+                    </button>
+                    <button
+                      onClick={() => { setSearchOpen(true); setTimeout(() => searchInputRef.current?.focus(), 80); }}
+                      className="w-10 h-10 rounded-full flex items-center justify-center bg-card border border-border/40 shadow-sm text-muted-foreground hover:bg-muted transition"
+                      aria-label="Search"
+                    >
+                      <Search className="w-[18px] h-[18px]" />
+                    </button>
+                  </>
+                )}
               </motion.div>
             )}
           </AnimatePresence>
         </div>
 
-        {/* Category chips */}
-        {(usedCategories.length > 0 || favoriteIds.size > 0) && (
+        {/* Category chips (hidden in manage mode) */}
+        {!manageMode && (usedCategories.length > 0 || favoriteIds.size > 0) && (
           <div className="relative">
             <div className="px-4 pb-3 overflow-x-auto scrollbar-hide">
               <div className="flex gap-2 w-max">
@@ -434,7 +602,7 @@ export default function StoresListPage() {
       </div>
 
       {/* GPS error banner */}
-      {gpsError && (
+      {gpsError && !manageMode && (
         <div className="px-3 pt-3">
           <div className="flex items-start gap-2.5 rounded-xl bg-amber-50 border border-amber-200 p-3 text-amber-900">
             <AlertTriangle className="w-4 h-4 mt-0.5 shrink-0" />
@@ -455,8 +623,8 @@ export default function StoresListPage() {
       )}
 
       {/* List */}
-      <div className="flex-1 overflow-y-auto px-3 pt-3 pb-[110px]">
-        {error ? (
+      <div className={`flex-1 overflow-y-auto px-3 pt-3 ${manageMode ? "pb-[140px]" : "pb-[110px]"}`}>
+        {error && !isOffline ? (
           <div className="flex flex-col items-center justify-center text-center py-16 px-6">
             <div className="w-16 h-16 rounded-2xl bg-destructive/10 flex items-center justify-center mb-3">
               <AlertTriangle className="w-7 h-7 text-destructive" />
@@ -470,7 +638,7 @@ export default function StoresListPage() {
               Retry
             </Button>
           </div>
-        ) : isLoading ? (
+        ) : isLoading && allStores.length === 0 ? (
           <ul className="space-y-2.5" aria-busy="true" aria-label="Loading stores">
             {Array.from({ length: 6 }).map((_, i) => (
               <li key={i} className="rounded-2xl bg-card border border-border/40 overflow-hidden">
@@ -507,7 +675,7 @@ export default function StoresListPage() {
             <Button
               variant="outline"
               className="mt-4"
-              onClick={() => { setActiveCategory("all"); setSearchQuery(""); setShowFavorites(false); }}
+              onClick={() => { setActiveCategory("all"); setSearchQuery(""); setShowFavorites(false); exitManageMode(); }}
             >
               {showFavorites ? "Browse all stores" : "Reset filters"}
             </Button>
@@ -521,9 +689,50 @@ export default function StoresListPage() {
         )}
       </div>
 
+      {/* Manage mode action bar */}
+      <AnimatePresence>
+        {manageMode && (
+          <motion.div
+            initial={{ y: 100, opacity: 0 }}
+            animate={{ y: 0, opacity: 1 }}
+            exit={{ y: 100, opacity: 0 }}
+            className="fixed left-0 right-0 bottom-0 z-50 bg-card border-t border-border/40 shadow-2xl"
+            style={{ paddingBottom: "max(env(safe-area-inset-bottom, 0px), 8px)" }}
+          >
+            <div className="px-3 py-3 flex items-center gap-2">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={selectAllVisible}
+                disabled={visibleFavoriteIds.length === 0}
+              >
+                {selectedIds.size === visibleFavoriteIds.length && visibleFavoriteIds.length > 0
+                  ? "Clear"
+                  : "Select all"}
+              </Button>
+              <div className="flex-1 text-center text-[13px] font-semibold text-foreground">
+                {selectedIds.size} selected
+              </div>
+              <Button
+                onClick={handleBulkRemove}
+                disabled={selectedIds.size === 0 || removingFavs}
+                className="bg-rose-500 hover:bg-rose-600 text-white"
+              >
+                {removingFavs ? (
+                  <Loader2 className="w-4 h-4 mr-1.5 animate-spin" />
+                ) : (
+                  <Trash2 className="w-4 h-4 mr-1.5" />
+                )}
+                Remove{selectedIds.size > 0 ? ` (${selectedIds.size})` : ""}
+              </Button>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
       {/* Store details drawer */}
       <AnimatePresence>
-        {drawerStore && (
+        {drawerStore && !manageMode && (
           <motion.div
             className="fixed inset-0 z-[1700] bg-foreground/40"
             initial={{ opacity: 0 }}
@@ -608,28 +817,82 @@ export default function StoresListPage() {
                 )}
               </div>
 
+              {/* Promo code */}
+              <div className="mt-4 rounded-xl border border-border/40 bg-muted/20 overflow-hidden">
+                <button
+                  onClick={() => setPromoOpen((v) => !v)}
+                  className="w-full px-3.5 py-3 flex items-center gap-2 text-left"
+                  aria-expanded={promoOpen}
+                >
+                  <Tag className="w-4 h-4 text-primary" />
+                  <span className="text-[13px] font-semibold text-foreground flex-1">
+                    {promoApplied ? `Promo ${promoApplied} applied` : "Have a promo code?"}
+                  </span>
+                  {promoApplied && <CheckCircle2 className="w-4 h-4 text-emerald-600" />}
+                  <span className="text-[12px] text-muted-foreground">{promoOpen ? "Hide" : "Add"}</span>
+                </button>
+                {promoOpen && (
+                  <div className="px-3.5 pb-3.5 flex items-center gap-2">
+                    <Input
+                      value={promoCode}
+                      onChange={(e) => setPromoCode(e.target.value.toUpperCase())}
+                      placeholder="Enter code"
+                      className="h-10 rounded-xl flex-1 text-sm uppercase"
+                      maxLength={20}
+                      disabled={!!promoApplied}
+                    />
+                    <Button
+                      size="sm"
+                      onClick={handleApplyPromo}
+                      disabled={!promoCode.trim() || !!promoApplied}
+                      className="h-10 px-4 rounded-xl"
+                    >
+                      {promoApplied ? "Applied" : "Apply"}
+                    </Button>
+                  </div>
+                )}
+                {promoApplied && (
+                  <p className="px-3.5 pb-3 text-[11px] text-muted-foreground">
+                    Will be added to your next ride or order from this store.
+                  </p>
+                )}
+              </div>
+
               {/* Primary actions */}
-              <div className="mt-5 grid grid-cols-2 gap-2">
+              <div className="mt-4 grid grid-cols-2 gap-2">
                 <Button
-                  onClick={() => { navigate(`/grocery/shop/${drawerStore.slug}`); setDrawerStore(null); }}
+                  onClick={() => { handleViewStore(drawerStore, promoApplied); setDrawerStore(null); }}
                 >
                   <Store className="w-4 h-4 mr-1.5" /> View Store
                 </Button>
                 <Button
                   variant="outline"
-                  onClick={() => { handleRide(drawerStore); setDrawerStore(null); }}
+                  onClick={() => { handleRide(drawerStore, promoApplied); setDrawerStore(null); }}
                 >
                   <Car className="w-4 h-4 mr-1.5" /> Ride There
                 </Button>
                 <Button
                   variant="outline"
-                  onClick={() => shareStore(drawerStore)}
+                  onClick={() => handleOpenDirections(drawerStore)}
+                >
+                  <Navigation className="w-4 h-4 mr-1.5" /> Directions
+                </Button>
+                <Button
+                  variant="outline"
+                  onClick={() => {
+                    const d = userLoc
+                      ? distanceMiles(userLoc, { lat: drawerStore.latitude, lng: drawerStore.longitude })
+                      : null;
+                    shareStore(drawerStore, d);
+                  }}
                 >
                   <Share2 className="w-4 h-4 mr-1.5" /> Share
                 </Button>
                 <Button
                   variant={isFavorite(drawerStore.id) ? "default" : "outline"}
-                  className={isFavorite(drawerStore.id) ? "bg-rose-500 hover:bg-rose-600 text-white" : ""}
+                  className={`col-span-2 ${
+                    isFavorite(drawerStore.id) ? "bg-rose-500 hover:bg-rose-600 text-white" : ""
+                  }`}
                   onClick={() => handleToggleFavorite(drawerStore)}
                 >
                   <Heart className={`w-4 h-4 mr-1.5 ${isFavorite(drawerStore.id) ? "fill-current" : ""}`} />
@@ -654,7 +917,7 @@ export default function StoresListPage() {
         )}
       </AnimatePresence>
 
-      <ZivoMobileNav />
+      {!manageMode && <ZivoMobileNav />}
     </div>
   );
 }
