@@ -4,6 +4,7 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
+import { toast } from "sonner";
 import {
   ArrowLeft, Package, ShoppingBag, BarChart3, Settings, Tag, Truck,
   Plus, TrendingUp, DollarSign, Box, Users, Calendar, Clock, Wallet, Shield, ChevronRight,
@@ -12,6 +13,41 @@ import {
 import { useAuth } from "@/contexts/AuthContext";
 import AppLayout from "@/components/app/AppLayout";
 import { cn } from "@/lib/utils";
+
+// Routes that exist in App.tsx — anything else shows a "Coming soon" toast
+// instead of dropping the user on a 404 page.
+const IMPLEMENTED_SHOP_ROUTES = new Set<string>([
+  "/shop-dashboard/employees",
+  "/shop-dashboard/payroll",
+  "/shop-dashboard/employee-schedule",
+  "/shop-dashboard/time-clock",
+  "/shop-dashboard/employee-rules",
+  "/shop-dashboard/truck",
+  "/shop-dashboard/attribution",
+  "/shop-dashboard/sandbox",
+  "/shop-dashboard/roi",
+  "/shop-dashboard/refer",
+  "/shop-dashboard/boost",
+  "/shop-dashboard/boost-engine",
+  "/shop-dashboard/ai-creative",
+  "/shop-dashboard/ai-content",
+  "/shop-dashboard/wallet",
+  "/shop-dashboard/tax-reports",
+]);
+
+const safeNavigate = (
+  navigate: (to: string) => void,
+  to: string,
+  label: string,
+) => {
+  if (IMPLEMENTED_SHOP_ROUTES.has(to)) {
+    navigate(to);
+  } else {
+    toast.info(`${label} — coming soon`, {
+      description: "We're polishing this section. Check back shortly.",
+    });
+  }
+};
 
 const ShopDashboard = () => {
   const navigate = useNavigate();
