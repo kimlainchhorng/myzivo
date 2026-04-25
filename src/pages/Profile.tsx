@@ -445,9 +445,9 @@ const Profile = () => {
         <NavBar />
       </div>
 
-      {/* ── Deep 3D Background with multiple parallax layers ── */}
-      <motion.div style={{ y: bgParallax }} className="pointer-events-none fixed inset-0 z-0">
-        {/* Base gradient */}
+      {/* ── Background: clean Facebook-style on mobile, parallax on desktop ── */}
+      <motion.div style={{ y: bgParallax }} className="pointer-events-none fixed inset-0 z-0 hidden lg:block">
+        {/* Base gradient (desktop only) */}
         <div className="absolute inset-0 bg-gradient-to-b from-primary/[0.06] via-background to-primary/[0.04]" />
         {/* Radial glows */}
         <div className="absolute top-[-25%] right-[-15%] w-[70vw] h-[70vw] rounded-full bg-primary/[0.07] blur-[120px]" />
@@ -463,8 +463,9 @@ const Profile = () => {
       </motion.div>
 
       {/* ── Scrollable content ── */}
-      <div ref={scrollRef} className="relative z-10 h-screen overflow-y-auto pb-24 scroll-smooth" style={{ scrollbarWidth: 'none' }}>
-        <div className="px-4 pt-2 lg:pt-20 max-w-lg md:max-w-2xl lg:max-w-3xl mx-auto">
+      <div ref={scrollRef} className="relative z-10 h-screen overflow-y-auto pb-24 scroll-smooth bg-background" style={{ scrollbarWidth: 'none' }}>
+        {/* Mobile: edge-to-edge full-screen (Facebook-style). Desktop: centered card. */}
+        <div className="px-0 lg:px-4 pt-0 lg:pt-20 max-w-none lg:max-w-3xl mx-auto">
 
           {profileLoading ? (
             <div className="flex items-center justify-center py-20">
