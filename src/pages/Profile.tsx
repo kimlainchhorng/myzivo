@@ -1206,69 +1206,7 @@ const Profile = () => {
                 <ProfileStories />
               </ParallaxSection>
 
-          {/* Translate moved to /more page */}
-          <ParallaxSection index={2.1}>
-            <div className="relative mb-2">
-
-              <AnimatePresence>
-                {showNotifPanel && (
-                  <motion.div
-                    id="profile-notif-panel"
-                    initial={{ opacity: 0, height: 0 }}
-                    animate={{ opacity: 1, height: "auto" }}
-                    exit={{ opacity: 0, height: 0 }}
-                    transition={{ duration: 0.22, ease: "easeInOut" }}
-                    className="overflow-hidden"
-                  >
-                    <div className="mt-2 rounded-2xl border border-border/40 bg-card/90 p-2.5 shadow-xl shadow-primary/[0.04] backdrop-blur-xl">
-                      <div className="mb-2 flex items-center justify-between">
-                        <div className="flex items-center gap-2">
-                          <Bell className="h-3.5 w-3.5 text-primary" />
-                          <span className="text-xs font-bold">Notifications</span>
-                          {totalNotifCount > 0 && <Badge variant="secondary" className="h-5 px-1.5 text-[10px]">{totalNotifCount} new</Badge>}
-                        </div>
-                        <button onClick={() => setShowNotifPanel(false)} className="rounded-xl p-1.5 transition-colors hover:bg-muted/50" aria-label="Close notifications">
-                          <X className="h-3.5 w-3.5 text-muted-foreground" />
-                        </button>
-                      </div>
-
-                      <div className="mb-2 max-h-[220px] space-y-1.5 overflow-y-auto pr-1">
-                        {totalNotifCount === 0 ? (
-                          <div className="py-3 text-center">
-                            <Bell className="mx-auto mb-1.5 h-6 w-6 text-muted-foreground/30" />
-                            <p className="text-xs text-muted-foreground">No new notifications</p>
-                          </div>
-                        ) : (
-                          <>
-                            {socialCount > 0 && (
-                              <button onClick={() => { setShowNotifPanel(false); navigate('/notifications'); }} className="flex w-full items-center gap-2.5 rounded-xl border border-primary/15 bg-primary/5 p-2 text-left transition-colors hover:bg-primary/10">
-                                <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-primary/15"><UserPlus className="h-3.5 w-3.5 text-primary" /></div>
-                                <div className="min-w-0 flex-1"><p className="text-xs font-semibold">Friend Requests</p><p className="text-[10px] text-muted-foreground">{socialCount} pending</p></div>
-                                <ChevronRight className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
-                              </button>
-                            )}
-                            {notifications.filter(n => !n.is_read).slice(0, 4).map((n) => (
-                              <button key={n.id} onClick={() => { setShowNotifPanel(false); navigate('/notifications'); }} className="flex w-full items-center gap-2.5 rounded-xl bg-muted/35 p-2 text-left transition-colors hover:bg-muted/55">
-                                <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-primary/10"><Bell className="h-3.5 w-3.5 text-primary" /></div>
-                                <div className="min-w-0 flex-1"><p className="truncate text-xs font-semibold">{n.title || 'Notification'}</p><p className="truncate text-[10px] text-muted-foreground">{n.body || n.template || 'New update'}</p></div>
-                                <ChevronRight className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
-                              </button>
-                            ))}
-                          </>
-                        )}
-                      </div>
-
-                      <div className="flex gap-2">
-                        <button onClick={() => { setShowNotifPanel(false); navigate('/notifications'); }} className="flex-1 rounded-xl bg-primary py-2 text-xs font-bold text-primary-foreground transition-transform active:scale-95">View All</button>
-                        <button onClick={() => setShowNotifPanel(false)} className="rounded-xl bg-muted/50 px-4 py-2 text-xs font-bold text-muted-foreground transition-transform active:scale-95 hover:bg-muted/70">Close</button>
-                      </div>
-                    </div>
-                  </motion.div>
-                )}
-              </AnimatePresence>
-            </div>
-          </ParallaxSection>
-
+          {/* Notifications panel moved into the sticky header (Facebook-style popover) */}
 
 
               {/* ── Social Content Tabs (Posts, Videos, Live, Status) ── */}
