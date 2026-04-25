@@ -1,27 +1,34 @@
-The screenshot confirms the target: the cover photo should touch the top/left/right edges of the app content area, while the cover buttons stay below the notch/status area.
+I found two likely causes for why it still looks wrong and why Add Cover is hard/impossible to click:
 
-Plan:
+1. `capacitor.config.ts` says the app should be edge-to-edge, but `src/main.tsx` overrides it at runtime with `StatusBar.setOverlaysWebView({ overlay: false })`. That prevents the cover from truly crossing into the status bar area on iOS.
+2. The cover upload uses a hidden file input triggered by `ref.click()`. On mobile/iOS this can be unreliable when nested inside animated/transformed wrappers, so the Add Cover button may not open the picker.
 
-1. Fix the Profile page wrapper
-   - Remove `safe-area-top` from the outer Profile wrapper because it pushes the whole page down, including the cover.
-   - Keep bottom safe-area spacing so the bottom navigation/home indicator remains safe.
+Plan to fix it:
 
-2. Make the cover photo full-bleed
-   - Let the cover container start at the very top of the app viewport.
-   - Make the cover image/gradient fill the full container with `absolute inset-0`, `w-full`, `h-full`, and `object-cover`.
-   - Avoid applying `.pt-safe`, `.safe-area-top`, or top padding to the cover visual layer.
+1. Make the native status bar match the Facebook-style cover behavior
+   - Update the runtime Capacitor status bar setup so iOS keeps `overlay: true` instead of forcing `false`.
+   - Keep status-bar icon color readable over the cover.
 
-3. Keep only the buttons inside the safe zone
-   - Keep the reposition/change-cover buttons using `top: calc(var(--zivo-safe-top) + ...)` so they sit below the status/notch area.
-   - Keep the sticky profile header using the safe-top token.
-   - If needed, increase the cover buttons’ top offset slightly so they do not overlap the phone status UI.
+2. Rebuild the profile cover top area like the Facebook reference
+   - Cover image starts at the very top of the screen and fills the status/safe-area region.
+   - Buttons stay inside the safe area, not under the clock/battery.
+   - Remove the current negative-margin workaround and use a cleaner full-bleed mobile cover height: `cover height + safe top`.
+   - Keep desktop layout unchanged.
 
-4. Preserve the visual height
-   - Because removing wrapper safe padding changes the layout, adjust the cover height to include the safe-area top visually, so the cover still looks tall and full like the screenshot.
-   - Keep the avatar overlap and profile content alignment natural below the cover.
+3. Fix Add Cover click on mobile
+   - Replace the hidden-input/ref-click pattern for cover upload with a real clickable `<label>` tied to the file input.
+   - Position the actual input/label above overlays with proper `z-index`, so tapping the camera/image button always opens the file picker.
+   - Apply the same reliability pattern to the avatar camera button if needed.
 
-5. Update the safe-area note
-   - Add a Profile example to the developer doc: “cover photo = full-bleed visual layer, no safe-area class; cover buttons/header = interactive layer, use safe-area offset.”
+4. Reduce click blockers in the cover area
+   - Disable pointer events on decorative cover layers, gradients, and scrims.
+   - Keep only real controls clickable.
+   - Make PullToRefresh ignore touches that start on file-upload controls.
 
-Important limitation:
-The black top area in your screenshot that shows the time and “Facebook” is Facebook’s in-app browser chrome. A website cannot draw behind that black native browser bar. This fix will make the cover fill the full available ZIVO app/webview area underneath that native bar, and in the real Capacitor app/PWA it will extend edge-to-edge as much as the platform allows.
+5. Verify after implementation
+   - Test `/profile` in mobile viewport.
+   - Confirm the cover visually reaches the top like Facebook.
+   - Confirm action buttons are below the status bar.
+   - Confirm tapping Add/Change Cover opens the file picker.
+
+After approval, I’ll apply these changes. For the native iPhone/Android app, you will also need to pull the updated project and run `npx cap sync ios` / `npx cap sync android` so the native status bar change is included.

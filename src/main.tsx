@@ -17,9 +17,14 @@ idle(() => {
     import("@capacitor/status-bar").then(({ StatusBar, Style }) => {
       const getStyle = () => {
         const dark = window.matchMedia("(prefers-color-scheme: dark)").matches || document.documentElement.classList.contains("dark");
-        return dark ? Style.Light : Style.Dark;
+        // Use Light icons over the cover photo (dark scrim) regardless of theme
+        // so the clock/battery stay legible like Facebook on iOS.
+        return Style.Light;
       };
-      void StatusBar.setOverlaysWebView({ overlay: false });
+      // Edge-to-edge: webview crosses behind the status bar so cover photos /
+      // gradients reach the very top of the screen. Interactive controls use
+      // env(safe-area-inset-top) to stay clear of the notch / Dynamic Island.
+      void StatusBar.setOverlaysWebView({ overlay: true });
       void StatusBar.setStyle({ style: getStyle() });
       
       const update = () => void StatusBar.setStyle({ style: getStyle() });
