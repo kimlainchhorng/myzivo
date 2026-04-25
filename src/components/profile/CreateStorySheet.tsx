@@ -43,13 +43,15 @@ interface Track {
   url: string;
 }
 
-const TEXT_BACKGROUNDS = [
-  "linear-gradient(135deg,#10b981,#059669)",
-  "linear-gradient(135deg,#6366f1,#8b5cf6)",
-  "linear-gradient(135deg,#f59e0b,#ef4444)",
-  "linear-gradient(135deg,#06b6d4,#3b82f6)",
-  "linear-gradient(135deg,#ec4899,#f43f5e)",
-  "linear-gradient(135deg,#1e293b,#334155)",
+// 3-stop premium gradients (start, mid, end) — used by both the picker
+// chip and the canvas renderer so the saved story matches the preview.
+const TEXT_BACKGROUNDS: { css: string; stops: [string, string, string] }[] = [
+  { css: "linear-gradient(135deg,#10b981 0%,#0ea371 45%,#0f766e 100%)", stops: ["#10b981", "#0ea371", "#0f766e"] }, // ZIVO emerald
+  { css: "linear-gradient(135deg,#6366f1 0%,#7c3aed 50%,#8b5cf6 100%)", stops: ["#6366f1", "#7c3aed", "#8b5cf6"] }, // indigo→violet
+  { css: "linear-gradient(135deg,#f59e0b 0%,#f97316 50%,#ef4444 100%)", stops: ["#f59e0b", "#f97316", "#ef4444"] }, // sunset
+  { css: "linear-gradient(135deg,#06b6d4 0%,#0ea5e9 50%,#3b82f6 100%)", stops: ["#06b6d4", "#0ea5e9", "#3b82f6"] }, // ocean
+  { css: "linear-gradient(135deg,#ec4899 0%,#db2777 50%,#f43f5e 100%)", stops: ["#ec4899", "#db2777", "#f43f5e"] }, // rose
+  { css: "linear-gradient(135deg,#0f172a 0%,#1e293b 55%,#334155 100%)", stops: ["#0f172a", "#1e293b", "#334155"] }, // graphite
 ];
 
 export default function CreateStorySheet({ open, onClose, onPublished }: Props) {
@@ -148,19 +150,51 @@ export default function CreateStorySheet({ open, onClose, onPublished }: Props) 
     canvas.height = h;
     const ctx = canvas.getContext("2d")!;
 
-    const grad = TEXT_BACKGROUNDS[bgIdx];
-    const m = grad.match(/#([0-9a-f]{6})/gi) || ["#10b981", "#059669"];
+    // 1) Base 3-stop diagonal gradient
+    const [c0, c1, c2] = TEXT_BACKGROUNDS[bgIdx].stops;
     const linear = ctx.createLinearGradient(0, 0, w, h);
-    linear.addColorStop(0, m[0]);
-    linear.addColorStop(1, m[1] || m[0]);
+    linear.addColorStop(0, c0);
+    linear.addColorStop(0.5, c1);
+    linear.addColorStop(1, c2);
     ctx.fillStyle = linear;
     ctx.fillRect(0, 0, w, h);
 
+    // 2) Top-left radial highlight (premium glass feel)
+    const hi = ctx.createRadialGradient(w * 0.22, h * 0.18, 50, w * 0.22, h * 0.18, w * 0.9);
+    hi.addColorStop(0, "rgba(255,255,255,0.32)");
+    hi.addColorStop(0.45, "rgba(255,255,255,0.08)");
+    hi.addColorStop(1, "rgba(255,255,255,0)");
+    ctx.fillStyle = hi;
+    ctx.fillRect(0, 0, w, h);
+
+    // 3) Bottom-right shade for depth
+    const sh = ctx.createRadialGradient(w * 0.85, h * 0.9, 80, w * 0.85, h * 0.9, w);
+    sh.addColorStop(0, "rgba(0,0,0,0.35)");
+    sh.addColorStop(0.6, "rgba(0,0,0,0.12)");
+    sh.addColorStop(1, "rgba(0,0,0,0)");
+    ctx.fillStyle = sh;
+    ctx.fillRect(0, 0, w, h);
+
+    // 4) Decorative soft orbs for visual interest
+    const orb = (x: number, y: number, r: number, alpha: number) => {
+      const g = ctx.createRadialGradient(x, y, 0, x, y, r);
+      g.addColorStop(0, `rgba(255,255,255,${alpha})`);
+      g.addColorStop(1, "rgba(255,255,255,0)");
+      ctx.fillStyle = g;
+      ctx.fillRect(0, 0, w, h);
+    };
+    orb(w * 0.85, h * 0.18, 280, 0.18);
+    orb(w * 0.15, h * 0.78, 240, 0.12);
+
+    // 5) Centered text with soft drop-shadow
     ctx.fillStyle = "#ffffff";
     ctx.textAlign = "center";
     ctx.textBaseline = "middle";
-    const fontSize = text.length > 80 ? 72 : text.length > 40 ? 96 : 128;
-    ctx.font = `700 ${fontSize}px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif`;
+    ctx.shadowColor = "rgba(0,0,0,0.35)";
+    ctx.shadowBlur = 24;
+    ctx.shadowOffsetY = 6;
+    const fontSize = text.length > 80 ? 76 : text.length > 40 ? 104 : 132;
+    ctx.font = `800 ${fontSize}px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif`;
 
     const maxWidth = w - 160;
     const words = text.split(/\s+/);
@@ -184,6 +218,9 @@ export default function CreateStorySheet({ open, onClose, onPublished }: Props) 
       ctx.fillText(l, w / 2, y);
       y += lineHeight;
     }
+    ctx.shadowColor = "transparent";
+    ctx.shadowBlur = 0;
+    ctx.shadowOffsetY = 0;
 
     return await new Promise<Blob>((resolve, reject) => {
       canvas.toBlob((b) => (b ? resolve(b) : reject(new Error("Canvas blob failed"))), "image/jpeg", 0.92);
@@ -536,7 +573,7 @@ export default function CreateStorySheet({ open, onClose, onPublished }: Props) 
               <div className="p-3 space-y-3">
                 <div
                   className="relative w-full aspect-[9/16] rounded-2xl overflow-hidden flex items-center justify-center px-6"
-                  style={{ background: TEXT_BACKGROUNDS[bgIdx] }}
+                  style={{ background: TEXT_BACKGROUNDS[bgIdx].css }}
                 >
                   <textarea
                     value={text}
@@ -570,7 +607,7 @@ export default function CreateStorySheet({ open, onClose, onPublished }: Props) 
                         "shrink-0 w-9 h-9 rounded-full border-2 transition-transform",
                         bgIdx === i ? "border-primary scale-110" : "border-border/40"
                       )}
-                      style={{ background: bg }}
+                      style={{ background: bg.css }}
                     />
                   ))}
                 </div>
