@@ -1,356 +1,117 @@
-import { useState, useRef, useEffect } from "react";
-import { createPortal } from "react-dom";
-import { Plus, Camera, X } from "lucide-react";
-import { motion, AnimatePresence } from "framer-motion";
+/**
+ * ProfileStories — Account-page "Your story" tile.
+ * Backed by the shared `stories` pipeline; uses CreateStorySheet to compose
+ * and StoryViewer to view existing stories.
+ */
+import { useState } from "react";
+import { motion } from "framer-motion";
+import { Plus, Camera } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useUserProfile } from "@/hooks/useUserProfile";
 import { supabase } from "@/integrations/supabase/client";
-import { toast } from "sonner";
+import { useQuery } from "@tanstack/react-query";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-
-interface Story {
-  id: string;
-  user_id: string;
-  media_url: string;
-  media_type: "image" | "video";
-  caption?: string;
-  created_at: string;
-  viewed?: boolean;
-  user_name?: string;
-  user_avatar?: string;
-}
-
-interface StoryGroup {
-  user_id: string;
-  user_name: string;
-  user_avatar: string | null;
-  stories: Story[];
-  hasUnviewed: boolean;
-}
+import CreateStorySheet from "@/components/profile/CreateStorySheet";
+import StoryViewer, { StoryGroup } from "@/components/stories/StoryViewer";
 
 const ProfileStories = () => {
   const { user } = useAuth();
   const { data: profile } = useUserProfile();
-  const scrollRef = useRef<HTMLDivElement>(null);
-  const fileInputRef = useRef<HTMLInputElement>(null);
-  const [storyGroups, setStoryGroups] = useState<StoryGroup[]>([]);
-  const [viewingGroup, setViewingGroup] = useState<StoryGroup | null>(null);
-  const [currentStoryIndex, setCurrentStoryIndex] = useState(0);
-  const [progress, setProgress] = useState(0);
-  const timerRef = useRef<NodeJS.Timeout | null>(null);
-  const STORY_DURATION = 5000;
 
-  // Load real stories from database (last 24h)
-  useEffect(() => {
-    let alive = true;
-    const loadStories = async () => {
-      try {
-        const since = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
-        const { data } = await (supabase as any)
-          .from("user_stories")
-          .select("id, user_id, media_url, media_type, caption, created_at")
-          .gte("created_at", since)
-          .order("created_at", { ascending: false })
-          .limit(100);
+  const [showCreate, setShowCreate] = useState(false);
+  const [viewing, setViewing] = useState<StoryGroup[] | null>(null);
 
-        if (!alive || !data) return;
+  // My active stories (24h)
+  const { data: myStories = [] } = useQuery({
+    queryKey: ["profile-my-story", user?.id],
+    enabled: !!user?.id,
+    refetchInterval: 60000,
+    queryFn: async () => {
+      const { data } = await supabase
+        .from("stories" as any)
+        .select("id, user_id, media_url, media_type, caption, created_at, expires_at, views_count")
+        .eq("user_id", user!.id)
+        .gt("expires_at", new Date().toISOString())
+        .order("created_at", { ascending: true });
+      return (data as any[]) || [];
+    },
+  });
 
-        // Collect unique user IDs and fetch their profiles
-        const userIds = [...new Set((data as any[]).map((r: any) => r.user_id))];
-        let profileMap: Record<string, { full_name: string | null; avatar_url: string | null }> = {};
-        if (userIds.length > 0) {
-          try {
-            const { data: profiles } = await supabase
-              .from("profiles")
-              .select("user_id, full_name, avatar_url")
-              .in("user_id", userIds);
-            if (profiles) {
-              for (const p of profiles as any[]) {
-                profileMap[p.user_id] = { full_name: p.full_name, avatar_url: p.avatar_url };
-              }
-            }
-          } catch {}
-        }
+  const hasStory = myStories.length > 0;
+  const displayName = profile?.full_name || "You";
 
-        // Group by user_id
-        const groupMap = new Map<string, StoryGroup>();
-        for (const row of data as any[]) {
-          const story: Story = {
-            id: row.id,
-            user_id: row.user_id,
-            media_url: row.media_url,
-            media_type: row.media_type || "image",
-            caption: row.caption || undefined,
-            created_at: row.created_at,
-            viewed: false,
-          };
-          if (!groupMap.has(row.user_id)) {
-            const prof = profileMap[row.user_id];
-            const displayName = row.user_id === user?.id
-              ? (profile?.full_name || prof?.full_name || "You")
-              : (prof?.full_name || "User");
-            groupMap.set(row.user_id, {
-              user_id: row.user_id,
-              user_name: displayName,
-              user_avatar: prof?.avatar_url || null,
-              stories: [],
-              hasUnviewed: true,
-            });
-          }
-          groupMap.get(row.user_id)!.stories.push(story);
-        }
-        setStoryGroups(Array.from(groupMap.values()));
-      } catch {
-        // user_stories table may not exist yet
-      }
-    };
-    void loadStories();
-    return () => { alive = false; };
-  }, [user?.id, profile?.full_name]);
-
-  useEffect(() => {
-    if (!viewingGroup) return;
-    setProgress(0);
-    const startTime = Date.now();
-    const tick = () => {
-      const elapsed = Date.now() - startTime;
-      const p = Math.min(elapsed / STORY_DURATION, 1);
-      setProgress(p);
-      if (p < 1) {
-        timerRef.current = setTimeout(tick, 30);
-      } else {
-        if (currentStoryIndex < viewingGroup.stories.length - 1) {
-          setCurrentStoryIndex(prev => prev + 1);
-        } else {
-          setViewingGroup(null);
-          setCurrentStoryIndex(0);
-        }
-      }
-    };
-    timerRef.current = setTimeout(tick, 30);
-    return () => { if (timerRef.current) clearTimeout(timerRef.current); };
-  }, [viewingGroup, currentStoryIndex]);
-
-  const openStory = (group: StoryGroup) => {
-    setCurrentStoryIndex(0);
-    setViewingGroup(group);
-  };
-
-  const nextStory = () => {
-    if (!viewingGroup) return;
-    if (currentStoryIndex < viewingGroup.stories.length - 1) {
-      setCurrentStoryIndex(prev => prev + 1);
+  const handleTap = () => {
+    if (!user) return;
+    if (hasStory) {
+      const group: StoryGroup = {
+        userId: user.id,
+        userName: displayName,
+        avatarUrl: profile?.avatar_url || undefined,
+        stories: myStories.map((s: any) => ({
+          id: s.id,
+          mediaUrl: s.media_url,
+          mediaType: s.media_type,
+          caption: s.caption,
+          createdAt: s.created_at,
+          viewsCount: s.views_count ?? 0,
+        })),
+      };
+      setViewing([group]);
     } else {
-      const idx = storyGroups.findIndex(g => g.user_id === viewingGroup.user_id);
-      if (idx < storyGroups.length - 1) {
-        setViewingGroup(storyGroups[idx + 1]);
-        setCurrentStoryIndex(0);
-      } else {
-        setViewingGroup(null);
-      }
+      setShowCreate(true);
     }
   };
-
-  const prevStory = () => {
-    if (!viewingGroup) return;
-    if (currentStoryIndex > 0) {
-      setCurrentStoryIndex(prev => prev - 1);
-    } else {
-      const idx = storyGroups.findIndex(g => g.user_id === viewingGroup.user_id);
-      if (idx > 0) {
-        setViewingGroup(storyGroups[idx - 1]);
-        setCurrentStoryIndex(storyGroups[idx - 1].stories.length - 1);
-      }
-    }
-  };
-
-  const handleAddStory = () => {
-    fileInputRef.current?.click();
-  };
-
-  const handleFileSelected = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file || !user?.id) return;
-    toast.success("Story uploaded! 📸");
-    e.target.value = "";
-  };
-
-  const timeAgo = (dateStr: string) => {
-    const diff = Date.now() - new Date(dateStr).getTime();
-    const hours = Math.floor(diff / 3600000);
-    if (hours < 1) return `${Math.floor(diff / 60000)}m`;
-    return `${hours}h`;
-  };
-
-  const currentStory = viewingGroup?.stories[currentStoryIndex];
 
   return (
     <>
       <div className="relative">
-        <div
-          ref={scrollRef}
-          className="flex gap-2 overflow-x-auto pb-1 scrollbar-none"
-          style={{ scrollbarWidth: "none" }}
+        <motion.button
+          whileTap={{ scale: 0.93 }}
+          onClick={handleTap}
+          className="flex items-center gap-2 rounded-2xl border border-primary/15 bg-card/75 px-2.5 py-2 shadow-sm backdrop-blur-xl"
         >
-          <motion.button
-            whileTap={{ scale: 0.93 }}
-            onClick={handleAddStory}
-            className="flex shrink-0 items-center gap-2 rounded-2xl border border-primary/15 bg-card/75 px-2.5 py-2 shadow-sm backdrop-blur-xl"
-          >
-            <div className="relative">
-              <div className="flex h-11 w-11 items-center justify-center rounded-full border border-dashed border-primary/40 bg-muted/60">
-                {profile?.avatar_url ? (
-                  <Avatar className="h-10 w-10">
-                    <AvatarImage src={profile.avatar_url} />
-                    <AvatarFallback className="bg-primary/10 text-sm font-bold text-primary">
-                      {profile?.full_name?.[0] || "Y"}
-                    </AvatarFallback>
-                  </Avatar>
-                ) : (
-                  <div className="flex h-10 w-10 items-center justify-center rounded-full bg-primary/10">
-                    <Camera className="h-4 w-4 text-primary/60" />
-                  </div>
-                )}
-              </div>
+          <div className="relative">
+            <div className={`h-11 w-11 rounded-full p-[2px] ${
+              hasStory
+                ? "bg-gradient-to-br from-primary via-green-400 to-emerald-500"
+                : "border border-dashed border-primary/40 bg-muted/60"
+            }`}>
+              {profile?.avatar_url ? (
+                <Avatar className="h-full w-full border-2 border-background">
+                  <AvatarImage src={profile.avatar_url} />
+                  <AvatarFallback className="bg-primary/10 text-sm font-bold text-primary">
+                    {displayName[0]}
+                  </AvatarFallback>
+                </Avatar>
+              ) : (
+                <div className="flex h-full w-full items-center justify-center rounded-full border-2 border-background bg-primary/10">
+                  <Camera className="h-4 w-4 text-primary/60" />
+                </div>
+              )}
+            </div>
+            {!hasStory && (
               <div className="absolute -bottom-0.5 -right-0.5 flex h-5 w-5 items-center justify-center rounded-full border-2 border-background bg-primary shadow-md">
                 <Plus className="h-3 w-3 text-primary-foreground" />
               </div>
-            </div>
-            <span className="w-14 truncate text-left text-[11px] font-bold text-foreground">Your story</span>
-          </motion.button>
-
-          {storyGroups.map((group) => (
-            <motion.button
-              key={group.user_id}
-              whileTap={{ scale: 0.93 }}
-              onClick={() => openStory(group)}
-              className="flex shrink-0 flex-col items-center gap-1"
-            >
-              <div className={`h-12 w-12 rounded-full p-[2px] ${
-                group.hasUnviewed
-                  ? "bg-gradient-to-br from-primary via-green-400 to-emerald-500"
-                  : "bg-muted-foreground/20"
-              }`}>
-                <div className="w-full h-full rounded-full border-2 border-background overflow-hidden bg-muted">
-                  {group.stories[0]?.media_url ? (
-                    <img
-                      src={group.stories[0].media_url}
-                      alt={group.user_name}
-                      className="w-full h-full object-cover"
-                    />
-                  ) : (
-                  <div className="flex h-full w-full items-center justify-center bg-primary/10 text-xs font-bold text-primary">
-                      {group.user_name[0]}
-                    </div>
-                  )}
-                </div>
-              </div>
-              <span className="w-12 truncate text-center text-[9px] font-medium text-foreground/70">
-                {group.user_name}
-              </span>
-            </motion.button>
-          ))}
-        </div>
-
-        <input
-          ref={fileInputRef}
-          type="file"
-          accept="image/*,video/*"
-          className="hidden"
-          onChange={handleFileSelected}
-        />
+            )}
+          </div>
+          <div className="text-left">
+            <p className="text-[12px] font-bold leading-tight text-foreground">Your story</p>
+            <p className="text-[10px] leading-tight text-muted-foreground">
+              {hasStory ? "Tap to view" : "Tap to add"}
+            </p>
+          </div>
+        </motion.button>
       </div>
 
-      {createPortal(
-        <AnimatePresence>
-          {viewingGroup && currentStory && (
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              className="fixed inset-0 z-[9999] bg-black flex items-center justify-center"
-            >
-              {/* Tap zones */}
-              <div className="absolute inset-0 z-40 flex">
-                <button className="w-1/3 h-full" onClick={prevStory} aria-label="Previous" />
-                <div className="w-1/3 h-full" />
-                <button className="w-1/3 h-full" onClick={nextStory} aria-label="Next" />
-              </div>
+      <CreateStorySheet open={showCreate} onClose={() => setShowCreate(false)} />
 
-              {/* Progress bars */}
-              <div className="absolute top-3 left-3 right-3 z-50 flex gap-1">
-                {viewingGroup.stories.map((_, i) => (
-                  <div key={i} className="flex-1 h-[3px] rounded-full bg-white/25 overflow-hidden">
-                    <motion.div
-                      className="h-full bg-white rounded-full"
-                      style={{
-                        width: i < currentStoryIndex ? "100%" : i === currentStoryIndex ? `${progress * 100}%` : "0%",
-                      }}
-                    />
-                  </div>
-                ))}
-              </div>
-
-              {/* Header */}
-              <div className="absolute top-8 left-3 right-3 z-50 flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <div className="w-8 h-8 rounded-full bg-white/20 overflow-hidden">
-                    {viewingGroup.user_avatar ? (
-                      <img src={viewingGroup.user_avatar} alt="" className="w-full h-full object-cover" />
-                    ) : (
-                      <div className="w-full h-full flex items-center justify-center text-white text-xs font-bold">
-                        {viewingGroup.user_name[0]}
-                      </div>
-                    )}
-                  </div>
-                  <span className="text-white text-sm font-semibold">{viewingGroup.user_name}</span>
-                  <span className="text-white/50 text-xs">{timeAgo(currentStory.created_at)}</span>
-                </div>
-                <button
-                  onClick={() => { setViewingGroup(null); setCurrentStoryIndex(0); }}
-                  className="p-2 text-white/80 hover:text-white z-50"
-                >
-                  <X className="w-6 h-6" />
-                </button>
-              </div>
-
-              {/* Story content */}
-              <motion.div
-                key={currentStory.id}
-                initial={{ scale: 1.05, opacity: 0 }}
-                animate={{ scale: 1, opacity: 1 }}
-                transition={{ duration: 0.2 }}
-                className="w-full h-full"
-              >
-                {currentStory.media_type === "video" ? (
-                  <video
-                    src={currentStory.media_url}
-                    className="w-full h-full object-cover"
-                    autoPlay
-                    muted
-                    playsInline
-                  />
-                ) : (
-                  <img
-                    src={currentStory.media_url}
-                    alt=""
-                    className="w-full h-full object-cover"
-                  />
-                )}
-              </motion.div>
-
-              {/* Caption */}
-              {currentStory.caption && (
-                <div className="absolute bottom-12 left-0 right-0 z-50 text-center px-6">
-                  <p className="text-white text-sm font-medium drop-shadow-lg bg-black/30 backdrop-blur-sm rounded-2xl px-4 py-2 inline-block">
-                    {currentStory.caption}
-                  </p>
-                </div>
-              )}
-            </motion.div>
-          )}
-        </AnimatePresence>,
-        document.body
+      {viewing && (
+        <StoryViewer
+          groups={viewing}
+          startGroupIndex={0}
+          onClose={() => setViewing(null)}
+        />
       )}
     </>
   );

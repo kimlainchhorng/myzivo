@@ -1,0 +1,418 @@
+/**
+ * CreateStorySheet — Facebook-style create-a-story bottom sheet.
+ * Modes: pick photo/video, take photo (camera), or text on a colored background.
+ * Publishes to the same `stories` table + `user-stories` bucket used everywhere.
+ */
+import { useState, useRef, useEffect } from "react";
+import { createPortal } from "react-dom";
+import { motion, AnimatePresence } from "framer-motion";
+import { useAuth } from "@/contexts/AuthContext";
+import { useUserProfile } from "@/hooks/useUserProfile";
+import { supabase } from "@/integrations/supabase/client";
+import { useQueryClient } from "@tanstack/react-query";
+import { toast } from "sonner";
+import { cn } from "@/lib/utils";
+import X from "lucide-react/dist/esm/icons/x";
+import ImageIcon from "lucide-react/dist/esm/icons/image";
+import Camera from "lucide-react/dist/esm/icons/camera";
+import Type from "lucide-react/dist/esm/icons/type";
+import Globe from "lucide-react/dist/esm/icons/globe";
+import Loader2 from "lucide-react/dist/esm/icons/loader-2";
+import ChevronLeft from "lucide-react/dist/esm/icons/chevron-left";
+
+interface Props {
+  open: boolean;
+  onClose: () => void;
+}
+
+type Step = "choose" | "preview-media" | "compose-text";
+
+const TEXT_BACKGROUNDS = [
+  "linear-gradient(135deg,#10b981,#059669)",
+  "linear-gradient(135deg,#6366f1,#8b5cf6)",
+  "linear-gradient(135deg,#f59e0b,#ef4444)",
+  "linear-gradient(135deg,#06b6d4,#3b82f6)",
+  "linear-gradient(135deg,#ec4899,#f43f5e)",
+  "linear-gradient(135deg,#1e293b,#334155)",
+];
+
+export default function CreateStorySheet({ open, onClose }: Props) {
+  const { user } = useAuth();
+  const { data: profile } = useUserProfile();
+  const queryClient = useQueryClient();
+
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const cameraInputRef = useRef<HTMLInputElement>(null);
+
+  const [step, setStep] = useState<Step>("choose");
+  const [pickedFile, setPickedFile] = useState<File | null>(null);
+  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+  const [caption, setCaption] = useState("");
+  const [text, setText] = useState("");
+  const [bgIdx, setBgIdx] = useState(0);
+  const [uploading, setUploading] = useState(false);
+
+  // Reset on close
+  useEffect(() => {
+    if (!open) {
+      const t = setTimeout(() => {
+        setStep("choose");
+        setPickedFile(null);
+        setPreviewUrl(null);
+        setCaption("");
+        setText("");
+        setBgIdx(0);
+      }, 200);
+      return () => clearTimeout(t);
+    }
+  }, [open]);
+
+  // Cleanup blob URL
+  useEffect(() => {
+    return () => {
+      if (previewUrl) URL.revokeObjectURL(previewUrl);
+    };
+  }, [previewUrl]);
+
+  const handleFile = (file: File) => {
+    const isVideo = file.type.startsWith("video/");
+    const maxSize = isVideo ? 20 * 1024 * 1024 : 5 * 1024 * 1024;
+    if (file.size > maxSize) {
+      toast.error(isVideo ? "Video must be under 20MB" : "Image must be under 5MB");
+      return;
+    }
+    setPickedFile(file);
+    setPreviewUrl(URL.createObjectURL(file));
+    setStep("preview-media");
+  };
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    e.target.value = "";
+    if (file) handleFile(file);
+  };
+
+  const renderTextToBlob = async (): Promise<Blob> => {
+    const w = 1080;
+    const h = 1920;
+    const canvas = document.createElement("canvas");
+    canvas.width = w;
+    canvas.height = h;
+    const ctx = canvas.getContext("2d")!;
+
+    // Parse "linear-gradient(135deg, c1, c2)"
+    const grad = TEXT_BACKGROUNDS[bgIdx];
+    const m = grad.match(/#([0-9a-f]{6})/gi) || ["#10b981", "#059669"];
+    const linear = ctx.createLinearGradient(0, 0, w, h);
+    linear.addColorStop(0, m[0]);
+    linear.addColorStop(1, m[1] || m[0]);
+    ctx.fillStyle = linear;
+    ctx.fillRect(0, 0, w, h);
+
+    // Text
+    ctx.fillStyle = "#ffffff";
+    ctx.textAlign = "center";
+    ctx.textBaseline = "middle";
+    const fontSize = text.length > 80 ? 72 : text.length > 40 ? 96 : 128;
+    ctx.font = `700 ${fontSize}px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif`;
+
+    // Word-wrap
+    const maxWidth = w - 160;
+    const words = text.split(/\s+/);
+    const lines: string[] = [];
+    let line = "";
+    for (const word of words) {
+      const test = line ? line + " " + word : word;
+      if (ctx.measureText(test).width > maxWidth && line) {
+        lines.push(line);
+        line = word;
+      } else {
+        line = test;
+      }
+    }
+    if (line) lines.push(line);
+
+    const lineHeight = fontSize * 1.2;
+    const totalHeight = lines.length * lineHeight;
+    let y = h / 2 - totalHeight / 2 + lineHeight / 2;
+    for (const l of lines) {
+      ctx.fillText(l, w / 2, y);
+      y += lineHeight;
+    }
+
+    return await new Promise<Blob>((resolve, reject) => {
+      canvas.toBlob((b) => (b ? resolve(b) : reject(new Error("Canvas blob failed"))), "image/jpeg", 0.92);
+    });
+  };
+
+  const publish = async () => {
+    if (!user) return;
+    setUploading(true);
+    try {
+      let blob: Blob;
+      let mediaType: "image" | "video";
+      let ext: string;
+      let contentType: string;
+      let captionToSave: string | undefined;
+
+      if (step === "compose-text") {
+        if (!text.trim()) {
+          toast.error("Write something first");
+          setUploading(false);
+          return;
+        }
+        blob = await renderTextToBlob();
+        mediaType = "image";
+        ext = "jpg";
+        contentType = "image/jpeg";
+      } else {
+        if (!pickedFile) return;
+        blob = pickedFile;
+        mediaType = pickedFile.type.startsWith("video/") ? "video" : "image";
+        ext = pickedFile.name.split(".").pop() || (mediaType === "video" ? "mp4" : "jpg");
+        contentType = pickedFile.type;
+        captionToSave = caption.trim() || undefined;
+      }
+
+      const path = `${user.id}/${Date.now()}.${ext}`;
+      const { error: upErr } = await supabase.storage
+        .from("user-stories")
+        .upload(path, blob, { contentType });
+      if (upErr) throw upErr;
+
+      const { data: urlData } = supabase.storage.from("user-stories").getPublicUrl(path);
+
+      const { error: insErr } = await supabase.from("stories" as any).insert({
+        user_id: user.id,
+        media_url: urlData.publicUrl,
+        media_type: mediaType,
+        caption: captionToSave,
+      });
+      if (insErr) throw insErr;
+
+      queryClient.invalidateQueries({ queryKey: ["user-stories"] });
+      queryClient.invalidateQueries({ queryKey: ["feed-story-users"] });
+      queryClient.invalidateQueries({ queryKey: ["profile-my-story"] });
+      toast.success("Story shared 🎉");
+      onClose();
+    } catch (err: any) {
+      toast.error(err?.message || "Failed to share story");
+    } finally {
+      setUploading(false);
+    }
+  };
+
+  if (!open) return null;
+
+  const initials = profile?.full_name?.[0]?.toUpperCase() || "Y";
+
+  const sheet = (
+    <AnimatePresence>
+      <motion.div
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        exit={{ opacity: 0 }}
+        transition={{ duration: 0.18 }}
+        className="fixed inset-0 z-[120] bg-background/60 backdrop-blur-sm flex items-end sm:items-center justify-center"
+        onClick={() => !uploading && onClose()}
+      >
+        <motion.div
+          initial={{ y: "100%" }}
+          animate={{ y: 0 }}
+          exit={{ y: "100%" }}
+          transition={{ type: "spring", damping: 28, stiffness: 320 }}
+          onClick={(e) => e.stopPropagation()}
+          className="w-full max-w-md max-h-[92vh] overflow-hidden rounded-t-3xl sm:rounded-3xl border border-border/60 bg-card text-card-foreground shadow-2xl flex flex-col"
+        >
+          {/* Header */}
+          <div className="flex items-center justify-between px-4 pt-3 pb-2 border-b border-border/40">
+            <div className="flex items-center gap-2">
+              {step !== "choose" && (
+                <button
+                  onClick={() => setStep("choose")}
+                  className="w-8 h-8 -ml-1 flex items-center justify-center rounded-full hover:bg-muted/60"
+                  aria-label="Back"
+                  disabled={uploading}
+                >
+                  <ChevronLeft className="w-5 h-5" />
+                </button>
+              )}
+              <div className="flex items-center gap-2">
+                <div className="w-8 h-8 rounded-full overflow-hidden bg-primary/15 flex items-center justify-center text-primary text-xs font-bold">
+                  {profile?.avatar_url ? (
+                    <img src={profile.avatar_url} alt="" className="w-full h-full object-cover" />
+                  ) : initials}
+                </div>
+                <div className="leading-tight">
+                  <p className="text-sm font-bold">Create story</p>
+                  <p className="text-[11px] text-muted-foreground flex items-center gap-1">
+                    <Globe className="w-3 h-3" /> Public · 24h
+                  </p>
+                </div>
+              </div>
+            </div>
+            <button
+              onClick={onClose}
+              disabled={uploading}
+              aria-label="Close"
+              className="w-8 h-8 flex items-center justify-center rounded-full hover:bg-muted/60"
+            >
+              <X className="w-5 h-5" />
+            </button>
+          </div>
+
+          {/* Body */}
+          <div className="flex-1 overflow-y-auto">
+            {step === "choose" && (
+              <div className="p-4 space-y-3">
+                <button
+                  onClick={() => fileInputRef.current?.click()}
+                  className="w-full flex items-center gap-3 rounded-2xl border border-border/60 p-4 text-left hover:bg-muted/40 transition-colors"
+                >
+                  <div className="w-12 h-12 rounded-full bg-emerald-500/15 text-emerald-500 flex items-center justify-center">
+                    <ImageIcon className="w-5 h-5" />
+                  </div>
+                  <div className="flex-1">
+                    <p className="text-sm font-bold">Photo or video</p>
+                    <p className="text-xs text-muted-foreground">Pick from your gallery</p>
+                  </div>
+                </button>
+
+                <button
+                  onClick={() => cameraInputRef.current?.click()}
+                  className="w-full flex items-center gap-3 rounded-2xl border border-border/60 p-4 text-left hover:bg-muted/40 transition-colors"
+                >
+                  <div className="w-12 h-12 rounded-full bg-amber-500/15 text-amber-500 flex items-center justify-center">
+                    <Camera className="w-5 h-5" />
+                  </div>
+                  <div className="flex-1">
+                    <p className="text-sm font-bold">Take a photo</p>
+                    <p className="text-xs text-muted-foreground">Open the camera</p>
+                  </div>
+                </button>
+
+                <button
+                  onClick={() => setStep("compose-text")}
+                  className="w-full flex items-center gap-3 rounded-2xl border border-border/60 p-4 text-left hover:bg-muted/40 transition-colors"
+                >
+                  <div className="w-12 h-12 rounded-full bg-fuchsia-500/15 text-fuchsia-500 flex items-center justify-center">
+                    <Type className="w-5 h-5" />
+                  </div>
+                  <div className="flex-1">
+                    <p className="text-sm font-bold">Text</p>
+                    <p className="text-xs text-muted-foreground">Share what's on your mind</p>
+                  </div>
+                </button>
+
+                <p className="text-[11px] text-muted-foreground text-center pt-2">
+                  Stories disappear after 24 hours.
+                </p>
+              </div>
+            )}
+
+            {step === "preview-media" && previewUrl && pickedFile && (
+              <div className="p-3 space-y-3">
+                <div className="relative w-full aspect-[9/16] rounded-2xl overflow-hidden bg-black">
+                  {pickedFile.type.startsWith("video/") ? (
+                    <video src={previewUrl} className="w-full h-full object-cover" autoPlay muted loop playsInline />
+                  ) : (
+                    <img src={previewUrl} alt="" className="w-full h-full object-cover" />
+                  )}
+                  {caption && (
+                    <div className="absolute bottom-4 left-4 right-4">
+                      <p className="text-white text-sm font-medium drop-shadow-lg bg-black/40 backdrop-blur-sm rounded-xl px-3 py-2 text-center">
+                        {caption}
+                      </p>
+                    </div>
+                  )}
+                </div>
+                <input
+                  type="text"
+                  value={caption}
+                  onChange={(e) => setCaption(e.target.value)}
+                  placeholder="Add a caption…"
+                  maxLength={200}
+                  className="w-full rounded-2xl border border-border/60 bg-muted/30 px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-primary/40"
+                />
+              </div>
+            )}
+
+            {step === "compose-text" && (
+              <div className="p-3 space-y-3">
+                <div
+                  className="relative w-full aspect-[9/16] rounded-2xl overflow-hidden flex items-center justify-center px-6"
+                  style={{ background: TEXT_BACKGROUNDS[bgIdx] }}
+                >
+                  <textarea
+                    value={text}
+                    onChange={(e) => setText(e.target.value)}
+                    placeholder="Start typing…"
+                    maxLength={250}
+                    autoFocus
+                    className={cn(
+                      "w-full resize-none bg-transparent text-white text-center font-bold outline-none placeholder:text-white/60",
+                      text.length > 80 ? "text-2xl" : text.length > 40 ? "text-3xl" : "text-4xl"
+                    )}
+                    rows={6}
+                  />
+                </div>
+                <div className="flex items-center gap-2 overflow-x-auto pb-1">
+                  {TEXT_BACKGROUNDS.map((bg, i) => (
+                    <button
+                      key={i}
+                      onClick={() => setBgIdx(i)}
+                      aria-label={`Background ${i + 1}`}
+                      className={cn(
+                        "shrink-0 w-9 h-9 rounded-full border-2 transition-transform",
+                        bgIdx === i ? "border-primary scale-110" : "border-border/40"
+                      )}
+                      style={{ background: bg }}
+                    />
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
+
+          {/* Footer action */}
+          {step !== "choose" && (
+            <div className="border-t border-border/40 p-3 pb-[max(env(safe-area-inset-bottom),12px)]">
+              <button
+                onClick={publish}
+                disabled={uploading || (step === "compose-text" && !text.trim())}
+                className="w-full h-11 rounded-full bg-primary text-primary-foreground font-bold text-sm shadow-md disabled:opacity-50 flex items-center justify-center gap-2"
+              >
+                {uploading ? (
+                  <>
+                    <Loader2 className="w-4 h-4 animate-spin" /> Sharing…
+                  </>
+                ) : (
+                  "Share to Story"
+                )}
+              </button>
+            </div>
+          )}
+        </motion.div>
+
+        {/* Hidden inputs */}
+        <input
+          ref={fileInputRef}
+          type="file"
+          accept="image/*,video/*"
+          className="hidden"
+          onChange={handleFileChange}
+        />
+        <input
+          ref={cameraInputRef}
+          type="file"
+          accept="image/*"
+          capture="environment"
+          className="hidden"
+          onChange={handleFileChange}
+        />
+      </motion.div>
+    </AnimatePresence>
+  );
+
+  return createPortal(sheet, document.body);
+}
