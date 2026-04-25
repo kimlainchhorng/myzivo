@@ -9,26 +9,47 @@
  *   4) Profile photo   (optional, Skip allowed)
  *   5) Cover photo     (optional, Skip allowed)
  */
-import { useState, useEffect, useRef, useMemo } from "react";
+import { useState, useEffect, useRef, useMemo, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   ArrowLeft, ArrowRight, Briefcase, Building2, User, Image as ImageIcon,
-  Camera, CheckCircle2, Loader2, Upload, X,
+  Camera, CheckCircle2, Loader2, Upload, X, Check,
 } from "lucide-react";
 import { toast } from "sonner";
 
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { useUserProfile } from "@/hooks/useUserProfile";
-import { isLodgingStoreCategory } from "@/hooks/useOwnerStoreProfile";
 import { STORE_CATEGORY_OPTIONS, type StoreCategory } from "@/config/groceryStores";
+import {
+  resolveBusinessDashboardRoute,
+  RESTAURANT_CATEGORIES,
+} from "@/lib/business/dashboardRoute";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 
 const STEP_COUNT = 5;
+
+const STEP_LABELS = ["Basics", "Type", "Contact", "Profile", "Cover"] as const;
+const NEXT_STEP_LABELS: Record<number, string> = {
+  1: "Business type",
+  2: "Contact",
+  3: "Profile photo",
+  4: "Cover photo",
+};
 
 const formatPhone = (value: string): string => {
   const d = value.replace(/\D/g, "").slice(0, 10);
@@ -40,9 +61,26 @@ const formatPhone = (value: string): string => {
 const slugify = (s: string) =>
   s.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, "") || `biz-${Date.now()}`;
 
-const RESTAURANT_CATS = new Set<StoreCategory>(["restaurant", "cafe", "bakery", "drink"]);
-
 type Step = 1 | 2 | 3 | 4 | 5;
+
+/** Find a slug that isn't taken by another owner. Returns null if all attempts collide. */
+async function findAvailableSlug(base: string, ownerId: string): Promise<string | null> {
+  const candidates = [base, ...Array.from({ length: 5 }, (_, i) => `${base}-${i + 2}`)];
+  for (const candidate of candidates) {
+    const { data, error } = await supabase
+      .from("store_profiles")
+      .select("id, owner_id")
+      .eq("slug", candidate)
+      .maybeSingle();
+    if (error) {
+      // If query itself fails, optimistically return the candidate — DB unique
+      // constraint will be the final guard.
+      return candidate;
+    }
+    if (!data || data.owner_id === ownerId) return candidate;
+  }
+  return null;
+}
 
 export default function BusinessPageWizard() {
   const navigate = useNavigate();
@@ -52,11 +90,17 @@ export default function BusinessPageWizard() {
   const [step, setStep] = useState<Step>(1);
   const [submitting, setSubmitting] = useState(false);
   const [checking, setChecking] = useState(true);
+  const [completedSteps, setCompletedSteps] = useState<Set<Step>>(new Set());
+  const [storeId, setStoreId] = useState<string | null>(null);
+  const [leaveOpen, setLeaveOpen] = useState(false);
+  const pendingLeaveRef = useRef<(() => void) | null>(null);
+  const completedRef = useRef(false);
 
   // Step 1
   const [bizName, setBizName] = useState("");
   const [bizPhone, setBizPhone] = useState("");
   const [bizEmail, setBizEmail] = useState("");
+  const [nameError, setNameError] = useState<string | null>(null);
 
   // Step 2
   const [category, setCategory] = useState<StoreCategory | "">("");
@@ -75,19 +119,41 @@ export default function BusinessPageWizard() {
   const logoInput = useRef<HTMLInputElement>(null);
   const bannerInput = useRef<HTMLInputElement>(null);
 
-  // Auth gate + redirect already-completed owners
+  const isDirty =
+    !!bizName || !!bizPhone || !!bizEmail || !!category ||
+    !!firstName || !!lastName || !!contactPhone || !!logoUrl || !!bannerUrl;
+
+  // Auth gate + redirect already-completed owners; resume partial setups.
   useEffect(() => {
     if (!user) return;
     (async () => {
       const { data } = await supabase
         .from("store_profiles")
-        .select("id, category, setup_complete")
+        .select("id, name, slug, category, phone, logo_url, banner_url, setup_complete")
         .eq("owner_id", user.id)
         .maybeSingle();
+
       if (data?.setup_complete) {
-        const lodging = isLodgingStoreCategory(data.category);
-        navigate(`/admin/stores/${data.id}${lodging ? "?tab=lodge-overview" : ""}`, { replace: true });
+        const { path } = resolveBusinessDashboardRoute(data.category, data.id);
+        navigate(path, { replace: true });
         return;
+      }
+
+      // Resume partial setup
+      if (data) {
+        setStoreId(data.id);
+        if (data.name) setBizName(data.name);
+        if (data.phone) setBizPhone(formatPhone(data.phone));
+        if (data.category) {
+          setCategory(data.category as StoreCategory);
+          setCompletedSteps((prev) => new Set(prev).add(1).add(2));
+          setStep(3);
+        } else if (data.name) {
+          setCompletedSteps((prev) => new Set(prev).add(1));
+          setStep(2);
+        }
+        if (data.logo_url) setLogoUrl(data.logo_url);
+        if (data.banner_url) setBannerUrl(data.banner_url);
       }
       setChecking(false);
     })();
@@ -105,6 +171,17 @@ export default function BusinessPageWizard() {
     if (!bizEmail) setBizEmail(profile?.email || user.email || "");
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [profile, user]);
+
+  // Warn on tab close / reload while dirty.
+  useEffect(() => {
+    if (!isDirty || completedRef.current) return;
+    const handler = (e: BeforeUnloadEvent) => {
+      e.preventDefault();
+      e.returnValue = "";
+    };
+    window.addEventListener("beforeunload", handler);
+    return () => window.removeEventListener("beforeunload", handler);
+  }, [isDirty]);
 
   const groupedCategories = useMemo(() => {
     const groups: Record<string, typeof STORE_CATEGORY_OPTIONS> = {};
@@ -143,21 +220,122 @@ export default function BusinessPageWizard() {
   const canContinue = (): boolean => {
     switch (step) {
       case 1:
-        return bizName.trim().length >= 2 && bizPhone.replace(/\D/g, "").length >= 7 && /\S+@\S+\.\S+/.test(bizEmail);
+        return (
+          bizName.trim().length >= 2 &&
+          bizPhone.replace(/\D/g, "").length >= 7 &&
+          /\S+@\S+\.\S+/.test(bizEmail) &&
+          !nameError
+        );
       case 2:
         return !!category;
       case 3:
-        return firstName.trim().length >= 1 && lastName.trim().length >= 1 && /\S+@\S+\.\S+/.test(contactEmail) && contactPhone.replace(/\D/g, "").length >= 7;
+        return (
+          firstName.trim().length >= 1 &&
+          lastName.trim().length >= 1 &&
+          /\S+@\S+\.\S+/.test(contactEmail) &&
+          contactPhone.replace(/\D/g, "").length >= 7
+        );
       default:
         return true;
     }
   };
 
-  const goNext = () => {
+  /** Soft-save the partial store_profiles row so users can resume. */
+  const persistPartial = useCallback(async (): Promise<{ id: string | null; error?: string }> => {
+    if (!user) return { id: null };
+    try {
+      // Resolve a non-colliding slug.
+      const base = slugify(bizName);
+      const slug = await findAvailableSlug(base, user.id);
+      if (!slug) {
+        return { id: null, error: "That business name is already taken — try a small variation." };
+      }
+
+      // NOTE: store_profiles has no `email` column — keep email out of the payload.
+      const payload = {
+        owner_id: user.id,
+        name: bizName.trim(),
+        slug,
+        category: (category || null) as any,
+        phone: bizPhone.replace(/\D/g, "") || null,
+        logo_url: logoUrl,
+        banner_url: bannerUrl,
+        setup_complete: false,
+      };
+
+      if (storeId) {
+        const { error } = await supabase
+          .from("store_profiles")
+          .update(payload)
+          .eq("id", storeId);
+        if (error) {
+          if ((error as any).code === "23505") {
+            return { id: null, error: "That business name is already taken — try a small variation." };
+          }
+          return { id: null, error: error.message };
+        }
+        return { id: storeId };
+      }
+
+      const { data, error } = await supabase
+        .from("store_profiles")
+        .insert(payload as any)
+        .select("id")
+        .single();
+      if (error) {
+        if ((error as any).code === "23505") {
+          return { id: null, error: "That business name is already taken — try a small variation." };
+        }
+        return { id: null, error: error.message };
+      }
+      setStoreId(data.id);
+      return { id: data.id };
+    } catch (e: any) {
+      return { id: null, error: e.message || "Could not save progress" };
+    }
+  }, [user, bizName, bizPhone, category, logoUrl, bannerUrl, storeId]);
+
+  const goNext = async () => {
+    if (!canContinue()) return;
+
+    // Steps 1 & 2 trigger a soft save so progress survives a reload.
+    if (step === 1 || step === 2) {
+      const res = await persistPartial();
+      if (res.error) {
+        setNameError(res.error);
+        toast.error(res.error);
+        setStep(1);
+        return;
+      }
+      setNameError(null);
+    }
+
+    setCompletedSteps((prev) => new Set(prev).add(step));
+    const nextLabel = NEXT_STEP_LABELS[step];
+    if (nextLabel) toast.success("Step saved", { description: `Next: ${nextLabel}` });
+
     if (step < STEP_COUNT) setStep((s) => (s + 1) as Step);
   };
+
   const goBack = () => {
     if (step > 1) setStep((s) => (s - 1) as Step);
+  };
+
+  const requestLeave = (action: () => void) => {
+    if (!isDirty || completedRef.current) {
+      action();
+      return;
+    }
+    pendingLeaveRef.current = action;
+    setLeaveOpen(true);
+  };
+
+  const onHeaderBack = () => {
+    if (step === 1) {
+      requestLeave(() => navigate(-1));
+    } else {
+      goBack();
+    }
   };
 
   const handleComplete = async () => {
@@ -174,42 +352,24 @@ export default function BusinessPageWizard() {
         })
         .eq("user_id", user.id);
 
-      // Upsert store profile
-      const slug = slugify(bizName);
-      const payload: Record<string, any> = {
-        owner_id: user.id,
-        name: bizName.trim(),
-        slug,
-        category,
-        phone: bizPhone.replace(/\D/g, "") || null,
-        email: bizEmail.trim() || null,
-        logo_url: logoUrl,
-        banner_url: bannerUrl,
-        setup_complete: true,
-      };
-
-      const { data: existing } = await supabase
-        .from("store_profiles")
-        .select("id")
-        .eq("owner_id", user.id)
-        .maybeSingle();
-
-      let storeId = existing?.id as string | undefined;
-      if (storeId) {
-        const { error } = await supabase.from("store_profiles").update(payload).eq("id", storeId);
-        if (error) throw error;
-      } else {
-        const { data, error } = await (supabase as any)
-          .from("store_profiles")
-          .insert(payload)
-          .select("id")
-          .single();
-        if (error) throw error;
-        storeId = data.id;
+      // Final upsert with setup_complete: true.
+      const partial = await persistPartial();
+      if (partial.error || !partial.id) {
+        setNameError(partial.error || "Could not save");
+        toast.error(partial.error || "Could not save");
+        setStep(1);
+        return;
       }
+      const finalStoreId = partial.id;
 
-      // Restaurant branch — also seed restaurants row if none exists
-      if (RESTAURANT_CATS.has(category)) {
+      const { error: completeErr } = await supabase
+        .from("store_profiles")
+        .update({ setup_complete: true })
+        .eq("id", finalStoreId);
+      if (completeErr) throw completeErr;
+
+      // Restaurant branch — also seed restaurants row if none exists.
+      if (RESTAURANT_CATEGORIES.has(category)) {
         const { data: existingRest } = await supabase
           .from("restaurants")
           .select("id")
@@ -222,17 +382,21 @@ export default function BusinessPageWizard() {
             phone: bizPhone.replace(/\D/g, "") || null,
             email: bizEmail.trim() || null,
             logo_url: logoUrl,
-            banner_url: bannerUrl,
+            cover_image_url: bannerUrl,
           } as any);
         }
-        toast.success("Business page created");
-        navigate("/restaurant/dashboard", { replace: true });
-        return;
       }
 
-      toast.success("Business page created");
-      const lodging = isLodgingStoreCategory(category);
-      navigate(`/admin/stores/${storeId}${lodging ? "?tab=lodge-overview" : ""}`, { replace: true });
+      completedRef.current = true;
+      const { path, fallback } = resolveBusinessDashboardRoute(category, finalStoreId);
+      if (fallback) {
+        toast.success("Business page created", {
+          description: "Opened your generic dashboard — pick a category later to unlock more tools.",
+        });
+      } else {
+        toast.success("Business page created");
+      }
+      navigate(path, { replace: true });
     } catch (e: any) {
       toast.error(e.message || "Could not save your business page");
     } finally {
@@ -251,17 +415,21 @@ export default function BusinessPageWizard() {
   return (
     <div className="mx-auto flex min-h-screen w-full max-w-xl flex-col bg-background pb-32">
       {/* Header */}
-      <header className="sticky top-0 z-10 flex items-center gap-3 border-b border-border bg-background/95 px-4 py-3 backdrop-blur"
-        style={{ paddingTop: "calc(env(safe-area-inset-top) + 12px)" }}>
+      <header
+        className="sticky top-0 z-10 flex items-center gap-3 border-b border-border bg-background/95 px-4 py-3 backdrop-blur"
+        style={{ paddingTop: "calc(env(safe-area-inset-top) + 12px)" }}
+      >
         <button
-          onClick={() => (step === 1 ? navigate(-1) : goBack())}
+          onClick={onHeaderBack}
           className="flex h-10 w-10 items-center justify-center rounded-full hover:bg-muted active:scale-95"
           aria-label="Back"
         >
           <ArrowLeft className="h-5 w-5" />
         </button>
         <div className="flex-1">
-          <p className="text-xs font-medium text-muted-foreground">Step {step} of {STEP_COUNT}</p>
+          <p className="text-xs font-medium text-muted-foreground">
+            Step {step} of {STEP_COUNT}
+          </p>
           <h1 className="text-base font-bold text-foreground">Business Page</h1>
         </div>
       </header>
@@ -276,6 +444,33 @@ export default function BusinessPageWizard() {
             }`}
           />
         ))}
+      </div>
+
+      {/* Step summary chips */}
+      <div className="flex flex-wrap gap-1.5 px-4 pt-3">
+        {STEP_LABELS.map((label, i) => {
+          const stepNum = (i + 1) as Step;
+          const done = completedSteps.has(stepNum);
+          const active = step === stepNum;
+          return (
+            <button
+              key={label}
+              type="button"
+              onClick={() => done && setStep(stepNum)}
+              disabled={!done && !active}
+              className={`flex items-center gap-1 rounded-full border px-2.5 py-1 text-[11px] font-medium transition-colors ${
+                done
+                  ? "border-primary/30 bg-primary/10 text-primary hover:bg-primary/15"
+                  : active
+                  ? "border-foreground/30 bg-muted text-foreground"
+                  : "border-border bg-card text-muted-foreground"
+              }`}
+            >
+              {done && <Check className="h-3 w-3" />}
+              {label}
+            </button>
+          );
+        })}
       </div>
 
       {/* Body */}
@@ -307,9 +502,16 @@ export default function BusinessPageWizard() {
                       id="bizName"
                       placeholder="e.g. Sunrise Coffee Co."
                       value={bizName}
-                      onChange={(e) => setBizName(e.target.value)}
+                      onChange={(e) => {
+                        setBizName(e.target.value);
+                        if (nameError) setNameError(null);
+                      }}
                       autoFocus
+                      aria-invalid={!!nameError}
                     />
+                    {nameError && (
+                      <p className="text-xs font-medium text-destructive">{nameError}</p>
+                    )}
                   </div>
                   <div className="space-y-1.5">
                     <Label htmlFor="bizPhone">Business phone number</Label>
@@ -587,6 +789,32 @@ export default function BusinessPageWizard() {
           )}
         </div>
       </div>
+
+      {/* Leave confirm */}
+      <AlertDialog open={leaveOpen} onOpenChange={setLeaveOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Leave business setup?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Your progress on this step won't be saved. Saved steps will still be here when you come back.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel onClick={() => (pendingLeaveRef.current = null)}>
+              Stay
+            </AlertDialogCancel>
+            <AlertDialogAction
+              onClick={() => {
+                const action = pendingLeaveRef.current;
+                pendingLeaveRef.current = null;
+                action?.();
+              }}
+            >
+              Leave
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }
