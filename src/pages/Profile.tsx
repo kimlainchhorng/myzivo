@@ -967,7 +967,7 @@ const Profile = () => {
                       {user && !coverRepositioning && (
                         <div
                           className="absolute right-2 z-20 flex gap-1.5"
-                          style={{ top: "calc(var(--zivo-safe-top, 0px) + 0.5rem)" }}
+                          style={{ top: "calc(var(--zivo-safe-top, 0px) + 0.75rem)" }}
                         >
                           {profile?.cover_url && (
                             <motion.button
