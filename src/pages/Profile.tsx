@@ -791,14 +791,24 @@ const Profile = () => {
                             </button>
                           </div>
                         ) : !profile?.bio && !bioEditing ? (
-                          <button
-                            type="button"
-                            onClick={() => { setBioDraft(""); setBioEditing(true); }}
-                            className="inline-flex items-center gap-1.5 rounded-full border border-dashed border-border/60 px-3 py-1.5 text-xs text-muted-foreground hover:bg-muted/40 hover:text-foreground focus-visible:ring-2 focus-visible:ring-primary/60 focus-visible:outline-none transition-colors"
-                          >
-                            <Pencil className="h-3 w-3" />
-                            Add bio
-                          </button>
+                          <div className="flex flex-wrap items-center gap-2">
+                            <button
+                              type="button"
+                              onClick={() => { setBioDraft(""); setBioEditing(true); }}
+                              className="inline-flex items-center gap-1.5 rounded-full border border-dashed border-border/60 px-3 py-1.5 text-xs text-muted-foreground hover:bg-muted/40 hover:text-foreground focus-visible:ring-2 focus-visible:ring-primary/60 focus-visible:outline-none transition-colors"
+                            >
+                              <Pencil className="h-3 w-3" />
+                              Add bio
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => navigate("/account/profile-edit")}
+                              className="lg:hidden inline-flex items-center gap-1.5 rounded-full border border-border/60 bg-muted/30 px-3 py-1.5 text-xs font-medium text-foreground hover:bg-muted/50 focus-visible:ring-2 focus-visible:ring-primary/60 focus-visible:outline-none transition-colors"
+                            >
+                              <Pencil className="h-3 w-3" />
+                              Edit profile
+                            </button>
+                          </div>
                         ) : (
                           <>
                             <textarea
