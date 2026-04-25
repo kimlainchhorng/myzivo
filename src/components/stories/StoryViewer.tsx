@@ -574,73 +574,46 @@ export default function StoryViewer({
         <div className="absolute left-0 top-0 bottom-0 w-1/3 z-10" onClick={goPrev} />
         <div className="absolute right-0 top-0 bottom-0 w-2/3 z-10" onClick={goNext} />
 
-        {/* Right-side actions */}
-        <div className="absolute right-4 bottom-[160px] flex flex-col items-center gap-4 z-20">
-          <button onClick={toggleLike} className="flex flex-col items-center gap-1" aria-label="Like story">
-            <motion.div
-              key={myReaction || "none"}
-              animate={myReaction === "❤️" ? { scale: [1, 1.3, 1] } : {}}
-              className={cn(
-                "w-11 h-11 rounded-full flex items-center justify-center backdrop-blur-sm transition-all",
-                myReaction === "❤️" ? "bg-destructive/80" : "bg-white/10"
-              )}
+        {/* Right-side actions — only for non-owners (owners get the IG-style bottom toolbar) */}
+        {!isOwner && (
+          <div className="absolute right-4 bottom-[160px] flex flex-col items-center gap-4 z-20">
+            <button onClick={toggleLike} className="flex flex-col items-center gap-1" aria-label="Like story">
+              <motion.div
+                key={myReaction || "none"}
+                animate={myReaction === "❤️" ? { scale: [1, 1.3, 1] } : {}}
+                className={cn(
+                  "w-11 h-11 rounded-full flex items-center justify-center backdrop-blur-sm transition-all",
+                  myReaction === "❤️" ? "bg-destructive/80" : "bg-white/10"
+                )}
+              >
+                <Heart className={cn("w-5 h-5 transition-all", myReaction === "❤️" ? "text-white fill-white" : "text-white")} />
+              </motion.div>
+              <span className="text-white/80 text-[10px] font-medium">Like</span>
+            </button>
+
+            <button
+              onClick={() => { setPaused(true); setShowComments(true); }}
+              className="flex flex-col items-center gap-1"
             >
-              <Heart className={cn("w-5 h-5 transition-all", myReaction === "❤️" ? "text-white fill-white" : "text-white")} />
-            </motion.div>
-            <span className="text-white/80 text-[10px] font-medium">Like</span>
-          </button>
+              <div className="w-11 h-11 rounded-full bg-white/10 backdrop-blur-sm flex items-center justify-center relative">
+                <MessageCircle className="w-5 h-5 text-white" />
+                {comments.length > 0 && (
+                  <span className="absolute -top-1 -right-1 min-w-[16px] h-[16px] px-1 bg-primary text-primary-foreground text-[9px] font-bold rounded-full flex items-center justify-center">
+                    {comments.length}
+                  </span>
+                )}
+              </div>
+              <span className="text-white/80 text-[10px] font-medium">Comment</span>
+            </button>
 
-          <button
-            onClick={() => { setPaused(true); setShowComments(true); }}
-            className="flex flex-col items-center gap-1"
-          >
-            <div className="w-11 h-11 rounded-full bg-white/10 backdrop-blur-sm flex items-center justify-center relative">
-              <MessageCircle className="w-5 h-5 text-white" />
-              {comments.length > 0 && (
-                <span className="absolute -top-1 -right-1 min-w-[16px] h-[16px] px-1 bg-primary text-primary-foreground text-[9px] font-bold rounded-full flex items-center justify-center">
-                  {comments.length}
-                </span>
-              )}
-            </div>
-            <span className="text-white/80 text-[10px] font-medium">Comment</span>
-          </button>
-
-          <button onClick={handleShare} className="flex flex-col items-center gap-1">
-            <div className="w-11 h-11 rounded-full bg-white/10 backdrop-blur-sm flex items-center justify-center">
-              <Send className="w-5 h-5 text-white" />
-            </div>
-            <span className="text-white/80 text-[10px] font-medium">Share</span>
-          </button>
-
-          {isOwner && (
-            <>
-              <button
-                onClick={() => { setPaused(true); setShowViewers(true); }}
-                className="flex flex-col items-center gap-1"
-              >
-                <div className="w-11 h-11 rounded-full bg-white/10 backdrop-blur-sm flex items-center justify-center">
-                  <Eye className="w-5 h-5 text-white" />
-                </div>
-                <span className="text-white/80 text-[10px] font-medium">{currentStory.viewsCount || 0}</span>
-              </button>
-              <button
-                onClick={() => {
-                  if (!currentStory) return;
-                  deleteStory.mutate(currentStory.id);
-                  if (viewingGroup.stories.length <= 1) closeWithMeta();
-                  else goNext();
-                }}
-                className="flex flex-col items-center gap-1"
-              >
-                <div className="w-11 h-11 rounded-full bg-white/10 backdrop-blur-sm flex items-center justify-center">
-                  <Trash2 className="w-5 h-5 text-white" />
-                </div>
-                <span className="text-white/80 text-[10px] font-medium">Delete</span>
-              </button>
-            </>
-          )}
-        </div>
-
+            <button onClick={handleShare} className="flex flex-col items-center gap-1">
+              <div className="w-11 h-11 rounded-full bg-white/10 backdrop-blur-sm flex items-center justify-center">
+                <Send className="w-5 h-5 text-white" />
+              </div>
+              <span className="text-white/80 text-[10px] font-medium">Share</span>
+            </button>
+          </div>
+        )}
         {/* Floating reaction burst */}
         <AnimatePresence>
           {reactionBurst && (
