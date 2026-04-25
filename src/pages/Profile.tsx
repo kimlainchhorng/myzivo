@@ -499,9 +499,10 @@ const Profile = () => {
 
   // Cover photo upload
   const handleCoverUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file || !user?.id) return;
-    if (file.size > 10 * 1024 * 1024) { toast.error("Cover image must be under 10MB"); return; }
+    const input = e.target;
+    const file = input.files?.[0];
+    if (!file || !user?.id) { input.value = ""; return; }
+    if (file.size > 10 * 1024 * 1024) { toast.error("Cover image must be under 10MB"); input.value = ""; return; }
     setCoverUploading(true);
     try {
       const ext = file.name.split(".").pop();
@@ -516,12 +517,14 @@ const Profile = () => {
       toast.error(err.message || "Failed to upload cover");
     } finally {
       setCoverUploading(false);
+      input.value = "";
     }
   };
 
   // Avatar upload
   const handleAvatarUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
+    const input = e.target;
+    const file = input.files?.[0];
     if (!file) return;
     try {
       const reader = new FileReader();
@@ -530,6 +533,7 @@ const Profile = () => {
       await uploadAvatar.mutateAsync(file);
       setAvatarPreview(null);
     } catch { setAvatarPreview(null); }
+    finally { input.value = ""; }
   };
 
   // Cover repositioning handlers
