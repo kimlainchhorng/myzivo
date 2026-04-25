@@ -36,21 +36,22 @@ const VerifiedBadge = ({
       aria-label={VERIFIED_LABEL}
       title={tooltipText}
       data-testid="verified-badge"
-      className={`relative inline-flex items-center justify-center shrink-0 align-[-0.125em] ${className}`}
+      className={`relative inline-flex items-center justify-center shrink-0 align-[-0.2em] ${className}`}
       style={sizeStyle}
     >
       <svg viewBox="0 0 24 24" className="h-full w-full block" aria-hidden="true" focusable="false">
         <title>{VERIFIED_LABEL}</title>
-        {/* Facebook-style flat blue starburst */}
+        {/* Facebook 12-point scalloped starburst */}
         <path
-          d="M12 1.5l2.39 1.74 2.95-.13.78 2.85 2.55 1.5-1.07 2.74 1.07 2.74-2.55 1.5-.78 2.85-2.95-.13L12 22.5l-2.39-1.74-2.95.13-.78-2.85-2.55-1.5 1.07-2.74-1.07-2.74 2.55-1.5.78-2.85 2.95-.13L12 1.5z"
+          d="M12 1.6l2.05 1.86 2.74-.46 1.18 2.52 2.52 1.18-.46 2.74L21.9 12l-1.86 2.05.46 2.74-2.52 1.18-1.18 2.52-2.74-.46L12 21.9l-2.05-1.86-2.74.46-1.18-2.52-2.52-1.18.46-2.74L2.1 12l1.87-2.05-.46-2.74 2.52-1.18 1.18-2.52 2.74.46L12 1.6z"
           fill="#1877F2"
         />
+        {/* Bold, optically-centered checkmark */}
         <path
-          d="M7.8 12.2l2.9 2.9 5.5-5.9"
+          d="M7.6 12.25l3.05 3.05 5.75-6.2"
           fill="none"
           stroke="#ffffff"
-          strokeWidth="2.4"
+          strokeWidth="3"
           strokeLinecap="round"
           strokeLinejoin="round"
         />
