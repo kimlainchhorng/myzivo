@@ -980,7 +980,24 @@ export default function StoreMapPage() {
         )}
       </AnimatePresence>
 
-      <ZivoMobileNav />
+      {drawerStore && (
+        <StoreDetailsDrawer
+          store={drawerStore}
+          userLoc={userLocation}
+          categoryLabel={getCategoryLabel(drawerStore.category)}
+          isFavorite={isFavorite(drawerStore.id)}
+          isAuthed={isAuthed}
+          onClose={() => setDrawerStore(null)}
+          onView={(s) => navigate(`/grocery/shop/${s.slug}`)}
+          onRide={(s, promo) => handleRideSelected(s, promo)}
+          onDirections={(s) => openDirections({ lat: s.latitude, lng: s.longitude, label: s.name, address: s.address })}
+          onShare={(s) => handleShareSelected(s)}
+          onToggleFavorite={handleToggleFavoriteSelected}
+          onPromoApplied={(code) => toast.success(`Promo ${code} ready for your next ride or order`)}
+        />
+      )}
+
+      {!drawerStore && <ZivoMobileNav />}
       </div>
     </div>
   );
