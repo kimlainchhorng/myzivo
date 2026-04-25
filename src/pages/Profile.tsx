@@ -1113,7 +1113,7 @@ const Profile = () => {
             <button
               type="button"
               onClick={async () => {
-                const url = `${window.location.origin}/u/${profile?.username || user?.id}`;
+                const url = `${window.location.origin}/u/${user?.id}`;
                 try {
                   await navigator.clipboard.writeText(url);
                   toast.success("Profile link copied");
@@ -1138,7 +1138,7 @@ const Profile = () => {
             <button
               type="button"
               onClick={async () => {
-                const url = `${window.location.origin}/u/${profile?.username || user?.id}`;
+                const url = `${window.location.origin}/u/${user?.id}`;
                 const title = profile?.full_name || "My ZIVO profile";
                 if (navigator.share) {
                   try { await navigator.share({ title, url }); } catch { /* user cancelled */ }
