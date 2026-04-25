@@ -94,6 +94,7 @@ export default function ShareSheet({
   };
 
   const handleOptionClick = (opt: { label?: string; url: string; copyMessage?: string }) => {
+    const channel = (opt.label || "external").toLowerCase();
     if (opt.url === "__copy__") {
       handleCopyLink();
       if (opt.copyMessage) toast.success(opt.copyMessage);
@@ -104,9 +105,17 @@ export default function ShareSheet({
           );
         }, 400);
       }
+      track("share_completed", { post_id: sharePostId, author_id: sharePostAuthorId, channel });
     } else {
       onClose();
-      import("@/lib/openExternalUrl").then(({ openExternalUrl }) => openExternalUrl(opt.url));
+      import("@/lib/openExternalUrl")
+        .then(({ openExternalUrl }) => {
+          openExternalUrl(opt.url);
+          track("share_completed", { post_id: sharePostId, author_id: sharePostAuthorId, channel });
+        })
+        .catch((e) => {
+          track("share_failed", { post_id: sharePostId, author_id: sharePostAuthorId, channel, reason: e?.message || "external_open_failed" });
+        });
     }
   };
 
