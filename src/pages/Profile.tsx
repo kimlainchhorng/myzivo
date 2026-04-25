@@ -1044,17 +1044,25 @@ const Profile = () => {
                               {getInitials()}
                             </AvatarFallback>
                           </Avatar>
-                          <motion.button
-                            whileHover={{ scale: 1.15, rotate: 10 }}
-                            whileTap={{ scale: 0.85 }}
-                            onClick={() => avatarInputRef.current?.click()}
-                            disabled={uploadAvatar.isPending}
+                          <label
+                            htmlFor="profile-avatar-input"
                             aria-label="Change profile photo"
-                            className="absolute bottom-0 right-0 p-2 bg-primary text-primary-foreground rounded-full shadow-xl shadow-primary/40 ring-2 ring-card disabled:opacity-50 focus-visible:ring-2 focus-visible:ring-primary/60 focus-visible:outline-none"
+                            aria-disabled={uploadAvatar.isPending}
+                            className={cn(
+                              "absolute bottom-0 right-0 p-2 bg-primary text-primary-foreground rounded-full shadow-xl shadow-primary/40 ring-2 ring-card cursor-pointer active:scale-90 transition focus-visible:ring-2 focus-visible:ring-primary/60 focus-visible:outline-none",
+                              uploadAvatar.isPending && "opacity-50 pointer-events-none"
+                            )}
                           >
                             {uploadAvatar.isPending ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Camera className="h-3.5 w-3.5" />}
-                          </motion.button>
-                          <input ref={avatarInputRef} type="file" accept="image/jpeg,image/png,image/webp" onChange={handleAvatarUpload} className="hidden" />
+                          </label>
+                          <input
+                            id="profile-avatar-input"
+                            ref={avatarInputRef}
+                            type="file"
+                            accept="image/jpeg,image/png,image/webp"
+                            onChange={handleAvatarUpload}
+                            className="sr-only"
+                          />
                         </motion.div>
                       </div>
                     </div>
