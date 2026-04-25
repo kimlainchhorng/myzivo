@@ -119,9 +119,18 @@ export default function ChatStories() {
   const myStories = storyGroups.find((g) => g.userId === user?.id);
   const hasMyStory = !!myStories && myStories.stories.length > 0;
 
+  const viewerLocation = useMemo(() => {
+    if (!activeStoryId) return null;
+    for (let gi = 0; gi < storyGroups.length; gi++) {
+      const si = storyGroups[gi].stories.findIndex((s) => s.id === activeStoryId);
+      if (si !== -1) return { groupIndex: gi, storyIndex: si };
+    }
+    return null;
+  }, [activeStoryId, storyGroups]);
+
   const openViewer = (group: StoryGroup) => {
-    const idx = storyGroups.findIndex((g) => g.userId === group.userId);
-    setViewing({ groups: storyGroups, startIdx: Math.max(0, idx) });
+    if (group.stories.length === 0) return;
+    openStory(group.stories[0].id);
   };
 
   return (
