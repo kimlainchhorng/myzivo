@@ -283,19 +283,26 @@ export default function StoryViewer({ groups, startGroupIndex, startStoryIndex =
     },
   });
 
-  // ---- Delete (owner) ----
+  // ---- Delete (owner) — also removes media + audio from storage ----
   const deleteStory = useMutation({
     mutationFn: async (storyId: string) => {
+      const story = viewingGroup?.stories.find((s) => s.id === storyId);
+      const keys = [
+        parseStorageKeyFromPublicUrl(story?.mediaUrl),
+        parseStorageKeyFromPublicUrl(story?.audioUrl),
+      ].filter(Boolean) as string[];
       const { error } = await supabase.from("stories" as any).delete().eq("id", storyId);
       if (error) throw error;
+      if (keys.length > 0) {
+        // Best-effort: don't fail the deletion if storage cleanup errors
+        await supabase.storage.from(STORIES_BUCKET).remove(keys).catch(() => {});
+      }
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["user-stories"], exact: true });
-      queryClient.invalidateQueries({ queryKey: ["feed-story-users"], exact: true });
-      queryClient.invalidateQueries({ queryKey: ["profile-story-rings", user?.id], exact: true });
-      queryClient.invalidateQueries({ queryKey: ["profile-my-story", user?.id], exact: true });
+      invalidateAllStoryCaches(queryClient, user?.id);
       toast.success("Story deleted");
     },
+    onError: (err: any) => toast.error(err?.message || "Could not delete story"),
   });
 
   // ---- Auto-progress ----
@@ -323,7 +330,7 @@ export default function StoryViewer({ groups, startGroupIndex, startStoryIndex =
   const resetAndStart = useCallback(() => {
     elapsedRef.current = 0;
     setProgress(0);
-    setLiked(false);
+    setReactionBurst(null);
     startTimer();
   }, [startTimer]);
 
@@ -532,15 +539,16 @@ export default function StoryViewer({ groups, startGroupIndex, startStoryIndex =
 
         {/* Right-side actions */}
         <div className="absolute right-4 bottom-[160px] flex flex-col items-center gap-4 z-20">
-          <button onClick={() => setLiked((l) => !l)} className="flex flex-col items-center gap-1">
+          <button onClick={toggleLike} className="flex flex-col items-center gap-1" aria-label="Like story">
             <motion.div
-              animate={liked ? { scale: [1, 1.3, 1] } : {}}
+              key={myReaction || "none"}
+              animate={myReaction === "❤️" ? { scale: [1, 1.3, 1] } : {}}
               className={cn(
                 "w-11 h-11 rounded-full flex items-center justify-center backdrop-blur-sm transition-all",
-                liked ? "bg-destructive/80" : "bg-white/10"
+                myReaction === "❤️" ? "bg-destructive/80" : "bg-white/10"
               )}
             >
-              <Heart className={cn("w-5 h-5 transition-all", liked ? "text-white fill-white" : "text-white")} />
+              <Heart className={cn("w-5 h-5 transition-all", myReaction === "❤️" ? "text-white fill-white" : "text-white")} />
             </motion.div>
             <span className="text-white/80 text-[10px] font-medium">Like</span>
           </button>
@@ -610,15 +618,22 @@ export default function StoryViewer({ groups, startGroupIndex, startStoryIndex =
             <>
               <div className="px-4 pb-2">
                 <div className="flex items-center justify-center gap-3">
-                  {["❤️", "😂", "😮", "🔥", "😢", "👏"].map((emoji) => (
-                    <button
-                      key={emoji}
-                      onClick={() => toast.success(`Reacted with ${emoji}`)}
-                      className="text-2xl active:scale-150 transition-transform"
-                    >
-                      {emoji}
-                    </button>
-                  ))}
+                  {["❤️", "😂", "😮", "🔥", "😢", "👏"].map((emoji) => {
+                    const active = myReaction === emoji;
+                    return (
+                      <button
+                        key={emoji}
+                        onClick={() => reactToStory.mutate(active ? null : emoji)}
+                        className={cn(
+                          "text-2xl transition-transform active:scale-150",
+                          active && "drop-shadow-[0_0_10px_rgba(255,255,255,0.6)] scale-125"
+                        )}
+                        aria-label={`React with ${emoji}`}
+                      >
+                        {emoji}
+                      </button>
+                    );
+                  })}
                 </div>
               </div>
               <div className="px-4 pb-3">
