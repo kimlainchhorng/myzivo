@@ -17,6 +17,8 @@ import { toUserPostInteractionId } from "@/lib/social/postInteraction";
 import CommentsSheet from "@/components/social/CommentsSheet";
 import CollapsibleCaption from "@/components/social/CollapsibleCaption";
 import { formatCount, commentsLinkLabel } from "@/lib/social/formatCount";
+import VerifiedBadge from "@/components/VerifiedBadge";
+import { isBlueVerified } from "@/lib/verification";
 
 const REACTIONS = ["❤️", "😂", "😮", "😢", "😡", "👍"];
 
