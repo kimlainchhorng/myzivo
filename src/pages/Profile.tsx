@@ -251,6 +251,44 @@ const Profile = () => {
     else navigate("/feed");
   }, [impact, navigate]);
   const handleToggleNotif = useCallback(() => { selectionChanged(); setShowNotifPanel(p => !p); }, [selectionChanged]);
+  const [notifFilter, setNotifFilter] = useState<"all" | "unread">("all");
+  const notifPanelRef = useRef<HTMLDivElement>(null);
+  const notifBellRef = useRef<HTMLButtonElement>(null);
+  // Outside-click + Escape close
+  useEffect(() => {
+    if (!showNotifPanel) return;
+    const onDown = (e: MouseEvent | TouchEvent) => {
+      const t = e.target as Node;
+      if (notifPanelRef.current?.contains(t)) return;
+      if (notifBellRef.current?.contains(t)) return;
+      setShowNotifPanel(false);
+    };
+    const onKey = (e: KeyboardEvent) => { if (e.key === "Escape") setShowNotifPanel(false); };
+    document.addEventListener("mousedown", onDown);
+    document.addEventListener("touchstart", onDown, { passive: true });
+    document.addEventListener("keydown", onKey);
+    return () => {
+      document.removeEventListener("mousedown", onDown);
+      document.removeEventListener("touchstart", onDown);
+      document.removeEventListener("keydown", onKey);
+    };
+  }, [showNotifPanel]);
+  const resolveNotifLink = useCallback((n: { action_url: string | null; metadata: Record<string, any>; template: string }) => {
+    if (n.action_url) return n.action_url;
+    const dl = n.metadata?.deepLink || n.metadata?.deep_link || n.metadata?.url;
+    if (typeof dl === "string" && dl) return dl;
+    const tpl = (n.template || "").toLowerCase();
+    if (tpl.includes("friend")) return "/notifications?tab=requests";
+    if (tpl.includes("message") || tpl.includes("chat")) return "/chat";
+    if (tpl.includes("ride") || tpl.includes("trip")) return "/rides";
+    return "/notifications";
+  }, []);
+  const handleNotifClick = useCallback(async (n: { id: string; action_url: string | null; metadata: Record<string, any>; template: string; is_read: boolean }) => {
+    selectionChanged();
+    if (!n.is_read) { try { await markAsRead([n.id]); } catch {} }
+    setShowNotifPanel(false);
+    navigate(resolveNotifLink(n));
+  }, [markAsRead, navigate, resolveNotifLink, selectionChanged]);
   const handleResetCover = useCallback(() => { impact("light"); setCoverPosition(50); }, [impact]);
   
   const [showLangPicker, setShowLangPicker] = useState(false);
