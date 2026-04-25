@@ -442,7 +442,7 @@ export default function ProfileFeedCard({
             whileTap={{ scale: 0.88 }}
             onClick={() => onShare(item.id)}
             aria-label="Share post"
-            className="min-h-[44px] h-11 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40 w-10 inline-flex items-center justify-center rounded-full text-foreground hover:bg-muted/50 transition-all"
+            className="min-h-[44px] h-11 w-11 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40 inline-flex items-center justify-center rounded-full text-foreground hover:bg-muted/50 transition-all"
           >
             <Send aria-hidden strokeWidth={2.2} className="h-[21px] w-[21px] -rotate-12" />
           </motion.button>
@@ -455,7 +455,7 @@ export default function ProfileFeedCard({
           aria-label={isBookmarked ? "Remove bookmark" : "Save post"}
           aria-pressed={isBookmarked}
           className={cn(
-            "min-h-[44px] h-11 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40 w-10 inline-flex items-center justify-center rounded-full transition-all",
+            "min-h-[44px] h-11 w-11 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40 inline-flex items-center justify-center rounded-full transition-all",
             isBookmarked
               ? "bg-emerald-500/12 text-emerald-500"
               : "text-foreground hover:bg-muted/50",
