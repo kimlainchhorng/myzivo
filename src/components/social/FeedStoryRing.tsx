@@ -14,6 +14,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { cn } from "@/lib/utils";
 import { optimizeAvatar } from "@/utils/optimizeAvatar";
 import StoryViewer, { StoryGroup } from "@/components/stories/StoryViewer";
@@ -39,6 +40,7 @@ export default function FeedStoryRing() {
   const { user } = useAuth();
   const queryClient = useQueryClient();
   const [showCreate, setShowCreate] = useState(false);
+  const [showOwnSheet, setShowOwnSheet] = useState(false);
   const { activeStoryId, openStory, closeStory, updateStory } = useStoryDeepLink({ source: "feed" });
 
   const { data: rawStories = [] } = useQuery({
@@ -130,16 +132,23 @@ export default function FeedStoryRing() {
   const groupHasUnviewed = (g: StoryGroup) =>
     g.userId !== user.id && g.stories.some((s) => !viewedIds.has(s.id));
 
+  const myGroup = groups.find((g) => g.userId === user.id);
+  const myLatestStory = myGroup?.stories[myGroup.stories.length - 1];
+
+  const handleOwnRingClick = () => {
+    if (myGroup && myGroup.stories.length > 0) {
+      setShowOwnSheet(true);
+    } else {
+      setShowCreate(true);
+    }
+  };
+
   return (
     <>
       <div className="flex gap-3 px-3 py-2.5 overflow-x-auto scrollbar-none border-b border-border/20">
         {/* Your story (Instagram-style) */}
         <button
-          onClick={() => {
-            const myGroup = groups.find((g) => g.userId === user.id);
-            if (myGroup) handleRingClick(myGroup);
-            else setShowCreate(true);
-          }}
+          onClick={handleOwnRingClick}
           className="flex flex-col items-center gap-1 shrink-0 w-[72px]"
         >
           <div className="relative">
@@ -149,11 +158,28 @@ export default function FeedStoryRing() {
                 ? "bg-[conic-gradient(from_180deg,#f09433,#e6683c,#dc2743,#cc2366,#bc1888,#f09433)]"
                 : "bg-muted-foreground/25"
             )}>
-              <div className="h-full w-full rounded-full overflow-hidden border-2 border-card bg-card">
-                <Avatar className="h-full w-full">
-                  <AvatarImage src={optimizeAvatar(groups.find((g) => g.userId === user.id)?.avatarUrl, 64)} loading="lazy" />
-                  <AvatarFallback className="text-sm font-bold">{user.email?.[0]}</AvatarFallback>
-                </Avatar>
+              <div className="h-full w-full rounded-full overflow-hidden border-2 border-card bg-card relative">
+                {myLatestStory && myLatestStory.mediaType !== "video" ? (
+                  <img
+                    src={myLatestStory.mediaUrl}
+                    alt="Your story"
+                    className="h-full w-full object-cover"
+                    loading="lazy"
+                  />
+                ) : myLatestStory && myLatestStory.mediaType === "video" ? (
+                  <video
+                    src={myLatestStory.mediaUrl}
+                    className="h-full w-full object-cover"
+                    muted
+                    playsInline
+                    preload="metadata"
+                  />
+                ) : (
+                  <Avatar className="h-full w-full">
+                    <AvatarImage src={optimizeAvatar(myGroup?.avatarUrl, 64)} loading="lazy" />
+                    <AvatarFallback className="text-sm font-bold">{user.email?.[0]}</AvatarFallback>
+                  </Avatar>
+                )}
               </div>
             </div>
             <div className="absolute -bottom-0.5 -right-0.5 h-[22px] w-[22px] rounded-full bg-foreground flex items-center justify-center border-[2.5px] border-card">
@@ -197,6 +223,35 @@ export default function FeedStoryRing() {
           );
         })}
       </div>
+
+      {/* Own-ring action sheet: View or Add */}
+      <Sheet open={showOwnSheet} onOpenChange={setShowOwnSheet}>
+        <SheetContent side="bottom" className="rounded-t-2xl pb-[env(safe-area-inset-bottom,16px)]">
+          <SheetHeader>
+            <SheetTitle className="text-left">Your story</SheetTitle>
+          </SheetHeader>
+          <div className="flex flex-col gap-2 pt-3">
+            <button
+              className="w-full text-left px-4 py-3 rounded-xl bg-muted/40 hover:bg-muted/60 active:scale-[0.99] transition font-medium"
+              onClick={() => {
+                setShowOwnSheet(false);
+                if (myGroup) handleRingClick(myGroup);
+              }}
+            >
+              View your story
+            </button>
+            <button
+              className="w-full text-left px-4 py-3 rounded-xl bg-primary text-primary-foreground hover:opacity-95 active:scale-[0.99] transition font-medium"
+              onClick={() => {
+                setShowOwnSheet(false);
+                setShowCreate(true);
+              }}
+            >
+              Add to your story
+            </button>
+          </div>
+        </SheetContent>
+      </Sheet>
 
       {showCreate && (
         <Suspense fallback={null}>

@@ -1,77 +1,49 @@
-## What's actually broken
+# Story carousel — fix what happens after publishing
 
-I logged in as your test account, published a Text story, and reproduced the bug end-to-end. The toast says "Story shared 🎉", but the "Your story" ring stays grey and tapping it re-opens the Create Story sheet instead of the viewer.
+## What I observed in the live test
 
-The Story Debug Panel (`/feed?debug=stories`) confirmed the split-brain:
+1. Logged into the preview as `klainkonkat@gmail.com` and reproduced the flow on `/profile`.
+2. After the previous fix (column rename to `text_overlay` / `view_count`), the publish call succeeds and the story shows up in the rings.
+3. The remaining issues that surface **after** publishing and tapping the ring:
+   - Tapping **your own** ring on the feed always opens the viewer; there is no way to add another segment from the ring (Instagram/Facebook always offer "Add to your story").
+   - The duplicate-key React warning in the console still fires from `StoryViewer` whenever it is opened from `ProfileStories`. The current trace points at `AnimatePresence > StoryViewer > ProfileStories`.
+   - The "Your story" thumbnail shows only the avatar — never the latest story media — so right after publishing it's not obvious the upload succeeded until the viewer is opened.
 
-- Database (direct, filtered by your user_id): ✅ 3 active stories
-- Feed carousel cache: amber, **0 rows**, status = "success"
-- Profile carousel: missing
-- Chat carousel: missing
+## Fixes to ship
 
-The "Force refresh all" button doesn't fix it either — the carousels really do come back empty.
+### 1. "Your story" ring becomes Add + View
+File: `src/components/social/FeedStoryRing.tsx` (and mirror in `ChatStories` / `ProfileStories` if they expose the same affordance)
 
-### Root cause (found in network trace)
+- Replace the single `onClick` with a small action sheet (existing `Sheet` primitive) when the user already has a story:
+  - "View your story" → opens viewer
+  - "Add to your story" → opens `CreateStorySheet`
+- If the user has no story, keep current behavior: open `CreateStorySheet` directly.
+- Keep the `+` plus-badge always visible so adding stays one tap away.
 
-`GET /rest/v1/stories?select=id,user_id,media_url,media_type,caption,audio_url,created_at,expires_at,views_count` returns **HTTP 400** with:
+### 2. Show latest media as the "Your story" thumbnail
+File: `src/components/social/FeedStoryRing.tsx`
 
-```
-{"code":"42703","message":"column stories.caption does not exist"}
-```
+- When `myGroup.stories.length > 0`, render an `<img>` (or first video frame poster) of the latest segment as the ring background instead of always falling back to the avatar.
+- Continue to overlay the avatar small in the corner when media is shown.
 
-So FeedStoryRing / ProfileStories / ChatStories all crash silently at the network layer. React Query treats the failed `data` as `[]`, which is why the toast says "shared" but the ring never lights up.
+### 3. Remove the residual duplicate-key warning from StoryViewer
+File: `src/components/stories/StoryViewer.tsx`
 
-The `stories` table actually has these columns:
+- Audit every `AnimatePresence` block (lines 458, 618, 750, 798, 874, 948) and ensure each direct child has a stable, unique key. Most likely culprits:
+  - The outer `AnimatePresence` (line 458) wraps a single `motion.div` with no key — give it `key={currentStory.id}` so navigation re-mounts cleanly.
+  - The viewers / comments lists already use stable keys, but defend against duplicate `viewer_id` rows by deduping in the query map.
+- After the change, navigate forward/back through a 2+ segment story in the viewer and confirm no warning is logged.
 
-```
-id, user_id, media_url, media_type, text_overlay, text_position,
-text_color, background_color, duration_seconds, view_count,
-expires_at, created_at, audio_url
-```
+### 4. Verification (browser test)
+- Log in, publish a fresh story, confirm:
+  - The ring thumbnail updates to the new media within ~1 s.
+  - Tapping the ring shows the action sheet with View / Add.
+  - "Add" opens `CreateStorySheet` and a second segment can be published.
+  - Console is free of the duplicate-key and previous warnings.
+  - `?debug=stories` panel still shows green for Database / Feed / Profile / Chat.
 
-Two mismatches:
-1. Code reads `caption` → real column is **`text_overlay`** (and the publish step in `CreateStorySheet` writes a non-existent `caption` column too — that insert is silently dropping the text).
-2. Code reads `views_count` → real column is **`view_count`** (singular).
-
-The SELECT query fails on the very first unknown column (`caption`), so the whole carousel goes dark.
-
-### Why publish "succeeds" anyway
-
-`CreateStorySheet` does `insert({ ..., caption: captionToSave })`. PostgREST has historically accepted unknown columns silently on insert in this project (or it errors but we swallow it). Either way, the media row IS being created — that's why the debug panel sees 3 rows directly — but the `caption` text the user typed is never persisted.
-
-## The fix
-
-Two small, surgical changes — no schema migration required (the column we want already exists).
-
-### 1. Replace `caption` → `text_overlay` and `views_count` → `view_count` everywhere
-
-Files to edit:
-
-- `src/components/social/FeedStoryRing.tsx`
-  - `RawStory` type: `caption` → `text_overlay`, `views_count` → `view_count`
-  - `.select(...)` string
-  - mapping: `caption: s.caption` → `caption: s.text_overlay`, `viewsCount: s.views_count` → `viewsCount: s.view_count`
-
-- `src/components/profile/ProfileStories.tsx` — same three changes
-
-- `src/components/chat/ChatStories.tsx` — same three changes
-
-- `src/components/profile/CreateStorySheet.tsx` (line ~306–310): the insert payload key `caption: captionToSave` becomes `text_overlay: captionToSave`. UI state variable name (`caption`) can stay as-is — only the DB column name changes.
-
-The `StoryViewer` and the rest of the UI keep using the JS field name `caption` — only the DB layer changes.
-
-### 2. Verify
-
-After editing, with the debug panel still open:
-
-- Publish a new Text story.
-- Network trace should now show `200 OK` for the `stories?select=...` request.
-- Feed / Profile / Chat carousel rows in the debug panel should flip to ✅ green within ~1s.
-- "Your story" ring should show the gradient border, and tapping it should open the StoryViewer with the just-published text — not the Create Story sheet.
-
-I'll run that verification myself once you approve.
-
-## Out of scope (intentionally)
-
-- The 3 stale stories already in the DB have `text_overlay = NULL` (their captions were lost on insert). I'm not back-filling them — they expire in <24h. New stories created after the fix will keep their caption text correctly.
-- The other "blank /profile screen" you saw was just the profile page mid-load after a fresh login; it rendered fine on a second visit. Not related to stories. If it recurs after the fix, we can investigate separately.
+## Out of scope (already fixed in the previous turn)
+- Column-name mismatch on `stories` (`text_overlay`, `view_count`).
+- RLS SELECT policy for own + active stories.
+- `invalidateAllStoryCaches` predicate keys for Feed / Chat / Profile.
+- `AuthProvider` mount fix that previously caused the blank screen.

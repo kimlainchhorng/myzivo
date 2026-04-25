@@ -145,13 +145,20 @@ export default function StoryViewer({
         .eq("story_id", currentStory!.id)
         .order("viewed_at", { ascending: false });
       if (!data || data.length === 0) return [];
-      const viewerIds = (data as any[]).map((v: any) => v.viewer_id);
+      // Dedupe by viewer_id so React list keys stay unique
+      const seen = new Set<string>();
+      const uniqueViews = (data as any[]).filter((v: any) => {
+        if (seen.has(v.viewer_id)) return false;
+        seen.add(v.viewer_id);
+        return true;
+      });
+      const viewerIds = uniqueViews.map((v: any) => v.viewer_id);
       const { data: profiles } = await supabase
         .from("public_profiles" as any)
         .select("id, full_name, avatar_url")
         .in("id", viewerIds);
       const profileMap = new Map((profiles || []).map((p: any) => [p.id, p]));
-      return (data as any[]).map((v: any) => ({
+      return uniqueViews.map((v: any) => ({
         ...v,
         name: profileMap.get(v.viewer_id)?.full_name || "User",
         avatar: profileMap.get(v.viewer_id)?.avatar_url,
@@ -170,13 +177,20 @@ export default function StoryViewer({
         .eq("story_id", currentStory!.id)
         .order("created_at", { ascending: true });
       if (!data || data.length === 0) return [];
-      const userIds = [...new Set((data as any[]).map((c: any) => c.user_id))];
+      // Dedupe comments by id (defensive — duplicates would crash React lists)
+      const seenC = new Set<string>();
+      const uniqueComments = (data as any[]).filter((c: any) => {
+        if (seenC.has(c.id)) return false;
+        seenC.add(c.id);
+        return true;
+      });
+      const userIds = [...new Set(uniqueComments.map((c: any) => c.user_id))];
       const { data: profiles } = await supabase
         .from("public_profiles" as any)
         .select("id, full_name, avatar_url")
         .in("id", userIds);
       const profileMap = new Map((profiles || []).map((p: any) => [p.id, p]));
-      return (data as any[]).map((c: any) => ({
+      return uniqueComments.map((c: any) => ({
         ...c,
         name: profileMap.get(c.user_id)?.full_name || "User",
         avatar: profileMap.get(c.user_id)?.avatar_url,
@@ -457,6 +471,7 @@ export default function StoryViewer({
   return (
     <AnimatePresence>
       <motion.div
+        key={currentStory.id}
         initial={{ opacity: 0, scale: 0.95 }}
         animate={{ opacity: 1, scale: 1 }}
         exit={{ opacity: 0, scale: 0.95 }}
