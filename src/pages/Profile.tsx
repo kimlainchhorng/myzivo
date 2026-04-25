@@ -394,16 +394,14 @@ const Profile = () => {
 
   const { scrollYProgress, scrollY } = useScroll();
   const bgParallax = useTransform(scrollYProgress, [0, 1], [0, -80]);
-  // Mobile sticky compact header (Facebook-style)
-  const stickyOpacity = useTransform(scrollY, [96, 156], [0, 1]);
-  const stickyTranslate = useTransform(scrollY, [96, 156], [-18, 0]);
   // Mobile cover parallax + rubber-band
   const coverY = useTransform(scrollY, [0, 240], [0, -60]);
   const coverScale = useTransform(scrollY, [-100, 0], [1.15, 1]);
-  const [isStickyHeaderVisible, setIsStickyHeaderVisible] = useState(false);
-
+  // Header is always pinned & visible. Toggle "over cover" styling vs solid bar
+  // once the user scrolls past the cover area for legibility.
+  const [overCover, setOverCover] = useState(true);
   useMotionValueEvent(scrollY, "change", (latest) => {
-    setIsStickyHeaderVisible((prev) => (prev ? latest > 84 : latest > 118));
+    setOverCover(latest < 80);
   });
 
   const getInitials = () => {
