@@ -952,7 +952,7 @@ const Profile = () => {
                   </div>
 
                 </motion.div>
-              </ParallaxSection>
+              </div>
 
               {/* ZIVO+ upgrade moved to /more page */}
 
