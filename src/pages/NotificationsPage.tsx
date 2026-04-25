@@ -20,6 +20,8 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { toast } from 'sonner';
 import { formatDistanceToNow } from 'date-fns';
 import { useSocialNotifications, SocialNotification } from '@/hooks/useSocialNotifications';
+import VerifiedBadge from '@/components/VerifiedBadge';
+import { isBlueVerified } from '@/lib/verification';
 
 type NotificationCategory = 'all' | 'social' | 'orders' | 'promos' | 'support' | 'delays';
 
@@ -30,6 +32,7 @@ interface FriendRequest {
   profile?: {
     full_name: string | null;
     avatar_url: string | null;
+    is_verified?: boolean | null;
   };
 }
 
@@ -74,7 +77,10 @@ const FriendRequestCard = ({ request, onAccept, onDecline }: { request: FriendRe
           </AvatarFallback>
         </Avatar>
         <div className="flex-1 min-w-0">
-          <p className="font-bold text-sm truncate">{request.profile?.full_name || 'Unknown User'}</p>
+          <p className="font-bold text-sm truncate inline-flex items-center gap-1">
+            <span className="truncate">{request.profile?.full_name || 'Unknown User'}</span>
+            {isBlueVerified(request.profile?.is_verified) && <VerifiedBadge size={13} interactive={false} />}
+          </p>
           <p className="text-[10px] text-muted-foreground">
             Sent you a friend request · {formatDistanceToNow(new Date(request.created_at), { addSuffix: true })}
           </p>
@@ -133,8 +139,9 @@ const SocialNotifItem = ({ notif, index, onClick }: { notif: SocialNotification;
             </div>
           </div>
           <div className="flex-1 min-w-0">
-            <p className={cn("text-[13px] leading-snug", !notif.is_read && "font-semibold")}>
-              {notif.message}
+            <p className={cn("text-[13px] leading-snug inline-flex items-baseline gap-1 flex-wrap", !notif.is_read && "font-semibold")}>
+              <span>{notif.message}</span>
+              {isBlueVerified(notif.actor_is_verified) && <VerifiedBadge size={11} interactive={false} className="self-center" />}
             </p>
             <p className="text-[10px] text-muted-foreground mt-0.5">{timeAgo}</p>
           </div>
@@ -190,7 +197,7 @@ const NotificationsPage = () => {
         const userIds = data.map((r: any) => r.user_id);
         const { data: profiles } = await (supabase as any)
           .from('profiles')
-          .select('user_id, full_name, avatar_url')
+          .select('user_id, full_name, avatar_url, is_verified')
           .in('user_id', userIds);
 
         const profileMap = new Map((profiles || []).map((p: any) => [p.user_id, p]));

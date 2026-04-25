@@ -18,6 +18,7 @@ export interface SocialNotification {
   // Joined
   actor_name?: string;
   actor_avatar?: string | null;
+  actor_is_verified?: boolean;
 }
 
 export function useSocialNotifications(limit = 30) {
@@ -41,7 +42,7 @@ export function useSocialNotifications(limit = 30) {
     // Fetch actor profiles
     const actorIds = [...new Set((data as any[]).map((n: any) => n.actor_id).filter(Boolean))] as string[];
     const { data: profiles } = actorIds.length > 0
-      ? await supabase.from("public_profiles" as any).select("id, full_name, avatar_url").in("id", actorIds)
+      ? await supabase.from("public_profiles" as any).select("id, full_name, avatar_url, is_verified").in("id", actorIds)
       : { data: [] };
     const profileMap = new Map((profiles || []).map((p: any) => [p.id, p]));
 
@@ -51,6 +52,7 @@ export function useSocialNotifications(limit = 30) {
         ...n,
         actor_name: (actor as any)?.full_name || "Someone",
         actor_avatar: (actor as any)?.avatar_url || null,
+        actor_is_verified: (actor as any)?.is_verified === true,
       };
     });
 
