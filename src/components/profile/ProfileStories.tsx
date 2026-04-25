@@ -14,6 +14,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { cn } from "@/lib/utils";
 import CreateStorySheet from "@/components/profile/CreateStorySheet";
 import StoryViewer, { StoryGroup } from "@/components/stories/StoryViewer";
+import { useStoryDeepLink } from "@/hooks/useStoryDeepLink";
 
 interface RawStory {
   id: string;
