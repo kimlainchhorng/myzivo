@@ -776,8 +776,8 @@ export default function StoryViewer({
 
           {!isOwner && (
             <>
-              <div className="px-4 pb-2">
-                <div className="flex items-center justify-center gap-3">
+              <div className="px-4 pb-2 relative">
+                <div className="flex items-center justify-center gap-2.5">
                   {["❤️", "😂", "😮", "🔥", "😢", "👏"].map((emoji) => {
                     const active = myReaction === emoji;
                     return (
@@ -785,17 +785,70 @@ export default function StoryViewer({
                         key={emoji}
                         onClick={() => reactToStory.mutate(active ? null : emoji)}
                         className={cn(
-                          "text-2xl transition-transform active:scale-150",
-                          active && "drop-shadow-[0_0_10px_rgba(255,255,255,0.6)] scale-125"
+                          "relative text-2xl transition-transform active:scale-150",
+                          active && "drop-shadow-[0_0_10px_rgba(255,255,255,0.65)] scale-125"
                         )}
-                        aria-label={`React with ${emoji}`}
+                        aria-label={active ? `Remove ${emoji} reaction` : `React with ${emoji}`}
                       >
                         {emoji}
+                        {active && (
+                          <span className="absolute -top-1 -right-2 w-4 h-4 rounded-full bg-black/70 border border-white/40 flex items-center justify-center text-[10px] text-white">
+                            ×
+                          </span>
+                        )}
                       </button>
                     );
                   })}
+                  <button
+                    onClick={() => setShowQuickReact((v) => !v)}
+                    className={cn(
+                      "w-9 h-9 rounded-full bg-white/10 backdrop-blur-md border border-white/15 flex items-center justify-center transition active:scale-90",
+                      showQuickReact && "bg-white/25 ring-2 ring-white/40"
+                    )}
+                    aria-label="More reactions"
+                  >
+                    <Plus className="w-4 h-4 text-white" strokeWidth={2.5} />
+                  </button>
                 </div>
+
+                {/* Quick-react expanded picker */}
+                <AnimatePresence>
+                  {showQuickReact && (
+                    <motion.div
+                      initial={{ opacity: 0, y: 8, scale: 0.95 }}
+                      animate={{ opacity: 1, y: 0, scale: 1 }}
+                      exit={{ opacity: 0, y: 8, scale: 0.95 }}
+                      transition={{ duration: 0.15 }}
+                      className="absolute left-3 right-3 bottom-full mb-2 z-30"
+                    >
+                      <div className="rounded-2xl bg-black/65 backdrop-blur-2xl border border-white/15 ring-1 ring-[hsl(160_84%_55%)/0.25] shadow-[0_10px_40px_-10px_rgba(0,0,0,0.7)] p-3">
+                        <div className="grid grid-cols-8 gap-1.5">
+                          {["😍","🥹","🤩","😎","😭","🤣","👏","🙌","💯","🔥","✨","💖","🥳","😱","😤","🫶","🤝","👀","🌟","⚡","🎉","🍿","🤔","🙏"].map((emoji) => {
+                            const active = myReaction === emoji;
+                            return (
+                              <button
+                                key={emoji}
+                                onClick={() => {
+                                  reactToStory.mutate(active ? null : emoji);
+                                  setShowQuickReact(false);
+                                }}
+                                className={cn(
+                                  "h-9 rounded-lg text-xl flex items-center justify-center transition active:scale-125",
+                                  active ? "bg-white/25 ring-1 ring-white/50" : "hover:bg-white/10"
+                                )}
+                                aria-label={`React with ${emoji}`}
+                              >
+                                {emoji}
+                              </button>
+                            );
+                          })}
+                        </div>
+                      </div>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
               </div>
+
               <div className="px-4 pb-3">
                 <div className="flex items-center gap-2 bg-white/10 backdrop-blur-md rounded-full px-4 py-2.5 border border-white/10">
                   <input
@@ -803,21 +856,23 @@ export default function StoryViewer({
                     value={commentText}
                     onChange={(e) => setCommentText(e.target.value)}
                     onKeyDown={(e) => {
-                      if (e.key === "Enter" && commentText.trim()) postComment.mutate(commentText.trim());
+                      if (e.key === "Enter" && commentText.trim()) sendDmReply.mutate(commentText.trim());
                     }}
-                    placeholder={`Reply to ${viewingGroup.userName.split(" ")[0]}...`}
+                    placeholder={`Message ${viewingGroup.userName.split(" ")[0]}...`}
                     className="flex-1 bg-transparent text-white text-sm outline-none placeholder:text-white/50"
                     onFocus={() => setPaused(true)}
                     onBlur={() => setPaused(false)}
                   />
                   <button
-                    onClick={() => { if (commentText.trim()) postComment.mutate(commentText.trim()); }}
-                    disabled={postComment.isPending}
-                    aria-label="Send reply"
+                    onClick={() => { if (commentText.trim()) sendDmReply.mutate(commentText.trim()); }}
+                    disabled={sendDmReply.isPending || !commentText.trim()}
+                    aria-label="Send reply via chat"
+                    className="disabled:opacity-40"
                   >
-                    <Send className="w-4 h-4 text-white/60" />
+                    <Send className="w-4 h-4 text-[hsl(160_84%_60%)]" />
                   </button>
                 </div>
+                <p className="text-[10px] text-white/45 text-center mt-1.5">Replies open in chat</p>
               </div>
             </>
           )}
