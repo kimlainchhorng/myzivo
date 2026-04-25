@@ -177,13 +177,20 @@ export default function StoryViewer({
         .eq("story_id", currentStory!.id)
         .order("created_at", { ascending: true });
       if (!data || data.length === 0) return [];
-      const userIds = [...new Set((data as any[]).map((c: any) => c.user_id))];
+      // Dedupe comments by id (defensive — duplicates would crash React lists)
+      const seenC = new Set<string>();
+      const uniqueComments = (data as any[]).filter((c: any) => {
+        if (seenC.has(c.id)) return false;
+        seenC.add(c.id);
+        return true;
+      });
+      const userIds = [...new Set(uniqueComments.map((c: any) => c.user_id))];
       const { data: profiles } = await supabase
         .from("public_profiles" as any)
         .select("id, full_name, avatar_url")
         .in("id", userIds);
       const profileMap = new Map((profiles || []).map((p: any) => [p.id, p]));
-      return (data as any[]).map((c: any) => ({
+      return uniqueComments.map((c: any) => ({
         ...c,
         name: profileMap.get(c.user_id)?.full_name || "User",
         avatar: profileMap.get(c.user_id)?.avatar_url,
