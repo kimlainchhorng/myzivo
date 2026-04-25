@@ -277,6 +277,7 @@ const Profile = () => {
   const [followerCount, setFollowerCount] = useState(0);
   const [followingCount, setFollowingCount] = useState(0);
   const [socialModal, setSocialModal] = useState<{ open: boolean; tab: "friends" | "followers" | "following" }>({ open: false, tab: "friends" });
+  const [shareOpen, setShareOpen] = useState(false);
 
   // Load real friendship status, friend count & follower count
   useEffect(() => {
