@@ -809,7 +809,7 @@ const Profile = () => {
                           <>
                             <textarea
                               value={bioDraft}
-                              onChange={(e) => setBioDraft(e.target.value)}
+                              onChange={(e) => setBioDraft(e.target.value.slice(0, 160))}
                               placeholder="Add a short bio so people know who you are."
                               maxLength={160}
                               rows={2}
@@ -817,6 +817,11 @@ const Profile = () => {
                               aria-label="Bio"
                               className="w-full resize-none rounded-2xl border border-border/50 bg-background/80 px-3 py-2 text-xs text-foreground outline-none placeholder:text-muted-foreground focus:border-primary/40 focus:ring-2 focus:ring-primary/10"
                             />
+                            <div className="mt-1 flex justify-end">
+                              <span className={cn("text-[10px] tabular-nums", bioDraft.length >= 150 ? "text-amber-500" : "text-muted-foreground/70")}>
+                                {bioDraft.length}/160
+                              </span>
+                            </div>
                             <div className="mt-2 flex items-center gap-2">
                               <Button
                                 type="button"
