@@ -128,14 +128,7 @@ const ProfileStories = () => {
   const hasMyStory = !!myGroup;
 
   // Resolve the active deep-linked story to (groupIndex, storyIndex)
-  const viewerLocation = useMemo(() => {
-    if (!activeStoryId) return null;
-    for (let gi = 0; gi < groups.length; gi++) {
-      const si = groups[gi].stories.findIndex((s) => s.id === activeStoryId);
-      if (si !== -1) return { groupIndex: gi, storyIndex: si };
-    }
-    return null;
-  }, [activeStoryId, groups]);
+  const viewerLocation = useStoryViewerLocation(groups, activeStoryId);
 
   const openViewer = (groupUserId: string) => {
     const grp = groups.find((g) => g.userId === groupUserId);

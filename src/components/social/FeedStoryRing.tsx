@@ -113,14 +113,7 @@ export default function FeedStoryRing() {
     return out;
   }, [rawStories, profileMap, user?.id]);
 
-  const viewerLocation = useMemo(() => {
-    if (!activeStoryId) return null;
-    for (let gi = 0; gi < groups.length; gi++) {
-      const si = groups[gi].stories.findIndex((s) => s.id === activeStoryId);
-      if (si !== -1) return { groupIndex: gi, storyIndex: si };
-    }
-    return null;
-  }, [activeStoryId, groups]);
+  const viewerLocation = useStoryViewerLocation(groups, activeStoryId);
 
   const hasMyStory = groups.some((g) => g.userId === user?.id);
 
