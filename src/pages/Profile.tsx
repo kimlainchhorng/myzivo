@@ -39,6 +39,7 @@ import ProfileStories from "@/components/profile/ProfileStories";
 import SocialListModal from "@/components/profile/SocialListModal";
 import PullToRefresh from "@/components/shared/PullToRefresh";
 import { useNotifications } from "@/hooks/useNotifications";
+import { formatDistanceToNowStrict } from "date-fns";
 
 const LANGS = [
   { code: "en", label: "English", cc: "us" },
