@@ -136,8 +136,8 @@ const ProfileStories = () => {
     openStory(grp.stories[0].id);
   };
 
-  const handleViewerClose = () => {
-    closeStory();
+  const handleViewerClose = (meta?: Parameters<typeof closeStory>[0]) => {
+    closeStory(meta);
     queryClient.invalidateQueries({ queryKey: ["my-story-views", user?.id], exact: true });
     queryClient.invalidateQueries({ queryKey: ["profile-story-rings", user?.id], exact: true });
     queryClient.invalidateQueries({ queryKey: ["feed-story-users"], exact: true });
