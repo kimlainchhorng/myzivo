@@ -194,6 +194,7 @@ const AdminLodgingWiringCheckPage = lazy(() => import("./pages/admin/AdminLodgin
 const AdminLodgingWebhookEventsPage = lazy(() => import("./pages/admin/AdminLodgingWebhookEventsPage"));
 const StoreAssetsUploadCheck = lazy(() => import("./pages/admin/StoreAssetsUploadCheck"));
 const StoreSetup = lazy(() => import("./pages/store/StoreSetup"));
+const BusinessPageWizard = lazy(() => import("./pages/business/BusinessPageWizard"));
 const ServiceBookingPage = lazy(() => import("./pages/store/ServiceBookingPage"));
 const AdminEmployeesPage = lazy(() => import("./pages/admin/AdminEmployeesPage"));
 const AdminSystemHealth = lazy(() => import("./pages/admin/AdminSystemHealth"));
