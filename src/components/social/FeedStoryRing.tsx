@@ -14,6 +14,7 @@ import { optimizeAvatar } from "@/utils/optimizeAvatar";
 import { toast } from "sonner";
 import StoryViewer, { StoryGroup } from "@/components/stories/StoryViewer";
 import { useStoryDeepLink, useStoryViewerLocation } from "@/hooks/useStoryDeepLink";
+import { invalidateAllStoryCaches } from "@/lib/storiesCache";
 
 interface RawStory {
   id: string;
@@ -145,10 +146,7 @@ export default function FeedStoryRing() {
       });
       if (insertError) throw insertError;
 
-      queryClient.invalidateQueries({ queryKey: ["feed-story-users"], exact: true });
-      queryClient.invalidateQueries({ queryKey: ["user-stories"], exact: true });
-      queryClient.invalidateQueries({ queryKey: ["profile-story-rings", user.id], exact: true });
-      queryClient.invalidateQueries({ queryKey: ["profile-my-story", user.id], exact: true });
+      invalidateAllStoryCaches(queryClient, user.id);
       toast.success("Story added! ✨");
     } catch (err: any) {
       toast.error(err.message || "Failed to upload story");
@@ -165,9 +163,7 @@ export default function FeedStoryRing() {
 
   const handleViewerClose = (meta?: Parameters<typeof closeStory>[0]) => {
     closeStory(meta);
-    queryClient.invalidateQueries({ queryKey: ["my-story-views", user?.id], exact: true });
-    queryClient.invalidateQueries({ queryKey: ["feed-story-users"], exact: true });
-    queryClient.invalidateQueries({ queryKey: ["profile-story-rings", user?.id], exact: true });
+    invalidateAllStoryCaches(queryClient, user?.id);
   };
 
   if (!user) return null;

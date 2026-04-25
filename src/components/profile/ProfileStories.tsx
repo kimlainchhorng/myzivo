@@ -15,6 +15,7 @@ import { cn } from "@/lib/utils";
 import CreateStorySheet from "@/components/profile/CreateStorySheet";
 import StoryViewer, { StoryGroup } from "@/components/stories/StoryViewer";
 import { useStoryDeepLink, useStoryViewerLocation } from "@/hooks/useStoryDeepLink";
+import { invalidateAllStoryCaches } from "@/lib/storiesCache";
 
 interface RawStory {
   id: string;
@@ -138,10 +139,7 @@ const ProfileStories = () => {
 
   const handleViewerClose = (meta?: Parameters<typeof closeStory>[0]) => {
     closeStory(meta);
-    queryClient.invalidateQueries({ queryKey: ["my-story-views", user?.id], exact: true });
-    queryClient.invalidateQueries({ queryKey: ["profile-story-rings", user?.id], exact: true });
-    queryClient.invalidateQueries({ queryKey: ["feed-story-users"], exact: true });
-    queryClient.invalidateQueries({ queryKey: ["user-stories"], exact: true });
+    invalidateAllStoryCaches(queryClient, user?.id);
   };
 
   const isFullyViewed = (g: StoryGroup) =>
