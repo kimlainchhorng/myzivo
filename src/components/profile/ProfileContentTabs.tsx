@@ -770,8 +770,9 @@ export default function ProfileContentTabs({ userId }: { userId?: string }) {
       return;
     }
 
+    track("post_comment_opened", { post_id: item.id, author_id: profileOwnerId, surface: "profile_feed" });
     setCommentPost(item);
-  }, []);
+  }, [profileOwnerId]);
 
   const handleBookmarkToggle = useCallback(async (item: FeedItem) => {
     if (!user?.id) {
@@ -804,6 +805,7 @@ export default function ProfileContentTabs({ userId }: { userId?: string }) {
           .eq("item_id", interactionId);
 
         if (error) throw error;
+        track("post_unbookmarked", { post_id: item.id, author_id: profileOwnerId, surface: "profile_feed" });
         toast.success("Removed from bookmarks");
       } else {
         const { error } = await (supabase as any).from("bookmarks").insert({
@@ -812,7 +814,9 @@ export default function ProfileContentTabs({ userId }: { userId?: string }) {
           item_type: "post",
         });
 
-        if (error) throw error;
+        const dupKey = (error as any)?.code === "23505";
+        if (error && !dupKey) throw error;
+        track("post_bookmarked", { post_id: item.id, author_id: profileOwnerId, surface: "profile_feed", deduped: dupKey });
         toast.success("Saved to bookmarks");
       }
     } catch (error: any) {
