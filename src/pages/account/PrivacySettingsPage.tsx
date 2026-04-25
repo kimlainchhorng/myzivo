@@ -140,7 +140,7 @@ export default function PrivacySettingsPage() {
         </section>
 
         {/* Blocked Users */}
-        <section>
+        <section id="blocked" style={{ scrollMarginTop: 80 }}>
           <h3 className="text-sm font-semibold text-foreground mb-3 flex items-center gap-2">
             <UserX className="h-4 w-4 text-destructive" /> Blocked Users ({blockedUsers.length})
           </h3>
