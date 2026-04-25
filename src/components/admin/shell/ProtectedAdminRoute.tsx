@@ -15,12 +15,15 @@ interface Props {
   children: ReactNode;
 }
 
-const verticalAccessKey: Record<AdminVertical, keyof UserAccess> = {
+const verticalAccessKey: Partial<Record<AdminVertical, keyof UserAccess>> = {
   restaurant: "isRestaurantOwner",
-  business: "isAdmin", // business dashboard: admin-only for now
-  rides: "isDriver",
-  hotel: "isHotelOwner",
-  store: "isStoreOwner",
+  business: "isAdmin",
+  grocery: "isStoreOwner",
+  retail: "isStoreOwner",
+  cafe: "isRestaurantOwner",
+  service: "isAdmin",
+  mobility: "isDriver",
+  generic: "isAdmin",
 };
 
 export function ProtectedAdminRoute({ vertical, children }: Props) {
