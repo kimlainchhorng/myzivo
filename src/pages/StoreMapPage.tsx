@@ -723,6 +723,7 @@ export default function StoreMapPage() {
           </Button>
         </motion.div>
       </div>
+      )}
 
       {/* ── Map ── */}
       <div ref={mapContainerRef} className="absolute inset-0" style={{ touchAction: "none" }} />
