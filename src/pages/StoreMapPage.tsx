@@ -318,8 +318,9 @@ export default function StoreMapPage() {
       const q = searchQuery.toLowerCase();
       result = result.filter((s) => s.name.toLowerCase().includes(q) || s.address?.toLowerCase().includes(q));
     }
+    if (openNowOnly) result = result.filter((s) => isOpenNow(s.hours) === true);
     return result;
-  }, [stores, activeCategory, searchQuery]);
+  }, [stores, activeCategory, searchQuery, openNowOnly]);
 
   const { data: selectedStoreProducts = [] } = useQuery({
     queryKey: ["store-map-products", selectedStore?.id],
