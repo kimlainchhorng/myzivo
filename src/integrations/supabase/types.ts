@@ -3546,6 +3546,30 @@ export type Database = {
         }
         Relationships: []
       }
+      app_role_permissions: {
+        Row: {
+          action: string
+          created_at: string
+          id: string
+          resource: string
+          role: Database["public"]["Enums"]["app_role"]
+        }
+        Insert: {
+          action: string
+          created_at?: string
+          id?: string
+          resource: string
+          role: Database["public"]["Enums"]["app_role"]
+        }
+        Update: {
+          action?: string
+          created_at?: string
+          id?: string
+          resource?: string
+          role?: Database["public"]["Enums"]["app_role"]
+        }
+        Relationships: []
+      }
       app_settings: {
         Row: {
           created_at: string | null
@@ -60605,6 +60629,10 @@ export type Database = {
         Args: { _permission: string; _user_id: string }
         Returns: boolean
       }
+      has_permission: {
+        Args: { _action: string; _resource: string; _user_id: string }
+        Returns: boolean
+      }
       has_policy_consent: {
         Args: { _policy_type: string; _user_id: string }
         Returns: boolean
@@ -60940,8 +60968,6 @@ export type Database = {
         Args: { p_geojson: Json; p_zone_id: string }
         Returns: Json
       }
-      show_limit: { Args: never; Returns: number }
-      show_trgm: { Args: { "": string }; Returns: string[] }
       start_batch: {
         Args: { p_batch_id: string; p_driver_id: string }
         Returns: Json
