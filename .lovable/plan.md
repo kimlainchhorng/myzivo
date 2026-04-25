@@ -1,53 +1,60 @@
-# Fix: Tapping "Your story" does nothing
+# Instagram-style stories — full polish
 
-## Root cause
+Three changes, applied together.
 
-When you tap your story ring, the click handler **does** fire and the fullscreen `StoryViewer` **does** mount and play its open animation — you just can't see it.
+## 1. IG gradient ring on all carousels
 
-`src/components/stories/StoryViewer.tsx` line 449 renders the viewer at:
+Replace the current avatar ring styling on **Feed, Profile, and Chat** so it matches Instagram exactly:
+
+- Unseen ring: `bg-[conic-gradient(from_180deg,#f09433,#e6683c,#dc2743,#cc2366,#bc1888,#f09433)]` (the iconic IG sunset → magenta gradient).
+- Seen ring: `bg-muted-foreground/25` (subtle grey).
+- Avatar size: `h-[64px] w-[64px]`, `p-[2.5px]` ring thickness, inner `border-2 border-card`.
+- "Your story" tile: same avatar with a **black `+` badge** at bottom-right (`bg-foreground`, white plus, `border-[2.5px] border-card`). Tapping it: opens viewer if a story exists, otherwise opens `CreateStorySheet`.
+- Username below in `text-[11px]`, bold-foreground when unseen, medium-muted when seen.
+
+Files:
+- `src/components/social/FeedStoryRing.tsx`
+- `src/components/profile/ProfileStories.tsx`
+- `src/components/chat/ChatStories.tsx`
+
+## 2. Owner action toolbar in StoryViewer (IG bottom row)
+
+Today, when you view your own story, the right side shows generic Eye / Trash icons. Replace this with the **Instagram bottom row** for owners:
 
 ```
-className="fixed inset-0 z-[100] bg-black"
+Activity  ·  Facebook  ·  Mention  ·  Send  ·  More
 ```
 
-But other UI on the same screen is layered far higher:
+Layout: horizontal row docked at the bottom of the viewer (above safe-area), 5 equally-spaced buttons. Each = icon (24px, white) + label (11px, white).
 
-| Layer | z-index |
-|---|---|
-| StoryViewer (today) | **z-[100]** |
-| ZivoMobileNav (bottom tab bar) | z-[1401] |
-| CreateStorySheet scrim | z-[1500] |
-| Toasts / sheets | z-[1000+] |
+Wiring:
+| Button | Icon | Action |
+|---|---|---|
+| Activity | `BarChart2` | Opens existing viewers sheet (was Eye button) |
+| Facebook | `Facebook` (lucide) | Calls `navigator.share` with Facebook intent fallback `https://www.facebook.com/sharer/sharer.php?u=<storyDeepLinkUrl>` |
+| Mention | `AtSign` | Opens a small "Mention a friend" sheet that posts a story_comment of the form `@<friend>` (reuses existing `postComment` mutation + a friend picker query) |
+| Send | `Send` | Opens existing `StoryForwardSheet` |
+| More | `MoreHorizontal` | Opens an action sheet: **Save to device** · **Share to feed** · **Delete** (existing `deleteStory` mutation) |
 
-So the viewer paints **underneath** the mobile nav and any sticky profile chrome, which on a 428×703 viewport covers the entire visible area — making it look like "nothing happens" even though the URL flips to `?story=<id>` and the viewer is mounted.
+Right-side floating Like/Comment/Share stack stays for **non-owners** only. Hide it for owners (replaced by the bottom row above).
 
-This affects all three entry points (Profile, Feed, Chat) because they all render the same shared `StoryViewer`.
+The non-owner reply input ("Reply to {name}…") already exists and stays.
 
-## Fix
+Files: `src/components/stories/StoryViewer.tsx` (replace `isOwner` block at lines 606-632 with the bottom toolbar; gate the Like/Comment/Share stack at 569-604 with `{!isOwner && (...)}`).
 
-Raise the StoryViewer to sit above every other in-app surface (nav, sheets, toasts) — same tier as other true fullscreen overlays.
+## 3. "Save to device" + small sub-sheet
 
-### Change 1 — `src/components/stories/StoryViewer.tsx`
+For the "More" sheet's Save action, fetch `currentStory.mediaUrl`, blob it, and trigger an `<a download>` click — works on mobile Safari for images, prompts native share for video on iOS.
 
-- Line 449: change `z-[100]` → `z-[1600]` (above CreateStorySheet at 1500 and mobile nav at 1401, below only critical system overlays like incoming-call full-screen).
-- Apply the same z-tier to the `StoryForwardSheet` portal it spawns so the "Send to" sheet still sits on top of the viewer.
+## Out of scope
 
-### Change 2 — Quick QA pass on sibling overlays
+- Story creation flow, viewer, deep-link routing — unchanged.
+- Bottom-nav z-index hide — already shipped.
+- Real-time delivery for mentions (just inserts a `story_comments` row tagging the mentioned user; push notification piggybacks on existing comment trigger if present).
 
-- Confirm `StoryForwardSheet` (rendered from inside the viewer) uses `>= z-[1700]` so it stacks above the viewer.
-- Confirm `CommentsSheet` / viewers list overlay used inside StoryViewer also sits above `z-[1600]`.
+## Files touched
 
-### Change 3 (defensive) — close the body-scroll-lock + nav-hide
-
-While the viewer is open, hide the bottom nav with `body[data-story-open="true"]` or simply set a flag that `ZivoMobileNav` reads, so it doesn't draw on top in the rare case a future overlay shares the same tier. Set the flag in StoryViewer's mount effect and clear on unmount.
-
-## Why this is the right fix (not a click-handler bug)
-
-- `openStory()` in `useStoryDeepLink` calls `setSearchParams({ story: <id> })` synchronously — verified.
-- `useStoryViewerLocation` resolves the deep-link to `(groupIndex, storyIndex)` whenever the active story id is found in the loaded groups — verified your story IS in the carousel (RLS allows `expires_at > now()` for everyone, and a row exists in the DB).
-- `StoryViewer` only early-returns when `viewingGroup` or `currentStory` is null — both are present.
-- The only remaining failure mode is "renders but invisible," which the z-index inversion above explains exactly.
-
-## Out of scope (noted, not fixing here)
-
-- The unrelated React `forwardRef` warning on `ProfileFeedCard` from `AnimatePresence` — separate cleanup, doesn't block stories.
+- `src/components/social/FeedStoryRing.tsx` — ring restyle
+- `src/components/profile/ProfileStories.tsx` — ring restyle
+- `src/components/chat/ChatStories.tsx` — ring restyle
+- `src/components/stories/StoryViewer.tsx` — owner toolbar + hide right stack for owners + More sheet + Mention sheet + Save handler
