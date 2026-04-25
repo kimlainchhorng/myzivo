@@ -176,8 +176,10 @@ export default function ShareSheet({
       window.dispatchEvent(new CustomEvent("zivo-feed-refresh"));
       navigate("/reels", { replace: false });
       toast.success("Shared to profile");
+      track("share_completed", { post_id: sharePostId, author_id: sharePostAuthorId, channel: "profile_repost" });
     } catch (error: any) {
       toast.error(error.message || "Failed to share to profile");
+      track("share_failed", { post_id: sharePostId, author_id: sharePostAuthorId, channel: "profile_repost", reason: error?.message || "repost_failed" });
     } finally {
       setSharingToProfile(false);
     }
