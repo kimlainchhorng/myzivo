@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { MoreHorizontal, MessageCircle, User, UserCircle, Share2 } from "lucide-react";
 import { toast } from "sonner";
@@ -6,6 +6,7 @@ import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { getPostShareUrl, getProfileShareUrl, getPublicOrigin } from "@/lib/getPublicOrigin";
 import SwipeableSheet from "@/components/social/SwipeableSheet";
+import { track } from "@/lib/analytics";
 
 interface ShareSheetProps {
   shareUrl: string;
@@ -48,6 +49,12 @@ export default function ShareSheet({
   const [sharingToProfile, setSharingToProfile] = useState(false);
   const navigate = useNavigate();
 
+  // Funnel: sheet opened
+  useEffect(() => {
+    track("share_sheet_opened", { post_id: sharePostId, author_id: sharePostAuthorId });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   const normalizeShareUrl = (url: string) => {
     try {
       const parsed = new URL(url);
@@ -78,13 +85,16 @@ export default function ShareSheet({
       document.execCommand("copy");
       document.body.removeChild(ta);
       toast.success("Link copied!");
-    } catch {
+      track("share_completed", { post_id: sharePostId, author_id: sharePostAuthorId, channel: "copy_link" });
+    } catch (e: any) {
       toast.info("Long-press URL bar to copy");
+      track("share_failed", { post_id: sharePostId, author_id: sharePostAuthorId, channel: "copy_link", reason: e?.message || "copy_failed" });
     }
     onClose();
   };
 
   const handleOptionClick = (opt: { label?: string; url: string; copyMessage?: string }) => {
+    const channel = (opt.label || "external").toLowerCase();
     if (opt.url === "__copy__") {
       handleCopyLink();
       if (opt.copyMessage) toast.success(opt.copyMessage);
@@ -95,9 +105,17 @@ export default function ShareSheet({
           );
         }, 400);
       }
+      track("share_completed", { post_id: sharePostId, author_id: sharePostAuthorId, channel });
     } else {
       onClose();
-      import("@/lib/openExternalUrl").then(({ openExternalUrl }) => openExternalUrl(opt.url));
+      import("@/lib/openExternalUrl")
+        .then(({ openExternalUrl }) => {
+          openExternalUrl(opt.url);
+          track("share_completed", { post_id: sharePostId, author_id: sharePostAuthorId, channel });
+        })
+        .catch((e) => {
+          track("share_failed", { post_id: sharePostId, author_id: sharePostAuthorId, channel, reason: e?.message || "external_open_failed" });
+        });
     }
   };
 
@@ -158,8 +176,10 @@ export default function ShareSheet({
       window.dispatchEvent(new CustomEvent("zivo-feed-refresh"));
       navigate("/reels", { replace: false });
       toast.success("Shared to profile");
+      track("share_completed", { post_id: sharePostId, author_id: sharePostAuthorId, channel: "profile_repost" });
     } catch (error: any) {
       toast.error(error.message || "Failed to share to profile");
+      track("share_failed", { post_id: sharePostId, author_id: sharePostAuthorId, channel: "profile_repost", reason: error?.message || "repost_failed" });
     } finally {
       setSharingToProfile(false);
     }

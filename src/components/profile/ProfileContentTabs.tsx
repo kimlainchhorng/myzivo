@@ -908,7 +908,7 @@ export default function ProfileContentTabs({ userId }: { userId?: string }) {
               onToggleBookmark={(feedItem) => void handleBookmarkToggle(feedItem as any)}
               onOpenMenu={(feedItem) => { setSelectedPost(feedItem as any); setShowPostMenu(true); }}
               onShare={(postId) => {
-                track("post_share_opened", { post_id: postId, author_id: profileOwnerId, surface: "profile_feed" });
+                track("share_button_tapped", { post_id: postId, author_id: profileOwnerId, surface: "profile_feed" });
                 setSharePostId(postId);
               }}
               onSelectPost={(feedItem) => setSelectedPost(feedItem as any)}
