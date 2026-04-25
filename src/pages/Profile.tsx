@@ -511,6 +511,10 @@ const Profile = () => {
                       onTouchEnd={coverRepositioning ? handleCoverDragEnd : undefined}
                       style={{ cursor: coverRepositioning ? "ns-resize" : "default" }}
                     >
+                      <motion.div
+                        className="absolute inset-0 lg:!translate-y-0 lg:!scale-100"
+                        style={coverRepositioning ? undefined : { y: coverY, scale: coverScale }}
+                      >
                       {profile?.cover_url ? (
                         <img
                           src={profile.cover_url}
@@ -529,6 +533,7 @@ const Profile = () => {
                       )}
                       {/* Gradient overlay (subtle on mobile so cover stays vivid like Facebook) */}
                       <div className="absolute inset-0 bg-gradient-to-t from-card/40 via-transparent to-transparent lg:from-card/90 lg:via-card/20" />
+                      </motion.div>
 
                       {/* Cover action buttons */}
                       {user && !coverRepositioning && (
