@@ -1,9 +1,10 @@
 /**
  * CreateStorySheet — Facebook-style create-a-story bottom sheet.
  * Modes: pick photo/video, take photo (camera), or text on a colored background.
+ * Optional music track. Real upload progress + retry + error states.
  * Publishes to the same `stories` table + `user-stories` bucket used everywhere.
  */
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, useCallback } from "react";
 import { createPortal } from "react-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { useAuth } from "@/contexts/AuthContext";
@@ -19,6 +20,10 @@ import Type from "lucide-react/dist/esm/icons/type";
 import Globe from "lucide-react/dist/esm/icons/globe";
 import Loader2 from "lucide-react/dist/esm/icons/loader-2";
 import ChevronLeft from "lucide-react/dist/esm/icons/chevron-left";
+import Music from "lucide-react/dist/esm/icons/music";
+import Play from "lucide-react/dist/esm/icons/play";
+import Pause from "lucide-react/dist/esm/icons/pause";
+import AlertCircle from "lucide-react/dist/esm/icons/alert-circle";
 
 interface Props {
   open: boolean;
@@ -26,6 +31,13 @@ interface Props {
 }
 
 type Step = "choose" | "preview-media" | "compose-text";
+
+interface Track {
+  id: string;
+  title: string;
+  artist: string;
+  url: string;
+}
 
 const TEXT_BACKGROUNDS = [
   "linear-gradient(135deg,#10b981,#059669)",
@@ -43,6 +55,7 @@ export default function CreateStorySheet({ open, onClose }: Props) {
 
   const fileInputRef = useRef<HTMLInputElement>(null);
   const cameraInputRef = useRef<HTMLInputElement>(null);
+  const previewAudioRef = useRef<HTMLAudioElement | null>(null);
 
   const [step, setStep] = useState<Step>("choose");
   const [pickedFile, setPickedFile] = useState<File | null>(null);
@@ -50,7 +63,16 @@ export default function CreateStorySheet({ open, onClose }: Props) {
   const [caption, setCaption] = useState("");
   const [text, setText] = useState("");
   const [bgIdx, setBgIdx] = useState(0);
+  const [audioTrack, setAudioTrack] = useState<Track | null>(null);
+  const [audioPreviewing, setAudioPreviewing] = useState(false);
+  const [showMusicSheet, setShowMusicSheet] = useState(false);
+  const [tracks, setTracks] = useState<Track[]>([]);
+
+  // Upload state
   const [uploading, setUploading] = useState(false);
+  const [progress, setProgress] = useState(0); // 0..1
+  const [uploadError, setUploadError] = useState<string | null>(null);
+  const [showQuitConfirm, setShowQuitConfirm] = useState(false);
 
   // Reset on close
   useEffect(() => {
@@ -62,10 +84,29 @@ export default function CreateStorySheet({ open, onClose }: Props) {
         setCaption("");
         setText("");
         setBgIdx(0);
+        setAudioTrack(null);
+        setShowMusicSheet(false);
+        setProgress(0);
+        setUploadError(null);
+        setShowQuitConfirm(false);
+        if (previewAudioRef.current) {
+          previewAudioRef.current.pause();
+          previewAudioRef.current = null;
+        }
+        setAudioPreviewing(false);
       }, 200);
       return () => clearTimeout(t);
     }
   }, [open]);
+
+  // Load music tracks once
+  useEffect(() => {
+    if (!open || tracks.length > 0) return;
+    fetch("/audio/stories/tracks.json")
+      .then((r) => (r.ok ? r.json() : []))
+      .then((data) => Array.isArray(data) && setTracks(data))
+      .catch(() => setTracks([]));
+  }, [open, tracks.length]);
 
   // Cleanup blob URL
   useEffect(() => {
@@ -100,7 +141,6 @@ export default function CreateStorySheet({ open, onClose }: Props) {
     canvas.height = h;
     const ctx = canvas.getContext("2d")!;
 
-    // Parse "linear-gradient(135deg, c1, c2)"
     const grad = TEXT_BACKGROUNDS[bgIdx];
     const m = grad.match(/#([0-9a-f]{6})/gi) || ["#10b981", "#059669"];
     const linear = ctx.createLinearGradient(0, 0, w, h);
@@ -109,14 +149,12 @@ export default function CreateStorySheet({ open, onClose }: Props) {
     ctx.fillStyle = linear;
     ctx.fillRect(0, 0, w, h);
 
-    // Text
     ctx.fillStyle = "#ffffff";
     ctx.textAlign = "center";
     ctx.textBaseline = "middle";
     const fontSize = text.length > 80 ? 72 : text.length > 40 ? 96 : 128;
     ctx.font = `700 ${fontSize}px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif`;
 
-    // Word-wrap
     const maxWidth = w - 160;
     const words = text.split(/\s+/);
     const lines: string[] = [];
@@ -145,9 +183,34 @@ export default function CreateStorySheet({ open, onClose }: Props) {
     });
   };
 
-  const publish = async () => {
+  /**
+   * Upload via XHR PUT against a Supabase signed upload URL so we can
+   * report real progress events.
+   */
+  const xhrUpload = (url: string, blob: Blob, contentType: string) =>
+    new Promise<void>((resolve, reject) => {
+      const xhr = new XMLHttpRequest();
+      xhr.open("PUT", url, true);
+      xhr.setRequestHeader("Content-Type", contentType);
+      xhr.setRequestHeader("x-upsert", "true");
+      xhr.upload.onprogress = (e) => {
+        if (e.lengthComputable) setProgress(e.loaded / e.total);
+      };
+      xhr.onload = () => {
+        if (xhr.status >= 200 && xhr.status < 300) resolve();
+        else reject(new Error(`Upload failed (${xhr.status})`));
+      };
+      xhr.onerror = () => reject(new Error("Network error during upload"));
+      xhr.onabort = () => reject(new Error("Upload aborted"));
+      xhr.send(blob);
+    });
+
+  const publish = useCallback(async () => {
     if (!user) return;
     setUploading(true);
+    setUploadError(null);
+    setProgress(0);
+
     try {
       let blob: Blob;
       let mediaType: "image" | "video";
@@ -157,7 +220,7 @@ export default function CreateStorySheet({ open, onClose }: Props) {
 
       if (step === "compose-text") {
         if (!text.trim()) {
-          toast.error("Write something first");
+          setUploadError("Write something first");
           setUploading(false);
           return;
         }
@@ -166,19 +229,29 @@ export default function CreateStorySheet({ open, onClose }: Props) {
         ext = "jpg";
         contentType = "image/jpeg";
       } else {
-        if (!pickedFile) return;
+        if (!pickedFile) {
+          setUploadError("No file selected");
+          setUploading(false);
+          return;
+        }
         blob = pickedFile;
         mediaType = pickedFile.type.startsWith("video/") ? "video" : "image";
         ext = pickedFile.name.split(".").pop() || (mediaType === "video" ? "mp4" : "jpg");
-        contentType = pickedFile.type;
+        contentType = pickedFile.type || (mediaType === "video" ? "video/mp4" : "image/jpeg");
         captionToSave = caption.trim() || undefined;
       }
 
       const path = `${user.id}/${Date.now()}.${ext}`;
-      const { error: upErr } = await supabase.storage
+
+      // Get signed upload URL for progress-tracked PUT
+      const { data: signed, error: signErr } = await supabase.storage
         .from("user-stories")
-        .upload(path, blob, { contentType });
-      if (upErr) throw upErr;
+        .createSignedUploadUrl(path);
+      if (signErr || !signed?.signedUrl) {
+        throw new Error(signErr?.message || "Could not prepare upload");
+      }
+
+      await xhrUpload(signed.signedUrl, blob, contentType);
 
       const { data: urlData } = supabase.storage.from("user-stories").getPublicUrl(path);
 
@@ -187,19 +260,47 @@ export default function CreateStorySheet({ open, onClose }: Props) {
         media_url: urlData.publicUrl,
         media_type: mediaType,
         caption: captionToSave,
+        audio_url: audioTrack?.url || null,
       });
       if (insErr) throw insErr;
 
       queryClient.invalidateQueries({ queryKey: ["user-stories"] });
       queryClient.invalidateQueries({ queryKey: ["feed-story-users"] });
       queryClient.invalidateQueries({ queryKey: ["profile-my-story"] });
+      queryClient.invalidateQueries({ queryKey: ["my-story-views"] });
       toast.success("Story shared 🎉");
+      setUploading(false);
       onClose();
     } catch (err: any) {
-      toast.error(err?.message || "Failed to share story");
-    } finally {
       setUploading(false);
+      setUploadError(err?.message || "Failed to share story");
     }
+  }, [user, step, text, pickedFile, caption, audioTrack, onClose, queryClient]);
+
+  const toggleAudioPreview = (track: Track) => {
+    if (previewAudioRef.current && audioPreviewing && audioTrack?.id === track.id) {
+      previewAudioRef.current.pause();
+      setAudioPreviewing(false);
+      return;
+    }
+    if (previewAudioRef.current) previewAudioRef.current.pause();
+    const a = new Audio(track.url);
+    a.volume = 0.6;
+    a.onended = () => setAudioPreviewing(false);
+    a.play().then(() => setAudioPreviewing(true)).catch(() => {
+      toast.error("Couldn't preview track");
+      setAudioPreviewing(false);
+    });
+    previewAudioRef.current = a;
+    setAudioTrack(track);
+  };
+
+  const handleAttemptClose = () => {
+    if (uploading) {
+      setShowQuitConfirm(true);
+      return;
+    }
+    onClose();
   };
 
   if (!open) return null;
@@ -214,7 +315,7 @@ export default function CreateStorySheet({ open, onClose }: Props) {
         exit={{ opacity: 0 }}
         transition={{ duration: 0.18 }}
         className="fixed inset-0 z-[120] bg-background/60 backdrop-blur-sm flex items-end sm:items-center justify-center"
-        onClick={() => !uploading && onClose()}
+        onClick={handleAttemptClose}
       >
         <motion.div
           initial={{ y: "100%" }}
@@ -227,12 +328,11 @@ export default function CreateStorySheet({ open, onClose }: Props) {
           {/* Header */}
           <div className="flex items-center justify-between px-4 pt-3 pb-2 border-b border-border/40">
             <div className="flex items-center gap-2">
-              {step !== "choose" && (
+              {step !== "choose" && !uploading && (
                 <button
                   onClick={() => setStep("choose")}
                   className="w-8 h-8 -ml-1 flex items-center justify-center rounded-full hover:bg-muted/60"
                   aria-label="Back"
-                  disabled={uploading}
                 >
                   <ChevronLeft className="w-5 h-5" />
                 </button>
@@ -252,8 +352,7 @@ export default function CreateStorySheet({ open, onClose }: Props) {
               </div>
             </div>
             <button
-              onClick={onClose}
-              disabled={uploading}
+              onClick={handleAttemptClose}
               aria-label="Close"
               className="w-8 h-8 flex items-center justify-center rounded-full hover:bg-muted/60"
             >
@@ -325,6 +424,23 @@ export default function CreateStorySheet({ open, onClose }: Props) {
                       </p>
                     </div>
                   )}
+                  {audioTrack && (
+                    <div className="absolute top-3 left-3 right-3 flex items-center gap-2 bg-black/50 backdrop-blur-sm rounded-full px-3 py-1.5">
+                      <Music className="w-3.5 h-3.5 text-white shrink-0" />
+                      <span className="text-white text-xs font-medium truncate flex-1">{audioTrack.title}</span>
+                      <button
+                        onClick={() => {
+                          previewAudioRef.current?.pause();
+                          setAudioPreviewing(false);
+                          setAudioTrack(null);
+                        }}
+                        aria-label="Remove music"
+                        className="shrink-0"
+                      >
+                        <X className="w-3.5 h-3.5 text-white/80" />
+                      </button>
+                    </div>
+                  )}
                 </div>
                 <input
                   type="text"
@@ -334,6 +450,14 @@ export default function CreateStorySheet({ open, onClose }: Props) {
                   maxLength={200}
                   className="w-full rounded-2xl border border-border/60 bg-muted/30 px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-primary/40"
                 />
+                <button
+                  onClick={() => setShowMusicSheet(true)}
+                  className="w-full flex items-center gap-2 rounded-2xl border border-border/60 bg-muted/20 px-4 py-3 text-sm hover:bg-muted/40"
+                >
+                  <Music className="w-4 h-4 text-primary" />
+                  <span className="font-medium">{audioTrack ? audioTrack.title : "Add music"}</span>
+                  <span className="text-xs text-muted-foreground ml-auto">Optional</span>
+                </button>
               </div>
             )}
 
@@ -355,6 +479,15 @@ export default function CreateStorySheet({ open, onClose }: Props) {
                     )}
                     rows={6}
                   />
+                  {audioTrack && (
+                    <div className="absolute top-3 left-3 right-3 flex items-center gap-2 bg-black/40 backdrop-blur-sm rounded-full px-3 py-1.5">
+                      <Music className="w-3.5 h-3.5 text-white shrink-0" />
+                      <span className="text-white text-xs font-medium truncate flex-1">{audioTrack.title}</span>
+                      <button onClick={() => setAudioTrack(null)} aria-label="Remove music" className="shrink-0">
+                        <X className="w-3.5 h-3.5 text-white/80" />
+                      </button>
+                    </div>
+                  )}
                 </div>
                 <div className="flex items-center gap-2 overflow-x-auto pb-1">
                   {TEXT_BACKGROUNDS.map((bg, i) => (
@@ -370,13 +503,53 @@ export default function CreateStorySheet({ open, onClose }: Props) {
                     />
                   ))}
                 </div>
+                <button
+                  onClick={() => setShowMusicSheet(true)}
+                  className="w-full flex items-center gap-2 rounded-2xl border border-border/60 bg-muted/20 px-4 py-3 text-sm hover:bg-muted/40"
+                >
+                  <Music className="w-4 h-4 text-primary" />
+                  <span className="font-medium">{audioTrack ? audioTrack.title : "Add music"}</span>
+                  <span className="text-xs text-muted-foreground ml-auto">Optional</span>
+                </button>
               </div>
             )}
           </div>
 
           {/* Footer action */}
           {step !== "choose" && (
-            <div className="border-t border-border/40 p-3 pb-[max(env(safe-area-inset-bottom),12px)]">
+            <div className="border-t border-border/40 p-3 pb-[max(env(safe-area-inset-bottom),12px)] space-y-2">
+              {/* Error banner */}
+              {uploadError && (
+                <div className="flex items-start gap-2 rounded-xl border border-destructive/40 bg-destructive/10 p-3">
+                  <AlertCircle className="w-4 h-4 text-destructive shrink-0 mt-0.5" />
+                  <div className="flex-1 min-w-0">
+                    <p className="text-xs font-bold text-destructive">Upload failed</p>
+                    <p className="text-[11px] text-destructive/80 break-words">{uploadError}</p>
+                  </div>
+                  <button
+                    onClick={publish}
+                    className="shrink-0 px-3 h-7 rounded-full bg-destructive text-destructive-foreground text-xs font-bold"
+                  >
+                    Retry
+                  </button>
+                </div>
+              )}
+
+              {/* Progress bar */}
+              {uploading && (
+                <div className="space-y-1.5">
+                  <div className="h-1.5 w-full bg-muted rounded-full overflow-hidden">
+                    <div
+                      className="h-full bg-primary transition-[width] duration-150"
+                      style={{ width: `${Math.round(progress * 100)}%` }}
+                    />
+                  </div>
+                  <p className="text-[11px] text-muted-foreground text-center">
+                    Uploading {Math.round(progress * 100)}%…
+                  </p>
+                </div>
+              )}
+
               <button
                 onClick={publish}
                 disabled={uploading || (step === "compose-text" && !text.trim())}
@@ -386,6 +559,8 @@ export default function CreateStorySheet({ open, onClose }: Props) {
                   <>
                     <Loader2 className="w-4 h-4 animate-spin" /> Sharing…
                   </>
+                ) : uploadError ? (
+                  "Try again"
                 ) : (
                   "Share to Story"
                 )}
@@ -393,6 +568,145 @@ export default function CreateStorySheet({ open, onClose }: Props) {
             </div>
           )}
         </motion.div>
+
+        {/* Music picker sheet */}
+        <AnimatePresence>
+          {showMusicSheet && (
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="fixed inset-0 z-[130] bg-background/70 backdrop-blur-md flex items-end sm:items-center justify-center"
+              onClick={() => setShowMusicSheet(false)}
+            >
+              <motion.div
+                initial={{ y: "100%" }}
+                animate={{ y: 0 }}
+                exit={{ y: "100%" }}
+                transition={{ type: "spring", damping: 28, stiffness: 320 }}
+                onClick={(e) => e.stopPropagation()}
+                className="w-full max-w-md max-h-[80vh] overflow-hidden rounded-t-3xl sm:rounded-3xl border border-border/60 bg-card text-card-foreground shadow-2xl flex flex-col"
+              >
+                <div className="flex items-center justify-between px-4 pt-3 pb-2 border-b border-border/40">
+                  <p className="text-sm font-bold flex items-center gap-2">
+                    <Music className="w-4 h-4 text-primary" /> Add music
+                  </p>
+                  <button
+                    onClick={() => setShowMusicSheet(false)}
+                    aria-label="Close"
+                    className="w-8 h-8 flex items-center justify-center rounded-full hover:bg-muted/60"
+                  >
+                    <X className="w-5 h-5" />
+                  </button>
+                </div>
+                <div className="flex-1 overflow-y-auto p-2 space-y-1">
+                  {tracks.length === 0 && (
+                    <p className="text-xs text-muted-foreground text-center py-8">No tracks available.</p>
+                  )}
+                  {tracks.map((track) => {
+                    const selected = audioTrack?.id === track.id;
+                    return (
+                      <div
+                        key={track.id}
+                        className={cn(
+                          "flex items-center gap-3 rounded-xl p-3",
+                          selected ? "bg-primary/10" : "hover:bg-muted/40"
+                        )}
+                      >
+                        <button
+                          onClick={() => toggleAudioPreview(track)}
+                          className="w-10 h-10 rounded-full bg-primary text-primary-foreground flex items-center justify-center shrink-0"
+                          aria-label={audioPreviewing && selected ? "Pause preview" : "Play preview"}
+                        >
+                          {audioPreviewing && selected ? (
+                            <Pause className="w-4 h-4" />
+                          ) : (
+                            <Play className="w-4 h-4" />
+                          )}
+                        </button>
+                        <button
+                          onClick={() => {
+                            setAudioTrack(track);
+                            setShowMusicSheet(false);
+                            previewAudioRef.current?.pause();
+                            setAudioPreviewing(false);
+                          }}
+                          className="flex-1 text-left min-w-0"
+                        >
+                          <p className="text-sm font-bold truncate">{track.title}</p>
+                          <p className="text-[11px] text-muted-foreground truncate">{track.artist}</p>
+                        </button>
+                        {selected && (
+                          <span className="text-[10px] font-bold text-primary uppercase tracking-wide shrink-0">
+                            Selected
+                          </span>
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
+                {audioTrack && (
+                  <div className="border-t border-border/40 p-3 pb-[max(env(safe-area-inset-bottom),12px)]">
+                    <button
+                      onClick={() => {
+                        previewAudioRef.current?.pause();
+                        setAudioPreviewing(false);
+                        setAudioTrack(null);
+                      }}
+                      className="w-full h-10 rounded-full border border-border/60 text-sm font-bold hover:bg-muted/40"
+                    >
+                      Remove music
+                    </button>
+                  </div>
+                )}
+              </motion.div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+
+        {/* Quit-while-uploading confirm */}
+        <AnimatePresence>
+          {showQuitConfirm && (
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="fixed inset-0 z-[140] bg-background/70 backdrop-blur-md flex items-center justify-center p-4"
+              onClick={() => setShowQuitConfirm(false)}
+            >
+              <motion.div
+                initial={{ scale: 0.95, opacity: 0 }}
+                animate={{ scale: 1, opacity: 1 }}
+                exit={{ scale: 0.95, opacity: 0 }}
+                onClick={(e) => e.stopPropagation()}
+                className="w-full max-w-sm rounded-2xl border border-border/60 bg-card p-5 shadow-2xl"
+              >
+                <p className="text-base font-bold">Cancel upload?</p>
+                <p className="text-xs text-muted-foreground mt-1">
+                  Your story is still uploading. Closing now will discard it.
+                </p>
+                <div className="flex items-center gap-2 mt-4">
+                  <button
+                    onClick={() => setShowQuitConfirm(false)}
+                    className="flex-1 h-10 rounded-full border border-border/60 text-sm font-bold hover:bg-muted/40"
+                  >
+                    Keep uploading
+                  </button>
+                  <button
+                    onClick={() => {
+                      setShowQuitConfirm(false);
+                      setUploading(false);
+                      onClose();
+                    }}
+                    className="flex-1 h-10 rounded-full bg-destructive text-destructive-foreground text-sm font-bold"
+                  >
+                    Discard
+                  </button>
+                </div>
+              </motion.div>
+            </motion.div>
+          )}
+        </AnimatePresence>
 
         {/* Hidden inputs */}
         <input
