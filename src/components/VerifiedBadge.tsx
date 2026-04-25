@@ -43,28 +43,16 @@ const VerifiedBadge = ({
     >
       <svg viewBox="0 0 24 24" className="h-full w-full block" aria-hidden="true" focusable="false">
         <title>{VERIFIED_LABEL}</title>
-        <defs>
-          <linearGradient id={`${uid}-grad`} x1="0" y1="0" x2="0" y2="1">
-            <stop offset="0%" stopColor="#3BB0FF" />
-            <stop offset="100%" stopColor="#1d9bf0" />
-          </linearGradient>
-          <filter id={`${uid}-shadow`} x="-20%" y="-20%" width="140%" height="140%">
-            <feDropShadow dx="0" dy="0.6" stdDeviation="0.6" floodColor="#1d9bf0" floodOpacity="0.35" />
-          </filter>
-        </defs>
+        {/* Facebook-style flat blue starburst */}
         <path
-          filter={`url(#${uid}-shadow)`}
           d="M12 1.5l2.39 1.74 2.95-.13.78 2.85 2.55 1.5-1.07 2.74 1.07 2.74-2.55 1.5-.78 2.85-2.95-.13L12 22.5l-2.39-1.74-2.95.13-.78-2.85-2.55-1.5 1.07-2.74-1.07-2.74 2.55-1.5.78-2.85 2.95-.13L12 1.5z"
-          fill={`url(#${uid}-grad)`}
-          stroke="#ffffff"
-          strokeWidth="0.4"
-          strokeLinejoin="round"
+          fill="#1877F2"
         />
         <path
-          d="M8.2 12.3l2.6 2.6 5-5.4"
+          d="M7.8 12.2l2.9 2.9 5.5-5.9"
           fill="none"
           stroke="#ffffff"
-          strokeWidth="2.1"
+          strokeWidth="2.4"
           strokeLinecap="round"
           strokeLinejoin="round"
         />
