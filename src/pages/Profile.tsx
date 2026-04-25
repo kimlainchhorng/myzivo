@@ -636,24 +636,39 @@ const Profile = () => {
           </motion.button>
           <AnimatePresence>
             {showNotifPanel && (
-              <motion.div
-                ref={notifPanelRef}
-                id="profile-notif-panel"
-                role="dialog"
-                aria-label="Notifications"
-                initial={{ opacity: 0, y: -8, scale: 0.98 }}
-                animate={{ opacity: 1, y: 0, scale: 1 }}
-                exit={{ opacity: 0, y: -8, scale: 0.98 }}
-                transition={{ duration: 0.18, ease: "easeOut" }}
-                className="absolute right-0 top-full mt-2 z-50 w-[min(92vw,380px)] origin-top-right overflow-hidden rounded-2xl border border-border/60 bg-card text-card-foreground shadow-2xl shadow-black/20 backdrop-blur-xl"
-                style={{ maxHeight: "calc(100vh - var(--zivo-safe-top-sticky, 0px) - 80px)" }}
-              >
-                {/* Caret */}
-                <div className="absolute -top-1.5 right-3 h-3 w-3 rotate-45 rounded-sm border-l border-t border-border/60 bg-card" />
+              <>
+                {/* Soft backdrop on mobile so the popover clearly stands above the page */}
+                <motion.div
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  exit={{ opacity: 0 }}
+                  transition={{ duration: 0.18 }}
+                  onClick={() => setShowNotifPanel(false)}
+                  className="lg:hidden fixed inset-0 z-40 bg-background/40 backdrop-blur-[2px]"
+                  style={{ top: "calc(var(--zivo-safe-top-sticky) + 3rem)" }}
+                  aria-hidden
+                />
+                <motion.div
+                  ref={notifPanelRef}
+                  id="profile-notif-panel"
+                  role="dialog"
+                  aria-label="Notifications"
+                  initial={{ opacity: 0, y: -8, scale: 0.98 }}
+                  animate={{ opacity: 1, y: 0, scale: 1 }}
+                  exit={{ opacity: 0, y: -8, scale: 0.98 }}
+                  transition={{ duration: 0.2, ease: [0.16, 1, 0.3, 1] }}
+                  className="fixed z-50 origin-top-right overflow-hidden rounded-2xl border border-border/60 bg-card text-card-foreground shadow-2xl shadow-black/30 backdrop-blur-xl right-2 left-2 mx-auto max-w-[420px] lg:left-auto lg:right-4 lg:mx-0 lg:w-[400px]"
+                  style={{
+                    top: "calc(var(--zivo-safe-top-sticky) + 3rem + 6px)",
+                    maxHeight: "calc(100vh - var(--zivo-safe-top-sticky) - 3rem - 24px)",
+                  }}
+                >
+                {/* Caret pointing at the bell */}
+                <div className="pointer-events-none absolute -top-1.5 right-12 h-3 w-3 rotate-45 rounded-sm border-l border-t border-border/60 bg-card lg:right-6" />
                 {/* Header (sticky) */}
                 <div className="sticky top-0 z-10 flex items-center justify-between gap-2 border-b border-border/40 bg-card/95 px-4 pt-3 pb-2.5 backdrop-blur">
                   <div className="flex items-center gap-2" aria-live="polite">
-                    <h3 className="text-base font-bold leading-none">Notifications</h3>
+                    <h3 className="text-[15px] font-bold leading-none tracking-tight">Notifications</h3>
                     {totalNotifCount > 0 && (
                       <Badge variant="secondary" className="h-5 px-1.5 text-[10px]">{totalNotifCount}</Badge>
                     )}
@@ -721,9 +736,9 @@ const Profile = () => {
                       : notifications);
                     if (filtered.length === 0 && socialCount === 0) {
                       return (
-                        <div className="flex flex-col items-center justify-center gap-2 px-4 py-10 text-center">
-                          <div className="flex h-12 w-12 items-center justify-center rounded-full bg-muted/40">
-                            <Bell className="h-6 w-6 text-muted-foreground/60" />
+                        <div className="flex flex-col items-center justify-center gap-1.5 px-4 py-7 text-center">
+                          <div className="flex h-10 w-10 items-center justify-center rounded-full bg-muted/40">
+                            <Bell className="h-5 w-5 text-muted-foreground/60" />
                           </div>
                           <p className="text-sm font-semibold text-foreground">You're all caught up</p>
                           <p className="text-xs text-muted-foreground">New notifications will appear here.</p>
@@ -812,7 +827,8 @@ const Profile = () => {
                     See all notifications
                   </button>
                 </div>
-              </motion.div>
+                </motion.div>
+              </>
             )}
           </AnimatePresence>
           </div>
