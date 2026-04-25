@@ -495,38 +495,61 @@ const Profile = () => {
 
       {/* ── Mobile sticky compact header (Facebook-style) ── */}
       <motion.header
-        style={{ opacity: stickyOpacity, y: stickyTranslate }}
-        className="lg:hidden fixed top-0 inset-x-0 z-40 h-14 px-3 flex items-center gap-3 bg-background/85 backdrop-blur-xl border-b border-border/40 safe-area-top"
+        role="banner"
+        aria-label="Profile quick navigation"
+        data-testid="profile-sticky-header"
+        style={{
+          opacity: stickyOpacity,
+          y: stickyTranslate,
+          paddingTop: "var(--zivo-safe-top, env(safe-area-inset-top, 0px))",
+          height: "calc(56px + var(--zivo-safe-top, env(safe-area-inset-top, 0px)))",
+        }}
+        className="lg:hidden fixed top-0 inset-x-0 z-40 px-3 flex items-center gap-3 bg-background/85 backdrop-blur-xl border-b border-border/40"
       >
-        <button
-          onClick={() => navigate(-1)}
-          aria-label="Back"
-          className="h-9 w-9 -ml-1 flex items-center justify-center rounded-full hover:bg-muted/60 active:scale-95 transition"
+        <motion.button
+          onClick={handleBack}
+          aria-label="Go back"
+          whileTap={{ scale: 0.86 }}
+          whileHover={{ scale: 1.04 }}
+          transition={{ type: "spring", stiffness: 400, damping: 22 }}
+          className="h-9 w-9 -ml-1 flex items-center justify-center rounded-full hover:bg-muted/60 active:bg-muted/70 transition focus-visible:ring-2 focus-visible:ring-primary/70 focus-visible:outline-none focus-visible:ring-offset-2 focus-visible:ring-offset-background"
         >
           <ArrowLeft className="h-5 w-5 text-foreground" />
-        </button>
-        <Avatar className="h-8 w-8 ring-1 ring-border/60">
-          <AvatarImage src={profile?.avatar_url || undefined} alt={profile?.full_name || "Profile"} />
-          <AvatarFallback className="text-xs">{getInitials()}</AvatarFallback>
-        </Avatar>
-        <div className="flex items-center gap-1 min-w-0 flex-1">
+        </motion.button>
+        <span aria-hidden="true">
+          <Avatar className="h-8 w-8 ring-1 ring-border/60">
+            <AvatarImage src={profile?.avatar_url || undefined} alt="" />
+            <AvatarFallback className="text-xs">{getInitials()}</AvatarFallback>
+          </Avatar>
+        </span>
+        <div className="flex items-center gap-1 min-w-0 flex-1" aria-live="polite">
           <span className="font-semibold text-sm text-foreground truncate">
             {profile?.full_name || "Profile"}
           </span>
           {profile?.is_verified && <VerifiedBadge size={14} />}
         </div>
-        <button
-          onClick={() => setShowNotifPanel(prev => !prev)}
+        <motion.button
+          onClick={handleToggleNotif}
           aria-label={showNotifPanel ? "Close notifications" : "Open notifications"}
           aria-pressed={showNotifPanel}
+          aria-expanded={showNotifPanel}
+          aria-controls="profile-notif-panel"
+          whileTap={{ scale: 0.86 }}
+          transition={{ type: "spring", stiffness: 400, damping: 22 }}
           className={cn(
-            "h-9 w-9 flex items-center justify-center rounded-full transition active:scale-95",
+            "relative h-9 w-9 flex items-center justify-center rounded-full transition focus-visible:ring-2 focus-visible:ring-primary/70 focus-visible:outline-none focus-visible:ring-offset-2 focus-visible:ring-offset-background",
             showNotifPanel ? "bg-primary text-primary-foreground" : "hover:bg-muted/60 text-foreground"
           )}
         >
           <Bell className="h-5 w-5" />
-        </button>
+          {totalNotifCount > 0 && !showNotifPanel && (
+            <span className="absolute -right-0.5 -top-0.5 flex h-4 min-w-[16px] items-center justify-center rounded-full bg-destructive px-1 text-[9px] font-bold text-destructive-foreground shadow-sm">
+              {totalNotifCount > 99 ? "99+" : totalNotifCount}
+            </span>
+          )}
+        </motion.button>
       </motion.header>
+
 
       {/* ── Scrollable content ── */}
       <div ref={scrollRef} className="relative z-10 h-screen overflow-y-auto pb-24 scroll-smooth bg-background" style={{ scrollbarWidth: 'none' }}>
