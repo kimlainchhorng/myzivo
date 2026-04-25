@@ -1,49 +1,77 @@
-## Findings (already verified)
+## What's actually broken
 
-- **RLS SELECT policy on `stories`** — already correct: `Anyone can read active stories USING (expires_at > now())`. Both your own sessions and the feed can read it. **No DB change needed.**
-- **Your story IS in the DB** — confirmed earlier (1 active row, expires in ~23 h).
-- **`invalidateAllStoryCaches`** — already rewritten last turn to use predicate-based invalidation + active refetch on every story-related cache key (`feed-story-users`, `user-stories`, `profile-story-rings`, `profile-my-story`, `my-story-views`, `chat-story-rings`, `story-author-profiles`, `feed-story-profiles`). Will add `chat-story-rings` and confirm it covers `my-story-views`.
-- **Duplicate-key warning** — root cause was hidden file `<input>` elements rendered as un-keyed siblings inside `<AnimatePresence>`. Already moved them outside and added an explicit `key="create-story-sheet"` to the outer motion.div.
-- **Auto refresh after publish** — `CreateStorySheet` already calls `invalidateStoryQueries()` then fires the new `onPublished?.()` callback; all three parents (Profile, Feed, Chat) wire it to `invalidateAllStoryCaches`. Carousels also dropped to 30 s polling + `refetchOnWindowFocus`.
+I logged in as your test account, published a Text story, and reproduced the bug end-to-end. The toast says "Story shared 🎉", but the "Your story" ring stays grey and tapping it re-opens the Create Story sheet instead of the viewer.
 
-## What still needs to ship
+The Story Debug Panel (`/feed?debug=stories`) confirmed the split-brain:
 
-### 1) Add `StoryDebugPanel` (new file)
+- Database (direct, filtered by your user_id): ✅ 3 active stories
+- Feed carousel cache: amber, **0 rows**, status = "success"
+- Profile carousel: missing
+- Chat carousel: missing
 
-`src/components/stories/StoryDebugPanel.tsx` — floating bug-icon button (bottom-right, above the mobile nav). Opens a 320 px panel that shows in real time:
+The "Force refresh all" button doesn't fix it either — the carousels really do come back empty.
 
-- **Database (direct)**: bypasses every cache and queries `stories` for the current user where `expires_at > now()`. Shows count, latest story id, expiry timestamp, last fetch time, and a "Refetch" button.
-- **Carousel caches**: reads `queryClient.getQueryState` for `["feed-story-users"]`, `["profile-story-rings", userId]`, and `["user-stories"]`. For each, shows: cache status, row count, last update time, and a green/amber dot indicating whether your story id is present in that cache.
-- **Force refresh all** button → calls `invalidateAllStoryCaches` + refetches the direct DB query.
+### Root cause (found in network trace)
 
-Visibility gate: only renders when `?debug=stories` is in the URL OR `localStorage.zivo_debug_stories === '1'`. Includes a "disable debug" link inside the panel.
+`GET /rest/v1/stories?select=id,user_id,media_url,media_type,caption,audio_url,created_at,expires_at,views_count` returns **HTTP 400** with:
 
-### 2) Mount the debug panel app-wide
+```
+{"code":"42703","message":"column stories.caption does not exist"}
+```
 
-In `src/App.tsx`, render `<StoryDebugPanel />` once near the top level (after providers, alongside the toaster). It self-gates so it's invisible by default.
+So FeedStoryRing / ProfileStories / ChatStories all crash silently at the network layer. React Query treats the failed `data` as `[]`, which is why the toast says "shared" but the ring never lights up.
 
-### 3) Confirm `invalidateAllStoryCaches` keys are exhaustive
+The `stories` table actually has these columns:
 
-Audit pass already done. Final key set:
-`feed-story-users`, `user-stories`, `profile-story-rings`, `profile-my-story`, `my-story-views`, `chat-story-rings`, `story-author-profiles`, `feed-story-profiles`. No edit unless something's missing — will re-grep before saving.
+```
+id, user_id, media_url, media_type, text_overlay, text_position,
+text_color, background_color, duration_seconds, view_count,
+expires_at, created_at, audio_url
+```
 
-### 4) Re-verify the duplicate-key fix
+Two mismatches:
+1. Code reads `caption` → real column is **`text_overlay`** (and the publish step in `CreateStorySheet` writes a non-existent `caption` column too — that insert is silently dropping the text).
+2. Code reads `views_count` → real column is **`view_count`** (singular).
 
-Open `CreateStorySheet.tsx` after the previous edit and confirm:
-- Outer `<AnimatePresence>` wraps a single keyed `<motion.div key="create-story-sheet">`.
-- Inner `<AnimatePresence>` blocks for `showMusicSheet` / `showQuitConfirm` each wrap a single conditional motion.div (already keyed by presence/absence, fine).
-- The two hidden file inputs are outside `<AnimatePresence>`. Already done.
+The SELECT query fails on the very first unknown column (`caption`), so the whole carousel goes dark.
 
-### 5) Auto-refresh-on-publish
+### Why publish "succeeds" anyway
 
-Already wired: `CreateStorySheet.publish()` → `invalidateStoryQueries()` → `onPublished?.()` → `onClose()`. Each parent passes `onPublished={() => invalidateAllStoryCaches(queryClient, user?.id)}`. Will leave as-is; the new debug panel will let you visually confirm the cache flips green within ~1 second of publish.
+`CreateStorySheet` does `insert({ ..., caption: captionToSave })`. PostgREST has historically accepted unknown columns silently on insert in this project (or it errors but we swallow it). Either way, the media row IS being created — that's why the debug panel sees 3 rows directly — but the `caption` text the user typed is never persisted.
 
-## How to use the debug panel
+## The fix
 
-Open the app with `?debug=stories` appended to the URL (e.g. `/feed?debug=stories`), or run `localStorage.setItem('zivo_debug_stories','1')` once in the console. A small bug button appears bottom-right; tap to expand. Publish a story and watch the three carousel rows flip from amber → green.
+Two small, surgical changes — no schema migration required (the column we want already exists).
 
-## Files
+### 1. Replace `caption` → `text_overlay` and `views_count` → `view_count` everywhere
 
-- **New**: `src/components/stories/StoryDebugPanel.tsx`
-- **Edit**: `src/App.tsx` — mount `<StoryDebugPanel />`
-- (No DB / RLS changes; previous turn's edits already cover items 2, 4, 5.)
+Files to edit:
+
+- `src/components/social/FeedStoryRing.tsx`
+  - `RawStory` type: `caption` → `text_overlay`, `views_count` → `view_count`
+  - `.select(...)` string
+  - mapping: `caption: s.caption` → `caption: s.text_overlay`, `viewsCount: s.views_count` → `viewsCount: s.view_count`
+
+- `src/components/profile/ProfileStories.tsx` — same three changes
+
+- `src/components/chat/ChatStories.tsx` — same three changes
+
+- `src/components/profile/CreateStorySheet.tsx` (line ~306–310): the insert payload key `caption: captionToSave` becomes `text_overlay: captionToSave`. UI state variable name (`caption`) can stay as-is — only the DB column name changes.
+
+The `StoryViewer` and the rest of the UI keep using the JS field name `caption` — only the DB layer changes.
+
+### 2. Verify
+
+After editing, with the debug panel still open:
+
+- Publish a new Text story.
+- Network trace should now show `200 OK` for the `stories?select=...` request.
+- Feed / Profile / Chat carousel rows in the debug panel should flip to ✅ green within ~1s.
+- "Your story" ring should show the gradient border, and tapping it should open the StoryViewer with the just-published text — not the Create Story sheet.
+
+I'll run that verification myself once you approve.
+
+## Out of scope (intentionally)
+
+- The 3 stale stories already in the DB have `text_overlay = NULL` (their captions were lost on insert). I'm not back-filling them — they expire in <24h. New stories created after the fix will keep their caption text correctly.
+- The other "blank /profile screen" you saw was just the profile page mid-load after a fresh login; it rendered fine on a second visit. Not related to stories. If it recurs after the fix, we can investigate separately.
