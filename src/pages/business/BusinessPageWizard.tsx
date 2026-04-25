@@ -469,7 +469,19 @@ export default function BusinessPageWizard() {
           <p className="text-xs font-medium text-muted-foreground">
             Step {step} of {STEP_COUNT}
           </p>
-          <h1 className="text-base font-bold text-foreground">Business Page</h1>
+          <div className="flex items-center gap-2">
+            <h1 className="text-base font-bold text-foreground">Business Page</h1>
+            {isDirty && (
+              <span
+                role="status"
+                aria-live="polite"
+                className="inline-flex items-center gap-1 rounded-full bg-amber-500/10 px-2 py-0.5 text-[10px] font-semibold text-amber-600"
+              >
+                <span className="h-1.5 w-1.5 rounded-full bg-amber-500" />
+                Unsaved changes
+              </span>
+            )}
+          </div>
         </div>
       </header>
 
