@@ -1,30 +1,45 @@
-# Fix: Sticky header missing on mobile Profile scroll
+# Profile/Account: remaining mobile polish
 
-## What I tested
-Logged in as `klainkonkat@gmail.com` and opened `/profile` at 390×844 (iPhone). Scrolled the page down past the cover/avatar.
+Based on the iPhone screenshot you sent, here are the issues still left on the Account page and the proposed fixes.
 
-## Bug found
-**The mobile sticky header (back button + name + bell) does not appear after scrolling past the cover.** Screenshots at 30% and 50% scroll show the cover scrolled away with no compact header pinned to the top — the area behind the status bar stays empty.
+## Issues observed
 
-## Root cause
-The `<motion.header>` for the sticky header lives inside `<PullToRefresh>`. PullToRefresh's inner wrapper uses `style={{ y: ... }}` (a CSS `transform`). Per the CSS spec, **a `position: fixed` element inside a transformed ancestor is positioned relative to that ancestor, not the viewport**. Combined with the header's own `y: stickyTranslate` transform, the header is effectively translated out of the visible region and never becomes visible.
+1. **Cover photo extends behind the iOS status bar** — the time / battery indicator sits directly on top of the bright cover image, hard to read on light covers and breaks the safe-area contract.
+2. **4 round buttons crowd the cover** — reposition, change-photo, bell, and "more" stack horizontally on top of the cover and partly overlap the photo subject. On a 390 px screen they consume ~180 px of cover width.
+3. **`Bell` and `More` belong to the sticky header / `/more` page, not the cover** — duplicating them on the cover is redundant now that the sticky header has its own bell, and `/more` is one tap away from the bottom nav.
+4. **"Your story" appears as an isolated half-width card** with empty space beside it instead of a horizontal stories rail like Facebook/Instagram.
+5. **Tabs row (All / Photos / Reels)** uses oversized full-width pills that waste vertical space; should be a compact segmented control.
+6. **Wasted vertical gap** between "0 followers · 0 following · 0 friends" and "Your story" (~40 px of empty space).
 
-Secondary issue: even if it were visible, putting the sticky header inside the pull-to-refresh transformed container means it would jiggle with pull-to-refresh gestures.
+## Proposed fixes (`src/pages/Profile.tsx` + small tweaks)
 
-## Fix
+1. **Status-bar safe area on cover**
+   - Add `paddingTop: var(--zivo-safe-top)` to the cover container and a subtle top-to-transparent gradient scrim (12 % black → transparent over the first 44 px) so the status bar text always reads cleanly over any cover.
 
-1. **Lift the sticky header out of the transformed ancestor.** Render it via `createPortal(stickyHeaderJSX, document.body)` so it attaches directly to `<body>` and behaves as a true viewport-fixed element. (`createPortal` is already imported in `Profile.tsx`.)
+2. **Slim down the cover action cluster**
+   - Keep only **Reposition** (when a cover exists) and **Change cover** on the cover itself.
+   - Remove the `Bell` button from the cover — it already lives in the sticky header which appears as soon as the user scrolls.
+   - Remove the `MoreHorizontal` button from the cover — it duplicates the bottom-nav "Account" tap path to `/more`. Move it into the sticky header on the right side instead (kebab menu → `/more`).
+   - Reduce button size from `h-10 w-10` → `h-9 w-9` and tighten the gap.
 
-2. **Keep `useScroll()` window-bound** (no change) — it already tracks window scroll correctly.
+3. **Tighten vertical rhythm**
+   - Collapse the gap between the social counts row and `ProfileStories` from the current default to `mt-3`.
+   - Reduce `ParallaxSection` padding around `ProfileStories` on mobile.
 
-3. **Verify after fix**: re-test mobile scroll at 0%, 30%, 50%, 100%, then back to top, confirming:
-   - Header fades in past ~150px scroll
-   - Header has correct safe-area top padding
-   - Header is non-interactive when hidden (pointer-events gating preserved)
-   - No jitter during pull-to-refresh
+4. **Compact tabs**
+   - Switch the All / Photos / Reels row to a compact segmented control (height 36 px, equal flex, smaller icons), matching the Feed page style used elsewhere.
 
-## Files to edit
-- `src/pages/Profile.tsx` — wrap the existing `<motion.header>` block in `createPortal(..., document.body)`, guarded for SSR (`typeof document !== 'undefined'`).
+5. **Stories rail**
+   - Verify `ProfileStories` renders horizontally; if it currently shows a single "Your story" card, wrap it in a horizontal scroller with `snap-x` so future stories sit next to it.
 
 ## Out of scope
-No changes to PullToRefresh, scroll math, thresholds, or styling — only the DOM mount point of the sticky header.
+- No changes to data / queries / RLS.
+- No changes to the sticky header logic from the previous fix (only adds a kebab button on its right side).
+- Bottom nav tab count is intentional per project memory; not changing it here.
+
+## Files to edit
+- `src/pages/Profile.tsx` — cover safe-area, button cluster, sticky-header kebab, vertical spacing, tabs styling.
+- `src/components/profile/ProfileStories.tsx` — confirm horizontal scroll/snap layout (read first; only edit if needed).
+
+## Verification
+After implementing, re-test on 390×844 in the sandbox: status bar legible over cover, only 2 buttons on cover, sticky header shows back / avatar / name / bell / kebab, stories rail scrolls horizontally, no large empty gaps.
