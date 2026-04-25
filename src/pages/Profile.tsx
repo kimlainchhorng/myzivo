@@ -445,9 +445,9 @@ const Profile = () => {
         <NavBar />
       </div>
 
-      {/* ── Deep 3D Background with multiple parallax layers ── */}
-      <motion.div style={{ y: bgParallax }} className="pointer-events-none fixed inset-0 z-0">
-        {/* Base gradient */}
+      {/* ── Background: clean Facebook-style on mobile, parallax on desktop ── */}
+      <motion.div style={{ y: bgParallax }} className="pointer-events-none fixed inset-0 z-0 hidden lg:block">
+        {/* Base gradient (desktop only) */}
         <div className="absolute inset-0 bg-gradient-to-b from-primary/[0.06] via-background to-primary/[0.04]" />
         {/* Radial glows */}
         <div className="absolute top-[-25%] right-[-15%] w-[70vw] h-[70vw] rounded-full bg-primary/[0.07] blur-[120px]" />
@@ -463,8 +463,9 @@ const Profile = () => {
       </motion.div>
 
       {/* ── Scrollable content ── */}
-      <div ref={scrollRef} className="relative z-10 h-screen overflow-y-auto pb-24 scroll-smooth" style={{ scrollbarWidth: 'none' }}>
-        <div className="px-4 pt-2 lg:pt-20 max-w-lg md:max-w-2xl lg:max-w-3xl mx-auto">
+      <div ref={scrollRef} className="relative z-10 h-screen overflow-y-auto pb-24 scroll-smooth bg-background" style={{ scrollbarWidth: 'none' }}>
+        {/* Mobile: edge-to-edge full-screen (Facebook-style). Desktop: centered card. */}
+        <div className="px-0 lg:px-4 pt-0 lg:pt-20 max-w-none lg:max-w-3xl mx-auto">
 
           {profileLoading ? (
             <div className="flex items-center justify-center py-20">
@@ -473,7 +474,7 @@ const Profile = () => {
               </motion.div>
             </div>
           ) : (
-            <div className="space-y-2.5 pt-1">
+            <div className="space-y-2.5 pt-0 lg:pt-1">
               {/* ── Profile Card with Cover Photo ── */}
               <ParallaxSection index={2}>
                 <motion.div
@@ -485,10 +486,16 @@ const Profile = () => {
                   style={{ perspective: "1200px", transformStyle: "preserve-3d" }}
                   className="group"
                 >
-                  <GlassCard3D glow className="shadow-2xl shadow-primary/[0.08] overflow-hidden">
-                    {/* Cover Photo */}
+                  {/* Mobile: edge-to-edge plain surface (Facebook). Desktop: glass card. */}
+                  <div className="relative bg-card lg:rounded-3xl lg:overflow-hidden lg:shadow-2xl lg:shadow-primary/[0.08]">
+                    <div className="hidden lg:block absolute inset-0 bg-card/70 backdrop-blur-2xl rounded-3xl" />
+                    <div className="hidden lg:block absolute inset-0 bg-gradient-to-br from-primary/[0.04] via-transparent to-primary/[0.02] rounded-3xl" />
+                    <div className="hidden lg:block pointer-events-none absolute inset-0 rounded-3xl ring-1 ring-inset ring-white/[0.08] shadow-[inset_0_1px_0_0_rgba(255,255,255,0.06)]" />
+                    <div className="relative z-10">
+                    {/* Cover Photo — full-bleed on mobile, taller like Facebook */}
                     <div
-                      className="relative h-36 sm:h-44 md:h-52 w-full overflow-hidden select-none"
+                      className="relative h-48 sm:h-56 md:h-60 lg:h-52 w-full overflow-hidden select-none"
+
                       onMouseDown={coverRepositioning ? (e) => { e.preventDefault(); handleCoverDragStart(e.clientY); } : undefined}
                       onMouseMove={coverRepositioning ? (e) => handleCoverDragMove(e.clientY) : undefined}
                       onMouseUp={coverRepositioning ? handleCoverDragEnd : undefined}
@@ -514,8 +521,8 @@ const Profile = () => {
                           </div>
                         </div>
                       )}
-                      {/* Gradient overlay */}
-                      <div className="absolute inset-0 bg-gradient-to-t from-card/90 via-card/20 to-transparent" />
+                      {/* Gradient overlay (subtle on mobile so cover stays vivid like Facebook) */}
+                      <div className="absolute inset-0 bg-gradient-to-t from-card/40 via-transparent to-transparent lg:from-card/90 lg:via-card/20" />
 
                       {/* Cover action buttons */}
                       {user && !coverRepositioning && (
@@ -821,7 +828,9 @@ const Profile = () => {
 
                     <CardContent className="px-6 pb-4 pt-2">
                     </CardContent>
-                  </GlassCard3D>
+                    </div>
+                  </div>
+
                 </motion.div>
               </ParallaxSection>
 
@@ -831,7 +840,7 @@ const Profile = () => {
               {!profile?.phone?.trim() && (
                 <ParallaxSection index={1.5}>
                   <div
-                    className="rounded-2xl border border-destructive/20 bg-destructive/5 p-4 flex items-center gap-3 cursor-pointer active:scale-[0.98] transition-transform"
+                    className="mx-3 lg:mx-0 rounded-2xl border border-destructive/20 bg-destructive/5 p-4 flex items-center gap-3 cursor-pointer active:scale-[0.98] transition-transform"
                     onClick={() => navigate("/account/profile-edit?focus=phone")}
                   >
                     <div className="w-10 h-10 rounded-full bg-destructive/10 flex items-center justify-center shrink-0">
