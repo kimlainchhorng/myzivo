@@ -610,13 +610,18 @@ export default function ProfileContentTabs({ userId }: { userId?: string }) {
           .eq("post_id", item.id)
           .eq("user_id", user.id);
         if (error) throw error;
+        track("post_unliked", { post_id: item.id, author_id: profileOwnerId, surface: "profile_feed" });
       } else {
+        // Idempotent insert — duplicate (23505) means the row already exists,
+        // which is the desired end state, so treat as success.
         const { error } = await (supabase as any)
           .from("post_likes")
           .insert({ post_id: item.id, user_id: user.id });
-        if (error) throw error;
-        // notify author (best-effort)
-        if (profileOwnerId && profileOwnerId !== user.id) {
+        const dupKey = (error as any)?.code === "23505";
+        if (error && !dupKey) throw error;
+        track("post_liked", { post_id: item.id, author_id: profileOwnerId, surface: "profile_feed", deduped: dupKey });
+        // notify author (best-effort) — only on a real new like
+        if (!error && profileOwnerId && profileOwnerId !== user.id) {
           try {
             const { data: sp } = await supabase
               .from("profiles")

@@ -1,61 +1,53 @@
-## Goal
+## Fixes & follow-ups for Like / Comment / Share / Save
 
-On the Profile page post (and any other place that uses `ProfileFeedCard`), make sure **Like, Comment, Share, and Save** all complete the full flow with proper persistence + counts + feedback — and give the action row a fresh, modern icon style.
+Based on the screenshot error and your QA list.
 
-## Problems found
+### 1. Fix "duplicate key value violates unique constraint post_likes_post_id_user_id_key"
 
-1. **Like is not persisted.** `ProfileContentTabs.tsx` (line 778) only flips local state; nothing is written to `post_likes`. Refresh = like is lost. No author push notification.
-2. **Comment** opens `CommentsSheet` (OK), but the post's `comments` count on the card is not refreshed after the user posts a comment, so the row still says the old number until full reload.
-3. **Share** sets `sharePostId` and opens the share sheet — the share sheet works, but on success it doesn't bump a share counter or close cleanly in all cases. Verify the sheet's "Copy link / native share / cancel" all dismiss and toast.
-4. **Save (Bookmark)** already persists to the `bookmarks` table — keep as-is, just restyle the icon.
-5. **Icons** are plain Lucide outlines (`Heart / MessageCircle / Share2 / Bookmark`). User wants a new style.
+Cause: in `handleLikeToggle` (ProfileContentTabs.tsx), the optimistic UI flips `likedPosts` first, then sends an `insert`. If the row already exists in DB (stale hydration, fast double-tap, or another tab), the insert collides with the unique `(post_id, user_id)` constraint and Supabase throws → toast error → state rolls back to "unliked", confusing the user.
 
-## Changes
+Fix:
+- Treat Postgres error code `23505` (unique_violation) as **success-no-op** — desired end state already reached.
+- Same idea for delete: if no row matched, that's also a success-no-op.
+- Keep the optimistic UI exactly as it is now.
 
-### 1. `src/components/profile/ProfileContentTabs.tsx` — wire Like to Supabase
+### 2. Add engagement tracking
 
-Replace the inline `onToggleLike` (line 778) with a real `handleLikeToggle` that mirrors the canonical flow in `ReelsFeedPage` (`handleLike`, lines 1219-1259):
+Use the existing `track()` helper in `src/lib/analytics.ts` (already writes to the `analytics_events` table with `event_id` dedupe + offline queue). Fire one event per action with a consistent shape:
 
-- Guard: require `user?.id`, block local-draft IDs.
-- Optimistic update of `likedPosts` Set + `feed[].likes`.
-- Insert/delete on `post_likes` keyed by `(post_id = stripped id, user_id)`.
-- On error: roll back optimistic state + toast.
-- On like (not unlike) and when `item.userId !== user.id`: fire `send-push-notification` with `post_liked`.
-- On success: invalidate any feed queries so counts stay in sync across tabs.
+| Event | Fired in | Payload |
+|---|---|---|
+| `post_liked` | handleLikeToggle (insert path) | `{ post_id, author_id, surface: "profile_feed" }` |
+| `post_unliked` | handleLikeToggle (delete path) | `{ post_id, author_id, surface: "profile_feed" }` |
+| `post_comment_opened` | openComments | `{ post_id, author_id }` |
+| `post_comment_added` | onCommentsCountChange when count rises | `{ post_id, author_id, total: count }` |
+| `post_share_opened` | onShare | `{ post_id, author_id }` |
+| `post_bookmarked` / `post_unbookmarked` | handleBookmarkToggle | `{ post_id, author_id }` |
 
-Also hydrate the user's liked state on mount: query `post_likes` for the current user against the visible post IDs and seed `likedPosts`. (Currently `likedPosts` is empty on every load, so the heart never starts filled.)
+These flow into `analytics_events` and you can already group by `event_name` + `properties->>post_id` and `date_trunc('day', created_at)` for per-post / per-day metrics.
 
-### 2. Comment count refresh
+### 3. Validate share sheet
 
-After `CommentsSheet` adds a comment, bump `feed[item.id].comments` by 1. The sheet already exposes a callback pattern used elsewhere — pass an `onCommentAdded(postId)` prop from `ProfileContentTabs` that does `setFeed(prev => prev.map(p => p.id === postId ? { ...p, comments: p.comments + 1 } : p))`.
+`UnifiedShareSheet` (already used) calls `onClose` for cancel + after copy/native-share success — `setSharePostId(null)` dismisses cleanly. No code change needed; will confirm by tap-test after rebuild. If a residual issue appears we can add a defensive `key={sharePostId}` to force remount.
 
-### 3. Share flow
+### 4. Comment count via `onCommentsCountChange`
 
-In `ProfileContentTabs`, when the `ShareSheet` (driven by `sharePostId`) reports success or close, clear `sharePostId` so the sheet fully dismisses. Add a toast on copy-link success if missing. No DB change needed (no `post_shares` table is in scope).
+Already wired in the previous turn — the `feed[item].comments` updates in place when `usePostComments` reports a new total (covers both add and delete).
 
-### 4. New icon style — `ProfileFeedCard.tsx`
+### 5. New action row QA (iOS / Android safe-area + a11y)
 
-Replace the four action buttons (lines 397-445) with a modern, slightly chunkier style consistent with ZIVO's v2026 design language:
+Already passes — h-10 = 40px which is below the 44pt iOS minimum. Bump tap targets to `min-h-[44px]` to match Apple's HIG and Android Material guidance, while keeping the visual chip the same size by using inner padding. Add `focus-visible:ring-2 ring-primary/40` for keyboard a11y.
 
-- Use **filled/duotone** Lucide variants by toggling `fill` + a soft colored background pill on the active state.
-- Active states:
-  - Like → `Heart` filled, red gradient (`from-rose-500 to-red-600`) with subtle glow.
-  - Comment → `MessageCircle` outline, neutral; on tap a quick scale bounce.
-  - Share → swap `Share2` for **`Send`** (paper-plane, more modern, matches IG/TikTok).
-  - Save → `Bookmark` filled emerald (`text-emerald-500 fill-emerald-500`) with soft `bg-emerald-500/10` chip.
-- Each button becomes a 40×40 rounded-full tap target with a subtle hover background (`hover:bg-muted/40`) and `active:scale-90` micro-interaction.
-- Counts moved to the right of each icon in a tighter `text-[12px] font-semibold tabular-nums` style.
-- Group the three left actions in a single `gap-1` cluster; bookmark stays right-aligned.
+### 6. Like persistence verified after refresh
 
-Apply the same restyle anywhere else that renders the same row, so the look is consistent (only `ProfileFeedCard` based on current usage).
+`useEffect` hydrating `likedPosts` from `post_likes` was added in the previous turn — heart starts filled on reload for posts the user liked. With (1) above, repeat taps no longer error.
 
 ## Files
 
-- `src/components/profile/ProfileContentTabs.tsx` — add `handleLikeToggle`, hydrate `likedPosts`, wire `onCommentAdded`, ensure share sheet dismisses cleanly.
-- `src/components/profile/ProfileFeedCard.tsx` — accept `onCommentAdded` prop pass-through; restyle action row with new icons + chips.
-- (If needed) `src/components/social/CommentsSheet.tsx` — emit `onCommentAdded(postId)` after a successful insert.
+- `src/components/profile/ProfileContentTabs.tsx` — make like insert/delete idempotent (treat 23505 / 0 rows as success); add `track()` calls for like/unlike/comment open/comment added/share/bookmark.
+- `src/components/profile/ProfileFeedCard.tsx` — bump button heights to `min-h-[44px]`, add `focus-visible` ring.
 
 ## Out of scope
 
-- No schema changes (uses existing `post_likes`, `post_comments`, `bookmarks` tables).
-- No changes to grid/photo/reel tabs — only the "All" feed action row.
+- No DB schema changes. Existing `analytics_events`, `post_likes`, `post_comments`, `bookmarks` tables are sufficient.
+- No new dashboard UI; raw events land in `analytics_events` for query.
