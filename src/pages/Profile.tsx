@@ -1194,7 +1194,7 @@ const Profile = () => {
                       <div className="lg:hidden mt-3 grid grid-cols-4 gap-2">
                         {[
                           { label: "Shop", icon: Store, onClick: openShopDashboard },
-                          { label: "Employees", icon: Users, onClick: () => { selectionChanged(); if (!user) { toast.info("Sign in to open Personal Account"); navigate("/login?redirect=/personal/employees"); return; } navigate("/personal/employees"); } },
+                          { label: "Employees", icon: Users, onClick: () => { selectionChanged(); if (!user) { toast.info("Sign in to open Personal Account"); navigate("/login?redirect=/personal"); return; } navigate("/personal"); } },
                           { label: "Mode", icon: Repeat, onClick: () => { selectionChanged(); setModeOpen(true); } },
                           { label: "Monetization", icon: DollarSign, onClick: () => { selectionChanged(); navigate("/monetization"); } },
                         ].map((a) => (
