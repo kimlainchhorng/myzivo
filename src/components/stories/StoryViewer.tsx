@@ -22,6 +22,7 @@ import {
   parseStorageKeyFromPublicUrl,
   STORIES_BUCKET,
 } from "@/lib/storiesCache";
+import StoryForwardSheet from "@/components/stories/StoryForwardSheet";
 import X from "lucide-react/dist/esm/icons/x";
 import Eye from "lucide-react/dist/esm/icons/eye";
 import Trash2 from "lucide-react/dist/esm/icons/trash-2";
@@ -90,6 +91,7 @@ export default function StoryViewer({
   const [commentText, setCommentText] = useState("");
   const [muted, setMuted] = useState(true);
   const [reactionBurst, setReactionBurst] = useState<string | null>(null);
+  const [showForward, setShowForward] = useState(false);
 
   const timerRef = useRef<number | null>(null);
   const startTimeRef = useRef(0);
@@ -248,26 +250,12 @@ export default function StoryViewer({
     if (currentStory && onStoryChange) onStoryChange(currentStory.id);
   }, [currentStory?.id, onStoryChange]);
 
-  // ---- Share story (deep link) ----
-  const handleShare = useCallback(async () => {
+  // ---- Share story (opens Instagram-style "Send to" sheet) ----
+  const handleShare = useCallback(() => {
     if (!currentStory) return;
-    const url = `${window.location.origin}/stories/${currentStory.id}`;
-    try {
-      if (navigator.share) {
-        await navigator.share({ title: `${viewingGroup?.userName}'s story`, url });
-      } else {
-        await navigator.clipboard.writeText(url);
-        toast.success("Story link copied");
-      }
-    } catch {
-      try {
-        await navigator.clipboard.writeText(url);
-        toast.success("Story link copied");
-      } catch {
-        toast.error("Could not share story");
-      }
-    }
-  }, [currentStory, viewingGroup?.userName]);
+    setPaused(true);
+    setShowForward(true);
+  }, [currentStory]);
 
   // ---- Post comment ----
   const postComment = useMutation({
