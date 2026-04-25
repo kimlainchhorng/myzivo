@@ -7,6 +7,7 @@
  */
 import { lazy, Suspense, useState } from "react";
 import Plus from "lucide-react/dist/esm/icons/plus";
+import Sparkles from "lucide-react/dist/esm/icons/sparkles";
 import Camera from "lucide-react/dist/esm/icons/camera";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
@@ -105,7 +106,7 @@ export default function ChatStories() {
               <div className={cn(
                 "h-[64px] w-[64px] rounded-full p-[2.5px] box-border",
                 hasMyStory
-                  ? "bg-[conic-gradient(from_180deg,#f09433,#e6683c,#dc2743,#cc2366,#bc1888,#f09433)]"
+                  ? "bg-[conic-gradient(from_140deg,hsl(160_84%_45%),hsl(174_72%_45%),hsl(190_85%_55%),hsl(160_84%_45%))] shadow-[0_0_12px_-3px_hsl(160_84%_45%/0.55)]"
                   : "bg-muted-foreground/25"
               )}>
                 <div className="h-full w-full rounded-full overflow-hidden border-2 border-background bg-card flex items-center justify-center">
@@ -135,9 +136,13 @@ export default function ChatStories() {
                 onClick={(e) => { e.stopPropagation(); setShowCreate(true); }}
                 role="button"
                 aria-label="Add story"
-                className="absolute -bottom-0.5 -right-0.5 h-[22px] w-[22px] rounded-full bg-foreground flex items-center justify-center border-[2.5px] border-background"
+                className="absolute -bottom-0.5 -right-0.5 h-[22px] w-[22px] rounded-full bg-gradient-to-br from-[hsl(160_84%_45%)] to-[hsl(174_72%_40%)] flex items-center justify-center border-[2.5px] border-background shadow-[0_2px_6px_-1px_hsl(160_84%_45%/0.6)]"
               >
-                <Plus className="w-3 h-3 text-background" strokeWidth={3} />
+                {hasMyStory ? (
+                  <Sparkles className="w-3 h-3 text-white" strokeWidth={2.5} />
+                ) : (
+                  <Plus className="w-3 h-3 text-white" strokeWidth={3} />
+                )}
               </span>
             </div>
             <span className="text-[11px] text-foreground font-medium max-w-[68px] truncate">
@@ -154,7 +159,7 @@ export default function ChatStories() {
                 onClick={() => openViewer(group)}
                 className="flex flex-col items-center gap-1 flex-shrink-0 w-[72px]"
               >
-                <div className="h-[64px] w-[64px] rounded-full p-[2.5px] bg-[conic-gradient(from_180deg,#f09433,#e6683c,#dc2743,#cc2366,#bc1888,#f09433)]">
+                <div className="h-[64px] w-[64px] rounded-full p-[2.5px] bg-[conic-gradient(from_140deg,hsl(160_84%_45%),hsl(174_72%_45%),hsl(190_85%_55%),hsl(160_84%_45%))] shadow-[0_0_12px_-3px_hsl(160_84%_45%/0.55)]">
                   <div className="w-full h-full rounded-full border-2 border-background overflow-hidden bg-muted">
                     {group.avatarUrl ? (
                       <img src={group.avatarUrl} alt="" className="w-full h-full object-cover" />

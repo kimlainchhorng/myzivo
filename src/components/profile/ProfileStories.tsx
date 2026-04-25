@@ -5,7 +5,7 @@
  */
 import { useMemo, useState } from "react";
 import { motion } from "framer-motion";
-import { Plus, Camera } from "lucide-react";
+import { Plus, Camera, Sparkles } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useUserProfile } from "@/hooks/useUserProfile";
 import { supabase } from "@/integrations/supabase/client";
@@ -154,7 +154,7 @@ const ProfileStories = () => {
                 className={cn(
                   "h-16 w-16 rounded-full p-[2.5px] box-border",
                   hasMyStory
-                    ? "bg-[conic-gradient(from_180deg,#f09433,#e6683c,#dc2743,#cc2366,#bc1888,#f09433)]"
+                    ? "bg-[conic-gradient(from_140deg,hsl(160_84%_45%),hsl(174_72%_45%),hsl(190_85%_55%),hsl(160_84%_45%))] shadow-[0_0_12px_-3px_hsl(160_84%_45%/0.55)]"
                     : "bg-muted-foreground/25"
                 )}
               >
@@ -188,9 +188,13 @@ const ProfileStories = () => {
                   })()}
                 </div>
               </div>
-              {/* Black + badge — always shown on Your story so adding more segments is one tap */}
-              <div className="absolute -bottom-0.5 -right-0.5 h-[22px] w-[22px] rounded-full bg-foreground flex items-center justify-center border-[2.5px] border-background">
-                <Plus className="h-3 w-3 text-background" strokeWidth={3} />
+              {/* ZIVO Aurora badge — Sparkles when story exists, Plus to add */}
+              <div className="absolute -bottom-0.5 -right-0.5 h-[22px] w-[22px] rounded-full bg-gradient-to-br from-[hsl(160_84%_45%)] to-[hsl(174_72%_40%)] flex items-center justify-center border-[2.5px] border-background shadow-[0_2px_6px_-1px_hsl(160_84%_45%/0.6)]">
+                {hasMyStory ? (
+                  <Sparkles className="h-3 w-3 text-white" strokeWidth={2.5} />
+                ) : (
+                  <Plus className="h-3 w-3 text-white" strokeWidth={3} />
+                )}
               </div>
               {/* Segment count badge */}
               {hasMyStory && myGroup!.stories.length > 1 && (
@@ -231,7 +235,7 @@ const ProfileStories = () => {
                       "h-16 w-16 rounded-full p-[2.5px]",
                       fullyViewed
                         ? "bg-muted-foreground/25"
-                        : "bg-[conic-gradient(from_180deg,#f09433,#e6683c,#dc2743,#cc2366,#bc1888,#f09433)]"
+                        : "bg-[conic-gradient(from_140deg,hsl(160_84%_45%),hsl(174_72%_45%),hsl(190_85%_55%),hsl(160_84%_45%))] shadow-[0_0_12px_-3px_hsl(160_84%_45%/0.55)]"
                     )}
                   >
                     <Avatar className="h-full w-full border-2 border-background">
