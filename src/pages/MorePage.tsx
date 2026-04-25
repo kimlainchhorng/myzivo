@@ -164,13 +164,13 @@ const quickLinksAccount: QuickLink[] = [
   { icon: Download, label: "Get App", href: "/install", description: "Download", accent: "hsl(var(--primary))" },
   { icon: Lightbulb, label: "Feedback", href: "/feedback", description: "Ideas", accent: "hsl(45 93% 58%)" },
   { icon: Shield, label: "Safety Center", href: "/safety", description: "Reporting", accent: "hsl(0 84% 60%)" },
-  { icon: Palette, label: "Appearance", href: "/account/settings", description: "Theme", accent: "hsl(263 70% 58%)" },
+  { icon: Palette, label: "Appearance", href: "#theme-toggle", description: "Light / Dark theme", accent: "hsl(263 70% 58%)" },
   { icon: AlertCircle, label: "Report a Problem", href: "/feedback", description: "Bug report", accent: "hsl(0 84% 60%)" },
-  { icon: Clock, label: "Activity Log", href: "/activity", description: "History", accent: "hsl(198 93% 59%)" },
   { icon: ShieldCheck, label: "Security Report", href: "/security/report", description: "Status", accent: "hsl(142 71% 45%)" },
-  { icon: Smartphone, label: "Login & Devices", href: "/account/settings", description: "Active sessions", accent: "hsl(221 83% 53%)" },
-  { icon: Lock, label: "Two-Factor Auth", href: "/account/privacy", description: "Extra security", accent: "hsl(142 71% 45%)" },
-  { icon: Users, label: "Blocked Users", href: "/account/privacy", description: "Manage blocks", accent: "hsl(0 84% 60%)" },
+  { icon: Smartphone, label: "Login & Devices", href: "/account/security", description: "Active sessions", accent: "hsl(221 83% 53%)" },
+  { icon: Lock, label: "Two-Factor Auth", href: "/account/security", description: "Extra security", accent: "hsl(142 71% 45%)" },
+  { icon: Users, label: "Blocked Users", href: "/account/privacy#blocked", description: "Manage blocks", accent: "hsl(0 84% 60%)" },
+  { icon: Trash2, label: "Delete Account", href: "/profile/delete-account", description: "Permanently remove", accent: "hsl(0 84% 60%)" },
 ];
 
 const sections = [
