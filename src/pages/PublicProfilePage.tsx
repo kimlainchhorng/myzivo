@@ -847,9 +847,9 @@ export default function PublicProfilePage() {
 
           {/* Profile Info */}
           <div className="flex flex-col items-center pt-16 sm:pt-20 pb-4 px-4 max-w-3xl mx-auto">
-            <h2 className="text-2xl font-bold tracking-tight text-foreground inline-flex items-center gap-1.5">
+            <h2 className="text-2xl font-bold tracking-tight text-foreground inline-flex items-center gap-2">
               <span>{resolvedProfile.full_name}</span>
-              {isBlueVerified(resolvedProfile.is_verified) && <VerifiedBadge size={22} />}
+              {isBlueVerified(resolvedProfile.is_verified) && <VerifiedBadge size={28} />}
             </h2>
             {resolvedProfile.bio && (
               <p className="mt-2 max-w-md text-center text-sm text-muted-foreground whitespace-pre-wrap break-words">
