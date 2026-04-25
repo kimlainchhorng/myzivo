@@ -917,7 +917,8 @@ const Profile = () => {
                         itself reaches the very top of the webview. Only the
                         floating action buttons inside respect the safe area. */}
                     <div
-                      className="relative w-full overflow-hidden select-none h-40 sm:h-52 md:h-56 lg:h-52"
+                      data-disable-pull-to-refresh="true"
+                      className="relative w-full overflow-hidden select-none"
                       onMouseDown={coverRepositioning ? (e) => { e.preventDefault(); handleCoverDragStart(e.clientY); } : undefined}
                       onMouseMove={coverRepositioning ? (e) => handleCoverDragMove(e.clientY) : undefined}
                       onMouseUp={coverRepositioning ? handleCoverDragEnd : undefined}
@@ -928,18 +929,20 @@ const Profile = () => {
                       onDoubleClick={coverRepositioning ? () => { impact("medium"); setCoverPosition(50); } : undefined}
                       style={{
                         cursor: coverRepositioning ? "ns-resize" : "default",
-                        marginTop: "calc(-1 * var(--zivo-safe-top, 0px))",
+                        // Full-bleed: cover photo crosses behind the status bar.
+                        // Mobile target: 10rem of visible cover + safe-area inset.
+                        // Desktop keeps a fixed 13rem (lg:h-52) cover.
                         height: "calc(10rem + var(--zivo-safe-top, 0px))",
                       }}
                     >
-                      {/* Status-bar legibility scrim (mobile only) */}
+                      {/* Status-bar legibility scrim (mobile only). pointer-events disabled. */}
                       <div
                         aria-hidden="true"
                         className="lg:hidden pointer-events-none absolute inset-x-0 top-0 z-10 bg-gradient-to-b from-black/45 via-black/15 to-transparent"
-                        style={{ height: "calc(var(--zivo-safe-top, 0px) + 16px)" }}
+                        style={{ height: "calc(var(--zivo-safe-top, 0px) + 24px)" }}
                       />
                       <motion.div
-                        className="absolute inset-0 lg:!translate-y-0 lg:!scale-100"
+                        className="pointer-events-none absolute inset-0 lg:!translate-y-0 lg:!scale-100"
                         style={coverRepositioning ? undefined : { y: coverY, scale: coverScale }}
                       >
                       {profile?.cover_url ? (
@@ -953,65 +956,77 @@ const Profile = () => {
                       ) : (
                         <div className="absolute inset-0 bg-gradient-to-br from-primary/30 via-primary/15 to-accent/20">
                           <div className="absolute inset-0 bg-[radial-gradient(circle_at_30%_40%,hsl(var(--primary)/0.25),transparent_70%)]" />
-                          <div className="absolute bottom-3 right-4 text-primary/20 text-[11px] font-medium flex items-center gap-1">
+                          <div className="absolute bottom-3 right-4 text-primary/40 text-[11px] font-medium flex items-center gap-1">
                             <ImagePlus className="w-3.5 h-3.5" /> Add cover photo
                           </div>
                         </div>
                       )}
                       {/* Gradient overlay (subtle on mobile so cover stays vivid like Facebook) */}
-                      <div className="absolute inset-0 bg-gradient-to-t from-card/40 via-transparent to-transparent lg:from-card/90 lg:via-card/20" />
+                      <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-card/40 via-transparent to-transparent lg:from-card/90 lg:via-card/20" />
                       </motion.div>
 
                       {/* Cover action buttons — kept minimal: reposition + change.
-                          Notifications and "more" live in the sticky header / bottom nav. */}
+                          Use a real <label htmlFor> for the file input so the picker
+                          opens reliably on iOS / Android (ref.click() can be blocked
+                          inside transformed/animated ancestors). */}
                       {user && !coverRepositioning && (
                         <div
-                          className="absolute right-2 z-20 flex gap-1.5"
+                          className="absolute right-2 z-30 flex gap-1.5"
                           style={{ top: "calc(var(--zivo-safe-top, 0px) + 0.75rem)" }}
                         >
                           {profile?.cover_url && (
                             <motion.button
+                              type="button"
                               whileTap={{ scale: 0.88 }}
                               onClick={() => { setCoverPosition(profile?.cover_position ?? 50); setCoverRepositioning(true); }}
                               aria-label="Reposition cover photo"
-                              className="h-9 w-9 flex items-center justify-center rounded-full bg-background/65 backdrop-blur-md text-foreground/85 hover:bg-background/90 shadow-md border border-border/25 focus-visible:ring-2 focus-visible:ring-primary/60 focus-visible:outline-none"
+                              className="h-9 w-9 flex items-center justify-center rounded-full bg-background/70 backdrop-blur-md text-foreground/90 hover:bg-background/95 shadow-md border border-border/30 focus-visible:ring-2 focus-visible:ring-primary/60 focus-visible:outline-none"
                             >
-                              <MoveVertical className="h-3.5 w-3.5" />
+                              <MoveVertical className="h-4 w-4" />
                             </motion.button>
                           )}
-                          <motion.button
-                            whileTap={{ scale: 0.88 }}
-                            onClick={() => coverInputRef.current?.click()}
-                            disabled={coverUploading}
+                          <label
+                            htmlFor="profile-cover-input"
                             aria-label="Change cover photo"
-                            className="h-9 w-9 flex items-center justify-center rounded-full bg-background/65 backdrop-blur-md text-foreground/85 hover:bg-background/90 shadow-md border border-border/25 disabled:opacity-50 focus-visible:ring-2 focus-visible:ring-primary/60 focus-visible:outline-none"
+                            aria-disabled={coverUploading}
+                            className={cn(
+                              "h-9 w-9 flex items-center justify-center rounded-full bg-background/70 backdrop-blur-md text-foreground/90 hover:bg-background/95 shadow-md border border-border/30 cursor-pointer active:scale-90 transition focus-visible:ring-2 focus-visible:ring-primary/60 focus-visible:outline-none",
+                              coverUploading && "opacity-50 pointer-events-none"
+                            )}
                           >
-                            {coverUploading ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <ImagePlus className="h-3.5 w-3.5" />}
-                          </motion.button>
+                            {coverUploading ? <Loader2 className="h-4 w-4 animate-spin" /> : <ImagePlus className="h-4 w-4" />}
+                          </label>
                         </div>
                       )}
 
                       {/* Repositioning controls */}
                       {coverRepositioning && (
-                        <div className="absolute inset-0 z-20 flex items-center justify-center">
+                        <div className="absolute inset-0 z-30 flex items-center justify-center">
                           <div className="absolute inset-0 bg-background/30 backdrop-blur-[2px]" />
                           <div className="relative flex items-center gap-3 bg-background/90 backdrop-blur-xl rounded-full px-4 py-2 shadow-xl border border-border/50">
                             <MoveVertical className="h-4 w-4 text-muted-foreground" />
                             <span className="text-xs font-semibold text-foreground">Drag to reposition</span>
-                            <button onClick={saveCoverPosition} aria-label="Save cover position" className="p-1.5 rounded-full bg-primary text-primary-foreground transition active:scale-90 focus-visible:ring-2 focus-visible:ring-primary/60 focus-visible:outline-none">
+                            <button type="button" onClick={saveCoverPosition} aria-label="Save cover position" className="p-1.5 rounded-full bg-primary text-primary-foreground transition active:scale-90 focus-visible:ring-2 focus-visible:ring-primary/60 focus-visible:outline-none">
                               <Check className="h-3.5 w-3.5" />
                             </button>
-                            <button onClick={handleResetCover} aria-label="Reset cover position to center" className="p-1.5 rounded-full bg-muted/70 text-foreground hover:bg-muted transition active:scale-90 focus-visible:ring-2 focus-visible:ring-primary/60 focus-visible:outline-none">
+                            <button type="button" onClick={handleResetCover} aria-label="Reset cover position to center" className="p-1.5 rounded-full bg-muted/70 text-foreground hover:bg-muted transition active:scale-90 focus-visible:ring-2 focus-visible:ring-primary/60 focus-visible:outline-none">
                               <RotateCcw className="h-3.5 w-3.5" />
                             </button>
-                            <button onClick={() => { setCoverPosition(profile?.cover_position ?? 50); setCoverRepositioning(false); }} aria-label="Cancel cover repositioning" className="p-1.5 rounded-full bg-muted text-muted-foreground transition active:scale-90 focus-visible:ring-2 focus-visible:ring-primary/60 focus-visible:outline-none">
+                            <button type="button" onClick={() => { setCoverPosition(profile?.cover_position ?? 50); setCoverRepositioning(false); }} aria-label="Cancel cover repositioning" className="p-1.5 rounded-full bg-muted text-muted-foreground transition active:scale-90 focus-visible:ring-2 focus-visible:ring-primary/60 focus-visible:outline-none">
                               <X className="h-3.5 w-3.5" />
                             </button>
                           </div>
                         </div>
                       )}
 
-                      <input ref={coverInputRef} type="file" accept="image/jpeg,image/png,image/webp" onChange={handleCoverUpload} className="hidden" />
+                      <input
+                        id="profile-cover-input"
+                        ref={coverInputRef}
+                        type="file"
+                        accept="image/jpeg,image/png,image/webp"
+                        onChange={handleCoverUpload}
+                        className="sr-only"
+                      />
                     </div>
 
                     {/* Avatar overlapping cover */}
