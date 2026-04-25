@@ -404,7 +404,7 @@ export default function ProfileFeedCard({
             aria-label={isLiked ? `Unlike post${formatCount(item.likes) ? `, ${formatCount(item.likes)} likes` : ""}` : `Like post${formatCount(item.likes) ? `, ${formatCount(item.likes)} likes` : ""}`}
             aria-pressed={isLiked}
             className={cn(
-              "min-h-[40px] h-10 inline-flex items-center justify-center gap-1.5 px-2.5 rounded-full transition-all",
+              "min-h-[44px] h-11 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40 inline-flex items-center justify-center gap-1.5 px-2.5 rounded-full transition-all",
               isLiked
                 ? "bg-rose-500/12 text-rose-500 shadow-[0_0_18px_-6px_hsl(347_77%_55%/0.55)]"
                 : "text-foreground hover:bg-muted/50",
@@ -427,7 +427,7 @@ export default function ProfileFeedCard({
             whileTap={{ scale: 0.88 }}
             onClick={openComments}
             aria-label={`Open comments${formatCount(item.comments) ? `, ${formatCount(item.comments)} comments` : ""}`}
-            className="min-h-[40px] h-10 inline-flex items-center justify-center gap-1.5 px-2.5 rounded-full text-foreground hover:bg-muted/50 transition-all"
+            className="min-h-[44px] h-11 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40 inline-flex items-center justify-center gap-1.5 px-2.5 rounded-full text-foreground hover:bg-muted/50 transition-all"
           >
             <MessageCircle aria-hidden strokeWidth={2.2} className="h-[22px] w-[22px]" />
             {formatCount(item.comments) && (
@@ -442,7 +442,7 @@ export default function ProfileFeedCard({
             whileTap={{ scale: 0.88 }}
             onClick={() => onShare(item.id)}
             aria-label="Share post"
-            className="min-h-[40px] h-10 w-10 inline-flex items-center justify-center rounded-full text-foreground hover:bg-muted/50 transition-all"
+            className="min-h-[44px] h-11 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40 w-10 inline-flex items-center justify-center rounded-full text-foreground hover:bg-muted/50 transition-all"
           >
             <Send aria-hidden strokeWidth={2.2} className="h-[21px] w-[21px] -rotate-12" />
           </motion.button>
@@ -455,7 +455,7 @@ export default function ProfileFeedCard({
           aria-label={isBookmarked ? "Remove bookmark" : "Save post"}
           aria-pressed={isBookmarked}
           className={cn(
-            "min-h-[40px] h-10 w-10 inline-flex items-center justify-center rounded-full transition-all",
+            "min-h-[44px] h-11 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40 w-10 inline-flex items-center justify-center rounded-full transition-all",
             isBookmarked
               ? "bg-emerald-500/12 text-emerald-500"
               : "text-foreground hover:bg-muted/50",
