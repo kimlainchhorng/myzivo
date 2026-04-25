@@ -174,6 +174,7 @@ const DriverShoppingList = lazy(() => import("./pages/DriverShoppingList"));
 const DriverOrdersPage = lazy(() => import("./pages/DriverOrdersPage"));
 const AdminShoppingOrders = lazy(() => import("./pages/admin/AdminShoppingOrders"));
 const AdminAnalyticsDashboard = lazy(() => import("./pages/admin/AdminAnalyticsDashboard"));
+const AdminStoriesFunnelPage = lazy(() => import("./pages/admin/AdminStoriesFunnelPage"));
 const AdminUsersPage = lazy(() => import("./pages/admin/AdminUsersPage"));
 const AdminPricingPage = lazy(() => import("./pages/admin/AdminPricingPage"));
 const AdminRemoteConfigPage = lazy(() => import("./pages/admin/AdminRemoteConfigPage"));
@@ -749,6 +750,7 @@ const App = () => (
                 <Route path="/package-delivery" element={<PreserveQueryRedirect to="/delivery" />} />
                 <Route path="/admin/shopping-orders" element={<AdminShoppingOrders />} />
                 <Route path="/admin/analytics" element={<ProtectedRoute><AdminAnalyticsDashboard /></ProtectedRoute>} />
+                <Route path="/admin/stories-funnel" element={<ProtectedRoute><AdminStoriesFunnelPage /></ProtectedRoute>} />
                 <Route path="/admin/users" element={<ProtectedRoute><AdminUsersPage /></ProtectedRoute>} />
                 <Route path="/admin/pricing" element={<ProtectedRoute><AdminPricingPage /></ProtectedRoute>} />
                 <Route path="/admin/remote-config" element={<ProtectedRoute><AdminRemoteConfigPage /></ProtectedRoute>} />
