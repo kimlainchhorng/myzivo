@@ -51,15 +51,17 @@ const STORY_DURATION = 5000;
 interface Props {
   groups: StoryGroup[];
   startGroupIndex: number;
+  startStoryIndex?: number;
   onClose: () => void;
+  onStoryChange?: (storyId: string) => void;
 }
 
-export default function StoryViewer({ groups, startGroupIndex, onClose }: Props) {
+export default function StoryViewer({ groups, startGroupIndex, startStoryIndex = 0, onClose, onStoryChange }: Props) {
   const { user } = useAuth();
   const queryClient = useQueryClient();
 
   const [groupIdx, setGroupIdx] = useState(startGroupIndex);
-  const [viewIdx, setViewIdx] = useState(0);
+  const [viewIdx, setViewIdx] = useState(startStoryIndex);
   const [paused, setPaused] = useState(false);
   const [progress, setProgress] = useState(0);
   const [liked, setLiked] = useState(false);
