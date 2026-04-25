@@ -183,6 +183,34 @@ export default function BusinessPageWizard() {
     return () => window.removeEventListener("beforeunload", handler);
   }, [isDirty]);
 
+  // Intercept browser/system back button. We push a sentinel history entry
+  // when the wizard mounts; if the user pops it (back button), we restore it
+  // and open the leave-confirm dialog instead of navigating away.
+  useEffect(() => {
+    const SENTINEL = "biz-wizard-guard";
+    window.history.pushState({ [SENTINEL]: true }, "");
+
+    const onPop = (_e: PopStateEvent) => {
+      if (completedRef.current || !isDirty) {
+        // Allow the navigation through.
+        return;
+      }
+      // Re-push the sentinel so we stay on this page, then prompt.
+      window.history.pushState({ [SENTINEL]: true }, "");
+      pendingLeaveRef.current = () => {
+        // User confirmed leave — actually go back. Pop our sentinel + the real entry.
+        window.removeEventListener("popstate", onPop);
+        window.history.go(-1);
+      };
+      setLeaveOpen(true);
+    };
+
+    window.addEventListener("popstate", onPop);
+    return () => {
+      window.removeEventListener("popstate", onPop);
+    };
+  }, [isDirty]);
+
   const groupedCategories = useMemo(() => {
     const groups: Record<string, typeof STORE_CATEGORY_OPTIONS> = {};
     for (const opt of STORE_CATEGORY_OPTIONS) {
