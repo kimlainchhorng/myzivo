@@ -1,29 +1,53 @@
-## Why pictures 2 & 3 look broken
+# Fix: Tapping "Your story" does nothing
 
-Picture 1 (Profile) opens the premium `CreateStorySheet` — a bottom-anchored sheet with the green/amber/pink gradient row cards.
+## Root cause
 
-Pictures 2 (Chat) and 3 (Feed) open a raw hidden `<input type="file">`, which on iOS Safari renders that floating "Photo Library / Take Photo or Video / Choose File" panel anchored to the input's top-left coordinates — that's the chrome you see covering the page.
+When you tap your story ring, the click handler **does** fire and the fullscreen `StoryViewer` **does** mount and play its open animation — you just can't see it.
+
+`src/components/stories/StoryViewer.tsx` line 449 renders the viewer at:
+
+```
+className="fixed inset-0 z-[100] bg-black"
+```
+
+But other UI on the same screen is layered far higher:
+
+| Layer | z-index |
+|---|---|
+| StoryViewer (today) | **z-[100]** |
+| ZivoMobileNav (bottom tab bar) | z-[1401] |
+| CreateStorySheet scrim | z-[1500] |
+| Toasts / sheets | z-[1000+] |
+
+So the viewer paints **underneath** the mobile nav and any sticky profile chrome, which on a 428×703 viewport covers the entire visible area — making it look like "nothing happens" even though the URL flips to `?story=<id>` and the viewer is mounted.
+
+This affects all three entry points (Profile, Feed, Chat) because they all render the same shared `StoryViewer`.
 
 ## Fix
 
-Make Chat and Feed open the same `CreateStorySheet` Profile uses, so all three entry points feel identical.
+Raise the StoryViewer to sit above every other in-app surface (nav, sheets, toasts) — same tier as other true fullscreen overlays.
 
-### 1. `src/components/social/FeedStoryRing.tsx`
-- Remove `fileRef`, the hidden `<input type="file">`, and the `handleAddStory` upload logic (it's duplicated by `CreateStorySheet`).
-- Add `const [showCreate, setShowCreate] = useState(false)`.
-- "Add story" button: if user has no story → `setShowCreate(true)`; otherwise keep opening the viewer.
-- Render `<CreateStorySheet open={showCreate} onClose={() => setShowCreate(false)} />`.
-- Drop the now-unused `Loader2` and `uploading` state.
+### Change 1 — `src/components/stories/StoryViewer.tsx`
 
-### 2. `src/components/chat/ChatStories.tsx`
-- Remove `fileInputRef`, the inline `<input type="file">`, `uploading` state, and `handleFileSelect`.
-- Add `const [showCreate, setShowCreate] = useState(false)`.
-- The avatar tap and the small `+` badge both call `setShowCreate(true)` when the user has no story (avatar still opens the viewer when they do).
-- Import and render `<CreateStorySheet open={showCreate} onClose={() => setShowCreate(false)} />`.
+- Line 449: change `z-[100]` → `z-[1600]` (above CreateStorySheet at 1500 and mobile nav at 1401, below only critical system overlays like incoming-call full-screen).
+- Apply the same z-tier to the `StoryForwardSheet` portal it spawns so the "Send to" sheet still sits on top of the viewer.
 
-### Result
-- Tapping "Your story" from Feed, Chat, or Profile shows the identical premium sheet from Picture 1 — gradient icon tiles, header avatar + "Public · 24h" chip, safe-area padding, scrim above the bottom nav.
-- iOS no longer pops the floating top-left native chooser; the file picker is launched from inside `CreateStorySheet`'s anchored buttons.
-- Single source of truth for upload, validation, retry, audio, text-on-gradient, and storage rollback — Chat/Feed inherit all of it for free.
+### Change 2 — Quick QA pass on sibling overlays
 
-No DB, RLS, or analytics changes required.
+- Confirm `StoryForwardSheet` (rendered from inside the viewer) uses `>= z-[1700]` so it stacks above the viewer.
+- Confirm `CommentsSheet` / viewers list overlay used inside StoryViewer also sits above `z-[1600]`.
+
+### Change 3 (defensive) — close the body-scroll-lock + nav-hide
+
+While the viewer is open, hide the bottom nav with `body[data-story-open="true"]` or simply set a flag that `ZivoMobileNav` reads, so it doesn't draw on top in the rare case a future overlay shares the same tier. Set the flag in StoryViewer's mount effect and clear on unmount.
+
+## Why this is the right fix (not a click-handler bug)
+
+- `openStory()` in `useStoryDeepLink` calls `setSearchParams({ story: <id> })` synchronously — verified.
+- `useStoryViewerLocation` resolves the deep-link to `(groupIndex, storyIndex)` whenever the active story id is found in the loaded groups — verified your story IS in the carousel (RLS allows `expires_at > now()` for everyone, and a row exists in the DB).
+- `StoryViewer` only early-returns when `viewingGroup` or `currentStory` is null — both are present.
+- The only remaining failure mode is "renders but invisible," which the z-index inversion above explains exactly.
+
+## Out of scope (noted, not fixing here)
+
+- The unrelated React `forwardRef` warning on `ProfileFeedCard` from `AnimatePresence` — separate cleanup, doesn't block stories.

@@ -111,6 +111,16 @@ export default function StoryViewer({
     }
   }, [paused, showViewers, showComments, muted]);
 
+  // While the fullscreen viewer is mounted, flag the document so the bottom
+  // mobile nav (and any other UI keyed on this attribute) hides itself —
+  // belt-and-suspenders alongside the z-[1600] layer.
+  useEffect(() => {
+    document.body.setAttribute("data-story-open", "true");
+    return () => {
+      document.body.removeAttribute("data-story-open");
+    };
+  }, []);
+
   const viewingGroup = groups[groupIdx] ?? null;
   const currentStory = viewingGroup?.stories[viewIdx] ?? null;
   const isOwner = viewingGroup?.userId === user?.id;
@@ -446,7 +456,7 @@ export default function StoryViewer({
         dragConstraints={{ top: 0, bottom: 0 }}
         dragElastic={{ top: 0, bottom: 0.4 }}
         onDragEnd={handleDragEnd}
-        className="fixed inset-0 z-[100] bg-black"
+        className="fixed inset-0 z-[1600] bg-black"
       >
         {/* Media */}
         <div className="absolute inset-0">

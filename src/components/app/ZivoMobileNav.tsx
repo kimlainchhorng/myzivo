@@ -69,6 +69,7 @@ const ZivoMobileNav = forwardRef<HTMLElement, Record<string, never>>((_props, re
   const nav = (
     <nav
       ref={ref}
+      data-zivo-mobile-nav
       className="fixed inset-x-0 bottom-0 z-[1401] lg:hidden"
       style={{ paddingBottom: "env(safe-area-inset-bottom, 0px)" }}
     >
