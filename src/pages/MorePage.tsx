@@ -568,8 +568,40 @@ export default function MorePage() {
           {/* Spotlight Cards */}
           {renderSpotlight()}
 
-          {/* All Sections */}
-          {sections.map((section, si) => renderSection(section, si))}
+          {/* Search */}
+          <div className="relative mb-4">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+            <Input
+              placeholder="Search account, settings, links…"
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              className="pl-9 pr-9 h-10 rounded-xl bg-muted/50 border-border/40 text-sm"
+            />
+            {search && (
+              <button
+                onClick={() => setSearch("")}
+                aria-label="Clear search"
+                className="absolute right-3 top-1/2 -translate-y-1/2"
+              >
+                <X className="h-4 w-4 text-muted-foreground" />
+              </button>
+            )}
+          </div>
+
+          {/* All Sections OR flat search results */}
+          {searchResults ? (
+            <div className="space-y-1.5">
+              {searchResults.length === 0 ? (
+                <p className="text-center text-sm text-muted-foreground py-8">
+                  No results for "{search}"
+                </p>
+              ) : (
+                searchResults.map((link, i) => renderLink(link, i))
+              )}
+            </div>
+          ) : (
+            sections.map((section, si) => renderSection(section, si))
+          )}
 
           {/* Admin */}
           {isAdmin && (
