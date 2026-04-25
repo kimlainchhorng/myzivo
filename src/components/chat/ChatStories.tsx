@@ -161,7 +161,11 @@ export default function ChatStories() {
 
       {showCreate && (
         <Suspense fallback={null}>
-          <CreateStorySheet open={showCreate} onClose={() => setShowCreate(false)} />
+          <CreateStorySheet
+            open={showCreate}
+            onClose={() => setShowCreate(false)}
+            onPublished={() => invalidateAllStoryCaches(queryClient, user?.id)}
+          />
         </Suspense>
       )}
 
