@@ -907,7 +907,10 @@ export default function ProfileContentTabs({ userId }: { userId?: string }) {
               onToggleLike={(feedItem) => void handleLikeToggle(feedItem as any)}
               onToggleBookmark={(feedItem) => void handleBookmarkToggle(feedItem as any)}
               onOpenMenu={(feedItem) => { setSelectedPost(feedItem as any); setShowPostMenu(true); }}
-              onShare={(postId) => setSharePostId(postId)}
+              onShare={(postId) => {
+                track("post_share_opened", { post_id: postId, author_id: profileOwnerId, surface: "profile_feed" });
+                setSharePostId(postId);
+              }}
               onSelectPost={(feedItem) => setSelectedPost(feedItem as any)}
             />
           ))}
@@ -1380,7 +1383,13 @@ export default function ProfileContentTabs({ userId }: { userId?: string }) {
         onCommentsCountChange={(count) => {
           if (!commentPost) return;
           const targetId = commentPost.id;
-          setFeed((prev) => prev.map((p) => (p.id === targetId ? { ...p, comments: count } : p)));
+          setFeed((prev) => {
+            const prevItem = prev.find((p) => p.id === targetId);
+            if (prevItem && count > prevItem.comments) {
+              track("post_comment_added", { post_id: targetId, author_id: profileOwnerId, total: count, surface: "profile_feed" });
+            }
+            return prev.map((p) => (p.id === targetId ? { ...p, comments: count } : p));
+          });
         }}
       />
 
