@@ -171,7 +171,30 @@ export default function StoryViewer({
     },
   });
 
-  // ---- Comments ----
+  // ---- Reactions list (owner only) — who reacted with what emoji ----
+  const { data: reactionList = [] } = useQuery({
+    queryKey: ["story-reactions-list", currentStory?.id],
+    enabled: !!currentStory && isOwner,
+    queryFn: async () => {
+      const { data } = await supabase
+        .from("story_reactions" as any)
+        .select("user_id, emoji, created_at")
+        .eq("story_id", currentStory!.id)
+        .order("created_at", { ascending: false });
+      if (!data || data.length === 0) return [];
+      const reactorIds = [...new Set((data as any[]).map((r: any) => r.user_id))];
+      const { data: profiles } = await supabase
+        .from("public_profiles" as any)
+        .select("id, full_name, avatar_url")
+        .in("id", reactorIds);
+      const profileMap = new Map((profiles || []).map((p: any) => [p.id, p]));
+      return (data as any[]).map((r: any) => ({
+        ...r,
+        name: profileMap.get(r.user_id)?.full_name || "User",
+        avatar: profileMap.get(r.user_id)?.avatar_url,
+      }));
+    },
+  });
   const { data: comments = [] } = useQuery({
     queryKey: ["story-comments", currentStory?.id],
     enabled: !!currentStory,
