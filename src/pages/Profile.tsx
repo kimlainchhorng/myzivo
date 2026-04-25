@@ -736,9 +736,9 @@ const Profile = () => {
                       : notifications);
                     if (filtered.length === 0 && socialCount === 0) {
                       return (
-                        <div className="flex flex-col items-center justify-center gap-2 px-4 py-10 text-center">
-                          <div className="flex h-12 w-12 items-center justify-center rounded-full bg-muted/40">
-                            <Bell className="h-6 w-6 text-muted-foreground/60" />
+                        <div className="flex flex-col items-center justify-center gap-1.5 px-4 py-7 text-center">
+                          <div className="flex h-10 w-10 items-center justify-center rounded-full bg-muted/40">
+                            <Bell className="h-5 w-5 text-muted-foreground/60" />
                           </div>
                           <p className="text-sm font-semibold text-foreground">You're all caught up</p>
                           <p className="text-xs text-muted-foreground">New notifications will appear here.</p>
