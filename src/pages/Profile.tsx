@@ -1166,15 +1166,14 @@ const Profile = () => {
                         </button>
                       </div>
 
-                      {/* Quick Actions row (mobile-only) — keeps the most-used
-                          account actions one tap away so users don't have to
-                          scroll or open /more for the basics. */}
+                      {/* Quick Actions row (mobile-only) — business-focused
+                          shortcuts: Shop, Employees, Mode switch, Monetization. */}
                       <div className="lg:hidden mt-3 grid grid-cols-4 gap-2">
                         {[
-                          { label: "Edit", icon: Pencil, onClick: () => navigate("/account/profile-edit") },
-                          { label: "Share", icon: Share2, onClick: () => setShareOpen(true) },
-                          { label: "Insights", icon: BarChart3, onClick: () => navigate("/account/analytics") },
-                          { label: "Settings", icon: Settings, onClick: () => navigate("/more") },
+                          { label: "Shop", icon: Store, onClick: () => navigate("/shop-dashboard") },
+                          { label: "Employees", icon: Users, onClick: () => navigate("/shop-dashboard/employees") },
+                          { label: "Mode", icon: Repeat, onClick: () => setModeOpen(true) },
+                          { label: "Monetization", icon: DollarSign, onClick: () => navigate("/monetization") },
                         ].map((a) => (
                           <button
                             key={a.label}
@@ -1183,7 +1182,7 @@ const Profile = () => {
                             className="flex flex-col items-center gap-1 rounded-2xl border border-border/50 bg-muted/25 px-2 py-2 text-[11px] font-semibold text-foreground hover:bg-muted/50 active:scale-[0.97] focus-visible:ring-2 focus-visible:ring-primary/60 focus-visible:outline-none transition-all"
                           >
                             <a.icon className="h-4 w-4 text-primary" />
-                            <span>{a.label}</span>
+                            <span className="truncate">{a.label}</span>
                           </button>
                         ))}
                       </div>
