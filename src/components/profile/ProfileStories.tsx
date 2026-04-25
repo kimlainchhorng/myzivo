@@ -258,11 +258,13 @@ const ProfileStories = () => {
 
       <CreateStorySheet open={showCreate} onClose={() => setShowCreate(false)} />
 
-      {viewing && (
+      {viewerLocation && (
         <StoryViewer
-          groups={viewing.groups}
-          startGroupIndex={viewing.startIndex}
+          groups={groups}
+          startGroupIndex={viewerLocation.groupIndex}
+          startStoryIndex={viewerLocation.storyIndex}
           onClose={handleViewerClose}
+          onStoryChange={updateStory}
         />
       )}
     </>
