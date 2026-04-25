@@ -19,7 +19,8 @@ import { cn } from "@/lib/utils";
 import { formatDistanceToNow } from "date-fns";
 import {
   invalidateAllStoryCaches,
-  parseStorageKeyFromPublicUrl,
+  collectStoryStorageKeys,
+  sweepStoryStoragePrefix,
   STORIES_BUCKET,
 } from "@/lib/storiesCache";
 import StoryForwardSheet from "@/components/stories/StoryForwardSheet";
@@ -283,16 +284,36 @@ export default function StoryViewer({
   // ---- Delete (owner) — also removes media + audio from storage ----
   const deleteStory = useMutation({
     mutationFn: async (storyId: string) => {
-      const story = viewingGroup?.stories.find((s) => s.id === storyId);
-      const keys = [
-        parseStorageKeyFromPublicUrl(story?.mediaUrl),
-        parseStorageKeyFromPublicUrl(story?.audioUrl),
-      ].filter(Boolean) as string[];
+      // 1) Re-fetch the row to get the latest URLs (and confirm ownership exists).
+      const { data: latest } = await supabase
+        .from("stories" as any)
+        .select("id, user_id, media_url, audio_url")
+        .eq("id", storyId)
+        .maybeSingle();
+
+      const cached = viewingGroup?.stories.find((s) => s.id === storyId);
+      const ownerId = (latest as any)?.user_id ?? viewingGroup?.userId ?? user?.id;
+
+      // 2) Collect every known storage key from cache + fresh row.
+      const keys = Array.from(
+        new Set([
+          ...collectStoryStorageKeys(cached),
+          ...collectStoryStorageKeys(latest as any),
+        ])
+      );
+
+      // 3) Delete the DB row first so RLS-protected files become deletable.
       const { error } = await supabase.from("stories" as any).delete().eq("id", storyId);
       if (error) throw error;
+
+      // 4) Best-effort URL-key removal.
       if (keys.length > 0) {
-        // Best-effort: don't fail the deletion if storage cleanup errors
         await supabase.storage.from(STORIES_BUCKET).remove(keys).catch(() => {});
+      }
+
+      // 5) Belt-and-suspenders: sweep any orphans under <user>/<story>/.
+      if (ownerId) {
+        await sweepStoryStoragePrefix(ownerId, storyId);
       }
     },
     onSuccess: () => {

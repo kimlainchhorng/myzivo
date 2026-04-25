@@ -1,41 +1,65 @@
-# Add Instagram-style "Send to" forward sheet for stories
+# Story system: cleanup hardening, seen-state verification, deep-link tests, and E2E QA
 
-Items 2-5 from your request are already shipped and verified in the previous turn (seen/unseen rings, persisted reactions in `story_reactions`, storage cleanup on delete, hourly `cleanup_expired_stories()` cron). The only remaining gap is item 1: today the share button only does **copy link / native share** — there is no in-app **forward to another user** flow like Instagram's "Send to".
+This plan addresses four asks: (1) make storage cleanup robust against missing/legacy URLs, (2) verify and harden seen/unseen ring state across navigation and accounts, (3) add deep-link tests for expired/deleted/chat/shared-link cases with analytics assertions, and (4) run a structured end-to-end test pass across all story flows on iOS / Android / web and report mismatches.
 
-## What gets added
+## 1. Bulletproof storage cleanup (no orphans)
 
-A new `StoryForwardSheet` opened from the viewer's Share button. It contains:
+Today, `deleteStory` in `StoryViewer.tsx` and `cleanup_expired_stories()` rely solely on the public URL string to recover the storage key. If `media_url`/`audio_url` is null, malformed, or stored with a different host, the object is leaked.
 
-1. **Copy link** quick action at the top — copies `${origin}/stories/:id` (the same canonical deep link the rest of the system uses, so it routes through `StoryDeepLinkPage` correctly).
-2. **Friend picker** — lists accepted friends from `friendships` (status='accepted'), searchable, multi-select, with checkmark.
-3. **Optional note** input (auto-prefixed to the link, e.g. `"loved this 😍\nhttps://…/stories/<id>"`).
-4. **Send button** — inserts one row per recipient into `direct_messages` (sender_id, receiver_id, message, message_type='text'). The deep link is included so tapping it in chat opens `StoryDeepLinkPage` → real viewer.
+Changes:
+- **`StoryViewer.tsx → deleteStory`**: switch to a fallback chain — (a) try `parseStorageKeyFromPublicUrl`, (b) re-fetch the story row before deletion to get the latest URLs, (c) list `user-stories/{user_id}/{story_id}/` via `supabase.storage.from('user-stories').list()` and remove every returned object. This guarantees image, video, thumbnail, and audio assets are all swept even when a URL field is empty.
+- **`storiesCache.ts`**: add `collectStoryStorageKeys(story)` helper that returns all candidate keys (media, audio, thumbnail) and used by both delete paths.
+- **DB function `cleanup_expired_stories()`** (new migration): before deleting `stories` rows, additionally delete every `storage.objects` row whose `name LIKE user_id || '/' || story_id || '/%'` for the expired set. This covers stories whose `media_url` was never written (failed upload) or used a non-public URL pattern.
+- **`CreateStorySheet.tsx`**: when an upload succeeds but the subsequent `stories` insert fails, immediately remove the just-uploaded object (currently leaked).
 
-## Analytics
+## 2. Seen / unseen carousel state
 
-Both paths emit `story_share` (new event) with `meta`:
-- `{ story_id, source, method: "copy_link" }`
-- `{ story_id, source, method: "forward", recipient_count }`
+Audit + fixes for `FeedStoryRing`, `ProfileStories`, `ChatStories`:
+- **Refetch on viewer close**: today `viewedIds` only refreshes via React Query staleness. Wire `StoryViewer`'s `onClose` to call `invalidateAllStoryCaches(qc, user.id)` so `["my-story-views", user.id]` is re-pulled and the ring desaturates immediately on return.
+- **Account switch**: `["my-story-views", user?.id]` already keys on user id, but the cache for the previous user persists. Add a `useEffect` in a top-level `StoriesAccountSync` (or extend the existing `AuthProvider`) that calls `qc.removeQueries({ queryKey: ["my-story-views"] })` on `SIGNED_OUT` / user change so a different device/account never sees stale "seen" rings.
+- **Cross-device**: `story_views` is server-side, so the new device pulls the correct set on first mount — verified by the same query — but we'll add a lightweight `realtime` subscription on `story_views` filtered by `viewer_id = me` to update rings live when the same account marks a story seen on another device.
 
-Where `source` is the carousel the viewer was opened from (`profile` / `feed` / `chat` / `shared-link`) — already passed into `StoryViewer` via `useStoryDeepLink`.
+## 3. Deep-link edge-case tests + analytics assertions
+
+Extend `src/components/stories/__tests__/`:
+- **`StoryDeepLinkExpired.test.tsx`** — mounts `StoryDeepLinkPage` with a mocked supabase that returns a story with `expires_at` in the past; asserts the "Story expired" copy renders and `track('story_deeplink_missing', { reason: 'expired' })` was called.
+- **`StoryDeepLinkDeleted.test.tsx`** — mocks `maybeSingle()` returning `{ data: null }`; asserts `not_found` reason + analytics event.
+- **`StoryDeepLinkFromChat.test.tsx`** — renders `ChatStories` with a fixture group, drives `?story=ID`, asserts the viewer mounts and `track('story_deeplink_open', { source: 'chat' })` fires exactly once.
+- **`StoryDeepLinkFromSharedLink.test.tsx`** — mounts `StoryDeepLinkPage` with a valid story, asserts redirect to `/feed?story=…` and `track('story_deeplink_open', { source: 'shared-link' })`.
+- All tests mock `@/lib/analytics` with a `vi.fn()` and assert the event payload shape used by `AdminStoriesFunnelPage`.
+
+## 4. End-to-end QA pass + report
+
+Run the preview signed in as the provided test account and exercise every flow per platform via the browser tool with three viewport profiles (iPhone 390×844, Pixel 412×915, desktop 1440×900). For each, walk:
+1. Open story from Feed ring, Profile ring, and Chat row
+2. Tap-right (next) and tap-left (prev) including across user groups
+3. React (each emoji) and verify persistence after reload
+4. Share → copy link, Share → forward (to a friend), confirm chat message appears
+5. Owner: delete a story early; confirm it disappears from carousel and storage object is gone (`storage.objects` query)
+6. Expired story: insert a row with `expires_at = now() - interval '1 hour'`, run `select cleanup_expired_stories();`, confirm row + objects removed
+
+Deliverable: `docs/qa/stories-e2e-2026-04-25.md` with a per-platform pass/fail matrix, screenshots of any visual mismatches, and a triage list of bugs to fix in a follow-up.
+
+## Technical notes
+
+- New migration adds the path-prefix sweep inside `cleanup_expired_stories()` and a covering index `storage.objects (bucket_id, name text_pattern_ops)` to keep the `LIKE` fast.
+- Realtime subscription is added in `useMyStoryViews` (extracted from the duplicated query in Feed/Profile) so all three carousels share one source of truth.
+- Test fixtures reuse the `StoryGroup` shape already used in `StoryDeepLinkNavigation.test.tsx`.
 
 ## Files
 
-**New**
-- `src/components/stories/StoryForwardSheet.tsx` — the sheet (portal, friend list, search, copy-link, send).
+Created:
+- `src/hooks/useMyStoryViews.ts`
+- `src/components/stories/__tests__/StoryDeepLinkExpired.test.tsx`
+- `src/components/stories/__tests__/StoryDeepLinkDeleted.test.tsx`
+- `src/components/stories/__tests__/StoryDeepLinkFromChat.test.tsx`
+- `src/components/stories/__tests__/StoryDeepLinkFromSharedLink.test.tsx`
+- `supabase/migrations/<ts>_stories_cleanup_prefix_sweep.sql`
+- `docs/qa/stories-e2e-2026-04-25.md`
 
-**Edit**
-- `src/components/stories/StoryViewer.tsx`
-  - Accept a `source` prop so analytics knows which carousel opened the viewer.
-  - Replace `handleShare` (current native-share-with-clipboard-fallback) with: open the new `StoryForwardSheet`. Pause playback while open.
-- `src/components/profile/ProfileStories.tsx`, `src/components/social/FeedStoryRing.tsx`, `src/components/chat/ChatStories.tsx`, `src/pages/StoryDeepLinkPage.tsx` — pass their respective `source` ("profile" / "feed" / "chat" / "shared-link") into `<StoryViewer />`.
-
-## Technical notes
-- Friends loading copies the proven pattern from `CreateGroupModal`: `friendships` `or(user_id.eq.me,friend_id.eq.me)` + `status='accepted'`, then `profiles` lookup.
-- Deep link is built from `window.location.origin` so it works for preview, published, and custom domains (hizivo.com, zivollc.com).
-- Empty state when the user has no friends still surfaces the "Copy link" action.
-- Sheet uses the same portal + spring sheet pattern as `CreateStorySheet` for visual consistency.
-
-## Out of scope
-- Forwarding to chat groups (only 1:1 DMs in v1; can be added later).
-- Story-as-rich-card preview inside chat — for now the link auto-renders via the existing rich-link preview system the chat already has.
+Edited:
+- `src/lib/storiesCache.ts` (add `collectStoryStorageKeys`)
+- `src/components/stories/StoryViewer.tsx` (robust delete + close-time invalidation)
+- `src/components/profile/CreateStorySheet.tsx` (rollback orphan upload on insert failure)
+- `src/components/social/FeedStoryRing.tsx`, `ProfileStories.tsx`, `ChatStories.tsx` (use shared `useMyStoryViews`)
+- `src/contexts/AuthProvider` (clear story-view cache on user change)

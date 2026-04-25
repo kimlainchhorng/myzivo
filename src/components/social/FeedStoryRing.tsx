@@ -15,6 +15,7 @@ import { toast } from "sonner";
 import StoryViewer, { StoryGroup } from "@/components/stories/StoryViewer";
 import { useStoryDeepLink, useStoryViewerLocation } from "@/hooks/useStoryDeepLink";
 import { invalidateAllStoryCaches } from "@/lib/storiesCache";
+import { useMyStoryViews } from "@/hooks/useMyStoryViews";
 
 interface RawStory {
   id: string;
@@ -49,17 +50,7 @@ export default function FeedStoryRing() {
     },
   });
 
-  const { data: viewedIds = new Set<string>() } = useQuery({
-    queryKey: ["my-story-views", user?.id],
-    enabled: !!user?.id,
-    queryFn: async () => {
-      const { data } = await (supabase as any)
-        .from("story_views")
-        .select("story_id")
-        .eq("viewer_id", user!.id);
-      return new Set(((data as any[]) || []).map((v: any) => v.story_id));
-    },
-  });
+  const { viewedIds } = useMyStoryViews();
 
   const userIds = useMemo(() => [...new Set(rawStories.map((s) => s.user_id))], [rawStories]);
   const profileKey = useMemo(() => [...userIds].sort().join(","), [userIds]);

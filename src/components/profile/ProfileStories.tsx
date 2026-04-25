@@ -16,6 +16,7 @@ import CreateStorySheet from "@/components/profile/CreateStorySheet";
 import StoryViewer, { StoryGroup } from "@/components/stories/StoryViewer";
 import { useStoryDeepLink, useStoryViewerLocation } from "@/hooks/useStoryDeepLink";
 import { invalidateAllStoryCaches } from "@/lib/storiesCache";
+import { useMyStoryViews } from "@/hooks/useMyStoryViews";
 
 interface RawStory {
   id: string;
@@ -53,17 +54,7 @@ const ProfileStories = () => {
   });
 
   // Story IDs current user has viewed → drives "fully viewed" ring color
-  const { data: viewedIds = new Set<string>() } = useQuery({
-    queryKey: ["my-story-views", user?.id],
-    enabled: !!user?.id,
-    queryFn: async () => {
-      const { data } = await supabase
-        .from("story_views" as any)
-        .select("story_id")
-        .eq("viewer_id", user!.id);
-      return new Set(((data as any[]) || []).map((v: any) => v.story_id));
-    },
-  });
+  const { viewedIds } = useMyStoryViews();
 
   // Profiles for everyone with an active story
   const userIds = useMemo(
