@@ -11,6 +11,7 @@ import {
   Wallet, Store, ExternalLink, Users, Globe, ChevronDown, Crown, MapPin, ShoppingBag,
   Settings, Handshake, Car, Wrench, UtensilsCrossed, Building2, Truck, Phone, AlertCircle, Bell, MoreHorizontal,
   Pencil, RotateCcw, Share2, BarChart3, Link as LinkIcon, QrCode, Copy,
+  Repeat, DollarSign, Briefcase, User as UserIcon,
 } from "lucide-react";
 import { useHaptics } from "@/hooks/useHaptics";
 import { Button } from "@/components/ui/button";
@@ -337,6 +338,11 @@ const Profile = () => {
   const [followingCount, setFollowingCount] = useState(0);
   const [socialModal, setSocialModal] = useState<{ open: boolean; tab: "friends" | "followers" | "following" }>({ open: false, tab: "friends" });
   const [shareOpen, setShareOpen] = useState(false);
+  const [modeOpen, setModeOpen] = useState(false);
+  const [activeMode, setActiveMode] = useState<string>(() => {
+    if (typeof window === "undefined") return "personal";
+    return localStorage.getItem("zivo:active_mode") || "personal";
+  });
 
   // Load real friendship status, friend count & follower count
   useEffect(() => {
@@ -1160,15 +1166,14 @@ const Profile = () => {
                         </button>
                       </div>
 
-                      {/* Quick Actions row (mobile-only) — keeps the most-used
-                          account actions one tap away so users don't have to
-                          scroll or open /more for the basics. */}
+                      {/* Quick Actions row (mobile-only) — business-focused
+                          shortcuts: Shop, Employees, Mode switch, Monetization. */}
                       <div className="lg:hidden mt-3 grid grid-cols-4 gap-2">
                         {[
-                          { label: "Edit", icon: Pencil, onClick: () => navigate("/account/profile-edit") },
-                          { label: "Share", icon: Share2, onClick: () => setShareOpen(true) },
-                          { label: "Insights", icon: BarChart3, onClick: () => navigate("/account/analytics") },
-                          { label: "Settings", icon: Settings, onClick: () => navigate("/more") },
+                          { label: "Shop", icon: Store, onClick: () => navigate("/shop-dashboard") },
+                          { label: "Employees", icon: Users, onClick: () => navigate("/shop-dashboard/employees") },
+                          { label: "Mode", icon: Repeat, onClick: () => setModeOpen(true) },
+                          { label: "Monetization", icon: DollarSign, onClick: () => navigate("/monetization") },
                         ].map((a) => (
                           <button
                             key={a.label}
@@ -1177,7 +1182,7 @@ const Profile = () => {
                             className="flex flex-col items-center gap-1 rounded-2xl border border-border/50 bg-muted/25 px-2 py-2 text-[11px] font-semibold text-foreground hover:bg-muted/50 active:scale-[0.97] focus-visible:ring-2 focus-visible:ring-primary/60 focus-visible:outline-none transition-all"
                           >
                             <a.icon className="h-4 w-4 text-primary" />
-                            <span>{a.label}</span>
+                            <span className="truncate">{a.label}</span>
                           </button>
                         ))}
                       </div>
@@ -1313,6 +1318,53 @@ const Profile = () => {
           if (socialModal.tab === "following") setFollowingCount(fg);
         }}
       />
+
+      {/* Mode Switch bottom sheet — placeholder for future per-mode routing */}
+      <Sheet open={modeOpen} onOpenChange={setModeOpen}>
+        <SheetContent side="bottom" className="rounded-t-3xl pb-10">
+          <SheetHeader className="pb-3">
+            <SheetTitle className="text-base font-bold">Switch mode</SheetTitle>
+          </SheetHeader>
+          <div className="flex flex-col gap-2">
+            {[
+              { id: "personal", label: "Personal", desc: "Your everyday account", icon: UserIcon },
+              { id: "business", label: "Business", desc: "Manage company travel & teams", icon: Briefcase },
+              { id: "driver", label: "Driver", desc: "Go online and accept rides", icon: Car },
+              { id: "shop", label: "Shop Partner", desc: "Manage your store & staff", icon: Store },
+            ].map((m) => {
+              const active = activeMode === m.id;
+              const Icon = m.icon;
+              return (
+                <button
+                  key={m.id}
+                  type="button"
+                  onClick={() => {
+                    setActiveMode(m.id);
+                    try { localStorage.setItem("zivo:active_mode", m.id); } catch {}
+                    toast.success(`Switched to ${m.label} mode`);
+                    setModeOpen(false);
+                  }}
+                  className={`flex items-center gap-3 rounded-2xl border px-3 py-3 text-left transition-all active:scale-[0.99] ${
+                    active ? "border-primary/60 bg-primary/5" : "border-border/50 bg-muted/25 hover:bg-muted/50"
+                  }`}
+                >
+                  <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-background border border-border/40">
+                    <Icon className="h-4 w-4 text-primary" />
+                  </span>
+                  <span className="flex-1 min-w-0">
+                    <span className="block text-sm font-semibold text-foreground">{m.label}</span>
+                    <span className="block text-[11px] text-muted-foreground truncate">{m.desc}</span>
+                  </span>
+                  {active && <BadgeCheck className="h-4 w-4 text-primary shrink-0" />}
+                </button>
+              );
+            })}
+          </div>
+          <p className="mt-4 text-[11px] text-muted-foreground text-center">
+            More modes coming soon.
+          </p>
+        </SheetContent>
+      </Sheet>
 
       {/* Share Profile bottom sheet */}
       <Sheet open={shareOpen} onOpenChange={setShareOpen}>

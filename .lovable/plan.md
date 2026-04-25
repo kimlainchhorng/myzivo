@@ -1,60 +1,41 @@
-# Story Reactions & Replies — 5-feature upgrade
+## Goal
+Replace the 4 quick-action buttons on the mobile Profile page (currently **Edit / Share / Insights / Settings**) with a more business-focused set:
 
-Implements all 5 requested items as one coordinated change to `StoryViewer.tsx` (plus one tiny shared hook for realtime). No DB migration is required — everything reuses existing tables (`story_reactions`, `story_comments`, `direct_messages`).
+1. **Shop** — opens the user's shop dashboard (only shown if they have one)
+2. **Employees** — opens the existing employees management page
+3. **Mode** — switch mode control (placeholder, designed for future expansion)
+4. **Monetization** — opens the monetization page
 
-## What you get
+## Where
+File: `src/pages/Profile.tsx` — lines 1166–1183 (the `lg:hidden mt-3 grid grid-cols-4 gap-2` block).
 
-### 1. Edit / remove your own reaction (instant counts)
-- In the bottom emoji row, your active emoji shows a small **× chip** to clear it in one tap.
-- Tapping a different emoji **switches** your reaction (already supported server-side; UI now confirms it visually with an animated swap).
-- Owner's "Reactions" count in the insights pill + tab badge update **optimistically** so the number changes the instant you tap, then reconciles with the server.
+## New button set
 
-### 2. Threaded replies under each reaction
-- In the owner's **Reactions tab**, each reactor row gets a "Reply" affordance and a chevron to expand a thread underneath.
-- Threads use the existing `story_comments` table with a content convention: `[react:<reactionId>] body` (no schema change). The viewer parses & groups them under the matching reaction.
-- Both the **story owner** AND the **original reactor** can post into a thread. Other viewers don't see other people's threads.
-- Renders inline with avatar + relative time; auto-scrolls to newest.
+| Button | Icon (lucide) | Action | Route |
+|---|---|---|---|
+| Shop | `Store` | navigate (shown only if user has a shop) | `/shop-dashboard` |
+| Employees | `Users` | navigate | `/app/shop/employees` (existing `ShopEmployeesPage`) |
+| Mode | `Repeat` (or `ArrowLeftRight`) | open a bottom sheet ("Switch Mode") with future-ready list (Personal, Business, Driver, Shop, etc.) | sheet |
+| Monetization | `DollarSign` (or `Coins`) | navigate | `/monetization` |
 
-### 3. Tap-to-react quick picker (no leaving screen)
-- Adds a `+` chip at the end of the 6-emoji row (non-owner). Tapping it (or long-pressing any emoji) opens a **floating glass picker** above the row with a 24-emoji palette: 😍🥹🤩😎😭🤣👏🙌💯🔥✨💖🥳😱😤🫶🤝👀🌟⚡🎉🍿🤔🙏
-- Picking one fires the same `reactToStory` mutation, animates a burst, and closes the picker.
-- Tapping outside or the close icon dismisses without sending.
+Visual treatment stays identical to the current 4-button row (rounded-2xl, border, muted bg, primary icon, 11px label) so the look matches the screenshot.
 
-### 4. Live updates (Supabase realtime)
-- New hook `useStoryRealtime(storyId)` opens a Supabase channel subscribing to `story_reactions` and `story_comments` filtered to the active story.
-- On any INSERT / UPDATE / DELETE event, it invalidates the four query keys (`story-reactions-list`, `story-my-reaction`, `story-comments`, `story-viewers`) so the owner sees new reactions, removed reactions, and new threaded replies in real time without a refresh.
-- Channel is cleaned up automatically when the viewer unmounts or the story changes.
+## Mode Switch sheet (lightweight, future-ready)
+A simple `Sheet` opened from the Mode button, showing a vertical list of mode rows. Initial entries:
+- Personal (active by default)
+- Business
+- Driver
+- Shop Partner
 
-### 5. DM-style story replies (no more orphan comments)
-- The non-owner reply input at the bottom of the viewer **no longer writes to `story_comments`** for free-text replies.
-- Pressing Send (or Enter) inserts a row into `direct_messages` with:
-  - `sender_id` = current user
-  - `receiver_id` = story owner
-  - `message` = `"💬 Replied to your story\n<typed text>\n<deep-link to the story>"`
-  - `message_type = "text"`
-- Toast: **"Reply sent — open chat to continue"** with a tappable action that navigates to `/chat`.
-- Threaded reactions (item 2) still use `story_comments` because they live inside the story-insights surface, not the inbox.
+Each row is a button styled like the existing share-sheet rows. Selecting one persists to `localStorage` (`zivo:active_mode`) and closes the sheet — actual routing per mode can be wired up later. This keeps the surface ready for "add on more in there" without locking design now.
 
-## Files touched
+## Shop visibility
+Use the same condition already used elsewhere (presence of a shop record / role). If unknown at this layout, render the Shop button always but route to `/shop-dashboard` which already handles the "no shop" empty state — simplest and consistent. (Confirmed `/shop-dashboard` exists in `MorePage.tsx`.)
 
-| File | Change |
-|---|---|
-| `src/components/stories/StoryViewer.tsx` | All 5 features wired in (state, mutations, UI for picker + thread + DM reply) |
-| `src/hooks/useStoryRealtime.ts` (new) | Tiny hook: subscribes to reactions/comments channels, invalidates queries on change |
+## What we are removing
+- Edit, Share, Insights, Settings buttons from this 4-grid only. Their entry points remain available elsewhere (Settings via `/more`, Share via existing share entry points, Edit via profile edit, Insights via `/account/analytics`) so no functionality is lost.
 
-## Technical notes
-
-- **No DB migration needed.** Realtime works on existing tables; thread parent-id is encoded in `content` prefix (cleanly stripped before display).
-- **RLS unchanged.** `direct_messages` already accepts inserts where `sender_id = auth.uid()`. `story_comments` policy already restricts who can write.
-- **Optimistic updates** use `queryClient.setQueryData` for the reactor's own row so taps feel instant; realtime then reconciles for the owner.
-- Quick picker is rendered inside the existing portal overlay — no new portal/z-index conflicts.
-
-## Build order (single pass)
-1. Add `useStoryRealtime.ts` hook.
-2. Wire it inside `StoryViewer` next to existing queries.
-3. Replace non-owner reply input handler → `direct_messages` insert + navigate-to-chat toast.
-4. Add `+` quick-pick chip and floating picker overlay.
-5. Add per-reactor "Reply" + chevron + thread renderer in Reactions tab.
-6. Add active-emoji × clear button + optimistic count update.
-
-Ready to ship as one approved change.
+## Out of scope
+- No DB or schema changes
+- No new routes created (all targets already exist)
+- No changes to desktop layout (this row is `lg:hidden` only)
