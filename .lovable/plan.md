@@ -1,154 +1,137 @@
-## Goal
+# Phase 1 Mega-Rollout: DB Indexes + API Hardening + Tests + Unified Dashboard Shell
 
-A multi-phase platform upgrade across **all** ZIVO shop dashboards (Restaurant, Grocery/Store, Cafe, Retail, Service, Truck/Mobility, Generic Business) plus the underlying database, edge-function API, and end-to-end performance — both web and app. Each phase ships independently. Breaking schema/API changes are allowed, with migration scripts and a versioned API surface.
+Ship all four workstreams in one coordinated release, sequenced to minimize downtime and risk.
 
-> Scope is large (~161 edge functions, ~40+ dashboards). This plan is the **roadmap**. After approval, each phase becomes its own implementation request so we can review and ship in safe slices.
+## Scope
 
----
-
-## Phase 0 — Audit & guardrails (1 short request)
-
-Before touching anything:
-
-1. **DB inventory** — run a script that dumps, per public table: row count, table+index size, sequential-scan ratio (`pg_stat_user_tables`), missing indexes (foreign keys without index, columns frequently in `WHERE`), tables without RLS, RLS policies referencing the same table (recursion risk).
-2. **Edge function inventory** — categorize all 161 functions by: caller (client / cron / webhook), auth strategy (JWT-verified vs service-role), CORS hygiene, input validation present (Zod or none), shared module usage. Output a CSV at `/mnt/documents/edge-fn-audit.csv`.
-3. **Dashboard inventory** — list every dashboard page, its data sources, and current queries. Output `/mnt/documents/dashboard-inventory.md`.
-4. **Performance baseline** — Lighthouse + bundle analyzer numbers for: marketing pages, app shell, each dashboard. Saved as a baseline to compare after each phase.
-
-Deliverable: 3 audit files in `/mnt/documents/`. No code changes.
+1. **DB**: Add 279 FK indexes + ~20 composite hot-path indexes (CONCURRENTLY where possible).
+2. **API**: Shared CORS/auth/Zod toolkit + harden top 30 edge functions.
+3. **Tests**: Automated CORS/auth/Zod regression suite for edge functions.
+4. **Dashboard**: Unified `<DashboardShell>` + migrate Restaurant dashboard.
+5. **Rollout**: Phased checklist with rollback gates.
 
 ---
 
-## Phase 1 — Database restructure (foundation)
+## 1. Database Indexes
 
-### 1a. Schema cleanup migration
-- Consolidate overlapping tables (e.g. `store_profiles` + `restaurants` overlap revealed by the wizard work — unify under `store_profiles` with `category`-driven extensions in a `restaurant_settings` child table).
-- Move all role checks to the `user_roles` + `has_role()` pattern (audit any role columns still on `profiles`).
-- Drop unused/empty tables flagged in the audit (with a one-week soft-deprecation window: rename to `_deprecated_` first, drop in Phase 1c).
-- Standardize timestamp columns (`created_at`, `updated_at` with trigger-driven `updated_at`).
+**New migration**: `supabase/migrations/<ts>_phase1_indexes.sql`
 
-### 1b. Indexes & partitioning
-- Add covering indexes on all FK columns missing them.
-- Composite indexes for the top 20 hot queries (orders by store + status + date, messages by chat + created_at, etc.).
-- Partition large append-only tables by month: `orders`, `messages`, `notifications`, `analytics_events`, `audit_logs`.
-- Add `BRIN` indexes on partitioned timestamp columns.
+- Generate `CREATE INDEX IF NOT EXISTS` for each of the 279 unindexed FKs from `db-audit.md`.
+  - Naming: `idx_<table>_<column>` (suffix `_fk` if collision).
+- Add ~20 composite indexes on hot tables flagged in audit (80–100% seq-scan rate):
+  - `food_orders (store_id, status, created_at DESC)`
+  - `food_orders (user_id, created_at DESC)`
+  - `trips (driver_id, status, created_at DESC)`
+  - `trips (rider_id, status, created_at DESC)`
+  - `messages (chat_id, created_at DESC)`
+  - `notifications (user_id, read_at NULLS FIRST, created_at DESC)`
+  - `orders (store_id, status, created_at DESC)`
+  - `pricing_config (region, vehicle_type)`
+  - …plus ~12 more from audit
+- BRIN indexes on append-only timestamps (`messages.created_at`, `notifications.created_at`, `audit_logs.created_at`).
+- Migration tool runs in transactions; for very large tables we'll split into a follow-up migration using `CREATE INDEX CONCURRENTLY` (cannot run in tx) — flagged in checklist.
+- Post-migration: `ANALYZE` hot tables.
 
-### 1c. RLS hardening
-- Replace any inline `SELECT … FROM same_table` policies with `SECURITY DEFINER` helper functions (recursion risk).
-- For every table with RLS enabled, ensure all four operations (SELECT/INSERT/UPDATE/DELETE) have an explicit policy or an explicit "deny all" comment.
-- Add a tested `is_store_owner(_store_id)` and `is_store_staff(_store_id, _role)` helper to centralize dashboard authorization.
+## 2. Shared API Toolkit
 
-### 1d. Data archival
-- Move rows older than 18 months from hot tables (`messages`, `notifications`, `analytics_events`) into `_archive` schema tables. Read paths fall back to UNION when needed.
+**New files** under `supabase/functions/_shared/`:
 
-Deliverables: SQL migrations + updated `types.ts` (auto-regenerated) + RLS policy doc.
+- `cors.ts` — re-export `corsHeaders` from `@supabase/supabase-js/cors` + `handlePreflight(req)` helper.
+- `auth.ts` — `requireUser(req)` → returns `{ userId, claims, supabase }` or throws `UnauthorizedError`.
+- `validate.ts` — `parseBody(req, schema)` and `parseQuery(req, schema)` Zod helpers returning typed data or `400` with `flatten()` errors.
+- `respond.ts` — `ok(data)`, `err(status, message)`, `zodErr(error)` — all auto-merge `corsHeaders`.
+- `errors.ts` — `UnauthorizedError`, `ValidationError`, `withErrorHandling(handler)` wrapper.
 
----
+**Harden top 30 edge functions** (highest-traffic from audit):
+- Replace inline CORS with shared import.
+- Wrap handler in `withErrorHandling`.
+- Add `requireUser` for any non-webhook endpoint.
+- Add Zod schema for body/query; reject on parse fail.
+- Keep behavior identical otherwise (no breaking response shape changes in this batch).
 
-## Phase 2 — API / Edge Function modernization
+Remaining ~130 functions: tracked for Phase 2b in checklist (not in this drop).
 
-### 2a. Shared toolkit (`supabase/functions/_shared/`)
-- `cors.ts` — single source of CORS headers.
-- `validate.ts` — Zod helpers + standard 400 envelope `{ error: { code, message, fields } }`.
-- `auth.ts` — `requireUser(req)`, `requireStoreOwner(req, storeId)`, `requireRole(req, role)`.
-- `rateLimit.ts` — Redis-backed (Upstash) limiter with in-memory fallback.
-- `gateway.ts` — typed wrapper for connector-gateway calls (`LOVABLE_API_KEY` + connection key headers).
-- `logger.ts` — structured JSON logging with request_id propagation.
+## 3. Automated Tests
 
-### 2b. Versioning
-- Group functions by domain (`v2-orders-*`, `v2-shop-*`, `v2-payments-*`).
-- Old `v1` endpoints stay alive but log a deprecation warning header `X-Deprecated: true` and an EOL date.
+**Per hardened function**: `supabase/functions/<name>/index.test.ts` covering:
+- `OPTIONS` returns 204/200 with correct CORS headers.
+- Missing/invalid JWT → 401.
+- Invalid body (missing required field) → 400 with field errors.
+- Valid request → 200 (mocked where external).
 
-### 2c. Refactor critical functions
-Top-10 traffic functions (from edge logs) get rewritten on the new toolkit first:
-- order placement, payment capture, dispatch matching, push send, search, chat send, notification fanout, analytics ingest, cron summarizers, OTP send.
-Each gains: Zod validation, rate limit, structured logs, JWT verification, unit tests with `Deno.test`.
+**Shared test helper**: `supabase/functions/_shared/test-utils.ts` — `dotenv/load`, `callFn(name, opts)`, `assertCors(res)`, `assertUnauthorized(res)`, `assertZodError(res, field)`.
 
-### 2d. Webhooks reliability
-- All inbound webhooks (Stripe, Twilio, Duffel) get an `inbound_webhook_events` table with idempotency-key dedup + replay endpoint for support.
+Use `supabase--test_edge_functions` to run; add a CI-style "smoke" pattern that runs CORS+auth tests across all hardened functions.
 
-Deliverables: new `_shared/` modules, ~10 refactored functions per sub-phase, deprecation log in `mem://`.
+## 4. Unified Dashboard Shell (Restaurant first)
 
----
+**New components** under `src/components/dashboard/shell/`:
+- `DashboardShell.tsx` — layout: sidebar + topbar + content area, responsive, safe-area aware.
+- `DashboardSidebar.tsx` — collapsible nav, vertical-aware sections via `navConfig` prop.
+- `DashboardTopbar.tsx` — store switcher, search/command palette trigger, notifications, profile.
+- `StoreSwitcher.tsx` — multi-store dropdown, persists selection to localStorage + URL.
+- `CommandPalette.tsx` — `cmdk`-based, registers actions per dashboard.
+- `useDashboardContext.tsx` — current store, role, vertical, permissions.
 
-## Phase 3 — Speed / Performance
+**Migrate Restaurant dashboard**:
+- Wrap `src/pages/business/restaurant/*` pages in `<DashboardShell vertical="restaurant" nav={restaurantNav}>`.
+- Extract restaurant-specific nav config to `src/config/dashboards/restaurant.ts`.
+- Preserve all existing routes & functionality.
 
-### 3a. Frontend bundle
-- Convert remaining eager imports to `lazy()` route splits — target every page > 30KB gzipped.
-- Add `vite-plugin-compression` (brotli) and ensure published host serves `br`.
-- Replace heavy deps where possible (audit `moment`, full-icon imports, etc.).
-- Image pipeline: switch all `<img>` to a `<SmartImage>` component that emits `srcSet` from Supabase Storage transform URLs (`?width=…&quality=…&format=webp`).
+Other verticals (Grocery, Retail, Cafe, Service, Mobility) stay on legacy layout this round; tracked in checklist.
 
-### 3b. Data fetching
-- Standardize on TanStack Query with shared `staleTime` defaults (lists: 30s, details: 5m, configs: 1h).
-- Add `prefetchQuery` on hover for primary nav links.
-- Realtime subscriptions: dedupe via a single `useRealtimeChannel(channel)` hook to stop the N-tab fanout.
+## 5. Phased Rollout Checklist
 
-### 3c. Backend hot paths
-- Materialized view `mv_store_dashboard_stats` (orders today / 7d / 30d, revenue, top items, avg prep time) refreshed every 60s by a cron edge function. Dashboard SELECTs hit the MV instead of recomputing.
-- Add `EXPLAIN ANALYZE`-based fixes for the slowest 20 queries surfaced by `pg_stat_statements`.
+Generated as `/mnt/documents/phase-1-rollout-checklist.md`:
 
-### 3d. CDN & caching
-- Cache `GET` responses for public read endpoints with `Cache-Control: s-maxage=…` headers + ETag support.
+```text
+Stage A — DB indexes (low risk, no code dep)
+  [ ] Apply migration on staging
+  [ ] Verify pg_stat_user_indexes shows scans
+  [ ] ANALYZE hot tables
+  [ ] Apply on prod (off-peak window)
+  [ ] Monitor seq_scan ratio for 24h
 
-Targets: **LCP < 2.5s on 4G** (public/marketing) and **dashboard tab switches < 800ms p95**.
+Stage B — Shared API toolkit (no behavior change)
+  [ ] Deploy _shared/* (no callers yet)
+  [ ] Run shared unit tests
 
----
+Stage C — Hardened edge functions (rolling)
+  [ ] Deploy 5 fns → smoke tests → 30min soak
+  [ ] Repeat in batches of 5 until 30 done
+  [ ] Rollback plan: redeploy previous version per fn
 
-## Phase 4 — Unified Shop Dashboard shell + per-vertical workflows
+Stage D — Dashboard shell (Restaurant only)
+  [ ] Feature flag `dashboard_shell_v2` on staging
+  [ ] QA Restaurant flows end-to-end
+  [ ] Enable for 10% → 50% → 100% of restaurant orgs
 
-### 4a. Shared `<DashboardShell>`
-- Single layout: collapsible sidebar (desktop) / bottom tab bar (mobile), command palette (`Cmd+K`), global notification tray, store switcher (for owners with multiple stores), real-time presence dot.
-- Per-vertical config object drives nav items, actions, and KPI cards — so all six dashboards reuse the same shell.
-
-### 4b. Per-vertical screens (each ships as its own request)
-1. **Restaurant** (`EatsRestaurantDashboard`): live order rail (KDS-style), menu manager with bulk price edit, prep-time tracker, table/QR ordering, daily close summary.
-2. **Grocery / Store** (`StoreDashboard`): inventory with low-stock alerts + CSV import, picker assignments, shelf labels print, real-time order picking screen.
-3. **Cafe**: simplified Restaurant variant — quick-tap menu, loyalty stamp manager.
-4. **Retail**: catalog manager, variant matrix, barcode scanner (web BarcodeDetector + native plugin), POS-lite session.
-5. **Service** (bookings): calendar week view, staff/resource scheduler, service-add-on builder, deposit collection.
-6. **Truck / Mobility**: live driver map, dispatch board, surge controls, payout summary.
-7. **Generic Business**: lightweight CRM + simple "products / services / hours / messages" tabs (fallback dashboard).
-
-Each vertical shares: orders table, customer drawer, messaging panel, analytics card, settings modal.
-
-### 4c. Cross-cutting workflow upgrades
-- **Bulk actions** everywhere lists exist (accept/reject N orders, bulk price edit, bulk message customers).
-- **Saved views** per dashboard (filters + columns persist to `user_dashboard_views` table).
-- **Inline editing** in tables (no modal round-trip for trivial edits).
-- **Export to CSV/PDF** on every list.
-- **Activity log drawer** per entity (who changed what, when).
-- **Empty/loading/error states** standardized via `<DataState>` component.
+Stage E — Post-rollout
+  [ ] Compare LCP/TTFB vs baseline
+  [ ] File Phase 2 backlog (remaining 130 fns, other verticals)
+```
 
 ---
 
-## Phase 5 — Software / Tooling
+## Technical Notes
 
-- **Testing**: extend Vitest suites to every refactored page; add Playwright smoke tests for the critical flow per vertical.
-- **CI**: lint + typecheck + test on every push (already partially in place — verify and harden).
-- **Feature flags**: lightweight `feature_flags` table + `useFlag('flag_name')` hook so each Phase-4 dashboard can roll out behind a switch.
-- **Error monitoring**: Sentry-style capture in `_shared/logger.ts` + a frontend `ErrorBoundary` per route group.
-- **Docs**: living `/docs` route inside the admin area auto-generated from edge-function Zod schemas.
+- Migration uses `IF NOT EXISTS` everywhere — safe to re-run.
+- Large-table indexes that can't fit in a transaction will be emitted as a separate non-transactional migration file the user must apply manually via SQL editor (linked at end).
+- Zod is already a dep on the frontend; for edge functions we import via `npm:zod@^3`.
+- No `verify_jwt` config changes — auth enforced in code per platform guidance.
+- Restaurant dashboard migration is purely additive (wrap in shell); no route changes, fully reversible by removing the wrapper.
+- All response shapes preserved on hardened functions; only error envelopes for 400/401 are standardized (`{ error: string | Record<string, string[]> }`).
 
----
+## Deliverables
 
-## Suggested order & estimated requests
+- 1–2 SQL migration files (indexes).
+- `supabase/functions/_shared/*` (5 files).
+- 30 hardened edge functions + 30 test files.
+- `src/components/dashboard/shell/*` + Restaurant nav config + wrapped pages.
+- `/mnt/documents/phase-1-rollout-checklist.md`.
 
-| Phase | What ships | Approx. requests |
-|---|---|---|
-| 0 | Audit files in `/mnt/documents/` | 1 |
-| 1a–d | DB restructure + RLS + archival | 3–4 |
-| 2a–d | API toolkit + 10-fn refactor + webhook log | 3 |
-| 3a–d | Bundle + data fetching + MV + CDN | 2–3 |
-| 4a | Shared DashboardShell | 1 |
-| 4b | One vertical per request | 7 |
-| 4c | Cross-cutting workflow upgrades | 2 |
-| 5 | Tests + flags + monitoring + docs | 2 |
+## Out of Scope (next phases)
 
-Total: ~22–24 focused requests. Each is independently shippable and reversible.
-
----
-
-## What I need from you to start Phase 0
-
-Just say "go" and I'll run the audit (read-only DB queries + filesystem scan) and produce the three audit files. From there, you pick which phase to attack next based on what the audit surfaces.
+- Remaining ~130 edge functions.
+- Grocery/Retail/Cafe/Service/Mobility dashboard migration.
+- Table partitioning, materialized views, `<SmartImage>`, feature-flag service.
