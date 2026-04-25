@@ -2,7 +2,7 @@
  * ChatStories — Stories row for the Chat hub.
  * Uses the shared `StoryViewer` for the fullscreen viewer experience.
  */
-import { useState, useRef } from "react";
+import { useState, useRef, useMemo } from "react";
 import Plus from "lucide-react/dist/esm/icons/plus";
 import Camera from "lucide-react/dist/esm/icons/camera";
 import { useAuth } from "@/contexts/AuthContext";
@@ -11,13 +11,14 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import StoryViewer, { StoryGroup } from "@/components/stories/StoryViewer";
+import { useStoryDeepLink } from "@/hooks/useStoryDeepLink";
 
 export default function ChatStories() {
   const { user } = useAuth();
   const queryClient = useQueryClient();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [uploading, setUploading] = useState(false);
-  const [viewing, setViewing] = useState<{ groups: StoryGroup[]; startIdx: number } | null>(null);
+  const { activeStoryId, openStory, closeStory, updateStory } = useStoryDeepLink();
 
   const { data: storyGroups = [] } = useQuery({
     queryKey: ["user-stories"],
@@ -118,9 +119,18 @@ export default function ChatStories() {
   const myStories = storyGroups.find((g) => g.userId === user?.id);
   const hasMyStory = !!myStories && myStories.stories.length > 0;
 
+  const viewerLocation = useMemo(() => {
+    if (!activeStoryId) return null;
+    for (let gi = 0; gi < storyGroups.length; gi++) {
+      const si = storyGroups[gi].stories.findIndex((s) => s.id === activeStoryId);
+      if (si !== -1) return { groupIndex: gi, storyIndex: si };
+    }
+    return null;
+  }, [activeStoryId, storyGroups]);
+
   const openViewer = (group: StoryGroup) => {
-    const idx = storyGroups.findIndex((g) => g.userId === group.userId);
-    setViewing({ groups: storyGroups, startIdx: Math.max(0, idx) });
+    if (group.stories.length === 0) return;
+    openStory(group.stories[0].id);
   };
 
   return (
@@ -206,11 +216,13 @@ export default function ChatStories() {
         </div>
       </div>
 
-      {viewing && (
+      {viewerLocation && (
         <StoryViewer
-          groups={viewing.groups}
-          startGroupIndex={viewing.startIdx}
-          onClose={() => setViewing(null)}
+          groups={storyGroups}
+          startGroupIndex={viewerLocation.groupIndex}
+          startStoryIndex={viewerLocation.storyIndex}
+          onClose={closeStory}
+          onStoryChange={updateStory}
         />
       )}
     </>

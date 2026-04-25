@@ -1,8 +1,9 @@
 /**
- * FeedStoryRing — Horizontal scrollable story rings for the feed page
- * Shows active stories with gradient ring, tapping opens the story viewer
+ * FeedStoryRing — Horizontal scrollable story rings for the feed page.
+ * Tapping a ring opens the shared StoryViewer via a deep-linked URL
+ * (`?story=<story_id>`), so the same link can be shared and reopened anywhere.
  */
-import { useRef, useState } from "react";
+import { useMemo, useRef, useState } from "react";
 import { Plus, Loader2 } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
@@ -11,14 +12,19 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { cn } from "@/lib/utils";
 import { optimizeAvatar } from "@/utils/optimizeAvatar";
 import { toast } from "sonner";
-import ChatStories from "@/components/chat/ChatStories";
+import StoryViewer, { StoryGroup } from "@/components/stories/StoryViewer";
+import { useStoryDeepLink } from "@/hooks/useStoryDeepLink";
 
-interface StoryUser {
-  userId: string;
-  userName: string;
-  avatarUrl?: string;
-  hasUnviewed: boolean;
-  storyCount: number;
+interface RawStory {
+  id: string;
+  user_id: string;
+  media_url: string;
+  media_type: string;
+  caption: string | null;
+  audio_url: string | null;
+  created_at: string;
+  expires_at: string;
+  views_count: number | null;
 }
 
 export default function FeedStoryRing() {
@@ -26,75 +32,97 @@ export default function FeedStoryRing() {
   const queryClient = useQueryClient();
   const fileRef = useRef<HTMLInputElement>(null);
   const [uploading, setUploading] = useState(false);
+  const { activeStoryId, openStory, closeStory, updateStory } = useStoryDeepLink();
 
-  const { data: storyUsers = [] } = useQuery({
+  const { data: rawStories = [] } = useQuery({
     queryKey: ["feed-story-users"],
     enabled: !!user,
     refetchInterval: 60000,
     queryFn: async () => {
       const { data } = await (supabase as any)
         .from("stories")
-        .select("user_id")
-        .gt("expires_at", new Date().toISOString());
+        .select("id, user_id, media_url, media_type, caption, audio_url, created_at, expires_at, views_count")
+        .gt("expires_at", new Date().toISOString())
+        .order("created_at", { ascending: true });
+      return ((data as any[]) || []) as RawStory[];
+    },
+  });
 
-      if (!data || data.length === 0) return [];
-
-      const userIds = [...new Set((data as any[]).map((s: any) => s.user_id))] as string[];
-      const { data: profiles } = await supabase
-        .from("profiles")
-        .select("id, full_name, avatar_url")
-        .in("id", userIds);
-
-      // Check which stories the current user has viewed
-      const { data: views } = await (supabase as any)
+  const { data: viewedIds = new Set<string>() } = useQuery({
+    queryKey: ["my-story-views", user?.id],
+    enabled: !!user?.id,
+    queryFn: async () => {
+      const { data } = await (supabase as any)
         .from("story_views")
         .select("story_id")
         .eq("viewer_id", user!.id);
-
-      const viewedStoryIds = new Set((views || []).map((v: any) => v.story_id));
-
-      // Get all stories to check viewed status
-      const { data: allStories } = await (supabase as any)
-        .from("stories")
-        .select("id, user_id")
-        .gt("expires_at", new Date().toISOString());
-
-      const profileMap = new Map((profiles || []).map((p: any) => [p.id, p]));
-
-      const userStoryMap = new Map<string, { count: number; hasUnviewed: boolean }>();
-      for (const s of allStories || []) {
-        if (!userStoryMap.has(s.user_id)) {
-          userStoryMap.set(s.user_id, { count: 0, hasUnviewed: false });
-        }
-        const entry = userStoryMap.get(s.user_id)!;
-        entry.count++;
-        if (!viewedStoryIds.has(s.id) && s.user_id !== user!.id) {
-          entry.hasUnviewed = true;
-        }
-      }
-
-      const result: StoryUser[] = userIds.map((uid) => {
-        const profile = profileMap.get(uid);
-        const storyInfo = userStoryMap.get(uid) || { count: 0, hasUnviewed: false };
-        return {
-          userId: uid,
-          userName: (profile as any)?.full_name || "User",
-          avatarUrl: (profile as any)?.avatar_url,
-          hasUnviewed: storyInfo.hasUnviewed,
-          storyCount: storyInfo.count,
-        };
-      });
-
-      // Put current user first
-      const myIdx = result.findIndex((u) => u.userId === user!.id);
-      if (myIdx > 0) {
-        const [mine] = result.splice(myIdx, 1);
-        result.unshift(mine);
-      }
-
-      return result;
+      return new Set(((data as any[]) || []).map((v: any) => v.story_id));
     },
   });
+
+  const userIds = useMemo(() => [...new Set(rawStories.map((s) => s.user_id))], [rawStories]);
+  const profileKey = useMemo(() => [...userIds].sort().join(","), [userIds]);
+
+  const { data: profileMap = new Map() } = useQuery({
+    queryKey: ["feed-story-profiles", profileKey],
+    enabled: userIds.length > 0,
+    queryFn: async () => {
+      const { data } = await supabase
+        .from("profiles")
+        .select("id, user_id, full_name, avatar_url")
+        .or(`id.in.(${userIds.join(",")}),user_id.in.(${userIds.join(",")})`);
+      const map = new Map<string, any>();
+      for (const p of data || []) {
+        if ((p as any).id) map.set((p as any).id, p);
+        if ((p as any).user_id) map.set((p as any).user_id, p);
+      }
+      return map;
+    },
+  });
+
+  const groups: StoryGroup[] = useMemo(() => {
+    const byUser = new Map<string, RawStory[]>();
+    for (const s of rawStories) {
+      if (!byUser.has(s.user_id)) byUser.set(s.user_id, []);
+      byUser.get(s.user_id)!.push(s);
+    }
+    const out: StoryGroup[] = [];
+    for (const [uid, list] of byUser.entries()) {
+      const p = profileMap.get(uid);
+      out.push({
+        userId: uid,
+        userName: p?.full_name || "User",
+        avatarUrl: p?.avatar_url || undefined,
+        stories: list.map((s) => ({
+          id: s.id,
+          mediaUrl: s.media_url,
+          mediaType: s.media_type,
+          caption: s.caption || undefined,
+          audioUrl: s.audio_url || undefined,
+          createdAt: s.created_at,
+          viewsCount: s.views_count ?? 0,
+        })),
+      });
+    }
+    // Put current user first
+    const myIdx = out.findIndex((g) => g.userId === user?.id);
+    if (myIdx > 0) {
+      const [mine] = out.splice(myIdx, 1);
+      out.unshift(mine);
+    }
+    return out;
+  }, [rawStories, profileMap, user?.id]);
+
+  const viewerLocation = useMemo(() => {
+    if (!activeStoryId) return null;
+    for (let gi = 0; gi < groups.length; gi++) {
+      const si = groups[gi].stories.findIndex((s) => s.id === activeStoryId);
+      if (si !== -1) return { groupIndex: gi, storyIndex: si };
+    }
+    return null;
+  }, [activeStoryId, groups]);
+
+  const hasMyStory = groups.some((g) => g.userId === user?.id);
 
   const handleAddStory = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -137,16 +165,33 @@ export default function FeedStoryRing() {
     }
   };
 
-  const hasMyStory = storyUsers.some((u) => u.userId === user?.id);
+  const handleRingClick = (group: StoryGroup) => {
+    if (group.stories.length === 0) return;
+    openStory(group.stories[0].id);
+  };
+
+  const handleViewerClose = () => {
+    closeStory();
+    queryClient.invalidateQueries({ queryKey: ["my-story-views", user?.id], exact: true });
+    queryClient.invalidateQueries({ queryKey: ["feed-story-users"], exact: true });
+    queryClient.invalidateQueries({ queryKey: ["profile-story-rings", user?.id], exact: true });
+  };
 
   if (!user) return null;
+
+  const groupHasUnviewed = (g: StoryGroup) =>
+    g.userId !== user.id && g.stories.some((s) => !viewedIds.has(s.id));
 
   return (
     <>
       <div className="flex gap-2.5 px-3 py-2 overflow-x-auto scrollbar-none border-b border-border/20">
         {/* Add story button */}
         <button
-          onClick={() => fileRef.current?.click()}
+          onClick={() => {
+            const myGroup = groups.find((g) => g.userId === user.id);
+            if (myGroup) handleRingClick(myGroup);
+            else fileRef.current?.click();
+          }}
           className="flex flex-col items-center gap-0.5 shrink-0"
           disabled={uploading}
         >
@@ -160,7 +205,7 @@ export default function FeedStoryRing() {
               {hasMyStory ? (
                 <div className="h-full w-full rounded-full overflow-hidden bg-card">
                   <Avatar className="h-full w-full">
-                    <AvatarImage src={optimizeAvatar(storyUsers.find((u) => u.userId === user.id)?.avatarUrl, 52)} loading="lazy" />
+                    <AvatarImage src={optimizeAvatar(groups.find((g) => g.userId === user.id)?.avatarUrl, 52)} loading="lazy" />
                     <AvatarFallback className="text-xs font-bold">{user.email?.[0]}</AvatarFallback>
                   </Avatar>
                 </div>
@@ -182,35 +227,36 @@ export default function FeedStoryRing() {
         </button>
 
         {/* Other users' stories */}
-        {storyUsers.filter((u) => u.userId !== user.id).map((su) => (
-          <button
-            key={su.userId}
-            className="flex flex-col items-center gap-0.5 shrink-0"
-            onClick={() => {
-              toast.info(`Viewing ${su.userName}'s story`);
-            }}
-          >
-            <div className={cn(
-              "h-[52px] w-[52px] rounded-full p-[2px]",
-              su.hasUnviewed
-                ? "bg-gradient-to-tr from-primary via-destructive to-primary"
-                : "bg-muted-foreground/20"
-            )}>
-              <div className="h-full w-full rounded-full overflow-hidden bg-card border-2 border-card">
-                <Avatar className="h-full w-full">
-                  <AvatarImage src={optimizeAvatar(su.avatarUrl, 52)} loading="lazy" />
-                  <AvatarFallback className="text-xs font-bold">{su.userName[0]}</AvatarFallback>
-                </Avatar>
+        {groups.filter((g) => g.userId !== user.id).map((g) => {
+          const hasUnviewed = groupHasUnviewed(g);
+          return (
+            <button
+              key={g.userId}
+              className="flex flex-col items-center gap-0.5 shrink-0"
+              onClick={() => handleRingClick(g)}
+            >
+              <div className={cn(
+                "h-[52px] w-[52px] rounded-full p-[2px]",
+                hasUnviewed
+                  ? "bg-gradient-to-tr from-primary via-destructive to-primary"
+                  : "bg-muted-foreground/20"
+              )}>
+                <div className="h-full w-full rounded-full overflow-hidden bg-card border-2 border-card">
+                  <Avatar className="h-full w-full">
+                    <AvatarImage src={optimizeAvatar(g.avatarUrl, 52)} loading="lazy" />
+                    <AvatarFallback className="text-xs font-bold">{g.userName[0]}</AvatarFallback>
+                  </Avatar>
+                </div>
               </div>
-            </div>
-            <span className={cn(
-              "text-[9px] max-w-[48px] truncate",
-              su.hasUnviewed ? "font-semibold text-foreground" : "font-medium text-muted-foreground"
-            )}>
-              {su.userName.split(" ")[0]}
-            </span>
-          </button>
-        ))}
+              <span className={cn(
+                "text-[9px] max-w-[48px] truncate",
+                hasUnviewed ? "font-semibold text-foreground" : "font-medium text-muted-foreground"
+              )}>
+                {g.userName.split(" ")[0]}
+              </span>
+            </button>
+          );
+        })}
       </div>
 
       <input
@@ -220,6 +266,16 @@ export default function FeedStoryRing() {
         className="hidden"
         onChange={handleAddStory}
       />
+
+      {viewerLocation && (
+        <StoryViewer
+          groups={groups}
+          startGroupIndex={viewerLocation.groupIndex}
+          startStoryIndex={viewerLocation.storyIndex}
+          onClose={handleViewerClose}
+          onStoryChange={updateStory}
+        />
+      )}
     </>
   );
 }

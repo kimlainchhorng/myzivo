@@ -51,15 +51,17 @@ const STORY_DURATION = 5000;
 interface Props {
   groups: StoryGroup[];
   startGroupIndex: number;
+  startStoryIndex?: number;
   onClose: () => void;
+  onStoryChange?: (storyId: string) => void;
 }
 
-export default function StoryViewer({ groups, startGroupIndex, onClose }: Props) {
+export default function StoryViewer({ groups, startGroupIndex, startStoryIndex = 0, onClose, onStoryChange }: Props) {
   const { user } = useAuth();
   const queryClient = useQueryClient();
 
   const [groupIdx, setGroupIdx] = useState(startGroupIndex);
-  const [viewIdx, setViewIdx] = useState(0);
+  const [viewIdx, setViewIdx] = useState(startStoryIndex);
   const [paused, setPaused] = useState(false);
   const [progress, setProgress] = useState(0);
   const [liked, setLiked] = useState(false);
@@ -153,6 +155,32 @@ export default function StoryViewer({ groups, startGroupIndex, onClose }: Props)
         }
       });
   }, [currentStory?.id, user?.id, isOwner, queryClient]);
+
+  // ---- Sync URL deep-link with currently visible story ----
+  useEffect(() => {
+    if (currentStory && onStoryChange) onStoryChange(currentStory.id);
+  }, [currentStory?.id, onStoryChange]);
+
+  // ---- Share story (deep link) ----
+  const handleShare = useCallback(async () => {
+    if (!currentStory) return;
+    const url = `${window.location.origin}/stories/${currentStory.id}`;
+    try {
+      if (navigator.share) {
+        await navigator.share({ title: `${viewingGroup?.userName}'s story`, url });
+      } else {
+        await navigator.clipboard.writeText(url);
+        toast.success("Story link copied");
+      }
+    } catch {
+      try {
+        await navigator.clipboard.writeText(url);
+        toast.success("Story link copied");
+      } catch {
+        toast.error("Could not share story");
+      }
+    }
+  }, [currentStory, viewingGroup?.userName]);
 
   // ---- Post comment ----
   const postComment = useMutation({
@@ -431,11 +459,11 @@ export default function StoryViewer({ groups, startGroupIndex, onClose }: Props)
             <span className="text-white/80 text-[10px] font-medium">Comment</span>
           </button>
 
-          <button className="flex flex-col items-center gap-1">
+          <button onClick={handleShare} className="flex flex-col items-center gap-1">
             <div className="w-11 h-11 rounded-full bg-white/10 backdrop-blur-sm flex items-center justify-center">
               <Send className="w-5 h-5 text-white" />
             </div>
-            <span className="text-white/80 text-[10px] font-medium">Send</span>
+            <span className="text-white/80 text-[10px] font-medium">Share</span>
           </button>
 
           {isOwner && (

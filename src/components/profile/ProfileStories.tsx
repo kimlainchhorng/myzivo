@@ -14,6 +14,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { cn } from "@/lib/utils";
 import CreateStorySheet from "@/components/profile/CreateStorySheet";
 import StoryViewer, { StoryGroup } from "@/components/stories/StoryViewer";
+import { useStoryDeepLink } from "@/hooks/useStoryDeepLink";
 
 interface RawStory {
   id: string;
@@ -31,9 +32,9 @@ const ProfileStories = () => {
   const { user } = useAuth();
   const { data: profile } = useUserProfile();
   const queryClient = useQueryClient();
+  const { activeStoryId, openStory, closeStory, updateStory } = useStoryDeepLink();
 
   const [showCreate, setShowCreate] = useState(false);
-  const [viewing, setViewing] = useState<{ groups: StoryGroup[]; startIndex: number } | null>(null);
 
   // All active stories across friends + self (drives the ring carousel)
   const { data: allStories = [], isLoading } = useQuery({
@@ -126,14 +127,24 @@ const ProfileStories = () => {
   const friendGroups = groups.filter((g) => g.userId !== user?.id);
   const hasMyStory = !!myGroup;
 
+  // Resolve the active deep-linked story to (groupIndex, storyIndex)
+  const viewerLocation = useMemo(() => {
+    if (!activeStoryId) return null;
+    for (let gi = 0; gi < groups.length; gi++) {
+      const si = groups[gi].stories.findIndex((s) => s.id === activeStoryId);
+      if (si !== -1) return { groupIndex: gi, storyIndex: si };
+    }
+    return null;
+  }, [activeStoryId, groups]);
+
   const openViewer = (groupUserId: string) => {
-    const idx = groups.findIndex((g) => g.userId === groupUserId);
-    if (idx === -1) return;
-    setViewing({ groups, startIndex: idx });
+    const grp = groups.find((g) => g.userId === groupUserId);
+    if (!grp || grp.stories.length === 0) return;
+    openStory(grp.stories[0].id);
   };
 
   const handleViewerClose = () => {
-    setViewing(null);
+    closeStory();
     queryClient.invalidateQueries({ queryKey: ["my-story-views", user?.id], exact: true });
     queryClient.invalidateQueries({ queryKey: ["profile-story-rings", user?.id], exact: true });
     queryClient.invalidateQueries({ queryKey: ["feed-story-users"], exact: true });
@@ -247,11 +258,13 @@ const ProfileStories = () => {
 
       <CreateStorySheet open={showCreate} onClose={() => setShowCreate(false)} />
 
-      {viewing && (
+      {viewerLocation && (
         <StoryViewer
-          groups={viewing.groups}
-          startGroupIndex={viewing.startIndex}
+          groups={groups}
+          startGroupIndex={viewerLocation.groupIndex}
+          startStoryIndex={viewerLocation.storyIndex}
           onClose={handleViewerClose}
+          onStoryChange={updateStory}
         />
       )}
     </>
