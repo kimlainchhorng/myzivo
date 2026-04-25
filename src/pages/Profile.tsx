@@ -910,13 +910,14 @@ const Profile = () => {
                     <div className="hidden lg:block absolute inset-0 bg-gradient-to-br from-primary/[0.04] via-transparent to-primary/[0.02] rounded-3xl" />
                     <div className="hidden lg:block pointer-events-none absolute inset-0 rounded-3xl ring-1 ring-inset ring-white/[0.08] shadow-[inset_0_1px_0_0_rgba(255,255,255,0.06)]" />
                     <div className="relative z-10">
-                    {/* Cover Photo — full-bleed on mobile, taller like Facebook.
-                        On mobile, the cover extends behind the iOS/Android status bar.
-                        We add safe-area top padding + a subtle status-bar scrim so
-                        the system clock/battery stay legible over any cover image. */}
+                    {/* Cover Photo — TRUE full-bleed on mobile.
+                        The image extends edge-to-edge AND behind the iOS/Android
+                        status bar / notch. We grow the container height by the
+                        safe-area inset (instead of padding it down) so the photo
+                        itself reaches the very top of the webview. Only the
+                        floating action buttons inside respect the safe area. */}
                     <div
-                      className="relative h-40 sm:h-52 md:h-56 lg:h-52 w-full overflow-hidden select-none"
-
+                      className="relative w-full overflow-hidden select-none h-40 sm:h-52 md:h-56 lg:h-52"
                       onMouseDown={coverRepositioning ? (e) => { e.preventDefault(); handleCoverDragStart(e.clientY); } : undefined}
                       onMouseMove={coverRepositioning ? (e) => handleCoverDragMove(e.clientY) : undefined}
                       onMouseUp={coverRepositioning ? handleCoverDragEnd : undefined}
@@ -927,7 +928,8 @@ const Profile = () => {
                       onDoubleClick={coverRepositioning ? () => { impact("medium"); setCoverPosition(50); } : undefined}
                       style={{
                         cursor: coverRepositioning ? "ns-resize" : "default",
-                        paddingTop: "var(--zivo-safe-top, 0px)",
+                        marginTop: "calc(-1 * var(--zivo-safe-top, 0px))",
+                        height: "calc(10rem + var(--zivo-safe-top, 0px))",
                       }}
                     >
                       {/* Status-bar legibility scrim (mobile only) */}
