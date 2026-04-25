@@ -525,19 +525,34 @@ export default function StoreMapPage() {
                 animate={{ opacity: 1, scale: 1 }}
                 exit={{ opacity: 0, scale: 0.95 }}
               >
-                <div className="flex items-center gap-3 rounded-2xl px-4 py-3 bg-card/95 backdrop-blur-xl shadow-lg border border-border/20">
-                  <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center shrink-0">
+                <div className="flex items-center gap-2.5 rounded-2xl px-3 py-2.5 bg-card/95 backdrop-blur-xl shadow-lg border border-border/20">
+                  <div className="w-11 h-11 rounded-xl bg-primary/10 flex items-center justify-center shrink-0">
                     <Store className="w-5 h-5 text-primary" />
                   </div>
-                  <div className="flex-1">
-                    <p className="text-[14px] font-bold text-foreground leading-tight">Explore Stores</p>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-[14px] font-bold text-foreground leading-tight truncate">Explore Stores</p>
                     <p className="text-[11px] text-muted-foreground mt-0.5">
                       {filteredStores.length} {filteredStores.length === 1 ? "store" : "stores"} nearby
                     </p>
                   </div>
+                  <motion.button
+                    whileTap={{ scale: 0.94 }}
+                    onClick={() => {
+                      const p = new URLSearchParams();
+                      if (activeCategory !== "all") p.set("cat", activeCategory);
+                      if (searchQuery.trim()) p.set("q", searchQuery.trim());
+                      navigate(`/store-map/list${p.toString() ? `?${p.toString()}` : ""}`);
+                    }}
+                    className="h-10 px-3 inline-flex items-center gap-1 rounded-xl bg-primary text-primary-foreground text-[12px] font-bold shadow-sm"
+                    aria-label="See all stores"
+                  >
+                    <List className="w-4 h-4" />
+                    See all
+                  </motion.button>
                   <button
                     onClick={() => { setSearchOpen(true); setTimeout(() => searchInputRef.current?.focus(), 100); }}
                     className="w-10 h-10 rounded-xl flex items-center justify-center bg-muted/60 hover:bg-muted transition-colors"
+                    aria-label="Search"
                   >
                     <Search className="w-[18px] h-[18px] text-muted-foreground" />
                   </button>
