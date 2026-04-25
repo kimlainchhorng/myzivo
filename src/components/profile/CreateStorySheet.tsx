@@ -596,7 +596,9 @@ export default function CreateStorySheet({ open, onClose }: Props) {
                     />
                   </div>
                   <p className="text-[11px] text-muted-foreground text-center">
-                    Uploading {Math.round(progress * 100)}%…
+                    {uploadPhase === "preparing" && "Preparing upload…"}
+                    {uploadPhase === "uploading" && `Uploading ${Math.round(progress * 100)}%…`}
+                    {uploadPhase === "saving" && "Saving story…"}
                   </p>
                 </div>
               )}
@@ -745,8 +747,10 @@ export default function CreateStorySheet({ open, onClose }: Props) {
                   </button>
                   <button
                     onClick={() => {
+                      activeUploadRef.current?.abort();
                       setShowQuitConfirm(false);
                       setUploading(false);
+                      setUploadPhase("idle");
                       onClose();
                     }}
                     className="flex-1 h-10 rounded-full bg-destructive text-destructive-foreground text-sm font-bold"
