@@ -6,7 +6,7 @@ import { useState, useEffect, useRef, useCallback, useMemo } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { MapPin, Clock, Star, Navigation, Store, ChevronRight, Search, X, Locate, Car, Phone, Wrench, List } from "lucide-react";
+import { MapPin, Clock, Star, Navigation, Store, ChevronRight, Search, X, Locate, Car, Phone, Wrench, List, Heart, Share2, MoreHorizontal } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { motion, AnimatePresence } from "framer-motion";
 import { toast } from "sonner";
@@ -15,6 +15,11 @@ import NavBar from "@/components/home/NavBar";
 import { STORE_CATEGORY_OPTIONS } from "@/config/groceryStores";
 import { trackInitiateCheckout } from "@/services/metaConversion";
 import { buildShopDeepLink } from "@/lib/deepLinks";
+import { isOpenNow } from "@/lib/store/storeHours";
+import { openDirections } from "@/lib/maps/openDirections";
+import { shareStoreWithCard } from "@/lib/social/storeShareCard";
+import { useStoreFavorites } from "@/hooks/useStoreFavorites";
+import StoreDetailsDrawer from "@/components/store/StoreDetailsDrawer";
 
 const DEFAULT_CENTER = { lat: 11.5564, lng: 104.9282 };
 
