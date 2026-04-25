@@ -95,10 +95,10 @@ export default function FeedStoryRing() {
           id: s.id,
           mediaUrl: s.media_url,
           mediaType: s.media_type,
-          caption: s.caption || undefined,
+          caption: s.text_overlay || undefined,
           audioUrl: s.audio_url || undefined,
           createdAt: s.created_at,
-          viewsCount: s.views_count ?? 0,
+          viewsCount: s.view_count ?? 0,
         })),
       });
     }
