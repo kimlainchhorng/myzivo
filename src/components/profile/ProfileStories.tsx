@@ -32,9 +32,9 @@ const ProfileStories = () => {
   const { user } = useAuth();
   const { data: profile } = useUserProfile();
   const queryClient = useQueryClient();
+  const { activeStoryId, openStory, closeStory, updateStory } = useStoryDeepLink();
 
   const [showCreate, setShowCreate] = useState(false);
-  const [viewing, setViewing] = useState<{ groups: StoryGroup[]; startIndex: number } | null>(null);
 
   // All active stories across friends + self (drives the ring carousel)
   const { data: allStories = [], isLoading } = useQuery({
