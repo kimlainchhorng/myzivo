@@ -430,7 +430,13 @@ export default function MorePage() {
           className="zivo-icon-pill"
           style={{ color: link.accent, background: `${link.accent}15` }}
         >
-          <link.icon className="w-[18px] h-[18px]" style={{ color: link.accent }} />
+          {isTheme ? (
+            (resolvedTheme ?? theme) === "dark"
+              ? <Moon className="w-[18px] h-[18px]" style={{ color: link.accent }} />
+              : <Sun className="w-[18px] h-[18px]" style={{ color: link.accent }} />
+          ) : (
+            <link.icon className="w-[18px] h-[18px]" style={{ color: link.accent }} />
+          )}
         </div>
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-1.5">
@@ -439,6 +445,7 @@ export default function MorePage() {
           </div>
           <p className="text-[11px] text-muted-foreground truncate mt-0.5">{link.description}</p>
         </div>
+        {rightSlot}
         <ChevronRight className="w-4 h-4 text-muted-foreground/30 shrink-0" />
       </motion.div>
     );
