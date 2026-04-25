@@ -156,6 +156,32 @@ export default function StoryViewer({ groups, startGroupIndex, startStoryIndex =
       });
   }, [currentStory?.id, user?.id, isOwner, queryClient]);
 
+  // ---- Sync URL deep-link with currently visible story ----
+  useEffect(() => {
+    if (currentStory && onStoryChange) onStoryChange(currentStory.id);
+  }, [currentStory?.id, onStoryChange]);
+
+  // ---- Share story (deep link) ----
+  const handleShare = useCallback(async () => {
+    if (!currentStory) return;
+    const url = `${window.location.origin}/stories/${currentStory.id}`;
+    try {
+      if (navigator.share) {
+        await navigator.share({ title: `${viewingGroup?.userName}'s story`, url });
+      } else {
+        await navigator.clipboard.writeText(url);
+        toast.success("Story link copied");
+      }
+    } catch {
+      try {
+        await navigator.clipboard.writeText(url);
+        toast.success("Story link copied");
+      } catch {
+        toast.error("Could not share story");
+      }
+    }
+  }, [currentStory, viewingGroup?.userName]);
+
   // ---- Post comment ----
   const postComment = useMutation({
     mutationFn: async (content: string) => {
