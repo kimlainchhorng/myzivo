@@ -516,6 +516,61 @@ export default function StoreMapPage() {
     );
   }, []);
 
+  const handleShareSelected = useCallback(async (s: StorePin) => {
+    const dist = userLocation
+      ? Math.hypot(s.latitude - userLocation.lat, s.longitude - userLocation.lng) * 69
+      : undefined;
+    try {
+      const result = await shareStoreWithCard(s as any, {
+        distanceMi: dist,
+        categoryLabel: getCategoryLabel(s.category),
+      });
+      if (result.mode === "shared-with-image") toast.success("Shared with image");
+      else if (result.mode === "shared-link") toast.success("Link shared");
+      else if (result.mode === "downloaded") toast.success("Image saved · link copied");
+      else if (result.mode === "copied") toast.success("Link copied to clipboard");
+      else if (result.mode === "error") toast.error("Couldn't share — try again");
+    } catch {
+      try {
+        await navigator.clipboard.writeText(buildShopDeepLink(s.slug));
+        toast.success("Link copied to clipboard");
+      } catch {
+        toast.error("Couldn't share — try again");
+      }
+    }
+  }, [userLocation]);
+
+  const handleToggleFavoriteSelected = useCallback(async (s: StorePin) => {
+    const res = await toggleFavorite(s.id, {
+      name: s.name, slug: s.slug, category: s.category, logo_url: s.logo_url,
+    });
+    if (res.needsAuth) { toast.error("Sign in to save favorites"); return; }
+    if (res.error) { toast.error("Couldn't update favorites"); return; }
+    if (res.queued) {
+      toast.success(res.added ? "Saved offline — syncs later" : "Removed offline — syncs later");
+      return;
+    }
+    toast.success(res.added ? "Added to favorites" : "Removed from favorites");
+  }, [toggleFavorite]);
+
+  const handleRideSelected = useCallback((s: StorePin, promo?: string | null) => {
+    trackInitiateCheckout({
+      eventId: `ride-book-${s.id}-${Date.now()}`,
+      externalId: currentUserId || undefined,
+      sourceType: "ride_book",
+      sourceTable: "store_profiles",
+      sourceId: s.id,
+      payload: { destination: s.address || s.name, promo: promo || undefined },
+    });
+    const qp = new URLSearchParams({
+      destination: s.address || s.name,
+      destLat: String(s.latitude),
+      destLng: String(s.longitude),
+    });
+    if (promo) qp.set("promo", promo);
+    navigate(`/rides/hub?${qp.toString()}`);
+  }, [currentUserId, navigate]);
+
   return (
     <div className="fixed inset-0 z-0 bg-background lg:flex lg:flex-col">
       {/* Desktop NavBar */}
