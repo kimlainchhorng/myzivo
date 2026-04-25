@@ -414,6 +414,28 @@ export default function RequestRidePage() {
   const [selectedPreferences, setSelectedPreferences] = useState<string[]>([]);
   const [promoCode, setPromoCode] = useState("");
   const [promoApplied, setPromoApplied] = useState(false);
+
+  // Pre-fill promo code if forwarded from Stores list (?promo=… or sessionStorage)
+  useEffect(() => {
+    if (promoCode) return;
+    try {
+      const params = new URLSearchParams(window.location.search);
+      let code = params.get("promo")?.trim().toUpperCase() || "";
+      if (!code) {
+        const raw = sessionStorage.getItem("zivo:pending-promo");
+        if (raw) {
+          const parsed = JSON.parse(raw);
+          if (parsed?.code && Date.now() - (parsed.ts || 0) < 15 * 60 * 1000) {
+            code = String(parsed.code).toUpperCase();
+          }
+        }
+      }
+      if (code) setPromoCode(code);
+    } catch {
+      /* noop */
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
   const [selectedTip, setSelectedTip] = useState("none");
   const [customTip, setCustomTip] = useState("");
   const [rideNote, setRideNote] = useState("");
