@@ -309,6 +309,8 @@ export default function CreateStorySheet({ open, onClose }: Props) {
         audio_url: audioTrack?.url || null,
       });
       if (insErr) {
+        // Roll back the just-uploaded object so storage doesn't leak.
+        await supabase.storage.from("user-stories").remove([path]).catch(() => {});
         throw new Error(`Story saved to storage but database insert failed: ${await getErrorMessage(insErr, "Unknown database error")}`);
       }
 
