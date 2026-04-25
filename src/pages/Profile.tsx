@@ -11,7 +11,7 @@ import {
   Wallet, Store, ExternalLink, Users, Globe, ChevronDown, Crown, MapPin, ShoppingBag,
   Settings, Handshake, Car, Wrench, UtensilsCrossed, Building2, Truck, Phone, AlertCircle, Bell, MoreHorizontal,
   Pencil, RotateCcw, Share2, BarChart3, Link as LinkIcon, QrCode, Copy,
-  Repeat, DollarSign, Briefcase, User as UserIcon, Check,
+  Repeat, DollarSign, Briefcase, User as UserIcon,
 } from "lucide-react";
 import { useHaptics } from "@/hooks/useHaptics";
 import { Button } from "@/components/ui/button";
