@@ -216,11 +216,13 @@ export default function ChatStories() {
         </div>
       </div>
 
-      {viewing && (
+      {viewerLocation && (
         <StoryViewer
-          groups={viewing.groups}
-          startGroupIndex={viewing.startIdx}
-          onClose={() => setViewing(null)}
+          groups={storyGroups}
+          startGroupIndex={viewerLocation.groupIndex}
+          startStoryIndex={viewerLocation.storyIndex}
+          onClose={closeStory}
+          onStoryChange={updateStory}
         />
       )}
     </>
