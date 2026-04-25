@@ -18,6 +18,17 @@ export default function PrivacySettingsPage() {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
 
+  // Scroll to hash anchor (e.g. #blocked) on mount
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const hash = window.location.hash?.replace("#", "");
+    if (!hash) return;
+    const t = setTimeout(() => {
+      document.getElementById(hash)?.scrollIntoView({ behavior: "smooth", block: "start" });
+    }, 250);
+    return () => clearTimeout(t);
+  }, []);
+
   // Privacy settings
   const { data: settings } = useQuery({
     queryKey: ["privacy-settings", user?.id],
@@ -140,7 +151,7 @@ export default function PrivacySettingsPage() {
         </section>
 
         {/* Blocked Users */}
-        <section>
+        <section id="blocked" style={{ scrollMarginTop: 80 }}>
           <h3 className="text-sm font-semibold text-foreground mb-3 flex items-center gap-2">
             <UserX className="h-4 w-4 text-destructive" /> Blocked Users ({blockedUsers.length})
           </h3>

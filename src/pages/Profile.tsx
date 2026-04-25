@@ -10,13 +10,14 @@ import {
   Shield, Star, ChevronRight, UserPlus, BadgeCheck,
   Wallet, Store, ExternalLink, Users, Globe, ChevronDown, Crown, MapPin, ShoppingBag,
   Settings, Handshake, Car, Wrench, UtensilsCrossed, Building2, Truck, Phone, AlertCircle, Bell, MoreHorizontal,
-  Pencil, RotateCcw,
+  Pencil, RotateCcw, Share2, BarChart3, Link as LinkIcon, QrCode, Copy,
 } from "lucide-react";
 import { useHaptics } from "@/hooks/useHaptics";
 import { Button } from "@/components/ui/button";
 import { CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
+import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { useAuth } from "@/contexts/AuthContext";
 import { useUserProfile, useUpdateUserProfile, useUploadAvatar } from "@/hooks/useUserProfile";
 import { useMerchantRole } from "@/hooks/useMerchantRole";
@@ -243,7 +244,11 @@ const Profile = () => {
       document.removeEventListener("visibilitychange", restore);
     };
   }, []);
-  const handleBack = useCallback(() => { impact("light"); navigate(-1); }, [impact, navigate]);
+  const handleBack = useCallback(() => {
+    impact("light");
+    if (window.history.length > 1) navigate(-1);
+    else navigate("/feed");
+  }, [impact, navigate]);
   const handleToggleNotif = useCallback(() => { selectionChanged(); setShowNotifPanel(p => !p); }, [selectionChanged]);
   const handleResetCover = useCallback(() => { impact("light"); setCoverPosition(50); }, [impact]);
   
@@ -273,6 +278,7 @@ const Profile = () => {
   const [followerCount, setFollowerCount] = useState(0);
   const [followingCount, setFollowingCount] = useState(0);
   const [socialModal, setSocialModal] = useState<{ open: boolean; tab: "friends" | "followers" | "following" }>({ open: false, tab: "friends" });
+  const [shareOpen, setShareOpen] = useState(false);
 
   // Load real friendship status, friend count & follower count
   useEffect(() => {
@@ -582,9 +588,11 @@ const Profile = () => {
               </motion.div>
             </div>
           ) : (
-            <div className="space-y-2.5 pt-0 lg:pt-1">
-              {/* ── Profile Card with Cover Photo ── */}
-              <ParallaxSection index={2}>
+            <div className="space-y-2 pt-0 lg:pt-1">
+              {/* ── Profile Card with Cover Photo ──
+                  No ParallaxSection here: the hero card must paint immediately
+                  to avoid a giant blank area at the top of the viewport. */}
+              <div>
                 <motion.div
                   ref={profileCardRef}
                   onMouseMove={profileTilt.handleMove as any}
@@ -605,7 +613,7 @@ const Profile = () => {
                         We add safe-area top padding + a subtle status-bar scrim so
                         the system clock/battery stay legible over any cover image. */}
                     <div
-                      className="relative h-48 sm:h-56 md:h-60 lg:h-52 w-full overflow-hidden select-none"
+                      className="relative h-40 sm:h-52 md:h-56 lg:h-52 w-full overflow-hidden select-none"
 
                       onMouseDown={coverRepositioning ? (e) => { e.preventDefault(); handleCoverDragStart(e.clientY); } : undefined}
                       onMouseMove={coverRepositioning ? (e) => handleCoverDragMove(e.clientY) : undefined}
@@ -803,7 +811,7 @@ const Profile = () => {
                           <>
                             <textarea
                               value={bioDraft}
-                              onChange={(e) => setBioDraft(e.target.value)}
+                              onChange={(e) => setBioDraft(e.target.value.slice(0, 160))}
                               placeholder="Add a short bio so people know who you are."
                               maxLength={160}
                               rows={2}
@@ -811,6 +819,11 @@ const Profile = () => {
                               aria-label="Bio"
                               className="w-full resize-none rounded-2xl border border-border/50 bg-background/80 px-3 py-2 text-xs text-foreground outline-none placeholder:text-muted-foreground focus:border-primary/40 focus:ring-2 focus:ring-primary/10"
                             />
+                            <div className="mt-1 flex justify-end">
+                              <span className={cn("text-[10px] tabular-nums", bioDraft.length >= 150 ? "text-amber-500" : "text-muted-foreground/70")}>
+                                {bioDraft.length}/160
+                              </span>
+                            </div>
                             <div className="mt-2 flex items-center gap-2">
                               <Button
                                 type="button"
@@ -874,16 +887,26 @@ const Profile = () => {
                         </button>
                       </div>
 
-                      {/* Edit profile (mobile-only quick CTA) */}
-                      <div className="lg:hidden mt-3">
-                        <button
-                          type="button"
-                          onClick={() => navigate("/account/profile-edit")}
-                          className="inline-flex items-center gap-1.5 rounded-full border border-border/60 bg-muted/30 px-3.5 py-1.5 text-xs font-semibold text-foreground hover:bg-muted/50 focus-visible:ring-2 focus-visible:ring-primary/60 focus-visible:outline-none transition-colors"
-                        >
-                          <Pencil className="h-3 w-3" />
-                          Edit profile
-                        </button>
+                      {/* Quick Actions row (mobile-only) — keeps the most-used
+                          account actions one tap away so users don't have to
+                          scroll or open /more for the basics. */}
+                      <div className="lg:hidden mt-3 grid grid-cols-4 gap-2">
+                        {[
+                          { label: "Edit", icon: Pencil, onClick: () => navigate("/account/profile-edit") },
+                          { label: "Share", icon: Share2, onClick: () => setShareOpen(true) },
+                          { label: "Insights", icon: BarChart3, onClick: () => navigate("/account/analytics") },
+                          { label: "Settings", icon: Settings, onClick: () => navigate("/more") },
+                        ].map((a) => (
+                          <button
+                            key={a.label}
+                            type="button"
+                            onClick={a.onClick}
+                            className="flex flex-col items-center gap-1 rounded-2xl border border-border/50 bg-muted/25 px-2 py-2 text-[11px] font-semibold text-foreground hover:bg-muted/50 active:scale-[0.97] focus-visible:ring-2 focus-visible:ring-primary/60 focus-visible:outline-none transition-all"
+                          >
+                            <a.icon className="h-4 w-4 text-primary" />
+                            <span>{a.label}</span>
+                          </button>
+                        ))}
                       </div>
 
                       {/* Social Links Row */}
@@ -950,7 +973,7 @@ const Profile = () => {
                   </div>
 
                 </motion.div>
-              </ParallaxSection>
+              </div>
 
               {/* ZIVO+ upgrade moved to /more page */}
 
@@ -1079,6 +1102,59 @@ const Profile = () => {
           if (socialModal.tab === "following") setFollowingCount(fg);
         }}
       />
+
+      {/* Share Profile bottom sheet */}
+      <Sheet open={shareOpen} onOpenChange={setShareOpen}>
+        <SheetContent side="bottom" className="rounded-t-3xl pb-10">
+          <SheetHeader className="pb-3">
+            <SheetTitle className="text-base font-bold">Share your profile</SheetTitle>
+          </SheetHeader>
+          <div className="grid grid-cols-3 gap-3">
+            <button
+              type="button"
+              onClick={async () => {
+                const url = `${window.location.origin}/u/${user?.id}`;
+                try {
+                  await navigator.clipboard.writeText(url);
+                  toast.success("Profile link copied");
+                } catch {
+                  toast.error("Could not copy link");
+                }
+                setShareOpen(false);
+              }}
+              className="flex flex-col items-center gap-1.5 rounded-2xl border border-border/40 bg-muted/30 p-3 active:scale-[0.97] transition-transform"
+            >
+              <Copy className="h-5 w-5 text-primary" />
+              <span className="text-[11px] font-semibold">Copy link</span>
+            </button>
+            <button
+              type="button"
+              onClick={() => { setShareOpen(false); navigate("/qr-profile"); }}
+              className="flex flex-col items-center gap-1.5 rounded-2xl border border-border/40 bg-muted/30 p-3 active:scale-[0.97] transition-transform"
+            >
+              <QrCode className="h-5 w-5 text-primary" />
+              <span className="text-[11px] font-semibold">QR code</span>
+            </button>
+            <button
+              type="button"
+              onClick={async () => {
+                const url = `${window.location.origin}/u/${user?.id}`;
+                const title = profile?.full_name || "My ZIVO profile";
+                if (navigator.share) {
+                  try { await navigator.share({ title, url }); } catch { /* user cancelled */ }
+                } else {
+                  try { await navigator.clipboard.writeText(url); toast.success("Profile link copied"); } catch { toast.error("Sharing not supported"); }
+                }
+                setShareOpen(false);
+              }}
+              className="flex flex-col items-center gap-1.5 rounded-2xl border border-border/40 bg-muted/30 p-3 active:scale-[0.97] transition-transform"
+            >
+              <Share2 className="h-5 w-5 text-primary" />
+              <span className="text-[11px] font-semibold">Share to…</span>
+            </button>
+          </div>
+        </SheetContent>
+      </Sheet>
     </PullToRefresh>
   );
 };
