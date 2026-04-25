@@ -56,6 +56,7 @@ export default function ChatStories() {
           mediaUrl: s.media_url,
           mediaType: s.media_type,
           caption: s.caption,
+          audioUrl: s.audio_url,
           createdAt: s.created_at,
           viewsCount: s.views_count ?? 0,
         });
