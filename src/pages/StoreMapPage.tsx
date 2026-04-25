@@ -728,11 +728,19 @@ export default function StoreMapPage() {
                         try {
                           if (navigator.share) {
                             await navigator.share({ title: selectedStore.name, text: shareText, url: shareUrl });
+                            toast.success("Shared!");
                           } else {
                             await navigator.clipboard.writeText(shareUrl);
+                            toast.success("Link copied to clipboard");
                           }
-                        } catch {
-                          await navigator.clipboard.writeText(shareUrl);
+                        } catch (err: any) {
+                          if (err?.name === "AbortError") return; // user cancelled
+                          try {
+                            await navigator.clipboard.writeText(shareUrl);
+                            toast.success("Link copied to clipboard");
+                          } catch {
+                            toast.error("Couldn't share — try again");
+                          }
                         }
                       }}
                     >
