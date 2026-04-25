@@ -703,6 +703,7 @@ export default function StoreMapPage() {
       </div>
 
       {/* ── Right FABs ── */}
+      {!drawerStore && (
       <div className="absolute right-4 bottom-[140px] z-[1500] flex flex-col gap-2.5">
         <motion.div whileTap={{ scale: 0.9 }}>
           <Button variant="secondary" size="icon" onClick={handleLocateMe}
