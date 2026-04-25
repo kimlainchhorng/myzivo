@@ -610,6 +610,19 @@ export default function StoreMapPage() {
               >
                 All ({allStores.length})
               </motion.button>
+              <motion.button
+                whileTap={{ scale: 0.95 }}
+                onClick={() => { setOpenNowOnly((v) => !v); setSelectedStore(null); }}
+                aria-pressed={openNowOnly}
+                className={`px-4 py-2 rounded-full text-[12px] font-semibold transition-all whitespace-nowrap flex items-center gap-1.5 border backdrop-blur-sm ${
+                  openNowOnly
+                    ? "bg-emerald-600 text-white border-emerald-600 shadow-md"
+                    : "bg-card/90 text-muted-foreground border-border/30 shadow-sm"
+                }`}
+              >
+                <Clock className="w-3.5 h-3.5" />
+                Open now
+              </motion.button>
               {usedCategories.map((cat) => {
                 const count = allStores.filter((s) => s.category === cat.value).length;
                 const isActive = activeCategory === cat.value;
