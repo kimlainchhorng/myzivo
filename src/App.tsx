@@ -772,6 +772,7 @@ const App = () => (
                 <Route path="/admin/lodging/wiring-check" element={<ProtectedRoute><AdminLodgingWiringCheckPage /></ProtectedRoute>} />
                 <Route path="/admin/lodging/webhook-events" element={<ProtectedRoute><AdminLodgingWebhookEventsPage /></ProtectedRoute>} />
                 <Route path="/store/setup" element={<ProtectedRoute><StoreSetup /></ProtectedRoute>} />
+                <Route path="/business/new" element={<ProtectedRoute><BusinessPageWizard /></ProtectedRoute>} />
                 <Route path="/admin/employees" element={<ProtectedRoute><AdminEmployeesPage /></ProtectedRoute>} />
                 <Route path="/admin/wallet" element={<ProtectedRoute><AdminWalletPage /></ProtectedRoute>} />
                 <Route path="/admin/system-health" element={<ProtectedRoute><AdminSystemHealth /></ProtectedRoute>} />
