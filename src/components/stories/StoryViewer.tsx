@@ -568,12 +568,12 @@ export default function StoryViewer({
               </p>
             </div>
           </div>
-          <div className="flex items-center gap-1">
+          <div className="flex items-center gap-1.5 shrink-0">
             {currentStory.audioUrl && (
               <button
                 onClick={() => setMuted((m) => !m)}
                 aria-label={muted ? "Unmute" : "Mute"}
-                className="w-9 h-9 flex items-center justify-center rounded-full bg-white/10 backdrop-blur-sm"
+                className="w-9 h-9 flex items-center justify-center rounded-full bg-black/35 backdrop-blur-xl border border-white/10 ring-1 ring-[hsl(160_84%_55%)/0.2] hover:ring-[hsl(160_84%_55%)/0.5] transition"
               >
                 {muted ? <VolumeX className="w-4 h-4 text-white" /> : <Volume2 className="w-4 h-4 text-white" />}
               </button>
@@ -582,7 +582,7 @@ export default function StoryViewer({
               data-testid="story-pause"
               onClick={() => setPaused((p) => !p)}
               aria-label={paused ? "Play" : "Pause"}
-              className="w-9 h-9 flex items-center justify-center rounded-full bg-white/10 backdrop-blur-sm"
+              className="w-9 h-9 flex items-center justify-center rounded-full bg-black/35 backdrop-blur-xl border border-white/10 ring-1 ring-[hsl(160_84%_55%)/0.2] hover:ring-[hsl(160_84%_55%)/0.5] transition"
             >
               {paused ? <Play className="w-4 h-4 text-white" /> : <Pause className="w-4 h-4 text-white" />}
             </button>
@@ -590,7 +590,7 @@ export default function StoryViewer({
               data-testid="story-close"
               onClick={() => closeWithMeta()}
               aria-label="Close"
-              className="w-9 h-9 flex items-center justify-center rounded-full bg-white/10 backdrop-blur-sm"
+              className="w-9 h-9 flex items-center justify-center rounded-full bg-black/35 backdrop-blur-xl border border-white/10 ring-1 ring-[hsl(160_84%_55%)/0.2] hover:ring-[hsl(160_84%_55%)/0.5] transition"
             >
               <X className="w-5 h-5 text-white" />
             </button>
