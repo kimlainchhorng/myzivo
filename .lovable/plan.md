@@ -85,3 +85,41 @@ withCors → withWaf → withRateLimit → withSignature? → withJwt → withZo
 7. 2H GDPR tooling — ~0.5 session
 
 Approve to start with **2B + 2D together** (they share the logger/event tables), then proceed sequentially.
+
+---
+
+## Progress — 2026-04-25 (Phase 2B/2C/2D/2G/2H foundation shipped)
+
+**Database (migration applied):**
+- `idempotency_records` (key+route PK, 24h TTL, BRIN expiry index, service_role only)
+- `nonce_cache` (5-minute replay window, BRIN expiry, service_role only)
+- `jobs_queue` (kind/payload/status/attempts/run_at/lock, partial index on pending, admin read)
+- `user_consents` (GDPR consent ledger, user-owned RLS)
+- `user_mfa_factors` (TOTP/backup/WebAuthn, user own select+delete, secrets via service role only)
+- `cleanup_expired_security_records()` housekeeping function
+- Reused existing `security_events`, `feature_flags`, `user_sessions` tables (no schema collision)
+
+**Shared edge modules (`supabase/functions/_shared/`):**
+- `waf.ts` — SQLi/XSS/path-traversal/oversize blocklist with URL decode + body sniff (5 tests)
+- `logger.ts` — structured JSON logger with x-request-id correlation propagation
+- `audit.ts` — `recordSecurityEvent` + `recordAudit` + `redactPii` (2 tests)
+- `signing.ts` — HMAC-SHA256 request signing + replay protection
+- `idempotency.ts` — `withIdempotency` wrapper for duplicate-safe mutations
+- `flags.ts` — edge-side feature-flag evaluator with deterministic bucketing + 30s cache
+- `withSecurity.ts` — composer that wires WAF + correlation ID + structured logging into any handler
+
+**Frontend:**
+- `src/hooks/useFeatureFlag.ts` — reactive flag check with 30s cache + bucketed rollout
+- `index.html` — added `X-Frame-Options: SAMEORIGIN`, CSP `frame-ancestors`/`base-uri`/`form-action`/`object-src 'none'`
+
+**Verification:** Deno test suite — **43 passed / 0 failed** across `_shared/` and the 5 hardened auth functions. Build cache clean.
+
+**Skipped per project directive:** backend rate limiting (no infra primitives yet — see `<no-backend-rate-limiting>` rule).
+
+**Next sub-phases ready to ship:**
+- 2B-extra: brute-force enrichment (impossible-travel + device fingerprint) on `auth_precheck_login`
+- 2C-apply: wire `withIdempotency` into `food-orders-create`, `payments-*`, `trips-*-create`
+- 2D-apply: wire `withSecurity` into top-10 traffic edge functions; add `v_security_anomalies` view
+- 2E: `mfa-enroll` / `mfa-verify` / `mfa-disable` edge functions + Account Security UI
+- 2G: `process-jobs` cron edge function + migrate inline fan-outs onto queue
+- 2H: `account-export-data` + `account-erase` edge functions
