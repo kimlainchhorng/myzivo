@@ -15,6 +15,7 @@ import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import X from "lucide-react/dist/esm/icons/x";
 import ImageIcon from "lucide-react/dist/esm/icons/image";
+import ChevronRight from "lucide-react/dist/esm/icons/chevron-right";
 import Camera from "lucide-react/dist/esm/icons/camera";
 import Type from "lucide-react/dist/esm/icons/type";
 import Globe from "lucide-react/dist/esm/icons/globe";
