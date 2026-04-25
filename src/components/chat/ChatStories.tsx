@@ -212,7 +212,10 @@ export default function ChatStories() {
           groups={storyGroups}
           startGroupIndex={viewerLocation.groupIndex}
           startStoryIndex={viewerLocation.storyIndex}
-          onClose={closeStory}
+          onClose={(meta) => {
+            closeStory(meta);
+            invalidateAllStoryCaches(queryClient, user?.id);
+          }}
           onStoryChange={updateStory}
           source="chat"
         />
