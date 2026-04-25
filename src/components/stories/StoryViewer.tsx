@@ -276,6 +276,9 @@ export default function StoryViewer({
       queryClient.invalidateQueries({
         queryKey: ["story-my-reaction", currentStory?.id, user?.id],
       });
+      queryClient.invalidateQueries({
+        queryKey: ["story-reactions-list", currentStory?.id],
+      });
       if (emoji) {
         setReactionBurst(emoji);
         window.setTimeout(() => setReactionBurst(null), 800);
