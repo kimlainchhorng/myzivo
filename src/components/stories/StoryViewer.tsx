@@ -104,6 +104,13 @@ export default function StoryViewer({
   const [showForward, setShowForward] = useState(false);
   const [showMore, setShowMore] = useState(false);
   const [showMention, setShowMention] = useState(false);
+  // Quick-react picker (non-owner: tap "+" or long-press to open expanded grid)
+  const [showQuickReact, setShowQuickReact] = useState(false);
+  // Threaded reply UI inside the Reactions tab
+  const [openThreadId, setOpenThreadId] = useState<string | null>(null);
+  const [threadDraft, setThreadDraft] = useState("");
+  // Track which reaction is "mine" so we can render the × clear chip
+  // (server already enforces uniqueness via reactToStory mutation)
 
   const timerRef = useRef<number | null>(null);
   const startTimeRef = useRef(0);
