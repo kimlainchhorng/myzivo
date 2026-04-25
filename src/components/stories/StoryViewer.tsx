@@ -145,13 +145,20 @@ export default function StoryViewer({
         .eq("story_id", currentStory!.id)
         .order("viewed_at", { ascending: false });
       if (!data || data.length === 0) return [];
-      const viewerIds = (data as any[]).map((v: any) => v.viewer_id);
+      // Dedupe by viewer_id so React list keys stay unique
+      const seen = new Set<string>();
+      const uniqueViews = (data as any[]).filter((v: any) => {
+        if (seen.has(v.viewer_id)) return false;
+        seen.add(v.viewer_id);
+        return true;
+      });
+      const viewerIds = uniqueViews.map((v: any) => v.viewer_id);
       const { data: profiles } = await supabase
         .from("public_profiles" as any)
         .select("id, full_name, avatar_url")
         .in("id", viewerIds);
       const profileMap = new Map((profiles || []).map((p: any) => [p.id, p]));
-      return (data as any[]).map((v: any) => ({
+      return uniqueViews.map((v: any) => ({
         ...v,
         name: profileMap.get(v.viewer_id)?.full_name || "User",
         avatar: profileMap.get(v.viewer_id)?.avatar_url,
