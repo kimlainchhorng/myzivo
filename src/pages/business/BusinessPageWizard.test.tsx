@@ -147,6 +147,11 @@ const fillBasics = async () => {
   fireEvent.change(name, { target: { value: "Sunrise Coffee" } });
   fireEvent.change(phone, { target: { value: "5551234567" } });
   // bizEmail is prefilled from profile.
+  // Wait for the Continue button to be enabled — guarantees state has flushed
+  // and canContinue() is true (which the Save & exit button also depends on).
+  await waitFor(() => {
+    expect(screen.getByRole("button", { name: /continue/i })).toBeEnabled();
+  });
 };
 
 beforeEach(() => {
@@ -164,13 +169,11 @@ afterEach(() => {
   vi.restoreAllMocks();
 });
 
-// Wait for the wizard to settle past the initial loading + baseline tick.
+// Wait for the wizard to finish its async resume + baseline effects.
 const waitReady = async () => {
   await waitFor(() => {
     expect(screen.getByText(/business basics/i)).toBeInTheDocument();
   });
-  // baseline timeout = next tick
-  await act(async () => { await new Promise((r) => setTimeout(r, 5)); });
 };
 
 describe("BusinessPageWizard — leave guard", () => {
@@ -199,8 +202,10 @@ describe("BusinessPageWizard — leave guard", () => {
     renderWizard();
     await waitReady();
     await fillBasics();
-    // Allow the popstate-guard effect to re-run for the new isDirty=true.
-    await act(async () => { await new Promise((r) => setTimeout(r, 5)); });
+    // Wait for the popstate-guard effect to install for isDirty=true.
+    await waitFor(() => {
+      expect(screen.getByText(/unsaved changes/i)).toBeInTheDocument();
+    });
 
     act(() => {
       window.dispatchEvent(new PopStateEvent("popstate"));
@@ -245,7 +250,39 @@ describe("BusinessPageWizard — leave guard", () => {
     act(() => {
       window.dispatchEvent(new PopStateEvent("popstate"));
     });
-    await act(async () => { await new Promise((r) => setTimeout(r, 5)); });
+    expect(screen.queryByText(/leave business setup/i)).not.toBeInTheDocument();
+    expect(navigateSpy).toHaveBeenCalledTimes(1);
+  });
+
+  it("rapid repeated popstate does NOT cause an infinite prompt loop", async () => {
+    renderWizard();
+    await waitReady();
+    await fillBasics();
+    await waitFor(() => {
+      expect(screen.getByText(/unsaved changes/i)).toBeInTheDocument();
+    });
+
+    act(() => {
+      window.dispatchEvent(new PopStateEvent("popstate"));
+      window.dispatchEvent(new PopStateEvent("popstate"));
+      window.dispatchEvent(new PopStateEvent("popstate"));
+    });
+
+    // Only one dialog visible.
+    const dialogs = await screen.findAllByText(/leave business setup/i);
+    expect(dialogs.length).toBe(1);
+    expect(navigateSpy).not.toHaveBeenCalled();
+
+    // Confirm Leave once.
+    fireEvent.click(screen.getByRole("button", { name: /^leave$/i }));
+    await waitFor(() => {
+      expect(navigateSpy).toHaveBeenCalledTimes(1);
+    });
+
+    // Another popstate after confirming should be a no-op.
+    act(() => {
+      window.dispatchEvent(new PopStateEvent("popstate"));
+    });
     expect(screen.queryByText(/leave business setup/i)).not.toBeInTheDocument();
     expect(navigateSpy).toHaveBeenCalledTimes(1);
   });
@@ -259,7 +296,9 @@ describe("BusinessPageWizard — Save & exit", () => {
     fireEvent.click(screen.getByLabelText("Back"));
     await screen.findByText(/leave business setup/i);
 
-    fireEvent.click(screen.getByRole("button", { name: /save & exit/i }));
+    const saveBtn = screen.getByRole("button", { name: /save & exit/i });
+    await waitFor(() => expect(saveBtn).toBeEnabled());
+    fireEvent.click(saveBtn);
 
     await waitFor(() => {
       expect(persistMock).toHaveBeenCalled();
@@ -279,7 +318,9 @@ describe("BusinessPageWizard — Save & exit", () => {
     fireEvent.click(screen.getByLabelText("Back"));
     await screen.findByText(/leave business setup/i);
 
-    fireEvent.click(screen.getByRole("button", { name: /save & exit/i }));
+    const saveBtn = screen.getByRole("button", { name: /save & exit/i });
+    await waitFor(() => expect(saveBtn).toBeEnabled());
+    fireEvent.click(saveBtn);
 
     await waitFor(() => {
       expect(toastError).toHaveBeenCalledWith("Something went wrong");
@@ -321,8 +362,6 @@ describe("BusinessPageWizard — auto-save and resume", () => {
     await waitFor(() => {
       expect(screen.getByText(/set type of business/i)).toBeInTheDocument();
     });
-    // baseline tick
-    await act(async () => { await new Promise((r) => setTimeout(r, 5)); });
 
     // Header back on step ≥2 just goes one step back, no dialog.
     fireEvent.click(screen.getByLabelText("Back"));
@@ -330,6 +369,28 @@ describe("BusinessPageWizard — auto-save and resume", () => {
       expect(screen.getByText(/business basics/i)).toBeInTheDocument();
     });
     expect(screen.queryByText(/leave business setup/i)).not.toBeInTheDocument();
+  });
+});
+
+describe("BusinessPageWizard — unsaved-changes indicator", () => {
+  it("shows the chip only when fields differ from baseline", async () => {
+    renderWizard();
+    await waitReady();
+
+    expect(screen.queryByText(/unsaved changes/i)).not.toBeInTheDocument();
+
+    await fillBasics();
+
+    expect(await screen.findByText(/unsaved changes/i)).toBeInTheDocument();
+
+    // After Continue auto-save resolves, baseline is updated → chip disappears.
+    fireEvent.click(screen.getByRole("button", { name: /continue/i }));
+    await waitFor(() => {
+      expect(persistMock).toHaveBeenCalled();
+    });
+    await waitFor(() => {
+      expect(screen.queryByText(/unsaved changes/i)).not.toBeInTheDocument();
+    });
   });
 });
 
@@ -349,7 +410,6 @@ describe("BusinessPageWizard — completion disarms guard", () => {
     await waitFor(() => {
       expect(screen.getByText(/contact person/i)).toBeInTheDocument();
     });
-    await act(async () => { await new Promise((r) => setTimeout(r, 5)); });
 
     // Step 3 → 4 → 5
     fireEvent.click(screen.getByRole("button", { name: /continue/i }));
