@@ -131,17 +131,19 @@ describe("Story deep-link back/forward navigation", () => {
     });
     expect(screen.getByTestId("viewer-story").textContent).toBe("B");
 
-    // 3) Back -> should show A (and never momentarily show B during this commit)
+    // 3) Back -> should show A. history.back() dispatches popstate
+    // asynchronously; wait for the next tick so React Router can process it.
     await act(async () => {
       window.history.back();
+      await new Promise((r) => setTimeout(r, 0));
     });
-    // Snapshot the rendered viewer immediately after back; it must be A.
     const afterBack = container.querySelector("[data-testid='viewer-story']");
     expect(afterBack?.textContent).toBe("A");
 
     // 4) Forward -> should show B again
     await act(async () => {
       window.history.forward();
+      await new Promise((r) => setTimeout(r, 0));
     });
     expect(screen.getByTestId("viewer-story").textContent).toBe("B");
   });
