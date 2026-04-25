@@ -11,14 +11,14 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import StoryViewer, { StoryGroup } from "@/components/stories/StoryViewer";
-import { useStoryDeepLink } from "@/hooks/useStoryDeepLink";
+import { useStoryDeepLink, useStoryViewerLocation } from "@/hooks/useStoryDeepLink";
 
 export default function ChatStories() {
   const { user } = useAuth();
   const queryClient = useQueryClient();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [uploading, setUploading] = useState(false);
-  const { activeStoryId, openStory, closeStory, updateStory } = useStoryDeepLink();
+  const { activeStoryId, openStory, closeStory, updateStory } = useStoryDeepLink({ source: "chat" });
 
   const { data: storyGroups = [] } = useQuery({
     queryKey: ["user-stories"],
@@ -119,14 +119,7 @@ export default function ChatStories() {
   const myStories = storyGroups.find((g) => g.userId === user?.id);
   const hasMyStory = !!myStories && myStories.stories.length > 0;
 
-  const viewerLocation = useMemo(() => {
-    if (!activeStoryId) return null;
-    for (let gi = 0; gi < storyGroups.length; gi++) {
-      const si = storyGroups[gi].stories.findIndex((s) => s.id === activeStoryId);
-      if (si !== -1) return { groupIndex: gi, storyIndex: si };
-    }
-    return null;
-  }, [activeStoryId, storyGroups]);
+  const viewerLocation = useStoryViewerLocation(storyGroups, activeStoryId);
 
   const openViewer = (group: StoryGroup) => {
     if (group.stories.length === 0) return;
