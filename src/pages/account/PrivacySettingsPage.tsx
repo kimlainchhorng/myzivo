@@ -18,6 +18,17 @@ export default function PrivacySettingsPage() {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
 
+  // Scroll to hash anchor (e.g. #blocked) on mount
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const hash = window.location.hash?.replace("#", "");
+    if (!hash) return;
+    const t = setTimeout(() => {
+      document.getElementById(hash)?.scrollIntoView({ behavior: "smooth", block: "start" });
+    }, 250);
+    return () => clearTimeout(t);
+  }, []);
+
   // Privacy settings
   const { data: settings } = useQuery({
     queryKey: ["privacy-settings", user?.id],
