@@ -40,6 +40,7 @@ export default function FeedStoryRing() {
   const { user } = useAuth();
   const queryClient = useQueryClient();
   const [showCreate, setShowCreate] = useState(false);
+  const [showOwnSheet, setShowOwnSheet] = useState(false);
   const { activeStoryId, openStory, closeStory, updateStory } = useStoryDeepLink({ source: "feed" });
 
   const { data: rawStories = [] } = useQuery({
