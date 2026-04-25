@@ -765,30 +765,12 @@ export default function StoreMapPage() {
                 <div className="w-px bg-border/20" />
                     <button
                       className="flex-1 min-w-[33%] py-3 text-[12px] font-bold text-center text-primary hover:bg-primary/5 transition-colors flex items-center justify-center gap-1.5"
-                      onClick={async (e) => {
+                      onClick={(e) => {
                         e.stopPropagation();
-                        const shareUrl = buildShopDeepLink(selectedStore.slug);
-                        const shareText = `Check out ${selectedStore.name} on ZiVo`;
-                        try {
-                          if (navigator.share) {
-                            await navigator.share({ title: selectedStore.name, text: shareText, url: shareUrl });
-                            toast.success("Shared!");
-                          } else {
-                            await navigator.clipboard.writeText(shareUrl);
-                            toast.success("Link copied to clipboard");
-                          }
-                        } catch (err: any) {
-                          if (err?.name === "AbortError") return; // user cancelled
-                          try {
-                            await navigator.clipboard.writeText(shareUrl);
-                            toast.success("Link copied to clipboard");
-                          } catch {
-                            toast.error("Couldn't share — try again");
-                          }
-                        }
+                        handleShareSelected(selectedStore);
                       }}
                     >
-                      Share
+                      <Share2 className="w-3.5 h-3.5" /> Share
                     </button>
                     {selectedStore.phone && (
                       <>
@@ -803,6 +785,45 @@ export default function StoreMapPage() {
                     )}
                   </>
                 )}
+              </div>
+
+              {/* Secondary action strip — Favorite / Directions / More (parity with list drawer) */}
+              <div className="flex items-center gap-2 px-3 py-2 border-t border-border/20 bg-muted/10">
+                <button
+                  onClick={(e) => { e.stopPropagation(); handleToggleFavoriteSelected(selectedStore); }}
+                  aria-label={isFavorite(selectedStore.id) ? "Remove favorite" : "Save favorite"}
+                  aria-pressed={isFavorite(selectedStore.id)}
+                  className={`flex-1 h-11 rounded-xl inline-flex items-center justify-center gap-1.5 text-[12px] font-bold transition-colors ${
+                    isFavorite(selectedStore.id)
+                      ? "bg-rose-500 text-white"
+                      : "bg-card text-foreground border border-border/40"
+                  }`}
+                >
+                  <Heart className={`w-4 h-4 ${isFavorite(selectedStore.id) ? "fill-current" : ""}`} />
+                  {isFavorite(selectedStore.id) ? "Saved" : "Save"}
+                </button>
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    openDirections({
+                      lat: selectedStore.latitude,
+                      lng: selectedStore.longitude,
+                      label: selectedStore.name,
+                      address: selectedStore.address,
+                    });
+                  }}
+                  aria-label="Open directions"
+                  className="flex-1 h-11 rounded-xl bg-card border border-border/40 inline-flex items-center justify-center gap-1.5 text-[12px] font-bold text-foreground"
+                >
+                  <Navigation className="w-4 h-4" /> Directions
+                </button>
+                <button
+                  onClick={(e) => { e.stopPropagation(); setDrawerStore(selectedStore); }}
+                  aria-label="More details"
+                  className="h-11 w-11 rounded-xl bg-card border border-border/40 inline-flex items-center justify-center text-foreground"
+                >
+                  <MoreHorizontal className="w-4 h-4" />
+                </button>
               </div>
 
               <div className="border-t border-border/20 px-3 py-3 bg-muted/20">
