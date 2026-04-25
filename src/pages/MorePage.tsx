@@ -668,6 +668,28 @@ export default function MorePage() {
         </SheetContent>
       </Sheet>
 
+      {/* Sign Out / Switch Account confirm */}
+      <AlertDialog open={!!confirmAction} onOpenChange={(o) => !o && setConfirmAction(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>
+              {confirmAction === "switch" ? "Switch account?" : "Sign out?"}
+            </AlertDialogTitle>
+            <AlertDialogDescription>
+              {confirmAction === "switch"
+                ? "You'll be signed out and taken to the login screen so you can sign in with a different account."
+                : "You'll need to sign in again to access your account."}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={handleConfirm}>
+              {confirmAction === "switch" ? "Switch" : "Sign out"}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
       <ZivoMobileNav />
     </div>
   );
