@@ -1,78 +1,63 @@
 ## Goal
 
-Turn the home-screen "Partner Admin" card into a **"Business Page"** entry point. Because the user is already signed into Zivo, skip partner-login entirely and walk them through a clean 5-step setup wizard (Business → Type → Contact → Profile → Cover → Done). Wizard auto-routes them to the correct dashboard based on the business type they pick.
+Harden `BusinessPageWizard` so it (1) actually saves without the schema error you saw, (2) refuses duplicate slugs gracefully, (3) warns before losing in-progress work, (4) confirms what was saved at every step, and (5) always lands on a real dashboard route.
 
-## UX Flow
+## Bugs found while exploring
 
-```text
-AppHome → "Business Page" card  ──▶  /business/new
-   (only shown when user has no       │
-    existing partner role)            ▼
-                          ┌──────────────────────────────┐
-                          │ 1. Business basics           │  full business name
-                          │                              │  business phone
-                          │                              │  business email
-                          ├──────────────────────────────┤
-                          │ 2. Business type             │  pick from grouped
-                          │   "Set type of business"     │  STORE_CATEGORY_OPTIONS
-                          │                              │  (Stay / Food / Shop /
-                          │                              │   Auto / Beauty / Services)
-                          │                              │  → drives dashboard route
-                          ├──────────────────────────────┤
-                          │ 3. Contact person            │  first + last name
-                          │                              │  phone, email
-                          │                              │  (prefilled from profile)
-                          ├──────────────────────────────┤
-                          │ 4. Profile photo  [Skip]     │  optional logo upload
-                          ├──────────────────────────────┤
-                          │ 5. Cover photo    [Skip]     │  optional banner upload
-                          ├──────────────────────────────┤
-                          │ ✓ Complete → Go to dashboard │
-                          └──────────────────────────────┘
-                                       │
-              ┌────────────────────────┼─────────────────────────────┐
-              ▼                        ▼                             ▼
-      hotel/resort/guesthouse   restaurant/cafe/bakery/drink   everything else
-      → /admin/stores/:id            → /restaurant/dashboard    → /admin/stores/:id
-        ?tab=lodge-overview          (creates restaurants row    (creates store_profiles
-                                      when category=restaurant)   row, setup_complete=true)
-```
+1. **Schema error in screenshot** — `store_profiles` has no `email` column. The wizard sends `email: bizEmail` on insert/update, which is what produces *"Could not find the 'email' column of 'store_profiles' in the schema cache"*. Real columns: `name, slug, category, phone, logo_url, banner_url, owner_id, setup_complete, …` (no email).
+2. **Restaurant route is broken** — wizard redirects to `/restaurant/dashboard` but no such route exists in `src/App.tsx`. The actual route is `/eats/restaurant-dashboard`.
+3. **No slug collision handling** — `slugify(name)` can collide with another business's slug, and the DB has a unique index on `slug`, so the insert silently fails with a 23505 error.
+4. **No leave-warning** — back button / browser nav / route change discards everything typed.
+5. **No per-step confirmation** — user has no signal that step data was captured.
 
-Key UX rules:
-- Steps 4 and 5 have a visible **Skip** button alongside Continue.
-- Steps 1–3 require their fields; inline validation, no toasts on every keystroke.
-- Top progress bar (5 dots) + Back button on every step except step 1.
-- Auto-save draft to `store_profiles` on each step transition so users can resume.
-- On completion: `setup_complete = true`, success toast, route to dashboard.
+## What we'll change
 
-## Changes
+### 1. Fix the schema error (blocking)
+- Stop sending `email` to `store_profiles` (it's not a column).
+- Keep business email in component state and persist it on the matching `restaurants` row (which does support email) for restaurant categories, and on the user's `profiles.email` only if user opts in later. For non-restaurant categories, drop it from the payload — we'll surface a TODO if a column is added later.
 
-### 1. `src/pages/app/AppHome.tsx`
-- Rename the fallback card label "Partner Admin" → **"Business Page"**, subtitle → **"Create your business page on Zivo"**.
-- Change `onClick` from `navigate("/partner-login")` → `navigate("/business/new")`.
-- Keep the existing "owner store detected" branch unchanged (users who already have a store still see ops).
+### 2. Duplicate slug protection
+- Before insert, query `store_profiles` for existing rows where `slug = candidate AND owner_id <> current user`.
+- If taken, auto-append a short numeric suffix (`-2`, `-3`, …) up to 5 attempts; after that, show inline error on Step 1: *"That business name is already taken — try a small variation."* and keep the user on Step 1 with focus on the name field.
+- Also catch Postgres `23505` from the insert as a final safety net and surface the same friendly message.
 
-### 2. New page `src/pages/business/BusinessPageWizard.tsx`
-- 5-step wizard component using existing `Card`, `Button`, `Input`, `Label`, `framer-motion` patterns from `StoreSetup.tsx`.
-- Reuses `STORE_CATEGORY_OPTIONS` (grouped chips) for the "Set type of business" step.
-- Reuses `formatPhone` and the `store-assets` storage bucket upload pattern from `StoreSetup.tsx` for logo/banner.
-- On submit, upserts `store_profiles` (owner_id = auth.uid, category, name, phone, email, logo_url, banner_url, setup_complete=true) and:
-  - if category is `restaurant|cafe|bakery|drink`, also inserts a minimal `restaurants` row and routes to `/restaurant/dashboard`,
-  - if category is lodging (`hotel|resort|guesthouse`), routes to `/admin/stores/:id?tab=lodge-overview`,
-  - else routes to `/admin/stores/:id`.
-- Prefills contact step with `profiles.full_name`, `profiles.phone`, `user.email`.
-- If the user already has a `store_profiles` row with `setup_complete=true`, redirect straight to the dashboard (no double-setup).
+### 3. Leave-wizard confirm dialog
+- Track `isDirty` (true once any field is touched and `setup_complete` not yet true).
+- Add a `useBeforeUnload` handler for full-page reload/close.
+- Intercept the in-app Back button and any `navigate(-1)` from Step >1 with an `<AlertDialog>`: *"Leave setup? Your progress on this step won't be saved."* with **Stay** / **Leave** actions.
+- Soft-save partial progress (without `setup_complete`) on every successful **Continue**, so returning to `/business/new` later resumes mid-flow.
 
-### 3. `src/App.tsx`
-- Add lazy route: `<Route path="/business/new" element={<ProtectedRoute><BusinessPageWizard /></ProtectedRoute>} />`.
+### 4. "Setup saved" + "Next: …" status summary
+- After each successful **Continue**, show a small toast: *"Step saved · Next: Business type"* (etc.).
+- Add a compact summary chip row beneath the progress bar listing completed steps with a green check (`Basics ✓ · Type ✓ · Contact …`). Tapping a completed chip jumps back to that step (read-only-ish, but editable).
 
-### 4. (No DB migration needed)
-All target tables (`store_profiles`, `restaurants`, `profiles`) already exist with the required columns.
+### 5. Dashboard routing + fallback
+- Verified destinations:
+  - Lodging categories → `/admin/stores/:storeId?tab=lodge-overview` ✓ exists.
+  - Generic store categories → `/admin/stores/:storeId` ✓ exists.
+  - Restaurants/cafes/bakeries/drinks → currently points at `/restaurant/dashboard` which **doesn't exist**. Change to `/eats/restaurant-dashboard` (the real route).
+- Add a centralized `resolveBusinessDashboardRoute(category, storeId)` helper.
+- Add a final fallback: if the resolved route would 404 (unknown category), route to `/admin/stores/:storeId` and toast *"Opened your generic dashboard — pick a category later to unlock more tools."*
 
-## Technical Notes
+### 6. Light type cleanup
+- Cast the upsert payload through a typed helper instead of `Record<string, any>` / `(supabase as any)`.
 
-- Reuse existing routing convention (`isLodgingStoreCategory`) used by `PartnerLogin.tsx` so dashboard handoff stays consistent.
-- Restaurant branch: only insert into `restaurants` if no row with `owner_id = auth.uid` exists yet (mirrors `PartnerLogin` lookup).
-- Skip buttons set the field to `null` server-side so users can fill it in later from the dashboard's profile page.
-- Wizard layout follows existing mobile-native patterns: safe-area top padding, sticky bottom action bar with Back / Skip / Continue.
-- Fallback unchanged for unauthenticated users — `ProtectedRoute` will redirect to `/auth?redirect=/business/new`.
+## Files to edit
+
+- `src/pages/business/BusinessPageWizard.tsx` — all of the above.
+- `src/lib/business/dashboardRoute.ts` *(new, tiny)* — `resolveBusinessDashboardRoute()` + restaurant category set, reused by the wizard and by the auto-redirect-on-mount block.
+
+## Out of scope (call out, do not do)
+
+- No new DB migrations. We won't add an `email` column to `store_profiles` unless you ask — the wizard will simply stop sending it.
+- No changes to the home card or the `/business/new` route registration (already shipped).
+- No redesign of the dashboards themselves.
+
+## Acceptance checks
+
+- Completing the wizard with category = *Restaurant* lands on `/eats/restaurant-dashboard` with no console errors.
+- Completing with category = *Hotel* lands on `/admin/stores/:id?tab=lodge-overview`.
+- Re-running with the same business name as another owner shows the friendly duplicate message and keeps the user on Step 1.
+- Pressing Back mid-wizard opens the confirm dialog; choosing **Stay** keeps state; **Leave** discards.
+- Reopening `/business/new` after a partial save resumes on the next incomplete step with previous fields prefilled.
+- Each Continue press shows a "Step saved · Next: …" toast and advances the chip checkmarks.
