@@ -42,7 +42,12 @@ import AtSign from "lucide-react/dist/esm/icons/at-sign";
 import MoreHorizontal from "lucide-react/dist/esm/icons/more-horizontal";
 import Download from "lucide-react/dist/esm/icons/download";
 import Share2 from "lucide-react/dist/esm/icons/share-2";
+import Plus from "lucide-react/dist/esm/icons/plus";
+import ChevronDown from "lucide-react/dist/esm/icons/chevron-down";
+import CornerDownRight from "lucide-react/dist/esm/icons/corner-down-right";
+import { useNavigate } from "react-router-dom";
 import { getPublicOrigin } from "@/lib/getPublicOrigin";
+import { useStoryRealtime } from "@/hooks/useStoryRealtime";
 
 export interface StoryItem {
   id: string;
@@ -90,6 +95,7 @@ export default function StoryViewer({
 }: Props) {
   const { user } = useAuth();
   const queryClient = useQueryClient();
+  const navigate = useNavigate();
 
   const [groupIdx, setGroupIdx] = useState(startGroupIndex);
   const [viewIdx, setViewIdx] = useState(startStoryIndex);
@@ -104,6 +110,13 @@ export default function StoryViewer({
   const [showForward, setShowForward] = useState(false);
   const [showMore, setShowMore] = useState(false);
   const [showMention, setShowMention] = useState(false);
+  // Quick-react picker (non-owner: tap "+" or long-press to open expanded grid)
+  const [showQuickReact, setShowQuickReact] = useState(false);
+  // Threaded reply UI inside the Reactions tab
+  const [openThreadId, setOpenThreadId] = useState<string | null>(null);
+  const [threadDraft, setThreadDraft] = useState("");
+  // Track which reaction is "mine" so we can render the × clear chip
+  // (server already enforces uniqueness via reactToStory mutation)
 
   const timerRef = useRef<number | null>(null);
   const startTimeRef = useRef(0);
@@ -138,6 +151,9 @@ export default function StoryViewer({
   const viewingGroup = groups[groupIdx] ?? null;
   const currentStory = viewingGroup?.stories[viewIdx] ?? null;
   const isOwner = viewingGroup?.userId === user?.id;
+
+  // Live updates: subscribe to reactions / comments / views for the active story
+  useStoryRealtime(currentStory?.id);
 
   // ---- Viewers (owner only) ----
   const { data: viewers = [] } = useQuery({
@@ -178,7 +194,7 @@ export default function StoryViewer({
     queryFn: async () => {
       const { data } = await supabase
         .from("story_reactions" as any)
-        .select("user_id, emoji, created_at")
+        .select("id, user_id, emoji, created_at")
         .eq("story_id", currentStory!.id)
         .order("created_at", { ascending: false });
       if (!data || data.length === 0) return [];
@@ -225,6 +241,24 @@ export default function StoryViewer({
       }));
     },
   });
+
+  // Parse comments into threads keyed by reactionId.
+  // Convention: content starting with "[react:<uuid>] body" belongs to that
+  // reaction's thread. Plain comments (no prefix) go into the legacy bucket.
+  const REACT_PREFIX = /^\[react:([0-9a-f-]{36})\]\s*/i;
+  const commentsByReaction = new Map<string, any[]>();
+  const flatComments: any[] = [];
+  for (const c of comments as any[]) {
+    const m = REACT_PREFIX.exec(c.content || "");
+    if (m) {
+      const reactionId = m[1];
+      const cleaned = { ...c, content: c.content.replace(REACT_PREFIX, "") };
+      if (!commentsByReaction.has(reactionId)) commentsByReaction.set(reactionId, []);
+      commentsByReaction.get(reactionId)!.push(cleaned);
+    } else {
+      flatComments.push(c);
+    }
+  }
 
   // ---- My reaction on the current story (real persistence) ----
   const { data: myReaction } = useQuery({
@@ -322,7 +356,7 @@ export default function StoryViewer({
     setShowForward(true);
   }, [currentStory]);
 
-  // ---- Post comment ----
+  // ---- Post comment (used for threaded replies under reactions) ----
   const postComment = useMutation({
     mutationFn: async (content: string) => {
       const { error } = await supabase.from("story_comments" as any).insert({
@@ -335,14 +369,47 @@ export default function StoryViewer({
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["story-comments", currentStory?.id] });
       setCommentText("");
+      setThreadDraft("");
     },
     onError: (err: any) => {
       if (err?.message?.includes("violates row-level security")) {
-        toast.error("Only friends can comment on this story");
+        toast.error("Only the story owner or original reactor can reply here");
       } else {
-        toast.error("Failed to post comment");
+        toast.error("Failed to post reply");
       }
     },
+  });
+
+  // ---- DM-style story reply (non-owner) — lands in the owner's chat inbox ----
+  const sendDmReply = useMutation({
+    mutationFn: async (text: string) => {
+      if (!currentStory || !viewingGroup || !user) throw new Error("Not ready");
+      const ownerId = viewingGroup.userId;
+      if (ownerId === user.id) throw new Error("Cannot reply to your own story");
+      const deepLink = `${getPublicOrigin()}/stories/${currentStory.id}`;
+      const body = `💬 Replied to your story\n${text}\n${deepLink}`;
+      const { error } = await (supabase as any).from("direct_messages").insert({
+        sender_id: user.id,
+        receiver_id: ownerId,
+        message: body,
+        message_type: "text",
+      });
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      setCommentText("");
+      toast.success("Reply sent", {
+        description: "Continue the conversation in chat.",
+        action: {
+          label: "Open chat",
+          onClick: () => {
+            closeWithMeta();
+            navigate("/chat");
+          },
+        },
+      });
+    },
+    onError: (err: any) => toast.error(err?.message || "Could not send reply"),
   });
 
   // ---- Delete (owner) — also removes media + audio from storage ----
@@ -709,8 +776,8 @@ export default function StoryViewer({
 
           {!isOwner && (
             <>
-              <div className="px-4 pb-2">
-                <div className="flex items-center justify-center gap-3">
+              <div className="px-4 pb-2 relative">
+                <div className="flex items-center justify-center gap-2.5">
                   {["❤️", "😂", "😮", "🔥", "😢", "👏"].map((emoji) => {
                     const active = myReaction === emoji;
                     return (
@@ -718,17 +785,70 @@ export default function StoryViewer({
                         key={emoji}
                         onClick={() => reactToStory.mutate(active ? null : emoji)}
                         className={cn(
-                          "text-2xl transition-transform active:scale-150",
-                          active && "drop-shadow-[0_0_10px_rgba(255,255,255,0.6)] scale-125"
+                          "relative text-2xl transition-transform active:scale-150",
+                          active && "drop-shadow-[0_0_10px_rgba(255,255,255,0.65)] scale-125"
                         )}
-                        aria-label={`React with ${emoji}`}
+                        aria-label={active ? `Remove ${emoji} reaction` : `React with ${emoji}`}
                       >
                         {emoji}
+                        {active && (
+                          <span className="absolute -top-1 -right-2 w-4 h-4 rounded-full bg-black/70 border border-white/40 flex items-center justify-center text-[10px] text-white">
+                            ×
+                          </span>
+                        )}
                       </button>
                     );
                   })}
+                  <button
+                    onClick={() => setShowQuickReact((v) => !v)}
+                    className={cn(
+                      "w-9 h-9 rounded-full bg-white/10 backdrop-blur-md border border-white/15 flex items-center justify-center transition active:scale-90",
+                      showQuickReact && "bg-white/25 ring-2 ring-white/40"
+                    )}
+                    aria-label="More reactions"
+                  >
+                    <Plus className="w-4 h-4 text-white" strokeWidth={2.5} />
+                  </button>
                 </div>
+
+                {/* Quick-react expanded picker */}
+                <AnimatePresence>
+                  {showQuickReact && (
+                    <motion.div
+                      initial={{ opacity: 0, y: 8, scale: 0.95 }}
+                      animate={{ opacity: 1, y: 0, scale: 1 }}
+                      exit={{ opacity: 0, y: 8, scale: 0.95 }}
+                      transition={{ duration: 0.15 }}
+                      className="absolute left-3 right-3 bottom-full mb-2 z-30"
+                    >
+                      <div className="rounded-2xl bg-black/65 backdrop-blur-2xl border border-white/15 ring-1 ring-[hsl(160_84%_55%)/0.25] shadow-[0_10px_40px_-10px_rgba(0,0,0,0.7)] p-3">
+                        <div className="grid grid-cols-8 gap-1.5">
+                          {["😍","🥹","🤩","😎","😭","🤣","👏","🙌","💯","🔥","✨","💖","🥳","😱","😤","🫶","🤝","👀","🌟","⚡","🎉","🍿","🤔","🙏"].map((emoji) => {
+                            const active = myReaction === emoji;
+                            return (
+                              <button
+                                key={emoji}
+                                onClick={() => {
+                                  reactToStory.mutate(active ? null : emoji);
+                                  setShowQuickReact(false);
+                                }}
+                                className={cn(
+                                  "h-9 rounded-lg text-xl flex items-center justify-center transition active:scale-125",
+                                  active ? "bg-white/25 ring-1 ring-white/50" : "hover:bg-white/10"
+                                )}
+                                aria-label={`React with ${emoji}`}
+                              >
+                                {emoji}
+                              </button>
+                            );
+                          })}
+                        </div>
+                      </div>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
               </div>
+
               <div className="px-4 pb-3">
                 <div className="flex items-center gap-2 bg-white/10 backdrop-blur-md rounded-full px-4 py-2.5 border border-white/10">
                   <input
@@ -736,21 +856,23 @@ export default function StoryViewer({
                     value={commentText}
                     onChange={(e) => setCommentText(e.target.value)}
                     onKeyDown={(e) => {
-                      if (e.key === "Enter" && commentText.trim()) postComment.mutate(commentText.trim());
+                      if (e.key === "Enter" && commentText.trim()) sendDmReply.mutate(commentText.trim());
                     }}
-                    placeholder={`Reply to ${viewingGroup.userName.split(" ")[0]}...`}
+                    placeholder={`Message ${viewingGroup.userName.split(" ")[0]}...`}
                     className="flex-1 bg-transparent text-white text-sm outline-none placeholder:text-white/50"
                     onFocus={() => setPaused(true)}
                     onBlur={() => setPaused(false)}
                   />
                   <button
-                    onClick={() => { if (commentText.trim()) postComment.mutate(commentText.trim()); }}
-                    disabled={postComment.isPending}
-                    aria-label="Send reply"
+                    onClick={() => { if (commentText.trim()) sendDmReply.mutate(commentText.trim()); }}
+                    disabled={sendDmReply.isPending || !commentText.trim()}
+                    aria-label="Send reply via chat"
+                    className="disabled:opacity-40"
                   >
-                    <Send className="w-4 h-4 text-white/60" />
+                    <Send className="w-4 h-4 text-[hsl(160_84%_60%)]" />
                   </button>
                 </div>
+                <p className="text-[10px] text-white/45 text-center mt-1.5">Replies open in chat</p>
               </div>
             </>
           )}
@@ -880,30 +1002,116 @@ export default function StoryViewer({
                 ) : reactionList.length === 0 ? (
                   <p className="text-sm text-muted-foreground text-center py-8">No reactions yet</p>
                 ) : (
-                  reactionList.map((r: any, i: number) => (
-                    <div key={`${r.user_id}-${i}`} className="flex items-center gap-3">
-                      <div className="relative w-9 h-9 shrink-0">
-                        <div className="w-9 h-9 rounded-full bg-muted overflow-hidden">
-                          {r.avatar ? (
-                            <img src={r.avatar} alt="" className="w-full h-full object-cover" />
-                          ) : (
-                            <div className="w-full h-full flex items-center justify-center text-xs font-bold text-muted-foreground">
-                              {r.name.charAt(0)}
+                  reactionList.map((r: any, i: number) => {
+                    const thread = commentsByReaction.get(r.id) || [];
+                    const isOpen = openThreadId === r.id;
+                    const canReplyHere = isOwner || user?.id === r.user_id;
+                    return (
+                      <div key={`${r.id}-${i}`} className="rounded-xl">
+                        <div className="flex items-center gap-3">
+                          <div className="relative w-9 h-9 shrink-0">
+                            <div className="w-9 h-9 rounded-full bg-muted overflow-hidden">
+                              {r.avatar ? (
+                                <img src={r.avatar} alt="" className="w-full h-full object-cover" />
+                              ) : (
+                                <div className="w-full h-full flex items-center justify-center text-xs font-bold text-muted-foreground">
+                                  {r.name.charAt(0)}
+                                </div>
+                              )}
                             </div>
-                          )}
+                            <span className="absolute -bottom-1 -right-1 text-[15px] leading-none drop-shadow-[0_1px_3px_rgba(0,0,0,0.4)]">
+                              {r.emoji}
+                            </span>
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <p className="text-sm font-semibold text-foreground truncate">{r.name}</p>
+                            <p className="text-[10px] text-muted-foreground">
+                              Reacted {formatDistanceToNow(new Date(r.created_at), { addSuffix: true })}
+                            </p>
+                          </div>
+                          <button
+                            onClick={() => {
+                              setOpenThreadId(isOpen ? null : r.id);
+                              setThreadDraft("");
+                            }}
+                            className={cn(
+                              "shrink-0 flex items-center gap-1 px-2.5 py-1.5 rounded-full text-[11px] font-semibold transition",
+                              isOpen
+                                ? "bg-[hsl(160_84%_45%)/0.15] text-foreground ring-1 ring-[hsl(160_84%_45%)/0.4]"
+                                : "text-muted-foreground hover:bg-muted"
+                            )}
+                            aria-label={isOpen ? "Close thread" : "Open thread"}
+                          >
+                            <MessageCircle className="w-3 h-3" />
+                            {thread.length > 0 && <span>{thread.length}</span>}
+                            <ChevronDown className={cn("w-3 h-3 transition-transform", isOpen && "rotate-180")} />
+                          </button>
                         </div>
-                        <span className="absolute -bottom-1 -right-1 text-[15px] leading-none drop-shadow-[0_1px_3px_rgba(0,0,0,0.4)]">
-                          {r.emoji}
-                        </span>
+
+                        {/* Thread body */}
+                        {isOpen && (
+                          <div className="mt-2 ml-12 pl-3 border-l-2 border-[hsl(160_84%_45%)/0.25] space-y-2">
+                            {thread.length === 0 && (
+                              <p className="text-[11px] text-muted-foreground italic py-1">
+                                No replies yet{canReplyHere ? " — start the thread" : ""}.
+                              </p>
+                            )}
+                            {thread.map((tc: any) => (
+                              <div key={tc.id} className="flex gap-2 items-start">
+                                <CornerDownRight className="w-3 h-3 text-muted-foreground/60 mt-1.5 shrink-0" />
+                                <div className="w-6 h-6 rounded-full bg-muted overflow-hidden flex-shrink-0">
+                                  {tc.avatar ? (
+                                    <img src={tc.avatar} alt="" className="w-full h-full object-cover" />
+                                  ) : (
+                                    <div className="w-full h-full flex items-center justify-center text-[9px] font-bold text-muted-foreground">
+                                      {tc.name.charAt(0)}
+                                    </div>
+                                  )}
+                                </div>
+                                <div className="flex-1 min-w-0">
+                                  <div className="flex items-baseline gap-1.5">
+                                    <span className="text-[11px] font-bold text-foreground">{tc.name}</span>
+                                    <span className="text-[9px] text-muted-foreground">
+                                      {formatDistanceToNow(new Date(tc.created_at), { addSuffix: true })}
+                                    </span>
+                                  </div>
+                                  <p className="text-[12px] text-foreground leading-snug">{tc.content}</p>
+                                </div>
+                              </div>
+                            ))}
+                            {canReplyHere && (
+                              <div className="flex items-center gap-2 mt-2">
+                                <input
+                                  type="text"
+                                  value={threadDraft}
+                                  onChange={(e) => setThreadDraft(e.target.value)}
+                                  onKeyDown={(e) => {
+                                    if (e.key === "Enter" && threadDraft.trim()) {
+                                      postComment.mutate(`[react:${r.id}] ${threadDraft.trim()}`);
+                                    }
+                                  }}
+                                  placeholder="Reply in thread..."
+                                  className="flex-1 bg-muted rounded-full px-3 py-1.5 text-[12px] outline-none text-foreground placeholder:text-muted-foreground"
+                                />
+                                <button
+                                  onClick={() => {
+                                    if (threadDraft.trim()) {
+                                      postComment.mutate(`[react:${r.id}] ${threadDraft.trim()}`);
+                                    }
+                                  }}
+                                  disabled={postComment.isPending || !threadDraft.trim()}
+                                  className="text-[hsl(160_84%_45%)] disabled:opacity-40"
+                                  aria-label="Send thread reply"
+                                >
+                                  <Send className="w-3.5 h-3.5" />
+                                </button>
+                              </div>
+                            )}
+                          </div>
+                        )}
                       </div>
-                      <div className="flex-1 min-w-0">
-                        <p className="text-sm font-semibold text-foreground truncate">{r.name}</p>
-                        <p className="text-[10px] text-muted-foreground">
-                          Reacted {formatDistanceToNow(new Date(r.created_at), { addSuffix: true })}
-                        </p>
-                      </div>
-                    </div>
-                  ))
+                    );
+                  })
                 )}
               </div>
             </motion.div>
