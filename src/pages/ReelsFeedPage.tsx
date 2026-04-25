@@ -1033,7 +1033,7 @@ export default function ReelsFeedPage() {
                             <div className="flex-1 min-w-0 leading-tight">
                               <p className="text-sm font-semibold text-foreground truncate flex items-center gap-1">
                                 <span className="truncate">{post.author_name}</span>
-                                {isBlueVerified(post.author_is_verified) && <VerifiedBadge size={14} />}
+                                {isBlueVerified(post.author_is_verified) && <VerifiedBadge size={16} />}
                               </p>
                               <p className="text-[11px] text-muted-foreground truncate">
                                 {(() => {

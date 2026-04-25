@@ -841,20 +841,15 @@ export default function PublicProfilePage() {
                   <AvatarImage src={resolvedProfile.avatar_url || undefined} />
                   <AvatarFallback className="text-3xl sm:text-4xl font-bold bg-muted text-muted-foreground">{initials}</AvatarFallback>
                 </Avatar>
-                {isBlueVerified(resolvedProfile.is_verified) && (
-                  <div className="absolute bottom-1 right-1 rounded-full bg-background p-0.5 shadow-md">
-                    <VerifiedBadge size={20} />
-                  </div>
-                )}
               </div>
             </div>
           </div>
 
           {/* Profile Info */}
           <div className="flex flex-col items-center pt-16 sm:pt-20 pb-4 px-4 max-w-3xl mx-auto">
-            <h2 className="text-xl font-bold text-foreground inline-flex items-center gap-1.5">
-              {resolvedProfile.full_name}
-              {isBlueVerified(resolvedProfile.is_verified) && <VerifiedBadge size={18} />}
+            <h2 className="text-2xl font-bold tracking-tight text-foreground inline-flex items-center gap-1.5">
+              <span>{resolvedProfile.full_name}</span>
+              {isBlueVerified(resolvedProfile.is_verified) && <VerifiedBadge size={22} />}
             </h2>
             {resolvedProfile.bio && (
               <p className="mt-2 max-w-md text-center text-sm text-muted-foreground whitespace-pre-wrap break-words">

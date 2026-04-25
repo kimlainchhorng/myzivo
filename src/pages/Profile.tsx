@@ -603,9 +603,6 @@ const Profile = () => {
                               {getInitials()}
                             </AvatarFallback>
                           </Avatar>
-                          {profile?.is_verified && (
-                            <BlueVerifiedBadge className="absolute bottom-1 right-1 h-6 w-6" />
-                          )}
                           <motion.button
                             whileHover={{ scale: 1.15, rotate: 10 }}
                             whileTap={{ scale: 0.85 }}
@@ -623,9 +620,9 @@ const Profile = () => {
 
                     {/* Name & status */}
                     <div className="px-6 pb-1.5 pt-2 text-left">
-                      <CardTitle className="flex items-center justify-start gap-2 text-lg font-bold">
-                        {profile?.full_name || t("profile.set_name")}
-                        {profile?.is_verified && <BlueVerifiedBadge />}
+                      <CardTitle className="flex items-center justify-start gap-1.5 text-2xl font-bold tracking-tight">
+                        <span>{profile?.full_name || t("profile.set_name")}</span>
+                        {profile?.is_verified && <VerifiedBadge size={22} />}
                       </CardTitle>
                       {/* Email hidden — only visible to account owner in settings */}
                       <div className="flex flex-wrap items-center justify-start gap-2 mt-3">
