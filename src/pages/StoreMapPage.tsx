@@ -221,6 +221,7 @@ function makeUserDotIcon(): string {
 
 export default function StoreMapPage() {
   const navigate = useNavigate();
+  const [urlParams] = useSearchParams();
   const mapContainerRef = useRef<HTMLDivElement>(null);
   const mapRef = useRef<google.maps.Map | null>(null);
   const markersRef = useRef<google.maps.Marker[]>([]);
@@ -229,9 +230,9 @@ export default function StoreMapPage() {
   const [mapReady, setMapReady] = useState(false);
   const [mapError, setMapError] = useState(false);
   const [selectedStore, setSelectedStore] = useState<StorePin | null>(null);
-  const [activeCategory, setActiveCategory] = useState<string>("all");
-  const [searchQuery, setSearchQuery] = useState("");
-  const [searchOpen, setSearchOpen] = useState(false);
+  const [activeCategory, setActiveCategory] = useState<string>(urlParams.get("cat") || "all");
+  const [searchQuery, setSearchQuery] = useState(urlParams.get("q") || "");
+  const [searchOpen, setSearchOpen] = useState<boolean>(!!urlParams.get("q"));
   const [userLocation, setUserLocation] = useState<{ lat: number; lng: number } | null>(null);
   const [currentUserId, setCurrentUserId] = useState<string | null>(null);
   const [selectedProductId, setSelectedProductId] = useState<string>("");
