@@ -466,6 +466,17 @@ export default function StoreMapPage() {
     }
   }, [mapReady, filteredStores, userLocation, liveStoreMap]);
 
+  // Auto-focus a store when ?focus=<storeId> is present (deep-link from list page)
+  const focusId = urlParams.get("focus");
+  useEffect(() => {
+    if (!mapReady || !focusId || !mapRef.current) return;
+    const target = filteredStores.find((s) => s.id === focusId);
+    if (!target) return;
+    setSelectedStore(target);
+    mapRef.current.panTo({ lat: target.latitude, lng: target.longitude });
+    mapRef.current.setZoom(15);
+  }, [mapReady, focusId, filteredStores]);
+
   const handleRecenter = useCallback(() => {
     if (!mapRef.current) return;
     if (userLocation) { mapRef.current.panTo(userLocation); mapRef.current.setZoom(14); }
