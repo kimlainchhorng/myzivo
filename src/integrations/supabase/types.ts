@@ -59787,6 +59787,7 @@ export type Database = {
       cleanup_expired_messages: { Args: never; Returns: undefined }
       cleanup_expired_otp_codes: { Args: never; Returns: undefined }
       cleanup_expired_qr_tokens: { Args: never; Returns: undefined }
+      cleanup_expired_stories: { Args: never; Returns: number }
       cleanup_expired_tokens: { Args: never; Returns: undefined }
       cleanup_live_artifacts: { Args: never; Returns: Json }
       cleanup_old_live_stream_signals: { Args: never; Returns: undefined }
