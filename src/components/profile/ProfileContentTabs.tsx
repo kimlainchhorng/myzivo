@@ -894,11 +894,7 @@ export default function ProfileContentTabs({ userId }: { userId?: string }) {
               profileOwnerId={profileOwnerId}
               isLiked={likedPosts.has(item.id)}
               isBookmarked={bookmarkedPosts.has(toUserPostInteractionId(item.id))}
-              onToggleLike={(feedItem) => {
-                const isLiked = likedPosts.has(feedItem.id);
-                setLikedPosts((prev) => { const next = new Set(prev); if (isLiked) next.delete(feedItem.id); else next.add(feedItem.id); return next; });
-                setFeed((prev) => prev.map((p) => p.id === feedItem.id ? { ...p, likes: p.likes + (isLiked ? -1 : 1) } : p));
-              }}
+              onToggleLike={(feedItem) => void handleLikeToggle(feedItem as any)}
               onToggleBookmark={(feedItem) => void handleBookmarkToggle(feedItem as any)}
               onOpenMenu={(feedItem) => { setSelectedPost(feedItem as any); setShowPostMenu(true); }}
               onShare={(postId) => setSharePostId(postId)}
@@ -1371,6 +1367,11 @@ export default function ProfileContentTabs({ userId }: { userId?: string }) {
         postSource="user"
         currentUserId={user?.id ?? null}
         commentsCount={commentPost?.comments ?? 0}
+        onCommentsCountChange={(count) => {
+          if (!commentPost) return;
+          const targetId = commentPost.id;
+          setFeed((prev) => prev.map((p) => (p.id === targetId ? { ...p, comments: count } : p)));
+        }}
       />
 
       {createPortal(
