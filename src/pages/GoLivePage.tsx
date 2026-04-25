@@ -390,12 +390,14 @@ export default function GoLivePage() {
           const row = payload.new;
           const { data: prof } = await supabase
             .from("profiles")
-            .select("full_name")
+            .select("full_name, is_verified")
             .eq("user_id", row.user_id)
             .maybeSingle();
+          const verified = (prof as any)?.is_verified === true;
+          verifiedCacheRef.current.set(row.user_id, verified);
           setChatMessages((prev) => [
             ...prev.slice(-39),
-            { id: row.id, user_id: row.user_id, user_name: (prof as any)?.full_name || "Guest", text: row.content, created_at: row.created_at },
+            { id: row.id, user_id: row.user_id, user_name: (prof as any)?.full_name || "Guest", text: row.content, created_at: row.created_at, user_is_verified: verified },
           ]);
         }
       )
@@ -417,13 +419,23 @@ export default function GoLivePage() {
       .on(
         "postgres_changes",
         { event: "INSERT", schema: "public", table: "live_gift_displays", filter: `stream_id=eq.${streamId}` },
-        (payload: any) => {
+        async (payload: any) => {
           const g = payload.new;
           setCoinsEarned((c) => c + g.coins);
           setGiftsReceived((n) => n + 1);
+          let senderVerified = verifiedCacheRef.current.get(g.sender_id);
+          if (senderVerified === undefined) {
+            const { data: prof } = await (supabase as any)
+              .from("profiles")
+              .select("is_verified")
+              .eq("user_id", g.sender_id)
+              .maybeSingle();
+            senderVerified = (prof as any)?.is_verified === true;
+            verifiedCacheRef.current.set(g.sender_id, senderVerified);
+          }
           setChatMessages((prev) => [
             ...prev.slice(-39),
-            { id: `gift-${g.id}`, user_id: g.sender_id, user_name: g.sender_name, text: `sent ${g.gift_name}`, created_at: g.created_at, isGift: true },
+            { id: `gift-${g.id}`, user_id: g.sender_id, user_name: g.sender_name, text: `sent ${g.gift_name}`, created_at: g.created_at, isGift: true, user_is_verified: senderVerified },
           ]);
         }
       )
@@ -980,7 +992,10 @@ export default function GoLivePage() {
                   m.isGift ? "bg-amber-500/30 border border-amber-500/50" : "bg-black/40"
                 )}
               >
-                <span className="text-[10px] font-bold text-amber-300 mr-1.5">{m.user_name}</span>
+                <span className="text-[10px] font-bold text-amber-300 mr-1.5 inline-flex items-center gap-0.5 align-middle">
+                  {m.user_name}
+                  {isBlueVerified(m.user_is_verified) && <VerifiedBadge size={11} interactive={false} />}
+                </span>
                 <span className="text-[11px] text-white">{m.text}</span>
               </motion.div>
             ))
