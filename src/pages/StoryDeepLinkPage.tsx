@@ -10,6 +10,7 @@ import { useNavigate, useParams, Link } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Loader2 } from "lucide-react";
+import { track } from "@/lib/analytics";
 
 export default function StoryDeepLinkPage() {
   const { storyId } = useParams<{ storyId: string }>();
@@ -31,9 +32,11 @@ export default function StoryDeepLinkPage() {
       if (cancelled) return;
       const story = data as any;
       if (error || !story || new Date(story.expires_at) < new Date()) {
+        track("story_deeplink_missing", { story_id: storyId, reason: error ? "error" : !story ? "not_found" : "expired" });
         setStatus("missing");
         return;
       }
+      track("story_deeplink_open", { story_id: storyId, source: "shared-link" });
       navigate(`/feed?story=${storyId}`, { replace: true });
     })();
     return () => {
