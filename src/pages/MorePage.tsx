@@ -99,8 +99,8 @@ const quickLinksMain: QuickLink[] = [
   { icon: Handshake, label: "Become Partner", href: "#partner", description: "Join ZIVO", accent: "hsl(263 70% 58%)" },
   { icon: Heart, label: "Favorites", href: "/account/favorites", description: "Saved items", accent: "hsl(340 75% 55%)" },
   { icon: Award, label: "Badges", href: "/badges", description: "Achievements", accent: "hsl(38 92% 50%)" },
-  { icon: CreditCard, label: "Payment Methods", href: "/account/settings", description: "Cards & banks", accent: "hsl(199 89% 48%)" },
-  { icon: Inbox, label: "Notifications", href: "/notification-center", description: "All alerts", accent: "hsl(45 93% 58%)" },
+  { icon: CreditCard, label: "Payment Methods", href: "/account/wallet", description: "Cards & banks", accent: "hsl(199 89% 48%)" },
+  { icon: Inbox, label: "Inbox", href: "/notification-center", description: "All alerts", accent: "hsl(45 93% 58%)" },
 ];
 
 const quickLinksCreator: QuickLink[] = [
