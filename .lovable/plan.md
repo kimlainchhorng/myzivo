@@ -1,125 +1,75 @@
-# Next Update — Phase 2B → 2H Rollout
+# Safe-Area Hardening: Docs, Audit, Tests, Debug Overlay & QA
 
-Phase 2A is complete (0 linter warnings, granular permissions, storage buckets de-enumerated). This plan ships the remaining hardening + missing infrastructure across seven sub-phases. Each phase is independently shippable and verifiable.
+Five deliverables to lock in the recent safe-area fix and prevent the double-padding gap from coming back.
 
----
+## 1. Developer Doc — Capacitor Safe-Area Behavior
 
-## 2B — Anti-Attack Layer (rate limiting, WAF, brute force)
+Create `docs/dev/capacitor-safe-area.md` covering:
+- Why `StatusBar.overlaysWebView: false` (in `capacitor.config.ts`) means the native shell already insets the WebView below the status bar.
+- Therefore `env(safe-area-inset-top)` returns `0` on iOS Capacitor (no notch reported to CSS).
+- The forbidden anti-pattern: `max(env(safe-area-inset-top), 44px)` — this re-adds 44px on top of the already-inset WebView, producing the white gap shown in the user's "Picture 1".
+- Correct pattern: rely strictly on `env()` values, no minimum floors.
+- When you DO want a floor (true browser PWAs only): use the existing `--zivo-safe-top-overlay` token, never inline `max()`.
+- Quick decision table: Capacitor iOS / Capacitor Android / iOS Safari PWA / Mobile web → expected `env()` value and recommended class.
+- Link to memory `mem://style/mobile-native-ux-standards`.
 
-**Goal:** Block abusive traffic before it touches business logic.
+## 2. Bottom-Nav Padding Audit
 
-- New table `api_rate_limits(bucket_key, window_start, count)` with sliding-window function `public.check_rate_limit(_key text, _limit int, _window_seconds int)`.
-- New shared module `supabase/functions/_shared/rate-limit.ts` — keyed by `ip + user_id + route`, returns 429 with `Retry-After`.
-- New shared module `_shared/waf.ts` — pattern blocklist for SQLi, XSS, path traversal, oversize payloads (>1MB default).
-- New table `security_events(id, kind, ip, user_id, route, payload_hash, created_at)` for forensic trail.
-- Brute-force defense extension to `auth_precheck_login`: progressive delay + device-fingerprint + impossible-travel detection (geo-distance / time).
-- Wire `withRateLimit()` + `withWaf()` into the existing `_shared/respond.ts` middleware chain.
-- Migrate the 5 hardened auth functions first, then top 10 highest-traffic endpoints (from `function_edge_logs`).
+Two custom inline `paddingBottom` usages remain — replace with the shared utility:
+- `src/components/app/ZivoMobileNav.tsx` line 74 → remove inline style, add `pb-safe` class.
+- `src/components/navigation/MobileNavMenu.tsx` line 225 → replace inline `calc(env(...) + 1rem)` with `className="pb-safe pb-4"` (Tailwind composition handles the +1rem).
+- Grep all `pages/*` for any `style={{ paddingBottom: "env(...)` or `pb-[env(...)]` patterns and convert each to `pb-safe`.
+- Verify `MobileBottomNav.tsx` (already uses utility — confirm only).
 
-## 2C — Request Signing & Idempotency
+## 3. Visual Regression Tests
 
-- HMAC-SHA256 request signing for high-value routes (payments, admin mutations, webhooks). Shared `_shared/signing.ts` with `verifySignature()` + replay window (5 min) using `nonce_cache` table.
-- New table `idempotency_records(key, route, response_hash, status_code, expires_at)` + `_shared/idempotency.ts` wrapper. Default TTL 24h.
-- Apply to: `payments-*`, `food-orders-*`, `trips-*-create`, all admin write endpoints.
+Add Playwright-based screenshot tests in `tests/visual/safe-area.spec.ts`:
+- Devices: iPhone SE (375x667), iPhone 13 (390x844), iPhone 14 Pro Max (430x932).
+- Routes: `/account`, `/profile`, `/chat`, `/` (Home).
+- Capture full-page screenshots, store baselines under `tests/visual/__screenshots__/`.
+- Assert top 100px region pixel-diff < 0.1% vs. baseline (catches white-gap regressions specifically).
+- Add `bun run test:visual` script to `package.json`.
+- CI-ready but runnable locally; baselines committed.
 
-## 2D — Observability & Audit
+## 4. In-App Safe-Area Debug Overlay
 
-- `_shared/logger.ts` — structured JSON logs with `correlation_id` (propagated via `x-request-id` header), latency, user_id, route, status.
-- `_shared/audit.ts` — `recordAudit({actor, action, resource, before, after})` writes to existing `audit_logs` table; PII auto-redaction (email/phone/cards via regex).
-- Real-time anomaly view `v_security_anomalies` (spike in 4xx/5xx, repeated 401/403, rate-limit hits) + a `security-alerts` edge function that posts to admin notifications.
+Create `src/components/dev/SafeAreaDebugOverlay.tsx`:
+- Fixed full-screen overlay with translucent colored bands at each inset edge (top = red, bottom = blue, left/right = green).
+- Floating HUD card showing live numeric values for all four `env(safe-area-inset-*)` plus viewport size and `devicePixelRatio`.
+- Toggle persisted in `localStorage` under `zivo:debug:safe-area`.
+- Exposed in **Account → Developer Settings** (gated behind existing dev-mode check) as a Switch row "Show safe-area overlay".
+- Also bind keyboard shortcut `Ctrl+Shift+S` on web for fast toggling.
+- Mounted globally in `AppLayout.tsx` so it overlays every route.
 
-## 2E — MFA & Session Management
+## 5. QA Checklist Page
 
-- New tables: `user_mfa_factors(user_id, type, secret_encrypted, verified_at)`, `user_sessions(id, user_id, device, ip, ua, last_seen, revoked_at)`.
-- TOTP enrollment + verification edge functions (`mfa-enroll`, `mfa-verify`, `mfa-disable`) with backup codes.
-- Account → Security UI: list active sessions, revoke individually or globally, view login history (uses existing `login_audit`), enable/disable TOTP.
-- Step-up auth for sensitive ops (wallet withdraw, password change, role grant).
-
-## 2F — Frontend Security Headers & CSP
-
-- Add CSP, HSTS, Referrer-Policy, Permissions-Policy, X-Frame-Options via `index.html` meta + Lovable hosting headers where supported.
-- Subresource Integrity for any third-party scripts.
-- Lock `iframe` embedding (frame-ancestors 'self' hizivo.com zivollc.com).
-
-## 2G — Background Jobs & Feature Flags
-
-- New table `jobs_queue(id, kind, payload, status, attempts, run_at, locked_by, locked_at)` + `process-jobs` edge function (cron every 1 min) with exponential backoff and dead-letter handling.
-- Migrate fire-and-forget work currently inline in edge functions (email sends, push fan-out, analytics rollups) onto the queue.
-- New table `feature_flags(key, enabled, rollout_pct, audience jsonb)` + `useFeatureFlag(key)` hook + `_shared/flags.ts` for edge-side checks.
-
-## 2H — Data Governance (GDPR/CCPA)
-
-- `account-export-data` edge function: zip of all user-owned rows + storage objects, delivered via signed URL.
-- `account-erase` edge function: soft-delete + 30-day purge job (runs through 2G queue), with admin-side hold capability.
-- Consent ledger table `user_consents(user_id, kind, granted_at, revoked_at, version)` + UI surface in Account → Privacy.
-
----
+Create `src/pages/dev/SafeAreaQAPage.tsx` at route `/dev/qa/safe-area`:
+- Interactive checklist (state in localStorage) with rows for: Profile top gap, Account top gap, Chat header flush, Home status-bar flush, bottom nav home-indicator clearance, MobileNavMenu sheet bottom — each on iPhone SE / 13 / 15 Pro Max.
+- "Open page" button next to each row that navigates to the target route.
+- "Toggle debug overlay" button wired to deliverable #4.
+- Auto-detects platform (Capacitor vs web) and shows expected `env()` values to compare against.
+- Export results as Markdown via a copy-to-clipboard button (for sharing QA reports).
+- Linked from Account → Developer Settings.
 
 ## Technical Details
 
-**New shared modules** (all under `supabase/functions/_shared/`):
-`rate-limit.ts`, `waf.ts`, `signing.ts`, `idempotency.ts`, `logger.ts`, `audit.ts`, `flags.ts`, `mfa.ts`.
+**Files created**
+- `docs/dev/capacitor-safe-area.md`
+- `tests/visual/safe-area.spec.ts` (+ `playwright.config.ts` if not present)
+- `src/components/dev/SafeAreaDebugOverlay.tsx`
+- `src/pages/dev/SafeAreaQAPage.tsx`
 
-**Middleware composition** (extends existing `respond.ts`):
-```text
-withCors → withWaf → withRateLimit → withSignature? → withJwt → withZod → withIdempotency? → handler → withAudit → withLogger
-```
+**Files modified**
+- `src/components/app/ZivoMobileNav.tsx` — remove inline padding
+- `src/components/navigation/MobileNavMenu.tsx` — remove inline padding
+- `src/components/app/AppLayout.tsx` — mount `<SafeAreaDebugOverlay />`
+- `src/App.tsx` — add `/dev/qa/safe-area` route
+- `src/pages/account/...` (Developer Settings) — add overlay toggle + QA page link
+- `package.json` — add `test:visual` script + `@playwright/test` devDep
 
-**New tables** (all RLS service_role-only except `feature_flags` which is public-read):
-`api_rate_limits`, `security_events`, `nonce_cache`, `idempotency_records`, `user_mfa_factors`, `user_sessions`, `jobs_queue`, `feature_flags`, `user_consents`.
+**Memory updates**
+- Append safe-area rule to `mem://style/mobile-native-ux-standards`: "Never use `max(env(safe-area-inset-*), Npx)`. Use `pb-safe`/`pt-safe` only. See `docs/dev/capacitor-safe-area.md`."
 
-**Tests:** Each phase ships Deno tests for the shared module + integration tests against 2 representative endpoints. Vitest coverage for new UI (Security page, MFA enrollment, sessions list).
-
-**Verification report:** After 2H, generate `/mnt/documents/phase-2bh-verification-report.md` with linter results, endpoint middleware coverage matrix, and security_events sample.
-
----
-
-## Rollout Order & Effort
-
-1. 2B Anti-attack — highest impact, ~1 session
-2. 2D Observability — needed to measure 2B/2C — ~0.5 session
-3. 2C Signing/Idempotency — ~1 session
-4. 2E MFA + Sessions — ~1 session (UI heavy)
-5. 2G Jobs + Flags — ~0.5 session
-6. 2F Security headers — ~0.25 session
-7. 2H GDPR tooling — ~0.5 session
-
-Approve to start with **2B + 2D together** (they share the logger/event tables), then proceed sequentially.
-
----
-
-## Progress — 2026-04-25 (Phase 2B/2C/2D/2G/2H foundation shipped)
-
-**Database (migration applied):**
-- `idempotency_records` (key+route PK, 24h TTL, BRIN expiry index, service_role only)
-- `nonce_cache` (5-minute replay window, BRIN expiry, service_role only)
-- `jobs_queue` (kind/payload/status/attempts/run_at/lock, partial index on pending, admin read)
-- `user_consents` (GDPR consent ledger, user-owned RLS)
-- `user_mfa_factors` (TOTP/backup/WebAuthn, user own select+delete, secrets via service role only)
-- `cleanup_expired_security_records()` housekeeping function
-- Reused existing `security_events`, `feature_flags`, `user_sessions` tables (no schema collision)
-
-**Shared edge modules (`supabase/functions/_shared/`):**
-- `waf.ts` — SQLi/XSS/path-traversal/oversize blocklist with URL decode + body sniff (5 tests)
-- `logger.ts` — structured JSON logger with x-request-id correlation propagation
-- `audit.ts` — `recordSecurityEvent` + `recordAudit` + `redactPii` (2 tests)
-- `signing.ts` — HMAC-SHA256 request signing + replay protection
-- `idempotency.ts` — `withIdempotency` wrapper for duplicate-safe mutations
-- `flags.ts` — edge-side feature-flag evaluator with deterministic bucketing + 30s cache
-- `withSecurity.ts` — composer that wires WAF + correlation ID + structured logging into any handler
-
-**Frontend:**
-- `src/hooks/useFeatureFlag.ts` — reactive flag check with 30s cache + bucketed rollout
-- `index.html` — added `X-Frame-Options: SAMEORIGIN`, CSP `frame-ancestors`/`base-uri`/`form-action`/`object-src 'none'`
-
-**Verification:** Deno test suite — **43 passed / 0 failed** across `_shared/` and the 5 hardened auth functions. Build cache clean.
-
-**Skipped per project directive:** backend rate limiting (no infra primitives yet — see `<no-backend-rate-limiting>` rule).
-
-**Next sub-phases ready to ship:**
-- 2B-extra: brute-force enrichment (impossible-travel + device fingerprint) on `auth_precheck_login`
-- 2C-apply: wire `withIdempotency` into `food-orders-create`, `payments-*`, `trips-*-create`
-- 2D-apply: wire `withSecurity` into top-10 traffic edge functions; add `v_security_anomalies` view
-- 2E: `mfa-enroll` / `mfa-verify` / `mfa-disable` edge functions + Account Security UI
-- 2G: `process-jobs` cron edge function + migrate inline fan-outs onto queue
-- 2H: `account-export-data` + `account-erase` edge functions
+**Out of scope**
+- Android edge-to-edge changes (current config keeps WebView inset).
+- Reworking the design tokens in `index.css` (already correct after last fix).
