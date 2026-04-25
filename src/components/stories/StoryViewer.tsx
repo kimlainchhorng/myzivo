@@ -19,7 +19,8 @@ import { cn } from "@/lib/utils";
 import { formatDistanceToNow } from "date-fns";
 import {
   invalidateAllStoryCaches,
-  parseStorageKeyFromPublicUrl,
+  collectStoryStorageKeys,
+  sweepStoryStoragePrefix,
   STORIES_BUCKET,
 } from "@/lib/storiesCache";
 import StoryForwardSheet from "@/components/stories/StoryForwardSheet";
