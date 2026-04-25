@@ -708,7 +708,7 @@ export default function ProfileContentTabs({ userId }: { userId?: string }) {
 
 
   return (
-    <div className="space-y-3">
+    <div className="space-y-4">
       {/* Create Post Bar */}
       <button
         onClick={() => setShowCreatePost(true)}
