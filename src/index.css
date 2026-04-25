@@ -381,7 +381,9 @@
 
   /* Enhanced safe area with fallback for bottom nav */
   .pb-safe {
-    padding-bottom: max(env(safe-area-inset-bottom, 0px), 20px);
+    /* Honor the device-reported home-indicator inset only (no forced 20px floor),
+       so Capacitor iOS doesn't double-pad below the bottom navigation. */
+    padding-bottom: env(safe-area-inset-bottom, 0px);
   }
 
   .pt-safe {
