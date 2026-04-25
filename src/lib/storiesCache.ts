@@ -18,13 +18,31 @@ export const STORIES_BUCKET = "user-stories";
 
 /** Invalidate every cache the story system reads from. */
 export function invalidateAllStoryCaches(qc: QueryClient, userId?: string | null) {
-  qc.invalidateQueries({ queryKey: ["feed-story-users"], exact: true });
-  qc.invalidateQueries({ queryKey: ["user-stories"], exact: true });
-  if (userId) {
-    qc.invalidateQueries({ queryKey: ["profile-story-rings", userId], exact: true });
-    qc.invalidateQueries({ queryKey: ["profile-my-story", userId], exact: true });
-    qc.invalidateQueries({ queryKey: ["my-story-views", userId], exact: true });
-  }
+  const keysToRefresh = new Set([
+    "feed-story-users",
+    "user-stories",
+    "profile-story-rings",
+    "profile-my-story",
+    "my-story-views",
+    "chat-story-rings",
+    "story-author-profiles",
+    "feed-story-profiles",
+  ]);
+  qc.invalidateQueries({
+    predicate: (q) => {
+      const k0 = q.queryKey?.[0];
+      return typeof k0 === "string" && keysToRefresh.has(k0);
+    },
+  });
+  // Also force an immediate refetch of the active carousel queries so the
+  // ring updates without waiting for the next interval.
+  qc.refetchQueries({
+    type: "active",
+    predicate: (q) => {
+      const k0 = q.queryKey?.[0];
+      return typeof k0 === "string" && keysToRefresh.has(k0);
+    },
+  });
 }
 
 /**

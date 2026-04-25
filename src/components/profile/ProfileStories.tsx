@@ -42,7 +42,8 @@ const ProfileStories = () => {
   const { data: allStories = [], isLoading } = useQuery({
     queryKey: ["profile-story-rings", user?.id],
     enabled: !!user?.id,
-    refetchInterval: 60000,
+    refetchInterval: 30000,
+    refetchOnWindowFocus: true,
     queryFn: async () => {
       const { data } = await supabase
         .from("stories" as any)
@@ -241,7 +242,11 @@ const ProfileStories = () => {
         </div>
       </div>
 
-      <CreateStorySheet open={showCreate} onClose={() => setShowCreate(false)} />
+      <CreateStorySheet
+        open={showCreate}
+        onClose={() => setShowCreate(false)}
+        onPublished={() => invalidateAllStoryCaches(queryClient, user?.id)}
+      />
 
       {viewerLocation && (
         <StoryViewer

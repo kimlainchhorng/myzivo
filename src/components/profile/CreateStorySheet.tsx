@@ -30,6 +30,7 @@ import { invalidateAllStoryCaches } from "@/lib/storiesCache";
 interface Props {
   open: boolean;
   onClose: () => void;
+  onPublished?: () => void;
 }
 
 type Step = "choose" | "preview-media" | "compose-text";
@@ -51,7 +52,7 @@ const TEXT_BACKGROUNDS = [
   "linear-gradient(135deg,#1e293b,#334155)",
 ];
 
-export default function CreateStorySheet({ open, onClose }: Props) {
+export default function CreateStorySheet({ open, onClose, onPublished }: Props) {
   const { user } = useAuth();
   const { data: profile } = useUserProfile();
   const queryClient = useQueryClient();
@@ -316,6 +317,7 @@ export default function CreateStorySheet({ open, onClose }: Props) {
       }
 
       await invalidateStoryQueries();
+      onPublished?.();
       toast.success("Story shared 🎉");
       setUploading(false);
       setUploadPhase("idle");
@@ -325,7 +327,7 @@ export default function CreateStorySheet({ open, onClose }: Props) {
       setUploadPhase("idle");
       setUploadError(await getErrorMessage(err, "Failed to share story"));
     }
-  }, [user, step, text, pickedFile, caption, audioTrack, onClose, queryClient]);
+  }, [user, step, text, pickedFile, caption, audioTrack, onClose, onPublished, queryClient]);
 
   const toggleAudioPreview = (track: Track) => {
     if (previewAudioRef.current && audioPreviewing && audioTrack?.id === track.id) {
@@ -358,15 +360,17 @@ export default function CreateStorySheet({ open, onClose }: Props) {
   const initials = profile?.full_name?.[0]?.toUpperCase() || "Y";
 
   const sheet = (
-    <AnimatePresence>
-      <motion.div
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        exit={{ opacity: 0 }}
-        transition={{ duration: 0.18 }}
-        className="fixed inset-0 z-[1500] bg-background/85 backdrop-blur-xl flex items-end sm:items-center justify-center"
-        onClick={handleAttemptClose}
-      >
+    <>
+      <AnimatePresence>
+        <motion.div
+          key="create-story-sheet"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          transition={{ duration: 0.18 }}
+          className="fixed inset-0 z-[1500] bg-background/85 backdrop-blur-xl flex items-end sm:items-center justify-center"
+          onClick={handleAttemptClose}
+        >
         <motion.div
           initial={{ y: "100%" }}
           animate={{ y: 0 }}
@@ -779,8 +783,9 @@ export default function CreateStorySheet({ open, onClose }: Props) {
           )}
         </AnimatePresence>
       </motion.div>
+      </AnimatePresence>
 
-      {/* Hidden inputs (kept outside motion tree to avoid ref warnings) */}
+      {/* Hidden inputs (outside AnimatePresence to avoid duplicate-key warnings) */}
       <input
         ref={fileInputRef}
         type="file"
@@ -796,7 +801,7 @@ export default function CreateStorySheet({ open, onClose }: Props) {
         className="hidden"
         onChange={handleFileChange}
       />
-    </AnimatePresence>
+    </>
   );
 
   return createPortal(sheet, document.body);
