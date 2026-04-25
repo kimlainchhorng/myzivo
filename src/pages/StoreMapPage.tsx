@@ -227,7 +227,7 @@ function makeUserDotIcon(): string {
 
 export default function StoreMapPage() {
   const navigate = useNavigate();
-  const [urlParams] = useSearchParams();
+  const [urlParams, setUrlParams] = useSearchParams();
   const mapContainerRef = useRef<HTMLDivElement>(null);
   const mapRef = useRef<google.maps.Map | null>(null);
   const markersRef = useRef<google.maps.Marker[]>([]);
@@ -236,20 +236,33 @@ export default function StoreMapPage() {
   const [mapReady, setMapReady] = useState(false);
   const [mapError, setMapError] = useState(false);
   const [selectedStore, setSelectedStore] = useState<StorePin | null>(null);
+  const [drawerStore, setDrawerStore] = useState<StorePin | null>(null);
   const [activeCategory, setActiveCategory] = useState<string>(urlParams.get("cat") || "all");
   const [searchQuery, setSearchQuery] = useState(urlParams.get("q") || "");
   const [searchOpen, setSearchOpen] = useState<boolean>(!!urlParams.get("q"));
+  const [openNowOnly, setOpenNowOnly] = useState<boolean>(urlParams.get("open") === "1");
   const [userLocation, setUserLocation] = useState<{ lat: number; lng: number } | null>(null);
   const [currentUserId, setCurrentUserId] = useState<string | null>(null);
   const [selectedProductId, setSelectedProductId] = useState<string>("");
   const [liveStoreMap, setLiveStoreMap] = useState<Record<string, string>>({});
   const searchInputRef = useRef<HTMLInputElement>(null);
 
+  const { isFavorite, toggleFavorite, isAuthed } = useStoreFavorites();
+
   useEffect(() => {
     supabase.auth.getUser().then(({ data }) => {
       setCurrentUserId(data.user?.id || null);
     });
   }, []);
+
+  // Mirror filters back to the URL so List ↔ Map stay in sync
+  useEffect(() => {
+    const next = new URLSearchParams();
+    if (activeCategory !== "all") next.set("cat", activeCategory);
+    if (searchQuery.trim()) next.set("q", searchQuery.trim());
+    if (openNowOnly) next.set("open", "1");
+    setUrlParams(next, { replace: true });
+  }, [activeCategory, searchQuery, openNowOnly, setUrlParams]);
 
   const { data: allStores = [] } = useQuery({
     queryKey: ["store-map-all"],
