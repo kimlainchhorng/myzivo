@@ -1,71 +1,70 @@
-# Plan — Facebook-Style Story Flow on Profile
+# Profile Stories — Facebook-Style Upgrade
 
-## Problem
-The "Your story" entry on the Account page (`ProfileStories`) is broken and inconsistent with the rest of the app:
-- Tapping "Your story" runs a fake handler that just shows a toast — **no actual upload happens**.
-- It queries the wrong table (`user_stories`) while the real working pipeline (used in Feed/Chat) uses `stories` + `story_views` + `story_comments` + the `user-stories` storage bucket.
-- It has no Facebook-style **create flow** (choose Photo / Text / Camera), no caption step, no preview, no audience selector.
-- Viewer is barebones: no pause, no like, no comments, no viewers list, no swipe-down to close.
-- Two parallel implementations (`ChatStories` vs `ProfileStories`) drift apart and confuse users.
+The shared `stories` pipeline, `StoryViewer`, and `CreateStorySheet` are already wired up from the previous turn. This plan closes the remaining gaps so the Profile experience truly matches Facebook.
 
-## Goal
-Bring the Profile "Your story" experience in line with Facebook: a clear **Create Story sheet** → upload/preview → publish → rich **fullscreen viewer** (the same one used elsewhere).
+## What's already working (verified by reading current files)
+- `ProfileStories.tsx` reads from the real `stories` table, opens `CreateStorySheet` to compose, and `StoryViewer` to view.
+- `CreateStorySheet.tsx` uploads to the `user-stories` bucket with photo / camera / colored-text modes and inserts into `stories`.
+- `StoryViewer.tsx` has progress bars, tap zones, swipe-down-to-close, view recording (`story_views` upsert per segment), comments, owner viewers list, and delete.
+- `FeedStoryRing.tsx` already uses a `["feed-story-users"]` query that returns every friend with active stories — we'll reuse it.
 
-## Approach — reuse the working `ChatStories` engine, add a Facebook-style create sheet on top
+## What's missing / to fix
 
-We will NOT maintain two story stacks. We replace `ProfileStories` with a thin profile wrapper that:
-1. Uses the same `stories` table + `user-stories` bucket + `story_views` / `story_comments` already wired in `ChatStories`.
-2. Renders a Facebook-style "Your story" tile.
-3. On tap (when no story exists), opens a new **Create Story bottom sheet**.
-4. On tap (when a story exists), opens the existing rich fullscreen viewer.
+### 1. Profile ring carousel (biggest visible gap)
+Today the Profile only shows a single "Your story" tile. Facebook-style means a horizontal scroller of rings: your tile first, then each friend with an active story.
 
-## Changes
+- Rewrite `ProfileStories.tsx` to render `[Your story | Friend 1 | Friend 2 | …]` in a horizontal scroller.
+- Reuse `["feed-story-users"]` so the cache stays in sync with Feed and Chat.
+- Each tile: avatar wrapped in a gradient ring (full color = unviewed, muted gray = fully viewed), name truncated under it, subtle count dot when a user has 2+ active segments.
+- Tap a tile → open `StoryViewer` with `groups = allUsersWithStories` and `startGroupIndex = tappedIndex` so swiping moves between senders correctly.
+- Skeleton tiles while loading so the row doesn't pop in.
 
-### 1. New component: `src/components/profile/CreateStorySheet.tsx`
-Facebook-style bottom sheet with three creation paths:
-- **Photo / Video** — opens the file picker (image or video, validates ≤5MB image / ≤20MB video).
-- **Text Story** — typed text on a colored gradient background; rendered to a canvas → uploaded as an image.
-- **Camera** — opens file picker with `capture="environment"` so phones launch the camera directly.
+### 2. Correct active-story count per ring
+- The ring count today is implicit (just one progress bar per story). Display the per-user segment count by mapping over `group.stories.length`, and only show the count badge when ≥ 2.
+- "Viewed" detection: add a small `useQuery(["my-story-views"])` that returns the set of `story_id`s the current user has viewed; mark a ring as fully-viewed only when **every** story in that group is in the set.
+- Invalidate `["my-story-views"]` when `StoryViewer` closes so rings update instantly.
 
-Flow:
-1. Tap method → pick/capture media (or type text + pick gradient).
-2. **Preview screen** with caption input (Facebook-style overlaid text field), audience chip ("Public" — read-only for v1), and a primary "Share to Story" button.
-3. On Share: upload to `user-stories` bucket, insert into `stories` table (24h `expires_at`), invalidate the `["user-stories"]` query so the ring updates everywhere.
+### 3. Real upload progress + retry + clear errors
+Replace the boolean `uploading` flag in `CreateStorySheet.tsx` with a real progress UI:
+- Switch from `supabase.storage.upload` to a manual `XMLHttpRequest` PUT against a Supabase signed upload URL (the JS SDK doesn't expose progress events). Request the signed URL via `supabase.storage.from('user-stories').createSignedUploadUrl(path)`.
+- Footer shows a thin progress bar + "Uploading 47%" while active.
+- On failure: inline red error banner with the message + a "Retry" button that re-runs `publish()` with the same payload (no need to re-pick the file).
+- Add a confirm dialog if the user taps the close X mid-upload.
 
-Reuses existing tokens (`bg-card`, `text-foreground`, `bg-primary`, etc.) — no hardcoded colors.
+### 4. Optional music picker in composer + playback
+- Add a "🎵 Music" chip in both the `preview-media` and `compose-text` steps that opens a small bottom-sheet picker.
+- Curated set of 8–12 short royalty-free clips bundled at `public/audio/stories/*.mp3` with title + artist labels.
+- Selected track URL is saved on the new `audio_url` column; preview the chosen clip in the composer with a tiny play/stop control so the user knows what they picked.
+- `StoryViewer.tsx` plays `audio_url` via a single `<audio>` element keyed to `currentStory.id`, auto-playing muted on first segment then unmuting on user tap (mobile autoplay rules); pauses when `paused`, viewers sheet, or comments sheet is open.
 
-### 2. Rewrite `src/components/profile/ProfileStories.tsx`
-- Drop the broken `user_stories` query and fake upload handler.
-- Query the same `stories` table (24h, by current user) to detect "do I have an active story?".
-- Render the same "Your story" tile visual the user already sees.
-- Tap behavior:
-  - No active story → open `CreateStorySheet`.
-  - Has active story → open the fullscreen viewer (extracted from `ChatStories`, see step 3).
-- Long-press / chevron on existing story → quick "Add to your story" or "Delete story" action sheet (Facebook parity).
+### 5. Verify view tracking is firing correctly
+- The per-segment `story_views` upsert is already in `StoryViewer` (`useEffect` keyed on `currentStory.id`). After deploy, run a `supabase--read_query` on `story_views` to confirm rows are landing.
+- Owner ring shows total views as `currentStory.viewsCount` — confirm the `views_count` column is being incremented by the existing trigger, otherwise count rows in `story_views` directly.
 
-### 3. Extract the viewer into a shared component
-- New file: `src/components/stories/StoryViewer.tsx` — lift the fullscreen viewer (progress bars, pause/play, tap zones, like, comment sheet, viewers sheet, delete) out of `ChatStories.tsx` essentially as-is.
-- `ChatStories.tsx` and `ProfileStories.tsx` both import and use it. Behavior identical to today's `ChatStories` viewer (already Facebook/TikTok-class).
-- Add **swipe-down to close** gesture for parity with Facebook (framer-motion drag on Y axis with velocity threshold).
+### 6. Small polish
+- Composer: clear "Music: <track>" pill with an X to remove the selection.
+- Viewer: tiny music icon in the header when `audio_url` is set, tap to mute/unmute.
+- Carousel scrolls horizontally with `snap-x` and momentum on mobile; remains a single row on desktop.
 
-### 4. Profile feed ring stays consistent
-- After publishing from the sheet, invalidate `["user-stories"]` and `["feed-story-users"]` query keys so the ring updates on Profile, Feed, and Chat instantly.
+## Database changes (additive, safe)
+```sql
+alter table public.stories
+  add column if not exists audio_url text;
+```
+No RLS change required (existing row policies cover the new column). Bucket `user-stories` already exists and is public. No migration of existing rows needed.
 
-## Out of scope (call out, don't build)
-- Music sticker, polls, mentions, link sticker — Facebook has these but they're large separate features.
-- Story highlights pinning (already a separate `StoryHighlights.tsx` component).
-- Audience picker beyond "Public" — schema doesn't currently store audience on `stories`.
+(Text stickers on photos are baked into the uploaded image via canvas in the existing text-mode flow — no new column needed for that.)
 
-## Files touched
-- `src/components/profile/ProfileStories.tsx` — rewritten (small wrapper).
-- `src/components/profile/CreateStorySheet.tsx` — **new**.
-- `src/components/stories/StoryViewer.tsx` — **new** (extracted from `ChatStories`).
-- `src/components/chat/ChatStories.tsx` — refactored to import the shared viewer (no UX change).
+## Files to touch
+- `src/components/profile/ProfileStories.tsx` — rewrite as ring carousel with friends + viewed-state.
+- `src/components/profile/CreateStorySheet.tsx` — XHR upload with progress, retry, error banner, music picker UI, save `audio_url`.
+- `src/components/stories/StoryViewer.tsx` — play `audio_url`, mute toggle in header.
+- `supabase/migrations/<ts>_stories_audio_url.sql` — single `add column` statement.
+- `public/audio/stories/` — small bundled track set + a `tracks.json` manifest the picker reads.
 
-No DB migrations needed — `stories`, `story_views`, `story_comments` and the `user-stories` bucket already exist and are in use.
+## Out of scope for this pass
+- Draggable text stickers on top of videos (would need a new `stickers` JSON column + overlay renderer).
+- Drawing / freehand brush.
+- Server-side re-encoding to burn overlays into video.
 
-## Verification
-- Build passes.
-- From Profile, tap "Your story" with no active story → Create sheet opens, can pick photo/video/text, preview, share, story appears in ring instantly.
-- Tap an existing own story → fullscreen viewer with viewers count and delete action.
-- Tap a friend's story (via Feed) → same viewer, can like/comment.
+Ready to implement on approval.

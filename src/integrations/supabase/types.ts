@@ -47634,6 +47634,7 @@ export type Database = {
       }
       stories: {
         Row: {
+          audio_url: string | null
           background_color: string | null
           created_at: string
           duration_seconds: number
@@ -47648,6 +47649,7 @@ export type Database = {
           view_count: number
         }
         Insert: {
+          audio_url?: string | null
           background_color?: string | null
           created_at?: string
           duration_seconds?: number
@@ -47662,6 +47664,7 @@ export type Database = {
           view_count?: number
         }
         Update: {
+          audio_url?: string | null
           background_color?: string | null
           created_at?: string
           duration_seconds?: number
