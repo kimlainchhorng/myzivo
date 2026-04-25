@@ -522,12 +522,17 @@ export default function StoryViewer({
           <div className="absolute inset-0 bg-gradient-to-b from-black/50 via-transparent to-black/60" />
         </div>
 
-        {/* Progress bars */}
+        {/* Progress bars — ZIVO Aurora gradient */}
         <div className="absolute top-[env(safe-area-inset-top,12px)] left-0 right-0 flex gap-1 px-3 pt-2 z-20">
           {viewingGroup.stories.map((_, i) => (
-            <div key={i} className="flex-1 h-[3px] bg-white/25 rounded-full overflow-hidden">
+            <div key={i} className="flex-1 h-[3px] bg-white/15 rounded-full overflow-hidden backdrop-blur-sm">
               <motion.div
-                className="h-full bg-white rounded-full"
+                className={cn(
+                  "h-full rounded-full",
+                  i === viewIdx
+                    ? "bg-gradient-to-r from-[hsl(160_84%_55%)] via-[hsl(174_72%_60%)] to-[hsl(190_85%_65%)] shadow-[0_0_8px_hsl(160_84%_55%/0.7)]"
+                    : "bg-white/90"
+                )}
                 style={{
                   width: i < viewIdx ? "100%" : i === viewIdx ? `${progress * 100}%` : "0%",
                 }}
@@ -536,27 +541,28 @@ export default function StoryViewer({
           ))}
         </div>
 
-        {/* Header */}
-        <div data-testid="story-header" className="absolute top-[calc(env(safe-area-inset-top,12px)+20px)] left-0 right-0 flex items-center justify-between px-4 z-20">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-full ring-2 ring-white/40 overflow-hidden">
+        {/* Header — single ZIVO glass capsule */}
+        <div data-testid="story-header" className="absolute top-[calc(env(safe-area-inset-top,12px)+20px)] left-0 right-0 flex items-center justify-between px-3 z-20 gap-2">
+          <div className="flex items-center gap-2.5 rounded-full bg-black/35 backdrop-blur-xl border border-white/10 ring-1 ring-[hsl(160_84%_55%)/0.25] pl-1 pr-3.5 py-1 shadow-[0_4px_20px_-6px_rgba(0,0,0,0.5)] min-w-0 flex-1 max-w-[68%]">
+            <div className="w-9 h-9 rounded-full ring-2 ring-[hsl(160_84%_55%)/0.7] overflow-hidden shrink-0">
               {viewingGroup.avatarUrl ? (
                 <img src={viewingGroup.avatarUrl} alt="" className="w-full h-full object-cover" />
               ) : (
-                <div className="w-full h-full bg-white/20 flex items-center justify-center text-sm font-bold text-white">
+                <div className="w-full h-full bg-gradient-to-br from-[hsl(160_84%_45%)] to-[hsl(174_72%_40%)] flex items-center justify-center text-sm font-bold text-white">
                   {viewingGroup.userName.charAt(0)}
                 </div>
               )}
             </div>
-            <div>
-              <p className="text-white text-sm font-bold drop-shadow-lg">{viewingGroup.userName}</p>
-              <p className="text-white/70 text-[11px] drop-shadow flex items-center gap-1">
-                {formatDistanceToNow(new Date(currentStory.createdAt), { addSuffix: true })}
+            <div className="min-w-0 flex-1">
+              <p className="text-white text-sm font-bold leading-tight truncate">{viewingGroup.userName}</p>
+              <p className="text-white/70 text-[11px] flex items-center gap-1 leading-tight">
+                <span className="truncate">
+                  {formatDistanceToNow(new Date(currentStory.createdAt), { addSuffix: true })}
+                </span>
                 {currentStory.audioUrl && (
                   <>
                     <span className="opacity-50">·</span>
-                    <Music className="w-3 h-3" />
-                    <span>Music</span>
+                    <Music className="w-3 h-3 shrink-0" />
                   </>
                 )}
               </p>
