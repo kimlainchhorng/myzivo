@@ -620,9 +620,9 @@ const Profile = () => {
 
                     {/* Name & status */}
                     <div className="px-6 pb-1.5 pt-2 text-left">
-                      <CardTitle className="flex items-center justify-start gap-1.5 text-2xl font-bold tracking-tight">
+                      <CardTitle className="flex items-center justify-start gap-2 text-2xl font-bold tracking-tight">
                         <span>{profile?.full_name || t("profile.set_name")}</span>
-                        {profile?.is_verified && <VerifiedBadge size={22} />}
+                        {profile?.is_verified && <VerifiedBadge size={28} />}
                       </CardTitle>
                       {/* Email hidden — only visible to account owner in settings */}
                       <div className="flex flex-wrap items-center justify-start gap-2 mt-3">
