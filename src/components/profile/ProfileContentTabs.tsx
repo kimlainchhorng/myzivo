@@ -428,16 +428,16 @@ export default function ProfileContentTabs({ userId }: { userId?: string }) {
 
         // Fetch avatars for all unique user IDs
         const userIds = [...new Set((data as UserPostRow[]).map((r) => r.user_id))];
-        let avatarMap: Record<string, { avatar_url: string | null; full_name: string | null }> = {};
+        let avatarMap: Record<string, { avatar_url: string | null; full_name: string | null; is_verified: boolean }> = {};
         if (userIds.length > 0) {
           try {
             const { data: profiles } = await supabase
               .from("profiles")
-              .select("user_id, avatar_url, full_name")
+              .select("user_id, avatar_url, full_name, is_verified")
               .in("user_id", userIds);
             if (profiles) {
               for (const p of profiles as any[]) {
-                avatarMap[p.user_id] = { avatar_url: p.avatar_url, full_name: p.full_name };
+                avatarMap[p.user_id] = { avatar_url: p.avatar_url, full_name: p.full_name, is_verified: p.is_verified === true };
               }
             }
           } catch {}
