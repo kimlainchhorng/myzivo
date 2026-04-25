@@ -1,98 +1,80 @@
 ## Goal
 
-Make the leave-guard rock-solid (no false positives, no infinite loops, correctly off after completion), persist every step automatically, give users a "Save & exit" path, and lock the behaviour in with automated tests.
+Make all 10 `BusinessPageWizard` component tests pass reliably, eliminate `act()` warnings, harden the leave-guard (no infinite loop, no prompt after completion), and surface an inline "Unsaved changes" indicator in the wizard header so users can see when leaving will warn them.
 
-## Bugs / gaps in the current wizard
+---
 
-1. **`isDirty` is a false positive.** It's `!!bizName || !!bizEmail || …`, but `bizEmail`, `firstName`, `contactEmail`, etc. are *prefilled* from the user's profile in a `useEffect`. The wizard appears dirty before the user touches anything → the leave dialog opens on every Back press.
-2. **`completedRef` flips too late.** It's set after every awaited DB call in `handleComplete`. A `popstate` fired during that window still shows the leave prompt on the success path.
-3. **Steps 3, 4, 5 don't auto-save.** Only steps 1 & 2 call `persistPartial`. Resuming after a refresh on Step 4 loses the contact info entered on Step 3 (it lives only on `profiles`, but the wizard doesn't re-pull it back into local state on resume).
-4. **No "Save & exit" action.** The dialog only offers Stay / Leave (which discards work-in-progress on the current step).
-5. **Loop risk.** `popstate` re-pushes the sentinel; if a confirmed Leave fires another popstate before the listener is removed, or if the user mashes Back, we could re-prompt. Need an `isLeaving` latch and a single source of truth for "should we guard?".
-6. **No tests** covering any of this.
+## Changes
 
-## Plan
+### 1. `src/pages/business/BusinessPageWizard.tsx`
 
-### 1. Fix `isDirty` (no more false positives)
+**a) Wrap async resume + baseline effects to be test-friendly**
+- The two `useEffect`s that run async work (resume from `store_profiles` and the baseline `setTimeout`) currently fire setStates outside any user-driven action, which is what's producing the `act()` warnings and the timing flakiness. Restructure:
+  - Move the baseline-setting from a `setTimeout(…, 0)` into a `useEffect` that runs **synchronously** once `checking === false` AND the prefill effect has had a chance to run. Use a `useLayoutEffect` (or a `useEffect` with no timer) keyed on `[checking, profile?.id, user?.id]` to set `baselineRef.current = JSON.stringify(snapshot)` and `setBaselineReady(true)` in one tick.
+  - This removes the artificial 5ms wait the tests need and removes the `setTimeout`-induced act warnings.
 
-- Capture a `baselineRef` snapshot of all field values right after the prefill + resume effects settle (use a small `baselineReady` flag set on the next tick once the resume + prefill effects have run).
-- `isDirty = baselineReady && JSON.stringify(currentFields) !== baselineRef.current`.
-- After each successful `persistPartial`, refresh the baseline so just-saved values stop counting as dirty.
+**b) Save & exit on step 1 with empty form**
+- Currently the Save & exit button is disabled when `step === 1 && !canContinue()`. The test "persists progress and navigates to /account on Save & exit" fills only basics (which makes step 1 valid), so this should already pass — but only after the baseline timing fix. Keep the disabled rule (correct UX) and update the test (see test changes) to ensure step-1 fields are valid before clicking.
+- Make `saveAndExit` call `persist({ persistProfile: false })` when `step < 3` and not gate on `canContinue()` for steps ≥ 2.
 
-### 2. Flip the guard off the moment completion starts
+**c) Guard hardening — prevent infinite popstate loop**
+- Add `isLeavingRef` early-out at the **top** of the popstate handler (already present) AND set `isLeavingRef.current = true` synchronously inside `confirmLeave` **before** removing the listener via the effect's `armed` flag.
+- Move sentinel push to only happen the first time the guard arms; on re-arm (after Stay), don't double-push.
+- After `confirmLeave` and after `handleComplete` succeeds, also call a small `disarmGuard()` helper that clears the listener immediately (so the next `popstate` does nothing). This matches what the "Leave navigates exactly once" and "completion disarms guard" tests assert.
 
-- Set `completedRef.current = true` at the very top of `handleComplete` (before any awaits).
-- Also add an `isLeaving` ref set to `true` when the user confirms Leave or Save & exit, so the guard short-circuits during the actual navigation.
+**d) Inline "Unsaved changes" indicator**
+- In the header (next to the "Step X of 5" line), conditionally render a small chip when `isDirty` is true:
+  ```tsx
+  {isDirty && (
+    <span className="inline-flex items-center gap-1 rounded-full bg-amber-500/10 px-2 py-0.5 text-[10px] font-semibold text-amber-600">
+      <span className="h-1.5 w-1.5 rounded-full bg-amber-500" />
+      Unsaved changes
+    </span>
+  )}
+  ```
+- Hidden once the form matches baseline (e.g. right after a successful auto-save) or after completion.
 
-### 3. Auto-save on every step
+**e) Don't prompt after final step**
+- `completedRef.current = true` is already set at the top of `handleComplete`. Also set it the moment the user clicks "Go to dashboard" / Skip on step 5 → confirmed by the existing logic. Verify the popstate handler bails when `completedRef.current` is true (it does). No additional change required beyond ensuring `isDirty` returns false when `completedRef.current` is true (already the case).
 
-- Extend `persistPartial` to also write the step-3 fields it owns:
-  - `profiles.full_name` / `profiles.phone` (already done in `handleComplete` — move into `persistPartial` so step-3 Continue persists immediately).
-- Hit `persistPartial` on Continue for steps 1, 2, 3, 4 (4 already has `logoUrl` saved, just call it). Step 5 still funnels through `handleComplete`.
-- On resume, also re-hydrate contact fields from `profiles` (the existing `profile` query already runs — extend the prefill effect to set values from `profile` instead of skipping when present).
-- After each successful save, update `baselineRef` so the wizard becomes "clean" again.
+---
 
-### 4. "Save & exit" in the leave dialog
+### 2. `src/pages/business/BusinessPageWizard.test.tsx`
 
-- Add a third button to the AlertDialog footer: **Save & exit**.
-- Behaviour: call `persistPartial()` (without `setup_complete`), show toast "Setup saved — pick up here later", set `isLeaving` ref, then navigate to `/account` (or `-1` if there's history). If the save fails, keep the dialog open and surface the error.
-- Disabled when on Step 1 with invalid name (can't satisfy NOT NULL).
+**a) Replace the 5ms timer waits with `findBy*` queries**
+- Remove `await act(async () => { await new Promise((r) => setTimeout(r, 5)); });` lines.
+- Instead, in `waitReady()`, after asserting "business basics" is visible, wait for the baseline to be ready by waiting for an element that depends on it — e.g. `await waitFor(() => expect(screen.getByLabelText(/full business name/i)).toBeEnabled())` — or expose a `data-baseline-ready` attribute on the form root and `await screen.findByTestId('wizard-form[data-baseline-ready="true"]')`.
 
-### 5. Loop-proof popstate handler
+**b) Save & exit test — make persist trigger reliably**
+- After `await fillBasics()`, also fire-change to ensure the React state has flushed before clicking Back. Use `await waitFor(() => expect(screen.getByRole('button', { name: /save & exit/i })).toBeEnabled())` before the click.
+- This guarantees step-1 validity → button enabled → `persist` fires.
 
-- Single `useEffect` with these refs:
-  - `guardArmedRef` — true while `isDirty && !completedRef.current && !isLeaving.current`.
-  - `sentinelPushedRef` — track whether our sentinel is currently the top entry so we never double-push.
-- On mount: push sentinel once. On unmount or when guard becomes disarmed: remove listener, no extra `history.go`.
-- When confirming Leave: set `isLeaving.current = true`, remove the popstate listener *before* `history.go(-1)` so the resulting popstate isn't intercepted.
-- When user opens the dialog via the in-header Back button (not via popstate), confirming Leave just calls `navigate(-1)` directly — no popstate trickery.
+**c) New test: leave dialog does NOT appear after final step (popstate after completion)**
+- Already covered by the "completion disarms guard" test. Strengthen it: also fire a header back click after completion and assert `screen.queryByText(/leave business setup/i)` is null.
 
-### 6. Tests
+**d) New test: rapid repeated popstate doesn't cause infinite loop**
+- After `fillBasics()`, dispatch 3 consecutive `popstate` events in `act(...)` and assert only **one** dialog is open and `navigateSpy` was not called. Then click Leave and dispatch another popstate; assert dialog stays closed and navigate count is exactly 1.
 
-Use the existing Vitest setup. New file: `src/pages/business/BusinessPageWizard.test.tsx`.
+**e) New test: "Unsaved changes" chip visibility**
+- On render: assert chip is NOT in the document.
+- After `fillBasics()`: assert `screen.findByText(/unsaved changes/i)` resolves.
+- After clicking Continue (which auto-saves and updates baseline): assert the chip disappears via `waitFor(() => expect(screen.queryByText(/unsaved changes/i)).not.toBeInTheDocument())`.
 
-Mock surface:
-- `@/integrations/supabase/client` — minimal chainable `from(...).select(...).maybeSingle()` / `update().eq()` / `insert().select().single()` stubs returning canned data; `storage.from().upload()` no-op.
-- `@/contexts/AuthContext` — return `{ user: { id: "u1", email: "u1@test.com" } }`.
-- `@/hooks/useUserProfile` — return prefilled profile.
-- `react-router-dom` — wrap in `MemoryRouter`; spy on `useNavigate`.
+**f) Wrap any remaining state-causing dispatches in `act`**
+- Already used for `popstate`. Ensure all `fireEvent.click` on buttons that fire async `persist` are awaited via `await waitFor(...)` for the post-condition rather than fixed timers.
 
-Cases:
-1. **Clean state doesn't prompt** — render, prefill runs, press in-header Back on Step 1 → no dialog, navigate(-1) called immediately.
-2. **Dirty state prompts on header Back** — type into business name, press Back → dialog opens.
-3. **Dirty state prompts on browser Back** — type into business name, dispatch a `popstate` → dialog opens; assert sentinel is re-pushed (history.length unchanged).
-4. **Stay keeps you on page** — open dialog, click Stay → dialog closes, no navigate call, fields preserved.
-5. **Leave navigates exactly once** — open dialog (popstate path), click Leave → exactly one history pop / navigate call; firing another popstate after does NOT reopen dialog (no infinite loop).
-6. **Save & exit calls persist + navigates** — click Save & exit → `supabase.from('store_profiles').insert` called with `setup_complete: false`, success toast, navigate called.
-7. **Completion disarms the guard** — fill all required fields, click "Go to dashboard"; while submission is pending, fire popstate → no dialog. After completion, navigate to resolved dashboard route.
-8. **Refresh / beforeunload** — assert `beforeunload` listener is registered when dirty and removed when clean.
-9. **Resume restores state** — mount with a stubbed existing partial row → Step set to 3, name/phone/category/logo prefilled, baseline reflects loaded values so wizard is NOT dirty on mount.
-10. **Auto-save on each Continue** — simulate Continue from steps 1, 2, 3, 4 → assert `persistPartial` (i.e. `store_profiles` update) called each time with the right payload, and `profiles.update` called on step 3.
+---
 
-### 7. Minor cleanups
+### 3. Run and iterate
 
-- Move `persistPartial` and the slug helper into a small extractable function returning a `{ id, error }` tuple so the test can also unit-test the slug-collision path without mounting React.
-- Add a typed `WizardSnapshot` interface for the JSON.stringify baseline.
+- Run `bunx vitest run src/pages/business/BusinessPageWizard.test.tsx src/pages/business/wizardPersistence.test.ts`.
+- Confirm all 10+ component tests + 10 persistence tests pass and no `act()` warnings appear.
+
+---
 
 ## Files
 
-- **edit** `src/pages/business/BusinessPageWizard.tsx` — fixes 1–5 above.
-- **new** `src/pages/business/BusinessPageWizard.test.tsx` — 10 test cases above.
-- **new (small)** `src/pages/business/wizardPersistence.ts` — extracted `persistPartial` + `findAvailableSlug` for unit-test isolation.
-- **new** `src/pages/business/wizardPersistence.test.ts` — slug collision + 23505 paths.
+- `src/pages/business/BusinessPageWizard.tsx` — baseline-effect fix, guard disarm helper, inline "Unsaved changes" chip in header.
+- `src/pages/business/BusinessPageWizard.test.tsx` — remove sleep-based waits, add chip visibility test, add infinite-loop test, harden Save & exit test.
 
-## Out of scope
-
-- Database schema changes. We continue *not* writing `email` to `store_profiles`.
-- Restyling the dialog. Just adds one more button.
-- Capacitor hardware-back integration on native — out of scope for this round (web `popstate` covers it via Capacitor's back-button-emits-popstate behaviour by default).
-
-## Acceptance
-
-- Open `/business/new`, press Back without typing → leaves immediately, no dialog.
-- Type a name, press Back → dialog with Stay / Save & exit / Leave.
-- Save & exit persists, toasts, and lands you on `/account`.
-- Pressing Leave then Back again does not loop — you actually navigate away.
-- Completing step 5 navigates to the dashboard with no leave prompt.
-- Refreshing mid-flow restores you to the next incomplete step with prior values intact.
-- All 10 + 2 tests pass via `bunx vitest run`.
+No new files. No schema changes.

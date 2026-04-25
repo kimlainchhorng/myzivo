@@ -183,14 +183,11 @@ export default function BusinessPageWizard() {
   }, [profile, user]);
 
   // Set the dirty-detection baseline once initial loading + prefill have settled.
+  // Runs synchronously (no timer) so React Testing Library doesn't see updates outside act().
   useEffect(() => {
     if (checking || baselineReady) return;
-    // Defer one tick so the prefill effect's setStates have flushed into snapshot.
-    const t = setTimeout(() => {
-      baselineRef.current = fieldsSnapshot;
-      setBaselineReady(true);
-    }, 0);
-    return () => clearTimeout(t);
+    baselineRef.current = fieldsSnapshot;
+    setBaselineReady(true);
   }, [checking, baselineReady, fieldsSnapshot]);
 
   // Warn on tab close / reload while dirty.
