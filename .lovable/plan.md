@@ -1,48 +1,38 @@
-# Plan — Notifications Panel Polish (Account)
+# Plan — Fix Notifications Popover Position & Look
 
-The Facebook-style popover in `src/pages/Profile.tsx` is already live with: bell-anchored dropdown, in-place rendering, filter chips, mark-all action, rich rows with icon + relative time, unread dots, tap-to-mark-read, smart deep-link routing, and outside-click/Escape close. This plan adds the remaining polish requested.
+## Problem (from screenshot)
+The Account notifications dropdown opens but visually breaks on mobile:
+- The panel anchors to the bell's tiny `relative` wrapper with `absolute right-0`, so a 380px panel extends ~344px to the LEFT of the bell, slipping off the left edge of the screen.
+- The caret no longer sits under the bell.
+- The empty "You're all caught up" state looks oversized for a popover.
+- The dropdown sits above the rest of the page with no visual separation, so it's hard to tell what's the panel vs. the page underneath.
 
-## Changes (all in `src/pages/Profile.tsx`)
+## Fix (all in `src/pages/Profile.tsx`)
 
-### 1. Smarter deep-link routing
-Expand `resolveNotifLink` to cover all common Account notification types and use IDs from `metadata`:
-- `friend`/`follow` → `/notifications?tab=requests`
-- `message`/`chat` → `/chat/{thread_id}` or `/chat`
-- `comment`/`like`/`reaction`/`mention`/`post` → `/post/{post_id}` or `/feed`
-- `ride`/`trip`/`driver` → `/ride/track/{job_id}` or `/rides`
-- `order`/`delivery` → `/orders/{order_id}` or `/account/orders`
-- `wallet`/`payout`/`payment` → `/wallet`
-- `verification`/`verify` → `/account/verification`
-- `security`/`login` → `/account/security`
-- `promo`/`coupon` → `/wallet/promos`
-- Falls back to `n.action_url` first, then `metadata.deepLink/deep_link/url`.
+### 1. Switch panel to viewport-fixed positioning
+- Replace `absolute right-0 top-full` with `fixed` positioning.
+- Anchor with `top: calc(var(--zivo-safe-top-sticky) + 3rem + 6px)` so it sits 6px below the sticky header.
+- Mobile: `right-2 left-2 mx-auto max-w-[420px]` — full-bleed minus 8px gutter, capped at 420px.
+- Desktop (lg+): `lg:left-auto lg:right-4 lg:w-[400px]` — classic Facebook-style right-aligned dropdown.
+- Move caret to `right-12` on mobile / `right-6` on desktop so it visually points at the bell.
 
-### 2. Visible "Mark all read" confirmation
-- Wrap `markAllAsRead()` in a `handleMarkAllRead` callback.
-- On success: `toast.success("All notifications marked as read")`.
-- On error: `toast.error("Couldn't mark all as read")`.
-- Button hidden once `notifUnreadCount === 0` (already gated).
+### 2. Add a soft mobile backdrop
+- Render a `lg:hidden fixed inset-0 z-40 bg-background/40 backdrop-blur-[2px]` behind the panel (top offset to start below header) so the dropdown clearly stands out from the page below.
+- Tap on backdrop closes the popover.
 
-### 3. Actor avatars in rows
-- For each notification, prefer `metadata.actor_avatar_url` / `metadata.avatar_url` / `metadata.image_url` and render a real `<Avatar>` with fallback initials from `metadata.actor_name` or the title.
-- When no actor image is available, keep the current category-coloured icon bubble (transactional/operational/marketing/account) so the row never feels empty.
+### 3. Tighten empty state
+- Reduce empty-state padding to `py-7` and shrink illustration to `h-10 w-10` so the popover doesn't look cavernous when there's nothing to show.
+- Constrain panel `maxHeight` to `calc(100vh - var(--zivo-safe-top-sticky) - 3rem - 24px)`.
 
-### 4. Smooth in-place read transitions
-- Wrap the row list in `<AnimatePresence initial={false}>` and key each row by `n.id`.
-- Animate `bg-primary/[0.06] → transparent` and the unread dot's `opacity/scale` with a 180ms spring when `is_read` flips, so tapping a row visually "settles" without re-mounting.
-- Unread → read transition keeps the row in place; only the dot fades and the background tint relaxes.
+### 4. Header polish
+- Slightly smaller title (`text-[15px]`) and add `tracking-tight` for a Facebook-like compact header.
+- Keep sticky behavior so "Mark all read" stays visible while scrolling long lists.
 
-### 5. Consistent spacing and density
-- Standardize row padding to `p-2.5`, gap `gap-3`, avatar `h-10 w-10`, body `text-xs line-clamp-2`, time `text-[10px]` — matches Facebook's compact dropdown.
-- Sticky header inside the popover (`sticky top-0 bg-card`) so the title + Mark all read stay visible while scrolling long lists.
-
-### 6. Minor a11y / UX
-- Add `aria-live="polite"` region around the count badge so screen readers announce unread changes.
-- Friend Requests pinned row already has its own deep link (`/notifications?tab=requests`) — keep as-is.
+### 5. Cleanup
+- Remove the now-redundant `relative` wrapper around the bell (the panel no longer needs an offset parent). The bell stays in the header flex row unchanged.
 
 ## Files to edit
 - `src/pages/Profile.tsx` — only file touched.
 
 ## Out of scope
-- No DB / hook / route changes.
-- No new components.
+- No changes to data hooks, routing, or notification rendering logic.
