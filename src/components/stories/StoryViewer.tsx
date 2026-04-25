@@ -728,58 +728,57 @@ export default function StoryViewer({
             </>
           )}
 
-          {/* Owner toolbar — Instagram style: Activity · Facebook · Mention · Send · More */}
+          {/* Owner toolbar — ZIVO Verdant capsule (single elevated glass pill) */}
           {isOwner && (
-            <div className="px-2 pb-3 pt-2">
-              <div className="flex items-end justify-around">
-                <button
-                  onClick={() => { setPaused(true); setShowViewers(true); }}
-                  className="flex flex-col items-center gap-1 px-2 py-1"
-                  aria-label="Activity"
-                >
-                  <BarChart2 className="w-6 h-6 text-white" strokeWidth={1.8} />
-                  <span className="text-white text-[11px] font-medium leading-none">
-                    Activity{currentStory.viewsCount ? ` ${currentStory.viewsCount}` : ""}
-                  </span>
-                </button>
-                <button
-                  onClick={() => {
-                    setPaused(true);
-                    const url = `${getPublicOrigin()}/stories/${currentStory.id}`;
-                    const fbUrl = `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(url)}`;
-                    window.open(fbUrl, "_blank", "noopener,noreferrer");
-                    setTimeout(() => setPaused(false), 600);
-                  }}
-                  className="flex flex-col items-center gap-1 px-2 py-1"
-                  aria-label="Share to Facebook"
-                >
-                  <Facebook className="w-6 h-6 text-white" strokeWidth={1.8} />
-                  <span className="text-white text-[11px] font-medium leading-none">Facebook</span>
-                </button>
-                <button
-                  onClick={() => { setPaused(true); setShowMention(true); }}
-                  className="flex flex-col items-center gap-1 px-2 py-1"
-                  aria-label="Mention"
-                >
-                  <AtSign className="w-6 h-6 text-white" strokeWidth={1.8} />
-                  <span className="text-white text-[11px] font-medium leading-none">Mention</span>
-                </button>
-                <button
-                  onClick={handleShare}
-                  className="flex flex-col items-center gap-1 px-2 py-1"
-                  aria-label="Send to"
-                >
-                  <Send className="w-6 h-6 text-white" strokeWidth={1.8} />
-                  <span className="text-white text-[11px] font-medium leading-none">Send</span>
-                </button>
-                <button
-                  onClick={() => { setPaused(true); setShowMore(true); }}
-                  className="flex flex-col items-center gap-1 px-2 py-1"
-                  aria-label="More"
-                >
-                  <MoreHorizontal className="w-6 h-6 text-white" strokeWidth={1.8} />
-                  <span className="text-white text-[11px] font-medium leading-none">More</span>
-                </button>
+            <div className="px-3 pb-3 pt-2">
+              <div className="rounded-2xl bg-black/40 backdrop-blur-2xl border border-white/10 ring-1 ring-[hsl(160_84%_55%)/0.28] shadow-[0_10px_40px_-12px_hsl(160_84%_45%/0.55)] overflow-hidden">
+                <div className="flex items-stretch divide-x divide-white/10">
+                  <button
+                    onClick={() => { setPaused(true); setShowViewers(true); }}
+                    className="flex-1 flex items-center justify-center gap-1.5 px-2 py-2.5 hover:bg-white/5 active:bg-white/10 transition"
+                    aria-label="Activity"
+                  >
+                    <BarChart2 className="w-4 h-4 text-[hsl(160_84%_65%)]" strokeWidth={2} />
+                    <span className="text-white text-[12px] font-semibold leading-none">
+                      {currentStory.viewsCount || 0}
+                    </span>
+                  </button>
+                  <button
+                    onClick={() => {
+                      setPaused(true);
+                      const url = `${getPublicOrigin()}/stories/${currentStory.id}`;
+                      const fbUrl = `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(url)}`;
+                      window.open(fbUrl, "_blank", "noopener,noreferrer");
+                      setTimeout(() => setPaused(false), 600);
+                    }}
+                    className="shrink-0 flex items-center justify-center px-3.5 py-2.5 hover:bg-white/5 active:bg-white/10 transition"
+                    aria-label="Share to Facebook"
+                  >
+                    <Facebook className="w-4 h-4 text-white/85" strokeWidth={2} />
+                  </button>
+                  <button
+                    onClick={() => { setPaused(true); setShowMention(true); }}
+                    className="shrink-0 flex items-center justify-center px-3.5 py-2.5 hover:bg-white/5 active:bg-white/10 transition"
+                    aria-label="Mention"
+                  >
+                    <AtSign className="w-4 h-4 text-white/85" strokeWidth={2} />
+                  </button>
+                  <button
+                    onClick={handleShare}
+                    className="flex-1 flex items-center justify-center gap-1.5 px-3.5 py-2.5 bg-gradient-to-r from-[hsl(160_84%_45%)]/30 to-[hsl(174_72%_40%)]/30 hover:from-[hsl(160_84%_45%)]/45 hover:to-[hsl(174_72%_40%)]/45 active:from-[hsl(160_84%_45%)]/60 active:to-[hsl(174_72%_40%)]/60 transition"
+                    aria-label="Send"
+                  >
+                    <Send className="w-4 h-4 text-white" strokeWidth={2} />
+                    <span className="text-white text-[12px] font-bold leading-none">Send</span>
+                  </button>
+                  <button
+                    onClick={() => { setPaused(true); setShowMore(true); }}
+                    className="shrink-0 flex items-center justify-center px-3.5 py-2.5 hover:bg-white/5 active:bg-white/10 transition"
+                    aria-label="More"
+                  >
+                    <MoreHorizontal className="w-4 h-4 text-white/85" strokeWidth={2} />
+                  </button>
+                </div>
               </div>
             </div>
           )}
