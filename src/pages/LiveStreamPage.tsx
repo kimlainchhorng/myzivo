@@ -45,6 +45,8 @@ import { giftImages, preloadGiftImages } from "@/config/giftIcons";
 import { hasGiftVideo, preloadGiftAnimations } from "@/config/giftAnimations";
 import { giftCatalog, getLevelColor, type GiftItem } from "@/config/giftCatalog";
 import { playGiftSound, playPremiumGiftSound, playLegendaryGiftSound } from "@/utils/giftSounds";
+import VerifiedBadge from "@/components/VerifiedBadge";
+import { isBlueVerified } from "@/lib/verification";
 
 const ZivoMobileNav = lazy(() => import("@/components/app/ZivoMobileNav"));
 const GiftAnimationOverlay = lazy(() => import("@/components/live/GiftAnimationOverlay"));
@@ -56,6 +58,7 @@ interface LiveStream {
   user_id: string;
   host_name: string;
   host_avatar: string | null;
+  host_is_verified?: boolean;
   title: string;
   topic: string;
   viewer_count: number;
@@ -69,6 +72,7 @@ interface ChatMsg {
   id: string;
   user_id: string;
   user_name: string;
+  user_is_verified?: boolean;
   user_avatar?: string | null;
   text: string;
   created_at: string;
@@ -148,14 +152,14 @@ function LiveWatcher({ stream, onLeave }: { stream: LiveStream; onLeave: () => v
       const userIds = new Set<string>();
       (comments ?? []).forEach((c: any) => userIds.add(c.user_id));
       (viewers ?? []).forEach((v: any) => userIds.add(v.user_id));
-      let profileMap = new Map<string, { full_name: string | null; avatar_url: string | null }>();
+      let profileMap = new Map<string, { full_name: string | null; avatar_url: string | null; is_verified?: boolean | null }>();
       if (userIds.size) {
         const { data: profs } = await supabase
           .from("profiles")
-          .select("id, user_id, full_name, avatar_url")
+          .select("id, user_id, full_name, avatar_url, is_verified")
           .in("user_id", Array.from(userIds));
         for (const p of profs ?? []) {
-          profileMap.set((p as any).user_id, { full_name: (p as any).full_name, avatar_url: (p as any).avatar_url });
+          profileMap.set((p as any).user_id, { full_name: (p as any).full_name, avatar_url: (p as any).avatar_url, is_verified: (p as any).is_verified });
         }
       }
 
@@ -165,6 +169,7 @@ function LiveWatcher({ stream, onLeave }: { stream: LiveStream; onLeave: () => v
           user_id: c.user_id,
           user_name: profileMap.get(c.user_id)?.full_name || "Guest",
           user_avatar: profileMap.get(c.user_id)?.avatar_url ?? null,
+          user_is_verified: profileMap.get(c.user_id)?.is_verified === true,
           text: c.content,
           created_at: c.created_at,
         }))
@@ -217,7 +222,7 @@ function LiveWatcher({ stream, onLeave }: { stream: LiveStream; onLeave: () => v
           // Lookup author name
           const { data: prof } = await supabase
             .from("profiles")
-            .select("full_name, avatar_url")
+            .select("full_name, avatar_url, is_verified")
             .eq("user_id", row.user_id)
             .maybeSingle();
           setChatMessages((prev) => [
@@ -227,6 +232,7 @@ function LiveWatcher({ stream, onLeave }: { stream: LiveStream; onLeave: () => v
               user_id: row.user_id,
               user_name: (prof as any)?.full_name || "Guest",
               user_avatar: (prof as any)?.avatar_url ?? null,
+              user_is_verified: (prof as any)?.is_verified === true,
               text: row.content,
               created_at: row.created_at,
             },
@@ -466,7 +472,10 @@ function LiveWatcher({ stream, onLeave }: { stream: LiveStream; onLeave: () => v
             </AvatarFallback>
           </Avatar>
           <div className="flex-1 min-w-0">
-            <p className="text-white text-xs font-bold truncate leading-tight">{stream.host_name}</p>
+            <p className="text-white text-xs font-bold truncate leading-tight inline-flex items-center gap-1">
+              <span className="truncate">{stream.host_name}</span>
+              {isBlueVerified(stream.host_is_verified) && <VerifiedBadge size={11} interactive={false} />}
+            </p>
             <p className="text-white/50 text-[10px] leading-tight">{stream.topic}</p>
           </div>
         </div>
@@ -587,7 +596,10 @@ function LiveWatcher({ stream, onLeave }: { stream: LiveStream; onLeave: () => v
                 animate={{ opacity: 1, x: 0 }}
                 className="bg-black/40 backdrop-blur-sm rounded-2xl px-2.5 py-1.5 max-w-full"
               >
-                <span className="text-[10px] font-bold text-amber-300 mr-1.5">{msg.user_name}</span>
+                <span className="text-[10px] font-bold text-amber-300 mr-1.5 inline-flex items-center gap-0.5">
+                  {msg.user_name}
+                  {isBlueVerified(msg.user_is_verified) && <VerifiedBadge size={10} interactive={false} />}
+                </span>
                 <span className="text-[11px] text-white">{msg.text}</span>
               </motion.div>
             ))
@@ -809,13 +821,14 @@ export default function LiveStreamPage() {
 
       // Resolve missing host names from profiles
       const missing = (rows as any[]).filter((r) => !r.host_name).map((r) => r.user_id);
-      const profileMap = new Map<string, { full_name: string | null; avatar_url: string | null }>();
-      if (missing.length) {
+      const allHostIds = (rows as any[]).map((r) => r.user_id);
+      const profileMap = new Map<string, { full_name: string | null; avatar_url: string | null; is_verified?: boolean | null }>();
+      if (allHostIds.length) {
         const { data: profs } = await supabase
           .from("profiles")
-          .select("user_id, full_name, avatar_url")
-          .in("user_id", missing);
-        for (const p of (profs ?? []) as any[]) profileMap.set(p.user_id, { full_name: p.full_name, avatar_url: p.avatar_url });
+          .select("user_id, full_name, avatar_url, is_verified")
+          .in("user_id", allHostIds);
+        for (const p of (profs ?? []) as any[]) profileMap.set(p.user_id, { full_name: p.full_name, avatar_url: p.avatar_url, is_verified: p.is_verified });
       }
 
       return (rows as any[])
@@ -832,6 +845,7 @@ export default function LiveStreamPage() {
         ended_at: r.ended_at ?? null,
         host_name: r.host_name || profileMap.get(r.user_id)?.full_name || "Creator",
         host_avatar: r.host_avatar || profileMap.get(r.user_id)?.avatar_url || null,
+        host_is_verified: profileMap.get(r.user_id)?.is_verified === true,
       }));
     },
     staleTime: 5_000,
@@ -1016,7 +1030,10 @@ export default function LiveStreamPage() {
                           <AvatarFallback className="bg-red-500/20 text-white text-[10px] font-bold">{stream.host_name[0]}</AvatarFallback>
                         </Avatar>
                         <div className="flex-1 min-w-0">
-                          <p className="text-[11px] font-semibold text-white truncate drop-shadow">{stream.host_name}</p>
+                          <p className="text-[11px] font-semibold text-white truncate drop-shadow inline-flex items-center gap-1">
+                            <span className="truncate">{stream.host_name}</span>
+                            {isBlueVerified(stream.host_is_verified) && <VerifiedBadge size={11} interactive={false} />}
+                          </p>
                           <p className="text-[10px] text-white/70 truncate drop-shadow">{stream.topic}</p>
                         </div>
                       </div>
