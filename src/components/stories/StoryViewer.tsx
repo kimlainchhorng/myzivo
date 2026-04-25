@@ -446,7 +446,7 @@ export default function StoryViewer({
         dragConstraints={{ top: 0, bottom: 0 }}
         dragElastic={{ top: 0, bottom: 0.4 }}
         onDragEnd={handleDragEnd}
-        className="fixed inset-0 z-[100] bg-black"
+        className="fixed inset-0 z-[1600] bg-black"
       >
         {/* Media */}
         <div className="absolute inset-0">
