@@ -134,10 +134,10 @@ const ProfileStories = () => {
 
   const handleViewerClose = () => {
     setViewing(null);
-    queryClient.invalidateQueries({ queryKey: ["my-story-views", user?.id] });
-    queryClient.invalidateQueries({ queryKey: ["profile-story-rings", user?.id] });
-    queryClient.invalidateQueries({ queryKey: ["feed-story-users"] });
-    queryClient.invalidateQueries({ queryKey: ["user-stories"] });
+    queryClient.invalidateQueries({ queryKey: ["my-story-views", user?.id], exact: true });
+    queryClient.invalidateQueries({ queryKey: ["profile-story-rings", user?.id], exact: true });
+    queryClient.invalidateQueries({ queryKey: ["feed-story-users"], exact: true });
+    queryClient.invalidateQueries({ queryKey: ["user-stories"], exact: true });
   };
 
   const isFullyViewed = (g: StoryGroup) =>
