@@ -346,6 +346,27 @@ const Profile = () => {
     return localStorage.getItem("zivo:active_mode") || "personal";
   });
 
+  const getShopDashboardPath = useCallback(() => {
+    if (!ownerStore?.id) return "/shop-dashboard";
+    return ownerStore.isLodging
+      ? `/admin/stores/${ownerStore.id}?tab=lodge-overview`
+      : `/admin/stores/${ownerStore.id}`;
+  }, [ownerStore]);
+
+  const openShopDashboard = useCallback(() => {
+    selectionChanged();
+    if (!user) {
+      toast.info("Sign in to open Shop Dashboard");
+      navigate("/login?redirect=/shop-dashboard");
+      return;
+    }
+    if (ownerStoreLoading) {
+      toast.info("Loading your shop dashboard");
+      return;
+    }
+    navigate(getShopDashboardPath());
+  }, [getShopDashboardPath, navigate, ownerStoreLoading, selectionChanged, user]);
+
   // Load real friendship status, friend count & follower count
   useEffect(() => {
     if (!user?.id) return;
