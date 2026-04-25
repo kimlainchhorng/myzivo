@@ -60,10 +60,10 @@ export default function ChatStories() {
           id: s.id,
           mediaUrl: s.media_url,
           mediaType: s.media_type,
-          caption: s.caption,
+          caption: s.text_overlay,
           audioUrl: s.audio_url,
           createdAt: s.created_at,
-          viewsCount: s.views_count ?? 0,
+          viewsCount: s.view_count ?? 0,
         });
       }
 
