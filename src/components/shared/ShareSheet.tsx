@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { MoreHorizontal, MessageCircle, User, UserCircle, Share2 } from "lucide-react";
 import { toast } from "sonner";
@@ -6,6 +6,7 @@ import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { getPostShareUrl, getProfileShareUrl, getPublicOrigin } from "@/lib/getPublicOrigin";
 import SwipeableSheet from "@/components/social/SwipeableSheet";
+import { track } from "@/lib/analytics";
 
 interface ShareSheetProps {
   shareUrl: string;
@@ -48,6 +49,12 @@ export default function ShareSheet({
   const [sharingToProfile, setSharingToProfile] = useState(false);
   const navigate = useNavigate();
 
+  // Funnel: sheet opened
+  useEffect(() => {
+    track("share_sheet_opened", { post_id: sharePostId, author_id: sharePostAuthorId });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   const normalizeShareUrl = (url: string) => {
     try {
       const parsed = new URL(url);
@@ -78,8 +85,10 @@ export default function ShareSheet({
       document.execCommand("copy");
       document.body.removeChild(ta);
       toast.success("Link copied!");
-    } catch {
+      track("share_completed", { post_id: sharePostId, author_id: sharePostAuthorId, channel: "copy_link" });
+    } catch (e: any) {
       toast.info("Long-press URL bar to copy");
+      track("share_failed", { post_id: sharePostId, author_id: sharePostAuthorId, channel: "copy_link", reason: e?.message || "copy_failed" });
     }
     onClose();
   };
