@@ -14,7 +14,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { cn } from "@/lib/utils";
 import CreateStorySheet from "@/components/profile/CreateStorySheet";
 import StoryViewer, { StoryGroup } from "@/components/stories/StoryViewer";
-import { useStoryDeepLink } from "@/hooks/useStoryDeepLink";
+import { useStoryDeepLink, useStoryViewerLocation } from "@/hooks/useStoryDeepLink";
 
 interface RawStory {
   id: string;
@@ -32,7 +32,7 @@ const ProfileStories = () => {
   const { user } = useAuth();
   const { data: profile } = useUserProfile();
   const queryClient = useQueryClient();
-  const { activeStoryId, openStory, closeStory, updateStory } = useStoryDeepLink();
+  const { activeStoryId, openStory, closeStory, updateStory } = useStoryDeepLink({ source: "profile" });
 
   const [showCreate, setShowCreate] = useState(false);
 

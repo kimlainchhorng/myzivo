@@ -13,7 +13,7 @@ import { cn } from "@/lib/utils";
 import { optimizeAvatar } from "@/utils/optimizeAvatar";
 import { toast } from "sonner";
 import StoryViewer, { StoryGroup } from "@/components/stories/StoryViewer";
-import { useStoryDeepLink } from "@/hooks/useStoryDeepLink";
+import { useStoryDeepLink, useStoryViewerLocation } from "@/hooks/useStoryDeepLink";
 
 interface RawStory {
   id: string;
@@ -32,7 +32,7 @@ export default function FeedStoryRing() {
   const queryClient = useQueryClient();
   const fileRef = useRef<HTMLInputElement>(null);
   const [uploading, setUploading] = useState(false);
-  const { activeStoryId, openStory, closeStory, updateStory } = useStoryDeepLink();
+  const { activeStoryId, openStory, closeStory, updateStory } = useStoryDeepLink({ source: "feed" });
 
   const { data: rawStories = [] } = useQuery({
     queryKey: ["feed-story-users"],
