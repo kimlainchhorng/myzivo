@@ -12,20 +12,22 @@ import { toast } from "sonner";
 import { getPublicOrigin, getProfileShareUrl } from "@/lib/getPublicOrigin";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
+import VerifiedBadge from "@/components/VerifiedBadge";
+import { isBlueVerified } from "@/lib/verification";
 
 export default function QRProfilePage() {
   const navigate = useNavigate();
   const { user } = useAuth();
   const [activeTab, setActiveTab] = useState("my-code");
   const [copied, setCopied] = useState(false);
-  const [profile, setProfile] = useState<{ full_name: string | null; avatar_url: string | null; share_code: string | null } | null>(null);
+  const [profile, setProfile] = useState<{ full_name: string | null; avatar_url: string | null; share_code: string | null; is_verified?: boolean | null } | null>(null);
 
   useEffect(() => {
     if (!user) return;
     const loadProfile = async () => {
       const { data: byId } = await supabase
         .from("profiles")
-        .select("full_name, avatar_url, share_code")
+        .select("full_name, avatar_url, share_code, is_verified")
         .eq("id", user.id)
         .maybeSingle();
 
@@ -36,7 +38,7 @@ export default function QRProfilePage() {
 
       const { data: byUserId } = await supabase
         .from("profiles")
-        .select("full_name, avatar_url, share_code")
+        .select("full_name, avatar_url, share_code, is_verified")
         .eq("user_id", user.id)
         .maybeSingle();
 
@@ -100,7 +102,11 @@ export default function QRProfilePage() {
                 imageSettings={{ src: "", height: 0, width: 0, excavate: false }} />
             </Card>
 
-            <p className="text-sm text-muted-foreground mb-4 text-center">Scan this code to view my profile</p>
+            <p className="text-sm text-muted-foreground mb-1 text-center inline-flex items-center justify-center gap-1">
+              <span>{profile?.full_name || user?.email?.split("@")[0] || "Your profile"}</span>
+              {isBlueVerified(profile?.is_verified) && <VerifiedBadge size={14} interactive={false} />}
+            </p>
+            <p className="text-xs text-muted-foreground mb-4 text-center">Scan this code to view my profile</p>
 
             <div className="w-full space-y-3">
               <Card className="p-3 flex items-center gap-2">
