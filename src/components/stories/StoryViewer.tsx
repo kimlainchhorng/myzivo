@@ -95,6 +95,7 @@ export default function StoryViewer({
 }: Props) {
   const { user } = useAuth();
   const queryClient = useQueryClient();
+  const navigate = useNavigate();
 
   const [groupIdx, setGroupIdx] = useState(startGroupIndex);
   const [viewIdx, setViewIdx] = useState(startStoryIndex);
