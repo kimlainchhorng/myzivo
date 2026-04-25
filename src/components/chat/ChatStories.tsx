@@ -104,7 +104,8 @@ export default function ChatStories() {
 
       queryClient.invalidateQueries({ queryKey: ["user-stories"] });
       queryClient.invalidateQueries({ queryKey: ["feed-story-users"] });
-      queryClient.invalidateQueries({ queryKey: ["profile-my-story"] });
+      queryClient.invalidateQueries({ queryKey: ["profile-story-rings", user.id] });
+      queryClient.invalidateQueries({ queryKey: ["profile-my-story", user.id] });
       toast.success("Story added!");
     } catch (err: any) {
       toast.error(err.message || "Failed to upload story");
