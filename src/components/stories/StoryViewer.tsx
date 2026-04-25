@@ -1023,6 +1023,7 @@ export default function StoryViewer({
           source={source}
         />
       )}
-    </AnimatePresence>
+    </AnimatePresence>,
+    document.body
   );
 }
