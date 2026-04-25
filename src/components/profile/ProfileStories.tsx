@@ -23,11 +23,11 @@ interface RawStory {
   user_id: string;
   media_url: string;
   media_type: string;
-  caption: string | null;
+  text_overlay: string | null;
   audio_url: string | null;
   created_at: string;
   expires_at: string;
-  views_count: number | null;
+  view_count: number | null;
 }
 
 const ProfileStories = () => {
