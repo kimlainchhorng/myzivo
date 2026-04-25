@@ -2,10 +2,11 @@
  * MorePage — ZIVO Signature Design (2026)
  * Full hub with real user profile, quick actions, 70+ links, and organic design.
  */
-import { Fragment, useState } from "react";
+import { Fragment, useMemo, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { useQuery } from "@tanstack/react-query";
+import { useTheme } from "next-themes";
 import { supabase } from "@/integrations/supabase/client";
 import {
   ChevronRight, LogOut, Settings, ShoppingBag, Wallet, MapPin, Handshake,
@@ -18,7 +19,13 @@ import {
   Gem, Rocket, Layers, CircleDot, User, CreditCard, Map, Package,
   Clock, Receipt, Ticket, ShieldCheck, Flame, AlertCircle, Inbox,
   Search, Vote, Clapperboard, GraduationCap, Trophy, Banknote, ArrowLeft,
+  Sun, Moon, Trash2, X,
 } from "lucide-react";
+import { Input } from "@/components/ui/input";
+import {
+  AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
+  AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { useI18n } from "@/hooks/useI18n";
 import { useAuth } from "@/contexts/AuthContext";
 import { useUserProfile } from "@/hooks/useUserProfile";
@@ -92,8 +99,8 @@ const quickLinksMain: QuickLink[] = [
   { icon: Handshake, label: "Become Partner", href: "#partner", description: "Join ZIVO", accent: "hsl(263 70% 58%)" },
   { icon: Heart, label: "Favorites", href: "/account/favorites", description: "Saved items", accent: "hsl(340 75% 55%)" },
   { icon: Award, label: "Badges", href: "/badges", description: "Achievements", accent: "hsl(38 92% 50%)" },
-  { icon: CreditCard, label: "Payment Methods", href: "/account/settings", description: "Cards & banks", accent: "hsl(199 89% 48%)" },
-  { icon: Inbox, label: "Notifications", href: "/notification-center", description: "All alerts", accent: "hsl(45 93% 58%)" },
+  { icon: CreditCard, label: "Payment Methods", href: "/account/wallet", description: "Cards & banks", accent: "hsl(199 89% 48%)" },
+  { icon: Inbox, label: "Inbox", href: "/notification-center", description: "All alerts", accent: "hsl(45 93% 58%)" },
 ];
 
 const quickLinksCreator: QuickLink[] = [
@@ -144,7 +151,6 @@ const quickLinksBusiness: QuickLink[] = [
   { icon: Building2, label: "Store Map", href: "/store-map", description: "Map view", accent: "hsl(263 70% 58%)" },
   { icon: Wrench, label: "Store Setup", href: "/store/setup", description: "Configure", accent: "hsl(0 84% 60%)" },
   { icon: BarChart3, label: "Business Insights", href: "/business/insights", description: "Data analytics", accent: "hsl(198 93% 59%)" },
-  { icon: Banknote, label: "Referral Program", href: "/referrals", description: "Earn rewards", accent: "hsl(142 71% 45%)" },
   { icon: GraduationCap, label: "Marketplace", href: "/marketplace", description: "Buy & sell", accent: "hsl(38 92% 50%)" },
 ];
 
@@ -158,13 +164,13 @@ const quickLinksAccount: QuickLink[] = [
   { icon: Download, label: "Get App", href: "/install", description: "Download", accent: "hsl(var(--primary))" },
   { icon: Lightbulb, label: "Feedback", href: "/feedback", description: "Ideas", accent: "hsl(45 93% 58%)" },
   { icon: Shield, label: "Safety Center", href: "/safety", description: "Reporting", accent: "hsl(0 84% 60%)" },
-  { icon: Palette, label: "Appearance", href: "/account/settings", description: "Theme", accent: "hsl(263 70% 58%)" },
+  { icon: Palette, label: "Appearance", href: "#theme-toggle", description: "Light / Dark theme", accent: "hsl(263 70% 58%)" },
   { icon: AlertCircle, label: "Report a Problem", href: "/feedback", description: "Bug report", accent: "hsl(0 84% 60%)" },
-  { icon: Clock, label: "Activity Log", href: "/activity", description: "History", accent: "hsl(198 93% 59%)" },
   { icon: ShieldCheck, label: "Security Report", href: "/security/report", description: "Status", accent: "hsl(142 71% 45%)" },
-  { icon: Smartphone, label: "Login & Devices", href: "/account/settings", description: "Active sessions", accent: "hsl(221 83% 53%)" },
-  { icon: Lock, label: "Two-Factor Auth", href: "/account/privacy", description: "Extra security", accent: "hsl(142 71% 45%)" },
-  { icon: Users, label: "Blocked Users", href: "/account/privacy", description: "Manage blocks", accent: "hsl(0 84% 60%)" },
+  { icon: Smartphone, label: "Login & Devices", href: "/account/security", description: "Active sessions", accent: "hsl(221 83% 53%)" },
+  { icon: Lock, label: "Two-Factor Auth", href: "/account/security", description: "Extra security", accent: "hsl(142 71% 45%)" },
+  { icon: Users, label: "Blocked Users", href: "/account/privacy#blocked", description: "Manage blocks", accent: "hsl(0 84% 60%)" },
+  { icon: Trash2, label: "Delete Account", href: "/profile/delete-account", description: "Permanently remove", accent: "hsl(0 84% 60%)" },
 ];
 
 const sections = [
@@ -183,8 +189,11 @@ export default function MorePage() {
   const { t } = useI18n();
   const navigate = useNavigate();
   const { user, signOut, isAdmin } = useAuth();
+  const { theme, setTheme, resolvedTheme } = useTheme();
   const [showPartnerSheet, setShowPartnerSheet] = useState(false);
   const [expandedSection, setExpandedSection] = useState<string | null>("Essentials");
+  const [search, setSearch] = useState("");
+  const [confirmAction, setConfirmAction] = useState<null | "signout" | "switch">(null);
 
   // Shared profile data — same source as /profile, so the name/badge stay in sync
   const { data: profile } = useUserProfile();
@@ -268,10 +277,6 @@ export default function MorePage() {
           <p className="text-[11px] text-muted-foreground truncate mt-0.5">@{handle}</p>
           <div className="flex gap-4 mt-1.5">
             <div className="text-center">
-              <p className="text-xs font-bold">{friendCount}</p>
-              <p className="text-[9px] text-muted-foreground">Friends</p>
-            </div>
-            <div className="text-center">
               <p className="text-xs font-bold">{followerCount}</p>
               <p className="text-[9px] text-muted-foreground">Followers</p>
             </div>
@@ -279,10 +284,14 @@ export default function MorePage() {
               <p className="text-xs font-bold">{followingCount}</p>
               <p className="text-[9px] text-muted-foreground">Following</p>
             </div>
+            <div className="text-center">
+              <p className="text-xs font-bold">{friendCount}</p>
+              <p className="text-[9px] text-muted-foreground">Friends</p>
+            </div>
           </div>
         </Link>
         <Link
-          to="/account/settings"
+          to="/account/profile-edit"
           className="shrink-0 text-[11px] font-semibold px-2.5 py-1.5 rounded-full bg-primary/10 text-primary active:scale-95 transition-transform"
         >
           Edit
@@ -317,7 +326,7 @@ export default function MorePage() {
       >
         <Crown className="w-4 h-4 text-amber-500 shrink-0" />
         <div className="min-w-0">
-          <p className="text-[11px] font-bold leading-tight truncate">Explorer</p>
+          <p className="text-[11px] font-bold leading-tight truncate capitalize">{(profile as any)?.tier ?? "Explorer"}</p>
           <p className="text-[9px] text-muted-foreground truncate">Tier</p>
         </div>
       </Link>
@@ -389,15 +398,24 @@ export default function MorePage() {
   const renderLink = (link: QuickLink, i: number) => {
     const isPartner = link.href === "#partner";
     const isSwitch = link.href === "#switch-account";
-    const isAction = isPartner || isSwitch;
+    const isTheme = link.href === "#theme-toggle";
+    const isAction = isPartner || isSwitch || isTheme;
 
     const handleAction = () => {
       if (isPartner) setShowPartnerSheet(true);
-      else if (isSwitch) {
-        signOut();
-        navigate("/auth?intent=switch");
+      else if (isSwitch) setConfirmAction("switch");
+      else if (isTheme) {
+        const next = (resolvedTheme ?? theme) === "dark" ? "light" : "dark";
+        setTheme(next);
       }
     };
+
+    // Dynamic right-side content: theme row shows current theme label
+    const rightSlot = isTheme ? (
+      <span className="text-[11px] font-semibold text-muted-foreground capitalize mr-1">
+        {resolvedTheme ?? theme ?? "system"}
+      </span>
+    ) : null;
 
     const inner = (
       <motion.div
@@ -412,7 +430,13 @@ export default function MorePage() {
           className="zivo-icon-pill"
           style={{ color: link.accent, background: `${link.accent}15` }}
         >
-          <link.icon className="w-[18px] h-[18px]" style={{ color: link.accent }} />
+          {isTheme ? (
+            (resolvedTheme ?? theme) === "dark"
+              ? <Moon className="w-[18px] h-[18px]" style={{ color: link.accent }} />
+              : <Sun className="w-[18px] h-[18px]" style={{ color: link.accent }} />
+          ) : (
+            <link.icon className="w-[18px] h-[18px]" style={{ color: link.accent }} />
+          )}
         </div>
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-1.5">
@@ -421,6 +445,7 @@ export default function MorePage() {
           </div>
           <p className="text-[11px] text-muted-foreground truncate mt-0.5">{link.description}</p>
         </div>
+        {rightSlot}
         <ChevronRight className="w-4 h-4 text-muted-foreground/30 shrink-0" />
       </motion.div>
     );
@@ -484,6 +509,28 @@ export default function MorePage() {
   /* --- Total link count --- */
   const totalLinks = sections.reduce((sum, s) => sum + s.links.length, 0);
 
+  /* --- Flat search across all sections --- */
+  const searchResults = useMemo(() => {
+    const q = search.trim().toLowerCase();
+    if (!q) return null;
+    const all = sections.flatMap((s) => s.links);
+    return all.filter(
+      (l) =>
+        l.label.toLowerCase().includes(q) ||
+        l.description.toLowerCase().includes(q),
+    );
+  }, [search]);
+
+  const handleConfirm = () => {
+    if (confirmAction === "switch") {
+      signOut();
+      navigate("/auth?intent=switch");
+    } else if (confirmAction === "signout") {
+      signOut();
+    }
+    setConfirmAction(null);
+  };
+
   return (
     <div className="min-h-[100dvh] flex flex-col bg-background safe-area-bottom">
       <SEOHead title="More – ZIVO" description="Quick access to all ZIVO features and settings." noIndex />
@@ -521,8 +568,40 @@ export default function MorePage() {
           {/* Spotlight Cards */}
           {renderSpotlight()}
 
-          {/* All Sections */}
-          {sections.map((section, si) => renderSection(section, si))}
+          {/* Search */}
+          <div className="relative mb-4">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+            <Input
+              placeholder="Search account, settings, links…"
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              className="pl-9 pr-9 h-10 rounded-xl bg-muted/50 border-border/40 text-sm"
+            />
+            {search && (
+              <button
+                onClick={() => setSearch("")}
+                aria-label="Clear search"
+                className="absolute right-3 top-1/2 -translate-y-1/2"
+              >
+                <X className="h-4 w-4 text-muted-foreground" />
+              </button>
+            )}
+          </div>
+
+          {/* All Sections OR flat search results */}
+          {searchResults ? (
+            <div className="space-y-1.5">
+              {searchResults.length === 0 ? (
+                <p className="text-center text-sm text-muted-foreground py-8">
+                  No results for "{search}"
+                </p>
+              ) : (
+                searchResults.map((link, i) => renderLink(link, i))
+              )}
+            </div>
+          ) : (
+            sections.map((section, si) => renderSection(section, si))
+          )}
 
           {/* Admin */}
           {isAdmin && (
@@ -541,7 +620,7 @@ export default function MorePage() {
           {user && (
             <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.25 }} className="mt-4">
               <button
-                onClick={() => signOut()}
+                onClick={() => setConfirmAction("signout")}
                 className="w-full py-3 rounded-2xl border border-border/50 bg-card text-foreground font-semibold text-sm touch-manipulation active:scale-[0.98] transition-all flex items-center justify-center gap-2"
               >
                 <LogOut className="w-4 h-4" />
@@ -588,6 +667,28 @@ export default function MorePage() {
           </div>
         </SheetContent>
       </Sheet>
+
+      {/* Sign Out / Switch Account confirm */}
+      <AlertDialog open={!!confirmAction} onOpenChange={(o) => !o && setConfirmAction(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>
+              {confirmAction === "switch" ? "Switch account?" : "Sign out?"}
+            </AlertDialogTitle>
+            <AlertDialogDescription>
+              {confirmAction === "switch"
+                ? "You'll be signed out and taken to the login screen so you can sign in with a different account."
+                : "You'll need to sign in again to access your account."}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={handleConfirm}>
+              {confirmAction === "switch" ? "Switch" : "Sign out"}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
 
       <ZivoMobileNav />
     </div>
