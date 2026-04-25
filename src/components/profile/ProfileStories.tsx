@@ -5,7 +5,7 @@
  */
 import { useMemo, useState } from "react";
 import { motion } from "framer-motion";
-import { Plus, Camera } from "lucide-react";
+import { Plus, Camera, Sparkles } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useUserProfile } from "@/hooks/useUserProfile";
 import { supabase } from "@/integrations/supabase/client";
@@ -188,9 +188,13 @@ const ProfileStories = () => {
                   })()}
                 </div>
               </div>
-              {/* Black + badge — always shown on Your story so adding more segments is one tap */}
-              <div className="absolute -bottom-0.5 -right-0.5 h-[22px] w-[22px] rounded-full bg-foreground flex items-center justify-center border-[2.5px] border-background">
-                <Plus className="h-3 w-3 text-background" strokeWidth={3} />
+              {/* ZIVO Aurora badge — Sparkles when story exists, Plus to add */}
+              <div className="absolute -bottom-0.5 -right-0.5 h-[22px] w-[22px] rounded-full bg-gradient-to-br from-[hsl(160_84%_45%)] to-[hsl(174_72%_40%)] flex items-center justify-center border-[2.5px] border-background shadow-[0_2px_6px_-1px_hsl(160_84%_45%/0.6)]">
+                {hasMyStory ? (
+                  <Sparkles className="h-3 w-3 text-white" strokeWidth={2.5} />
+                ) : (
+                  <Plus className="h-3 w-3 text-white" strokeWidth={3} />
+                )}
               </div>
               {/* Segment count badge */}
               {hasMyStory && myGroup!.stories.length > 1 && (
