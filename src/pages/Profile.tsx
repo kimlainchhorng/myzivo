@@ -39,6 +39,7 @@ import ProfileStories from "@/components/profile/ProfileStories";
 import SocialListModal from "@/components/profile/SocialListModal";
 import PullToRefresh from "@/components/shared/PullToRefresh";
 import { useNotifications } from "@/hooks/useNotifications";
+import { formatDistanceToNowStrict } from "date-fns";
 
 const LANGS = [
   { code: "en", label: "English", cc: "us" },
@@ -146,7 +147,7 @@ const Profile = () => {
   const { user, isAdmin } = useAuth();
   const { data: profile, isLoading: profileLoading } = useUserProfile();
   const { data: merchantData } = useMerchantRole();
-  const { unreadCount: notifUnreadCount, notifications } = useNotifications(20);
+  const { unreadCount: notifUnreadCount, notifications, isLoading: notifLoading, markAsRead, markAllAsRead } = useNotifications(20);
   const { data: latestVerificationRequest } = useQuery({
     queryKey: ["verification-request", user?.id, "latest"],
     queryFn: async () => {
@@ -250,6 +251,44 @@ const Profile = () => {
     else navigate("/feed");
   }, [impact, navigate]);
   const handleToggleNotif = useCallback(() => { selectionChanged(); setShowNotifPanel(p => !p); }, [selectionChanged]);
+  const [notifFilter, setNotifFilter] = useState<"all" | "unread">("all");
+  const notifPanelRef = useRef<HTMLDivElement>(null);
+  const notifBellRef = useRef<HTMLButtonElement>(null);
+  // Outside-click + Escape close
+  useEffect(() => {
+    if (!showNotifPanel) return;
+    const onDown = (e: MouseEvent | TouchEvent) => {
+      const t = e.target as Node;
+      if (notifPanelRef.current?.contains(t)) return;
+      if (notifBellRef.current?.contains(t)) return;
+      setShowNotifPanel(false);
+    };
+    const onKey = (e: KeyboardEvent) => { if (e.key === "Escape") setShowNotifPanel(false); };
+    document.addEventListener("mousedown", onDown);
+    document.addEventListener("touchstart", onDown, { passive: true });
+    document.addEventListener("keydown", onKey);
+    return () => {
+      document.removeEventListener("mousedown", onDown);
+      document.removeEventListener("touchstart", onDown);
+      document.removeEventListener("keydown", onKey);
+    };
+  }, [showNotifPanel]);
+  const resolveNotifLink = useCallback((n: { action_url: string | null; metadata: Record<string, any>; template: string }) => {
+    if (n.action_url) return n.action_url;
+    const dl = n.metadata?.deepLink || n.metadata?.deep_link || n.metadata?.url;
+    if (typeof dl === "string" && dl) return dl;
+    const tpl = (n.template || "").toLowerCase();
+    if (tpl.includes("friend")) return "/notifications?tab=requests";
+    if (tpl.includes("message") || tpl.includes("chat")) return "/chat";
+    if (tpl.includes("ride") || tpl.includes("trip")) return "/rides";
+    return "/notifications";
+  }, []);
+  const handleNotifClick = useCallback(async (n: { id: string; action_url: string | null; metadata: Record<string, any>; template: string; is_read: boolean }) => {
+    selectionChanged();
+    if (!n.is_read) { try { await markAsRead([n.id]); } catch {} }
+    setShowNotifPanel(false);
+    navigate(resolveNotifLink(n));
+  }, [markAsRead, navigate, resolveNotifLink, selectionChanged]);
   const handleResetCover = useCallback(() => { impact("light"); setCoverPosition(50); }, [impact]);
   
   const [showLangPicker, setShowLangPicker] = useState(false);
@@ -550,7 +589,9 @@ const Profile = () => {
             </span>
             {profile?.is_verified && <VerifiedBadge size={14} />}
           </div>
+          <div className="relative">
           <motion.button
+            ref={notifBellRef}
             onClick={handleToggleNotif}
             aria-label={showNotifPanel ? "Close notifications" : "Open notifications"}
             aria-pressed={showNotifPanel}
@@ -574,6 +615,155 @@ const Profile = () => {
               </span>
             )}
           </motion.button>
+          <AnimatePresence>
+            {showNotifPanel && (
+              <motion.div
+                ref={notifPanelRef}
+                id="profile-notif-panel"
+                role="dialog"
+                aria-label="Notifications"
+                initial={{ opacity: 0, y: -8, scale: 0.98 }}
+                animate={{ opacity: 1, y: 0, scale: 1 }}
+                exit={{ opacity: 0, y: -8, scale: 0.98 }}
+                transition={{ duration: 0.18, ease: "easeOut" }}
+                className="absolute right-0 top-full mt-2 z-50 w-[min(92vw,380px)] origin-top-right overflow-hidden rounded-2xl border border-border/60 bg-card text-card-foreground shadow-2xl shadow-black/20 backdrop-blur-xl"
+                style={{ maxHeight: "calc(100vh - var(--zivo-safe-top-sticky, 0px) - 80px)" }}
+              >
+                {/* Caret */}
+                <div className="absolute -top-1.5 right-3 h-3 w-3 rotate-45 rounded-sm border-l border-t border-border/60 bg-card" />
+                {/* Header */}
+                <div className="flex items-center justify-between gap-2 border-b border-border/40 px-4 pt-3 pb-2.5">
+                  <div className="flex items-center gap-2">
+                    <h3 className="text-base font-bold leading-none">Notifications</h3>
+                    {totalNotifCount > 0 && (
+                      <Badge variant="secondary" className="h-5 px-1.5 text-[10px]">{totalNotifCount}</Badge>
+                    )}
+                  </div>
+                  {notifUnreadCount > 0 && (
+                    <button
+                      onClick={() => { void markAllAsRead(); }}
+                      className="text-xs font-semibold text-primary hover:underline"
+                    >
+                      Mark all read
+                    </button>
+                  )}
+                </div>
+                {/* Filter chips */}
+                <div className="flex items-center gap-1.5 px-3 pt-2.5 pb-1">
+                  {(["all", "unread"] as const).map((f) => (
+                    <button
+                      key={f}
+                      onClick={() => setNotifFilter(f)}
+                      className={cn(
+                        "rounded-full px-3 py-1 text-xs font-semibold transition-colors",
+                        notifFilter === f
+                          ? "bg-primary text-primary-foreground"
+                          : "bg-muted/50 text-muted-foreground hover:bg-muted"
+                      )}
+                    >
+                      {f === "all" ? "All" : `Unread${notifUnreadCount > 0 ? ` (${notifUnreadCount})` : ""}`}
+                    </button>
+                  ))}
+                </div>
+                {/* List */}
+                <div className="max-h-[60vh] overflow-y-auto overscroll-contain px-1.5 py-1.5">
+                  {/* Friend requests pinned */}
+                  {socialCount > 0 && (
+                    <button
+                      onClick={() => { selectionChanged(); setShowNotifPanel(false); navigate("/notifications?tab=requests"); }}
+                      className="flex w-full items-center gap-3 rounded-xl border border-primary/15 bg-primary/5 p-2.5 text-left transition-colors hover:bg-primary/10"
+                    >
+                      <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-primary/15">
+                        <UserPlus className="h-5 w-5 text-primary" />
+                      </div>
+                      <div className="min-w-0 flex-1">
+                        <p className="truncate text-sm font-semibold">Friend requests</p>
+                        <p className="truncate text-xs text-muted-foreground">{socialCount} pending · tap to review</p>
+                      </div>
+                      <span className="h-2 w-2 shrink-0 rounded-full bg-primary" />
+                    </button>
+                  )}
+
+                  {notifLoading && notifications.length === 0 ? (
+                    <div className="space-y-2 p-2">
+                      {[0, 1, 2].map((i) => (
+                        <div key={i} className="flex items-center gap-3">
+                          <div className="h-10 w-10 shrink-0 animate-pulse rounded-full bg-muted" />
+                          <div className="flex-1 space-y-1.5">
+                            <div className="h-3 w-2/3 animate-pulse rounded bg-muted" />
+                            <div className="h-2.5 w-1/2 animate-pulse rounded bg-muted/70" />
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  ) : (() => {
+                    const filtered = (notifFilter === "unread"
+                      ? notifications.filter((n) => !n.is_read)
+                      : notifications);
+                    if (filtered.length === 0 && socialCount === 0) {
+                      return (
+                        <div className="flex flex-col items-center justify-center gap-2 px-4 py-10 text-center">
+                          <div className="flex h-12 w-12 items-center justify-center rounded-full bg-muted/40">
+                            <Bell className="h-6 w-6 text-muted-foreground/60" />
+                          </div>
+                          <p className="text-sm font-semibold text-foreground">You're all caught up</p>
+                          <p className="text-xs text-muted-foreground">New notifications will appear here.</p>
+                        </div>
+                      );
+                    }
+                    return filtered.slice(0, 12).map((n) => {
+                      let timeLabel = "";
+                      try { timeLabel = formatDistanceToNowStrict(new Date(n.created_at), { addSuffix: false }); } catch {}
+                      return (
+                        <button
+                          key={n.id}
+                          onClick={() => handleNotifClick(n)}
+                          className={cn(
+                            "group flex w-full items-start gap-3 rounded-xl p-2.5 text-left transition-colors",
+                            n.is_read ? "hover:bg-muted/40" : "bg-primary/[0.06] hover:bg-primary/[0.10]"
+                          )}
+                        >
+                          <div className={cn(
+                            "flex h-10 w-10 shrink-0 items-center justify-center rounded-full",
+                            n.category === "transactional" ? "bg-emerald-500/15 text-emerald-500"
+                              : n.category === "operational" ? "bg-amber-500/15 text-amber-500"
+                              : n.category === "marketing" ? "bg-fuchsia-500/15 text-fuchsia-500"
+                              : "bg-primary/15 text-primary"
+                          )}>
+                            <Bell className="h-5 w-5" />
+                          </div>
+                          <div className="min-w-0 flex-1">
+                            <p className={cn("truncate text-sm", n.is_read ? "font-medium text-foreground/90" : "font-semibold text-foreground")}>
+                              {n.title || "Notification"}
+                            </p>
+                            {n.body && (
+                              <p className="line-clamp-2 text-xs text-muted-foreground">{n.body}</p>
+                            )}
+                            {timeLabel && (
+                              <p className={cn("mt-0.5 text-[10px] font-medium", n.is_read ? "text-muted-foreground" : "text-primary")}>
+                                {timeLabel} ago
+                              </p>
+                            )}
+                          </div>
+                          {!n.is_read && <span className="mt-1.5 h-2 w-2 shrink-0 rounded-full bg-primary" aria-label="Unread" />}
+                        </button>
+                      );
+                    });
+                  })()}
+                </div>
+                {/* Footer */}
+                <div className="border-t border-border/40 px-2 py-1.5">
+                  <button
+                    onClick={() => { setShowNotifPanel(false); navigate("/notifications"); }}
+                    className="w-full rounded-xl py-2 text-center text-xs font-semibold text-primary transition-colors hover:bg-primary/10"
+                  >
+                    See all notifications
+                  </button>
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
+          </div>
           <motion.button
             onClick={() => navigate("/more")}
             aria-label="More account options"
@@ -1016,69 +1206,7 @@ const Profile = () => {
                 <ProfileStories />
               </ParallaxSection>
 
-          {/* Translate moved to /more page */}
-          <ParallaxSection index={2.1}>
-            <div className="relative mb-2">
-
-              <AnimatePresence>
-                {showNotifPanel && (
-                  <motion.div
-                    id="profile-notif-panel"
-                    initial={{ opacity: 0, height: 0 }}
-                    animate={{ opacity: 1, height: "auto" }}
-                    exit={{ opacity: 0, height: 0 }}
-                    transition={{ duration: 0.22, ease: "easeInOut" }}
-                    className="overflow-hidden"
-                  >
-                    <div className="mt-2 rounded-2xl border border-border/40 bg-card/90 p-2.5 shadow-xl shadow-primary/[0.04] backdrop-blur-xl">
-                      <div className="mb-2 flex items-center justify-between">
-                        <div className="flex items-center gap-2">
-                          <Bell className="h-3.5 w-3.5 text-primary" />
-                          <span className="text-xs font-bold">Notifications</span>
-                          {totalNotifCount > 0 && <Badge variant="secondary" className="h-5 px-1.5 text-[10px]">{totalNotifCount} new</Badge>}
-                        </div>
-                        <button onClick={() => setShowNotifPanel(false)} className="rounded-xl p-1.5 transition-colors hover:bg-muted/50" aria-label="Close notifications">
-                          <X className="h-3.5 w-3.5 text-muted-foreground" />
-                        </button>
-                      </div>
-
-                      <div className="mb-2 max-h-[220px] space-y-1.5 overflow-y-auto pr-1">
-                        {totalNotifCount === 0 ? (
-                          <div className="py-3 text-center">
-                            <Bell className="mx-auto mb-1.5 h-6 w-6 text-muted-foreground/30" />
-                            <p className="text-xs text-muted-foreground">No new notifications</p>
-                          </div>
-                        ) : (
-                          <>
-                            {socialCount > 0 && (
-                              <button onClick={() => { setShowNotifPanel(false); navigate('/notifications'); }} className="flex w-full items-center gap-2.5 rounded-xl border border-primary/15 bg-primary/5 p-2 text-left transition-colors hover:bg-primary/10">
-                                <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-primary/15"><UserPlus className="h-3.5 w-3.5 text-primary" /></div>
-                                <div className="min-w-0 flex-1"><p className="text-xs font-semibold">Friend Requests</p><p className="text-[10px] text-muted-foreground">{socialCount} pending</p></div>
-                                <ChevronRight className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
-                              </button>
-                            )}
-                            {notifications.filter(n => !n.is_read).slice(0, 4).map((n) => (
-                              <button key={n.id} onClick={() => { setShowNotifPanel(false); navigate('/notifications'); }} className="flex w-full items-center gap-2.5 rounded-xl bg-muted/35 p-2 text-left transition-colors hover:bg-muted/55">
-                                <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-primary/10"><Bell className="h-3.5 w-3.5 text-primary" /></div>
-                                <div className="min-w-0 flex-1"><p className="truncate text-xs font-semibold">{n.title || 'Notification'}</p><p className="truncate text-[10px] text-muted-foreground">{n.body || n.template || 'New update'}</p></div>
-                                <ChevronRight className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
-                              </button>
-                            ))}
-                          </>
-                        )}
-                      </div>
-
-                      <div className="flex gap-2">
-                        <button onClick={() => { setShowNotifPanel(false); navigate('/notifications'); }} className="flex-1 rounded-xl bg-primary py-2 text-xs font-bold text-primary-foreground transition-transform active:scale-95">View All</button>
-                        <button onClick={() => setShowNotifPanel(false)} className="rounded-xl bg-muted/50 px-4 py-2 text-xs font-bold text-muted-foreground transition-transform active:scale-95 hover:bg-muted/70">Close</button>
-                      </div>
-                    </div>
-                  </motion.div>
-                )}
-              </AnimatePresence>
-            </div>
-          </ParallaxSection>
-
+          {/* Notifications panel moved into the sticky header (Facebook-style popover) */}
 
 
               {/* ── Social Content Tabs (Posts, Videos, Live, Status) ── */}

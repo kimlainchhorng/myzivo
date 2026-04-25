@@ -1,68 +1,70 @@
-# Plan — Pin the compact header over the cover (always visible)
+# Plan — Facebook-style Notifications Panel in Account
 
 ## Goal
-Match the uploaded screenshot: the small header row (back arrow • avatar • "ZIVO Platform" + verified • bell • more) should sit **on top of the cover photo from the very first frame**, not fade in only after scrolling. It should remain readable while scrolling and stay pinned at the top.
+Replace the current mid-page notifications card on the Profile/Account screen with a polished, Facebook-style notifications popover that opens directly under the bell icon in the sticky header, stays inside the Account context, and feels native on mobile.
 
-## What's wrong today
-In `src/pages/Profile.tsx` (lines ~397–520) the sticky header uses scroll-driven motion values:
-- `stickyOpacity = useTransform(scrollY, [96, 156], [0, 1])` — invisible until scrolled 96px
-- `stickyTranslate` slides it down from `-18px`
-- `pointerEvents` is disabled until visible
-- Background uses `bg-background/85` (solid-ish), no gradient scrim — looks empty over a white area
+## Problems with current behavior
+- Panel renders far below the header (inserted between Stories and Content Tabs), so tapping the bell visually "jumps" the user mid-page.
+- Items are minimal (title + body), no avatar, no timestamp, no read state.
+- Tapping any item closes the panel and navigates away to `/notifications` — defeats the "stay in account" feel.
+- Footer has redundant "View All / Close" buttons (modal-like), unlike Facebook's quick popover.
+- No "Mark all as read", no per-item read styling, no grouping (Today / Earlier).
 
-Result: when the page first loads, the cover area appears blank at the top with no header chrome — exactly the opposite of the screenshot.
+## What we'll build (`src/pages/Profile.tsx`)
 
-## Changes
+1. **Anchor the panel to the bell**
+   - Move the `<AnimatePresence>` notif panel out of the `ParallaxSection` between Stories and Tabs.
+   - Render it as a fixed/absolute popover positioned directly under the sticky header bell, with a small caret pointing up at the bell.
+   - Width: `min(92vw, 380px)`, right-aligned to the bell icon. On lg+ screens render as a normal dropdown.
 
-### 1. `src/pages/Profile.tsx` — pin header from frame one
-- Remove the scroll-tied `opacity` / `translate` / `pointerEvents` gating. Header is always visible and interactive on mobile.
-- Keep only a subtle scroll-driven **background opacity boost** for legibility once content scrolls under it:
-  - At scroll 0 → translucent (`bg-black/0` + soft top-down gradient scrim so icons read on bright covers)
-  - At scroll >80 → `bg-background/90 backdrop-blur-xl` with bottom border
-- Add a permanent gradient scrim layer behind the header (`bg-gradient-to-b from-black/35 to-transparent`) so the back/bell/more icons stay legible over photo covers (matches the screenshot where the dark icons sit cleanly over the cover).
-- Switch icon color to adapt: when over cover (scroll 0) use `text-white drop-shadow`, after scroll use `text-foreground`. Toggle via the same scroll threshold.
-- Keep existing back/avatar/title/bell/more buttons and handlers exactly as they are.
-- Remove the `isStickyHeaderVisible` state + `useMotionValueEvent` block that toggled it (no longer needed).
+2. **Facebook-style header**
+   - Title row: "Notifications" (bold, 16px) + small "Mark all as read" text-button on the right (only when unread > 0).
+   - Optional segmented chips: `All` | `Unread` (defaults to All).
 
-### 2. Cover offset
-- Because the header now overlays the cover, add `pt-[calc(var(--zivo-safe-top-sticky)+3rem)]` only to the **non-cover** loading state, so the spinner doesn't hide under the header. Cover already paints behind safe-area, so no change needed there.
+3. **Rich notification rows**
+   - Each row: avatar (actor or themed icon bubble) · 2-line title/body · relative timestamp (e.g. "3m", "1h", "Yesterday") · unread blue dot on the far right.
+   - Unread rows have subtle `bg-primary/5` tint; read rows are transparent.
+   - Long-press / kebab menu (3-dot) per row: "Mark as read", "Hide this notification" (UI only for now; mark-as-read wired to `markAsRead([id])`).
 
-### 3. No other files changed
-- `ProfileContentTabs`, `MorePage`, routes, etc. stay as-is from previous rounds.
+4. **Smart routing on tap**
+   - Tap a row: call `markAsRead([id])`, then route to the notification's deep link if present (use `n.data?.deepLink` / type-based fallback similar to `useRideNotifications.defaultDeepLink`).
+   - If the notification target is an in-account surface (friend requests, profile views, comments on own posts), navigate within the account stack so user stays in the Account tab.
+   - Friend Requests row keeps its dedicated entry pointing at `/notifications?tab=requests`.
 
-## Technical details
-```tsx
-// Replace the stickyOpacity / stickyTranslate / isStickyHeaderVisible block with:
-const headerBgOpacity = useTransform(scrollY, [0, 80], [0, 0.9]);
-const headerBlurEnabled = useTransform(scrollY, [0, 80], [0, 1]);
-const [overCover, setOverCover] = useState(true);
-useMotionValueEvent(scrollY, "change", (v) => setOverCover(v < 80));
+5. **Empty + loading states**
+   - Empty: small bell illustration, "You're all caught up" copy.
+   - Loading: 3 skeleton rows.
 
-// Header JSX:
-<motion.header
-  style={{ paddingTop: "var(--zivo-safe-top-sticky)",
-           height: "calc(var(--zivo-safe-top-sticky) + 3rem)" }}
-  className="lg:hidden fixed top-0 inset-x-0 z-40 px-3 flex items-center gap-3"
->
-  {/* Scrim layer for cover legibility */}
-  <div aria-hidden className={cn(
-    "absolute inset-0 -z-10 transition-all duration-200",
-    overCover
-      ? "bg-gradient-to-b from-black/40 via-black/15 to-transparent"
-      : "bg-background/90 backdrop-blur-xl border-b border-border/40"
-  )} />
-  {/* Buttons get conditional color */}
-  <ArrowLeft className={cn("h-5 w-5", overCover ? "text-white drop-shadow-md" : "text-foreground")} />
-  ...
-  <span className={cn("font-semibold text-sm truncate",
-    overCover ? "text-white drop-shadow-md" : "text-foreground")}>
-    {profile?.full_name || "Profile"}
-  </span>
-</motion.header>
-```
+6. **Footer**
+   - Single subtle link: "See all notifications" → `/notifications` (replaces the View All / Close buttons).
 
-## Acceptance
-- On mobile load of `/profile`, header (back • avatar • name + verified • bell • more) is visible immediately over the cover photo, matching the uploaded screenshot.
-- Scrolling past ~80px transitions the header background to the standard solid blurred bar with foreground-color icons; no flicker.
-- Buttons are tappable from the first frame (no `pointer-events: none`).
-- Desktop (`lg+`) is unaffected.
+7. **Dismiss behavior (in-account feel)**
+   - Click outside / Escape closes the panel (use a lightweight outside-click handler).
+   - Bell tap toggles open/close.
+   - Panel persists across re-renders within the page (already using `sessionStorage` key `zivo:profile:notif-panel`).
+   - Removes the inline `ParallaxSection index={2.1}` wrapper so the page layout no longer reflows when opening.
+
+8. **Bell affordances**
+   - Keep unread dot/count badge on the bell.
+   - When panel is open, bell gets `bg-primary/15` ring to indicate active state (already partially implemented).
+
+9. **Accessibility**
+   - `role="dialog"` + `aria-label="Notifications"` on the popover container.
+   - Focus trap while open; return focus to bell on close.
+   - Each row is a real `<button>` with `aria-label` describing actor + action.
+
+## Technical notes
+- All work in `src/pages/Profile.tsx`. No new files needed.
+- Use existing `useNotifications(20)` hook — already exposes `markAsRead`, `markAllAsRead`, `notifications`, `unreadCount`.
+- Reuse `formatDistanceToNowStrict` from `date-fns` (already in deps) for relative time.
+- Position the popover with `absolute top-full right-0 mt-2` inside a `relative` wrapper around the bell button in the sticky header (the header is already `fixed`, so the popover will follow it during scroll — bonus Facebook-like behavior).
+- Add `useEffect` outside-click listener tied to a ref on the popover + bell.
+- Keep current scroll-based `overCover` styling intact; popover always uses solid `bg-card` regardless of cover state for legibility.
+
+## Files to edit
+- `src/pages/Profile.tsx` — replace mid-page notif `ParallaxSection` with header-anchored popover; refactor item rendering; wire `markAsRead`.
+
+## Out of scope
+- No DB migrations.
+- No changes to the dedicated `/notifications` page or `useNotifications` hook.
+- No new routes.
