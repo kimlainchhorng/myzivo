@@ -1,44 +1,30 @@
-## Plan
+# Fix: Sticky header missing on mobile Profile scroll
 
-1. Rework the Profile page scroll container so the sticky header, cover parallax, and pull-to-refresh all listen to the same mobile scroll source.
-2. Replace the current sticky-header safe-area math with the shared `--zivo-safe-top-sticky` token from `src/index.css` so the header never sits under the iOS/Android status bar.
-3. Prevent the sticky header from capturing taps or feeling “stuck” while hidden by making its interaction state match its visible state during scroll transitions.
-4. Tune the top-of-page spacing so returning to the top does not show an awkward duplicated-header feel or jumpy overlap between the hero cover and compact header.
-5. Retest the account page on mobile with repeated scroll down/up passes and confirm the notification button, back button, and cover area still behave correctly.
+## What I tested
+Logged in as `klainkonkat@gmail.com` and opened `/profile` at 390×844 (iPhone). Scrolled the page down past the cover/avatar.
 
-## What I found
+## Bug found
+**The mobile sticky header (back button + name + bell) does not appear after scrolling past the cover.** Screenshots at 30% and 50% scroll show the cover scrolled away with no compact header pinned to the top — the area behind the status bar stays empty.
 
-- Login now works with the updated password you sent.
-- I reproduced the mobile profile flow on `/profile`.
-- After scrolling down and back up, the compact sticky header remains mounted over the page and contributes to the “something is stuck” feeling.
-- The Profile page currently mixes:
-  - `PullToRefresh`, which tracks `window.scrollY`
-  - an inner `div` with `overflow-y-auto`
-  - Framer Motion `useScroll({ container: scrollRef })`
-- That split scroll model is the likely cause of the weird mobile behavior.
-- The sticky header also uses raw `--zivo-safe-top` instead of the shared sticky safe-area token required by project memory.
+## Root cause
+The `<motion.header>` for the sticky header lives inside `<PullToRefresh>`. PullToRefresh's inner wrapper uses `style={{ y: ... }}` (a CSS `transform`). Per the CSS spec, **a `position: fixed` element inside a transformed ancestor is positioned relative to that ancestor, not the viewport**. Combined with the header's own `y: stickyTranslate` transform, the header is effectively translated out of the visible region and never becomes visible.
 
-## Technical details
+Secondary issue: even if it were visible, putting the sticky header inside the pull-to-refresh transformed container means it would jiggle with pull-to-refresh gestures.
 
-Files to update:
-- `src/pages/Profile.tsx`
-- possibly `src/components/shared/PullToRefresh.tsx` if the Profile page needs a small compatibility improvement for nested/mobile scroll containers
+## Fix
 
-Implementation details:
-- Make the Profile page use a single authoritative scroll container for:
-  - sticky header opacity/translate
-  - cover parallax
-  - pull-to-refresh eligibility
-- Update the sticky header styles to use:
-  - `paddingTop: var(--zivo-safe-top-sticky)`-compatible spacing
-  - height derived from the same sticky token instead of raw `env(safe-area-inset-top)`
-- Add pointer-event gating so the sticky header is non-interactive while visually hidden.
-- If needed, offset the main content with a header spacer only when the compact header becomes active, avoiding overlap/jumpiness near the top.
-- Re-run mobile verification on the preview after the fix.
+1. **Lift the sticky header out of the transformed ancestor.** Render it via `createPortal(stickyHeaderJSX, document.body)` so it attaches directly to `<body>` and behaves as a true viewport-fixed element. (`createPortal` is already imported in `Profile.tsx`.)
 
-## Expected result
+2. **Keep `useScroll()` window-bound** (no change) — it already tracks window scroll correctly.
 
-- Smooth touch scrolling on Account/Profile
-- No sticky header “stuck” sensation after scrolling down then back up
-- Correct safe-area clearance on notched phones
-- Existing notification drawer and cover reposition features remain intact
+3. **Verify after fix**: re-test mobile scroll at 0%, 30%, 50%, 100%, then back to top, confirming:
+   - Header fades in past ~150px scroll
+   - Header has correct safe-area top padding
+   - Header is non-interactive when hidden (pointer-events gating preserved)
+   - No jitter during pull-to-refresh
+
+## Files to edit
+- `src/pages/Profile.tsx` — wrap the existing `<motion.header>` block in `createPortal(..., document.body)`, guarded for SSR (`typeof document !== 'undefined'`).
+
+## Out of scope
+No changes to PullToRefresh, scroll math, thresholds, or styling — only the DOM mount point of the sticky header.
