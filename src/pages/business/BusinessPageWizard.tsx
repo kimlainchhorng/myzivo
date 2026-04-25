@@ -14,7 +14,7 @@ import { useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   ArrowLeft, ArrowRight, Briefcase, Building2, User, Image as ImageIcon,
-  Camera, CheckCircle2, Loader2, Upload, X, Check,
+  Camera, CheckCircle2, Loader2, Upload, X, Check, Save,
 } from "lucide-react";
 import { toast } from "sonner";
 
@@ -26,6 +26,10 @@ import {
   resolveBusinessDashboardRoute,
   RESTAURANT_CATEGORIES,
 } from "@/lib/business/dashboardRoute";
+import {
+  persistWizardPartial,
+  type WizardSnapshot,
+} from "./wizardPersistence";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -58,29 +62,9 @@ const formatPhone = (value: string): string => {
   return `(${d.slice(0, 3)}) ${d.slice(3, 6)}-${d.slice(6)}`;
 };
 
-const slugify = (s: string) =>
-  s.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, "") || `biz-${Date.now()}`;
-
 type Step = 1 | 2 | 3 | 4 | 5;
 
-/** Find a slug that isn't taken by another owner. Returns null if all attempts collide. */
-async function findAvailableSlug(base: string, ownerId: string): Promise<string | null> {
-  const candidates = [base, ...Array.from({ length: 5 }, (_, i) => `${base}-${i + 2}`)];
-  for (const candidate of candidates) {
-    const { data, error } = await supabase
-      .from("store_profiles")
-      .select("id, owner_id")
-      .eq("slug", candidate)
-      .maybeSingle();
-    if (error) {
-      // If query itself fails, optimistically return the candidate — DB unique
-      // constraint will be the final guard.
-      return candidate;
-    }
-    if (!data || data.owner_id === ownerId) return candidate;
-  }
-  return null;
-}
+const SENTINEL_KEY = "biz-wizard-guard";
 
 export default function BusinessPageWizard() {
   const navigate = useNavigate();
@@ -89,12 +73,19 @@ export default function BusinessPageWizard() {
 
   const [step, setStep] = useState<Step>(1);
   const [submitting, setSubmitting] = useState(false);
+  const [savingExit, setSavingExit] = useState(false);
   const [checking, setChecking] = useState(true);
   const [completedSteps, setCompletedSteps] = useState<Set<Step>>(new Set());
   const [storeId, setStoreId] = useState<string | null>(null);
   const [leaveOpen, setLeaveOpen] = useState(false);
-  const pendingLeaveRef = useRef<(() => void) | null>(null);
+  /** Records HOW the leave dialog was opened so Confirm Leave knows whether to call history.go. */
+  const leaveSourceRef = useRef<"header" | "popstate">("header");
+  /** Latches once the user has confirmed Leave / completed setup so guard short-circuits. */
+  const isLeavingRef = useRef(false);
   const completedRef = useRef(false);
+  /** Snapshot of fields that we treat as "saved" — used as baseline for dirty detection. */
+  const baselineRef = useRef<string>("");
+  const [baselineReady, setBaselineReady] = useState(false);
 
   // Step 1
   const [bizName, setBizName] = useState("");
@@ -119,9 +110,26 @@ export default function BusinessPageWizard() {
   const logoInput = useRef<HTMLInputElement>(null);
   const bannerInput = useRef<HTMLInputElement>(null);
 
+  // Build the current snapshot used for both DB writes and dirty detection.
+  const snapshot: WizardSnapshot = useMemo(
+    () => ({
+      bizName, bizPhone, bizEmail, category,
+      firstName, lastName, contactPhone, contactEmail,
+      logoUrl, bannerUrl,
+    }),
+    [
+      bizName, bizPhone, bizEmail, category,
+      firstName, lastName, contactPhone, contactEmail,
+      logoUrl, bannerUrl,
+    ]
+  );
+  const fieldsSnapshot = useMemo(() => JSON.stringify(snapshot), [snapshot]);
+
   const isDirty =
-    !!bizName || !!bizPhone || !!bizEmail || !!category ||
-    !!firstName || !!lastName || !!contactPhone || !!logoUrl || !!bannerUrl;
+    baselineReady &&
+    !completedRef.current &&
+    !isLeavingRef.current &&
+    fieldsSnapshot !== baselineRef.current;
 
   // Auth gate + redirect already-completed owners; resume partial setups.
   useEffect(() => {
@@ -133,33 +141,35 @@ export default function BusinessPageWizard() {
         .eq("owner_id", user.id)
         .maybeSingle();
 
-      if (data?.setup_complete) {
-        const { path } = resolveBusinessDashboardRoute(data.category, data.id);
+      if ((data as any)?.setup_complete) {
+        completedRef.current = true;
+        const { path } = resolveBusinessDashboardRoute((data as any).category, (data as any).id);
         navigate(path, { replace: true });
         return;
       }
 
       // Resume partial setup
       if (data) {
-        setStoreId(data.id);
-        if (data.name) setBizName(data.name);
-        if (data.phone) setBizPhone(formatPhone(data.phone));
-        if (data.category) {
-          setCategory(data.category as StoreCategory);
+        const d = data as any;
+        setStoreId(d.id);
+        if (d.name) setBizName(d.name);
+        if (d.phone) setBizPhone(formatPhone(d.phone));
+        if (d.category) {
+          setCategory(d.category as StoreCategory);
           setCompletedSteps((prev) => new Set(prev).add(1).add(2));
           setStep(3);
-        } else if (data.name) {
+        } else if (d.name) {
           setCompletedSteps((prev) => new Set(prev).add(1));
           setStep(2);
         }
-        if (data.logo_url) setLogoUrl(data.logo_url);
-        if (data.banner_url) setBannerUrl(data.banner_url);
+        if (d.logo_url) setLogoUrl(d.logo_url);
+        if (d.banner_url) setBannerUrl(d.banner_url);
       }
       setChecking(false);
     })();
   }, [user, navigate]);
 
-  // Prefill contact step from profile
+  // Prefill from profile (runs once profile loads).
   useEffect(() => {
     if (!user) return;
     const full = profile?.full_name || (user.user_metadata?.full_name as string) || "";
@@ -172,9 +182,20 @@ export default function BusinessPageWizard() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [profile, user]);
 
+  // Set the dirty-detection baseline once initial loading + prefill have settled.
+  useEffect(() => {
+    if (checking || baselineReady) return;
+    // Defer one tick so the prefill effect's setStates have flushed into snapshot.
+    const t = setTimeout(() => {
+      baselineRef.current = fieldsSnapshot;
+      setBaselineReady(true);
+    }, 0);
+    return () => clearTimeout(t);
+  }, [checking, baselineReady, fieldsSnapshot]);
+
   // Warn on tab close / reload while dirty.
   useEffect(() => {
-    if (!isDirty || completedRef.current) return;
+    if (!isDirty) return;
     const handler = (e: BeforeUnloadEvent) => {
       e.preventDefault();
       e.returnValue = "";
@@ -183,30 +204,28 @@ export default function BusinessPageWizard() {
     return () => window.removeEventListener("beforeunload", handler);
   }, [isDirty]);
 
-  // Intercept browser/system back button. We push a sentinel history entry
-  // when the wizard mounts; if the user pops it (back button), we restore it
-  // and open the leave-confirm dialog instead of navigating away.
+  // Intercept browser/system back. Push a sentinel; if user pops it, prompt instead.
   useEffect(() => {
-    const SENTINEL = "biz-wizard-guard";
-    window.history.pushState({ [SENTINEL]: true }, "");
+    if (!isDirty) return;
 
+    // Push sentinel only if it isn't already on top.
+    if (!(window.history.state && (window.history.state as any)[SENTINEL_KEY])) {
+      window.history.pushState({ [SENTINEL_KEY]: true }, "");
+    }
+
+    let armed = true;
     const onPop = (_e: PopStateEvent) => {
-      if (completedRef.current || !isDirty) {
-        // Allow the navigation through.
-        return;
-      }
+      if (!armed) return;
+      if (completedRef.current || isLeavingRef.current) return;
       // Re-push the sentinel so we stay on this page, then prompt.
-      window.history.pushState({ [SENTINEL]: true }, "");
-      pendingLeaveRef.current = () => {
-        // User confirmed leave — actually go back. Pop our sentinel + the real entry.
-        window.removeEventListener("popstate", onPop);
-        window.history.go(-1);
-      };
+      window.history.pushState({ [SENTINEL_KEY]: true }, "");
+      leaveSourceRef.current = "popstate";
       setLeaveOpen(true);
     };
 
     window.addEventListener("popstate", onPop);
     return () => {
+      armed = false;
       window.removeEventListener("popstate", onPop);
     };
   }, [isDirty]);
@@ -268,71 +287,43 @@ export default function BusinessPageWizard() {
     }
   };
 
-  /** Soft-save the partial store_profiles row so users can resume. */
-  const persistPartial = useCallback(async (): Promise<{ id: string | null; error?: string }> => {
-    if (!user) return { id: null };
-    try {
-      // Resolve a non-colliding slug.
-      const base = slugify(bizName);
-      const slug = await findAvailableSlug(base, user.id);
-      if (!slug) {
-        return { id: null, error: "That business name is already taken — try a small variation." };
-      }
-
-      // NOTE: store_profiles has no `email` column — keep email out of the payload.
-      const payload = {
-        owner_id: user.id,
-        name: bizName.trim(),
-        slug,
-        category: (category || null) as any,
-        phone: bizPhone.replace(/\D/g, "") || null,
-        logo_url: logoUrl,
-        banner_url: bannerUrl,
-        setup_complete: false,
+  /** Persist current snapshot. Updates baseline on success so wizard becomes "clean". */
+  const persist = useCallback(
+    async (opts?: { persistProfile?: boolean }) => {
+      if (!user) return { id: null as string | null };
+      const snap: WizardSnapshot = {
+        bizName, bizPhone, bizEmail, category,
+        firstName, lastName, contactPhone, contactEmail,
+        logoUrl, bannerUrl,
       };
-
-      if (storeId) {
-        const { error } = await supabase
-          .from("store_profiles")
-          .update(payload)
-          .eq("id", storeId);
-        if (error) {
-          if ((error as any).code === "23505") {
-            return { id: null, error: "That business name is already taken — try a small variation." };
-          }
-          return { id: null, error: error.message };
-        }
-        return { id: storeId };
+      const res = await persistWizardPartial({
+        userId: user.id,
+        storeId,
+        snapshot: snap,
+        persistProfile: opts?.persistProfile,
+      });
+      if (res.id) {
+        setStoreId(res.id);
+        baselineRef.current = JSON.stringify(snap);
       }
-
-      const { data, error } = await supabase
-        .from("store_profiles")
-        .insert(payload as any)
-        .select("id")
-        .single();
-      if (error) {
-        if ((error as any).code === "23505") {
-          return { id: null, error: "That business name is already taken — try a small variation." };
-        }
-        return { id: null, error: error.message };
-      }
-      setStoreId(data.id);
-      return { id: data.id };
-    } catch (e: any) {
-      return { id: null, error: e.message || "Could not save progress" };
-    }
-  }, [user, bizName, bizPhone, category, logoUrl, bannerUrl, storeId]);
+      return res;
+    },
+    [
+      user, storeId, bizName, bizPhone, bizEmail, category,
+      firstName, lastName, contactPhone, contactEmail, logoUrl, bannerUrl,
+    ]
+  );
 
   const goNext = async () => {
     if (!canContinue()) return;
 
-    // Steps 1 & 2 trigger a soft save so progress survives a reload.
-    if (step === 1 || step === 2) {
-      const res = await persistPartial();
+    // Auto-save after every step except 5 (handled by handleComplete).
+    if (step >= 1 && step <= 4) {
+      const res = await persist({ persistProfile: step >= 3 });
       if (res.error) {
         setNameError(res.error);
         toast.error(res.error);
-        setStep(1);
+        if (step !== 1) setStep(1);
         return;
       }
       setNameError(null);
@@ -349,40 +340,63 @@ export default function BusinessPageWizard() {
     if (step > 1) setStep((s) => (s - 1) as Step);
   };
 
-  const requestLeave = (action: () => void) => {
-    if (!isDirty || completedRef.current) {
-      action();
+  const onHeaderBack = () => {
+    if (step > 1) {
+      goBack();
       return;
     }
-    pendingLeaveRef.current = action;
+    if (!isDirty) {
+      navigate(-1);
+      return;
+    }
+    leaveSourceRef.current = "header";
     setLeaveOpen(true);
   };
 
-  const onHeaderBack = () => {
-    if (step === 1) {
-      requestLeave(() => navigate(-1));
+  /** User confirmed Leave. Discard unsaved edits on this step and navigate away. */
+  const confirmLeave = () => {
+    isLeavingRef.current = true;
+    setLeaveOpen(false);
+    if (leaveSourceRef.current === "popstate") {
+      // The sentinel is currently on top — popping it lands on the original prior page.
+      window.history.go(-1);
     } else {
-      goBack();
+      navigate(-1);
+    }
+  };
+
+  /** User chose Save & exit. Persist progress, then navigate to /account. */
+  const saveAndExit = async () => {
+    if (savingExit) return;
+    setSavingExit(true);
+    try {
+      const res = await persist({ persistProfile: step >= 3 });
+      if (res.error || !res.id) {
+        toast.error(res.error || "Could not save");
+        return;
+      }
+      toast.success("Setup saved", { description: "Pick up here later." });
+      isLeavingRef.current = true;
+      setLeaveOpen(false);
+      if (leaveSourceRef.current === "popstate") {
+        window.history.go(-1);
+      } else {
+        navigate("/account");
+      }
+    } finally {
+      setSavingExit(false);
     }
   };
 
   const handleComplete = async () => {
     if (!user || !category) return;
+    // Disarm guard immediately so popstate during the save is silent.
+    completedRef.current = true;
     setSubmitting(true);
     try {
-      // Update profile contact info
-      const fullName = `${firstName.trim()} ${lastName.trim()}`.trim();
-      await supabase
-        .from("profiles")
-        .update({
-          full_name: fullName || null,
-          phone: contactPhone.replace(/\D/g, "") || null,
-        })
-        .eq("user_id", user.id);
-
-      // Final upsert with setup_complete: true.
-      const partial = await persistPartial();
+      const partial = await persist({ persistProfile: true });
       if (partial.error || !partial.id) {
+        completedRef.current = false; // re-arm — completion didn't happen
         setNameError(partial.error || "Could not save");
         toast.error(partial.error || "Could not save");
         setStep(1);
@@ -415,7 +429,6 @@ export default function BusinessPageWizard() {
         }
       }
 
-      completedRef.current = true;
       const { path, fallback } = resolveBusinessDashboardRoute(category, finalStoreId);
       if (fallback) {
         toast.success("Business page created", {
@@ -426,6 +439,7 @@ export default function BusinessPageWizard() {
       }
       navigate(path, { replace: true });
     } catch (e: any) {
+      completedRef.current = false;
       toast.error(e.message || "Could not save your business page");
     } finally {
       setSubmitting(false);
@@ -824,19 +838,29 @@ export default function BusinessPageWizard() {
           <AlertDialogHeader>
             <AlertDialogTitle>Leave business setup?</AlertDialogTitle>
             <AlertDialogDescription>
-              Your progress on this step won't be saved. Saved steps will still be here when you come back.
+              Your unsaved edits on this step will be lost. Saved steps will still be here when you come back.
             </AlertDialogDescription>
           </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel onClick={() => (pendingLeaveRef.current = null)}>
-              Stay
-            </AlertDialogCancel>
+          <AlertDialogFooter className="flex-col gap-2 sm:flex-row">
+            <AlertDialogCancel disabled={savingExit}>Stay</AlertDialogCancel>
+            <Button
+              type="button"
+              variant="secondary"
+              onClick={saveAndExit}
+              disabled={savingExit || (step === 1 && !canContinue())}
+              className="gap-1.5"
+            >
+              {savingExit ? (
+                <Loader2 className="h-4 w-4 animate-spin" />
+              ) : (
+                <Save className="h-4 w-4" />
+              )}
+              Save &amp; exit
+            </Button>
             <AlertDialogAction
-              onClick={() => {
-                const action = pendingLeaveRef.current;
-                pendingLeaveRef.current = null;
-                action?.();
-              }}
+              onClick={confirmLeave}
+              disabled={savingExit}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
             >
               Leave
             </AlertDialogAction>

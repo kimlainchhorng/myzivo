@@ -1,63 +1,98 @@
 ## Goal
 
-Harden `BusinessPageWizard` so it (1) actually saves without the schema error you saw, (2) refuses duplicate slugs gracefully, (3) warns before losing in-progress work, (4) confirms what was saved at every step, and (5) always lands on a real dashboard route.
+Make the leave-guard rock-solid (no false positives, no infinite loops, correctly off after completion), persist every step automatically, give users a "Save & exit" path, and lock the behaviour in with automated tests.
 
-## Bugs found while exploring
+## Bugs / gaps in the current wizard
 
-1. **Schema error in screenshot** — `store_profiles` has no `email` column. The wizard sends `email: bizEmail` on insert/update, which is what produces *"Could not find the 'email' column of 'store_profiles' in the schema cache"*. Real columns: `name, slug, category, phone, logo_url, banner_url, owner_id, setup_complete, …` (no email).
-2. **Restaurant route is broken** — wizard redirects to `/restaurant/dashboard` but no such route exists in `src/App.tsx`. The actual route is `/eats/restaurant-dashboard`.
-3. **No slug collision handling** — `slugify(name)` can collide with another business's slug, and the DB has a unique index on `slug`, so the insert silently fails with a 23505 error.
-4. **No leave-warning** — back button / browser nav / route change discards everything typed.
-5. **No per-step confirmation** — user has no signal that step data was captured.
+1. **`isDirty` is a false positive.** It's `!!bizName || !!bizEmail || …`, but `bizEmail`, `firstName`, `contactEmail`, etc. are *prefilled* from the user's profile in a `useEffect`. The wizard appears dirty before the user touches anything → the leave dialog opens on every Back press.
+2. **`completedRef` flips too late.** It's set after every awaited DB call in `handleComplete`. A `popstate` fired during that window still shows the leave prompt on the success path.
+3. **Steps 3, 4, 5 don't auto-save.** Only steps 1 & 2 call `persistPartial`. Resuming after a refresh on Step 4 loses the contact info entered on Step 3 (it lives only on `profiles`, but the wizard doesn't re-pull it back into local state on resume).
+4. **No "Save & exit" action.** The dialog only offers Stay / Leave (which discards work-in-progress on the current step).
+5. **Loop risk.** `popstate` re-pushes the sentinel; if a confirmed Leave fires another popstate before the listener is removed, or if the user mashes Back, we could re-prompt. Need an `isLeaving` latch and a single source of truth for "should we guard?".
+6. **No tests** covering any of this.
 
-## What we'll change
+## Plan
 
-### 1. Fix the schema error (blocking)
-- Stop sending `email` to `store_profiles` (it's not a column).
-- Keep business email in component state and persist it on the matching `restaurants` row (which does support email) for restaurant categories, and on the user's `profiles.email` only if user opts in later. For non-restaurant categories, drop it from the payload — we'll surface a TODO if a column is added later.
+### 1. Fix `isDirty` (no more false positives)
 
-### 2. Duplicate slug protection
-- Before insert, query `store_profiles` for existing rows where `slug = candidate AND owner_id <> current user`.
-- If taken, auto-append a short numeric suffix (`-2`, `-3`, …) up to 5 attempts; after that, show inline error on Step 1: *"That business name is already taken — try a small variation."* and keep the user on Step 1 with focus on the name field.
-- Also catch Postgres `23505` from the insert as a final safety net and surface the same friendly message.
+- Capture a `baselineRef` snapshot of all field values right after the prefill + resume effects settle (use a small `baselineReady` flag set on the next tick once the resume + prefill effects have run).
+- `isDirty = baselineReady && JSON.stringify(currentFields) !== baselineRef.current`.
+- After each successful `persistPartial`, refresh the baseline so just-saved values stop counting as dirty.
 
-### 3. Leave-wizard confirm dialog
-- Track `isDirty` (true once any field is touched and `setup_complete` not yet true).
-- Add a `useBeforeUnload` handler for full-page reload/close.
-- Intercept the in-app Back button and any `navigate(-1)` from Step >1 with an `<AlertDialog>`: *"Leave setup? Your progress on this step won't be saved."* with **Stay** / **Leave** actions.
-- Soft-save partial progress (without `setup_complete`) on every successful **Continue**, so returning to `/business/new` later resumes mid-flow.
+### 2. Flip the guard off the moment completion starts
 
-### 4. "Setup saved" + "Next: …" status summary
-- After each successful **Continue**, show a small toast: *"Step saved · Next: Business type"* (etc.).
-- Add a compact summary chip row beneath the progress bar listing completed steps with a green check (`Basics ✓ · Type ✓ · Contact …`). Tapping a completed chip jumps back to that step (read-only-ish, but editable).
+- Set `completedRef.current = true` at the very top of `handleComplete` (before any awaits).
+- Also add an `isLeaving` ref set to `true` when the user confirms Leave or Save & exit, so the guard short-circuits during the actual navigation.
 
-### 5. Dashboard routing + fallback
-- Verified destinations:
-  - Lodging categories → `/admin/stores/:storeId?tab=lodge-overview` ✓ exists.
-  - Generic store categories → `/admin/stores/:storeId` ✓ exists.
-  - Restaurants/cafes/bakeries/drinks → currently points at `/restaurant/dashboard` which **doesn't exist**. Change to `/eats/restaurant-dashboard` (the real route).
-- Add a centralized `resolveBusinessDashboardRoute(category, storeId)` helper.
-- Add a final fallback: if the resolved route would 404 (unknown category), route to `/admin/stores/:storeId` and toast *"Opened your generic dashboard — pick a category later to unlock more tools."*
+### 3. Auto-save on every step
 
-### 6. Light type cleanup
-- Cast the upsert payload through a typed helper instead of `Record<string, any>` / `(supabase as any)`.
+- Extend `persistPartial` to also write the step-3 fields it owns:
+  - `profiles.full_name` / `profiles.phone` (already done in `handleComplete` — move into `persistPartial` so step-3 Continue persists immediately).
+- Hit `persistPartial` on Continue for steps 1, 2, 3, 4 (4 already has `logoUrl` saved, just call it). Step 5 still funnels through `handleComplete`.
+- On resume, also re-hydrate contact fields from `profiles` (the existing `profile` query already runs — extend the prefill effect to set values from `profile` instead of skipping when present).
+- After each successful save, update `baselineRef` so the wizard becomes "clean" again.
 
-## Files to edit
+### 4. "Save & exit" in the leave dialog
 
-- `src/pages/business/BusinessPageWizard.tsx` — all of the above.
-- `src/lib/business/dashboardRoute.ts` *(new, tiny)* — `resolveBusinessDashboardRoute()` + restaurant category set, reused by the wizard and by the auto-redirect-on-mount block.
+- Add a third button to the AlertDialog footer: **Save & exit**.
+- Behaviour: call `persistPartial()` (without `setup_complete`), show toast "Setup saved — pick up here later", set `isLeaving` ref, then navigate to `/account` (or `-1` if there's history). If the save fails, keep the dialog open and surface the error.
+- Disabled when on Step 1 with invalid name (can't satisfy NOT NULL).
 
-## Out of scope (call out, do not do)
+### 5. Loop-proof popstate handler
 
-- No new DB migrations. We won't add an `email` column to `store_profiles` unless you ask — the wizard will simply stop sending it.
-- No changes to the home card or the `/business/new` route registration (already shipped).
-- No redesign of the dashboards themselves.
+- Single `useEffect` with these refs:
+  - `guardArmedRef` — true while `isDirty && !completedRef.current && !isLeaving.current`.
+  - `sentinelPushedRef` — track whether our sentinel is currently the top entry so we never double-push.
+- On mount: push sentinel once. On unmount or when guard becomes disarmed: remove listener, no extra `history.go`.
+- When confirming Leave: set `isLeaving.current = true`, remove the popstate listener *before* `history.go(-1)` so the resulting popstate isn't intercepted.
+- When user opens the dialog via the in-header Back button (not via popstate), confirming Leave just calls `navigate(-1)` directly — no popstate trickery.
 
-## Acceptance checks
+### 6. Tests
 
-- Completing the wizard with category = *Restaurant* lands on `/eats/restaurant-dashboard` with no console errors.
-- Completing with category = *Hotel* lands on `/admin/stores/:id?tab=lodge-overview`.
-- Re-running with the same business name as another owner shows the friendly duplicate message and keeps the user on Step 1.
-- Pressing Back mid-wizard opens the confirm dialog; choosing **Stay** keeps state; **Leave** discards.
-- Reopening `/business/new` after a partial save resumes on the next incomplete step with previous fields prefilled.
-- Each Continue press shows a "Step saved · Next: …" toast and advances the chip checkmarks.
+Use the existing Vitest setup. New file: `src/pages/business/BusinessPageWizard.test.tsx`.
+
+Mock surface:
+- `@/integrations/supabase/client` — minimal chainable `from(...).select(...).maybeSingle()` / `update().eq()` / `insert().select().single()` stubs returning canned data; `storage.from().upload()` no-op.
+- `@/contexts/AuthContext` — return `{ user: { id: "u1", email: "u1@test.com" } }`.
+- `@/hooks/useUserProfile` — return prefilled profile.
+- `react-router-dom` — wrap in `MemoryRouter`; spy on `useNavigate`.
+
+Cases:
+1. **Clean state doesn't prompt** — render, prefill runs, press in-header Back on Step 1 → no dialog, navigate(-1) called immediately.
+2. **Dirty state prompts on header Back** — type into business name, press Back → dialog opens.
+3. **Dirty state prompts on browser Back** — type into business name, dispatch a `popstate` → dialog opens; assert sentinel is re-pushed (history.length unchanged).
+4. **Stay keeps you on page** — open dialog, click Stay → dialog closes, no navigate call, fields preserved.
+5. **Leave navigates exactly once** — open dialog (popstate path), click Leave → exactly one history pop / navigate call; firing another popstate after does NOT reopen dialog (no infinite loop).
+6. **Save & exit calls persist + navigates** — click Save & exit → `supabase.from('store_profiles').insert` called with `setup_complete: false`, success toast, navigate called.
+7. **Completion disarms the guard** — fill all required fields, click "Go to dashboard"; while submission is pending, fire popstate → no dialog. After completion, navigate to resolved dashboard route.
+8. **Refresh / beforeunload** — assert `beforeunload` listener is registered when dirty and removed when clean.
+9. **Resume restores state** — mount with a stubbed existing partial row → Step set to 3, name/phone/category/logo prefilled, baseline reflects loaded values so wizard is NOT dirty on mount.
+10. **Auto-save on each Continue** — simulate Continue from steps 1, 2, 3, 4 → assert `persistPartial` (i.e. `store_profiles` update) called each time with the right payload, and `profiles.update` called on step 3.
+
+### 7. Minor cleanups
+
+- Move `persistPartial` and the slug helper into a small extractable function returning a `{ id, error }` tuple so the test can also unit-test the slug-collision path without mounting React.
+- Add a typed `WizardSnapshot` interface for the JSON.stringify baseline.
+
+## Files
+
+- **edit** `src/pages/business/BusinessPageWizard.tsx` — fixes 1–5 above.
+- **new** `src/pages/business/BusinessPageWizard.test.tsx` — 10 test cases above.
+- **new (small)** `src/pages/business/wizardPersistence.ts` — extracted `persistPartial` + `findAvailableSlug` for unit-test isolation.
+- **new** `src/pages/business/wizardPersistence.test.ts` — slug collision + 23505 paths.
+
+## Out of scope
+
+- Database schema changes. We continue *not* writing `email` to `store_profiles`.
+- Restyling the dialog. Just adds one more button.
+- Capacitor hardware-back integration on native — out of scope for this round (web `popstate` covers it via Capacitor's back-button-emits-popstate behaviour by default).
+
+## Acceptance
+
+- Open `/business/new`, press Back without typing → leaves immediately, no dialog.
+- Type a name, press Back → dialog with Stay / Save & exit / Leave.
+- Save & exit persists, toasts, and lands you on `/account`.
+- Pressing Leave then Back again does not loop — you actually navigate away.
+- Completing step 5 navigates to the dashboard with no leave prompt.
+- Refreshing mid-flow restores you to the next incomplete step with prior values intact.
+- All 10 + 2 tests pass via `bunx vitest run`.
