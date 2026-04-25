@@ -17,7 +17,7 @@ import {
   TrendingUp, Target, Lightbulb, PenTool, Share2, Compass, ArrowRight,
   Gem, Rocket, Layers, CircleDot, User, CreditCard, Map, Package,
   Clock, Receipt, Ticket, ShieldCheck, Flame, AlertCircle, Inbox,
-  Search, Vote, Clapperboard, GraduationCap, Trophy, Banknote,
+  Search, Vote, Clapperboard, GraduationCap, Trophy, Banknote, ArrowLeft,
 } from "lucide-react";
 import { useI18n } from "@/hooks/useI18n";
 import { useAuth } from "@/contexts/AuthContext";
@@ -83,7 +83,7 @@ const quickLinksMain: QuickLink[] = [
   { icon: User, label: "My Profile", href: "/profile", description: "View & edit", accent: "hsl(199 89% 48%)" },
   { icon: Gift, label: "Refer a Friend", href: "/referrals", description: "Earn rewards", accent: "hsl(142 71% 45%)", badge: "Earn" },
   { icon: Clock, label: "Activity Log", href: "/activity", description: "Recent actions", accent: "hsl(198 93% 59%)" },
-  { icon: Users, label: "Switch Account", href: "/auth", description: "Add or change", accent: "hsl(263 70% 58%)" },
+  { icon: Users, label: "Switch Account", href: "#switch-account", description: "Add or change", accent: "hsl(263 70% 58%)" },
   { icon: Settings, label: "Settings", href: "/account/settings", description: "App preferences", accent: "hsl(var(--muted-foreground))" },
   { icon: ShoppingBag, label: "My Orders", href: "/grocery/orders", description: "Order history", accent: "hsl(221 83% 53%)" },
   { icon: Wallet, label: "Wallet", href: "/wallet", description: "Balance & pay", accent: "hsl(142 71% 45%)" },
