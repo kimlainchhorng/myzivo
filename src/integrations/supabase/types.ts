@@ -24157,6 +24157,39 @@ export type Database = {
           },
         ]
       }
+      idempotency_records: {
+        Row: {
+          created_at: string
+          expires_at: string
+          key: string
+          response_body: Json | null
+          response_hash: string | null
+          route: string
+          status_code: number | null
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          expires_at?: string
+          key: string
+          response_body?: Json | null
+          response_hash?: string | null
+          route: string
+          status_code?: number | null
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          expires_at?: string
+          key?: string
+          response_body?: Json | null
+          response_hash?: string | null
+          route?: string
+          status_code?: number | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       identity_verifications: {
         Row: {
           admin_override: boolean | null
@@ -25426,6 +25459,51 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      jobs_queue: {
+        Row: {
+          attempts: number
+          created_at: string
+          id: string
+          kind: string
+          last_error: string | null
+          locked_at: string | null
+          locked_by: string | null
+          max_attempts: number
+          payload: Json
+          run_at: string
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          attempts?: number
+          created_at?: string
+          id?: string
+          kind: string
+          last_error?: string | null
+          locked_at?: string | null
+          locked_by?: string | null
+          max_attempts?: number
+          payload?: Json
+          run_at?: string
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          attempts?: number
+          created_at?: string
+          id?: string
+          kind?: string
+          last_error?: string | null
+          locked_at?: string | null
+          locked_by?: string | null
+          max_attempts?: number
+          payload?: Json
+          run_at?: string
+          status?: string
+          updated_at?: string
+        }
+        Relationships: []
       }
       journal_entries: {
         Row: {
@@ -31414,6 +31492,27 @@ export type Database = {
           id?: string
           muted_until?: string | null
           user_id?: string
+        }
+        Relationships: []
+      }
+      nonce_cache: {
+        Row: {
+          expires_at: string
+          nonce: string
+          route: string
+          used_at: string
+        }
+        Insert: {
+          expires_at?: string
+          nonce: string
+          route: string
+          used_at?: string
+        }
+        Update: {
+          expires_at?: string
+          nonce?: string
+          route?: string
+          used_at?: string
         }
         Relationships: []
       }
@@ -52912,6 +53011,42 @@ export type Database = {
         }
         Relationships: []
       }
+      user_consents: {
+        Row: {
+          created_at: string
+          granted_at: string
+          id: string
+          ip: unknown
+          kind: string
+          revoked_at: string | null
+          user_agent: string | null
+          user_id: string
+          version: string
+        }
+        Insert: {
+          created_at?: string
+          granted_at?: string
+          id?: string
+          ip?: unknown
+          kind: string
+          revoked_at?: string | null
+          user_agent?: string | null
+          user_id: string
+          version?: string
+        }
+        Update: {
+          created_at?: string
+          granted_at?: string
+          id?: string
+          ip?: unknown
+          kind?: string
+          revoked_at?: string | null
+          user_agent?: string | null
+          user_id?: string
+          version?: string
+        }
+        Relationships: []
+      }
       user_cvs: {
         Row: {
           certifications: Json | null
@@ -53430,6 +53565,42 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      user_mfa_factors: {
+        Row: {
+          backup_codes_hash: string[] | null
+          created_at: string
+          friendly_name: string | null
+          id: string
+          last_used_at: string | null
+          secret_encrypted: string | null
+          type: string
+          user_id: string
+          verified_at: string | null
+        }
+        Insert: {
+          backup_codes_hash?: string[] | null
+          created_at?: string
+          friendly_name?: string | null
+          id?: string
+          last_used_at?: string | null
+          secret_encrypted?: string | null
+          type: string
+          user_id: string
+          verified_at?: string | null
+        }
+        Update: {
+          backup_codes_hash?: string[] | null
+          created_at?: string
+          friendly_name?: string | null
+          id?: string
+          last_used_at?: string | null
+          secret_encrypted?: string | null
+          type?: string
+          user_id?: string
+          verified_at?: string | null
+        }
+        Relationships: []
       }
       user_notifications: {
         Row: {
@@ -59811,6 +59982,7 @@ export type Database = {
       cleanup_expired_messages: { Args: never; Returns: undefined }
       cleanup_expired_otp_codes: { Args: never; Returns: undefined }
       cleanup_expired_qr_tokens: { Args: never; Returns: undefined }
+      cleanup_expired_security_records: { Args: never; Returns: undefined }
       cleanup_expired_stories: { Args: never; Returns: number }
       cleanup_expired_tokens: { Args: never; Returns: undefined }
       cleanup_live_artifacts: { Args: never; Returns: Json }
