@@ -493,66 +493,72 @@ const Profile = () => {
         <BokehParticle delay={1.2} size={45} x="40%" y="10%" color="hsl(var(--primary) / 0.06)" />
       </motion.div>
 
-      {/* ── Mobile sticky compact header (Facebook-style) ── */}
-      <motion.header
-        role="banner"
-        aria-label="Profile quick navigation"
-        data-testid="profile-sticky-header"
-        style={{
-          opacity: stickyOpacity,
-          y: stickyTranslate,
-          paddingTop: "var(--zivo-safe-top-sticky)",
-          height: "calc(var(--zivo-safe-top-sticky) + 3rem)",
-          pointerEvents: isStickyHeaderVisible ? "auto" : "none",
-        }}
-        className={cn(
-          "lg:hidden fixed top-0 inset-x-0 z-40 px-3 flex items-center gap-3 bg-background/85 backdrop-blur-xl border-b border-border/40 transition-shadow duration-200",
-          isStickyHeaderVisible ? "shadow-sm shadow-background/20" : "shadow-none"
-        )}
-      >
-        <motion.button
-          onClick={handleBack}
-          aria-label="Go back"
-          whileTap={{ scale: 0.86 }}
-          whileHover={{ scale: 1.04 }}
-          transition={{ type: "spring", stiffness: 400, damping: 22 }}
-          className="h-9 w-9 -ml-1 flex items-center justify-center rounded-full hover:bg-muted/60 active:bg-muted/70 transition focus-visible:ring-2 focus-visible:ring-primary/70 focus-visible:outline-none focus-visible:ring-offset-2 focus-visible:ring-offset-background"
-        >
-          <ArrowLeft className="h-5 w-5 text-foreground" />
-        </motion.button>
-        <span aria-hidden="true">
-          <Avatar className="h-8 w-8 ring-1 ring-border/60">
-            <AvatarImage src={profile?.avatar_url || undefined} alt="" />
-            <AvatarFallback className="text-xs">{getInitials()}</AvatarFallback>
-          </Avatar>
-        </span>
-        <div className="flex items-center gap-1 min-w-0 flex-1" aria-live="polite">
-          <span className="font-semibold text-sm text-foreground truncate">
-            {profile?.full_name || "Profile"}
-          </span>
-          {profile?.is_verified && <VerifiedBadge size={14} />}
-        </div>
-        <motion.button
-          onClick={handleToggleNotif}
-          aria-label={showNotifPanel ? "Close notifications" : "Open notifications"}
-          aria-pressed={showNotifPanel}
-          aria-expanded={showNotifPanel}
-          aria-controls="profile-notif-panel"
-          whileTap={{ scale: 0.86 }}
-          transition={{ type: "spring", stiffness: 400, damping: 22 }}
+      {/* ── Mobile sticky compact header (Facebook-style) ──
+          Portaled to <body> so the position:fixed element escapes the
+          PullToRefresh transformed ancestor (which would otherwise re-anchor
+          fixed positioning and hide the header). */}
+      {typeof document !== "undefined" && createPortal(
+        <motion.header
+          role="banner"
+          aria-label="Profile quick navigation"
+          data-testid="profile-sticky-header"
+          style={{
+            opacity: stickyOpacity,
+            y: stickyTranslate,
+            paddingTop: "var(--zivo-safe-top-sticky)",
+            height: "calc(var(--zivo-safe-top-sticky) + 3rem)",
+            pointerEvents: isStickyHeaderVisible ? "auto" : "none",
+          }}
           className={cn(
-            "relative h-9 w-9 flex items-center justify-center rounded-full transition focus-visible:ring-2 focus-visible:ring-primary/70 focus-visible:outline-none focus-visible:ring-offset-2 focus-visible:ring-offset-background",
-            showNotifPanel ? "bg-primary text-primary-foreground" : "hover:bg-muted/60 text-foreground"
+            "lg:hidden fixed top-0 inset-x-0 z-40 px-3 flex items-center gap-3 bg-background/85 backdrop-blur-xl border-b border-border/40 transition-shadow duration-200",
+            isStickyHeaderVisible ? "shadow-sm shadow-background/20" : "shadow-none"
           )}
         >
-          <Bell className="h-5 w-5" />
-          {totalNotifCount > 0 && !showNotifPanel && (
-            <span className="absolute -right-0.5 -top-0.5 flex h-4 min-w-[16px] items-center justify-center rounded-full bg-destructive px-1 text-[9px] font-bold text-destructive-foreground shadow-sm">
-              {totalNotifCount > 99 ? "99+" : totalNotifCount}
+          <motion.button
+            onClick={handleBack}
+            aria-label="Go back"
+            whileTap={{ scale: 0.86 }}
+            whileHover={{ scale: 1.04 }}
+            transition={{ type: "spring", stiffness: 400, damping: 22 }}
+            className="h-9 w-9 -ml-1 flex items-center justify-center rounded-full hover:bg-muted/60 active:bg-muted/70 transition focus-visible:ring-2 focus-visible:ring-primary/70 focus-visible:outline-none focus-visible:ring-offset-2 focus-visible:ring-offset-background"
+          >
+            <ArrowLeft className="h-5 w-5 text-foreground" />
+          </motion.button>
+          <span aria-hidden="true">
+            <Avatar className="h-8 w-8 ring-1 ring-border/60">
+              <AvatarImage src={profile?.avatar_url || undefined} alt="" />
+              <AvatarFallback className="text-xs">{getInitials()}</AvatarFallback>
+            </Avatar>
+          </span>
+          <div className="flex items-center gap-1 min-w-0 flex-1" aria-live="polite">
+            <span className="font-semibold text-sm text-foreground truncate">
+              {profile?.full_name || "Profile"}
             </span>
-          )}
-        </motion.button>
-      </motion.header>
+            {profile?.is_verified && <VerifiedBadge size={14} />}
+          </div>
+          <motion.button
+            onClick={handleToggleNotif}
+            aria-label={showNotifPanel ? "Close notifications" : "Open notifications"}
+            aria-pressed={showNotifPanel}
+            aria-expanded={showNotifPanel}
+            aria-controls="profile-notif-panel"
+            whileTap={{ scale: 0.86 }}
+            transition={{ type: "spring", stiffness: 400, damping: 22 }}
+            className={cn(
+              "relative h-9 w-9 flex items-center justify-center rounded-full transition focus-visible:ring-2 focus-visible:ring-primary/70 focus-visible:outline-none focus-visible:ring-offset-2 focus-visible:ring-offset-background",
+              showNotifPanel ? "bg-primary text-primary-foreground" : "hover:bg-muted/60 text-foreground"
+            )}
+          >
+            <Bell className="h-5 w-5" />
+            {totalNotifCount > 0 && !showNotifPanel && (
+              <span className="absolute -right-0.5 -top-0.5 flex h-4 min-w-[16px] items-center justify-center rounded-full bg-destructive px-1 text-[9px] font-bold text-destructive-foreground shadow-sm">
+                {totalNotifCount > 99 ? "99+" : totalNotifCount}
+              </span>
+            )}
+          </motion.button>
+        </motion.header>,
+        document.body
+      )}
 
 
       {/* ── Scrollable content ── */}
