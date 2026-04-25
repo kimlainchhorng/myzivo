@@ -41,6 +41,17 @@ export function useStoryDeepLink({ source }: Options) {
     [source]
   );
 
+  // Emit `story_deeplink_open` once on initial mount when the URL already
+  // contains `?story=…` (e.g. shared link, chat link, refresh inside the
+  // viewer). Subsequent updates from `openStory` / `updateStory` are
+  // de-duped via `lastTrackedRef`.
+  useEffect(() => {
+    if (activeStoryId && lastTrackedRef.current !== activeStoryId) {
+      emitOpen(activeStoryId, "open");
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [activeStoryId]);
+
   const openStory = useCallback(
     (storyId: string) => {
       const next = new URLSearchParams(searchParams);
