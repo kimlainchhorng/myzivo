@@ -291,10 +291,10 @@ export default function StoryViewer({ groups, startGroupIndex, startStoryIndex =
         setViewIdx(0);
         elapsedRef.current = 0;
       } else {
-        onClose();
+        closeWithMeta(true); // reached end of all stories
       }
     }
-  }, [viewingGroup, viewIdx, groupIdx, groups.length, onClose]);
+  }, [viewingGroup, viewIdx, groupIdx, groups.length, closeWithMeta]);
 
   const goPrev = useCallback(() => {
     if (viewIdx > 0) {
@@ -324,17 +324,17 @@ export default function StoryViewer({ groups, startGroupIndex, startStoryIndex =
   // Keyboard
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
-      if (e.key === "Escape") onClose();
+      if (e.key === "Escape") closeWithMeta();
       else if (e.key === "ArrowRight") goNext();
       else if (e.key === "ArrowLeft") goPrev();
     };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-  }, [onClose, goNext, goPrev]);
+  }, [closeWithMeta, goNext, goPrev]);
 
   // Swipe-down to close
   const handleDragEnd = (_: any, info: PanInfo) => {
-    if (info.offset.y > 120 || info.velocity.y > 600) onClose();
+    if (info.offset.y > 120 || info.velocity.y > 600) closeWithMeta();
   };
 
   if (!viewingGroup || !currentStory) return null;
