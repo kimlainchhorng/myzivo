@@ -511,7 +511,7 @@ export default function StoryViewer({ groups, startGroupIndex, startStoryIndex =
                 onClick={() => {
                   if (!currentStory) return;
                   deleteStory.mutate(currentStory.id);
-                  if (viewingGroup.stories.length <= 1) onClose();
+                  if (viewingGroup.stories.length <= 1) closeWithMeta();
                   else goNext();
                 }}
                 className="flex flex-col items-center gap-1"
