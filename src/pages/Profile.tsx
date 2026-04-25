@@ -25,7 +25,7 @@ import { useZivoPlus } from "@/contexts/ZivoPlusContext";
 import { MERCHANT_APP_URL } from "@/lib/eatsTables";
 import ZivoMobileNav from "@/components/app/ZivoMobileNav";
 import NavBar from "@/components/home/NavBar";
-import { motion, useScroll, useTransform, AnimatePresence } from "framer-motion";
+import { motion, useScroll, useTransform, AnimatePresence, useMotionValueEvent } from "framer-motion";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
@@ -248,7 +248,6 @@ const Profile = () => {
   const handleResetCover = useCallback(() => { impact("light"); setCoverPosition(50); }, [impact]);
   
   const [showLangPicker, setShowLangPicker] = useState(false);
-  const scrollRef = useRef<HTMLDivElement>(null);
   const profileCardRef = useRef<HTMLDivElement>(null);
   const coverInputRef = useRef<HTMLInputElement>(null);
   const avatarInputRef = useRef<HTMLInputElement>(null);
@@ -384,21 +383,22 @@ const Profile = () => {
 
   // Scroll to top on mount/navigation
   useEffect(() => {
-    if (scrollRef.current) {
-      scrollRef.current.scrollTop = 0;
-    }
+    window.scrollTo(0, 0);
   }, [location.pathname]);
 
-  const { scrollYProgress, scrollY } = useScroll({ container: scrollRef });
-  const headerY = useTransform(scrollYProgress, [0, 0.3], [0, -30]);
-  const headerScale = useTransform(scrollYProgress, [0, 0.3], [1, 0.95]);
+  const { scrollYProgress, scrollY } = useScroll();
   const bgParallax = useTransform(scrollYProgress, [0, 1], [0, -80]);
   // Mobile sticky compact header (Facebook-style)
-  const stickyOpacity = useTransform(scrollY, [80, 160], [0, 1]);
-  const stickyTranslate = useTransform(scrollY, [80, 160], [-12, 0]);
+  const stickyOpacity = useTransform(scrollY, [96, 156], [0, 1]);
+  const stickyTranslate = useTransform(scrollY, [96, 156], [-18, 0]);
   // Mobile cover parallax + rubber-band
   const coverY = useTransform(scrollY, [0, 240], [0, -60]);
   const coverScale = useTransform(scrollY, [-100, 0], [1.15, 1]);
+  const [isStickyHeaderVisible, setIsStickyHeaderVisible] = useState(false);
+
+  useMotionValueEvent(scrollY, "change", (latest) => {
+    setIsStickyHeaderVisible((prev) => (prev ? latest > 84 : latest > 118));
+  });
 
   const getInitials = () => {
     if (profile?.full_name) return profile.full_name.split(" ").map(n => n[0]).join("").toUpperCase().slice(0, 2);
@@ -501,10 +501,14 @@ const Profile = () => {
         style={{
           opacity: stickyOpacity,
           y: stickyTranslate,
-          paddingTop: "var(--zivo-safe-top, env(safe-area-inset-top, 0px))",
-          height: "calc(56px + var(--zivo-safe-top, env(safe-area-inset-top, 0px)))",
+          paddingTop: "var(--zivo-safe-top-sticky)",
+          height: "calc(var(--zivo-safe-top-sticky) + 3rem)",
+          pointerEvents: isStickyHeaderVisible ? "auto" : "none",
         }}
-        className="lg:hidden fixed top-0 inset-x-0 z-40 px-3 flex items-center gap-3 bg-background/85 backdrop-blur-xl border-b border-border/40"
+        className={cn(
+          "lg:hidden fixed top-0 inset-x-0 z-40 px-3 flex items-center gap-3 bg-background/85 backdrop-blur-xl border-b border-border/40 transition-shadow duration-200",
+          isStickyHeaderVisible ? "shadow-sm shadow-background/20" : "shadow-none"
+        )}
       >
         <motion.button
           onClick={handleBack}
@@ -552,7 +556,7 @@ const Profile = () => {
 
 
       {/* ── Scrollable content ── */}
-      <div ref={scrollRef} className="relative z-10 h-screen overflow-y-auto pb-24 scroll-smooth bg-background" style={{ scrollbarWidth: 'none' }}>
+      <div className="relative z-10 min-h-screen pb-24 scroll-smooth bg-background" style={{ scrollbarWidth: 'none' }}>
         {/* Mobile: edge-to-edge full-screen (Facebook-style). Desktop: centered card. */}
         <div className="px-0 lg:px-4 pt-0 lg:pt-20 max-w-none lg:max-w-3xl mx-auto">
 
