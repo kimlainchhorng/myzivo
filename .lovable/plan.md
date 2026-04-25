@@ -1,70 +1,61 @@
-# Map "See All" Flow + UI Polish + Action QA
+# Stores List — Toasts, Favorites, Drawer, GPS Recenter, Robust Loading
 
-## Goal
-On `/store-map` (the Map tab from the bottom nav), add a clear **"See All"** entry point that opens a full list view of nearby stores, polish the existing header/chips/FABs to match the screenshot's clean style, and verify every action button (Ride There / View Store / Share / Call / Create Reel / Buy Now / Locate / Recenter / store pin tap / category chip) is wired to the right destination.
+Five upgrades to `/store-map/list` (with one carried over to `/store-map`):
 
-## What's missing today
-- The Map page has category chips ("All (7)", "Resort (1)"…) but **no "See All" button** — there is no way to browse the full store list without scrubbing the map.
-- Header card and chips look slightly heavy; user wants a "new style" cleaner look matching the screenshot.
-- Action buttons in the selected-store card (Ride There, View Store, Share, Call, Create Reel, Buy Now) need an end-to-end pass to confirm flows still work after recent edits.
+## 1. Share confirmation toast
+- Use `sonner` `toast` to confirm share outcome:
+  - Native share success → `toast.success("Shared!")`
+  - Clipboard fallback → `toast.success("Link copied to clipboard")`
+  - User cancels (`AbortError`) → no toast
+  - Hard failure → `toast.error("Couldn't share — try again")`
+- Apply to both `handleShare` in `src/pages/StoresListPage.tsx` and the existing card `Share` button in `src/pages/StoreMapPage.tsx` so the behavior is consistent.
 
-## Plan
+## 2. Robust loading / errors on the list page
+- Improve skeletons in `src/pages/StoresListPage.tsx`: 6 rows that match real card shape (logo block + 2 text bars + footer action bar).
+- Surface fetch failure: when `useStorePins().error` is set, show an inline error card with reason + **Retry** button (`refetch()`).
+- GPS failure: track `gpsError` state. If geolocation fails or is denied, show a small inline banner above the list ("Location unavailable — list isn't sorted by distance") with a **Try again** button that re-runs the GPS request. Distance pills hide when no location.
+- Update `src/hooks/useStorePins.ts` to also return `refetch` and `error`.
 
-### 1. Add "See All" entry on the Map header
-- In `src/pages/StoreMapPage.tsx`, add a small **"See all"** pill on the right side of the title card (next to the search icon) that navigates to a new full-list route `/store-map/list`, preserving the current `activeCategory` and `searchQuery` via URL params.
-- Tap target ≥ 40px, primary color text, chevron-right icon.
+## 3. Favorite / heart button + Favorites filter
+- New hook `src/hooks/useStoreFavorites.ts` backed by the existing `user_favorites` table (`item_type='store'`, `item_id=store.id`). RLS already restricts to the owner.
+  - `isFavorite(id)`, `toggleFavorite(id, snapshot)` with optimistic update + rollback on failure.
+- On every list row: heart button (top-right of the meta column) toggles favorite. Toast on add/remove. If signed-out, toast prompt to sign in.
+- Add a **Favorites** chip at the start of the category row (after "All") showing the count. When active, list filters to favorited stores only and displays an empty state with link to clear filter when there are none.
+- URL param `fav=1` so the state survives reload / back-from-store.
 
-### 2. Build the Stores List page (new)
-- New file `src/pages/StoresListPage.tsx`, route `/store-map/list` in `src/App.tsx` (lazy).
-- Layout:
-  - Sticky header with back arrow → returns to `/store-map` (preserve filter), title "All Stores", count subtitle, and a search input (same behavior as map search).
-  - Sticky horizontal category chips row (reuses the same chip styles).
-  - Scrollable list: for each store render a card with logo, name, category badge, rating, distance (if `userLocation` available), address, and a right-side chevron.
-  - Tap a row → opens `/grocery/shop/:slug` (same as map "View Store").
-  - Long-press / kebab → quick actions sheet: Ride There, Share, Call (when phone present).
-- Reuse the same Supabase query the map uses (extract into a shared hook `src/hooks/useStorePins.ts` so both Map and List stay in sync; export the existing `StorePin` type).
-- Empty state: friendly icon + "No stores match this filter" + reset button.
-- Loading state: 6 skeleton rows.
+## 4. Recenter distance action
+- Add a small **Recenter** pill in the list header (right side, next to the search button), icon `Locate`. Tapping it:
+  - Re-requests GPS (`getCurrentPosition` with `maximumAge: 0`).
+  - On success → updates `userLoc`, toast `"Distances updated"`.
+  - On failure → sets `gpsError`, toast.error.
+- A spinner replaces the icon while in flight. Disabled during request.
 
-### 3. Polish header + chip "new style"
-- Header title card: tighter padding, slightly larger store icon tile (44×44), 13px subtitle muted, subtle 1px border, soft shadow (no heavy blur stack).
-- Chips: pill style with 14px font, white background + light border for inactive, primary fill for active, emoji/icon at left, count in muted weight, `whileTap` scale-95. Add a subtle right-edge fade (gradient mask) on the scroll container to hint at horizontal overflow.
-- FABs (Locate / Recenter): keep round, raise to 14×14 (56px), add soft shadow ring.
+## 5. Store details drawer (tap row → drawer)
+- Replace the row's primary tap behavior: tapping the card body opens a **bottom drawer** instead of going straight to the shop. The drawer shows:
+  - Logo, name, category badge, rating, distance.
+  - Hours (`s.hours`), full address with map-pin icon, phone (tap to call), and a small "Open in map" link that returns to `/store-map?focus=<storeId>`.
+  - Primary actions: **View Store** (→ `/grocery/shop/:slug`), **Ride There**, **Share**, **Favorite/Unfavorite**.
+- The existing inline action bar (Ride / Share / Call / more) stays for power users — tapping those still works without opening the drawer (`stopPropagation`).
+- New component lives inline in `StoresListPage.tsx` (or extracted to `src/components/stores/StoreDetailsDrawer.tsx` if it grows).
+- Map page: support `?focus=<storeId>` to auto-select that store's pin and pan to it on load.
 
-### 4. Wire & verify every action (acceptance checks)
-For each item below, confirm the click target navigates / triggers the right side effect with no console error:
-
-| Surface | Button | Expected |
-|---|---|---|
-| Header | Search icon | Opens inline search input, filters list as you type |
-| Header | "See all" | Pushes `/store-map/list?cat=<active>&q=<query>` |
-| Chips | All / category | Filters pins on map AND list count updates |
-| Map | Pin tap | Selects store, pans, opens bottom card |
-| Card | Card body | `/grocery/shop/:slug` |
-| Card | Ride There | `trackInitiateCheckout` + `/rides/hub?destination=…` |
-| Card | View Store | `/grocery/shop/:slug` |
-| Card | Share | `navigator.share` → fallback `clipboard.writeText(buildShopDeepLink)` |
-| Card | Call | `tel:` link |
-| Card | Create Reel | `/reels` with `commerceLinkDraft` state |
-| Card | Buy Now | `trackInitiateCheckout` + `/grocery/shop/:slug?buy=:id` |
-| FABs | Locate | Re-requests GPS, pans + zoom 15 |
-| FABs | Recenter | Re-fits bounds to current pins |
-| List page | Back | Returns to `/store-map` with filter intact |
-| List page | Row tap | `/grocery/shop/:slug` |
-| List page | Quick action sheet | Same handlers as map card |
-
-After implementation I'll open the preview, walk through the flow on a 428×703 viewport, and report any failures with fixes.
+## Database
+No migration required — `user_favorites` already exists with the right shape and RLS policies (own-row only on select/insert/delete). Schema:
+```
+user_favorites(id uuid pk, user_id uuid, item_type text, item_id text, item_data jsonb, created_at timestamptz)
+```
+We will use `item_type='store'` and store a small JSON snapshot (name, slug, category, logo_url) so the favorites view can render even if the store is deleted.
 
 ## Files
+- **New**: `src/hooks/useStoreFavorites.ts`
+- **Edited**: `src/hooks/useStorePins.ts` (return `refetch`, `error`)
+- **Edited**: `src/pages/StoresListPage.tsx` (toasts, skeletons, error UI, favorites chip + heart, recenter button, details drawer)
+- **Edited**: `src/pages/StoreMapPage.tsx` (share toast, accept `?focus=` param)
 
-**New**
-- `src/pages/StoresListPage.tsx` — full-list view
-- `src/hooks/useStorePins.ts` — shared query + types
-
-**Edited**
-- `src/pages/StoreMapPage.tsx` — add "See all" button, refine header/chips/FAB styles, switch to shared hook
-- `src/App.tsx` — register `/store-map/list` lazy route
-
-## Out of scope
-- Real-time distance sorting via Haversine on the map page (kept only on list page where it's useful).
-- Server-side category counts (current client-side filter is fast enough at this volume).
+## Acceptance checks
+- Tap Share on row → see "Link copied to clipboard" toast (or "Shared!" on native).
+- Disable network → list shows error card with working Retry.
+- Deny location → banner appears, distance pills hidden, "Try again" reinitiates request.
+- Tap heart on a row → row updates instantly, toast confirms; reload preserves state; switch to Favorites chip → only that store remains.
+- Tap Recenter → spinner, then "Distances updated" toast and visible re-sort.
+- Tap row body → drawer opens with hours/address/phone/distance/rating; primary buttons all work; closing returns to list.

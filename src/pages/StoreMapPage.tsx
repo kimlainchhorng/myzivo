@@ -9,6 +9,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { MapPin, Clock, Star, Navigation, Store, ChevronRight, Search, X, Locate, Car, Phone, Wrench, List } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { motion, AnimatePresence } from "framer-motion";
+import { toast } from "sonner";
 import ZivoMobileNav from "@/components/app/ZivoMobileNav";
 import NavBar from "@/components/home/NavBar";
 import { STORE_CATEGORY_OPTIONS } from "@/config/groceryStores";
@@ -465,6 +466,17 @@ export default function StoreMapPage() {
     }
   }, [mapReady, filteredStores, userLocation, liveStoreMap]);
 
+  // Auto-focus a store when ?focus=<storeId> is present (deep-link from list page)
+  const focusId = urlParams.get("focus");
+  useEffect(() => {
+    if (!mapReady || !focusId || !mapRef.current) return;
+    const target = filteredStores.find((s) => s.id === focusId);
+    if (!target) return;
+    setSelectedStore(target);
+    mapRef.current.panTo({ lat: target.latitude, lng: target.longitude });
+    mapRef.current.setZoom(15);
+  }, [mapReady, focusId, filteredStores]);
+
   const handleRecenter = useCallback(() => {
     if (!mapRef.current) return;
     if (userLocation) { mapRef.current.panTo(userLocation); mapRef.current.setZoom(14); }
@@ -727,11 +739,19 @@ export default function StoreMapPage() {
                         try {
                           if (navigator.share) {
                             await navigator.share({ title: selectedStore.name, text: shareText, url: shareUrl });
+                            toast.success("Shared!");
                           } else {
                             await navigator.clipboard.writeText(shareUrl);
+                            toast.success("Link copied to clipboard");
                           }
-                        } catch {
-                          await navigator.clipboard.writeText(shareUrl);
+                        } catch (err: any) {
+                          if (err?.name === "AbortError") return; // user cancelled
+                          try {
+                            await navigator.clipboard.writeText(shareUrl);
+                            toast.success("Link copied to clipboard");
+                          } catch {
+                            toast.error("Couldn't share — try again");
+                          }
                         }
                       }}
                     >
