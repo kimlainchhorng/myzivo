@@ -220,10 +220,7 @@ const MobileNavMenu = ({ isOpen, onClose, user, signOut }: MobileNavMenuProps) =
         </ScrollArea>
 
         {/* Footer Actions (always visible) */}
-        <div
-          className="p-4 bg-card border-t border-border"
-          style={{ paddingBottom: "calc(env(safe-area-inset-bottom, 0px) + 1rem)" }}
-        >
+        <div className="p-4 pb-safe bg-card border-t border-border">
           {user ? (
             <Button
               variant="outline"
