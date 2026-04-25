@@ -145,8 +145,14 @@ export default function StoryViewer({ groups, startGroupIndex, onClose }: Props)
     void supabase
       .from("story_views" as any)
       .upsert({ story_id: currentStory.id, viewer_id: user.id }, { onConflict: "story_id,viewer_id" })
-      .then();
-  }, [currentStory?.id, user?.id, isOwner]);
+      .then(({ error }) => {
+        if (!error) {
+          queryClient.invalidateQueries({ queryKey: ["my-story-views", user.id] });
+          queryClient.invalidateQueries({ queryKey: ["profile-story-rings", user.id] });
+          queryClient.invalidateQueries({ queryKey: ["feed-story-users"] });
+        }
+      });
+  }, [currentStory?.id, user?.id, isOwner, queryClient]);
 
   // ---- Post comment ----
   const postComment = useMutation({
@@ -180,7 +186,8 @@ export default function StoryViewer({ groups, startGroupIndex, onClose }: Props)
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["user-stories"] });
       queryClient.invalidateQueries({ queryKey: ["feed-story-users"] });
-      queryClient.invalidateQueries({ queryKey: ["profile-my-story"] });
+      queryClient.invalidateQueries({ queryKey: ["profile-story-rings", user?.id] });
+      queryClient.invalidateQueries({ queryKey: ["profile-my-story", user?.id] });
       toast.success("Story deleted");
     },
   });
