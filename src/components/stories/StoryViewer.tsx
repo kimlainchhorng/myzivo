@@ -96,6 +96,7 @@ export default function StoryViewer({
   const [paused, setPaused] = useState(false);
   const [progress, setProgress] = useState(0);
   const [showViewers, setShowViewers] = useState(false);
+  const [viewersTab, setViewersTab] = useState<"viewers" | "reactions">("viewers");
   const [showComments, setShowComments] = useState(false);
   const [commentText, setCommentText] = useState("");
   const [muted, setMuted] = useState(true);
