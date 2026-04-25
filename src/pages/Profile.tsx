@@ -589,7 +589,9 @@ const Profile = () => {
             </span>
             {profile?.is_verified && <VerifiedBadge size={14} />}
           </div>
+          <div className="relative">
           <motion.button
+            ref={notifBellRef}
             onClick={handleToggleNotif}
             aria-label={showNotifPanel ? "Close notifications" : "Open notifications"}
             aria-pressed={showNotifPanel}
@@ -613,6 +615,155 @@ const Profile = () => {
               </span>
             )}
           </motion.button>
+          <AnimatePresence>
+            {showNotifPanel && (
+              <motion.div
+                ref={notifPanelRef}
+                id="profile-notif-panel"
+                role="dialog"
+                aria-label="Notifications"
+                initial={{ opacity: 0, y: -8, scale: 0.98 }}
+                animate={{ opacity: 1, y: 0, scale: 1 }}
+                exit={{ opacity: 0, y: -8, scale: 0.98 }}
+                transition={{ duration: 0.18, ease: "easeOut" }}
+                className="absolute right-0 top-full mt-2 z-50 w-[min(92vw,380px)] origin-top-right overflow-hidden rounded-2xl border border-border/60 bg-card text-card-foreground shadow-2xl shadow-black/20 backdrop-blur-xl"
+                style={{ maxHeight: "calc(100vh - var(--zivo-safe-top-sticky, 0px) - 80px)" }}
+              >
+                {/* Caret */}
+                <div className="absolute -top-1.5 right-3 h-3 w-3 rotate-45 rounded-sm border-l border-t border-border/60 bg-card" />
+                {/* Header */}
+                <div className="flex items-center justify-between gap-2 border-b border-border/40 px-4 pt-3 pb-2.5">
+                  <div className="flex items-center gap-2">
+                    <h3 className="text-base font-bold leading-none">Notifications</h3>
+                    {totalNotifCount > 0 && (
+                      <Badge variant="secondary" className="h-5 px-1.5 text-[10px]">{totalNotifCount}</Badge>
+                    )}
+                  </div>
+                  {notifUnreadCount > 0 && (
+                    <button
+                      onClick={() => { void markAllAsRead(); }}
+                      className="text-xs font-semibold text-primary hover:underline"
+                    >
+                      Mark all read
+                    </button>
+                  )}
+                </div>
+                {/* Filter chips */}
+                <div className="flex items-center gap-1.5 px-3 pt-2.5 pb-1">
+                  {(["all", "unread"] as const).map((f) => (
+                    <button
+                      key={f}
+                      onClick={() => setNotifFilter(f)}
+                      className={cn(
+                        "rounded-full px-3 py-1 text-xs font-semibold transition-colors",
+                        notifFilter === f
+                          ? "bg-primary text-primary-foreground"
+                          : "bg-muted/50 text-muted-foreground hover:bg-muted"
+                      )}
+                    >
+                      {f === "all" ? "All" : `Unread${notifUnreadCount > 0 ? ` (${notifUnreadCount})` : ""}`}
+                    </button>
+                  ))}
+                </div>
+                {/* List */}
+                <div className="max-h-[60vh] overflow-y-auto overscroll-contain px-1.5 py-1.5">
+                  {/* Friend requests pinned */}
+                  {socialCount > 0 && (
+                    <button
+                      onClick={() => { selectionChanged(); setShowNotifPanel(false); navigate("/notifications?tab=requests"); }}
+                      className="flex w-full items-center gap-3 rounded-xl border border-primary/15 bg-primary/5 p-2.5 text-left transition-colors hover:bg-primary/10"
+                    >
+                      <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-primary/15">
+                        <UserPlus className="h-5 w-5 text-primary" />
+                      </div>
+                      <div className="min-w-0 flex-1">
+                        <p className="truncate text-sm font-semibold">Friend requests</p>
+                        <p className="truncate text-xs text-muted-foreground">{socialCount} pending · tap to review</p>
+                      </div>
+                      <span className="h-2 w-2 shrink-0 rounded-full bg-primary" />
+                    </button>
+                  )}
+
+                  {notifLoading && notifications.length === 0 ? (
+                    <div className="space-y-2 p-2">
+                      {[0, 1, 2].map((i) => (
+                        <div key={i} className="flex items-center gap-3">
+                          <div className="h-10 w-10 shrink-0 animate-pulse rounded-full bg-muted" />
+                          <div className="flex-1 space-y-1.5">
+                            <div className="h-3 w-2/3 animate-pulse rounded bg-muted" />
+                            <div className="h-2.5 w-1/2 animate-pulse rounded bg-muted/70" />
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  ) : (() => {
+                    const filtered = (notifFilter === "unread"
+                      ? notifications.filter((n) => !n.is_read)
+                      : notifications);
+                    if (filtered.length === 0 && socialCount === 0) {
+                      return (
+                        <div className="flex flex-col items-center justify-center gap-2 px-4 py-10 text-center">
+                          <div className="flex h-12 w-12 items-center justify-center rounded-full bg-muted/40">
+                            <Bell className="h-6 w-6 text-muted-foreground/60" />
+                          </div>
+                          <p className="text-sm font-semibold text-foreground">You're all caught up</p>
+                          <p className="text-xs text-muted-foreground">New notifications will appear here.</p>
+                        </div>
+                      );
+                    }
+                    return filtered.slice(0, 12).map((n) => {
+                      let timeLabel = "";
+                      try { timeLabel = formatDistanceToNowStrict(new Date(n.created_at), { addSuffix: false }); } catch {}
+                      return (
+                        <button
+                          key={n.id}
+                          onClick={() => handleNotifClick(n)}
+                          className={cn(
+                            "group flex w-full items-start gap-3 rounded-xl p-2.5 text-left transition-colors",
+                            n.is_read ? "hover:bg-muted/40" : "bg-primary/[0.06] hover:bg-primary/[0.10]"
+                          )}
+                        >
+                          <div className={cn(
+                            "flex h-10 w-10 shrink-0 items-center justify-center rounded-full",
+                            n.category === "transactional" ? "bg-emerald-500/15 text-emerald-500"
+                              : n.category === "operational" ? "bg-amber-500/15 text-amber-500"
+                              : n.category === "marketing" ? "bg-fuchsia-500/15 text-fuchsia-500"
+                              : "bg-primary/15 text-primary"
+                          )}>
+                            <Bell className="h-5 w-5" />
+                          </div>
+                          <div className="min-w-0 flex-1">
+                            <p className={cn("truncate text-sm", n.is_read ? "font-medium text-foreground/90" : "font-semibold text-foreground")}>
+                              {n.title || "Notification"}
+                            </p>
+                            {n.body && (
+                              <p className="line-clamp-2 text-xs text-muted-foreground">{n.body}</p>
+                            )}
+                            {timeLabel && (
+                              <p className={cn("mt-0.5 text-[10px] font-medium", n.is_read ? "text-muted-foreground" : "text-primary")}>
+                                {timeLabel} ago
+                              </p>
+                            )}
+                          </div>
+                          {!n.is_read && <span className="mt-1.5 h-2 w-2 shrink-0 rounded-full bg-primary" aria-label="Unread" />}
+                        </button>
+                      );
+                    });
+                  })()}
+                </div>
+                {/* Footer */}
+                <div className="border-t border-border/40 px-2 py-1.5">
+                  <button
+                    onClick={() => { setShowNotifPanel(false); navigate("/notifications"); }}
+                    className="w-full rounded-xl py-2 text-center text-xs font-semibold text-primary transition-colors hover:bg-primary/10"
+                  >
+                    See all notifications
+                  </button>
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
+          </div>
           <motion.button
             onClick={() => navigate("/more")}
             aria-label="More account options"
