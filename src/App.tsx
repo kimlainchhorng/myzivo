@@ -715,6 +715,7 @@ const App = () => (
                 <Route path="/account/activity-log" element={<ProtectedRoute><ActivityLogPage /></ProtectedRoute>} />
                 <Route path="/account/export" element={<ProtectedRoute><AccountExportPage /></ProtectedRoute>} />
                 <Route path="/store-map" element={<StoreMapPage />} />
+                <Route path="/store-map/list" element={<StoresListPage />} />
                 <Route path="/book/:slug" element={<ServiceBookingPage />} />
                 <Route path="/grocery/store/:slug" element={<GroceryStorePage />} />
                 <Route path="/grocery/shop/:slug" element={<StoreProfilePage />} />
