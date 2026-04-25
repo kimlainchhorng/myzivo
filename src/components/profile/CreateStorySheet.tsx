@@ -9,7 +9,7 @@ import { createPortal } from "react-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { useAuth } from "@/contexts/AuthContext";
 import { useUserProfile } from "@/hooks/useUserProfile";
-import { supabase } from "@/integrations/supabase/client";
+import { supabase, SUPABASE_PUBLISHABLE_KEY } from "@/integrations/supabase/client";
 import { useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
@@ -214,11 +214,13 @@ export default function CreateStorySheet({ open, onClose }: Props) {
     ]);
   };
 
-  const xhrUpload = (url: string, blob: Blob, contentType: string) =>
+  const xhrUpload = (url: string, blob: Blob, contentType: string, accessToken?: string) =>
     new Promise<void>((resolve, reject) => {
       const xhr = new XMLHttpRequest();
       xhr.open("PUT", url, true);
       xhr.setRequestHeader("x-upsert", "true");
+      xhr.setRequestHeader("apikey", SUPABASE_PUBLISHABLE_KEY);
+      if (accessToken) xhr.setRequestHeader("Authorization", `Bearer ${accessToken}`);
       const formData = new FormData();
       formData.append("cacheControl", "3600");
       formData.append("", blob, `story.${contentType.includes("video") ? "mp4" : "jpg"}`);
@@ -299,7 +301,8 @@ export default function CreateStorySheet({ open, onClose }: Props) {
       }
 
       setUploadPhase("uploading");
-      await xhrUpload(signed.signedUrl, blob, contentType);
+      const { data: sessionData } = await supabase.auth.getSession();
+      await xhrUpload(signed.signedUrl, blob, contentType, sessionData.session?.access_token);
       setProgress(1);
 
       const { data: urlData } = supabase.storage.from("user-stories").getPublicUrl(path);
