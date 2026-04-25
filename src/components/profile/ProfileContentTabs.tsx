@@ -545,6 +545,125 @@ export default function ProfileContentTabs({ userId }: { userId?: string }) {
     };
   }, [feed, user?.id]);
 
+  // Hydrate likedPosts from post_likes for current user
+  useEffect(() => {
+    let alive = true;
+    const loadLiked = async () => {
+      if (!user?.id) {
+        if (alive) setLikedPosts(new Set());
+        return;
+      }
+      const postIds = feed
+        .map((item) => item.id)
+        .filter((id) => !isLocalDraftPostId(id));
+      if (!postIds.length) {
+        if (alive) setLikedPosts(new Set());
+        return;
+      }
+      try {
+        const { data } = await (supabase as any)
+          .from("post_likes")
+          .select("post_id")
+          .eq("user_id", user.id)
+          .in("post_id", postIds);
+        if (!alive) return;
+        setLikedPosts(new Set((data ?? []).map((r: any) => String(r.post_id))));
+      } catch {
+        /* non-fatal */
+      }
+    };
+    void loadLiked();
+    return () => {
+      alive = false;
+    };
+  }, [feed, user?.id]);
+
+  const handleLikeToggle = useCallback(async (item: FeedItem) => {
+    if (!user?.id) {
+      toast.error("Please sign in to like posts");
+      return;
+    }
+    if (isLocalDraftPostId(item.id)) {
+      toast.info("This post is still syncing. Try again in a moment.");
+      return;
+    }
+
+    const wasLiked = likedPosts.has(item.id);
+    // optimistic
+    setLikedPosts((prev) => {
+      const next = new Set(prev);
+      if (wasLiked) next.delete(item.id);
+      else next.add(item.id);
+      return next;
+    });
+    setFeed((prev) =>
+      prev.map((p) =>
+        p.id === item.id ? { ...p, likes: Math.max(0, p.likes + (wasLiked ? -1 : 1)) } : p,
+      ),
+    );
+
+    try {
+      if (wasLiked) {
+        const { error } = await (supabase as any)
+          .from("post_likes")
+          .delete()
+          .eq("post_id", item.id)
+          .eq("user_id", user.id);
+        if (error) throw error;
+      } else {
+        const { error } = await (supabase as any)
+          .from("post_likes")
+          .insert({ post_id: item.id, user_id: user.id });
+        if (error) throw error;
+        // notify author (best-effort)
+        if (profileOwnerId && profileOwnerId !== user.id) {
+          try {
+            const { data: sp } = await supabase
+              .from("profiles")
+              .select("full_name")
+              .eq("user_id", user.id)
+              .single();
+            await supabase.functions.invoke("send-push-notification", {
+              body: {
+                user_id: profileOwnerId,
+                notification_type: "post_liked",
+                title: "New Like ❤️",
+                body: `${(sp as any)?.full_name || "Someone"} liked your post`,
+                data: {
+                  type: "post_liked",
+                  post_id: item.id,
+                  liker_id: user.id,
+                  action_url: `/profile?post=${item.id}`,
+                },
+              },
+            });
+          } catch {
+            /* push failures are non-fatal */
+          }
+        }
+      }
+    } catch (error: any) {
+      // rollback
+      setLikedPosts((prev) => {
+        const next = new Set(prev);
+        if (wasLiked) next.add(item.id);
+        else next.delete(item.id);
+        return next;
+      });
+      setFeed((prev) =>
+        prev.map((p) =>
+          p.id === item.id ? { ...p, likes: Math.max(0, p.likes + (wasLiked ? 1 : -1)) } : p,
+        ),
+      );
+      logProfileActionError(
+        "like.toggle",
+        { postId: item.id, op: wasLiked ? "delete" : "insert", userId: user?.id },
+        error,
+      );
+      toast.error(error?.message || "Failed to update like");
+    }
+  }, [likedPosts, user?.id, profileOwnerId]);
+
   const uploadMediaToSupabase = useCallback(async (file?: File | null) => {
     if (!file) return null;
     const extension = file.name.split(".").pop() || (file.type.startsWith("video/") ? "webm" : "jpg");
