@@ -139,7 +139,7 @@ export default function StoreDetailsDrawer({
                 {showRating && (
                   <span className="flex items-center gap-0.5 text-[12px] font-bold text-amber-500">
                     <Star className="w-3.5 h-3.5 fill-current" />
-                    {store.rating!.toFixed(1)}
+                    {(store.rating ?? 0).toFixed(1)}
                   </span>
                 )}
                 {distance != null && (

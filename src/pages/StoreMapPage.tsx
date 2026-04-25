@@ -6,7 +6,7 @@ import { useState, useEffect, useRef, useCallback, useMemo } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { MapPin, Clock, Star, Navigation, Store, ChevronRight, Search, X, Locate, Car, Phone, Wrench, List } from "lucide-react";
+import { MapPin, Clock, Star, Navigation, Store, ChevronRight, Search, X, Locate, Car, Phone, Wrench, List, Heart, Share2, MoreHorizontal } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { motion, AnimatePresence } from "framer-motion";
 import { toast } from "sonner";
@@ -15,6 +15,11 @@ import NavBar from "@/components/home/NavBar";
 import { STORE_CATEGORY_OPTIONS } from "@/config/groceryStores";
 import { trackInitiateCheckout } from "@/services/metaConversion";
 import { buildShopDeepLink } from "@/lib/deepLinks";
+import { isOpenNow } from "@/lib/store/storeHours";
+import { openDirections } from "@/lib/maps/openDirections";
+import { shareStoreWithCard } from "@/lib/social/storeShareCard";
+import { useStoreFavorites } from "@/hooks/useStoreFavorites";
+import StoreDetailsDrawer from "@/components/store/StoreDetailsDrawer";
 
 const DEFAULT_CENTER = { lat: 11.5564, lng: 104.9282 };
 
@@ -222,7 +227,7 @@ function makeUserDotIcon(): string {
 
 export default function StoreMapPage() {
   const navigate = useNavigate();
-  const [urlParams] = useSearchParams();
+  const [urlParams, setUrlParams] = useSearchParams();
   const mapContainerRef = useRef<HTMLDivElement>(null);
   const mapRef = useRef<google.maps.Map | null>(null);
   const markersRef = useRef<google.maps.Marker[]>([]);
@@ -231,20 +236,33 @@ export default function StoreMapPage() {
   const [mapReady, setMapReady] = useState(false);
   const [mapError, setMapError] = useState(false);
   const [selectedStore, setSelectedStore] = useState<StorePin | null>(null);
+  const [drawerStore, setDrawerStore] = useState<StorePin | null>(null);
   const [activeCategory, setActiveCategory] = useState<string>(urlParams.get("cat") || "all");
   const [searchQuery, setSearchQuery] = useState(urlParams.get("q") || "");
   const [searchOpen, setSearchOpen] = useState<boolean>(!!urlParams.get("q"));
+  const [openNowOnly, setOpenNowOnly] = useState<boolean>(urlParams.get("open") === "1");
   const [userLocation, setUserLocation] = useState<{ lat: number; lng: number } | null>(null);
   const [currentUserId, setCurrentUserId] = useState<string | null>(null);
   const [selectedProductId, setSelectedProductId] = useState<string>("");
   const [liveStoreMap, setLiveStoreMap] = useState<Record<string, string>>({});
   const searchInputRef = useRef<HTMLInputElement>(null);
 
+  const { isFavorite, toggleFavorite, isAuthed } = useStoreFavorites();
+
   useEffect(() => {
     supabase.auth.getUser().then(({ data }) => {
       setCurrentUserId(data.user?.id || null);
     });
   }, []);
+
+  // Mirror filters back to the URL so List ↔ Map stay in sync
+  useEffect(() => {
+    const next = new URLSearchParams();
+    if (activeCategory !== "all") next.set("cat", activeCategory);
+    if (searchQuery.trim()) next.set("q", searchQuery.trim());
+    if (openNowOnly) next.set("open", "1");
+    setUrlParams(next, { replace: true });
+  }, [activeCategory, searchQuery, openNowOnly, setUrlParams]);
 
   const { data: allStores = [] } = useQuery({
     queryKey: ["store-map-all"],
@@ -300,8 +318,9 @@ export default function StoreMapPage() {
       const q = searchQuery.toLowerCase();
       result = result.filter((s) => s.name.toLowerCase().includes(q) || s.address?.toLowerCase().includes(q));
     }
+    if (openNowOnly) result = result.filter((s) => isOpenNow(s.hours) === true);
     return result;
-  }, [stores, activeCategory, searchQuery]);
+  }, [stores, activeCategory, searchQuery, openNowOnly]);
 
   const { data: selectedStoreProducts = [] } = useQuery({
     queryKey: ["store-map-products", selectedStore?.id],
@@ -497,6 +516,61 @@ export default function StoreMapPage() {
     );
   }, []);
 
+  const handleShareSelected = useCallback(async (s: StorePin) => {
+    const dist = userLocation
+      ? Math.hypot(s.latitude - userLocation.lat, s.longitude - userLocation.lng) * 69
+      : undefined;
+    try {
+      const result = await shareStoreWithCard(s as any, {
+        distanceMi: dist,
+        categoryLabel: getCategoryLabel(s.category),
+      });
+      if (result.mode === "shared-with-image") toast.success("Shared with image");
+      else if (result.mode === "shared-link") toast.success("Link shared");
+      else if (result.mode === "downloaded") toast.success("Image saved · link copied");
+      else if (result.mode === "copied") toast.success("Link copied to clipboard");
+      else if (result.mode === "error") toast.error("Couldn't share — try again");
+    } catch {
+      try {
+        await navigator.clipboard.writeText(buildShopDeepLink(s.slug));
+        toast.success("Link copied to clipboard");
+      } catch {
+        toast.error("Couldn't share — try again");
+      }
+    }
+  }, [userLocation]);
+
+  const handleToggleFavoriteSelected = useCallback(async (s: StorePin) => {
+    const res = await toggleFavorite(s.id, {
+      name: s.name, slug: s.slug, category: s.category, logo_url: s.logo_url,
+    });
+    if (res.needsAuth) { toast.error("Sign in to save favorites"); return; }
+    if (res.error) { toast.error("Couldn't update favorites"); return; }
+    if (res.queued) {
+      toast.success(res.added ? "Saved offline — syncs later" : "Removed offline — syncs later");
+      return;
+    }
+    toast.success(res.added ? "Added to favorites" : "Removed from favorites");
+  }, [toggleFavorite]);
+
+  const handleRideSelected = useCallback((s: StorePin, promo?: string | null) => {
+    trackInitiateCheckout({
+      eventId: `ride-book-${s.id}-${Date.now()}`,
+      externalId: currentUserId || undefined,
+      sourceType: "ride_book",
+      sourceTable: "store_profiles",
+      sourceId: s.id,
+      payload: { destination: s.address || s.name, promo: promo || undefined },
+    });
+    const qp = new URLSearchParams({
+      destination: s.address || s.name,
+      destLat: String(s.latitude),
+      destLng: String(s.longitude),
+    });
+    if (promo) qp.set("promo", promo);
+    navigate(`/rides/hub?${qp.toString()}`);
+  }, [currentUserId, navigate]);
+
   return (
     <div className="fixed inset-0 z-0 bg-background lg:flex lg:flex-col">
       {/* Desktop NavBar */}
@@ -554,6 +628,7 @@ export default function StoreMapPage() {
                       const p = new URLSearchParams();
                       if (activeCategory !== "all") p.set("cat", activeCategory);
                       if (searchQuery.trim()) p.set("q", searchQuery.trim());
+                      if (openNowOnly) p.set("open", "1");
                       navigate(`/store-map/list${p.toString() ? `?${p.toString()}` : ""}`);
                     }}
                     className="h-10 px-3 inline-flex items-center gap-1 rounded-xl bg-primary text-primary-foreground text-[12px] font-bold shadow-sm"
@@ -590,6 +665,19 @@ export default function StoreMapPage() {
               >
                 All ({allStores.length})
               </motion.button>
+              <motion.button
+                whileTap={{ scale: 0.95 }}
+                onClick={() => { setOpenNowOnly((v) => !v); setSelectedStore(null); }}
+                aria-pressed={openNowOnly}
+                className={`px-4 py-2 rounded-full text-[12px] font-semibold transition-all whitespace-nowrap flex items-center gap-1.5 border backdrop-blur-sm ${
+                  openNowOnly
+                    ? "bg-emerald-600 text-white border-emerald-600 shadow-md"
+                    : "bg-card/90 text-muted-foreground border-border/30 shadow-sm"
+                }`}
+              >
+                <Clock className="w-3.5 h-3.5" />
+                Open now
+              </motion.button>
               {usedCategories.map((cat) => {
                 const count = allStores.filter((s) => s.category === cat.value).length;
                 const isActive = activeCategory === cat.value;
@@ -615,6 +703,7 @@ export default function StoreMapPage() {
       </div>
 
       {/* ── Right FABs ── */}
+      {!drawerStore && (
       <div className="absolute right-4 bottom-[140px] z-[1500] flex flex-col gap-2.5">
         <motion.div whileTap={{ scale: 0.9 }}>
           <Button variant="secondary" size="icon" onClick={handleLocateMe}
@@ -634,6 +723,7 @@ export default function StoreMapPage() {
           </Button>
         </motion.div>
       </div>
+      )}
 
       {/* ── Map ── */}
       <div ref={mapContainerRef} className="absolute inset-0" style={{ touchAction: "none" }} />
@@ -651,7 +741,7 @@ export default function StoreMapPage() {
 
       {/* ── Selected store card ── */}
       <AnimatePresence>
-        {selectedStore && (
+        {selectedStore && !drawerStore && (
           <motion.div
             initial={{ y: 140, opacity: 0, scale: 0.92 }}
             animate={{ y: 0, opacity: 1, scale: 1 }}
@@ -732,30 +822,12 @@ export default function StoreMapPage() {
                 <div className="w-px bg-border/20" />
                     <button
                       className="flex-1 min-w-[33%] py-3 text-[12px] font-bold text-center text-primary hover:bg-primary/5 transition-colors flex items-center justify-center gap-1.5"
-                      onClick={async (e) => {
+                      onClick={(e) => {
                         e.stopPropagation();
-                        const shareUrl = buildShopDeepLink(selectedStore.slug);
-                        const shareText = `Check out ${selectedStore.name} on ZiVo`;
-                        try {
-                          if (navigator.share) {
-                            await navigator.share({ title: selectedStore.name, text: shareText, url: shareUrl });
-                            toast.success("Shared!");
-                          } else {
-                            await navigator.clipboard.writeText(shareUrl);
-                            toast.success("Link copied to clipboard");
-                          }
-                        } catch (err: any) {
-                          if (err?.name === "AbortError") return; // user cancelled
-                          try {
-                            await navigator.clipboard.writeText(shareUrl);
-                            toast.success("Link copied to clipboard");
-                          } catch {
-                            toast.error("Couldn't share — try again");
-                          }
-                        }
+                        handleShareSelected(selectedStore);
                       }}
                     >
-                      Share
+                      <Share2 className="w-3.5 h-3.5" /> Share
                     </button>
                     {selectedStore.phone && (
                       <>
@@ -770,6 +842,45 @@ export default function StoreMapPage() {
                     )}
                   </>
                 )}
+              </div>
+
+              {/* Secondary action strip — Favorite / Directions / More (parity with list drawer) */}
+              <div className="flex items-center gap-2 px-3 py-2 border-t border-border/20 bg-muted/10">
+                <button
+                  onClick={(e) => { e.stopPropagation(); handleToggleFavoriteSelected(selectedStore); }}
+                  aria-label={isFavorite(selectedStore.id) ? "Remove favorite" : "Save favorite"}
+                  aria-pressed={isFavorite(selectedStore.id)}
+                  className={`flex-1 h-11 rounded-xl inline-flex items-center justify-center gap-1.5 text-[12px] font-bold transition-colors ${
+                    isFavorite(selectedStore.id)
+                      ? "bg-rose-500 text-white"
+                      : "bg-card text-foreground border border-border/40"
+                  }`}
+                >
+                  <Heart className={`w-4 h-4 ${isFavorite(selectedStore.id) ? "fill-current" : ""}`} />
+                  {isFavorite(selectedStore.id) ? "Saved" : "Save"}
+                </button>
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    openDirections({
+                      lat: selectedStore.latitude,
+                      lng: selectedStore.longitude,
+                      label: selectedStore.name,
+                      address: selectedStore.address,
+                    });
+                  }}
+                  aria-label="Open directions"
+                  className="flex-1 h-11 rounded-xl bg-card border border-border/40 inline-flex items-center justify-center gap-1.5 text-[12px] font-bold text-foreground"
+                >
+                  <Navigation className="w-4 h-4" /> Directions
+                </button>
+                <button
+                  onClick={(e) => { e.stopPropagation(); setDrawerStore(selectedStore); }}
+                  aria-label="More details"
+                  className="h-11 w-11 rounded-xl bg-card border border-border/40 inline-flex items-center justify-center text-foreground"
+                >
+                  <MoreHorizontal className="w-4 h-4" />
+                </button>
               </div>
 
               <div className="border-t border-border/20 px-3 py-3 bg-muted/20">
@@ -869,7 +980,24 @@ export default function StoreMapPage() {
         )}
       </AnimatePresence>
 
-      <ZivoMobileNav />
+      {drawerStore && (
+        <StoreDetailsDrawer
+          store={drawerStore}
+          userLoc={userLocation}
+          categoryLabel={getCategoryLabel(drawerStore.category)}
+          isFavorite={isFavorite(drawerStore.id)}
+          isAuthed={isAuthed}
+          onClose={() => setDrawerStore(null)}
+          onView={(s) => navigate(`/grocery/shop/${s.slug}`)}
+          onRide={(s, promo) => handleRideSelected(s, promo)}
+          onDirections={(s) => openDirections({ lat: s.latitude, lng: s.longitude, label: s.name, address: s.address })}
+          onShare={(s) => handleShareSelected(s)}
+          onToggleFavorite={handleToggleFavoriteSelected}
+          onPromoApplied={(code) => toast.success(`Promo ${code} ready for your next ride or order`)}
+        />
+      )}
+
+      {!drawerStore && <ZivoMobileNav />}
       </div>
     </div>
   );
