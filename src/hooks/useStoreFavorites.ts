@@ -98,6 +98,7 @@ export function useStoreFavorites() {
   const [userId, setUserId] = useState<string | null>(null);
   const [favoriteIds, setFavoriteIds] = useState<Set<string>>(new Set());
   const [isLoading, setIsLoading] = useState(true);
+  const [pendingSyncCount, setPendingSyncCount] = useState<number>(() => readQueue().length);
 
   useEffect(() => {
     let active = true;
@@ -241,15 +242,32 @@ export function useStoreFavorites() {
     [userId, favoriteIds]
   );
 
-  // Mark anon storage so we don't break anything (placeholder)
+  // Listen for online events to flush queue automatically.
   useEffect(() => {
-    if (!userId) {
-      try {
-        localStorage.setItem(ANON_CACHE, "1");
-      } catch {
-        /* noop */
-      }
-    }
+    const onOnline = async () => {
+      if (!userId) return;
+      const before = readQueue().length;
+      if (before === 0) return;
+      await flushQueue(userId);
+      const after = readQueue().length;
+      setPendingSyncCount(after);
+    };
+    window.addEventListener("online", onOnline);
+    return () => window.removeEventListener("online", onOnline);
+  }, [userId]);
+
+  // Keep pendingSyncCount in sync after toggles.
+  useEffect(() => {
+    setPendingSyncCount(readQueue().length);
+  }, [favoriteIds]);
+
+  const syncNow = useCallback(async (): Promise<{ flushed: number }> => {
+    if (!userId) return { flushed: 0 };
+    const before = readQueue().length;
+    await flushQueue(userId);
+    const after = readQueue().length;
+    setPendingSyncCount(after);
+    return { flushed: before - after };
   }, [userId]);
 
   return {
@@ -259,5 +277,7 @@ export function useStoreFavorites() {
     removeFavorites,
     isLoading,
     isAuthed: !!userId,
+    pendingSyncCount,
+    syncNow,
   };
 }
