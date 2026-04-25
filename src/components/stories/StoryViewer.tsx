@@ -35,6 +35,13 @@ import Play from "lucide-react/dist/esm/icons/play";
 import Volume2 from "lucide-react/dist/esm/icons/volume-2";
 import VolumeX from "lucide-react/dist/esm/icons/volume-x";
 import Music from "lucide-react/dist/esm/icons/music";
+import BarChart2 from "lucide-react/dist/esm/icons/bar-chart-2";
+import Facebook from "lucide-react/dist/esm/icons/facebook";
+import AtSign from "lucide-react/dist/esm/icons/at-sign";
+import MoreHorizontal from "lucide-react/dist/esm/icons/more-horizontal";
+import Download from "lucide-react/dist/esm/icons/download";
+import Share2 from "lucide-react/dist/esm/icons/share-2";
+import { getPublicOrigin } from "@/lib/getPublicOrigin";
 
 export interface StoryItem {
   id: string;
