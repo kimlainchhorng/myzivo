@@ -75,6 +75,7 @@ const LANGS = [
 const getFlagUrl = (cc: string) => `/flags/${cc}.svg`;
 
 import VerifiedBadge from "@/components/VerifiedBadge";
+import { formatCount } from "@/lib/social/formatCount";
 
 const BlueVerifiedBadge = ({ className = "h-5 w-5" }: { className?: string }) => (
   <VerifiedBadge className={className} />
@@ -727,21 +728,36 @@ const Profile = () => {
 
                       </div>
 
-                      {/* Friend, Follower & Following stats — Facebook/TikTok style */}
-                      <div className="mb-1 mt-2 flex items-center justify-center gap-0">
-                        <button aria-label={`View ${friendCount} friends`} className="flex-1 text-center py-1 group min-h-[44px] focus-visible:ring-2 focus-visible:ring-primary/60 rounded-lg" onClick={() => setSocialModal({ open: true, tab: "friends" })}>
-                          <p className="text-lg font-black text-foreground group-hover:text-primary transition-colors">{friendCount}</p>
-                          <p className="text-[10px] text-muted-foreground font-medium">Friends</p>
+                      {/* Facebook-style inline stats row */}
+                      <div className="mt-2 flex flex-wrap items-center gap-x-1.5 gap-y-1 text-sm">
+                        <button
+                          type="button"
+                          aria-label={`View ${followerCount} followers`}
+                          onClick={() => setSocialModal({ open: true, tab: "followers" })}
+                          className="inline-flex items-baseline gap-1 rounded-md px-1 -mx-1 py-0.5 hover:underline focus-visible:ring-2 focus-visible:ring-primary/60 focus-visible:outline-none"
+                        >
+                          <span className="font-bold text-foreground">{formatCount(followerCount) ?? "0"}</span>
+                          <span className="font-medium text-muted-foreground">followers</span>
                         </button>
-                        <div className="w-px h-9 bg-border/40" />
-                        <button aria-label={`View ${followerCount} followers`} className="flex-1 text-center py-1 group min-h-[44px] focus-visible:ring-2 focus-visible:ring-primary/60 rounded-lg" onClick={() => setSocialModal({ open: true, tab: "followers" })}>
-                          <p className="text-lg font-black text-foreground group-hover:text-primary transition-colors">{followerCount}</p>
-                          <p className="text-[10px] text-muted-foreground font-medium">Followers</p>
+                        <span aria-hidden="true" className="text-muted-foreground/70">·</span>
+                        <button
+                          type="button"
+                          aria-label={`View ${followingCount} following`}
+                          onClick={() => setSocialModal({ open: true, tab: "following" })}
+                          className="inline-flex items-baseline gap-1 rounded-md px-1 -mx-1 py-0.5 hover:underline focus-visible:ring-2 focus-visible:ring-primary/60 focus-visible:outline-none"
+                        >
+                          <span className="font-bold text-foreground">{formatCount(followingCount) ?? "0"}</span>
+                          <span className="font-medium text-muted-foreground">following</span>
                         </button>
-                        <div className="w-px h-9 bg-border/40" />
-                        <button aria-label={`View ${followingCount} following`} className="flex-1 text-center py-1 group min-h-[44px] focus-visible:ring-2 focus-visible:ring-primary/60 rounded-lg" onClick={() => setSocialModal({ open: true, tab: "following" })}>
-                          <p className="text-lg font-black text-foreground group-hover:text-primary transition-colors">{followingCount}</p>
-                          <p className="text-[10px] text-muted-foreground font-medium">Following</p>
+                        <span aria-hidden="true" className="text-muted-foreground/70">·</span>
+                        <button
+                          type="button"
+                          aria-label={`View ${friendCount} friends`}
+                          onClick={() => setSocialModal({ open: true, tab: "friends" })}
+                          className="inline-flex items-baseline gap-1 rounded-md px-1 -mx-1 py-0.5 hover:underline focus-visible:ring-2 focus-visible:ring-primary/60 focus-visible:outline-none"
+                        >
+                          <span className="font-bold text-foreground">{formatCount(friendCount) ?? "0"}</span>
+                          <span className="font-medium text-muted-foreground">friends</span>
                         </button>
                       </div>
 
