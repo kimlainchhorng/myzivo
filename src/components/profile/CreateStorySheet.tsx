@@ -9,7 +9,7 @@ import { createPortal } from "react-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { useAuth } from "@/contexts/AuthContext";
 import { useUserProfile } from "@/hooks/useUserProfile";
-import { supabase } from "@/integrations/supabase/client";
+import { supabase, SUPABASE_PUBLISHABLE_KEY } from "@/integrations/supabase/client";
 import { useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
@@ -31,6 +31,7 @@ interface Props {
 }
 
 type Step = "choose" | "preview-media" | "compose-text";
+type UploadPhase = "idle" | "preparing" | "uploading" | "saving";
 
 interface Track {
   id: string;
@@ -56,6 +57,7 @@ export default function CreateStorySheet({ open, onClose }: Props) {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const cameraInputRef = useRef<HTMLInputElement>(null);
   const previewAudioRef = useRef<HTMLAudioElement | null>(null);
+  const activeUploadRef = useRef<XMLHttpRequest | null>(null);
 
   const [step, setStep] = useState<Step>("choose");
   const [pickedFile, setPickedFile] = useState<File | null>(null);
@@ -70,6 +72,7 @@ export default function CreateStorySheet({ open, onClose }: Props) {
 
   // Upload state
   const [uploading, setUploading] = useState(false);
+  const [uploadPhase, setUploadPhase] = useState<UploadPhase>("idle");
   const [progress, setProgress] = useState(0); // 0..1
   const [uploadError, setUploadError] = useState<string | null>(null);
   const [showQuitConfirm, setShowQuitConfirm] = useState(false);
@@ -86,6 +89,7 @@ export default function CreateStorySheet({ open, onClose }: Props) {
         setBgIdx(0);
         setAudioTrack(null);
         setShowMusicSheet(false);
+        setUploadPhase("idle");
         setProgress(0);
         setUploadError(null);
         setShowQuitConfirm(false);
@@ -187,27 +191,70 @@ export default function CreateStorySheet({ open, onClose }: Props) {
    * Upload via XHR PUT against a Supabase signed upload URL so we can
    * report real progress events.
    */
-  const xhrUpload = (url: string, blob: Blob, contentType: string) =>
+  const getErrorMessage = async (err: any, fallback: string) => {
+    if (!err) return fallback;
+    if (typeof err === "string") return err;
+    if (err.message) return err.message;
+    try {
+      return JSON.stringify(err);
+    } catch {
+      return fallback;
+    }
+  };
+
+  const invalidateStoryQueries = async () => {
+    await Promise.all([
+      queryClient.invalidateQueries({ queryKey: ["user-stories"], exact: true }),
+      queryClient.invalidateQueries({ queryKey: ["feed-story-users"], exact: true }),
+      queryClient.invalidateQueries({ queryKey: ["profile-story-rings", user?.id], exact: true }),
+      queryClient.invalidateQueries({ queryKey: ["profile-my-story", user?.id], exact: true }),
+      queryClient.invalidateQueries({ queryKey: ["my-story-views", user?.id], exact: true }),
+    ]);
+  };
+
+  const xhrUpload = (url: string, blob: Blob, contentType: string, accessToken?: string) =>
     new Promise<void>((resolve, reject) => {
       const xhr = new XMLHttpRequest();
       xhr.open("PUT", url, true);
-      xhr.setRequestHeader("Content-Type", contentType);
       xhr.setRequestHeader("x-upsert", "true");
+      xhr.setRequestHeader("apikey", SUPABASE_PUBLISHABLE_KEY);
+      if (accessToken) xhr.setRequestHeader("Authorization", `Bearer ${accessToken}`);
+      const formData = new FormData();
+      formData.append("cacheControl", "3600");
+      formData.append("", blob, `story.${contentType.includes("video") ? "mp4" : "jpg"}`);
+      activeUploadRef.current = xhr;
       xhr.upload.onprogress = (e) => {
         if (e.lengthComputable) setProgress(e.loaded / e.total);
       };
       xhr.onload = () => {
+        activeUploadRef.current = null;
         if (xhr.status >= 200 && xhr.status < 300) resolve();
-        else reject(new Error(`Upload failed (${xhr.status})`));
+        else {
+          let detail = xhr.responseText || xhr.statusText || "No response body";
+          try {
+            const parsed = JSON.parse(detail);
+            detail = parsed.message || parsed.error || detail;
+          } catch {
+            // keep raw response text
+          }
+          reject(new Error(`Storage upload failed (${xhr.status}): ${detail}`));
+        }
       };
-      xhr.onerror = () => reject(new Error("Network error during upload"));
-      xhr.onabort = () => reject(new Error("Upload aborted"));
-      xhr.send(blob);
+      xhr.onerror = () => {
+        activeUploadRef.current = null;
+        reject(new Error("Network error during storage upload"));
+      };
+      xhr.onabort = () => {
+        activeUploadRef.current = null;
+        reject(new Error("Storage upload was cancelled"));
+      };
+      xhr.send(formData);
     });
 
   const publish = useCallback(async () => {
     if (!user) return;
     setUploading(true);
+    setUploadPhase("preparing");
     setUploadError(null);
     setProgress(0);
 
@@ -246,15 +293,19 @@ export default function CreateStorySheet({ open, onClose }: Props) {
       // Get signed upload URL for progress-tracked PUT
       const { data: signed, error: signErr } = await supabase.storage
         .from("user-stories")
-        .createSignedUploadUrl(path);
+        .createSignedUploadUrl(path, { upsert: true });
       if (signErr || !signed?.signedUrl) {
-        throw new Error(signErr?.message || "Could not prepare upload");
+        throw new Error(`Could not prepare storage upload: ${await getErrorMessage(signErr, "No signed URL returned")}`);
       }
 
-      await xhrUpload(signed.signedUrl, blob, contentType);
+      setUploadPhase("uploading");
+      const { data: sessionData } = await supabase.auth.getSession();
+      await xhrUpload(signed.signedUrl, blob, contentType, sessionData.session?.access_token);
+      setProgress(1);
 
       const { data: urlData } = supabase.storage.from("user-stories").getPublicUrl(path);
 
+      setUploadPhase("saving");
       const { error: insErr } = await supabase.from("stories" as any).insert({
         user_id: user.id,
         media_url: urlData.publicUrl,
@@ -262,19 +313,19 @@ export default function CreateStorySheet({ open, onClose }: Props) {
         caption: captionToSave,
         audio_url: audioTrack?.url || null,
       });
-      if (insErr) throw insErr;
+      if (insErr) {
+        throw new Error(`Story saved to storage but database insert failed: ${await getErrorMessage(insErr, "Unknown database error")}`);
+      }
 
-      queryClient.invalidateQueries({ queryKey: ["user-stories"] });
-      queryClient.invalidateQueries({ queryKey: ["feed-story-users"] });
-      queryClient.invalidateQueries({ queryKey: ["profile-story-rings"] });
-      queryClient.invalidateQueries({ queryKey: ["profile-my-story"] });
-      queryClient.invalidateQueries({ queryKey: ["my-story-views"] });
+      await invalidateStoryQueries();
       toast.success("Story shared 🎉");
       setUploading(false);
+      setUploadPhase("idle");
       onClose();
     } catch (err: any) {
       setUploading(false);
-      setUploadError(err?.message || "Failed to share story");
+      setUploadPhase("idle");
+      setUploadError(await getErrorMessage(err, "Failed to share story"));
     }
   }, [user, step, text, pickedFile, caption, audioTrack, onClose, queryClient]);
 
@@ -546,7 +597,9 @@ export default function CreateStorySheet({ open, onClose }: Props) {
                     />
                   </div>
                   <p className="text-[11px] text-muted-foreground text-center">
-                    Uploading {Math.round(progress * 100)}%…
+                    {uploadPhase === "preparing" && "Preparing upload…"}
+                    {uploadPhase === "uploading" && `Uploading ${Math.round(progress * 100)}%…`}
+                    {uploadPhase === "saving" && "Saving story…"}
                   </p>
                 </div>
               )}
@@ -695,8 +748,10 @@ export default function CreateStorySheet({ open, onClose }: Props) {
                   </button>
                   <button
                     onClick={() => {
+                      activeUploadRef.current?.abort();
                       setShowQuitConfirm(false);
                       setUploading(false);
+                      setUploadPhase("idle");
                       onClose();
                     }}
                     className="flex-1 h-10 rounded-full bg-destructive text-destructive-foreground text-sm font-bold"

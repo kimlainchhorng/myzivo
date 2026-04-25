@@ -102,9 +102,10 @@ export default function ChatStories() {
       });
       if (insertError) throw insertError;
 
-      queryClient.invalidateQueries({ queryKey: ["user-stories"] });
-      queryClient.invalidateQueries({ queryKey: ["feed-story-users"] });
-      queryClient.invalidateQueries({ queryKey: ["profile-my-story"] });
+      queryClient.invalidateQueries({ queryKey: ["user-stories"], exact: true });
+      queryClient.invalidateQueries({ queryKey: ["feed-story-users"], exact: true });
+      queryClient.invalidateQueries({ queryKey: ["profile-story-rings", user.id], exact: true });
+      queryClient.invalidateQueries({ queryKey: ["profile-my-story", user.id], exact: true });
       toast.success("Story added!");
     } catch (err: any) {
       toast.error(err.message || "Failed to upload story");

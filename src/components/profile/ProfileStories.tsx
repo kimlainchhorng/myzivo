@@ -1,7 +1,7 @@
 /**
  * ProfileStories — Facebook-style horizontal ring carousel.
- * Shows "Your story" + every friend with active stories. Reuses the
- * shared `["feed-story-users"]` cache so Profile/Feed/Chat stay in sync.
+ * Shows "Your story" + every friend with active stories. Uses an isolated
+ * profile cache key so it never collides with FeedStoryRing's data shape.
  */
 import { useMemo, useState } from "react";
 import { motion } from "framer-motion";
@@ -68,15 +68,21 @@ const ProfileStories = () => {
     () => [...new Set(allStories.map((s) => s.user_id))],
     [allStories]
   );
+  const authorKey = useMemo(() => [...userIds].sort().join(","), [userIds]);
   const { data: profileMap = new Map() } = useQuery({
-    queryKey: ["story-author-profiles", userIds.sort().join(",")],
+    queryKey: ["story-author-profiles", authorKey],
     enabled: userIds.length > 0,
     queryFn: async () => {
       const { data } = await supabase
         .from("profiles")
-        .select("id, full_name, avatar_url")
-        .in("id", userIds);
-      return new Map((data || []).map((p: any) => [p.id, p]));
+        .select("id, user_id, full_name, avatar_url")
+        .or(`id.in.(${userIds.join(",")}),user_id.in.(${userIds.join(",")})`);
+      const map = new Map<string, any>();
+      for (const p of data || []) {
+        if ((p as any).id) map.set((p as any).id, p);
+        if ((p as any).user_id) map.set((p as any).user_id, p);
+      }
+      return map;
     },
   });
 
@@ -128,9 +134,10 @@ const ProfileStories = () => {
 
   const handleViewerClose = () => {
     setViewing(null);
-    queryClient.invalidateQueries({ queryKey: ["my-story-views"] });
-    queryClient.invalidateQueries({ queryKey: ["profile-story-rings"] });
-    queryClient.invalidateQueries({ queryKey: ["feed-story-users"] });
+    queryClient.invalidateQueries({ queryKey: ["my-story-views", user?.id], exact: true });
+    queryClient.invalidateQueries({ queryKey: ["profile-story-rings", user?.id], exact: true });
+    queryClient.invalidateQueries({ queryKey: ["feed-story-users"], exact: true });
+    queryClient.invalidateQueries({ queryKey: ["user-stories"], exact: true });
   };
 
   const isFullyViewed = (g: StoryGroup) =>
