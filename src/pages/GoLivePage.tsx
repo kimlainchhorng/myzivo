@@ -58,6 +58,8 @@ import {
 } from "@/lib/livePairing";
 import { ICE_SERVERS, getIceServers, logSelectedCandidatePair, sendSignal, subscribeSignals } from "@/lib/liveWebrtc";
 import goldCoinIcon from "@/assets/gifts/gold-coin.png";
+import VerifiedBadge from "@/components/VerifiedBadge";
+import { isBlueVerified } from "@/lib/verification";
 import bgOffice from "@/assets/bg-office.jpg";
 import bgBeach from "@/assets/bg-beach.jpg";
 import bgCafe from "@/assets/bg-cafe.jpg";
@@ -196,6 +198,8 @@ export default function GoLivePage() {
   const previewStream = compareHold ? rawStream : filteredStream;
   const localStream = filteredStream;
   const chatEndRef = useRef<HTMLDivElement>(null);
+  // Cache verified flags so chat/gift inserts hydrate the badge without flicker
+  const verifiedCacheRef = useRef<Map<string, boolean>>(new Map());
 
   const [phase, setPhase] = useState<LivePhase>("setup");
   const [streamId, setStreamId] = useState<string | null>(null);
