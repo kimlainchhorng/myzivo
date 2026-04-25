@@ -1327,10 +1327,10 @@ const Profile = () => {
           </SheetHeader>
           <div className="flex flex-col gap-2">
             {[
-              { id: "personal", label: "Personal", desc: "Your everyday account", icon: UserIcon },
-              { id: "business", label: "Business", desc: "Manage company travel & teams", icon: Briefcase },
-              { id: "driver", label: "Driver", desc: "Go online and accept rides", icon: Car },
-              { id: "shop", label: "Shop Partner", desc: "Manage your store & staff", icon: Store },
+              { id: "personal", label: "Personal", desc: "Your everyday account", icon: UserIcon, route: "/profile" },
+              { id: "business", label: "Business", desc: "Manage company travel & teams", icon: Briefcase, route: "/business" },
+              { id: "driver", label: "Driver", desc: "Go online and accept rides", icon: Car, route: "/driver" },
+              { id: "shop", label: "Shop Partner", desc: "Open your store dashboard", icon: Store, route: "/shop-dashboard" },
             ].map((m) => {
               const active = activeMode === m.id;
               const Icon = m.icon;
@@ -1343,6 +1343,7 @@ const Profile = () => {
                     try { localStorage.setItem("zivo:active_mode", m.id); } catch {}
                     toast.success(`Switched to ${m.label} mode`);
                     setModeOpen(false);
+                    if (m.route && m.id !== "personal") navigate(m.route);
                   }}
                   className={`flex items-center gap-3 rounded-2xl border px-3 py-3 text-left transition-all active:scale-[0.99] ${
                     active ? "border-primary/60 bg-primary/5" : "border-border/50 bg-muted/25 hover:bg-muted/50"
