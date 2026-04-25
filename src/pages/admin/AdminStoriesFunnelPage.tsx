@@ -5,7 +5,7 @@
  */
 import { useState } from "react";
 import { Helmet } from "react-helmet-async";
-import { useUserAccess } from "@/hooks/useUserAccess";
+import { useAuth } from "@/contexts/AuthContext";
 import { Navigate } from "react-router-dom";
 import { useStoryFunnel } from "@/hooks/useStoryFunnel";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
@@ -23,7 +23,7 @@ const fmtPct = (n: number) => `${(n * 100).toFixed(1)}%`;
 const fmtInt = (n: number) => n.toLocaleString();
 
 export default function AdminStoriesFunnelPage() {
-  const { isAdmin, isLoading: roleLoading } = useUserAccess();
+  const { isAdmin, isLoading: roleLoading } = useAuth();
   const [days, setDays] = useState(7);
   const { data, isLoading, isFetching, refetch, error } = useStoryFunnel(days);
 
