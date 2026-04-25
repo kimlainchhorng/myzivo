@@ -162,6 +162,7 @@ const AccountExportPage = lazy(() => import("./pages/account/AccountExportPage")
 const GroceryStorePage = lazy(() => import("./pages/GroceryStorePage"));
 const StoreProfilePage = lazy(() => import("./pages/StoreProfilePage"));
 const StoreMapPage = lazy(() => import("./pages/StoreMapPage"));
+const StoresListPage = lazy(() => import("./pages/StoresListPage"));
 const GroceryOrderPlaced = lazy(() => import("./pages/grocery/GroceryOrderPlaced"));
 const GroceryOrderConfirmed = lazy(() => import("./pages/grocery/GroceryOrderConfirmed"));
 const GroceryOrderHistory = lazy(() => import("./pages/GroceryOrderHistory"));
@@ -714,6 +715,7 @@ const App = () => (
                 <Route path="/account/activity-log" element={<ProtectedRoute><ActivityLogPage /></ProtectedRoute>} />
                 <Route path="/account/export" element={<ProtectedRoute><AccountExportPage /></ProtectedRoute>} />
                 <Route path="/store-map" element={<StoreMapPage />} />
+                <Route path="/store-map/list" element={<StoresListPage />} />
                 <Route path="/book/:slug" element={<ServiceBookingPage />} />
                 <Route path="/grocery/store/:slug" element={<GroceryStorePage />} />
                 <Route path="/grocery/shop/:slug" element={<StoreProfilePage />} />
