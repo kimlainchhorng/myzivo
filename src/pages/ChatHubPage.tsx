@@ -1038,6 +1038,7 @@ export default function ChatHubPage({ embedded = false }: { embedded?: boolean }
               recipientId={openPersonalChat.id}
               recipientName={openPersonalChat.name}
               recipientAvatar={openPersonalChat.avatar}
+              recipientIsVerified={openPersonalChat.isVerified === true}
               onClose={() => { setOpenPersonalChat(null); setPendingCall(null); queryClient.invalidateQueries({ queryKey: ["chat-hub-personal"] }); }}
               autoStartCall={pendingCall}
               onCallStarted={() => setPendingCall(null)}
