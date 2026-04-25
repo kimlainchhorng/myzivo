@@ -474,7 +474,7 @@ const Profile = () => {
               </motion.div>
             </div>
           ) : (
-            <div className="space-y-2.5 pt-1">
+            <div className="space-y-2.5 pt-0 lg:pt-1">
               {/* ── Profile Card with Cover Photo ── */}
               <ParallaxSection index={2}>
                 <motion.div
@@ -486,10 +486,16 @@ const Profile = () => {
                   style={{ perspective: "1200px", transformStyle: "preserve-3d" }}
                   className="group"
                 >
-                  <GlassCard3D glow className="shadow-2xl shadow-primary/[0.08] overflow-hidden">
-                    {/* Cover Photo */}
+                  {/* Mobile: edge-to-edge plain surface (Facebook). Desktop: glass card. */}
+                  <div className="relative bg-card lg:rounded-3xl lg:overflow-hidden lg:shadow-2xl lg:shadow-primary/[0.08]">
+                    <div className="hidden lg:block absolute inset-0 bg-card/70 backdrop-blur-2xl rounded-3xl" />
+                    <div className="hidden lg:block absolute inset-0 bg-gradient-to-br from-primary/[0.04] via-transparent to-primary/[0.02] rounded-3xl" />
+                    <div className="hidden lg:block pointer-events-none absolute inset-0 rounded-3xl ring-1 ring-inset ring-white/[0.08] shadow-[inset_0_1px_0_0_rgba(255,255,255,0.06)]" />
+                    <div className="relative z-10">
+                    {/* Cover Photo — full-bleed on mobile, taller like Facebook */}
                     <div
-                      className="relative h-36 sm:h-44 md:h-52 w-full overflow-hidden select-none"
+                      className="relative h-48 sm:h-56 md:h-60 lg:h-52 w-full overflow-hidden select-none"
+
                       onMouseDown={coverRepositioning ? (e) => { e.preventDefault(); handleCoverDragStart(e.clientY); } : undefined}
                       onMouseMove={coverRepositioning ? (e) => handleCoverDragMove(e.clientY) : undefined}
                       onMouseUp={coverRepositioning ? handleCoverDragEnd : undefined}
