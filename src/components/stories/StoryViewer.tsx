@@ -35,6 +35,13 @@ import Play from "lucide-react/dist/esm/icons/play";
 import Volume2 from "lucide-react/dist/esm/icons/volume-2";
 import VolumeX from "lucide-react/dist/esm/icons/volume-x";
 import Music from "lucide-react/dist/esm/icons/music";
+import BarChart2 from "lucide-react/dist/esm/icons/bar-chart-2";
+import Facebook from "lucide-react/dist/esm/icons/facebook";
+import AtSign from "lucide-react/dist/esm/icons/at-sign";
+import MoreHorizontal from "lucide-react/dist/esm/icons/more-horizontal";
+import Download from "lucide-react/dist/esm/icons/download";
+import Share2 from "lucide-react/dist/esm/icons/share-2";
+import { getPublicOrigin } from "@/lib/getPublicOrigin";
 
 export interface StoryItem {
   id: string;
@@ -93,6 +100,8 @@ export default function StoryViewer({
   const [muted, setMuted] = useState(true);
   const [reactionBurst, setReactionBurst] = useState<string | null>(null);
   const [showForward, setShowForward] = useState(false);
+  const [showMore, setShowMore] = useState(false);
+  const [showMention, setShowMention] = useState(false);
 
   const timerRef = useRef<number | null>(null);
   const startTimeRef = useRef(0);
@@ -565,73 +574,46 @@ export default function StoryViewer({
         <div className="absolute left-0 top-0 bottom-0 w-1/3 z-10" onClick={goPrev} />
         <div className="absolute right-0 top-0 bottom-0 w-2/3 z-10" onClick={goNext} />
 
-        {/* Right-side actions */}
-        <div className="absolute right-4 bottom-[160px] flex flex-col items-center gap-4 z-20">
-          <button onClick={toggleLike} className="flex flex-col items-center gap-1" aria-label="Like story">
-            <motion.div
-              key={myReaction || "none"}
-              animate={myReaction === "❤️" ? { scale: [1, 1.3, 1] } : {}}
-              className={cn(
-                "w-11 h-11 rounded-full flex items-center justify-center backdrop-blur-sm transition-all",
-                myReaction === "❤️" ? "bg-destructive/80" : "bg-white/10"
-              )}
+        {/* Right-side actions — only for non-owners (owners get the IG-style bottom toolbar) */}
+        {!isOwner && (
+          <div className="absolute right-4 bottom-[160px] flex flex-col items-center gap-4 z-20">
+            <button onClick={toggleLike} className="flex flex-col items-center gap-1" aria-label="Like story">
+              <motion.div
+                key={myReaction || "none"}
+                animate={myReaction === "❤️" ? { scale: [1, 1.3, 1] } : {}}
+                className={cn(
+                  "w-11 h-11 rounded-full flex items-center justify-center backdrop-blur-sm transition-all",
+                  myReaction === "❤️" ? "bg-destructive/80" : "bg-white/10"
+                )}
+              >
+                <Heart className={cn("w-5 h-5 transition-all", myReaction === "❤️" ? "text-white fill-white" : "text-white")} />
+              </motion.div>
+              <span className="text-white/80 text-[10px] font-medium">Like</span>
+            </button>
+
+            <button
+              onClick={() => { setPaused(true); setShowComments(true); }}
+              className="flex flex-col items-center gap-1"
             >
-              <Heart className={cn("w-5 h-5 transition-all", myReaction === "❤️" ? "text-white fill-white" : "text-white")} />
-            </motion.div>
-            <span className="text-white/80 text-[10px] font-medium">Like</span>
-          </button>
+              <div className="w-11 h-11 rounded-full bg-white/10 backdrop-blur-sm flex items-center justify-center relative">
+                <MessageCircle className="w-5 h-5 text-white" />
+                {comments.length > 0 && (
+                  <span className="absolute -top-1 -right-1 min-w-[16px] h-[16px] px-1 bg-primary text-primary-foreground text-[9px] font-bold rounded-full flex items-center justify-center">
+                    {comments.length}
+                  </span>
+                )}
+              </div>
+              <span className="text-white/80 text-[10px] font-medium">Comment</span>
+            </button>
 
-          <button
-            onClick={() => { setPaused(true); setShowComments(true); }}
-            className="flex flex-col items-center gap-1"
-          >
-            <div className="w-11 h-11 rounded-full bg-white/10 backdrop-blur-sm flex items-center justify-center relative">
-              <MessageCircle className="w-5 h-5 text-white" />
-              {comments.length > 0 && (
-                <span className="absolute -top-1 -right-1 min-w-[16px] h-[16px] px-1 bg-primary text-primary-foreground text-[9px] font-bold rounded-full flex items-center justify-center">
-                  {comments.length}
-                </span>
-              )}
-            </div>
-            <span className="text-white/80 text-[10px] font-medium">Comment</span>
-          </button>
-
-          <button onClick={handleShare} className="flex flex-col items-center gap-1">
-            <div className="w-11 h-11 rounded-full bg-white/10 backdrop-blur-sm flex items-center justify-center">
-              <Send className="w-5 h-5 text-white" />
-            </div>
-            <span className="text-white/80 text-[10px] font-medium">Share</span>
-          </button>
-
-          {isOwner && (
-            <>
-              <button
-                onClick={() => { setPaused(true); setShowViewers(true); }}
-                className="flex flex-col items-center gap-1"
-              >
-                <div className="w-11 h-11 rounded-full bg-white/10 backdrop-blur-sm flex items-center justify-center">
-                  <Eye className="w-5 h-5 text-white" />
-                </div>
-                <span className="text-white/80 text-[10px] font-medium">{currentStory.viewsCount || 0}</span>
-              </button>
-              <button
-                onClick={() => {
-                  if (!currentStory) return;
-                  deleteStory.mutate(currentStory.id);
-                  if (viewingGroup.stories.length <= 1) closeWithMeta();
-                  else goNext();
-                }}
-                className="flex flex-col items-center gap-1"
-              >
-                <div className="w-11 h-11 rounded-full bg-white/10 backdrop-blur-sm flex items-center justify-center">
-                  <Trash2 className="w-5 h-5 text-white" />
-                </div>
-                <span className="text-white/80 text-[10px] font-medium">Delete</span>
-              </button>
-            </>
-          )}
-        </div>
-
+            <button onClick={handleShare} className="flex flex-col items-center gap-1">
+              <div className="w-11 h-11 rounded-full bg-white/10 backdrop-blur-sm flex items-center justify-center">
+                <Send className="w-5 h-5 text-white" />
+              </div>
+              <span className="text-white/80 text-[10px] font-medium">Share</span>
+            </button>
+          </div>
+        )}
         {/* Floating reaction burst */}
         <AnimatePresence>
           {reactionBurst && (
@@ -705,6 +687,63 @@ export default function StoryViewer({
               </div>
             </>
           )}
+
+          {/* Owner toolbar — Instagram style: Activity · Facebook · Mention · Send · More */}
+          {isOwner && (
+            <div className="px-2 pb-3 pt-2">
+              <div className="flex items-end justify-around">
+                <button
+                  onClick={() => { setPaused(true); setShowViewers(true); }}
+                  className="flex flex-col items-center gap-1 px-2 py-1"
+                  aria-label="Activity"
+                >
+                  <BarChart2 className="w-6 h-6 text-white" strokeWidth={1.8} />
+                  <span className="text-white text-[11px] font-medium leading-none">
+                    Activity{currentStory.viewsCount ? ` ${currentStory.viewsCount}` : ""}
+                  </span>
+                </button>
+                <button
+                  onClick={() => {
+                    setPaused(true);
+                    const url = `${getPublicOrigin()}/stories/${currentStory.id}`;
+                    const fbUrl = `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(url)}`;
+                    window.open(fbUrl, "_blank", "noopener,noreferrer");
+                    setTimeout(() => setPaused(false), 600);
+                  }}
+                  className="flex flex-col items-center gap-1 px-2 py-1"
+                  aria-label="Share to Facebook"
+                >
+                  <Facebook className="w-6 h-6 text-white" strokeWidth={1.8} />
+                  <span className="text-white text-[11px] font-medium leading-none">Facebook</span>
+                </button>
+                <button
+                  onClick={() => { setPaused(true); setShowMention(true); }}
+                  className="flex flex-col items-center gap-1 px-2 py-1"
+                  aria-label="Mention"
+                >
+                  <AtSign className="w-6 h-6 text-white" strokeWidth={1.8} />
+                  <span className="text-white text-[11px] font-medium leading-none">Mention</span>
+                </button>
+                <button
+                  onClick={handleShare}
+                  className="flex flex-col items-center gap-1 px-2 py-1"
+                  aria-label="Send to"
+                >
+                  <Send className="w-6 h-6 text-white" strokeWidth={1.8} />
+                  <span className="text-white text-[11px] font-medium leading-none">Send</span>
+                </button>
+                <button
+                  onClick={() => { setPaused(true); setShowMore(true); }}
+                  className="flex flex-col items-center gap-1 px-2 py-1"
+                  aria-label="More"
+                >
+                  <MoreHorizontal className="w-6 h-6 text-white" strokeWidth={1.8} />
+                  <span className="text-white text-[11px] font-medium leading-none">More</span>
+                </button>
+              </div>
+            </div>
+          )}
+
         </div>
 
         {/* Viewers sheet */}
@@ -827,6 +866,127 @@ export default function StoryViewer({
                 </div>
                 <p className="text-[9px] text-muted-foreground text-center mt-1">Only friends can comment</p>
               </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+
+        {/* Owner: "More" action sheet */}
+        <AnimatePresence>
+          {showMore && isOwner && (
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="absolute inset-0 z-40 bg-black/60 flex items-end"
+              onClick={() => { setShowMore(false); setPaused(false); }}
+            >
+              <motion.div
+                initial={{ y: "100%" }}
+                animate={{ y: 0 }}
+                exit={{ y: "100%" }}
+                transition={{ type: "spring", damping: 28, stiffness: 320 }}
+                className="w-full bg-card rounded-t-2xl p-2 pb-[env(safe-area-inset-bottom,16px)]"
+                onClick={(e) => e.stopPropagation()}
+              >
+                <div className="mx-auto h-1 w-10 rounded-full bg-muted-foreground/30 my-2" />
+                <button
+                  onClick={async () => {
+                    try {
+                      const res = await fetch(currentStory.mediaUrl, { mode: "cors" });
+                      const blob = await res.blob();
+                      const a = document.createElement("a");
+                      a.href = URL.createObjectURL(blob);
+                      a.download = `story-${currentStory.id}.${(currentStory.mediaType === "video" ? "mp4" : "jpg")}`;
+                      document.body.appendChild(a); a.click(); a.remove();
+                      URL.revokeObjectURL(a.href);
+                      toast.success("Saved");
+                    } catch { toast.error("Couldn't save"); }
+                    setShowMore(false); setPaused(false);
+                  }}
+                  className="w-full flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-muted text-left"
+                >
+                  <Download className="w-5 h-5 text-foreground" />
+                  <span className="text-sm font-medium text-foreground">Save to device</span>
+                </button>
+                <button
+                  onClick={() => {
+                    const url = `${getPublicOrigin()}/stories/${currentStory.id}`;
+                    if (navigator.share) navigator.share({ url }).catch(() => {});
+                    else { navigator.clipboard?.writeText(url); toast.success("Link copied"); }
+                    setShowMore(false); setPaused(false);
+                  }}
+                  className="w-full flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-muted text-left"
+                >
+                  <Share2 className="w-5 h-5 text-foreground" />
+                  <span className="text-sm font-medium text-foreground">Share link</span>
+                </button>
+                <button
+                  onClick={() => {
+                    if (!currentStory) return;
+                    const last = viewingGroup.stories.length <= 1;
+                    deleteStory.mutate(currentStory.id);
+                    setShowMore(false);
+                    if (last) closeWithMeta(); else goNext();
+                  }}
+                  className="w-full flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-destructive/10 text-left"
+                >
+                  <Trash2 className="w-5 h-5 text-destructive" />
+                  <span className="text-sm font-semibold text-destructive">Delete story</span>
+                </button>
+                <button
+                  onClick={() => { setShowMore(false); setPaused(false); }}
+                  className="w-full px-4 py-3 mt-1 rounded-xl text-sm font-medium text-muted-foreground hover:bg-muted"
+                >
+                  Cancel
+                </button>
+              </motion.div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+
+        {/* Owner: simple Mention sheet — posts an @mention as a story comment */}
+        <AnimatePresence>
+          {showMention && isOwner && (
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="absolute inset-0 z-40 bg-black/60 flex items-end"
+              onClick={() => { setShowMention(false); setPaused(false); }}
+            >
+              <motion.div
+                initial={{ y: "100%" }}
+                animate={{ y: 0 }}
+                exit={{ y: "100%" }}
+                transition={{ type: "spring", damping: 28, stiffness: 320 }}
+                className="w-full bg-card rounded-t-2xl p-4 pb-[env(safe-area-inset-bottom,16px)]"
+                onClick={(e) => e.stopPropagation()}
+              >
+                <div className="mx-auto h-1 w-10 rounded-full bg-muted-foreground/30 mb-3" />
+                <p className="text-sm font-bold text-foreground mb-2">Mention someone</p>
+                <div className="flex items-center gap-2 bg-muted rounded-full px-4 py-2">
+                  <AtSign className="w-4 h-4 text-muted-foreground" />
+                  <input
+                    type="text"
+                    value={commentText}
+                    onChange={(e) => setCommentText(e.target.value)}
+                    placeholder="username"
+                    className="flex-1 bg-transparent text-sm outline-none text-foreground placeholder:text-muted-foreground"
+                    autoFocus
+                  />
+                  <button
+                    className="text-primary text-sm font-semibold disabled:opacity-40"
+                    disabled={!commentText.trim() || postComment.isPending}
+                    onClick={() => {
+                      const handle = commentText.trim().replace(/^@/, "");
+                      if (handle) postComment.mutate(`@${handle}`);
+                      setShowMention(false); setPaused(false);
+                    }}
+                  >
+                    Send
+                  </button>
+                </div>
+              </motion.div>
             </motion.div>
           )}
         </AnimatePresence>

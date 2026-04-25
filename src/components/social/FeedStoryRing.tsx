@@ -131,41 +131,35 @@ export default function FeedStoryRing() {
 
   return (
     <>
-      <div className="flex gap-2.5 px-3 py-2 overflow-x-auto scrollbar-none border-b border-border/20">
-        {/* Add story button */}
+      <div className="flex gap-3 px-3 py-2.5 overflow-x-auto scrollbar-none border-b border-border/20">
+        {/* Your story (Instagram-style) */}
         <button
           onClick={() => {
             const myGroup = groups.find((g) => g.userId === user.id);
             if (myGroup) handleRingClick(myGroup);
             else setShowCreate(true);
           }}
-          className="flex flex-col items-center gap-0.5 shrink-0"
+          className="flex flex-col items-center gap-1 shrink-0 w-[72px]"
         >
           <div className="relative">
             <div className={cn(
-              "h-[52px] w-[52px] rounded-full flex items-center justify-center border-2",
+              "h-[64px] w-[64px] rounded-full p-[2.5px]",
               hasMyStory
-                ? "border-transparent bg-gradient-to-tr from-primary to-primary/60 p-[2px]"
-                : "border-dashed border-primary/30"
+                ? "bg-[conic-gradient(from_180deg,#f09433,#e6683c,#dc2743,#cc2366,#bc1888,#f09433)]"
+                : "bg-muted-foreground/25"
             )}>
-              {hasMyStory ? (
-                <div className="h-full w-full rounded-full overflow-hidden bg-card">
-                  <Avatar className="h-full w-full">
-                    <AvatarImage src={optimizeAvatar(groups.find((g) => g.userId === user.id)?.avatarUrl, 52)} loading="lazy" />
-                    <AvatarFallback className="text-xs font-bold">{user.email?.[0]}</AvatarFallback>
-                  </Avatar>
-                </div>
-              ) : (
-                <Plus className="h-4 w-4 text-primary" />
-              )}
-            </div>
-            {!hasMyStory && (
-              <div className="absolute -bottom-0.5 -right-0.5 h-4 w-4 rounded-full bg-primary flex items-center justify-center border-2 border-card">
-                <Plus className="h-2.5 w-2.5 text-primary-foreground" />
+              <div className="h-full w-full rounded-full overflow-hidden border-2 border-card bg-card">
+                <Avatar className="h-full w-full">
+                  <AvatarImage src={optimizeAvatar(groups.find((g) => g.userId === user.id)?.avatarUrl, 64)} loading="lazy" />
+                  <AvatarFallback className="text-sm font-bold">{user.email?.[0]}</AvatarFallback>
+                </Avatar>
               </div>
-            )}
+            </div>
+            <div className="absolute -bottom-0.5 -right-0.5 h-[22px] w-[22px] rounded-full bg-foreground flex items-center justify-center border-[2.5px] border-card">
+              <Plus className="h-3 w-3 text-background" strokeWidth={3} />
+            </div>
           </div>
-          <span className="text-[9px] font-medium text-muted-foreground max-w-[48px] truncate">
+          <span className="text-[11px] font-medium text-foreground max-w-[68px] truncate">
             Your story
           </span>
         </button>
@@ -176,24 +170,24 @@ export default function FeedStoryRing() {
           return (
             <button
               key={g.userId}
-              className="flex flex-col items-center gap-0.5 shrink-0"
+              className="flex flex-col items-center gap-1 shrink-0 w-[72px]"
               onClick={() => handleRingClick(g)}
             >
               <div className={cn(
-                "h-[52px] w-[52px] rounded-full p-[2px]",
+                "h-[64px] w-[64px] rounded-full p-[2.5px]",
                 hasUnviewed
-                  ? "bg-gradient-to-tr from-primary via-destructive to-primary"
-                  : "bg-muted-foreground/20"
+                  ? "bg-[conic-gradient(from_180deg,#f09433,#e6683c,#dc2743,#cc2366,#bc1888,#f09433)]"
+                  : "bg-muted-foreground/25"
               )}>
-                <div className="h-full w-full rounded-full overflow-hidden bg-card border-2 border-card">
+                <div className="h-full w-full rounded-full overflow-hidden border-2 border-card bg-card">
                   <Avatar className="h-full w-full">
-                    <AvatarImage src={optimizeAvatar(g.avatarUrl, 52)} loading="lazy" />
-                    <AvatarFallback className="text-xs font-bold">{g.userName[0]}</AvatarFallback>
+                    <AvatarImage src={optimizeAvatar(g.avatarUrl, 64)} loading="lazy" />
+                    <AvatarFallback className="text-sm font-bold">{g.userName[0]}</AvatarFallback>
                   </Avatar>
                 </div>
               </div>
               <span className={cn(
-                "text-[9px] max-w-[48px] truncate",
+                "text-[11px] max-w-[68px] truncate",
                 hasUnviewed ? "font-semibold text-foreground" : "font-medium text-muted-foreground"
               )}>
                 {g.userName.split(" ")[0]}

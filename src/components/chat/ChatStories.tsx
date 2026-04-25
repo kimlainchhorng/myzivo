@@ -89,44 +89,47 @@ export default function ChatStories() {
 
   return (
     <>
-      {/* Stories Row */}
-      <div className="px-5 pt-3 pb-1">
+      {/* Stories Row — Instagram style */}
+      <div className="px-4 pt-3 pb-2">
         <div className="flex gap-3 overflow-x-auto scrollbar-hide pb-1">
           {/* Your Story */}
-          <div className="flex flex-col items-center gap-1.5 flex-shrink-0">
-            <div className="relative w-[60px] h-[60px]">
-              <button
-                onClick={() => {
-                  if (hasMyStory) openViewer(myStories!);
-                  else setShowCreate(true);
-                }}
-                className="w-full h-full rounded-full overflow-hidden"
-              >
-                <div className={cn(
-                  "w-full h-full rounded-full border-2 flex items-center justify-center overflow-hidden",
-                  hasMyStory
-                    ? "border-primary bg-gradient-to-br from-primary/20 to-accent/20"
-                    : "border-dashed border-muted-foreground/30"
-                )}>
+          <button
+            onClick={() => {
+              if (hasMyStory) openViewer(myStories!);
+              else setShowCreate(true);
+            }}
+            className="flex flex-col items-center gap-1 flex-shrink-0 w-[72px]"
+          >
+            <div className="relative">
+              <div className={cn(
+                "h-[64px] w-[64px] rounded-full p-[2.5px]",
+                hasMyStory
+                  ? "bg-[conic-gradient(from_180deg,#f09433,#e6683c,#dc2743,#cc2366,#bc1888,#f09433)]"
+                  : "bg-muted-foreground/25"
+              )}>
+                <div className="h-full w-full rounded-full overflow-hidden border-2 border-background bg-card">
                   {myStories?.avatarUrl ? (
                     <img src={myStories.avatarUrl} alt="" className="w-full h-full object-cover" />
                   ) : (
-                    <Camera className="w-5 h-5 text-muted-foreground/50" />
+                    <div className="w-full h-full flex items-center justify-center bg-primary/10">
+                      <Camera className="w-5 h-5 text-primary/60" />
+                    </div>
                   )}
                 </div>
-              </button>
-              <button
+              </div>
+              <span
                 onClick={(e) => { e.stopPropagation(); setShowCreate(true); }}
+                role="button"
                 aria-label="Add story"
-                className="absolute -bottom-0.5 -right-0.5 w-5 h-5 bg-primary rounded-full flex items-center justify-center border-2 border-background z-10"
+                className="absolute -bottom-0.5 -right-0.5 h-[22px] w-[22px] rounded-full bg-foreground flex items-center justify-center border-[2.5px] border-background"
               >
-                <Plus className="w-3 h-3 text-primary-foreground" />
-              </button>
+                <Plus className="w-3 h-3 text-background" strokeWidth={3} />
+              </span>
             </div>
-            <span className="text-[10px] text-muted-foreground font-medium">
+            <span className="text-[11px] text-foreground font-medium max-w-[68px] truncate">
               Your story
             </span>
-          </div>
+          </button>
 
           {/* Other Users */}
           {storyGroups
@@ -135,9 +138,9 @@ export default function ChatStories() {
               <button
                 key={group.userId}
                 onClick={() => openViewer(group)}
-                className="flex flex-col items-center gap-1.5 flex-shrink-0"
+                className="flex flex-col items-center gap-1 flex-shrink-0 w-[72px]"
               >
-                <div className="w-[60px] h-[60px] rounded-full p-[2px] bg-gradient-to-br from-primary via-accent to-primary">
+                <div className="h-[64px] w-[64px] rounded-full p-[2.5px] bg-[conic-gradient(from_180deg,#f09433,#e6683c,#dc2743,#cc2366,#bc1888,#f09433)]">
                   <div className="w-full h-full rounded-full border-2 border-background overflow-hidden bg-muted">
                     {group.avatarUrl ? (
                       <img src={group.avatarUrl} alt="" className="w-full h-full object-cover" />
@@ -148,7 +151,7 @@ export default function ChatStories() {
                     )}
                   </div>
                 </div>
-                <span className="text-[10px] text-foreground font-medium max-w-[60px] truncate">
+                <span className="text-[11px] text-foreground font-semibold max-w-[68px] truncate">
                   {group.userName.split(" ")[0]}
                 </span>
               </button>

@@ -141,48 +141,48 @@ const ProfileStories = () => {
       {/* Horizontal ring carousel */}
       <div className="-mx-2 overflow-x-auto scrollbar-hide">
         <div className="flex items-start gap-3 px-2 py-1 snap-x snap-mandatory">
-          {/* Your story tile (always first) */}
+          {/* Your story tile (Instagram-style) */}
           <button
             onClick={() => (hasMyStory ? openViewer(user!.id) : setShowCreate(true))}
-            className="snap-start shrink-0 flex flex-col items-center gap-1 w-[68px]"
+            className="snap-start shrink-0 flex flex-col items-center gap-1 w-[72px]"
           >
             <motion.div whileTap={{ scale: 0.92 }} className="relative">
               <div
                 className={cn(
                   "h-16 w-16 rounded-full p-[2.5px]",
                   hasMyStory
-                    ? "bg-gradient-to-br from-primary via-emerald-400 to-emerald-600"
-                    : "border-2 border-dashed border-primary/40 bg-muted/40"
+                    ? "bg-[conic-gradient(from_180deg,#f09433,#e6683c,#dc2743,#cc2366,#bc1888,#f09433)]"
+                    : "bg-muted-foreground/25"
                 )}
               >
-                {profile?.avatar_url ? (
-                  <Avatar className="h-full w-full border-2 border-background">
-                    <AvatarImage src={profile.avatar_url} />
-                    <AvatarFallback className="bg-primary/10 text-base font-bold text-primary">
-                      {(profile?.full_name || "Y")[0]}
-                    </AvatarFallback>
-                  </Avatar>
-                ) : (
-                  <div className="flex h-full w-full items-center justify-center rounded-full border-2 border-background bg-primary/10">
-                    <Camera className="h-5 w-5 text-primary/60" />
-                  </div>
-                )}
-              </div>
-              {/* Add badge when no story yet */}
-              {!hasMyStory && (
-                <div className="absolute -bottom-0.5 -right-0.5 flex h-5 w-5 items-center justify-center rounded-full border-2 border-background bg-primary shadow-md">
-                  <Plus className="h-3 w-3 text-primary-foreground" />
+                <div className="h-full w-full rounded-full overflow-hidden border-2 border-background bg-card">
+                  {profile?.avatar_url ? (
+                    <Avatar className="h-full w-full">
+                      <AvatarImage src={profile.avatar_url} />
+                      <AvatarFallback className="bg-primary/10 text-base font-bold text-primary">
+                        {(profile?.full_name || "Y")[0]}
+                      </AvatarFallback>
+                    </Avatar>
+                  ) : (
+                    <div className="flex h-full w-full items-center justify-center bg-primary/10">
+                      <Camera className="h-5 w-5 text-primary/60" />
+                    </div>
+                  )}
                 </div>
-              )}
+              </div>
+              {/* Black + badge — always shown on Your story so adding more segments is one tap */}
+              <div className="absolute -bottom-0.5 -right-0.5 h-[22px] w-[22px] rounded-full bg-foreground flex items-center justify-center border-[2.5px] border-background">
+                <Plus className="h-3 w-3 text-background" strokeWidth={3} />
+              </div>
               {/* Segment count badge */}
               {hasMyStory && myGroup!.stories.length > 1 && (
-                <div className="absolute -top-0.5 -right-0.5 min-w-[18px] h-[18px] px-1 rounded-full border-2 border-background bg-foreground text-background text-[10px] font-bold flex items-center justify-center">
+                <div className="absolute -top-0.5 -right-0.5 min-w-[18px] h-[18px] px-1 rounded-full border-2 border-background bg-primary text-primary-foreground text-[10px] font-bold flex items-center justify-center">
                   {myGroup!.stories.length}
                 </div>
               )}
             </motion.div>
-            <span className="text-[11px] font-semibold leading-tight text-foreground truncate max-w-[68px] text-center">
-              {hasMyStory ? "Your story" : "Add story"}
+            <span className="text-[11px] font-medium leading-tight text-foreground truncate max-w-[68px] text-center">
+              Your story
             </span>
           </button>
 
@@ -190,7 +190,7 @@ const ProfileStories = () => {
           {isLoading && friendGroups.length === 0 && (
             <>
               {Array.from({ length: 3 }).map((_, i) => (
-                <div key={i} className="snap-start shrink-0 flex flex-col items-center gap-1 w-[68px]">
+                <div key={i} className="snap-start shrink-0 flex flex-col items-center gap-1 w-[72px]">
                   <div className="h-16 w-16 rounded-full bg-muted animate-pulse" />
                   <div className="h-2.5 w-12 rounded-full bg-muted animate-pulse" />
                 </div>
@@ -205,15 +205,15 @@ const ProfileStories = () => {
               <button
                 key={g.userId}
                 onClick={() => openViewer(g.userId)}
-                className="snap-start shrink-0 flex flex-col items-center gap-1 w-[68px]"
+                className="snap-start shrink-0 flex flex-col items-center gap-1 w-[72px]"
               >
                 <motion.div whileTap={{ scale: 0.92 }} className="relative">
                   <div
                     className={cn(
                       "h-16 w-16 rounded-full p-[2.5px]",
                       fullyViewed
-                        ? "bg-muted-foreground/30"
-                        : "bg-gradient-to-br from-primary via-emerald-400 to-emerald-600"
+                        ? "bg-muted-foreground/25"
+                        : "bg-[conic-gradient(from_180deg,#f09433,#e6683c,#dc2743,#cc2366,#bc1888,#f09433)]"
                     )}
                   >
                     <Avatar className="h-full w-full border-2 border-background">
@@ -229,7 +229,10 @@ const ProfileStories = () => {
                     </div>
                   )}
                 </motion.div>
-                <span className="text-[11px] leading-tight text-foreground truncate max-w-[68px] text-center">
+                <span className={cn(
+                  "text-[11px] leading-tight truncate max-w-[68px] text-center",
+                  fullyViewed ? "text-muted-foreground" : "font-semibold text-foreground"
+                )}>
                   {g.userName.split(" ")[0]}
                 </span>
               </button>
