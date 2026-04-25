@@ -154,7 +154,7 @@ const ProfileStories = () => {
                 className={cn(
                   "h-16 w-16 rounded-full p-[2.5px] box-border",
                   hasMyStory
-                    ? "bg-[conic-gradient(from_180deg,#f09433,#e6683c,#dc2743,#cc2366,#bc1888,#f09433)]"
+                    ? "bg-[conic-gradient(from_140deg,hsl(160_84%_45%),hsl(174_72%_45%),hsl(190_85%_55%),hsl(160_84%_45%))] shadow-[0_0_12px_-3px_hsl(160_84%_45%/0.55)]"
                     : "bg-muted-foreground/25"
                 )}
               >
@@ -231,7 +231,7 @@ const ProfileStories = () => {
                       "h-16 w-16 rounded-full p-[2.5px]",
                       fullyViewed
                         ? "bg-muted-foreground/25"
-                        : "bg-[conic-gradient(from_180deg,#f09433,#e6683c,#dc2743,#cc2366,#bc1888,#f09433)]"
+                        : "bg-[conic-gradient(from_140deg,hsl(160_84%_45%),hsl(174_72%_45%),hsl(190_85%_55%),hsl(160_84%_45%))] shadow-[0_0_12px_-3px_hsl(160_84%_45%/0.55)]"
                     )}
                   >
                     <Avatar className="h-full w-full border-2 border-background">

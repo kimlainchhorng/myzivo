@@ -105,7 +105,7 @@ export default function ChatStories() {
               <div className={cn(
                 "h-[64px] w-[64px] rounded-full p-[2.5px] box-border",
                 hasMyStory
-                  ? "bg-[conic-gradient(from_180deg,#f09433,#e6683c,#dc2743,#cc2366,#bc1888,#f09433)]"
+                  ? "bg-[conic-gradient(from_140deg,hsl(160_84%_45%),hsl(174_72%_45%),hsl(190_85%_55%),hsl(160_84%_45%))] shadow-[0_0_12px_-3px_hsl(160_84%_45%/0.55)]"
                   : "bg-muted-foreground/25"
               )}>
                 <div className="h-full w-full rounded-full overflow-hidden border-2 border-background bg-card flex items-center justify-center">
@@ -154,7 +154,7 @@ export default function ChatStories() {
                 onClick={() => openViewer(group)}
                 className="flex flex-col items-center gap-1 flex-shrink-0 w-[72px]"
               >
-                <div className="h-[64px] w-[64px] rounded-full p-[2.5px] bg-[conic-gradient(from_180deg,#f09433,#e6683c,#dc2743,#cc2366,#bc1888,#f09433)]">
+                <div className="h-[64px] w-[64px] rounded-full p-[2.5px] bg-[conic-gradient(from_140deg,hsl(160_84%_45%),hsl(174_72%_45%),hsl(190_85%_55%),hsl(160_84%_45%))] shadow-[0_0_12px_-3px_hsl(160_84%_45%/0.55)]">
                   <div className="w-full h-full rounded-full border-2 border-background overflow-hidden bg-muted">
                     {group.avatarUrl ? (
                       <img src={group.avatarUrl} alt="" className="w-full h-full object-cover" />
