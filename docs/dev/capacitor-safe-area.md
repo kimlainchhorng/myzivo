@@ -46,6 +46,73 @@ the header. This is exactly what users reported in "Picture 1" before the fix.
 | iOS Safari (browser tab) | `0px` | URL bar handles it. |
 | Desktop / Android Chrome | `0px` | No notch. |
 
+## Decision Cheatsheet — which utility to reach for
+
+```text
+┌─────────────────────────┬───────────────────────────────────────────────┐
+│ Use this                │ When                                          │
+├─────────────────────────┼───────────────────────────────────────────────┤
+│ Nothing                 │ You're inside <AppLayout> with the default    │
+│                         │ header — main already has padding-top set.    │
+│ .safe-area-top          │ A page renders its OWN header (no AppLayout) │
+│                         │ as the first child, sticky to the top.        │
+│ .pt-safe                │ Adding top inset to a non-header element such │
+│                         │ as a fullscreen overlay or modal that starts  │
+│                         │ at y=0 and isn't covered by safe-area-top.    │
+│ .pb-safe                │ Fixed/sticky bottom navs, action bars, bottom │
+│                         │ sheets, FABs, footers inside drawers.         │
+│ .safe-area-bottom       │ Same as .pb-safe — pick one, prefer .pb-safe  │
+│                         │ for consistency.                              │
+│ var(--zivo-safe-top-*)  │ Browser-PWA only; you need a minimum floor    │
+│                         │ to work around the Dynamic Island env()=0     │
+│                         │ bug. Tokens: -overlay (60), -sheet (44),      │
+│                         │ -sticky (48). NEVER inline max(env(...), N).  │
+└─────────────────────────┴───────────────────────────────────────────────┘
+```
+
+**Three-question decision flow:**
+
+1. *Is this inside `<AppLayout>` and using the default header?* → **Do nothing.**
+2. *Is it a bottom-anchored UI element (nav, action bar, sheet)?* → **`pb-safe`**.
+3. *Is it a top-anchored element rendered outside `<AppLayout>`?* → **`safe-area-top`** (header) or **`pt-safe`** (everything else).
+
+If you ever feel tempted to write `max(env(safe-area-inset-*), Npx)` — stop. Use a `--zivo-safe-*` token instead, or accept that the inset is genuinely zero on Capacitor iOS.
+
+## Common mistakes (before / after)
+
+**1. Double-padding the header**
+```tsx
+// ❌ BEFORE — adds inset twice on iOS Capacitor
+<header style={{ paddingTop: "max(env(safe-area-inset-top), 44px)" }}>
+
+// ✅ AFTER
+<header className="safe-area-top">
+```
+
+**2. Stacking utilities on parent + child**
+```tsx
+// ❌ BEFORE — both elements add the inset
+<div className="safe-area-top">
+  <div className="pt-safe">…</div>
+</div>
+
+// ✅ AFTER — pick exactly one layer
+<div className="safe-area-top">
+  <div>…</div>
+</div>
+```
+
+**3. Inline floor on a bottom nav**
+```tsx
+// ❌ BEFORE — the 1rem extra makes the bar float on Capacitor
+<nav style={{ paddingBottom: "calc(env(safe-area-inset-bottom, 0px) + 1rem)" }}>
+
+// ✅ AFTER — Tailwind composition keeps semantic intent
+<nav className="pb-safe pb-4">
+```
+
+
+
 ## Correct patterns
 
 ### Top inset (status bar)
