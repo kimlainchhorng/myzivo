@@ -44,7 +44,8 @@ export default function FeedStoryRing() {
   const { data: rawStories = [] } = useQuery({
     queryKey: ["feed-story-users"],
     enabled: !!user,
-    refetchInterval: 60000,
+    refetchInterval: 30000,
+    refetchOnWindowFocus: true,
     queryFn: async () => {
       const { data } = await (supabase as any)
         .from("stories")
@@ -199,7 +200,11 @@ export default function FeedStoryRing() {
 
       {showCreate && (
         <Suspense fallback={null}>
-          <CreateStorySheet open={showCreate} onClose={() => setShowCreate(false)} />
+          <CreateStorySheet
+            open={showCreate}
+            onClose={() => setShowCreate(false)}
+            onPublished={() => invalidateAllStoryCaches(queryClient, user?.id)}
+          />
         </Suspense>
       )}
 
