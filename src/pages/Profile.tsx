@@ -521,8 +521,8 @@ const Profile = () => {
                           </div>
                         </div>
                       )}
-                      {/* Gradient overlay */}
-                      <div className="absolute inset-0 bg-gradient-to-t from-card/90 via-card/20 to-transparent" />
+                      {/* Gradient overlay (subtle on mobile so cover stays vivid like Facebook) */}
+                      <div className="absolute inset-0 bg-gradient-to-t from-card/40 via-transparent to-transparent lg:from-card/90 lg:via-card/20" />
 
                       {/* Cover action buttons */}
                       {user && !coverRepositioning && (
@@ -828,7 +828,9 @@ const Profile = () => {
 
                     <CardContent className="px-6 pb-4 pt-2">
                     </CardContent>
-                  </GlassCard3D>
+                    </div>
+                  </div>
+
                 </motion.div>
               </ParallaxSection>
 
