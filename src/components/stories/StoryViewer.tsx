@@ -66,9 +66,18 @@ interface Props {
   startStoryIndex?: number;
   onClose: (meta?: StoryCloseMeta) => void;
   onStoryChange?: (storyId: string) => void;
+  /** Which carousel opened the viewer — used for share analytics. */
+  source?: "profile" | "feed" | "chat" | "shared-link";
 }
 
-export default function StoryViewer({ groups, startGroupIndex, startStoryIndex = 0, onClose, onStoryChange }: Props) {
+export default function StoryViewer({
+  groups,
+  startGroupIndex,
+  startStoryIndex = 0,
+  onClose,
+  onStoryChange,
+  source = "feed",
+}: Props) {
   const { user } = useAuth();
   const queryClient = useQueryClient();
 
