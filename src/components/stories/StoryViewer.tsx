@@ -604,6 +604,22 @@ export default function StoryViewer({ groups, startGroupIndex, startStoryIndex =
           )}
         </div>
 
+        {/* Floating reaction burst */}
+        <AnimatePresence>
+          {reactionBurst && (
+            <motion.div
+              key={reactionBurst}
+              initial={{ opacity: 0, y: 0, scale: 0.6 }}
+              animate={{ opacity: 1, y: -120, scale: 1.6 }}
+              exit={{ opacity: 0, scale: 0.5 }}
+              transition={{ duration: 0.7, ease: "easeOut" }}
+              className="absolute bottom-[200px] left-1/2 -translate-x-1/2 z-30 text-6xl pointer-events-none drop-shadow-[0_4px_20px_rgba(0,0,0,0.5)]"
+            >
+              {reactionBurst}
+            </motion.div>
+          )}
+        </AnimatePresence>
+
         {/* Bottom: caption + reactions + reply */}
         <div className="absolute bottom-0 left-0 right-0 z-20 pb-[env(safe-area-inset-bottom,16px)]">
           {currentStory.caption && (
