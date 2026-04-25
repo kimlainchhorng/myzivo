@@ -607,7 +607,7 @@ const Profile = () => {
                         We add safe-area top padding + a subtle status-bar scrim so
                         the system clock/battery stay legible over any cover image. */}
                     <div
-                      className="relative h-48 sm:h-56 md:h-60 lg:h-52 w-full overflow-hidden select-none"
+                      className="relative h-40 sm:h-52 md:h-56 lg:h-52 w-full overflow-hidden select-none"
 
                       onMouseDown={coverRepositioning ? (e) => { e.preventDefault(); handleCoverDragStart(e.clientY); } : undefined}
                       onMouseMove={coverRepositioning ? (e) => handleCoverDragMove(e.clientY) : undefined}
