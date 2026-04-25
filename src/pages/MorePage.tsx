@@ -326,7 +326,7 @@ export default function MorePage() {
       >
         <Crown className="w-4 h-4 text-amber-500 shrink-0" />
         <div className="min-w-0">
-          <p className="text-[11px] font-bold leading-tight truncate">Explorer</p>
+          <p className="text-[11px] font-bold leading-tight truncate capitalize">{(profile as any)?.tier ?? "Explorer"}</p>
           <p className="text-[9px] text-muted-foreground truncate">Tier</p>
         </div>
       </Link>
