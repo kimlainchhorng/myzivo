@@ -209,3 +209,31 @@ the safe zone — even when `env(safe-area-inset-*)` returns 0 (browser/PWA).
 Never apply a safe-area class to a visual layer — it creates an empty gap.
 Never omit the safe-area class from an interactive layer — buttons will sit
 under the notch or home indicator.
+
+### Profile cover example (full-bleed photo, safe-area buttons)
+
+```tsx
+// Wrapper: NO `safe-area-top` (it would push the cover photo down).
+<PullToRefresh className="min-h-screen safe-area-bottom">
+  {/* Cover container: extend BEHIND the status bar. Grow the height by
+      the safe-area inset and pull the container UP with a negative margin
+      so the photo reaches the very top of the webview. */}
+  <div
+    className="relative w-full h-40 overflow-hidden"
+    style={{
+      marginTop: "calc(-1 * var(--zivo-safe-top, 0px))",
+      height: "calc(10rem + var(--zivo-safe-top, 0px))",
+    }}
+  >
+    <img src={cover} className="absolute inset-0 w-full h-full object-cover" />
+
+    {/* Buttons: respect the safe area so they never sit under the notch. */}
+    <div
+      className="absolute right-2 z-20"
+      style={{ top: "calc(var(--zivo-safe-top, 0px) + 0.75rem)" }}
+    >
+      …
+    </div>
+  </div>
+</PullToRefresh>
+```
