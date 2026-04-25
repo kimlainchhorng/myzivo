@@ -37,6 +37,8 @@ import PullToRefresh from "@/components/shared/PullToRefresh";
 import { useCallback } from "react";
 import { assessChatMessageRisk, sanitizeOutgoingMessage } from "@/lib/security/chatContentSafety";
 import { validateExternalUrl } from "@/lib/urlSafety";
+import VerifiedBadge from "@/components/VerifiedBadge";
+import { isBlueVerified } from "@/lib/verification";
 
 // Lazy-load heavy sub-pages/components
 const GroupChat = lazy(() => import("@/components/chat/GroupChat"));
@@ -137,7 +139,7 @@ export default function ChatHubPage({ embedded = false }: { embedded?: boolean }
   const [deleteConfirm, setDeleteConfirm] = useState<{ id: string; name: string; category: ChatCategory } | null>(null);
   const [swipedId, setSwipedId] = useState<string | null>(null);
   const [openShopChat, setOpenShopChat] = useState<{ storeId: string; name: string; logo?: string | null } | null>(null);
-  const [openPersonalChat, setOpenPersonalChat] = useState<{ id: string; name: string; avatar?: string | null } | null>(null);
+  const [openPersonalChat, setOpenPersonalChat] = useState<{ id: string; name: string; avatar?: string | null; isVerified?: boolean } | null>(null);
   const [openGroupChat, setOpenGroupChat] = useState<{ id: string; name: string; avatar?: string | null } | null>(null);
   const [showCreateGroup, setShowCreateGroup] = useState(false);
   const location = useLocation();
@@ -822,7 +824,7 @@ export default function ChatHubPage({ embedded = false }: { embedded?: boolean }
                               if ((chat as any).isGroup) {
                                 setOpenGroupChat({ id: chat.id, name: chat.name, avatar: chat.avatar });
                               } else {
-                                setOpenPersonalChat({ id: chat.id, name: chat.name, avatar: chat.avatar });
+                                setOpenPersonalChat({ id: chat.id, name: chat.name, avatar: chat.avatar, isVerified: (chat as any).isVerified === true });
                               }
                             } else if (active === "support") {
                               navigate(`/support`);
