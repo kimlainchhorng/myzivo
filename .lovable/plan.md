@@ -1,38 +1,71 @@
-# Plan — Fix Notifications Popover Position & Look
+# Plan — Facebook-Style Story Flow on Profile
 
-## Problem (from screenshot)
-The Account notifications dropdown opens but visually breaks on mobile:
-- The panel anchors to the bell's tiny `relative` wrapper with `absolute right-0`, so a 380px panel extends ~344px to the LEFT of the bell, slipping off the left edge of the screen.
-- The caret no longer sits under the bell.
-- The empty "You're all caught up" state looks oversized for a popover.
-- The dropdown sits above the rest of the page with no visual separation, so it's hard to tell what's the panel vs. the page underneath.
+## Problem
+The "Your story" entry on the Account page (`ProfileStories`) is broken and inconsistent with the rest of the app:
+- Tapping "Your story" runs a fake handler that just shows a toast — **no actual upload happens**.
+- It queries the wrong table (`user_stories`) while the real working pipeline (used in Feed/Chat) uses `stories` + `story_views` + `story_comments` + the `user-stories` storage bucket.
+- It has no Facebook-style **create flow** (choose Photo / Text / Camera), no caption step, no preview, no audience selector.
+- Viewer is barebones: no pause, no like, no comments, no viewers list, no swipe-down to close.
+- Two parallel implementations (`ChatStories` vs `ProfileStories`) drift apart and confuse users.
 
-## Fix (all in `src/pages/Profile.tsx`)
+## Goal
+Bring the Profile "Your story" experience in line with Facebook: a clear **Create Story sheet** → upload/preview → publish → rich **fullscreen viewer** (the same one used elsewhere).
 
-### 1. Switch panel to viewport-fixed positioning
-- Replace `absolute right-0 top-full` with `fixed` positioning.
-- Anchor with `top: calc(var(--zivo-safe-top-sticky) + 3rem + 6px)` so it sits 6px below the sticky header.
-- Mobile: `right-2 left-2 mx-auto max-w-[420px]` — full-bleed minus 8px gutter, capped at 420px.
-- Desktop (lg+): `lg:left-auto lg:right-4 lg:w-[400px]` — classic Facebook-style right-aligned dropdown.
-- Move caret to `right-12` on mobile / `right-6` on desktop so it visually points at the bell.
+## Approach — reuse the working `ChatStories` engine, add a Facebook-style create sheet on top
 
-### 2. Add a soft mobile backdrop
-- Render a `lg:hidden fixed inset-0 z-40 bg-background/40 backdrop-blur-[2px]` behind the panel (top offset to start below header) so the dropdown clearly stands out from the page below.
-- Tap on backdrop closes the popover.
+We will NOT maintain two story stacks. We replace `ProfileStories` with a thin profile wrapper that:
+1. Uses the same `stories` table + `user-stories` bucket + `story_views` / `story_comments` already wired in `ChatStories`.
+2. Renders a Facebook-style "Your story" tile.
+3. On tap (when no story exists), opens a new **Create Story bottom sheet**.
+4. On tap (when a story exists), opens the existing rich fullscreen viewer.
 
-### 3. Tighten empty state
-- Reduce empty-state padding to `py-7` and shrink illustration to `h-10 w-10` so the popover doesn't look cavernous when there's nothing to show.
-- Constrain panel `maxHeight` to `calc(100vh - var(--zivo-safe-top-sticky) - 3rem - 24px)`.
+## Changes
 
-### 4. Header polish
-- Slightly smaller title (`text-[15px]`) and add `tracking-tight` for a Facebook-like compact header.
-- Keep sticky behavior so "Mark all read" stays visible while scrolling long lists.
+### 1. New component: `src/components/profile/CreateStorySheet.tsx`
+Facebook-style bottom sheet with three creation paths:
+- **Photo / Video** — opens the file picker (image or video, validates ≤5MB image / ≤20MB video).
+- **Text Story** — typed text on a colored gradient background; rendered to a canvas → uploaded as an image.
+- **Camera** — opens file picker with `capture="environment"` so phones launch the camera directly.
 
-### 5. Cleanup
-- Remove the now-redundant `relative` wrapper around the bell (the panel no longer needs an offset parent). The bell stays in the header flex row unchanged.
+Flow:
+1. Tap method → pick/capture media (or type text + pick gradient).
+2. **Preview screen** with caption input (Facebook-style overlaid text field), audience chip ("Public" — read-only for v1), and a primary "Share to Story" button.
+3. On Share: upload to `user-stories` bucket, insert into `stories` table (24h `expires_at`), invalidate the `["user-stories"]` query so the ring updates everywhere.
 
-## Files to edit
-- `src/pages/Profile.tsx` — only file touched.
+Reuses existing tokens (`bg-card`, `text-foreground`, `bg-primary`, etc.) — no hardcoded colors.
 
-## Out of scope
-- No changes to data hooks, routing, or notification rendering logic.
+### 2. Rewrite `src/components/profile/ProfileStories.tsx`
+- Drop the broken `user_stories` query and fake upload handler.
+- Query the same `stories` table (24h, by current user) to detect "do I have an active story?".
+- Render the same "Your story" tile visual the user already sees.
+- Tap behavior:
+  - No active story → open `CreateStorySheet`.
+  - Has active story → open the fullscreen viewer (extracted from `ChatStories`, see step 3).
+- Long-press / chevron on existing story → quick "Add to your story" or "Delete story" action sheet (Facebook parity).
+
+### 3. Extract the viewer into a shared component
+- New file: `src/components/stories/StoryViewer.tsx` — lift the fullscreen viewer (progress bars, pause/play, tap zones, like, comment sheet, viewers sheet, delete) out of `ChatStories.tsx` essentially as-is.
+- `ChatStories.tsx` and `ProfileStories.tsx` both import and use it. Behavior identical to today's `ChatStories` viewer (already Facebook/TikTok-class).
+- Add **swipe-down to close** gesture for parity with Facebook (framer-motion drag on Y axis with velocity threshold).
+
+### 4. Profile feed ring stays consistent
+- After publishing from the sheet, invalidate `["user-stories"]` and `["feed-story-users"]` query keys so the ring updates on Profile, Feed, and Chat instantly.
+
+## Out of scope (call out, don't build)
+- Music sticker, polls, mentions, link sticker — Facebook has these but they're large separate features.
+- Story highlights pinning (already a separate `StoryHighlights.tsx` component).
+- Audience picker beyond "Public" — schema doesn't currently store audience on `stories`.
+
+## Files touched
+- `src/components/profile/ProfileStories.tsx` — rewritten (small wrapper).
+- `src/components/profile/CreateStorySheet.tsx` — **new**.
+- `src/components/stories/StoryViewer.tsx` — **new** (extracted from `ChatStories`).
+- `src/components/chat/ChatStories.tsx` — refactored to import the shared viewer (no UX change).
+
+No DB migrations needed — `stories`, `story_views`, `story_comments` and the `user-stories` bucket already exist and are in use.
+
+## Verification
+- Build passes.
+- From Profile, tap "Your story" with no active story → Create sheet opens, can pick photo/video/text, preview, share, story appears in ring instantly.
+- Tap an existing own story → fullscreen viewer with viewers count and delete action.
+- Tap a friend's story (via Feed) → same viewer, can like/comment.
