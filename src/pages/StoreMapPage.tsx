@@ -9,6 +9,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { MapPin, Clock, Star, Navigation, Store, ChevronRight, Search, X, Locate, Car, Phone, Wrench, List } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { motion, AnimatePresence } from "framer-motion";
+import { toast } from "sonner";
 import ZivoMobileNav from "@/components/app/ZivoMobileNav";
 import NavBar from "@/components/home/NavBar";
 import { STORE_CATEGORY_OPTIONS } from "@/config/groceryStores";
