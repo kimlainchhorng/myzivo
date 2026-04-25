@@ -501,8 +501,8 @@ const AppHome = () => {
                 </div>
               </motion.div>
             ) : (
-              <button onClick={() => navigate("/partner-login")} className="flex w-full items-center justify-between rounded-2xl border border-border bg-card p-4 text-left shadow-sm active:scale-[0.99]">
-                <span className="flex items-center gap-3"><span className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary/10 text-primary"><Briefcase className="h-5 w-5" /></span><span><span className="block text-sm font-bold text-foreground">Partner Admin</span><span className="block text-xs text-muted-foreground">Manage your business account</span></span></span>
+              <button onClick={() => navigate("/business/new")} className="flex w-full items-center justify-between rounded-2xl border border-border bg-card p-4 text-left shadow-sm active:scale-[0.99]">
+                <span className="flex items-center gap-3"><span className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary/10 text-primary"><Briefcase className="h-5 w-5" /></span><span><span className="block text-sm font-bold text-foreground">Business Page</span><span className="block text-xs text-muted-foreground">Create your business page on Zivo</span></span></span>
                 <ArrowRight className="h-4 w-4 text-muted-foreground" />
               </button>
             )}
