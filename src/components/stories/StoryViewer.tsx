@@ -9,7 +9,7 @@
  * - Owner: viewers list + delete
  * - Records views in story_views; comments in story_comments
  */
-import { useState, useEffect, useRef, useCallback } from "react";
+import { useState, useEffect, useLayoutEffect, useRef, useCallback } from "react";
 import { createPortal } from "react-dom";
 import { motion, AnimatePresence, PanInfo } from "framer-motion";
 import { useAuth } from "@/contexts/AuthContext";
@@ -123,8 +123,11 @@ export default function StoryViewer({
 
   // While the fullscreen viewer is mounted, flag the document so the bottom
   // mobile nav (and any other UI keyed on this attribute) hides itself —
-  // belt-and-suspenders alongside the z-[1600] layer.
-  useEffect(() => {
+  // belt-and-suspenders alongside the z-[1600] layer. Use useLayoutEffect so
+  // the flag is set on the SAME paint as the opaque overlay appears, leaving
+  // no frame where the underlying nav is visible behind the entrance animation.
+  useLayoutEffect(() => {
+    if (typeof document === "undefined") return;
     document.body.setAttribute("data-story-open", "true");
     return () => {
       document.body.removeAttribute("data-story-open");
@@ -469,21 +472,32 @@ export default function StoryViewer({
 
   if (!viewingGroup || !currentStory) return null;
 
+  // SSR-safe portal guard — prevents runtime errors during prerender/build
+  // pipelines that import this component without a real DOM.
+  if (typeof document === "undefined" || !document.body) return null;
+
   // Portal to <body> so transformed ancestors (e.g. Profile's ParallaxSection)
   // can't trap our `position: fixed` viewer inside their bounding box.
+  // Outer shell is opaque from frame 0 (no animation) so the underlying
+  // Profile/Feed/Chat UI is fully covered AND non-interactive the instant
+  // the viewer mounts — even before Framer's first animation tick.
   return createPortal(
+    <div
+      data-testid="story-viewer"
+      className="fixed inset-0 z-[1600] bg-black pointer-events-auto touch-none overscroll-contain"
+    >
     <AnimatePresence>
       <motion.div
         key={currentStory.id}
-        initial={{ opacity: 0, scale: 0.95 }}
+        initial={{ opacity: 0, scale: 0.97 }}
         animate={{ opacity: 1, scale: 1 }}
-        exit={{ opacity: 0, scale: 0.95 }}
+        exit={{ opacity: 0, scale: 0.97 }}
         transition={{ duration: 0.2 }}
         drag="y"
         dragConstraints={{ top: 0, bottom: 0 }}
         dragElastic={{ top: 0, bottom: 0.4 }}
         onDragEnd={handleDragEnd}
-        className="fixed inset-0 z-[1600] bg-black"
+        className="absolute inset-0 bg-black"
       >
         {/* Media */}
         <div className="absolute inset-0">
@@ -523,7 +537,7 @@ export default function StoryViewer({
         </div>
 
         {/* Header */}
-        <div className="absolute top-[calc(env(safe-area-inset-top,12px)+20px)] left-0 right-0 flex items-center justify-between px-4 z-20">
+        <div data-testid="story-header" className="absolute top-[calc(env(safe-area-inset-top,12px)+20px)] left-0 right-0 flex items-center justify-between px-4 z-20">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 rounded-full ring-2 ring-white/40 overflow-hidden">
               {viewingGroup.avatarUrl ? (
@@ -559,6 +573,7 @@ export default function StoryViewer({
               </button>
             )}
             <button
+              data-testid="story-pause"
               onClick={() => setPaused((p) => !p)}
               aria-label={paused ? "Play" : "Pause"}
               className="w-9 h-9 flex items-center justify-center rounded-full bg-white/10 backdrop-blur-sm"
@@ -566,6 +581,7 @@ export default function StoryViewer({
               {paused ? <Play className="w-4 h-4 text-white" /> : <Pause className="w-4 h-4 text-white" />}
             </button>
             <button
+              data-testid="story-close"
               onClick={() => closeWithMeta()}
               aria-label="Close"
               className="w-9 h-9 flex items-center justify-center rounded-full bg-white/10 backdrop-blur-sm"
@@ -1023,7 +1039,8 @@ export default function StoryViewer({
           source={source}
         />
       )}
-    </AnimatePresence>,
+    </AnimatePresence>
+    </div>,
     document.body
   );
 }

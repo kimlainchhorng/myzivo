@@ -1,49 +1,67 @@
-# Story carousel — fix what happens after publishing
+# Story Viewer Polish + E2E Coverage
 
-## What I observed in the live test
+Tighten the fullscreen story overlay so nothing underneath leaks through during the open animation, make sure the "Your story" ring renders correctly for text-only and media stories at every breakpoint, harden the portal against SSR/build edge cases, and add a Playwright test that locks in the single-header / single-control invariants.
 
-1. Logged into the preview as `klainkonkat@gmail.com` and reproduced the flow on `/profile`.
-2. After the previous fix (column rename to `text_overlay` / `view_count`), the publish call succeeds and the story shows up in the rings.
-3. The remaining issues that surface **after** publishing and tapping the ring:
-   - Tapping **your own** ring on the feed always opens the viewer; there is no way to add another segment from the ring (Instagram/Facebook always offer "Add to your story").
-   - The duplicate-key React warning in the console still fires from `StoryViewer` whenever it is opened from `ProfileStories`. The current trace points at `AnimatePresence > StoryViewer > ProfileStories`.
-   - The "Your story" thumbnail shows only the avatar — never the latest story media — so right after publishing it's not obvious the upload succeeded until the viewer is opened.
+---
 
-## Fixes to ship
+## 1. Block underlying UI during the entrance animation
 
-### 1. "Your story" ring becomes Add + View
-File: `src/components/social/FeedStoryRing.tsx` (and mirror in `ChatStories` / `ProfileStories` if they expose the same affordance)
-
-- Replace the single `onClick` with a small action sheet (existing `Sheet` primitive) when the user already has a story:
-  - "View your story" → opens viewer
-  - "Add to your story" → opens `CreateStorySheet`
-- If the user has no story, keep current behavior: open `CreateStorySheet` directly.
-- Keep the `+` plus-badge always visible so adding stays one tap away.
-
-### 2. Show latest media as the "Your story" thumbnail
-File: `src/components/social/FeedStoryRing.tsx`
-
-- When `myGroup.stories.length > 0`, render an `<img>` (or first video frame poster) of the latest segment as the ring background instead of always falling back to the avatar.
-- Continue to overlay the avatar small in the corner when media is shown.
-
-### 3. Remove the residual duplicate-key warning from StoryViewer
 File: `src/components/stories/StoryViewer.tsx`
 
-- Audit every `AnimatePresence` block (lines 458, 618, 750, 798, 874, 948) and ensure each direct child has a stable, unique key. Most likely culprits:
-  - The outer `AnimatePresence` (line 458) wraps a single `motion.div` with no key — give it `key={currentStory.id}` so navigation re-mounts cleanly.
-  - The viewers / comments lists already use stable keys, but defend against duplicate `viewer_id` rows by deduping in the query map.
-- After the change, navigate forward/back through a 2+ segment story in the viewer and confirm no warning is logged.
+- The motion wrapper currently animates `opacity 0 → 1` + `scale 0.95 → 1`. During that 200ms the Profile page (parallax sections, action buttons) is partially visible and still receives pointer events.
+- Wrap the portal in a non-animated `fixed inset-0 z-[1600]` shell that is opaque (`bg-black`) from frame 0, then run the existing `motion.div` (with the media + chrome) inside it. The shell guarantees the underlying page is covered and clicks are captured the instant the viewer mounts, even before Framer's first animation frame.
+- Add `pointer-events-auto` and `touch-none` on the shell, and `overscroll-contain` so background scroll cannot bleed through on mobile Safari.
+- Ensure `data-story-open="true"` is set synchronously on `document.body` in a `useLayoutEffect` (not `useEffect`) so the bottom mobile nav hides on the same paint as the viewer appears.
 
-### 4. Verification (browser test)
-- Log in, publish a fresh story, confirm:
-  - The ring thumbnail updates to the new media within ~1 s.
-  - Tapping the ring shows the action sheet with View / Add.
-  - "Add" opens `CreateStorySheet` and a second segment can be published.
-  - Console is free of the duplicate-key and previous warnings.
-  - `?debug=stories` panel still shows green for Database / Feed / Profile / Chat.
+## 2. SSR-safe portal
 
-## Out of scope (already fixed in the previous turn)
-- Column-name mismatch on `stories` (`text_overlay`, `view_count`).
-- RLS SELECT policy for own + active stories.
-- `invalidateAllStoryCaches` predicate keys for Feed / Chat / Profile.
-- `AuthProvider` mount fix that previously caused the blank screen.
+File: `src/components/stories/StoryViewer.tsx`
+
+- Before calling `createPortal`, guard with `typeof document === "undefined" || !document.body` → return `null`. This prevents runtime errors in any SSR/prerender/build pipeline that imports the component.
+
+## 3. Story ring thumbnail sizing
+
+File: `src/components/social/FeedStoryRing.tsx` (and `src/components/profile/ProfileStories.tsx`, `src/components/chat/ChatStories.tsx` if they share the same pattern)
+
+- The "Your story" ring renders the latest media (`<img>` / `<video>`) inside a 64×64 circular container, but text-only stories (no `media_url`, only `text_overlay`) currently fall through to the avatar. Treat text-only stories explicitly:
+  - If `mediaType === "text"` (or `mediaUrl` is empty), render a centered gradient tile with a clamped 1-line preview of `caption` / `text_overlay` instead of the avatar.
+- Normalize the inner container so all three states (image, video, text) share identical sizing:
+  - Outer ring stays `h-[64px] w-[64px] p-[2.5px]`.
+  - Inner tile uses `h-full w-full rounded-full overflow-hidden` with `object-cover` on media and `flex items-center justify-center` for text.
+- Audit the ProfileStories carousel for the same pattern at its responsive sizes (compact mobile vs. desktop) and apply the same normalization so padding/scale don't shift between breakpoints.
+
+## 4. Playwright test: single header & controls
+
+New file: `tests/e2e/story-viewer.spec.ts`
+
+- Use the existing config (`baseURL` + dev server). Sign in via storage state if the suite already has a fixture; otherwise stub `localStorage` auth using the same approach as `swipe-close.spec.ts`.
+- Test flow:
+  1. Navigate to `/profile`.
+  2. Click the user's story ring (or a known seeded ring via `data-testid`).
+  3. Wait for the viewer (`[data-testid="story-viewer"]`) — add this `data-testid` on the motion shell.
+  4. Assert exactly one of each:
+     - `await expect(page.locator('[data-testid="story-close"]')).toHaveCount(1)`
+     - `await expect(page.locator('[data-testid="story-pause"]')).toHaveCount(1)`
+     - `await expect(page.locator('[data-testid="story-header"]')).toHaveCount(1)`
+- Add the corresponding `data-testid` attributes in `StoryViewer.tsx` (header bar, close button, pause/play button) so the test has stable selectors. No visual change.
+
+## 5. Manual re-verification (after build)
+
+After the changes deploy, run a quick browser pass on:
+- `/profile` — open own story, confirm overlay is opaque from first frame, only one header / close / pause is visible.
+- `/feed` — open another user's story from the rings.
+- `/chat` — open a story from `ChatStories`.
+
+Confirm in each: no duplicate header, no underlying buttons clickable, fullscreen on iPhone-sized viewport (390×844).
+
+---
+
+## Files touched
+
+- `src/components/stories/StoryViewer.tsx` — opaque shell wrapper, SSR-safe portal guard, `useLayoutEffect` for body flag, `data-testid`s.
+- `src/components/social/FeedStoryRing.tsx` — text-only ring state, normalized sizing.
+- `src/components/profile/ProfileStories.tsx` — same ring normalization (if pattern present).
+- `src/components/chat/ChatStories.tsx` — same ring normalization (if pattern present).
+- `tests/e2e/story-viewer.spec.ts` — new Playwright spec.
+
+No database, RLS, or edge-function changes required.
