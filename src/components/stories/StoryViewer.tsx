@@ -96,6 +96,7 @@ export default function StoryViewer({
   const [paused, setPaused] = useState(false);
   const [progress, setProgress] = useState(0);
   const [showViewers, setShowViewers] = useState(false);
+  const [viewersTab, setViewersTab] = useState<"viewers" | "reactions">("viewers");
   const [showComments, setShowComments] = useState(false);
   const [commentText, setCommentText] = useState("");
   const [muted, setMuted] = useState(true);
@@ -170,7 +171,30 @@ export default function StoryViewer({
     },
   });
 
-  // ---- Comments ----
+  // ---- Reactions list (owner only) — who reacted with what emoji ----
+  const { data: reactionList = [] } = useQuery({
+    queryKey: ["story-reactions-list", currentStory?.id],
+    enabled: !!currentStory && isOwner,
+    queryFn: async () => {
+      const { data } = await supabase
+        .from("story_reactions" as any)
+        .select("user_id, emoji, created_at")
+        .eq("story_id", currentStory!.id)
+        .order("created_at", { ascending: false });
+      if (!data || data.length === 0) return [];
+      const reactorIds = [...new Set((data as any[]).map((r: any) => r.user_id))];
+      const { data: profiles } = await supabase
+        .from("public_profiles" as any)
+        .select("id, full_name, avatar_url")
+        .in("id", reactorIds);
+      const profileMap = new Map((profiles || []).map((p: any) => [p.id, p]));
+      return (data as any[]).map((r: any) => ({
+        ...r,
+        name: profileMap.get(r.user_id)?.full_name || "User",
+        avatar: profileMap.get(r.user_id)?.avatar_url,
+      }));
+    },
+  });
   const { data: comments = [] } = useQuery({
     queryKey: ["story-comments", currentStory?.id],
     enabled: !!currentStory,
@@ -251,6 +275,9 @@ export default function StoryViewer({
     onSuccess: (_data, emoji) => {
       queryClient.invalidateQueries({
         queryKey: ["story-my-reaction", currentStory?.id, user?.id],
+      });
+      queryClient.invalidateQueries({
+        queryKey: ["story-reactions-list", currentStory?.id],
       });
       if (emoji) {
         setReactionBurst(emoji);
@@ -774,7 +801,7 @@ export default function StoryViewer({
 
         </div>
 
-        {/* Viewers sheet */}
+        {/* Insights sheet — Viewers + Reactions tabs */}
         <AnimatePresence>
           {showViewers && isOwner && (
             <motion.div
@@ -782,36 +809,97 @@ export default function StoryViewer({
               animate={{ y: 0 }}
               exit={{ y: "100%" }}
               transition={{ type: "spring", damping: 25, stiffness: 300 }}
-              className="absolute inset-x-0 bottom-0 z-30 bg-card/95 backdrop-blur-xl rounded-t-2xl max-h-[60vh] flex flex-col"
+              className="absolute inset-x-0 bottom-0 z-30 bg-card/95 backdrop-blur-xl rounded-t-2xl max-h-[65vh] flex flex-col"
             >
-              <div className="flex items-center justify-between px-5 pt-4 pb-2 border-b border-border/30">
+              <div className="flex items-center justify-between px-5 pt-4 pb-3 border-b border-border/30">
                 <div className="flex items-center gap-2">
-                  <Eye className="w-4 h-4 text-primary" />
-                  <span className="text-sm font-bold text-foreground">Viewers ({viewers.length})</span>
+                  <span className="w-1.5 h-5 rounded-full bg-gradient-to-b from-[hsl(160_84%_55%)] to-[hsl(190_85%_55%)]" />
+                  <span className="text-sm font-bold text-foreground">Story insights</span>
                 </div>
-                <button onClick={() => { setShowViewers(false); setPaused(false); }} aria-label="Close viewers">
+                <button
+                  onClick={() => { setShowViewers(false); setPaused(false); }}
+                  aria-label="Close insights"
+                >
                   <X className="w-5 h-5 text-muted-foreground" />
                 </button>
               </div>
+              {/* Tabs */}
+              <div className="flex items-center gap-1 px-3 pt-2 pb-1">
+                <button
+                  onClick={() => setViewersTab("viewers")}
+                  className={cn(
+                    "flex-1 flex items-center justify-center gap-1.5 py-2 rounded-lg text-[13px] font-semibold transition",
+                    viewersTab === "viewers"
+                      ? "bg-gradient-to-r from-[hsl(160_84%_45%)]/15 to-[hsl(190_85%_55%)]/15 text-foreground ring-1 ring-[hsl(160_84%_45%)]/30"
+                      : "text-muted-foreground hover:bg-muted"
+                  )}
+                >
+                  <Eye className="w-3.5 h-3.5" />
+                  Viewers
+                  <span className="ml-0.5 text-[11px] opacity-70">{viewers.length}</span>
+                </button>
+                <button
+                  onClick={() => setViewersTab("reactions")}
+                  className={cn(
+                    "flex-1 flex items-center justify-center gap-1.5 py-2 rounded-lg text-[13px] font-semibold transition",
+                    viewersTab === "reactions"
+                      ? "bg-gradient-to-r from-[hsl(160_84%_45%)]/15 to-[hsl(190_85%_55%)]/15 text-foreground ring-1 ring-[hsl(160_84%_45%)]/30"
+                      : "text-muted-foreground hover:bg-muted"
+                  )}
+                >
+                  <Heart className="w-3.5 h-3.5" />
+                  Reactions
+                  <span className="ml-0.5 text-[11px] opacity-70">{reactionList.length}</span>
+                </button>
+              </div>
               <div className="flex-1 overflow-y-auto p-4 space-y-3">
-                {viewers.length === 0 ? (
-                  <p className="text-sm text-muted-foreground text-center py-8">No viewers yet</p>
+                {viewersTab === "viewers" ? (
+                  viewers.length === 0 ? (
+                    <p className="text-sm text-muted-foreground text-center py-8">No viewers yet</p>
+                  ) : (
+                    viewers.map((v: any) => (
+                      <div key={v.viewer_id} className="flex items-center gap-3">
+                        <div className="w-9 h-9 rounded-full bg-muted overflow-hidden flex-shrink-0">
+                          {v.avatar ? (
+                            <img src={v.avatar} alt="" className="w-full h-full object-cover" />
+                          ) : (
+                            <div className="w-full h-full flex items-center justify-center text-xs font-bold text-muted-foreground">
+                              {v.name.charAt(0)}
+                            </div>
+                          )}
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <p className="text-sm font-semibold text-foreground truncate">{v.name}</p>
+                          <p className="text-[10px] text-muted-foreground">
+                            {formatDistanceToNow(new Date(v.viewed_at), { addSuffix: true })}
+                          </p>
+                        </div>
+                      </div>
+                    ))
+                  )
+                ) : reactionList.length === 0 ? (
+                  <p className="text-sm text-muted-foreground text-center py-8">No reactions yet</p>
                 ) : (
-                  viewers.map((v: any) => (
-                    <div key={v.viewer_id} className="flex items-center gap-3">
-                      <div className="w-9 h-9 rounded-full bg-muted overflow-hidden flex-shrink-0">
-                        {v.avatar ? (
-                          <img src={v.avatar} alt="" className="w-full h-full object-cover" />
-                        ) : (
-                          <div className="w-full h-full flex items-center justify-center text-xs font-bold text-muted-foreground">
-                            {v.name.charAt(0)}
-                          </div>
-                        )}
+                  reactionList.map((r: any, i: number) => (
+                    <div key={`${r.user_id}-${i}`} className="flex items-center gap-3">
+                      <div className="relative w-9 h-9 shrink-0">
+                        <div className="w-9 h-9 rounded-full bg-muted overflow-hidden">
+                          {r.avatar ? (
+                            <img src={r.avatar} alt="" className="w-full h-full object-cover" />
+                          ) : (
+                            <div className="w-full h-full flex items-center justify-center text-xs font-bold text-muted-foreground">
+                              {r.name.charAt(0)}
+                            </div>
+                          )}
+                        </div>
+                        <span className="absolute -bottom-1 -right-1 text-[15px] leading-none drop-shadow-[0_1px_3px_rgba(0,0,0,0.4)]">
+                          {r.emoji}
+                        </span>
                       </div>
                       <div className="flex-1 min-w-0">
-                        <p className="text-sm font-semibold text-foreground truncate">{v.name}</p>
+                        <p className="text-sm font-semibold text-foreground truncate">{r.name}</p>
                         <p className="text-[10px] text-muted-foreground">
-                          {formatDistanceToNow(new Date(v.viewed_at), { addSuffix: true })}
+                          Reacted {formatDistanceToNow(new Date(r.created_at), { addSuffix: true })}
                         </p>
                       </div>
                     </div>

@@ -1,45 +1,70 @@
-# Premium text-story image renderer
+# Story Workflow Audit — what's solid, what's missing
 
-The reason "nothing changed" is that the green disc in the ring is the **actual saved image** — `media_type` is `"image"` (not `"text"`), so the StoryTextTile branch never runs. The flat green PNG is produced by `CreateStorySheet`'s `renderTextToBlob` canvas function, which paints a basic 2-stop gradient + plain text. Fixing the ring isn't enough — the source image itself is flat.
+## ✅ What already works (verified end-to-end)
 
-## Fix: upgrade the canvas renderer + preview to match the StoryTextTile aesthetic
+**Create flow** (`CreateStorySheet.tsx`)
+- Photo / Video / Camera / Text-on-gradient (3-stop premium canvas)
+- Music track picker, real upload progress (XHR), retry, quit-confirm
+- Uploads to `user-stories` bucket → inserts into `stories` → invalidates all caches
 
-Single file: `src/components/profile/CreateStorySheet.tsx`
+**Viewer** (`StoryViewer.tsx`)
+- Fullscreen portal, swipe-down close, tap zones, hold-to-pause, keyboard nav
+- Auto-progress (5s images, video-driven)
+- ZIVO Aurora progress bars + glass header capsule
+- Owner: insights pill + emerald "Boost story" hero + More dot (✅ no longer IG-style)
+- Non-owner: like/comment/share stack, 6-emoji reactor row, reply input
+- Real persistence: `story_views`, `story_comments`, `story_reactions`
+- Owner More sheet: Save / Share link / Delete (with storage sweep)
+- Forward sheet, deep-linking, analytics close-meta
 
-### 1. Upgrade `TEXT_BACKGROUNDS` to 3-stop palettes
+**Entry tiles** — Profile, Feed, Chat all use shared `StoryViewer` ✅
 
-Replace the 6 flat 2-stop gradients with premium 3-stop ones (start → mid → end) so both the picker chip preview, the live compose preview, and the canvas render share the same colors.
+---
 
-```ts
-const TEXT_BACKGROUNDS: { css: string; stops: [string, string, string] }[] = [
-  { css: "linear-gradient(135deg,#10b981 0%,#0ea371 45%,#0f766e 100%)", stops: [...] }, // ZIVO emerald
-  { css: "linear-gradient(135deg,#6366f1 0%,#7c3aed 50%,#8b5cf6 100%)", stops: [...] }, // indigo→violet
-  { css: "linear-gradient(135deg,#f59e0b 0%,#f97316 50%,#ef4444 100%)", stops: [...] }, // sunset
-  { css: "linear-gradient(135deg,#06b6d4 0%,#0ea5e9 50%,#3b82f6 100%)", stops: [...] }, // ocean
-  { css: "linear-gradient(135deg,#ec4899 0%,#db2777 50%,#f43f5e 100%)", stops: [...] }, // rose
-  { css: "linear-gradient(135deg,#0f172a 0%,#1e293b 55%,#334155 100%)", stops: [...] }, // graphite
-];
-```
+## ❌ What's still missing (the gaps that make it feel incomplete)
 
-Update the two consumers — preview `style={{ background: TEXT_BACKGROUNDS[bgIdx].css }}` and chip `style={{ background: bg.css }}`.
+### 1. Owner can't see WHO reacted (only viewers)
+Today the viewers sheet shows views, but story_reactions are invisible to the owner. Add a **"Reactions" tab** to the viewers sheet showing emoji + reactor name + when. This is what makes stories feel alive on real platforms.
 
-### 2. Rewrite `renderTextToBlob` for depth
+### 2. No DM replies — text replies vanish into `story_comments`
+When a non-owner types a reply, it goes into `story_comments` (visible only inside viewer). Real story replies should land as a **chat message** in the owner's inbox with a story-thumbnail attachment ("replied to your story"). Wire reply input → `messages` table with `story_reply_id` reference.
 
-Replace the flat single linear-gradient + plain text with a layered composition (1080×1920 canvas):
+### 3. No mute/hide-from-feed for individual users
+Long-press on a friend's ring should offer **"Mute [name]'s stories"** (hides them from your ring without unfollowing). Persist in a new `story_mutes` table; filter in `useQuery` for ring carousels.
 
-1. **Base**: 3-stop diagonal `createLinearGradient` (using `stops`).
-2. **Top-left highlight**: large radial gradient `rgba(255,255,255,0.32) → 0` for glass dimensionality.
-3. **Bottom-right shade**: radial `rgba(0,0,0,0.35) → 0` for depth.
-4. **Decorative orbs**: two soft white radial blooms (top-right, bottom-left) for visual interest.
-5. **Text**: weight bumped to `800`, larger sizes, with `shadowColor rgba(0,0,0,0.35)`, `shadowBlur: 24`, `shadowOffsetY: 6`. Reset shadow after drawing.
+### 4. No "Close Friends" / audience selector on create
+ZIVO has follow/friendship system but stories are public to everyone. Add an **audience picker** at publish time: Public / Friends only / Close Friends (custom list). Add `audience` enum + `close_friends` table; enforce in RLS.
 
-Word-wrapping logic stays unchanged.
+### 5. No Highlights (saved past stories)
+Stories expire at 24h. Real differentiation = **Highlights** — owner can pin expired stories to a profile section ("Travel", "Food"). New `story_highlights` table, profile-page row of highlight covers, viewer reuses StoryViewer.
 
-## Out of scope
+### 6. No screenshot / download notification to owner
+For private stories (Friends/Close Friends), owner should be **notified when someone screenshots or downloads**. Hook into the More-sheet "Save to device" path → insert a `story_alerts` row → push notification to owner.
 
-- Existing 3 stories already in DB stay flat (they're immutable JPGs in storage). New text stories created from now on will render premium.
-- No DB / RLS / test changes.
+---
 
-## Files touched
+## 🛠️ Technical changes (per gap)
 
-- `src/components/profile/CreateStorySheet.tsx` only (3 small edits: palette, preview/chip style, `renderTextToBlob`).
+| # | DB / API | Component touch | Effort |
+|---|---|---|---|
+| 1 | Read existing `story_reactions` | `StoryViewer` viewers sheet → tabs | S |
+| 2 | New: link in `messages` (`story_reply_id` uuid nullable, RLS) | `StoryViewer` reply input handler | M |
+| 3 | New table `story_mutes(user_id, muted_user_id)` + RLS | `ProfileStories` + `FeedStoryRing` long-press menu, query filter | M |
+| 4 | New: `stories.audience` enum, `close_friends(user_id, friend_user_id)`, update RLS on `stories` | `CreateStorySheet` audience step before publish | M |
+| 5 | New table `story_highlights(id, user_id, title, cover_url, story_ids[])` + RLS | New `ProfileHighlights.tsx` row on `/profile`; reuse `StoryViewer` | L |
+| 6 | New table `story_alerts(story_id, actor_id, type)` + push trigger | Hook into More-sheet save + add browser screenshot listener (best-effort) | M |
+
+All new tables follow ZIVO RLS pattern: owner-write, owner-read for alerts/views; participants-only for reply messages. No client-side role checks.
+
+---
+
+## 📋 Recommended build order
+
+1. **Reactions tab in viewers sheet** (quick win, uses existing data)
+2. **DM-style replies** (kills the orphan story_comments confusion)
+3. **Audience selector + Close Friends** (privacy = trust)
+4. **Mute friend's stories** (table-stakes feedback control)
+5. **Highlights row on profile** (the big differentiator)
+6. **Screenshot/download alerts** (premium polish)
+
+Each step is independently shippable. Approve and I'll start with #1, then continue down the list — or pick a subset (e.g. "just 1, 2, 5") and I'll scope to that.
