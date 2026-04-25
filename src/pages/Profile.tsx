@@ -1025,15 +1025,19 @@ const Profile = () => {
                         </div>
                       )}
 
-                      <input
-                        id="profile-cover-input"
-                        ref={coverInputRef}
-                        type="file"
-                        accept="image/jpeg,image/png,image/webp"
-                        onChange={handleCoverUpload}
-                        className="sr-only"
-                      />
                     </div>
+
+                    {/* Hidden cover file input — placed OUTSIDE the cover
+                        container (which has motion transforms) so iOS/Capacitor
+                        reliably opens the file picker via the <label htmlFor>. */}
+                    <input
+                      id="profile-cover-input"
+                      ref={coverInputRef}
+                      type="file"
+                      accept="image/jpeg,image/png,image/webp"
+                      onChange={handleCoverUpload}
+                      className="sr-only"
+                    />
 
                     {/* Avatar overlapping cover */}
                     <div className="relative z-10 -mt-11 px-6">
