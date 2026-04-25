@@ -26,6 +26,7 @@ import { useSwipeDownClose } from "@/components/social/useSwipeDownClose";
 import { SwipeGrabHandle } from "@/components/social/SwipeGrabHandle";
 import { logProfileActionError } from "@/lib/security/errorReporting";
 import { getE2ESeedPosts } from "@/lib/testing/e2eSeed";
+import { track } from "@/lib/analytics";
 
 /**
  * Fullscreen post viewer wrapper with drag-down-to-close.
@@ -610,13 +611,18 @@ export default function ProfileContentTabs({ userId }: { userId?: string }) {
           .eq("post_id", item.id)
           .eq("user_id", user.id);
         if (error) throw error;
+        track("post_unliked", { post_id: item.id, author_id: profileOwnerId, surface: "profile_feed" });
       } else {
+        // Idempotent insert — duplicate (23505) means the row already exists,
+        // which is the desired end state, so treat as success.
         const { error } = await (supabase as any)
           .from("post_likes")
           .insert({ post_id: item.id, user_id: user.id });
-        if (error) throw error;
-        // notify author (best-effort)
-        if (profileOwnerId && profileOwnerId !== user.id) {
+        const dupKey = (error as any)?.code === "23505";
+        if (error && !dupKey) throw error;
+        track("post_liked", { post_id: item.id, author_id: profileOwnerId, surface: "profile_feed", deduped: dupKey });
+        // notify author (best-effort) — only on a real new like
+        if (!error && profileOwnerId && profileOwnerId !== user.id) {
           try {
             const { data: sp } = await supabase
               .from("profiles")
@@ -764,8 +770,9 @@ export default function ProfileContentTabs({ userId }: { userId?: string }) {
       return;
     }
 
+    track("post_comment_opened", { post_id: item.id, author_id: profileOwnerId, surface: "profile_feed" });
     setCommentPost(item);
-  }, []);
+  }, [profileOwnerId]);
 
   const handleBookmarkToggle = useCallback(async (item: FeedItem) => {
     if (!user?.id) {
@@ -798,6 +805,7 @@ export default function ProfileContentTabs({ userId }: { userId?: string }) {
           .eq("item_id", interactionId);
 
         if (error) throw error;
+        track("post_unbookmarked", { post_id: item.id, author_id: profileOwnerId, surface: "profile_feed" });
         toast.success("Removed from bookmarks");
       } else {
         const { error } = await (supabase as any).from("bookmarks").insert({
@@ -806,7 +814,9 @@ export default function ProfileContentTabs({ userId }: { userId?: string }) {
           item_type: "post",
         });
 
-        if (error) throw error;
+        const dupKey = (error as any)?.code === "23505";
+        if (error && !dupKey) throw error;
+        track("post_bookmarked", { post_id: item.id, author_id: profileOwnerId, surface: "profile_feed", deduped: dupKey });
         toast.success("Saved to bookmarks");
       }
     } catch (error: any) {
@@ -897,7 +907,10 @@ export default function ProfileContentTabs({ userId }: { userId?: string }) {
               onToggleLike={(feedItem) => void handleLikeToggle(feedItem as any)}
               onToggleBookmark={(feedItem) => void handleBookmarkToggle(feedItem as any)}
               onOpenMenu={(feedItem) => { setSelectedPost(feedItem as any); setShowPostMenu(true); }}
-              onShare={(postId) => setSharePostId(postId)}
+              onShare={(postId) => {
+                track("post_share_opened", { post_id: postId, author_id: profileOwnerId, surface: "profile_feed" });
+                setSharePostId(postId);
+              }}
               onSelectPost={(feedItem) => setSelectedPost(feedItem as any)}
             />
           ))}
@@ -1370,7 +1383,13 @@ export default function ProfileContentTabs({ userId }: { userId?: string }) {
         onCommentsCountChange={(count) => {
           if (!commentPost) return;
           const targetId = commentPost.id;
-          setFeed((prev) => prev.map((p) => (p.id === targetId ? { ...p, comments: count } : p)));
+          setFeed((prev) => {
+            const prevItem = prev.find((p) => p.id === targetId);
+            if (prevItem && count > prevItem.comments) {
+              track("post_comment_added", { post_id: targetId, author_id: profileOwnerId, total: count, surface: "profile_feed" });
+            }
+            return prev.map((p) => (p.id === targetId ? { ...p, comments: count } : p));
+          });
         }}
       />
 
