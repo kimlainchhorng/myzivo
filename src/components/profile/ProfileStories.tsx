@@ -16,6 +16,7 @@ import CreateStorySheet from "@/components/profile/CreateStorySheet";
 import StoryViewer, { StoryGroup } from "@/components/stories/StoryViewer";
 import { useStoryDeepLink, useStoryViewerLocation } from "@/hooks/useStoryDeepLink";
 import { invalidateAllStoryCaches } from "@/lib/storiesCache";
+import { useMyStoryViews } from "@/hooks/useMyStoryViews";
 
 interface RawStory {
   id: string;
