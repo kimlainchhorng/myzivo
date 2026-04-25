@@ -1002,30 +1002,116 @@ export default function StoryViewer({
                 ) : reactionList.length === 0 ? (
                   <p className="text-sm text-muted-foreground text-center py-8">No reactions yet</p>
                 ) : (
-                  reactionList.map((r: any, i: number) => (
-                    <div key={`${r.user_id}-${i}`} className="flex items-center gap-3">
-                      <div className="relative w-9 h-9 shrink-0">
-                        <div className="w-9 h-9 rounded-full bg-muted overflow-hidden">
-                          {r.avatar ? (
-                            <img src={r.avatar} alt="" className="w-full h-full object-cover" />
-                          ) : (
-                            <div className="w-full h-full flex items-center justify-center text-xs font-bold text-muted-foreground">
-                              {r.name.charAt(0)}
+                  reactionList.map((r: any, i: number) => {
+                    const thread = commentsByReaction.get(r.id) || [];
+                    const isOpen = openThreadId === r.id;
+                    const canReplyHere = isOwner || user?.id === r.user_id;
+                    return (
+                      <div key={`${r.id}-${i}`} className="rounded-xl">
+                        <div className="flex items-center gap-3">
+                          <div className="relative w-9 h-9 shrink-0">
+                            <div className="w-9 h-9 rounded-full bg-muted overflow-hidden">
+                              {r.avatar ? (
+                                <img src={r.avatar} alt="" className="w-full h-full object-cover" />
+                              ) : (
+                                <div className="w-full h-full flex items-center justify-center text-xs font-bold text-muted-foreground">
+                                  {r.name.charAt(0)}
+                                </div>
+                              )}
                             </div>
-                          )}
+                            <span className="absolute -bottom-1 -right-1 text-[15px] leading-none drop-shadow-[0_1px_3px_rgba(0,0,0,0.4)]">
+                              {r.emoji}
+                            </span>
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <p className="text-sm font-semibold text-foreground truncate">{r.name}</p>
+                            <p className="text-[10px] text-muted-foreground">
+                              Reacted {formatDistanceToNow(new Date(r.created_at), { addSuffix: true })}
+                            </p>
+                          </div>
+                          <button
+                            onClick={() => {
+                              setOpenThreadId(isOpen ? null : r.id);
+                              setThreadDraft("");
+                            }}
+                            className={cn(
+                              "shrink-0 flex items-center gap-1 px-2.5 py-1.5 rounded-full text-[11px] font-semibold transition",
+                              isOpen
+                                ? "bg-[hsl(160_84%_45%)/0.15] text-foreground ring-1 ring-[hsl(160_84%_45%)/0.4]"
+                                : "text-muted-foreground hover:bg-muted"
+                            )}
+                            aria-label={isOpen ? "Close thread" : "Open thread"}
+                          >
+                            <MessageCircle className="w-3 h-3" />
+                            {thread.length > 0 && <span>{thread.length}</span>}
+                            <ChevronDown className={cn("w-3 h-3 transition-transform", isOpen && "rotate-180")} />
+                          </button>
                         </div>
-                        <span className="absolute -bottom-1 -right-1 text-[15px] leading-none drop-shadow-[0_1px_3px_rgba(0,0,0,0.4)]">
-                          {r.emoji}
-                        </span>
+
+                        {/* Thread body */}
+                        {isOpen && (
+                          <div className="mt-2 ml-12 pl-3 border-l-2 border-[hsl(160_84%_45%)/0.25] space-y-2">
+                            {thread.length === 0 && (
+                              <p className="text-[11px] text-muted-foreground italic py-1">
+                                No replies yet{canReplyHere ? " — start the thread" : ""}.
+                              </p>
+                            )}
+                            {thread.map((tc: any) => (
+                              <div key={tc.id} className="flex gap-2 items-start">
+                                <CornerDownRight className="w-3 h-3 text-muted-foreground/60 mt-1.5 shrink-0" />
+                                <div className="w-6 h-6 rounded-full bg-muted overflow-hidden flex-shrink-0">
+                                  {tc.avatar ? (
+                                    <img src={tc.avatar} alt="" className="w-full h-full object-cover" />
+                                  ) : (
+                                    <div className="w-full h-full flex items-center justify-center text-[9px] font-bold text-muted-foreground">
+                                      {tc.name.charAt(0)}
+                                    </div>
+                                  )}
+                                </div>
+                                <div className="flex-1 min-w-0">
+                                  <div className="flex items-baseline gap-1.5">
+                                    <span className="text-[11px] font-bold text-foreground">{tc.name}</span>
+                                    <span className="text-[9px] text-muted-foreground">
+                                      {formatDistanceToNow(new Date(tc.created_at), { addSuffix: true })}
+                                    </span>
+                                  </div>
+                                  <p className="text-[12px] text-foreground leading-snug">{tc.content}</p>
+                                </div>
+                              </div>
+                            ))}
+                            {canReplyHere && (
+                              <div className="flex items-center gap-2 mt-2">
+                                <input
+                                  type="text"
+                                  value={threadDraft}
+                                  onChange={(e) => setThreadDraft(e.target.value)}
+                                  onKeyDown={(e) => {
+                                    if (e.key === "Enter" && threadDraft.trim()) {
+                                      postComment.mutate(`[react:${r.id}] ${threadDraft.trim()}`);
+                                    }
+                                  }}
+                                  placeholder="Reply in thread..."
+                                  className="flex-1 bg-muted rounded-full px-3 py-1.5 text-[12px] outline-none text-foreground placeholder:text-muted-foreground"
+                                />
+                                <button
+                                  onClick={() => {
+                                    if (threadDraft.trim()) {
+                                      postComment.mutate(`[react:${r.id}] ${threadDraft.trim()}`);
+                                    }
+                                  }}
+                                  disabled={postComment.isPending || !threadDraft.trim()}
+                                  className="text-[hsl(160_84%_45%)] disabled:opacity-40"
+                                  aria-label="Send thread reply"
+                                >
+                                  <Send className="w-3.5 h-3.5" />
+                                </button>
+                              </div>
+                            )}
+                          </div>
+                        )}
                       </div>
-                      <div className="flex-1 min-w-0">
-                        <p className="text-sm font-semibold text-foreground truncate">{r.name}</p>
-                        <p className="text-[10px] text-muted-foreground">
-                          Reacted {formatDistanceToNow(new Date(r.created_at), { addSuffix: true })}
-                        </p>
-                      </div>
-                    </div>
-                  ))
+                    );
+                  })
                 )}
               </div>
             </motion.div>
