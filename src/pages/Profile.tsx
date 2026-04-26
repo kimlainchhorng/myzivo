@@ -149,6 +149,12 @@ const Profile = () => {
   
   const { user, isAdmin } = useAuth();
   const { data: profile, isLoading: profileLoading } = useUserProfile();
+  const { username: claimedUsername } = useUsername();
+  // Brand-name override (e.g. "ZIVO" for staff/founder accounts) — falls back to legal name.
+  const brandName = (profile as { display_brand_name?: string | null } | undefined)?.display_brand_name || null;
+  const titleCase = (s: string) => s.replace(/\b([a-z])/g, (m) => m.toUpperCase());
+  const rawHeaderName = brandName || profile?.full_name || "";
+  const headerName = brandName ? rawHeaderName : (rawHeaderName ? titleCase(rawHeaderName) : "");
   const { data: merchantData } = useMerchantRole();
   const { data: ownerStore, isLoading: ownerStoreLoading } = useOwnerStoreProfile();
   const { unreadCount: notifUnreadCount, notifications, isLoading: notifLoading, markAsRead, markAllAsRead } = useNotifications(20);
