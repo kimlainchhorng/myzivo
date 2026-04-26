@@ -1,33 +1,29 @@
 ## Problem
 
-In your screenshot, the iOS status bar (12:37, signal, battery) is rendering on top of the "Contacts" page header — the title and back arrow collide with the system clock.
+In your screenshot, the "New Group" bottom sheet opens but the **Create Group button at the bottom is hidden behind the iOS home indicator / safe area** — you can only see the header, "Group name…" input, and the start of the friend list. The Create button is rendered off-screen at the bottom.
 
-Root cause: `src/pages/chat/ContactsPage.tsx` uses `sticky top-0` on the header but is missing the `safe-area-top` utility (which adds `padding-top: env(safe-area-inset-top)`). Other chat screens (PersonalChat, GroupChat, CallHistory, ChatContactInfo, ChatMediaGallery) already use it correctly.
+Root cause in `src/components/chat/CreateGroupModal.tsx`:
 
-A quick audit shows the same bug exists on several chat settings pages.
+- The sheet is `max-h-[80vh]` and uses `items-end` on mobile, so it sticks to the bottom edge of the screen.
+- The footer containing the Create button has only `p-4` — no `env(safe-area-inset-bottom)` padding, so iOS pushes it under the home indicator.
+- There's also no top safe-area on the sheet itself, but since it's a bottom sheet that's fine; the real bug is the bottom.
 
 ## Fix
 
-1. **`src/pages/chat/ContactsPage.tsx`** — add `safe-area-top` to the sticky `<header>` so the title clears the iOS notch/status bar.
+In `src/components/chat/CreateGroupModal.tsx`:
 
-2. **Audit + fix the same issue on these pages** (all use `sticky top-0` without `safe-area-top`):
-   - `src/pages/chat/settings/LoginAlertsPage.tsx`
-   - `src/pages/chat/settings/PasscodeSetupPage.tsx`
-   - `src/pages/chat/settings/TwoStepSetupPage.tsx`
-   - `src/pages/chat/settings/PrivacySecurityPage.tsx`
-   - `src/pages/chat/settings/ActiveSessionsPage.tsx`
-   - `src/components/chat/ChatSearch.tsx`
+1. Add safe-area bottom padding to the Create Group footer so the button always clears the iOS home indicator:
+   ```tsx
+   // Before
+   <div className="p-4 border-t border-border/30">
+   // After
+   <div className="p-4 border-t border-border/30 pb-[max(1rem,env(safe-area-inset-bottom))]">
+   ```
 
-3. No design changes — only the safe-area padding so the header sits below the device status bar, matching PersonalChat / GroupChat behavior.
+2. Slightly reduce the sheet max-height to `max-h-[85dvh]` (using `dvh` instead of `vh`) so it correctly accounts for mobile browser chrome and never clips on small devices.
 
-## Technical detail
+3. No design or logic changes — just safe-area handling.
 
-```tsx
-// Before
-<header className="sticky top-0 z-20 bg-background/80 backdrop-blur border-b px-4 py-3 ...">
+## Audit — same pattern elsewhere
 
-// After
-<header className="sticky top-0 z-20 bg-background/80 backdrop-blur border-b px-4 py-3 safe-area-top ...">
-```
-
-`safe-area-top` is the existing project utility that resolves to `padding-top: env(safe-area-inset-top)`, already used across the v2026 chat surfaces per the mobile-native-ux-standards memory.
+Quickly check other bottom-sheet modals in `src/components/chat/` (e.g. `AddContactSheet`, `ForwardPickerSheet`, `UsernameClaimSheet`) and apply the same `pb-[max(1rem,env(safe-area-inset-bottom))]` to any footer/action area that isn't already handling safe-area-bottom. Only fix files that actually have the bug — don't touch ones that already use `safe-area-bottom` or `pb-[env(...)]`.
