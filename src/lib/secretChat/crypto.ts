@@ -153,7 +153,7 @@ export async function decryptMessage(params: {
   const key = await deriveMessageKey(self.privateKey, params.payload.senderPublicKeyJwk, params.chatId);
   const iv = b64ToBytes(params.payload.iv);
   const ct = b64ToBytes(params.payload.ciphertext);
-  const plainBuf = await crypto.subtle.decrypt({ name: "AES-GCM", iv }, key, ct);
+  const plainBuf = await crypto.subtle.decrypt({ name: "AES-GCM", iv }, key, ct as BufferSource);
   return new TextDecoder().decode(plainBuf);
 }
 

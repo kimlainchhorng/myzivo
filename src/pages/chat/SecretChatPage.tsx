@@ -58,15 +58,15 @@ export default function SecretChatPage() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("profiles")
-        .select("display_name, avatar_url, username")
+        .select("full_name, avatar_url")
         .eq("user_id", partnerId)
         .maybeSingle();
       if (error) throw error;
-      return data;
+      return data as { full_name: string | null; avatar_url: string | null } | null;
     },
   });
 
-  const partnerName = partner?.display_name ?? partner?.username ?? "Contact";
+  const partnerName = partner?.full_name ?? "Contact";
 
   // Auto-scroll to bottom on new messages.
   useEffect(() => {
