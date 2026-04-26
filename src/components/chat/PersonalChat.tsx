@@ -1516,7 +1516,17 @@ export default function PersonalChat({ recipientId, recipientName, recipientAvat
                 onMediaSent={(opts) => {
                   if (opts.imageUrl) handleSend({ imageUrl: opts.imageUrl });
                   else if (opts.videoUrl) handleSend({ videoUrl: opts.videoUrl });
-                  else if (opts.fileUrl) handleSend({ imageUrl: opts.fileUrl });
+                  else if (opts.fileUrl) {
+                    handleSend({
+                      filePayload: {
+                        url: opts.fileUrl,
+                        filename: opts.fileName || "file",
+                        mime_type: opts.fileType || "application/octet-stream",
+                        size: opts.fileSize,
+                        source: "upload",
+                      },
+                    });
+                  }
                 }}
                 renderTrigger={(openFilePicker) => (
                   <button onClick={openFilePicker} className="h-10 w-10 rounded-full flex items-center justify-center text-muted-foreground/60 hover:bg-muted/50 active:scale-90 transition-all shrink-0">
