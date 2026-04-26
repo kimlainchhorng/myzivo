@@ -257,6 +257,41 @@ export default function SecretChatPage() {
           paddingBottom: "calc(env(safe-area-inset-bottom, 0px) + 10px)",
         }}
       >
+        <input
+          ref={fileInputRef}
+          type="file"
+          accept={pickerAccept}
+          className="hidden"
+          onChange={(e) => void handleFiles(e.target.files)}
+        />
+
+        <DropdownMenu open={attachOpen} onOpenChange={setAttachOpen}>
+          <DropdownMenuTrigger asChild>
+            <button
+              type="button"
+              aria-label="Attach"
+              disabled={!chatId}
+              className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-indigo-500/10 text-indigo-500 hover:bg-indigo-500/20 disabled:opacity-50"
+            >
+              <Plus className="h-4 w-4" />
+            </button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="start" side="top" className="w-44">
+            <DropdownMenuItem onClick={() => openPicker("image/*")}>
+              <ImageIcon className="mr-2 h-4 w-4 text-indigo-500" /> Photo
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={() => openPicker("video/*")}>
+              <VideoIcon className="mr-2 h-4 w-4 text-indigo-500" /> Video
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={() => openPicker("audio/*")}>
+              <Mic className="mr-2 h-4 w-4 text-indigo-500" /> Voice / Audio
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={() => openPicker("*/*")}>
+              <Paperclip className="mr-2 h-4 w-4 text-indigo-500" /> File
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
+
         <textarea
           value={draft}
           onChange={(e) => setDraft(e.target.value)}
