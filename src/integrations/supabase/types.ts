@@ -26493,6 +26493,39 @@ export type Database = {
         }
         Relationships: []
       }
+      linked_devices: {
+        Row: {
+          created_at: string
+          device_fingerprint: string | null
+          device_label: string | null
+          id: string
+          last_seen_at: string
+          platform: string | null
+          user_agent: string | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          device_fingerprint?: string | null
+          device_label?: string | null
+          id?: string
+          last_seen_at?: string
+          platform?: string | null
+          user_agent?: string | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          device_fingerprint?: string | null
+          device_label?: string | null
+          id?: string
+          last_seen_at?: string
+          platform?: string | null
+          user_agent?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       live_chat_messages: {
         Row: {
           created_at: string | null
