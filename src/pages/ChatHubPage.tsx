@@ -1003,6 +1003,31 @@ export default function ChatHubPage({ embedded = false }: { embedded?: boolean }
                       </button>
                     )}
 
+                    {/* Saved Messages — Telegram-style self chat */}
+                    {!search && active === "personal" && user && (
+                      <button
+                        onClick={() => setOpenPersonalChat({ id: user.id, name: "Saved Messages", avatar: null, isVerified: false })}
+                        className="w-full flex items-center gap-3 p-3 rounded-2xl bg-card border border-border/40 shadow-sm hover:shadow-md hover:border-border/60 active:scale-[0.98] transition-all"
+                      >
+                        <div className="w-[50px] h-[50px] rounded-2xl bg-primary/10 flex items-center justify-center ring-2 ring-border/30">
+                          <Bookmark className="w-5 h-5 text-primary" />
+                        </div>
+                        <div className="flex-1 min-w-0 text-left">
+                          <div className="flex items-center justify-between mb-1">
+                            <span className="text-[15px] font-semibold text-foreground truncate">Saved Messages</span>
+                            {savedMessagesPreview?.created_at && (
+                              <span className="text-[11px] text-muted-foreground tabular-nums ml-2">{formatChatTime(savedMessagesPreview.created_at)}</span>
+                            )}
+                          </div>
+                          <p className="text-[13px] text-muted-foreground truncate leading-snug">
+                            {savedMessagesPreview?.message
+                              ? parseRichMessagePreview(savedMessagesPreview.message)
+                              : "Notes, links and reminders for yourself"}
+                          </p>
+                        </div>
+                      </button>
+                    )}
+
                     {/* Pinned section header */}
                     {!search && displayList.some((c: any) => isPinned(c.id)) && (
                       <div className="flex items-center gap-1.5 px-2 pt-1 pb-0.5">
@@ -1015,6 +1040,8 @@ export default function ChatHubPage({ embedded = false }: { embedded?: boolean }
                       const pinned = isPinned(chat.id);
                       const muted = isMuted(chat.id);
                       const isPersonalChat = active === "personal";
+                      const liveOnline = isPersonalChat && !chat.isGroup && onlineIds.has(chat.id);
+                      const isTyping = isPersonalChat && !chat.isGroup && typingFrom.has(chat.id);
 
                       // Show separator before first non-pinned item
                       const prev = displayList[idx - 1];
