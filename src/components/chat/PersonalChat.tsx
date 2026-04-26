@@ -1320,8 +1320,18 @@ export default function PersonalChat({ recipientId, recipientName, recipientAvat
                       </div>
                     )}
 
-                    {/* Location message */}
-                    {msg.message_type === "location" && msg.location_lat != null && msg.location_lng != null ? (
+                    {/* Coin transfer message */}
+                    {msg.message_type === "coin_transfer" && (msg as any).gift_payload ? (
+                      <div className={`flex ${isMe ? "justify-end" : "justify-start"}`}>
+                        <Suspense fallback={null}>
+                          <CoinTransferBubble
+                            amount={Number(((msg as any).gift_payload?.amount) || 0)}
+                            note={(msg as any).gift_payload?.note}
+                            isOwn={isMe}
+                          />
+                        </Suspense>
+                      </div>
+                    ) : msg.message_type === "location" && msg.location_lat != null && msg.location_lng != null ? (
                       <LocationShareBubble
                         lat={msg.location_lat}
                         lng={msg.location_lng}
