@@ -1513,6 +1513,20 @@ export default function PersonalChat({ recipientId, recipientName, recipientAvat
               )}
             />
 
+            {/* Self-destruct flame picker */}
+            <SelfDestructPicker value={selfDestructSec} onChange={setSelfDestructSec} />
+
+            {/* Scheduled messages queue */}
+            <button
+              type="button"
+              onClick={() => setShowScheduledSheet(true)}
+              className="h-10 w-10 rounded-full flex items-center justify-center text-muted-foreground/60 hover:bg-muted/50 active:scale-90 transition-all shrink-0"
+              aria-label="Scheduled messages"
+              title="Scheduled messages"
+            >
+              <Clock className="h-[18px] w-[18px]" />
+            </button>
+
             {/* Input field */}
             <div className="flex-1 relative">
               <input
