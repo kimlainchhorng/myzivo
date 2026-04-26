@@ -39,5 +39,5 @@ export function useCoinBalance() {
     return () => { (supabase as any).removeChannel(ch); };
   }, [user, refresh]);
 
-  return { balance, loading, refresh };
+  return { balance, loading, refresh, recharge: refresh };
 }
