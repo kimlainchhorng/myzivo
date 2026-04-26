@@ -1318,6 +1318,11 @@ export default function PersonalChat({ recipientId, recipientName, recipientAvat
                         onEdit={handleEdit}
                       />
                     )}
+
+                    {/* Aggregated emoji reactions chip row */}
+                    {!msg.id.startsWith("opt-") && (
+                      <MessageReactionsBar messageId={msg.id} align={isMe ? "right" : "left"} />
+                    )}
                   </div>
                 );
             })}
