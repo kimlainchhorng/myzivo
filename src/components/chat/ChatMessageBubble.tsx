@@ -688,9 +688,36 @@ const ChatMessageBubble = memo(function ChatMessageBubble({
                 <LinkPreviewCard url={linkUrl} isMe={isMe} hasText={!!textWithoutUrl} messageText={message} />
               )}
 
+              {/* Inline translation */}
+              {showTranslation && (
+                <div className={`mx-3 mb-2 mt-0.5 px-3 py-2 rounded-xl text-[13px] leading-snug border ${
+                  isMe
+                    ? "bg-primary-foreground/10 border-primary-foreground/20 text-primary-foreground/90"
+                    : "bg-background/60 border-border/40 text-foreground"
+                }`}>
+                  {translating ? (
+                    <span className="flex items-center gap-1.5 opacity-70">
+                      <Loader2 className="h-3 w-3 animate-spin" /> Translating…
+                    </span>
+                  ) : translation ? (
+                    <>
+                      <p className={`text-[10px] uppercase tracking-wide mb-1 ${isMe ? "text-primary-foreground/60" : "text-muted-foreground/70"}`}>
+                        Translated{translation.sourceLang ? ` from ${translation.sourceLang}` : ""}
+                      </p>
+                      <p className="whitespace-pre-wrap break-words">{translation.text}</p>
+                    </>
+                  ) : null}
+                </div>
+              )}
+
               {/* Timestamp — iMessage style */}
               <div className="flex items-center gap-1 justify-end px-4 pb-2 -mt-0.5 relative z-[1]">
                 {isDisappearing && <Timer className={`h-2.5 w-2.5 ${isMe ? "text-primary-foreground/40" : "text-muted-foreground/40"}`} />}
+                {editedAt && (
+                  <span className={`text-[10px] italic ${isMe ? "text-primary-foreground/45" : "text-muted-foreground/45"}`}>
+                    edited
+                  </span>
+                )}
                 <span className={`text-[10px] font-medium ${isMe ? "text-primary-foreground/50" : "text-muted-foreground/50"}`}>
                   {time}
                 </span>
