@@ -1,113 +1,84 @@
-# Next Update — Phase 4 Track A + Safe-Zone Drag Fix
+# Phase 4 Track B — End-to-End Encrypted Secret Chats
 
-Two parallel deliverables in this update:
+This is the final piece of Phase 4. After this, ZIVO chat will support a true Signal-style "Secret Chat" mode in addition to the regular `direct_messages` chats already shipped.
 
-1. **Multi-Device QR Login** — link a second device by scanning a QR (Track A of Phase 4).
-2. **Safe-Zone Drag Fix** — the floating mini-call window (the "move" button you can drag around) must stay inside the visible safe area on every device (notch, status bar, home indicator, keyboard).
+## What you'll see
 
----
+- A new entry on every contact: **"Start Secret Chat"**.
+- Inside a Secret Chat:
+  - A purple "lock" header showing "End-to-end encrypted".
+  - Messages are server-blind: even ZIVO support cannot read them.
+  - Optional **disappearing-messages** timer (1 min / 1 h / 1 day) chosen at chat creation.
+  - **Verify Safety Number** screen — compare a 60-digit code with your contact (in person or by voice) to confirm there is no man-in-the-middle.
+  - "Reset encryption keys" option that wipes local keys and forces a fresh handshake.
+- Secret chats live alongside normal chats but are clearly marked with a lock icon and a different (subtle indigo) bubble theme.
 
-## Part 1 — Safe-zone fix for the draggable Mini Call window
+## Security model
 
-**What you'll see**
-- The mini call bubble can still be moved with your finger anywhere on screen.
-- It can no longer be dragged under the iPhone notch / Dynamic Island, behind the Android status bar, off the left/right edges, or under the home indicator / mobile bottom navigation.
-- If you rotate the phone or open the keyboard, the bubble auto-snaps back into the safe zone.
-- On release, it gently "magnets" to the nearest left/right edge (iMessage-style) while staying inside safe-area insets.
-
-**Where**
-- `src/components/chat/CallPiP.tsx` — the only draggable floating element in chat right now.
-
-## Part 2 — Multi-Device QR Login (Phase 4 Track A)
-
-**What you'll see**
-- New page **Settings → Linked Devices** (`/account/linked-devices`) showing all signed-in devices with name, OS, last-seen, and a "Sign out" button per device.
-- Tap **Link a Device** → a QR code appears (refreshes every 60s, expires in 2 min).
-- On a second phone (already on zivollc.com), tap **Scan to Sign In** → camera opens → scan the QR → that device is signed in instantly as the same account.
-- Optional one-tap "Sign out all other devices" button.
-
-**Security**
-- Tokens are single-use, expire in 120 s, bound to the QR-displaying device, and revoked the moment a session is created.
-- The scanning device must already be authenticated (we never expose the password / refresh token through the QR — only a short-lived magic link).
-
----
+- **Identity keypair** per device: ECDH P-256 generated in WebCrypto, **non-extractable** private key, stored in IndexedDB. Public key is published to `device_keys` so others can encrypt to you.
+- **Message key**: ECDH shared secret → HKDF-SHA-256 (salted with chat-id) → AES-GCM 256-bit per message, fresh 12-byte random IV.
+- Server stores only `iv + ciphertext + sender public key`. RLS allows only the two participants to read or write.
+- **Safety Number (SAS)** = SHA-256 of both public keys, formatted as 12 groups of 5 digits.
 
 ## Technical Section
 
-### Safe-zone drag (CallPiP.tsx)
-- Add a `containerRef` measuring `window.innerWidth/Height`.
-- Read CSS env safe-area insets via `getComputedStyle` (already exposed as `--safe-top/--safe-bottom/--safe-left/--safe-right` per `mobile-native-ux-standards`).
-- Add framer-motion `dragConstraints={{ top: safeTop+8, bottom: innerH - safeBottom - bottomNavHeight - pipH - 8, left: safeLeft+8, right: innerW - safeRight - pipW - 8 }}` and `dragElastic={0.15}`.
-- On `dragEnd`, snap to nearest horizontal edge with `animate` controls.
-- Add `resize` + `visualViewport.resize` listeners to re-clamp position when keyboard opens or orientation changes.
-- Replace the hard-coded `top:100, right:16` with state that respects the same insets on initial mount.
+### Database (one migration)
 
-### Multi-device QR login
+Three new tables, all RLS-locked:
 
-**DB migration**
-```sql
-create table public.device_link_tokens (
-  id uuid primary key default gen_random_uuid(),
-  token text unique not null,           -- short random (32 char base64url)
-  issuer_user_id uuid not null references auth.users(id) on delete cascade,
-  issuer_device_label text,
-  claimed_at timestamptz,
-  claimed_by_session text,
-  expires_at timestamptz not null default (now() + interval '2 minutes'),
-  created_at timestamptz default now()
-);
-alter table public.device_link_tokens enable row level security;
-create policy "owner can read own tokens"
-  on public.device_link_tokens for select
-  using (auth.uid() = issuer_user_id);
+```text
+device_keys
+  user_id, device_fingerprint, public_key_jwk, created_at
+  - SELECT: any authenticated user (needed to encrypt to them)
+  - INSERT/UPDATE/DELETE: only owner
 
-create table public.user_devices (
-  id uuid primary key default gen_random_uuid(),
-  user_id uuid not null references auth.users(id) on delete cascade,
-  device_label text,
-  user_agent text,
-  platform text,
-  last_seen_at timestamptz default now(),
-  created_at timestamptz default now()
-);
-alter table public.user_devices enable row level security;
-create policy "user reads own devices" on public.user_devices for select using (auth.uid() = user_id);
-create policy "user deletes own devices" on public.user_devices for delete using (auth.uid() = user_id);
+secret_chats
+  user_a, user_b (ordered, distinct, unique pair), created_by, ttl_seconds
+  - all ops gated to participants
+
+secret_messages
+  chat_id, sender_id, sender_public_key_jwk, iv, ciphertext, expires_at
+  - SELECT/INSERT gated via is_secret_chat_participant() SECURITY DEFINER fn
+  - Sender can DELETE own row
+  - Added to supabase_realtime publication
 ```
 
-**Edge functions** (all under `supabase/functions/`)
-- `device-link-issue` (verify_jwt: true) → creates a token row, returns `{ token, expiresAt }`.
-- `device-link-claim` (verify_jwt: true — caller is the *scanning* device, already logged in) → marks token claimed; if scanner is a different account, rejects.
-- `device-link-poll` (verify_jwt: true) → issuer device polls every 2 s; returns `{ claimed: true, by: deviceLabel }` once scanned, then closes the QR sheet.
-- `device-register` (verify_jwt: true) → upserts a `user_devices` row on app boot.
+No edge functions required — all encryption happens client-side; the server just persists ciphertext.
 
-> Note: because Supabase auth sessions cannot be transferred cross-device without exposing refresh tokens, "QR login" here = "approve this new device", which is the safe model used by WhatsApp Web. The scanning device must already be signed in to the same account on at least one device — exactly the WhatsApp/Telegram model. If the user wants true "scan to sign in from logged-out device" we will need to add a magic-link exchange (`device-link-exchange` returning a one-time `signInWithOtp` link) — flagged but not built in this pass.
+### Client code
 
-**New files**
-- `supabase/migrations/<ts>_device_linking.sql`
-- `supabase/functions/device-link-issue/index.ts`
-- `supabase/functions/device-link-claim/index.ts`
-- `supabase/functions/device-link-poll/index.ts`
-- `supabase/functions/device-register/index.ts`
-- `src/hooks/useLinkedDevices.ts`
-- `src/pages/account/LinkedDevicesPage.tsx`
-- `src/pages/account/LinkDevicePage.tsx` (shows QR via `qrcode.react`)
-- `src/pages/account/ScanDevicePage.tsx` (uses `@zxing/browser` for camera scan)
+- `src/lib/secretChat/crypto.ts` — WebCrypto helpers:
+  - `getOrCreateIdentity()` (IndexedDB-backed, non-extractable private key)
+  - `encryptMessage({ plaintext, chatId, recipientPublicKeyJwk })` → `{ iv, ciphertext, senderPublicKeyJwk }`
+  - `decryptMessage({ payload, chatId })` → plaintext
+  - `computeSafetyNumber({ jwkA, jwkB })` → 60-digit SAS string
+  - `resetIdentity()` — wipes local keys
 
-**Edited**
-- `src/App.tsx` — add 3 routes (`/account/linked-devices`, `/account/link-device`, `/account/scan-device`).
-- `src/pages/account/AccountSettingsPage.tsx` (or equivalent settings list) — add **Linked Devices** entry.
-- `src/components/chat/CallPiP.tsx` — safe-zone drag constraints + edge snap.
+- `src/hooks/useSecretChat.ts` — wraps:
+  - publishing the local public key to `device_keys` on first use
+  - fetching/creating the `secret_chats` row for a given partner
+  - subscribing to `secret_messages` realtime, decrypting on receive
+  - sending: encrypt → insert into `secret_messages`
+  - applying disappearing-message TTL (`expires_at`) and pruning
 
-**Dependencies**
-- `qrcode.react` (QR rendering)
-- `@zxing/browser` (camera QR scanning) — only loaded on the scan page (lazy import) to keep main bundle small.
+- `src/components/chat/SecretChatHeader.tsx` — lock badge + verify button
+- `src/components/chat/SecretChatPage.tsx` — full chat UI (reuses bubble/composer styling, but locked-down: no media/locked-media/voice in v1)
+- `src/components/chat/SafetyNumberSheet.tsx` — shows the SAS code + "Mark verified" toggle
+
+- New routes in `src/App.tsx`:
+  - `/chat/secret/:partnerId`
+- Entry point: add **"Start Secret Chat"** button in `ChatContactInfo.tsx` (and a long-press option on the contact list later).
+
+### Out of scope (v1)
+
+- Media/voice/file attachments inside secret chats (text only — encrypting blobs requires a separate ciphertext-storage pipeline; can ship in a follow-up)
+- Multi-device key sync (each device has its own keypair; messages encrypted to one device's public key are only readable on that device — same as Signal's secret chats)
+- Group secret chats
 
 ### Build order
-1. CallPiP safe-zone fix (small, ships immediately).
-2. DB migration + 4 edge functions.
-3. Linked Devices page + Link Device (QR display + poll).
-4. Scan Device page (camera + claim).
-5. Settings entry + route wiring.
 
-After this, Track B (E2E Secret Chats) is the only Phase 4 item remaining.
+1. Run the SQL migration (3 tables + helper fn).
+2. Add `crypto.ts` + `useSecretChat.ts`.
+3. Build `SecretChatPage` + `SafetyNumberSheet`.
+4. Wire route + "Start Secret Chat" entry in `ChatContactInfo`.
+5. Smoke-test: open between two accounts in two browsers, verify SAS matches, send a message, confirm DB row contains only base64 ciphertext.

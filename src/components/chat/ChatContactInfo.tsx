@@ -24,6 +24,7 @@ import Link2 from "lucide-react/dist/esm/icons/link-2";
 import UserRound from "lucide-react/dist/esm/icons/user-round";
 import Palette from "lucide-react/dist/esm/icons/palette";
 import Shield from "lucide-react/dist/esm/icons/shield";
+import Lock from "lucide-react/dist/esm/icons/lock";
 import Ban from "lucide-react/dist/esm/icons/ban";
 import Flag from "lucide-react/dist/esm/icons/flag";
 import Trash2 from "lucide-react/dist/esm/icons/trash-2";
@@ -449,6 +450,12 @@ export default function ChatContactInfo({
 
           {/* Privacy & Safety */}
           <Section title="Privacy & Safety">
+            <SectionButton
+              icon={Lock}
+              label="Start Secret Chat"
+              chevron
+              onClick={() => navigate(`/chat/secret/${recipientId}`)}
+            />
             <SectionButton icon={Shield} label="Privacy Settings" chevron onClick={onOpenSecurity} />
             <SectionButton icon={Ban} label="Block" className="text-destructive" onClick={handleBlock} />
             <SectionButton icon={Flag} label="Report" className="text-destructive" onClick={handleReport} />

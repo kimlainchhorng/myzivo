@@ -405,6 +405,7 @@ const AccountSecurity = lazy(() => import("./pages/account/AccountSecurity"));
 const LinkedDevicesPage = lazy(() => import("./pages/account/LinkedDevicesPage"));
 const LinkDevicePage = lazy(() => import("./pages/account/LinkDevicePage"));
 const ScanDevicePage = lazy(() => import("./pages/account/ScanDevicePage"));
+const SecretChatPage = lazy(() => import("./pages/chat/SecretChatPage"));
 const PreferencesPage = lazy(() => import("./pages/account/PreferencesPage"));
 const PrivacyControls = lazy(() => import("./pages/account/PrivacyControls"));
 const NotificationSettings = lazy(() => import("./pages/account/NotificationSettings"));
@@ -688,6 +689,7 @@ const App = () => (
                 <Route path="/chat" element={<ChatHubPage />} />
                 <Route path="/chat/contacts" element={<ProtectedRoute><ContactsPage /></ProtectedRoute>} />
                 <Route path="/chat/join/:code" element={<JoinGroupPage />} />
+                <Route path="/chat/secret/:partnerId" element={<ProtectedRoute><SecretChatPage /></ProtectedRoute>} />
                 <Route path="/chat/settings/privacy" element={<ProtectedRoute><PrivacySecurityPage /></ProtectedRoute>} />
                 <Route path="/chat/settings/sessions" element={<ProtectedRoute><ActiveSessionsPage /></ProtectedRoute>} />
                 <Route path="/chat/settings/two-step" element={<ProtectedRoute><TwoStepSetupPage /></ProtectedRoute>} />
