@@ -405,6 +405,7 @@ const AccountSecurity = lazy(() => import("./pages/account/AccountSecurity"));
 const LinkedDevicesPage = lazy(() => import("./pages/account/LinkedDevicesPage"));
 const LinkDevicePage = lazy(() => import("./pages/account/LinkDevicePage"));
 const ScanDevicePage = lazy(() => import("./pages/account/ScanDevicePage"));
+const SecretChatPage = lazy(() => import("./pages/chat/SecretChatPage"));
 const PreferencesPage = lazy(() => import("./pages/account/PreferencesPage"));
 const PrivacyControls = lazy(() => import("./pages/account/PrivacyControls"));
 const NotificationSettings = lazy(() => import("./pages/account/NotificationSettings"));
