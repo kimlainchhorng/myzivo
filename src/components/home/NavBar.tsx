@@ -23,6 +23,7 @@ import Crown from "lucide-react/dist/esm/icons/crown";
 import LogOut from "lucide-react/dist/esm/icons/log-out";
 import UserCircle from "lucide-react/dist/esm/icons/user-circle";
 import Briefcase from "lucide-react/dist/esm/icons/briefcase";
+import Building2 from "lucide-react/dist/esm/icons/building-2";
 import Globe from "lucide-react/dist/esm/icons/globe";
 import Check from "lucide-react/dist/esm/icons/check";
 import Newspaper from "lucide-react/dist/esm/icons/newspaper";
