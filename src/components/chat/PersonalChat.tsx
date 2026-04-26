@@ -34,6 +34,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { format, isToday, isYesterday } from "date-fns";
 import { primeCallAudio } from "@/lib/callAudio";
 import ChatMessageBubble from "./ChatMessageBubble";
+import HoldToRecordMic from "./HoldToRecordMic";
 import ChatAttachMenu from "./ChatAttachMenu";
 import type { StickerSendPayload } from "./StickerKeyboard";
 import { getWallpaperClass, getWallpaperStyle } from "./ChatPersonalization";
