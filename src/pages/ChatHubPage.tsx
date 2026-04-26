@@ -19,7 +19,7 @@ import Users from "lucide-react/dist/esm/icons/users";
 import Plus from "lucide-react/dist/esm/icons/plus";
 import UserPlus from "lucide-react/dist/esm/icons/user-plus";
 import Settings from "lucide-react/dist/esm/icons/settings";
-import Edit3 from "lucide-react/dist/esm/icons/edit-3";
+
 import Check from "lucide-react/dist/esm/icons/check";
 import CheckCheck from "lucide-react/dist/esm/icons/check-check";
 import ImageIcon from "lucide-react/dist/esm/icons/image";
