@@ -133,6 +133,24 @@ export function useVoiceRecorder() {
     setDuration(0);
   }, [stop]);
 
+  const pause = useCallback(() => {
+    const rec = recorder.current;
+    if (rec && rec.state === "recording") {
+      try { rec.pause(); } catch { /* noop */ }
+      if (timer.current) { clearInterval(timer.current); timer.current = null; }
+    }
+  }, []);
+
+  const resume = useCallback(() => {
+    const rec = recorder.current;
+    if (rec && rec.state === "paused") {
+      try { rec.resume(); } catch { /* noop */ }
+      const baseElapsed = elapsedMs;
+      const resumedAt = Date.now();
+      timer.current = setInterval(() => setElapsedMs(baseElapsed + (Date.now() - resumedAt)), 100);
+    }
+  }, [elapsedMs]);
+
   const clearBlob = useCallback(() => {
     setAudioBlob(null);
     setDuration(0);
