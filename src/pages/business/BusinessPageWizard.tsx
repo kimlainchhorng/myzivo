@@ -10,7 +10,7 @@
  *   5) Cover photo     (optional, Skip allowed)
  */
 import { useState, useEffect, useRef, useMemo, useCallback } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   ArrowLeft, ArrowRight, Briefcase, Building2, User, Image as ImageIcon,
@@ -68,6 +68,8 @@ const SENTINEL_KEY = "biz-wizard-guard";
 
 export default function BusinessPageWizard() {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const forceNew = searchParams.get("new") === "1";
   const { user } = useAuth();
   const { data: profile } = useUserProfile();
 
@@ -134,6 +136,12 @@ export default function BusinessPageWizard() {
   // Auth gate + redirect already-completed owners; resume partial setups.
   useEffect(() => {
     if (!user) return;
+    // When opened with ?new=1, always start a fresh business — don't resume
+    // an existing draft or redirect to an already-completed dashboard.
+    if (forceNew) {
+      setChecking(false);
+      return;
+    }
     (async () => {
       const { data } = await supabase
         .from("store_profiles")
@@ -167,7 +175,7 @@ export default function BusinessPageWizard() {
       }
       setChecking(false);
     })();
-  }, [user, navigate]);
+  }, [user, navigate, forceNew]);
 
   // Prefill from profile (runs once profile loads).
   useEffect(() => {
