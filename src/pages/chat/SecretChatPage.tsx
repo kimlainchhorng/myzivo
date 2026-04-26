@@ -4,13 +4,17 @@
  */
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import { ArrowLeft, Send, Lock, ShieldCheck, Clock, Trash2, RefreshCw, MoreVertical } from "lucide-react";
+import {
+  ArrowLeft, Send, Lock, ShieldCheck, Clock, Trash2, RefreshCw, MoreVertical,
+  Plus, Image as ImageIcon, Video as VideoIcon, Mic, Paperclip,
+} from "lucide-react";
 import { motion } from "framer-motion";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { useSecretChat } from "@/hooks/useSecretChat";
 import SafetyNumberSheet from "@/components/chat/SafetyNumberSheet";
+import SecretMediaBubble from "@/components/chat/SecretMediaBubble";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
