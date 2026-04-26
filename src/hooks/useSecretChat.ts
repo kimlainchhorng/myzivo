@@ -42,9 +42,8 @@ export interface SecretMessage {
   media?: {
     type: MediaKind;
     storage_path: string;
-    iv: string;
-    wrapped_key: string;
-    wrap_iv: string; // we store this prefixed inside ciphertext field for back-compat? No — see note.
+    iv: string;            // blob IV
+    wrapped_key: string;   // "<wrapIv>:<wrappedKey>" both base64
     mime: string | null;
     size: number | null;
     file_name: string | null;
