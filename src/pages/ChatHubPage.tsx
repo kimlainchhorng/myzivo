@@ -39,6 +39,7 @@ import SwipeableRow from "@/components/chat/SwipeableRow";
 import ChatRowActionsSheet, { type ChatRowActionsTarget } from "@/components/chat/ChatRowActionsSheet";
 import NewChatFab from "@/components/chat/NewChatFab";
 import AddContactSheet from "@/components/chat/AddContactSheet";
+import MyChannelsStrip from "@/components/chat/MyChannelsStrip";
 import { useChatPrefs } from "@/hooks/useChatPrefs";
 import { useBulkPresence } from "@/hooks/useBulkPresence";
 import { useTypingBus } from "@/hooks/useTypingBus";
@@ -1019,6 +1020,11 @@ export default function ChatHubPage({ embedded = false }: { embedded?: boolean }
                         )}
                         <ChevronRight className={cn("w-4 h-4 text-muted-foreground transition-transform", showArchived && "rotate-90")} />
                       </button>
+                    )}
+
+                    {/* Channels strip — subscribed channels with quick access */}
+                    {!search && active === "personal" && (folder === "all" || folder === "personal") && (
+                      <MyChannelsStrip />
                     )}
 
                     {/* Saved Messages — Telegram-style self chat */}
