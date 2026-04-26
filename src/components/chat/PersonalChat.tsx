@@ -1451,7 +1451,7 @@ export default function PersonalChat({ recipientId, recipientName, recipientAvat
                 ref={inputRef}
                 value={input}
                 onChange={handleInputChange}
-                onKeyDown={(e) => e.key === "Enter" && !e.shiftKey && handleSend()}
+                onKeyDown={(e) => e.key === "Enter" && !e.shiftKey && (editingId ? handleSaveEdit() : handleSend())}
                 placeholder={disappearingMode ? "Disappearing message..." : "Message..."}
                 className={`w-full h-11 pl-4 pr-12 rounded-full text-[14.5px] text-foreground placeholder:text-muted-foreground/40 focus:outline-none transition-all ${
                   disappearingMode
