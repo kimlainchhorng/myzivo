@@ -192,6 +192,16 @@ export default function PersonalChat({ recipientId, recipientName, recipientAvat
   const { isTyping: recipientTyping, isOnline: recipientOnline, lastSeen: recipientLastSeen, setTyping } = useChatPresence(user?.id, recipientId);
   const voice = useVoiceRecorder();
   const { draft, updateDraft, clearDraft } = useChatDraft(user?.id, recipientId);
+  const { forwardMessage } = useMessageActions();
+
+  // Phase 3 wiring state
+  const [selfDestructSec, setSelfDestructSec] = useState<number | null>(null);
+  const [forwardingMsg, setForwardingMsg] = useState<Message | null>(null);
+  const [showScheduledSheet, setShowScheduledSheet] = useState(false);
+  const conversationId = useMemo(
+    () => (user?.id && recipientId ? [user.id, recipientId].sort().join("_") : ""),
+    [user?.id, recipientId],
+  );
 
   // Sync draft to input on load
   useEffect(() => {
