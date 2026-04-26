@@ -4,7 +4,13 @@
  */
 import { useState } from "react";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
-import { GIFT_CATALOG, type GiftItem } from "@/config/giftCatalog";
+import { giftCatalog, type GiftItem } from "@/config/giftCatalog";
+
+const GIFT_CATALOG: GiftItem[] = [
+  ...giftCatalog.gifts,
+  ...giftCatalog.interactive,
+  ...giftCatalog.exclusive,
+];
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
