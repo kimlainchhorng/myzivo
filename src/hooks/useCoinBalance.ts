@@ -1,9 +1,6 @@
 /**
- * useCoinBalance — real Z Coin wallet hook backed by Supabase.
- *
- * - Reads the signed-in user's balance from `user_coin_balances`
- * - Subscribes via Realtime so the badge updates live when gifts are sent
- * - Exposes `recharge(amount)` and `refresh()` helpers
+ * useCoinBalance — Live Z-Coin balance for the current user
+ * Subscribes to user_coin_balances changes for instant updates after gifts/transfers.
  */
 import { useEffect, useState, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
@@ -12,14 +9,10 @@ import { useAuth } from "@/contexts/AuthContext";
 export function useCoinBalance() {
   const { user } = useAuth();
   const [balance, setBalance] = useState<number>(0);
-  const [loading, setLoading] = useState<boolean>(true);
+  const [loading, setLoading] = useState(true);
 
   const refresh = useCallback(async () => {
-    if (!user?.id) {
-      setBalance(0);
-      setLoading(false);
-      return;
-    }
+    if (!user) { setBalance(0); setLoading(false); return; }
     const { data } = await (supabase as any)
       .from("user_coin_balances")
       .select("balance")
@@ -27,12 +20,12 @@ export function useCoinBalance() {
       .maybeSingle();
     setBalance(data?.balance ?? 0);
     setLoading(false);
-  }, [user?.id]);
+  }, [user]);
 
   useEffect(() => {
-    refresh();
-    if (!user?.id) return;
-    const ch = supabase
+    void refresh();
+    if (!user) return;
+    const ch = (supabase as any)
       .channel(`coin-balance-${user.id}`)
       .on(
         "postgres_changes",
@@ -40,20 +33,19 @@ export function useCoinBalance() {
         (payload: any) => {
           const next = payload.new?.balance;
           if (typeof next === "number") setBalance(next);
-        }
+        },
       )
       .subscribe();
-    return () => {
-      supabase.removeChannel(ch);
-    };
-  }, [user?.id, refresh]);
+    return () => { (supabase as any).removeChannel(ch); };
+  }, [user, refresh]);
 
-  const recharge = useCallback(async (amount: number) => {
-    const { data, error } = await (supabase as any).rpc("recharge_coins", { amount });
-    if (error) throw error;
-    if (typeof data === "number") setBalance(data);
-    return data as number;
-  }, []);
+  /** Optimistically add purchased coins; pass nothing to just refetch. */
+  const recharge = useCallback(async (coins?: number) => {
+    if (typeof coins === "number" && coins > 0) {
+      setBalance((b) => b + coins);
+    }
+    await refresh();
+  }, [refresh]);
 
-  return { balance, loading, recharge, refresh };
+  return { balance, loading, refresh, recharge };
 }

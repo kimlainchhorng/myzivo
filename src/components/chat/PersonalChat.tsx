@@ -36,6 +36,9 @@ import { primeCallAudio } from "@/lib/callAudio";
 import ChatMessageBubble from "./ChatMessageBubble";
 import HoldToRecordMic from "./HoldToRecordMic";
 import ChatAttachMenu from "./ChatAttachMenu";
+const ChatGiftPanel = lazy(() => import("./ChatGiftPanel"));
+const ChatWalletSheet = lazy(() => import("./ChatWalletSheet"));
+const CoinTransferBubble = lazy(() => import("./CoinTransferBubble"));
 import type { StickerSendPayload } from "./StickerKeyboard";
 import { getWallpaperClass, getWallpaperStyle } from "./ChatPersonalization";
 import CallEventBubble from "./CallEventBubble";
@@ -178,6 +181,8 @@ export default function PersonalChat({ recipientId, recipientName, recipientAvat
   const [showScheduler, setShowScheduler] = useState(false);
   const [showPinnedPanel, setShowPinnedPanel] = useState(false);
   const [showLockedPricePicker, setShowLockedPricePicker] = useState(false);
+  const [showGiftPanel, setShowGiftPanel] = useState(false);
+  const [showWalletSheet, setShowWalletSheet] = useState(false);
   const [pendingLockedFile, setPendingLockedFile] = useState<File | null>(null);
   const [chatStyle, setChatStyle] = useState({ wallpaper: "default", themeColor: "default", fontSize: "medium" });
   const [callEvents, setCallEvents] = useState<CallEvent[]>([]);
@@ -1315,8 +1320,18 @@ export default function PersonalChat({ recipientId, recipientName, recipientAvat
                       </div>
                     )}
 
-                    {/* Location message */}
-                    {msg.message_type === "location" && msg.location_lat != null && msg.location_lng != null ? (
+                    {/* Coin transfer message */}
+                    {msg.message_type === "coin_transfer" && (msg as any).gift_payload ? (
+                      <div className={`flex ${isMe ? "justify-end" : "justify-start"}`}>
+                        <Suspense fallback={null}>
+                          <CoinTransferBubble
+                            amount={Number(((msg as any).gift_payload?.amount) || 0)}
+                            note={(msg as any).gift_payload?.note}
+                            isOwn={isMe}
+                          />
+                        </Suspense>
+                      </div>
+                    ) : msg.message_type === "location" && msg.location_lat != null && msg.location_lng != null ? (
                       <LocationShareBubble
                         lat={msg.location_lat}
                         lng={msg.location_lng}
@@ -1459,6 +1474,8 @@ export default function PersonalChat({ recipientId, recipientName, recipientAvat
                   }}
                   disappearingEnabled={disappearingMode}
                   onLockedImageSelect={() => lockedImageInputRef.current?.click()}
+                  onSendGift={() => setShowGiftPanel(true)}
+                  onOpenWallet={() => setShowWalletSheet(true)}
 
                 />
               </div>
@@ -1741,6 +1758,30 @@ export default function PersonalChat({ recipientId, recipientName, recipientAvat
       {activeEffect && (
         <Suspense fallback={null}>
           <MessageEffects effect={activeEffect} onComplete={() => setActiveEffect(null)} />
+        </Suspense>
+      )}
+
+      {/* Gift drawer (live-style) */}
+      {showGiftPanel && (
+        <Suspense fallback={null}>
+          <ChatGiftPanel
+            open={showGiftPanel}
+            onClose={() => setShowGiftPanel(false)}
+            recipientId={recipientId}
+            recipientName={recipientName}
+          />
+        </Suspense>
+      )}
+
+      {/* In-chat wallet sheet */}
+      {showWalletSheet && (
+        <Suspense fallback={null}>
+          <ChatWalletSheet
+            open={showWalletSheet}
+            onClose={() => setShowWalletSheet(false)}
+            recipientId={recipientId}
+            recipientName={recipientName}
+          />
         </Suspense>
       )}
     </motion.div>
