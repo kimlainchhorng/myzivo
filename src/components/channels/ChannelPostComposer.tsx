@@ -31,28 +31,31 @@ export function ChannelPostComposer({ channelId, onPosted }: Props) {
       setSubmitting(false);
       return;
     }
-    const payload: any = {
-      channel_id: channelId,
-      author_id: u.user.id,
-      body: body.trim(),
-      media: [],
-    };
-    if (scheduled && when) {
-      payload.scheduled_for = new Date(when).toISOString();
-      payload.published_at = null;
-    } else {
-      payload.published_at = new Date().toISOString();
-    }
-    const { error } = await supabase.from("channel_posts").insert(payload);
+    // Use the channel-broadcast edge function so subscribers get notified.
+    const { data, error } = await supabase.functions.invoke("channel-broadcast", {
+      body: {
+        channel_id: channelId,
+        body: body.trim(),
+        media: [],
+        scheduled_for: scheduled && when ? new Date(when).toISOString() : null,
+      },
+    });
     setSubmitting(false);
-    if (error) {
-      toast.error(error.message);
+    if (error || (data as any)?.error) {
+      toast.error((data as any)?.error ?? error?.message ?? "Couldn't publish");
       return;
     }
     setBody("");
     setWhen("");
     setScheduled(false);
-    toast.success(scheduled ? "Scheduled" : "Posted");
+    const notified = (data as any)?.notified ?? 0;
+    toast.success(
+      scheduled
+        ? "Scheduled"
+        : notified
+        ? `Posted · ${notified} subscriber${notified > 1 ? "s" : ""} notified`
+        : "Posted"
+    );
     onPosted?.();
   };
 

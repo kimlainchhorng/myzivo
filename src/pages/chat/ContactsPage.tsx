@@ -4,7 +4,7 @@
  */
 import { useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { ArrowLeft, Search, UserPlus, Star, MoreVertical, MessageCircle, Trash2, AtSign } from "lucide-react";
+import { ArrowLeft, Search, UserPlus, Star, MoreVertical, MessageCircle, Trash2, AtSign, Phone, Inbox, MapPin } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -59,6 +59,36 @@ export default function ContactsPage() {
             </div>
           </div>
         </button>
+
+        <div className="grid grid-cols-3 gap-2">
+          <button
+            onClick={() => navigate("/chat/find-contacts")}
+            className="flex flex-col items-center gap-1.5 p-3 rounded-2xl border bg-card hover:bg-muted/50 active:scale-[0.98] transition"
+          >
+            <div className="w-9 h-9 rounded-full bg-sky-500/15 text-sky-600 flex items-center justify-center">
+              <Phone className="w-4 h-4" />
+            </div>
+            <span className="text-[11px] font-medium leading-tight text-center">Find by phone</span>
+          </button>
+          <button
+            onClick={() => navigate("/chat/contacts/requests")}
+            className="flex flex-col items-center gap-1.5 p-3 rounded-2xl border bg-card hover:bg-muted/50 active:scale-[0.98] transition"
+          >
+            <div className="w-9 h-9 rounded-full bg-amber-500/15 text-amber-600 flex items-center justify-center">
+              <Inbox className="w-4 h-4" />
+            </div>
+            <span className="text-[11px] font-medium leading-tight text-center">Requests</span>
+          </button>
+          <button
+            onClick={() => navigate("/chat/nearby")}
+            className="flex flex-col items-center gap-1.5 p-3 rounded-2xl border bg-card hover:bg-muted/50 active:scale-[0.98] transition"
+          >
+            <div className="w-9 h-9 rounded-full bg-emerald-500/15 text-emerald-600 flex items-center justify-center">
+              <MapPin className="w-4 h-4" />
+            </div>
+            <span className="text-[11px] font-medium leading-tight text-center">Nearby</span>
+          </button>
+        </div>
 
         <div className="relative">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
