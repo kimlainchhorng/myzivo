@@ -1838,19 +1838,18 @@ export default function PersonalChat({ recipientId, recipientName, recipientAvat
                 toast.error("Couldn't upload scan");
                 return;
               }
-              // Send as a chat message — link will be linkified by the renderer.
-              const summary = `📄 ${uploaded.filename}\n${uploaded.page_count ?? meta.pageCount} page${(uploaded.page_count ?? meta.pageCount) > 1 ? "s" : ""} · PDF`;
-              const { error } = await supabase.from("direct_messages").insert({
-                sender_id: user.id,
-                receiver_id: recipientId,
-                message: `${summary}\n${uploaded.url}`,
-                message_type: "text",
-              } as any);
-              if (error) {
-                toast.error("Couldn't send PDF");
-              } else {
-                toast.success("Scan sent");
-              }
+              await handleSend({
+                filePayload: {
+                  url: uploaded.url,
+                  filename: uploaded.filename,
+                  mime_type: uploaded.mime_type,
+                  size: uploaded.size,
+                  page_count: uploaded.page_count ?? meta.pageCount,
+                  thumbnail_url: uploaded.thumbnail_url,
+                  source: "scan",
+                },
+              });
+              toast.success("Scan sent");
             }}
           />
         </Suspense>
