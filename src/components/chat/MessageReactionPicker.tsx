@@ -1,51 +1,23 @@
 /**
- * MessageReactionPicker — Icon picker for message reactions
+ * MessageReactionPicker — Telegram-style 16-emoji reaction picker
  */
 import { motion } from "framer-motion";
-import { supabase } from "@/integrations/supabase/client";
-import { useAuth } from "@/contexts/AuthContext";
-import { toast } from "sonner";
-import Heart from "lucide-react/dist/esm/icons/heart";
-import Laugh from "lucide-react/dist/esm/icons/laugh";
-import ThumbsUp from "lucide-react/dist/esm/icons/thumbs-up";
-import ThumbsDown from "lucide-react/dist/esm/icons/thumbs-down";
-import Flame from "lucide-react/dist/esm/icons/flame";
-import PartyPopper from "lucide-react/dist/esm/icons/party-popper";
-import Sparkles from "lucide-react/dist/esm/icons/sparkles";
-import Star from "lucide-react/dist/esm/icons/star";
+import { useReactions } from "@/hooks/useReactions";
 
-const QUICK_REACTIONS = [
-  { key: "heart", Icon: Heart, color: "text-red-400" },
-  { key: "laugh", Icon: Laugh, color: "text-amber-300" },
-  { key: "thumbsup", Icon: ThumbsUp, color: "text-blue-400" },
-  { key: "thumbsdown", Icon: ThumbsDown, color: "text-white/60" },
-  { key: "fire", Icon: Flame, color: "text-orange-400" },
-  { key: "party", Icon: PartyPopper, color: "text-pink-400" },
-  { key: "sparkle", Icon: Sparkles, color: "text-purple-300" },
-  { key: "star", Icon: Star, color: "text-yellow-400" },
-];
+const QUICK_EMOJIS = ["❤️", "😂", "👍", "👎", "🔥", "🎉", "✨", "⭐", "😮", "😢", "🙏", "💯", "👏", "🤔", "😍", "💔"];
 
-interface MessageReactionPickerProps {
+interface Props {
   messageId: string;
   onClose: () => void;
   onReacted?: () => void;
 }
 
-export default function MessageReactionPicker({ messageId, onClose, onReacted }: MessageReactionPickerProps) {
-  const { user } = useAuth();
+export default function MessageReactionPicker({ messageId, onClose, onReacted }: Props) {
+  const { toggle } = useReactions(messageId);
 
-  const addReaction = async (emoji: string) => {
-    if (!user) return;
-    try {
-      await (supabase as any).from("message_reactions").upsert({
-        message_id: messageId,
-        user_id: user.id,
-        emoji,
-      }, { onConflict: "message_id,user_id,emoji" });
-      onReacted?.();
-    } catch {
-      toast.error("Could not add reaction");
-    }
+  const handle = async (emoji: string) => {
+    await toggle(emoji);
+    onReacted?.();
     onClose();
   };
 
@@ -54,15 +26,15 @@ export default function MessageReactionPicker({ messageId, onClose, onReacted }:
       initial={{ opacity: 0, scale: 0.8, y: 10 }}
       animate={{ opacity: 1, scale: 1, y: 0 }}
       exit={{ opacity: 0, scale: 0.8, y: 10 }}
-      className="flex gap-1 bg-card border border-border/60 rounded-full px-2 py-1.5 shadow-lg"
+      className="grid grid-cols-8 gap-1 bg-card border border-border/60 rounded-2xl px-3 py-2 shadow-xl max-w-[320px]"
     >
-      {QUICK_REACTIONS.map((r) => (
+      {QUICK_EMOJIS.map((emoji) => (
         <button
-          key={r.key}
-          onClick={() => addReaction(r.key)}
-          className="hover:scale-125 transition-transform p-1"
+          key={emoji}
+          onClick={() => handle(emoji)}
+          className="hover:scale-125 active:scale-110 transition-transform text-2xl p-1 leading-none"
         >
-          <r.Icon className={`h-4 w-4 ${r.color}`} />
+          {emoji}
         </button>
       ))}
     </motion.div>
