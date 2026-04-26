@@ -40,6 +40,13 @@ export default function CallLobby({
   const [micOn, setMicOn] = useState(true);
   const [camOn, setCamOn] = useState(callType === "video");
   const [record, setRecord] = useState(false);
+  const { status: bucketStatus, message: bucketMsg } = useRecordingPreflight(canRecord);
+  const bucketReady = bucketStatus === "ready";
+  const recordDisabled = !bucketReady;
+  // Force off if bucket isn't ready
+  useEffect(() => {
+    if (recordDisabled && record) setRecord(false);
+  }, [recordDisabled, record]);
 
   // Acquire local preview
   useEffect(() => {
