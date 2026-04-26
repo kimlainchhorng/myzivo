@@ -101,8 +101,8 @@ export function useChannel(handle: string | undefined) {
     await supabase.from("channel_subscribers").insert({
       channel_id: channel.id,
       user_id: userId,
-      role: "subscriber",
-    });
+      role: "sub",
+    } as any);
     await refresh();
   };
 
