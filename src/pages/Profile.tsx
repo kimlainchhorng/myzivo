@@ -21,6 +21,7 @@ import { Badge } from "@/components/ui/badge";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { useAuth } from "@/contexts/AuthContext";
 import { useUserProfile, useUpdateUserProfile, useUploadAvatar } from "@/hooks/useUserProfile";
+import { useUsername } from "@/hooks/useUsername";
 import { useMerchantRole } from "@/hooks/useMerchantRole";
 import { useOwnerStoreProfile } from "@/hooks/useOwnerStoreProfile";
 import { useAffiliateAttribution } from "@/hooks/useAffiliateAttribution";
@@ -148,6 +149,12 @@ const Profile = () => {
   
   const { user, isAdmin } = useAuth();
   const { data: profile, isLoading: profileLoading } = useUserProfile();
+  const { username: claimedUsername } = useUsername();
+  // Brand-name override (e.g. "ZIVO" for staff/founder accounts) — falls back to legal name.
+  const brandName = (profile as { display_brand_name?: string | null } | undefined)?.display_brand_name || null;
+  const titleCase = (s: string) => s.replace(/\b([a-z])/g, (m) => m.toUpperCase());
+  const rawHeaderName = brandName || profile?.full_name || "";
+  const headerName = brandName ? rawHeaderName : (rawHeaderName ? titleCase(rawHeaderName) : "");
   const { data: merchantData } = useMerchantRole();
   const { data: ownerStore, isLoading: ownerStoreLoading } = useOwnerStoreProfile();
   const { unreadCount: notifUnreadCount, notifications, isLoading: notifLoading, markAsRead, markAllAsRead } = useNotifications(20);
@@ -492,8 +499,9 @@ const Profile = () => {
   });
 
   const getInitials = () => {
+    if (brandName) return brandName.slice(0, 2).toUpperCase();
     if (profile?.full_name) return profile.full_name.split(" ").map(n => n[0]).join("").toUpperCase().slice(0, 2);
-    if (user?.email) return user.email[0].toUpperCase();
+    if (claimedUsername) return claimedUsername.slice(0, 2).toUpperCase();
     return "U";
   };
 
@@ -637,7 +645,7 @@ const Profile = () => {
               "font-semibold text-sm truncate",
               overCover ? "text-white drop-shadow-md" : "text-foreground"
             )}>
-              {profile?.full_name || "Profile"}
+              {headerName || "Profile"}
             </span>
             {profile?.is_verified && <VerifiedBadge size={14} />}
           </div>
@@ -1085,9 +1093,23 @@ const Profile = () => {
                     {/* Name & status */}
                     <div className="px-6 pb-1.5 pt-2 text-left">
                       <CardTitle className="flex items-center justify-start gap-2 text-2xl font-bold tracking-tight">
-                        <span>{profile?.full_name || t("profile.set_name")}</span>
+                        <span>{headerName || t("profile.set_name")}</span>
                         {profile?.is_verified && <VerifiedBadge size={28} />}
                       </CardTitle>
+                      {/* @username line — link or "set" CTA. Email never shown publicly. */}
+                      <div className="mt-1 text-sm text-muted-foreground">
+                        {claimedUsername ? (
+                          <span>@{claimedUsername}</span>
+                        ) : (
+                          <button
+                            type="button"
+                            onClick={() => navigate("/account/profile-edit")}
+                            className="text-primary hover:underline"
+                          >
+                            Set a username
+                          </button>
+                        )}
+                      </div>
                       {/* Email hidden — only visible to account owner in settings */}
                       <div className="flex flex-wrap items-center justify-start gap-2 mt-3">
                         {isPlus && (
@@ -1467,7 +1489,7 @@ const Profile = () => {
               type="button"
               onClick={async () => {
                 const url = `${window.location.origin}/u/${user?.id}`;
-                const title = profile?.full_name || "My ZIVO profile";
+                const title = headerName || "My ZIVO profile";
                 if (navigator.share) {
                   try { await navigator.share({ title, url }); } catch { /* user cancelled */ }
                 } else {
