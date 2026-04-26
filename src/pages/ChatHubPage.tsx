@@ -1185,6 +1185,14 @@ export default function ChatHubPage({ embedded = false }: { embedded?: boolean }
                                         </span>
                                       )}
                                       {(() => {
+                                        if (isTyping) {
+                                          return (
+                                            <span className={cn(
+                                              embedded ? "text-[12px]" : "text-[13px]",
+                                              "truncate leading-snug text-primary font-medium animate-pulse"
+                                            )}>typing…</span>
+                                          );
+                                        }
                                         const stickerPreview = parseStickerPreview(chat.lastMessage || "");
                                         if (stickerPreview) {
                                           return (
