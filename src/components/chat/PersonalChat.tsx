@@ -1310,9 +1310,30 @@ export default function PersonalChat({ recipientId, recipientName, recipientAvat
         )}
       </div>
 
+      {/* Edit preview bar */}
+      <AnimatePresence>
+        {editingId && (
+          <motion.div
+            initial={{ height: 0, opacity: 0 }}
+            animate={{ height: "auto", opacity: 1 }}
+            exit={{ height: 0, opacity: 0 }}
+            className="bg-amber-500/10 border-t border-amber-500/30 px-4 py-2 flex items-center gap-2 overflow-hidden"
+          >
+            <div className="w-1 h-8 rounded-full bg-amber-500 shrink-0" />
+            <div className="flex-1 min-w-0">
+              <p className="text-[10px] font-semibold text-amber-600 dark:text-amber-400">Editing message</p>
+              <p className="text-xs text-muted-foreground truncate">Press send to save · 48h limit</p>
+            </div>
+            <button onClick={handleCancelEdit} className="h-7 w-7 rounded-full flex items-center justify-center">
+              <X className="h-3.5 w-3.5 text-muted-foreground" />
+            </button>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
       {/* Reply preview bar */}
       <AnimatePresence>
-        {replyTo && (
+        {replyTo && !editingId && (
           <motion.div
             initial={{ height: 0, opacity: 0 }}
             animate={{ height: "auto", opacity: 1 }}
