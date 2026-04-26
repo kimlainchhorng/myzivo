@@ -27952,6 +27952,48 @@ export type Database = {
         }
         Relationships: []
       }
+      login_alerts: {
+        Row: {
+          city: string | null
+          country: string | null
+          created_at: string
+          device_name: string | null
+          event: string
+          id: string
+          ip: string | null
+          metadata: Json
+          platform: string | null
+          user_agent: string | null
+          user_id: string
+        }
+        Insert: {
+          city?: string | null
+          country?: string | null
+          created_at?: string
+          device_name?: string | null
+          event: string
+          id?: string
+          ip?: string | null
+          metadata?: Json
+          platform?: string | null
+          user_agent?: string | null
+          user_id: string
+        }
+        Update: {
+          city?: string | null
+          country?: string | null
+          created_at?: string
+          device_name?: string | null
+          event?: string
+          id?: string
+          ip?: string | null
+          metadata?: Json
+          platform?: string | null
+          user_agent?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       login_attempts: {
         Row: {
           created_at: string
@@ -52751,6 +52793,39 @@ export type Database = {
         }
         Relationships: []
       }
+      two_step_auth: {
+        Row: {
+          created_at: string
+          enabled: boolean
+          hint: string | null
+          password_hash: string
+          password_salt: string
+          recovery_email: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          enabled?: boolean
+          hint?: string | null
+          password_hash: string
+          password_salt: string
+          recovery_email?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          enabled?: boolean
+          hint?: string | null
+          password_hash?: string
+          password_salt?: string
+          recovery_email?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       ui_translations: {
         Row: {
           created_at: string
@@ -53691,6 +53766,39 @@ export type Database = {
           is_read?: boolean
           message?: string
           type?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      user_passcode: {
+        Row: {
+          auto_lock_minutes: number
+          biometric_enabled: boolean
+          created_at: string
+          enabled: boolean
+          passcode_hash: string
+          passcode_salt: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          auto_lock_minutes?: number
+          biometric_enabled?: boolean
+          created_at?: string
+          enabled?: boolean
+          passcode_hash: string
+          passcode_salt: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          auto_lock_minutes?: number
+          biometric_enabled?: boolean
+          created_at?: string
+          enabled?: boolean
+          passcode_hash?: string
+          passcode_salt?: string
+          updated_at?: string
           user_id?: string
         }
         Relationships: []

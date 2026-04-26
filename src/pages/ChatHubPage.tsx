@@ -18,6 +18,7 @@ import Bell from "lucide-react/dist/esm/icons/bell";
 import Users from "lucide-react/dist/esm/icons/users";
 import Plus from "lucide-react/dist/esm/icons/plus";
 import UserPlus from "lucide-react/dist/esm/icons/user-plus";
+import Settings from "lucide-react/dist/esm/icons/settings";
 import Edit3 from "lucide-react/dist/esm/icons/edit-3";
 import Check from "lucide-react/dist/esm/icons/check";
 import CheckCheck from "lucide-react/dist/esm/icons/check-check";
@@ -656,6 +657,15 @@ export default function ChatHubPage({ embedded = false }: { embedded?: boolean }
                       aria-label="Contacts"
                     >
                       <UserPlus className="w-5 h-5 text-muted-foreground" />
+                    </button>
+                  )}
+                  {active === "personal" && (
+                    <button
+                      onClick={() => navigate('/chat/settings/privacy')}
+                      className="relative w-9 h-9 flex items-center justify-center rounded-full hover:bg-muted active:scale-90 transition-all"
+                      aria-label="Privacy & Security"
+                    >
+                      <Settings className="w-5 h-5 text-muted-foreground" />
                     </button>
                   )}
                   {active === "personal" && (
