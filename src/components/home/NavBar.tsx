@@ -345,16 +345,7 @@ const NavBar = forwardRef<HTMLDivElement>(function NavBar(_, ref) {
                       <motion.button
                         whileHover={{ scale: 1.05, z: 10 }}
                         whileTap={{ scale: 0.95 }}
-                        onClick={(e) => {
-                          // On desktop (lg+) the sidebar already exposes every account action,
-                          // so the avatar acts as a direct shortcut to /profile instead of opening
-                          // an empty dropdown. The dropdown stays available on mobile.
-                          if (typeof window !== "undefined" && window.matchMedia("(min-width: 1024px)").matches) {
-                            e.preventDefault();
-                            navigate("/profile");
-                          }
-                        }}
-                        className="flex items-center gap-2 px-2 py-1.5 rounded-full transition-all duration-200 group"
+                        className="lg:hidden flex items-center gap-2 px-2 py-1.5 rounded-full transition-all duration-200 group"
                         style={{
                           background: "hsl(var(--muted) / 0.3)",
                           boxShadow: "0 2px 10px -2px hsl(var(--foreground) / 0.06), inset 0 1px 1px hsl(var(--background) / 0.4)",
