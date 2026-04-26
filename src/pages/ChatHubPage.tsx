@@ -776,9 +776,9 @@ export default function ChatHubPage({ embedded = false }: { embedded?: boolean }
                   )}
                   {active === "personal" && (
                     <button
-                      onClick={() => navigate('/chat/settings/privacy')}
+                      onClick={() => navigate('/chat/settings/privacy-hub')}
                       className="relative w-9 h-9 flex items-center justify-center rounded-full hover:bg-muted active:scale-90 transition-all"
-                      aria-label="Privacy & Security"
+                      aria-label="Privacy & Notifications"
                     >
                       <Settings className="w-5 h-5 text-muted-foreground" />
                     </button>
@@ -811,6 +811,13 @@ export default function ChatHubPage({ embedded = false }: { embedded?: boolean }
                   type="text"
                   placeholder="Search conversations..."
                   value={search}
+                  onFocus={(e) => {
+                    // Tap-to-open global search (messages / people / media / links)
+                    if (!search) {
+                      e.currentTarget.blur();
+                      navigate('/chat/search');
+                    }
+                  }}
                   onChange={(e) => setSearch(e.target.value)}
                   className={cn(
                     "w-full pl-9 pr-4 bg-muted/60 rounded-2xl text-sm outline-none focus:ring-2 focus:ring-primary/30 text-foreground placeholder:text-muted-foreground transition-all",
@@ -851,6 +858,17 @@ export default function ChatHubPage({ embedded = false }: { embedded?: boolean }
             </div>
 
             <div className={cn("flex px-5 gap-2 pb-3 overflow-x-auto scrollbar-hide", embedded && "px-3 gap-1.5 pb-2")}>
+              <button
+                onClick={() => navigate('/chat/folders')}
+                className={cn(
+                  "flex items-center gap-1 px-3 py-1.5 text-xs font-semibold rounded-full bg-muted/40 text-muted-foreground hover:bg-muted whitespace-nowrap active:scale-95 transition-all",
+                  embedded && "px-2.5 py-1.5 text-[11px]"
+                )}
+                aria-label="Edit folders"
+              >
+                <Settings className="w-3 h-3" />
+                Edit
+              </button>
               {folders.map((f) => {
                 const isActiveFolder = folder === f.id;
                 const unread = folderUnreadMap[f.id];
