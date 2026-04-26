@@ -113,8 +113,12 @@ export function useVoiceRecorder() {
         stopAll();
         setIsRecording(false);
         if (cancelled.current) {
+          setAudioBlob(null);
+          setDuration(0);
           resolve(null);
         } else {
+          setAudioBlob(blob);
+          setDuration(Math.floor(duration / 1000));
           resolve({ blob, durationMs: duration, waveform: out, mimeType });
         }
       };
@@ -125,7 +129,27 @@ export function useVoiceRecorder() {
   const cancel = useCallback(async () => {
     cancelled.current = true;
     await stop();
+    setAudioBlob(null);
+    setDuration(0);
   }, [stop]);
 
-  return { isRecording, elapsedMs, start, stop, cancel };
+  const clearBlob = useCallback(() => {
+    setAudioBlob(null);
+    setDuration(0);
+  }, []);
+
+  return {
+    isRecording,
+    elapsedMs,
+    audioBlob,
+    duration,
+    start,
+    stop,
+    cancel,
+    clearBlob,
+    // Legacy aliases used by PersonalChat / GroupChat
+    startRecording: start,
+    stopRecording: stop,
+    cancelRecording: cancel,
+  };
 }
