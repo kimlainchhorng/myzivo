@@ -56,13 +56,13 @@ export function useLinkedDevices() {
   const fetchDevices = useCallback(async () => {
     setLoading(true);
     const { data, error } = await supabase
-      .from("user_devices")
+      .from("linked_devices")
       .select("*")
       .order("last_seen_at", { ascending: false });
     if (error) {
       toast.error("Could not load devices");
     } else {
-      setDevices((data ?? []) as UserDevice[]);
+      setDevices((data ?? []) as unknown as UserDevice[]);
     }
     setLoading(false);
   }, []);
@@ -81,7 +81,7 @@ export function useLinkedDevices() {
 
   const removeDevice = useCallback(
     async (id: string) => {
-      const { error } = await supabase.from("user_devices").delete().eq("id", id);
+      const { error } = await supabase.from("linked_devices").delete().eq("id", id);
       if (error) {
         toast.error("Could not remove device");
         return;

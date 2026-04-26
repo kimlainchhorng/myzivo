@@ -86,8 +86,8 @@ Deno.serve(async (req) => {
 
     if (updErr) throw updErr;
 
-    // Register the scanning device in user_devices so it shows up on the list.
-    await admin.from("user_devices").upsert(
+    // Register the scanning device in linked_devices so it shows up on the list.
+    await admin.from("linked_devices").upsert(
       {
         user_id: userData.user.id,
         device_fingerprint: deviceLabel ? `scan-${deviceLabel}` : `scan-${crypto.randomUUID()}`,

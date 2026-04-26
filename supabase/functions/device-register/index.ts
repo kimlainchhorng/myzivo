@@ -40,7 +40,7 @@ Deno.serve(async (req) => {
       });
     }
 
-    const { error } = await admin.from("user_devices").upsert(
+    const { error } = await admin.from("linked_devices").upsert(
       {
         user_id: userData.user.id,
         device_fingerprint: String(fingerprint).slice(0, 120),
