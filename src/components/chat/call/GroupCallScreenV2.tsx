@@ -17,10 +17,28 @@ interface Props {
   roomName: string;
   callType?: "audio" | "video";
   onEnded?: () => void;
+  startMicMuted?: boolean;
+  startCamOff?: boolean;
+  autoRecord?: boolean;
 }
 
-export default function GroupCallScreenV2({ roomName, callType = "video", onEnded }: Props) {
-  const call = useLiveKitCall({ roomName, callType, enabled: true, onEnded });
+export default function GroupCallScreenV2({
+  roomName,
+  callType = "video",
+  onEnded,
+  startMicMuted,
+  startCamOff,
+  autoRecord,
+}: Props) {
+  const call = useLiveKitCall({
+    roomName,
+    callType,
+    enabled: true,
+    onEnded,
+    startMicMuted,
+    startCamOff,
+    autoRecord,
+  });
 
   // Auto-bubble out when the room ends.
   useEffect(() => {
