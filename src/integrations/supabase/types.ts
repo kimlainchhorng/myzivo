@@ -13778,6 +13778,30 @@ export type Database = {
         }
         Relationships: []
       }
+      device_keys: {
+        Row: {
+          created_at: string
+          device_fingerprint: string
+          id: string
+          public_key_jwk: Json
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          device_fingerprint: string
+          id?: string
+          public_key_jwk: Json
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          device_fingerprint?: string
+          id?: string
+          public_key_jwk?: Json
+          user_id?: string
+        }
+        Relationships: []
+      }
       device_link_tokens: {
         Row: {
           claimed_at: string | null
@@ -44507,6 +44531,74 @@ export type Database = {
         }
         Relationships: []
       }
+      secret_chats: {
+        Row: {
+          created_at: string
+          created_by: string
+          id: string
+          ttl_seconds: number | null
+          user_a: string
+          user_b: string
+        }
+        Insert: {
+          created_at?: string
+          created_by: string
+          id?: string
+          ttl_seconds?: number | null
+          user_a: string
+          user_b: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string
+          id?: string
+          ttl_seconds?: number | null
+          user_a?: string
+          user_b?: string
+        }
+        Relationships: []
+      }
+      secret_messages: {
+        Row: {
+          chat_id: string
+          ciphertext: string
+          created_at: string
+          expires_at: string | null
+          id: string
+          iv: string
+          sender_id: string
+          sender_public_key_jwk: Json
+        }
+        Insert: {
+          chat_id: string
+          ciphertext: string
+          created_at?: string
+          expires_at?: string | null
+          id?: string
+          iv: string
+          sender_id: string
+          sender_public_key_jwk: Json
+        }
+        Update: {
+          chat_id?: string
+          ciphertext?: string
+          created_at?: string
+          expires_at?: string | null
+          id?: string
+          iv?: string
+          sender_id?: string
+          sender_public_key_jwk?: Json
+        }
+        Relationships: [
+          {
+            foreignKeyName: "secret_messages_chat_id_fkey"
+            columns: ["chat_id"]
+            isOneToOne: false
+            referencedRelation: "secret_chats"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       security_events: {
         Row: {
           created_at: string
@@ -61321,6 +61413,10 @@ export type Database = {
         Returns: boolean
       }
       is_restaurant_user: { Args: { p_user_id?: string }; Returns: boolean }
+      is_secret_chat_participant: {
+        Args: { _chat_id: string; _user_id: string }
+        Returns: boolean
+      }
       is_service_available: {
         Args: { p_service_name: string }
         Returns: boolean
