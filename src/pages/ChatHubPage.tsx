@@ -545,6 +545,7 @@ export default function ChatHubPage({ embedded = false }: { embedded?: boolean }
   });
 
   const currentCategory = categories.find((c) => c.id === active)!;
+  const { isPinned, isMuted, isArchived, togglePin, toggleMute, toggleArchive } = useChatPrefs(user?.id);
 
   // Compute unread counts per tab
   const personalUnread = personalChats.reduce((sum: number, c: any) => sum + (c.unread || 0), 0);
@@ -562,15 +563,50 @@ export default function ChatHubPage({ embedded = false }: { embedded?: boolean }
     ? [...personalChats, ...groupChats].sort((a: any, b: any) => new Date(b.lastTime).getTime() - new Date(a.lastTime).getTime())
     : [];
 
-  const chatList =
+  const rawChatList =
     active === "shop" ? shopChats :
     active === "ride" ? rideChats :
     active === "support" ? supportChats :
     mergedPersonalList;
 
+  // Apply folder-level filtering on top of category data
+  const folderFiltered = (rawChatList as any[]).filter((c) => {
+    if (folder === "unread") return (c.unread || 0) > 0;
+    if (folder === "personal") return !(c as any).isGroup;
+    if (folder === "groups") return !!(c as any).isGroup;
+    return true;
+  });
+
+  // Split archived vs visible
+  const archivedList = folderFiltered.filter((c: any) => isArchived(c.id));
+  const visibleList = folderFiltered.filter((c: any) => !isArchived(c.id));
+
+  // Per-folder unread badges (for the pill bar)
+  const folderUnreadMap: Record<ChatFolder, number> = {
+    all: personalUnread,
+    unread: personalUnread,
+    personal: personalChats.filter((c: any) => !c.isGroup).reduce((s: number, c: any) => s + (c.unread || 0), 0),
+    groups: groupChats.reduce((s: number, c: any) => s + (c.unread || 0), 0),
+    shop: shopUnread,
+    support: supportUnread,
+    ride: rideUnread,
+  };
+
+  // Pinned-first sort
+  const sortByPin = (list: any[]) =>
+    [...list].sort((a, b) => {
+      const pa = isPinned(a.id) ? 1 : 0;
+      const pb = isPinned(b.id) ? 1 : 0;
+      if (pa !== pb) return pb - pa;
+      return new Date(b.lastTime).getTime() - new Date(a.lastTime).getTime();
+    });
+
+  const sortedVisible = sortByPin(visibleList);
+  const archivedUnread = archivedList.reduce((s: number, c: any) => s + (c.unread || 0), 0);
+
   const filtered = search
-    ? chatList.filter((c: any) => c.name?.toLowerCase().includes(search.toLowerCase()))
-    : chatList;
+    ? sortedVisible.filter((c: any) => c.name?.toLowerCase().includes(search.toLowerCase()))
+    : sortedVisible;
 
   const [profileResults, setProfileResults] = useState<any[]>([]);
   const [searchingProfiles, setSearchingProfiles] = useState(false);
