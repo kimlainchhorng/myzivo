@@ -100,6 +100,7 @@ interface Message {
   created_at: string;
   is_read: boolean;
   locked_price_cents?: number | null;
+  edited_at?: string | null;
 }
 
 interface CallEvent {
