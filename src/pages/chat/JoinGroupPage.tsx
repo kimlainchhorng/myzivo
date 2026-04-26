@@ -26,7 +26,7 @@ interface InvitePreview {
 
 export default function JoinGroupPage() {
   const { code } = useParams<{ code: string }>();
-  const { user, loading: authLoading } = useAuth();
+  const { user, isLoading: authLoading } = useAuth();
   const navigate = useNavigate();
   const [preview, setPreview] = useState<InvitePreview | null>(null);
   const [error, setError] = useState<string | null>(null);
