@@ -19,7 +19,7 @@ import Users from "lucide-react/dist/esm/icons/users";
 import Plus from "lucide-react/dist/esm/icons/plus";
 import UserPlus from "lucide-react/dist/esm/icons/user-plus";
 import Settings from "lucide-react/dist/esm/icons/settings";
-import Edit3 from "lucide-react/dist/esm/icons/edit-3";
+
 import Check from "lucide-react/dist/esm/icons/check";
 import CheckCheck from "lucide-react/dist/esm/icons/check-check";
 import ImageIcon from "lucide-react/dist/esm/icons/image";
@@ -33,8 +33,15 @@ import Archive from "lucide-react/dist/esm/icons/archive";
 import ArchiveRestore from "lucide-react/dist/esm/icons/archive-restore";
 import Share2 from "lucide-react/dist/esm/icons/share-2";
 import MapPinned from "lucide-react/dist/esm/icons/map-pinned";
+import Bookmark from "lucide-react/dist/esm/icons/bookmark";
+import MoreVertical from "lucide-react/dist/esm/icons/more-vertical";
 import SwipeableRow from "@/components/chat/SwipeableRow";
+import ChatRowActionsSheet, { type ChatRowActionsTarget } from "@/components/chat/ChatRowActionsSheet";
+import NewChatFab from "@/components/chat/NewChatFab";
+import AddContactSheet from "@/components/chat/AddContactSheet";
 import { useChatPrefs } from "@/hooks/useChatPrefs";
+import { useBulkPresence } from "@/hooks/useBulkPresence";
+import { useTypingBus } from "@/hooks/useTypingBus";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/contexts/AuthContext";
 import { useNavigate, useLocation, useSearchParams } from "react-router-dom";
@@ -547,6 +554,37 @@ export default function ChatHubPage({ embedded = false }: { embedded?: boolean }
   const currentCategory = categories.find((c) => c.id === active)!;
   const { isPinned, isMuted, isArchived, togglePin, toggleMute, toggleArchive } = useChatPrefs(user?.id);
 
+  // Live presence dots for visible personal partners
+  const personalPartnerIds = useMemo(
+    () => (personalChats as any[]).filter((c) => !c.isGroup).map((c) => c.id),
+    [personalChats]
+  );
+  const onlineIds = useBulkPresence(user?.id, personalPartnerIds);
+
+  // Live "typing…" preview from other users
+  const typingFrom = useTypingBus(user?.id);
+
+  // Row actions sheet state
+  const [actionsTarget, setActionsTarget] = useState<ChatRowActionsTarget | null>(null);
+  const [showAddContact, setShowAddContact] = useState(false);
+
+  // Saved Messages — Telegram's self-chat
+  const { data: savedMessagesPreview } = useQuery({
+    queryKey: ["chat-hub-saved", user?.id],
+    enabled: !!user && active === "personal",
+    queryFn: async () => {
+      const { data } = await supabase
+        .from("direct_messages")
+        .select("message, created_at")
+        .eq("sender_id", user!.id)
+        .eq("receiver_id", user!.id)
+        .order("created_at", { ascending: false })
+        .limit(1)
+        .maybeSingle();
+      return data as { message: string; created_at: string } | null;
+    },
+  });
+
   // Compute unread counts per tab
   const personalUnread = personalChats.reduce((sum: number, c: any) => sum + (c.unread || 0), 0);
   const shopUnread = shopChats.reduce((sum: number, c: any) => sum + (c.unread || 0), 0);
@@ -965,6 +1003,31 @@ export default function ChatHubPage({ embedded = false }: { embedded?: boolean }
                       </button>
                     )}
 
+                    {/* Saved Messages — Telegram-style self chat */}
+                    {!search && active === "personal" && user && (
+                      <button
+                        onClick={() => setOpenPersonalChat({ id: user.id, name: "Saved Messages", avatar: null, isVerified: false })}
+                        className="w-full flex items-center gap-3 p-3 rounded-2xl bg-card border border-border/40 shadow-sm hover:shadow-md hover:border-border/60 active:scale-[0.98] transition-all"
+                      >
+                        <div className="w-[50px] h-[50px] rounded-2xl bg-primary/10 flex items-center justify-center ring-2 ring-border/30">
+                          <Bookmark className="w-5 h-5 text-primary" />
+                        </div>
+                        <div className="flex-1 min-w-0 text-left">
+                          <div className="flex items-center justify-between mb-1">
+                            <span className="text-[15px] font-semibold text-foreground truncate">Saved Messages</span>
+                            {savedMessagesPreview?.created_at && (
+                              <span className="text-[11px] text-muted-foreground tabular-nums ml-2">{formatChatTime(savedMessagesPreview.created_at)}</span>
+                            )}
+                          </div>
+                          <p className="text-[13px] text-muted-foreground truncate leading-snug">
+                            {savedMessagesPreview?.message
+                              ? parseRichMessagePreview(savedMessagesPreview.message)
+                              : "Notes, links and reminders for yourself"}
+                          </p>
+                        </div>
+                      </button>
+                    )}
+
                     {/* Pinned section header */}
                     {!search && displayList.some((c: any) => isPinned(c.id)) && (
                       <div className="flex items-center gap-1.5 px-2 pt-1 pb-0.5">
@@ -977,6 +1040,8 @@ export default function ChatHubPage({ embedded = false }: { embedded?: boolean }
                       const pinned = isPinned(chat.id);
                       const muted = isMuted(chat.id);
                       const isPersonalChat = active === "personal";
+                      const liveOnline = isPersonalChat && !chat.isGroup && onlineIds.has(chat.id);
+                      const isTyping = isPersonalChat && !chat.isGroup && typingFrom.has(chat.id);
 
                       // Show separator before first non-pinned item
                       const prev = displayList[idx - 1];
@@ -1078,7 +1143,7 @@ export default function ChatHubPage({ embedded = false }: { embedded?: boolean }
                                       <Car className="w-5 h-5 text-muted-foreground" />
                                     )}
                                   </div>
-                                  {active === "personal" && !(chat as any).isGroup && (chat as any).isOnline && (
+                                  {liveOnline && (
                                     <span className="absolute -bottom-0.5 -right-0.5 h-3.5 w-3.5 rounded-full bg-emerald-500 border-[2.5px] border-card" />
                                   )}
                                 </div>
@@ -1104,6 +1169,27 @@ export default function ChatHubPage({ embedded = false }: { embedded?: boolean }
                                       )}>
                                         {formatChatTime(chat.lastTime)}
                                       </span>
+                                      {isPersonalChat && !chat.isGroup && (
+                                        <span
+                                          role="button"
+                                          aria-label="Chat options"
+                                          onClick={(e) => {
+                                            e.stopPropagation();
+                                            e.preventDefault();
+                                            setActionsTarget({
+                                              id: chat.id,
+                                              name: chat.name,
+                                              isPinned: pinned,
+                                              isMuted: muted,
+                                              isArchived: isArchived(chat.id),
+                                              hasUnread: (chat.unread || 0) > 0,
+                                            });
+                                          }}
+                                          className="ml-0.5 w-6 h-6 rounded-full hover:bg-muted flex items-center justify-center cursor-pointer"
+                                        >
+                                          <MoreVertical className="w-3.5 h-3.5 text-muted-foreground" />
+                                        </span>
+                                      )}
                                     </span>
                                   </div>
                                   <div className="flex items-center justify-between">
@@ -1120,6 +1206,14 @@ export default function ChatHubPage({ embedded = false }: { embedded?: boolean }
                                         </span>
                                       )}
                                       {(() => {
+                                        if (isTyping) {
+                                          return (
+                                            <span className={cn(
+                                              embedded ? "text-[12px]" : "text-[13px]",
+                                              "truncate leading-snug text-primary font-medium animate-pulse"
+                                            )}>typing…</span>
+                                          );
+                                        }
                                         const stickerPreview = parseStickerPreview(chat.lastMessage || "");
                                         if (stickerPreview) {
                                           return (
@@ -1222,25 +1316,43 @@ export default function ChatHubPage({ embedded = false }: { embedded?: boolean }
       )}
 
       {active === "personal" && !sharePayload && !embedded && (
-        <motion.button
-          initial={{ scale: 0 }}
-          animate={{ scale: 1 }}
-          transition={{ type: "spring", delay: 0.2 }}
-          onClick={() => {
-            // Focus search to find users
+        <NewChatFab
+          onNewChat={() => {
             const searchInput = document.querySelector<HTMLInputElement>('input[placeholder="Search conversations..."]');
             if (searchInput) {
               searchInput.focus();
               searchInput.scrollIntoView({ behavior: "smooth" });
             }
           }}
-          className="fixed right-5 z-30 w-14 h-14 bg-primary text-primary-foreground rounded-full shadow-xl shadow-primary/30 flex items-center justify-center active:scale-90 transition-transform"
-          style={{ bottom: "calc(var(--zivo-safe-bottom, 0px) + 7rem)" }}
-          aria-label="Start new chat"
-        >
-          <Edit3 className="w-5 h-5" />
-        </motion.button>
+          onNewGroup={() => setShowCreateGroup(true)}
+          onNewContact={() => setShowAddContact(true)}
+        />
       )}
+
+      <AddContactSheet open={showAddContact} onOpenChange={setShowAddContact} />
+
+      <ChatRowActionsSheet
+        target={actionsTarget}
+        onClose={() => setActionsTarget(null)}
+        onTogglePin={() => actionsTarget && (togglePin(actionsTarget.id), toast.success(actionsTarget.isPinned ? "Unpinned" : "Pinned to top"))}
+        onToggleMute={() => actionsTarget && (toggleMute(actionsTarget.id), toast.success(actionsTarget.isMuted ? "Unmuted" : "Muted"))}
+        onMarkRead={async () => {
+          if (!actionsTarget || !user) return;
+          await supabase.from("direct_messages").update({ is_read: true })
+            .eq("receiver_id", user.id).eq("sender_id", actionsTarget.id).eq("is_read", false);
+          queryClient.invalidateQueries({ queryKey: ["chat-hub-personal"] });
+          toast.success("Marked as read");
+        }}
+        onToggleArchive={() => actionsTarget && (toggleArchive(actionsTarget.id), toast.success(actionsTarget.isArchived ? "Unarchived" : "Archived"))}
+        onClearHistory={async () => {
+          if (!actionsTarget || !user) return;
+          await supabase.from("direct_messages").delete()
+            .or(`and(sender_id.eq.${user.id},receiver_id.eq.${actionsTarget.id}),and(sender_id.eq.${actionsTarget.id},receiver_id.eq.${user.id})`);
+          queryClient.invalidateQueries({ queryKey: ["chat-hub-personal"] });
+          toast.success("History cleared");
+        }}
+        onDelete={() => actionsTarget && setDeleteConfirm({ id: actionsTarget.id, name: actionsTarget.name, category: "personal" })}
+      />
 
       <AnimatePresence>
         {deleteConfirm && (

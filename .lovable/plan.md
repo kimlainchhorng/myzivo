@@ -1,92 +1,96 @@
 ## Goal
-Make the Chat hub (`/chat`) feel like Telegram: denser, more informative, and more interactive — so users stop saying "missing a lot."
-
-All work stays inside the existing `ChatHubPage.tsx` + a few small new components. No backend/data model changes are required for v1 (pin/archive/mute use a per-user local store first, with a follow-up migration noted at the end).
+Round 2 of Telegram-parity for the Chat hub. The previous pass added folders, swipe actions, pin/mute/archive prefs, and a suggestion grid — but these row-level Telegram details and entry points are still missing. This pass closes those gaps without touching the inner chat screens.
 
 ---
 
-## 1. Folder bar with unread badges
+## What's still missing vs Telegram (and what we'll build)
 
-Replace the current 4-pill category row (Personal / Shop / Support / Ride) with a Telegram-style horizontal folder bar:
+### 1. Online presence dots on every avatar
+Right now rows have no live online indicator. Add a single shared presence channel (`chat-list-presence`) that tracks which user_ids in the visible list are online, and render a green dot on the avatar bottom-right.
 
-- `All`, `Unread`, `Personal`, `Groups`, `Shop`, `Support`, `Ride`
-- Each pill shows a small green badge with the unread count for that folder (hidden when 0)
-- Active pill = filled green; inactive = subtle gray; horizontal scroll on overflow
-- Persist last-selected folder in `localStorage`
+- New hook `src/hooks/useBulkPresence.ts` — joins one Supabase presence channel, accepts an array of user_ids, returns `Set<string>` of online ids. Re-tracks when the list changes; cleans up on unmount.
+- Render: `w-3 h-3 rounded-full bg-emerald-500 ring-2 ring-background absolute -bottom-0.5 -right-0.5` on personal rows only (not groups).
 
-Folder filtering is computed client-side from the chat list already loaded.
+### 2. Delivery ticks on outgoing previews
+Telegram shows ✓ / ✓✓ / blue ✓✓ next to outgoing previews. Today the row preview has no tick at all.
 
-## 2. Pinned chats + swipe actions
+- When the last message's `sender_id === currentUser.id`, prepend tick icon:
+  - `Check` (single) when `delivered_at` null
+  - `CheckCheck` (gray) when delivered but not read
+  - `CheckCheck` (emerald) when `is_read = true`
+- Already imported `Check` / `CheckCheck`. Pull the needed fields (`sender_id`, `delivered_at`, `is_read`) into the existing chat list query and pass through.
 
-- New "Pinned" section at the top of the list (separator label "Pinned"), followed by "Chats"
-- Long-press a row OR swipe-right → action sheet with **Pin / Unpin, Mute / Unmute, Mark read, Archive, Delete**
-- Swipe-left on a row → reveals inline `Archive` (amber) and `Delete` (red) buttons (Telegram-style)
-- Swipe-right on a row → reveals `Read/Unread` and `Pin` buttons
-- Implementation: wrap each row in a `SwipeableRow` component using `framer-motion` drag with snap thresholds; reuse existing toast for confirmations
+### 3. "You:" prefix + group sender prefix + live typing preview
+Today preview is plain text. Telegram shows `You: …`, `Alex: hey` (groups), and replaces the preview with green `typing…` while the partner is typing.
 
-## 3. Rich row metadata (the big visual upgrade)
+- "You:" prefix already partially in place — verify and apply consistently.
+- Groups: prefix with sender display name from `last_message.sender_name` if available.
+- Typing: piggy-back on the existing `useChatPresence` channel pattern — broadcast `typing` events on the per-conversation channel; the hub subscribes to a lightweight `chat-typing-bus` channel that fans out which `partner_id` is currently typing. Replace preview line with `<span class="text-primary">typing…</span>` when set.
 
-Each conversation row will show:
+### 4. Long-press / row-tap action sheet
+Swipe actions exist but discoverability is low on web. Add a `MoreVertical` button that opens a `Sheet` (reuse shadcn) with: **Pin / Unpin**, **Mute / Unmute**, **Mark as read**, **Archive / Unarchive**, **Clear history**, **Delete chat**. Long-press (300ms) on touch also triggers it.
 
-- **Avatar** with a green online dot (bottom-right) when the contact is online (use existing `useChatPresence` presence channel, batched per visible row)
-- **Verified badge** next to name (already imported)
-- **Pin icon** to the left of the timestamp when pinned
-- **Mute bell** (slashed) when muted
-- **Last-message preview** with:
-  - `You: …` prefix when the last message is from the current user
-  - `typing…` in green (replaces preview while the other side is typing)
-  - Sender name prefix in groups (`Alex: hey`)
-  - Existing media icons (📷 🎤 📍 🎥) preserved
-- **Delivery ticks** on outgoing previews: `✓` sent, `✓✓` delivered, blue `✓✓` read (derive from `read_at` / `delivered_at` on `direct_messages`)
-- **Unread count badge**: green pill, right-aligned under the timestamp; gray when chat is muted
+- New `src/components/chat/ChatRowActionsSheet.tsx`.
+- Reuse `useChatPrefs` for pin/mute/archive; wire delete + clear to existing handlers in `ChatHubPage`.
 
-## 4. Archive section + search filters
+### 5. Search filter chips (Chats / Media / Links / Files)
+v1 promised "Chats" functional + others as "Coming soon". Currently no chips render under search. Add the chip row that appears only when search is non-empty; "Chats" is active, others render disabled with a "Soon" tag.
 
-- A single "Archived chats" row pinned at the very top of the list (Telegram-style) when ≥1 chat is archived. Tap → expands to show archived chats inline; unread count shown on the row.
-- Inside the search input, when the user starts typing, show filter chips below it: **Chats · Media · Links · Files** (v1 only "Chats" is functional; the others render as disabled "Coming soon" chips so the UI parity is there without scope creep).
+### 6. Saved Messages (Telegram's "self chat")
+A staple Telegram feature with no equivalent today. Add a pinned, always-on row at the very top of the personal folder labeled **Saved Messages** with the bookmark icon. Tapping opens `PersonalChat` with the user's own id as the partner — `direct_messages` already supports same-user rows; we just need to allow it in the row click handler.
 
-## 5. Friendly empty state
+- Last-message preview pulls from `direct_messages` where `sender_id = receiver_id = me`.
+- Auto-creates on first tap (no row insert needed; the chat opens empty).
 
-When the personal folder has 0 (or only 1) chats, render a 3-card suggestion grid below the existing "Your story" row:
+### 7. Floating "New" FAB with menu
+Telegram has a single circular pencil FAB that fans out: **New Group**, **New Channel**, **New Contact**, **New Chat**. Today we only have a `+` in the header. Add a bottom-right FAB (above the mobile nav) with a popover menu of those 4 actions. "New Channel" routes to `/channels/new`, "New Contact" opens `AddContactSheet`, "New Group" opens `CreateGroupModal`, "New Chat" opens contact picker.
 
-- **Invite friends** → opens native share sheet with the user's referral link
-- **Find people nearby** → routes to `/nearby`
-- **New group** → opens existing `CreateGroupModal`
-
-Cards use the established rounded-2xl + soft-shadow style with emerald accent icons.
+### 8. Unread/Mute icons on the avatar row (polish)
+- Pin icon shown left of the timestamp when `isPinned` (already added) — verify on muted+pinned combo.
+- Add a tiny mute-bell on the avatar corner when muted *and* unread > 0 so the gray badge reads clearly.
+- Date column: show today's time, "Yesterday", or short date — same as Telegram (already in `formatChatTime`, verify groups path uses it too — currently groups inline-format.)
 
 ---
 
 ## Technical details
 
-**Files touched**
-- `src/pages/ChatHubPage.tsx` — folder bar, archive row, suggestion grid, wire new row component
-- `src/components/chat/ChatListRow.tsx` *(new)* — extracts the row markup with online dot, ticks, mute/pin icons, typing/You-prefix preview
-- `src/components/chat/SwipeableRow.tsx` *(new)* — reusable framer-motion swipe wrapper (left/right action reveal + snap)
-- `src/hooks/useChatPrefs.ts` *(new)* — localStorage-backed pin/mute/archive map keyed by `userId:partnerId`; returns `{pinned, muted, archived, togglePin, toggleMute, toggleArchive}`
-- `src/hooks/useBulkPresence.ts` *(new)* — single Supabase presence channel `chat-list-presence` that tracks which user_ids in the visible list are online (avoids one channel per row)
+**New files**
+- `src/hooks/useBulkPresence.ts` — single shared presence channel, returns `Set<string> onlineIds`.
+- `src/hooks/useTypingBus.ts` — subscribes to a broadcast channel that each `PersonalChat` already pings on input; returns `Map<partnerId, boolean>`. (Will also add a one-line broadcast inside `PersonalChat`'s existing typing handler.)
+- `src/components/chat/ChatRowActionsSheet.tsx` — shadcn `Sheet` with the action list.
+- `src/components/chat/NewChatFab.tsx` — floating button + popover.
+- `src/components/chat/SearchFilterChips.tsx` — chip row.
+
+**Files edited**
+- `src/pages/ChatHubPage.tsx`
+  - Hook in `useBulkPresence` with the list of visible personal partner ids.
+  - Hook in `useTypingBus` and override preview text when typing.
+  - Inject Saved Messages pseudo-row at top of personal list.
+  - Render `NewChatFab`, `SearchFilterChips`, presence dots, ticks, action-sheet trigger.
+  - Extend the existing chats query to include `sender_id`, `delivered_at`, `is_read` on the last message.
+- `src/components/chat/PersonalChat.tsx` — emit a tiny `chat-typing-bus` broadcast (1 line in the existing typing handler) so the hub can show `typing…`.
 
 **Data**
-- v1 stores pin/mute/archive in `localStorage` so it ships immediately and works offline.
-- Follow-up (noted, not built now): a `chat_preferences` table `(user_id, partner_id, pinned, muted, archived, updated_at)` synced via Supabase for cross-device parity.
+- No schema changes. All new behavior reads existing `direct_messages` columns and uses Supabase Realtime presence/broadcast.
 
 **Performance**
-- Memoize folder counts and sort with `useMemo` keyed on `[chats, prefs]`.
-- Single presence channel for the whole list (not per row).
-- Delivery tick state read from existing message fields — no extra query.
+- Presence: one channel, not one-per-row.
+- Typing bus: one global broadcast channel; payload is `{ from: uuid, typing: bool }`.
+- Memoize ticks/preview transforms keyed on `[chats, prefs, typingMap, onlineIds]`.
 
 **Visuals**
-- Reuse existing emerald tokens (`bg-primary`, `text-primary`); keep the rounded-2xl glass aesthetic from the v2026 chat memory.
-- Online dot: `w-3 h-3 rounded-full bg-emerald-500 ring-2 ring-background absolute -bottom-0.5 -right-0.5`.
-- Unread badge: `min-w-5 h-5 px-1.5 rounded-full bg-primary text-primary-foreground text-[11px]` (gray variant when muted).
+- Reuse emerald primary tokens; rounded-2xl glass aesthetic.
+- Online dot, pin icon, slashed bell, ticks all sized to match Telegram density (12–14px).
+- FAB: `bottom-20 right-4 size-14 rounded-full shadow-xl bg-primary text-primary-foreground`.
 
 **Out of scope for this pass**
-- Cross-device sync of pin/mute/archive (planned follow-up table).
-- Functional Media/Links/Files search filters (UI only).
-- Channels tab (separate feature already at `/channels`).
+- Cross-device sync of pin/mute/archive (still localStorage; planned `chat_preferences` table later).
+- Functional Media/Links/Files filter results (UI only).
+- Channels/Stories changes (separate features).
+- Backend table for Saved Messages metadata — uses existing `direct_messages` self-rows.
 
 ---
 
 ## Result
 
-After this change the Chat screen will display: folder tabs with live unread badges, an archive row, a pinned section, rows with online dots, ticks, mute/pin markers, "You:"/typing previews, swipe actions, and a friendly suggestion grid when the list is short — closing the gap with Telegram in one pass.
+After this pass, every row will show a live online dot, delivery ticks, "You:"/sender prefixes, and live `typing…`. Users get a Saved Messages shortcut, a Telegram-style FAB with all "new" actions, an action sheet for full row controls, and search filter chips — closing the remaining day-to-day Telegram parity gaps in the chat list.
