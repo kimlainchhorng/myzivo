@@ -160,8 +160,22 @@ function getMessagePreviewIcon(message: string) {
 }
 
 export default function ChatHubPage({ embedded = false }: { embedded?: boolean } = {}) {
-  const [active, setActive] = useState<ChatCategory>("personal");
+  const [folder, setFolderState] = useState<ChatFolder>(() => {
+    try {
+      const saved = localStorage.getItem(FOLDER_STORAGE_KEY) as ChatFolder | null;
+      if (saved && folders.some((f) => f.id === saved)) return saved;
+    } catch {}
+    return "all";
+  });
+  const setFolder = (f: ChatFolder) => {
+    setFolderState(f);
+    try { localStorage.setItem(FOLDER_STORAGE_KEY, f); } catch {}
+  };
+  const active: ChatCategory = folders.find((f) => f.id === folder)!.category;
+  const setActive = (c: ChatCategory) => setFolder(c as ChatFolder);
   const [search, setSearch] = useState("");
+  const [searchFilter, setSearchFilter] = useState<"chats" | "media" | "links" | "files">("chats");
+  const [showArchived, setShowArchived] = useState(false);
   const { user } = useAuth();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
