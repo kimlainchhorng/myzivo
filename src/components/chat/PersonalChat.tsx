@@ -973,12 +973,13 @@ export default function PersonalChat({ recipientId, recipientName, recipientAvat
     });
   }, []);
 
-  return (
+  const content = (
     <motion.div
       className={inline
         ? "absolute inset-0 z-50 flex flex-col overflow-hidden h-full w-full bg-background"
         : "fixed inset-0 z-[1300] bg-background flex flex-col overflow-hidden"
       }
+      style={inline ? undefined : { height: "100dvh", width: "100vw", top: 0, left: 0 }}
       initial={inline ? { opacity: 0 } : { x: "100%" }}
       animate={inline ? { opacity: 1 } : { x: 0 }}
       exit={inline ? { opacity: 0 } : { x: "100%" }}
