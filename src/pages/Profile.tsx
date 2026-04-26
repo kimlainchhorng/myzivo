@@ -499,8 +499,9 @@ const Profile = () => {
   });
 
   const getInitials = () => {
+    if (brandName) return brandName.slice(0, 2).toUpperCase();
     if (profile?.full_name) return profile.full_name.split(" ").map(n => n[0]).join("").toUpperCase().slice(0, 2);
-    if (user?.email) return user.email[0].toUpperCase();
+    if (claimedUsername) return claimedUsername.slice(0, 2).toUpperCase();
     return "U";
   };
 
