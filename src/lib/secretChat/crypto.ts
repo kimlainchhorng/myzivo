@@ -116,7 +116,8 @@ function bytesToB64(bytes: ArrayBuffer | Uint8Array): string {
 }
 function b64ToBytes(b64: string): Uint8Array {
   const s = atob(b64);
-  const u8 = new Uint8Array(s.length);
+  const buffer = new ArrayBuffer(s.length);
+  const u8 = new Uint8Array(buffer);
   for (let i = 0; i < s.length; i++) u8[i] = s.charCodeAt(i);
   return u8;
 }
