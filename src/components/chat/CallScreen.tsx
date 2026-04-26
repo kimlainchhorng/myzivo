@@ -799,7 +799,7 @@ export default function CallScreen({
 
         {/* Bottom controls */}
         <div className="absolute bottom-0 left-0 right-0 z-20 px-4"
-          style={{ paddingBottom: "max(calc(env(safe-area-inset-bottom, 0px) + 0.75rem), 1.25rem)" }}>
+          style={{ paddingBottom: "max(calc(env(safe-area-inset-bottom, 0px) + 1rem), 1.5rem)" }}>
           <div className="bg-white/10 backdrop-blur-xl rounded-3xl border border-white/10 px-4 py-4 shadow-2xl">
             <div className="flex items-center justify-around">
               {/* Mute */}
