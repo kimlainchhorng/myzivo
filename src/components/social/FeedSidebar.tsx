@@ -225,6 +225,79 @@ export default function FeedSidebar() {
             <span>{item.label}</span>
           </button>
         ))}
+
+        {/* Your Business Pages — moved from the top-right avatar dropdown */}
+        {user && (
+          <>
+            <p className="text-[11px] font-semibold text-muted-foreground/60 uppercase tracking-wider px-3 pt-4 pb-1">
+              Your Business Pages
+            </p>
+            {ownerStores.length > 0 && ownerStores.map((store) => (
+              <button
+                key={store.id}
+                onClick={() => {
+                  const { path } = resolveBusinessDashboardRoute(store.category, store.id);
+                  navigate(path);
+                }}
+                className="flex items-center gap-3 px-3 py-2 rounded-xl text-sm font-medium text-foreground hover:bg-muted/50 transition-colors group"
+              >
+                <Avatar className="h-6 w-6 shrink-0">
+                  <AvatarImage src={store.logo_url || undefined} alt={store.name || "Business"} />
+                  <AvatarFallback className="text-[10px] bg-primary/10 text-primary">
+                    {(store.name || "B").charAt(0).toUpperCase()}
+                  </AvatarFallback>
+                </Avatar>
+                <div className="flex-1 min-w-0 text-left">
+                  <p className="text-sm font-medium text-foreground truncate leading-tight">
+                    {store.name || "Untitled page"}
+                  </p>
+                  {store.normalizedCategory && (
+                    <p className="text-[10px] text-muted-foreground capitalize truncate">
+                      {store.normalizedCategory}
+                    </p>
+                  )}
+                </div>
+              </button>
+            ))}
+            <button
+              onClick={() => navigate("/business/new?new=1")}
+              className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-foreground hover:bg-muted/50 transition-colors"
+            >
+              <Building2 className="h-5 w-5 text-foreground" />
+              <span>Create new Business</span>
+            </button>
+          </>
+        )}
+
+        {/* Account footer — Membership + Sign out */}
+        {user && (
+          <div className="mt-4 pt-3 border-t border-border/30 space-y-0.5">
+            {isMember ? (
+              <button
+                onClick={() => navigate("/account/membership")}
+                className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-foreground hover:bg-muted/50 transition-colors w-full"
+              >
+                <Crown className="h-5 w-5 text-amber-500" />
+                <span>Membership</span>
+              </button>
+            ) : (
+              <button
+                onClick={() => navigate("/membership")}
+                className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-amber-600 hover:bg-amber-500/10 transition-colors w-full"
+              >
+                <Crown className="h-5 w-5" />
+                <span>Join ZIVO+</span>
+              </button>
+            )}
+            <button
+              onClick={() => signOut()}
+              className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-destructive hover:bg-destructive/10 transition-colors w-full"
+            >
+              <LogOut className="h-5 w-5" />
+              <span>Sign out</span>
+            </button>
+          </div>
+        )}
       </div>
 
       {/* Switch Account Sheet */}
