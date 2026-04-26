@@ -66,6 +66,16 @@ import { isBlueVerified } from "@/lib/verification";
 
 const StickerKeyboard = lazy(() => import("./StickerKeyboard"));
 
+// Phase 3B–3D wired components
+import MessageReactionsBar from "./MessageReactionsBar";
+import PinnedMessageBanner from "./PinnedMessageBanner";
+import SelfDestructPicker from "./SelfDestructPicker";
+import Flame from "lucide-react/dist/esm/icons/flame";
+import Clock from "lucide-react/dist/esm/icons/clock";
+const ForwardPickerSheet = lazy(() => import("./ForwardPickerSheet"));
+const ScheduledMessagesSheet = lazy(() => import("./ScheduledMessagesSheet"));
+import { useMessageActions, type DirectMessage } from "@/hooks/useMessageActions";
+
 const INITIAL_VISIBLE_TIMELINE_ITEMS = 25;
 const VISIBLE_TIMELINE_STEP = 30;
 
