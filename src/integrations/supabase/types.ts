@@ -13778,6 +13778,42 @@ export type Database = {
         }
         Relationships: []
       }
+      device_link_tokens: {
+        Row: {
+          claimed_at: string | null
+          claimed_by_device_label: string | null
+          claimed_by_user_id: string | null
+          created_at: string
+          expires_at: string
+          id: string
+          issuer_device_label: string | null
+          issuer_user_id: string
+          token: string
+        }
+        Insert: {
+          claimed_at?: string | null
+          claimed_by_device_label?: string | null
+          claimed_by_user_id?: string | null
+          created_at?: string
+          expires_at?: string
+          id?: string
+          issuer_device_label?: string | null
+          issuer_user_id: string
+          token: string
+        }
+        Update: {
+          claimed_at?: string | null
+          claimed_by_device_label?: string | null
+          claimed_by_user_id?: string | null
+          created_at?: string
+          expires_at?: string
+          id?: string
+          issuer_device_label?: string | null
+          issuer_user_id?: string
+          token?: string
+        }
+        Relationships: []
+      }
       device_registry: {
         Row: {
           app_version: string | null
@@ -60295,6 +60331,7 @@ export type Database = {
         Returns: Json
       }
       clean_expired_flight_cache: { Args: never; Returns: undefined }
+      cleanup_expired_device_link_tokens: { Args: never; Returns: undefined }
       cleanup_expired_messages: { Args: never; Returns: undefined }
       cleanup_expired_otp_codes: { Args: never; Returns: undefined }
       cleanup_expired_qr_tokens: { Args: never; Returns: undefined }
