@@ -90,8 +90,10 @@ export default function GroupCallScreenV2({
             <GroupCallGrid
               participants={call.participants}
               screenShareSource={call.screenShareSource}
+              isRecording={call.isRecording}
             />
             <CallReactionsOverlay reactions={call.reactions} />
+            <CallReactionStrip onReaction={call.sendReaction} />
           </>
         )}
       </div>
