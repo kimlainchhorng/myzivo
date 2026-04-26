@@ -1548,16 +1548,10 @@ export default function PersonalChat({ recipientId, recipientName, recipientAvat
                 {sending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-[17px] w-[17px]" />}
               </button>
             ) : (
-              <button
-                onClick={voice.startRecording}
-                className="h-11 w-11 rounded-full bg-primary/10 text-primary flex items-center justify-center hover:bg-primary/15 active:scale-90 transition-all shrink-0"
-              >
-                <Mic className="h-5 w-5" />
-              </button>
+              <HoldToRecordMic voice={voice} />
             )}
           </div>
         </div>
-      )}
 
       {/* Sticker keyboard */}
       <AnimatePresence>
