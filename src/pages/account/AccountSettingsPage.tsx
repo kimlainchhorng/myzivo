@@ -29,6 +29,7 @@ const settingsGroups: SettingsGroup[] = [
     items: [
       { icon: UserPen, label: "Profile Information", description: "Name, email & phone", href: "/account/profile-edit", color: "bg-emerald-500/15", iconColor: "text-emerald-500" },
       { icon: Shield, label: "Security", description: "Password & 2FA", href: "/account/security", color: "bg-teal-500/15", iconColor: "text-teal-500" },
+      { icon: Smartphone, label: "Linked Devices", description: "Sign in another device with QR", href: "/account/linked-devices", color: "bg-cyan-500/15", iconColor: "text-cyan-500" },
       { icon: UserCheck, label: "Account Status", description: "Manage your account", href: "/profile/delete-account", color: "bg-orange-500/15", iconColor: "text-orange-500" },
       { icon: ShieldCheck, label: "Verification", description: "Request verified badge", href: "/account/verification", color: "bg-blue-500/15", iconColor: "text-blue-500" },
     ],
