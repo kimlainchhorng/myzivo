@@ -1167,7 +1167,21 @@ export default function PersonalChat({ recipientId, recipientName, recipientAvat
         )}
       </AnimatePresence>
 
-      {/* Picture-in-Picture floating call */}
+      {/* New LiveKit-powered call (lobby + recording + reactions + screen-share) */}
+      <AnimatePresence>
+        {launcherCall && conversationId && (
+          <Suspense fallback={null}>
+            <div className="fixed inset-0 z-[70] bg-background">
+              <GroupCallLauncher
+                roomName={`dm-${conversationId}`}
+                callType={launcherCall}
+                onEnded={() => setLauncherCall(null)}
+              />
+            </div>
+          </Suspense>
+        )}
+      </AnimatePresence>
+
       <AnimatePresence>
         {activeCall && pipMode && (
           <Suspense fallback={null}>
