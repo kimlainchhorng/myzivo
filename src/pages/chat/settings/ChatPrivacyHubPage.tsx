@@ -17,6 +17,9 @@ import Clock from "lucide-react/dist/esm/icons/clock";
 import Phone from "lucide-react/dist/esm/icons/phone";
 import ShieldOff from "lucide-react/dist/esm/icons/shield-off";
 import MessageSquare from "lucide-react/dist/esm/icons/message-square";
+import MapPin from "lucide-react/dist/esm/icons/map-pin";
+import Navigation from "lucide-react/dist/esm/icons/navigation";
+import { useLocationSharePrefs } from "@/hooks/useLocationSharePrefs";
 
 type Visibility = "everyone" | "contacts" | "nobody";
 
@@ -53,6 +56,7 @@ export default function ChatPrivacyHubPage() {
   const { user } = useAuth();
   const qc = useQueryClient();
   const [prefs, setPrefs] = useState<Prefs>(() => loadPrefs(user?.id));
+  const { prefs: locPrefs, update: updateLocPrefs } = useLocationSharePrefs();
 
   useEffect(() => { setPrefs(loadPrefs(user?.id)); }, [user?.id]);
 
@@ -146,6 +150,39 @@ export default function ChatPrivacyHubPage() {
           <VisRow icon={Phone} label="Who can call me" k="whoCanCall" />
           <VisRow icon={MessageSquare} label="Who can message me" k="whoCanMessage" />
         </div>
+      </section>
+
+      <section className="mt-4">
+        <h2 className="px-4 py-2 text-[11px] uppercase tracking-wider text-muted-foreground">Location sharing</h2>
+        <div className="bg-card/60 rounded-xl mx-3 divide-y divide-border/30">
+          <div className="flex items-center justify-between py-3 px-4">
+            <div className="flex items-center gap-3">
+              <div className="w-9 h-9 rounded-full bg-muted/60 flex items-center justify-center">
+                <MapPin className="w-4 h-4 text-muted-foreground" />
+              </div>
+              <div>
+                <div className="text-sm font-medium">Show street address</div>
+                <div className="text-[11px] text-muted-foreground">Look up address from coordinates in shared location cards</div>
+              </div>
+            </div>
+            <Switch checked={locPrefs.showAddress} onCheckedChange={(v) => updateLocPrefs("showAddress", v)} />
+          </div>
+          <div className="flex items-center justify-between py-3 px-4">
+            <div className="flex items-center gap-3">
+              <div className="w-9 h-9 rounded-full bg-muted/60 flex items-center justify-center">
+                <Navigation className="w-4 h-4 text-muted-foreground" />
+              </div>
+              <div>
+                <div className="text-sm font-medium">Show route from my location</div>
+                <div className="text-[11px] text-muted-foreground">Distance and rough ETA — uses your device location</div>
+              </div>
+            </div>
+            <Switch checked={locPrefs.showRoute} onCheckedChange={(v) => updateLocPrefs("showRoute", v)} />
+          </div>
+        </div>
+        <p className="px-4 mt-2 text-[10.5px] text-muted-foreground/80 leading-snug">
+          Off by default for privacy. Address lookups use OpenStreetMap and are cached on this device for 7 days.
+        </p>
       </section>
 
       <section className="mt-4">
