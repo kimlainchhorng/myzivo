@@ -36,6 +36,9 @@ import { primeCallAudio } from "@/lib/callAudio";
 import ChatMessageBubble from "./ChatMessageBubble";
 import HoldToRecordMic from "./HoldToRecordMic";
 import ChatAttachMenu from "./ChatAttachMenu";
+const ChatGiftPanel = lazy(() => import("./ChatGiftPanel"));
+const ChatWalletSheet = lazy(() => import("./ChatWalletSheet"));
+const CoinTransferBubble = lazy(() => import("./CoinTransferBubble"));
 import type { StickerSendPayload } from "./StickerKeyboard";
 import { getWallpaperClass, getWallpaperStyle } from "./ChatPersonalization";
 import CallEventBubble from "./CallEventBubble";
@@ -178,6 +181,8 @@ export default function PersonalChat({ recipientId, recipientName, recipientAvat
   const [showScheduler, setShowScheduler] = useState(false);
   const [showPinnedPanel, setShowPinnedPanel] = useState(false);
   const [showLockedPricePicker, setShowLockedPricePicker] = useState(false);
+  const [showGiftPanel, setShowGiftPanel] = useState(false);
+  const [showWalletSheet, setShowWalletSheet] = useState(false);
   const [pendingLockedFile, setPendingLockedFile] = useState<File | null>(null);
   const [chatStyle, setChatStyle] = useState({ wallpaper: "default", themeColor: "default", fontSize: "medium" });
   const [callEvents, setCallEvents] = useState<CallEvent[]>([]);
@@ -1459,6 +1464,8 @@ export default function PersonalChat({ recipientId, recipientName, recipientAvat
                   }}
                   disappearingEnabled={disappearingMode}
                   onLockedImageSelect={() => lockedImageInputRef.current?.click()}
+                  onSendGift={() => setShowGiftPanel(true)}
+                  onOpenWallet={() => setShowWalletSheet(true)}
 
                 />
               </div>
