@@ -4,10 +4,14 @@
  * cloud recording before the call begins.
  */
 import { useEffect, useRef, useState } from "react";
-import { Mic, MicOff, Video, VideoOff, Radio, X, ArrowRight } from "lucide-react";
+import {
+  Mic, MicOff, Video, VideoOff, Radio, X, ArrowRight,
+  CheckCircle2, AlertTriangle, Loader2,
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import { toast } from "sonner";
+import { useRecordingPreflight } from "@/hooks/useRecordingPreflight";
 
 export interface CallLobbyResult {
   startMicMuted: boolean;
@@ -36,6 +40,13 @@ export default function CallLobby({
   const [micOn, setMicOn] = useState(true);
   const [camOn, setCamOn] = useState(callType === "video");
   const [record, setRecord] = useState(false);
+  const { status: bucketStatus, message: bucketMsg } = useRecordingPreflight(canRecord);
+  const bucketReady = bucketStatus === "ready";
+  const recordDisabled = !bucketReady;
+  // Force off if bucket isn't ready
+  useEffect(() => {
+    if (recordDisabled && record) setRecord(false);
+  }, [recordDisabled, record]);
 
   // Acquire local preview
   useEffect(() => {
@@ -151,19 +162,68 @@ export default function CallLobby({
       {/* Options */}
       <div className="mx-4 mt-4 space-y-3">
         {canRecord && (
-          <div className="flex items-center justify-between rounded-xl bg-white/5 px-4 py-3">
-            <div className="flex items-center gap-3">
-              <div className="grid h-9 w-9 place-items-center rounded-full bg-rose-500/20">
-                <Radio className="h-4 w-4 text-rose-300" />
+          <div
+            className={`rounded-xl px-4 py-3 transition ${
+              recordDisabled ? "bg-white/5 opacity-80" : "bg-white/5"
+            }`}
+          >
+            <div className="flex items-center justify-between gap-3">
+              <div className="flex items-center gap-3">
+                <div className="grid h-9 w-9 place-items-center rounded-full bg-rose-500/20">
+                  <Radio className="h-4 w-4 text-rose-300" />
+                </div>
+                <div>
+                  <p className="text-sm font-medium">Record this call</p>
+                  <p className="text-[11px] text-white/50">
+                    Saved privately to the host's recordings
+                  </p>
+                </div>
               </div>
-              <div>
-                <p className="text-sm font-medium">Record this call</p>
-                <p className="text-[11px] text-white/50">
-                  Saved privately to the host's recordings
-                </p>
-              </div>
+              <Switch
+                checked={record}
+                onCheckedChange={setRecord}
+                disabled={recordDisabled}
+                aria-label="Toggle cloud recording"
+              />
             </div>
-            <Switch checked={record} onCheckedChange={setRecord} />
+
+            {/* Pre-call summary: bucket status */}
+            <div className="mt-3 flex items-center justify-between gap-3 rounded-lg bg-black/30 px-3 py-2 text-[11px]">
+              <div className="flex items-center gap-2">
+                {bucketStatus === "checking" && (
+                  <>
+                    <Loader2 className="h-3.5 w-3.5 animate-spin text-white/70" />
+                    <span className="text-white/70">Checking storage…</span>
+                  </>
+                )}
+                {bucketStatus === "ready" && (
+                  <>
+                    <CheckCircle2 className="h-3.5 w-3.5 text-emerald-400" />
+                    <span className="text-emerald-300">
+                      Bucket ready · <span className="text-white/60">call-recordings</span>
+                    </span>
+                  </>
+                )}
+                {bucketStatus === "unavailable" && (
+                  <>
+                    <AlertTriangle className="h-3.5 w-3.5 text-rose-400" />
+                    <span className="text-rose-300 truncate">
+                      Recording unavailable
+                      {bucketMsg ? ` · ${bucketMsg}` : ""}
+                    </span>
+                  </>
+                )}
+              </div>
+              <span
+                className={`shrink-0 rounded-full px-2 py-0.5 font-semibold ${
+                  record && bucketReady
+                    ? "bg-rose-500/20 text-rose-300"
+                    : "bg-white/10 text-white/60"
+                }`}
+              >
+                {record && bucketReady ? "REC ON" : "REC OFF"}
+              </span>
+            </div>
           </div>
         )}
       </div>

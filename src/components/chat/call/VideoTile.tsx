@@ -10,9 +10,11 @@ import type { LKParticipant } from "@/hooks/useLiveKitCall";
 interface Props {
   participant: LKParticipant;
   emphasized?: boolean;
+  /** When true, every tile shows a small pulsing red dot for privacy disclosure */
+  isRecording?: boolean;
 }
 
-export default function VideoTile({ participant, emphasized = false }: Props) {
+export default function VideoTile({ participant, emphasized = false, isRecording = false }: Props) {
   const videoRef = useRef<HTMLVideoElement>(null);
 
   useEffect(() => {
@@ -51,6 +53,17 @@ export default function VideoTile({ participant, emphasized = false }: Props) {
       ) : (
         <div className="grid h-20 w-20 place-items-center rounded-full bg-zinc-700 text-2xl font-semibold text-white">
           {initials}
+        </div>
+      )}
+
+      {/* Top-left: REC privacy indicator */}
+      {isRecording && (
+        <div
+          className="absolute left-2 top-2 flex items-center gap-1 rounded-full bg-rose-500/90 px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wider text-white shadow"
+          title="This call is being recorded"
+        >
+          <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-white" />
+          REC
         </div>
       )}
 

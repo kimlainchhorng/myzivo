@@ -12,6 +12,7 @@ import { useLiveKitCall } from "@/hooks/useLiveKitCall";
 import GroupCallGrid from "./GroupCallGrid";
 import GroupCallControls from "./GroupCallControls";
 import CallReactionsOverlay from "./CallReactionsOverlay";
+import CallReactionStrip from "./CallReactionStrip";
 
 interface Props {
   roomName: string;
@@ -58,7 +59,10 @@ export default function GroupCallScreenV2({
           <span className="text-white/50">· {call.participants.length} in call</span>
         </div>
         {call.isRecording && (
-          <span className="flex items-center gap-1.5 rounded-full bg-rose-500/20 px-2.5 py-1 text-[11px] font-semibold text-rose-300">
+          <span
+            className="flex items-center gap-1.5 rounded-full bg-rose-500 px-2.5 py-1 text-[11px] font-bold tracking-wider text-white shadow-lg ring-2 ring-rose-300/50"
+            title="This call is being recorded and saved to the host's secure bucket"
+          >
             <Radio className="h-3 w-3 animate-pulse" /> REC
           </span>
         )}
@@ -86,8 +90,10 @@ export default function GroupCallScreenV2({
             <GroupCallGrid
               participants={call.participants}
               screenShareSource={call.screenShareSource}
+              isRecording={call.isRecording}
             />
             <CallReactionsOverlay reactions={call.reactions} />
+            <CallReactionStrip onReaction={call.sendReaction} />
           </>
         )}
       </div>
