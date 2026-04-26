@@ -30,6 +30,8 @@ export function PWAInstallBanner() {
     if (!isMobile) return;
     // Don't interrupt full-screen ride booking flows
     if (location.pathname.startsWith("/rides")) return;
+    // Don't cover chat / call surfaces (they own the bottom of the screen)
+    if (location.pathname.startsWith("/chat")) return;
     // Never show on auth routes — must not block input focus
     const authRoutes = ["/login", "/signup", "/verify-email", "/verify-otp", "/verify-new-device", "/forgot-password", "/reset-password", "/setup"];
     if (authRoutes.some((r) => location.pathname.startsWith(r))) return;
