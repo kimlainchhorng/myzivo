@@ -122,6 +122,7 @@ const TwoStepSetupPage = lazy(() => import("./pages/chat/settings/TwoStepSetupPa
 const PasscodeSetupPage = lazy(() => import("./pages/chat/settings/PasscodeSetupPage"));
 const LoginAlertsPage = lazy(() => import("./pages/chat/settings/LoginAlertsPage"));
 const AppLockGate = lazy(() => import("./components/chat/settings/AppLockGate"));
+const GroupCallEntryPage = lazy(() => import("./pages/chat/GroupCallEntryPage"));
 const ExplorePage = lazy(() => import("./pages/ExplorePage"));
 const BookmarksPage = lazy(() => import("./pages/BookmarksPage"));
 const PrivacySettingsPage = lazy(() => import("./pages/account/PrivacySettingsPage"));
@@ -690,6 +691,7 @@ const App = () => (
                 <Route path="/chat/contacts" element={<ProtectedRoute><ContactsPage /></ProtectedRoute>} />
                 <Route path="/chat/join/:code" element={<JoinGroupPage />} />
                 <Route path="/chat/secret/:partnerId" element={<ProtectedRoute><SecretChatPage /></ProtectedRoute>} />
+                <Route path="/chat/call/group/:roomName" element={<ProtectedRoute><GroupCallEntryPage /></ProtectedRoute>} />
                 <Route path="/chat/settings/privacy" element={<ProtectedRoute><PrivacySecurityPage /></ProtectedRoute>} />
                 <Route path="/chat/settings/sessions" element={<ProtectedRoute><ActiveSessionsPage /></ProtectedRoute>} />
                 <Route path="/chat/settings/two-step" element={<ProtectedRoute><TwoStepSetupPage /></ProtectedRoute>} />
