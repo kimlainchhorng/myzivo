@@ -24,6 +24,9 @@ import Pause from "lucide-react/dist/esm/icons/pause";
 import ChevronRight from "lucide-react/dist/esm/icons/chevron-right";
 import Lock from "lucide-react/dist/esm/icons/lock";
 import DollarSign from "lucide-react/dist/esm/icons/dollar-sign";
+import Pencil from "lucide-react/dist/esm/icons/pencil";
+import Languages from "lucide-react/dist/esm/icons/languages";
+import Loader2 from "lucide-react/dist/esm/icons/loader-2";
 import { supabase } from "@/integrations/supabase/client";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
@@ -163,18 +166,24 @@ interface ChatMessageBubbleProps {
   messageType?: string;
   senderId?: string;
   lockedPriceCents?: number | null;
+  /** ISO timestamp of last edit, if any */
+  editedAt?: string | null;
+  /** ISO timestamp of message creation — used to enforce 48h edit window */
+  createdAt?: string | null;
   /** Pre-loaded reactions from parent (avoids N+1 queries) */
   initialReactions?: { emoji: string; count: number; hasMyReaction: boolean }[];
   onReply: (id: string, message: string, isMe: boolean) => void;
   onDelete: (id: string) => void;
   onForward?: (id: string, message: string) => void;
   onPin?: (id: string, pinned: boolean) => void;
+  onEdit?: (id: string, currentText: string) => void;
 }
 
 const ChatMessageBubble = memo(function ChatMessageBubble({
   id, message, time, isMe, isRead, isDelivered, imageUrl, videoUrl, isPinned, expiresAt, messageType, senderId, lockedPriceCents,
+  editedAt, createdAt,
   initialReactions,
-  onReply, onDelete, onForward, onPin,
+  onReply, onDelete, onForward, onPin, onEdit,
 }: ChatMessageBubbleProps) {
   const { user } = useAuth();
   const [showActions, setShowActions] = useState(false);
@@ -190,6 +199,48 @@ const ChatMessageBubble = memo(function ChatMessageBubble({
   const [reactions, setReactions] = useState<{ emoji: string; count: number; hasMyReaction: boolean }[]>(initialReactions || []);
   const [openDown, setOpenDown] = useState(false);
   const [showStickerBurst, setShowStickerBurst] = useState(false);
+  const [translation, setTranslation] = useState<{ text: string; sourceLang?: string } | null>(null);
+  const [translating, setTranslating] = useState(false);
+  const [showTranslation, setShowTranslation] = useState(false);
+
+  const canEdit = isMe && !!createdAt && (Date.now() - new Date(createdAt).getTime() < 48 * 60 * 60 * 1000) && !!message?.trim() && !imageUrl && !videoUrl;
+
+  const handleEdit = useCallback(() => {
+    if (!onEdit) return;
+    onEdit(id, message);
+    setShowActions(false);
+    setShowReactions(false);
+  }, [id, message, onEdit]);
+
+  const handleTranslate = useCallback(async () => {
+    setShowActions(false);
+    setShowReactions(false);
+    if (!message?.trim()) return;
+    if (translation) { setShowTranslation((v) => !v); return; }
+    setTranslating(true);
+    setShowTranslation(true);
+    try {
+      const target = (navigator.language || "en").split("-")[0];
+      const { data, error } = await supabase.functions.invoke("translate-caption", {
+        body: { text: message, target_language: target },
+      });
+      if (error) throw error;
+      const translated = (data as any)?.translated_text || (data as any)?.translation || (data as any)?.text;
+      if (translated) {
+        setTranslation({ text: translated, sourceLang: (data as any)?.source_language });
+      } else {
+        toast.error("Could not translate");
+        setShowTranslation(false);
+      }
+    } catch (err) {
+      console.error("translate failed", err);
+      toast.error("Translation unavailable");
+      setShowTranslation(false);
+    } finally {
+      setTranslating(false);
+    }
+  }, [message, translation]);
+
   const longPressTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const didLongPress = useRef(false);
   const hasMoved = useRef(false);
@@ -637,9 +688,36 @@ const ChatMessageBubble = memo(function ChatMessageBubble({
                 <LinkPreviewCard url={linkUrl} isMe={isMe} hasText={!!textWithoutUrl} messageText={message} />
               )}
 
+              {/* Inline translation */}
+              {showTranslation && (
+                <div className={`mx-3 mb-2 mt-0.5 px-3 py-2 rounded-xl text-[13px] leading-snug border ${
+                  isMe
+                    ? "bg-primary-foreground/10 border-primary-foreground/20 text-primary-foreground/90"
+                    : "bg-background/60 border-border/40 text-foreground"
+                }`}>
+                  {translating ? (
+                    <span className="flex items-center gap-1.5 opacity-70">
+                      <Loader2 className="h-3 w-3 animate-spin" /> Translating…
+                    </span>
+                  ) : translation ? (
+                    <>
+                      <p className={`text-[10px] uppercase tracking-wide mb-1 ${isMe ? "text-primary-foreground/60" : "text-muted-foreground/70"}`}>
+                        Translated{translation.sourceLang ? ` from ${translation.sourceLang}` : ""}
+                      </p>
+                      <p className="whitespace-pre-wrap break-words">{translation.text}</p>
+                    </>
+                  ) : null}
+                </div>
+              )}
+
               {/* Timestamp — iMessage style */}
               <div className="flex items-center gap-1 justify-end px-4 pb-2 -mt-0.5 relative z-[1]">
                 {isDisappearing && <Timer className={`h-2.5 w-2.5 ${isMe ? "text-primary-foreground/40" : "text-muted-foreground/40"}`} />}
+                {editedAt && (
+                  <span className={`text-[10px] italic ${isMe ? "text-primary-foreground/45" : "text-muted-foreground/45"}`}>
+                    edited
+                  </span>
+                )}
                 <span className={`text-[10px] font-medium ${isMe ? "text-primary-foreground/50" : "text-muted-foreground/50"}`}>
                   {time}
                 </span>
@@ -726,6 +804,12 @@ const ChatMessageBubble = memo(function ChatMessageBubble({
                   {!showDeleteSub ? (
                     <motion.div key="actions" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.1 }}>
                       <MsgMenuItem icon={Reply} label="Reply" onClick={() => { onReply(id, message, isMe); setShowActions(false); setShowReactions(false); }} />
+                      {canEdit && onEdit && (
+                        <MsgMenuItem icon={Pencil} label="Edit" onClick={handleEdit} />
+                      )}
+                      {message?.trim() && !isMe && (
+                        <MsgMenuItem icon={Languages} label={translation ? (showTranslation ? "Hide translation" : "Show translation") : "Translate"} onClick={handleTranslate} />
+                      )}
                       <MsgMenuItem icon={Copy} label="Copy" onClick={handleCopy} />
                       <MsgMenuItem icon={Forward} label="Forward" onClick={handleForward} />
                       <MsgMenuItem icon={Pin} label={isPinned ? "Unpin" : "Pin"} onClick={handlePin} active={isPinned} />

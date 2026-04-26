@@ -100,6 +100,7 @@ interface Message {
   created_at: string;
   is_read: boolean;
   locked_price_cents?: number | null;
+  edited_at?: string | null;
 }
 
 interface CallEvent {
@@ -146,6 +147,7 @@ export default function PersonalChat({ recipientId, recipientName, recipientAvat
   const [pipData, setPipData] = useState<{ remoteStream: MediaStream | null; duration: number; isMuted: boolean; callType: "voice" | "video"; isCameraOff: boolean } | null>(null);
   const [pipControls, setPipControls] = useState<{ toggleMute: () => void; endCall: () => void; toggleCamera: () => void } | null>(null);
   const [replyTo, setReplyTo] = useState<{ id: string; message: string; isMe: boolean } | null>(null);
+  const [editingId, setEditingId] = useState<string | null>(null);
   const [uploadingMedia, setUploadingMedia] = useState(false);
   const [showSearch, setShowSearch] = useState(false);
   const [highlightedMsgId, setHighlightedMsgId] = useState<string | null>(null);
@@ -375,7 +377,7 @@ export default function PersonalChat({ recipientId, recipientName, recipientAvat
     initialScrollDone.current = false;
     const load = async () => {
       setLoading(true);
-      const msgColumns = "id,sender_id,receiver_id,message,image_url,video_url,voice_url,message_type,delivered_at,reply_to_id,location_lat,location_lng,location_label,is_pinned,expires_at,created_at,is_read,locked_price_cents";
+      const msgColumns = "id,sender_id,receiver_id,message,image_url,video_url,voice_url,message_type,delivered_at,reply_to_id,location_lat,location_lng,location_label,is_pinned,expires_at,created_at,is_read,locked_price_cents,edited_at";
       const callColumns = "id,caller_id,callee_id,call_type,status,duration_seconds,created_at";
       const [msgRes, callRes] = await Promise.all([
         (supabase as any)
@@ -746,8 +748,47 @@ export default function PersonalChat({ recipientId, recipientName, recipientAvat
 
   const handleReply = useCallback((id: string, message: string, isMe: boolean) => {
     setReplyTo({ id, message, isMe });
+    setEditingId(null);
     inputRef.current?.focus();
   }, []);
+
+  const handleEdit = useCallback((id: string, currentText: string) => {
+    setEditingId(id);
+    setReplyTo(null);
+    setInput(currentText);
+    requestAnimationFrame(() => inputRef.current?.focus());
+  }, []);
+
+  const handleCancelEdit = useCallback(() => {
+    setEditingId(null);
+    setInput("");
+  }, []);
+
+  const handleSaveEdit = useCallback(async () => {
+    const id = editingId;
+    const newText = input.trim();
+    if (!id || !newText) return;
+    const original = messages.find((m) => m.id === id);
+    if (!original) { setEditingId(null); return; }
+    if (original.message === newText) { setEditingId(null); setInput(""); return; }
+    const nowIso = new Date().toISOString();
+    setMessages((prev) => prev.map((m) => m.id === id ? { ...m, message: newText, edited_at: nowIso } : m));
+    setEditingId(null);
+    setInput("");
+    try {
+      const { error } = await (supabase as any)
+        .from("direct_messages")
+        .update({ message: newText, edited_at: nowIso, original_text: original.message })
+        .eq("id", id)
+        .eq("sender_id", user?.id);
+      if (error) throw error;
+      toast.success("Message edited");
+    } catch (err: any) {
+      console.error(err);
+      toast.error(err?.message?.includes("48") ? "Edit window expired (48h)" : "Failed to edit");
+      setMessages((prev) => prev.map((m) => m.id === id ? original : m));
+    }
+  }, [editingId, input, messages, user?.id]);
 
   const handleDelete = useCallback(async (id: string) => {
     setMessages((prev) => prev.filter((m) => m.id !== id));
@@ -1239,10 +1280,13 @@ export default function PersonalChat({ recipientId, recipientName, recipientAvat
                         senderId={msg.sender_id}
                         lockedPriceCents={msg.locked_price_cents}
                         initialReactions={reactionsMap[msg.id]}
+                        editedAt={msg.edited_at}
+                        createdAt={msg.created_at}
                         onReply={handleReply}
                         onDelete={handleDelete}
                         onForward={handleForward}
                         onPin={handlePin}
+                        onEdit={handleEdit}
                       />
                     )}
                   </div>
@@ -1266,9 +1310,30 @@ export default function PersonalChat({ recipientId, recipientName, recipientAvat
         )}
       </div>
 
+      {/* Edit preview bar */}
+      <AnimatePresence>
+        {editingId && (
+          <motion.div
+            initial={{ height: 0, opacity: 0 }}
+            animate={{ height: "auto", opacity: 1 }}
+            exit={{ height: 0, opacity: 0 }}
+            className="bg-amber-500/10 border-t border-amber-500/30 px-4 py-2 flex items-center gap-2 overflow-hidden"
+          >
+            <div className="w-1 h-8 rounded-full bg-amber-500 shrink-0" />
+            <div className="flex-1 min-w-0">
+              <p className="text-[10px] font-semibold text-amber-600 dark:text-amber-400">Editing message</p>
+              <p className="text-xs text-muted-foreground truncate">Press send to save · 48h limit</p>
+            </div>
+            <button onClick={handleCancelEdit} className="h-7 w-7 rounded-full flex items-center justify-center">
+              <X className="h-3.5 w-3.5 text-muted-foreground" />
+            </button>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
       {/* Reply preview bar */}
       <AnimatePresence>
-        {replyTo && (
+        {replyTo && !editingId && (
           <motion.div
             initial={{ height: 0, opacity: 0 }}
             animate={{ height: "auto", opacity: 1 }}
@@ -1410,7 +1475,7 @@ export default function PersonalChat({ recipientId, recipientName, recipientAvat
                 ref={inputRef}
                 value={input}
                 onChange={handleInputChange}
-                onKeyDown={(e) => e.key === "Enter" && !e.shiftKey && handleSend()}
+                onKeyDown={(e) => e.key === "Enter" && !e.shiftKey && (editingId ? handleSaveEdit() : handleSend())}
                 placeholder={disappearingMode ? "Disappearing message..." : "Message..."}
                 className={`w-full h-11 pl-4 pr-12 rounded-full text-[14.5px] text-foreground placeholder:text-muted-foreground/40 focus:outline-none transition-all ${
                   disappearingMode
@@ -1433,7 +1498,7 @@ export default function PersonalChat({ recipientId, recipientName, recipientAvat
             {/* Send or Mic */}
             {input.trim() ? (
               <button
-                onClick={() => handleSend()}
+                onClick={() => editingId ? handleSaveEdit() : handleSend()}
                 onContextMenu={(e) => { e.preventDefault(); setShowScheduler(true); }}
                 disabled={sending}
                 className="h-11 w-11 rounded-full bg-primary text-primary-foreground flex items-center justify-center disabled:opacity-40 active:scale-90 transition-all shrink-0 shadow-sm"
