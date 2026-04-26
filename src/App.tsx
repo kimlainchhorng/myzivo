@@ -402,6 +402,9 @@ const AccountSettingsPage = lazy(() => import("./pages/account/AccountSettingsPa
 const LegalPoliciesPage = lazy(() => import("./pages/account/LegalPoliciesPage"));
 const ProfileEditPage = lazy(() => import("./pages/account/ProfileEditPage"));
 const AccountSecurity = lazy(() => import("./pages/account/AccountSecurity"));
+const LinkedDevicesPage = lazy(() => import("./pages/account/LinkedDevicesPage"));
+const LinkDevicePage = lazy(() => import("./pages/account/LinkDevicePage"));
+const ScanDevicePage = lazy(() => import("./pages/account/ScanDevicePage"));
 const PreferencesPage = lazy(() => import("./pages/account/PreferencesPage"));
 const PrivacyControls = lazy(() => import("./pages/account/PrivacyControls"));
 const NotificationSettings = lazy(() => import("./pages/account/NotificationSettings"));
@@ -891,6 +894,9 @@ const App = () => (
                 <Route path="/account/legal" element={<LegalPoliciesPage />} />
                 <Route path="/account/profile-edit" element={<ProtectedRoute><ProfileEditPage /></ProtectedRoute>} />
                 <Route path="/account/security" element={<ProtectedRoute><AccountSecurity /></ProtectedRoute>} />
+                <Route path="/account/linked-devices" element={<ProtectedRoute><LinkedDevicesPage /></ProtectedRoute>} />
+                <Route path="/account/link-device" element={<ProtectedRoute><LinkDevicePage /></ProtectedRoute>} />
+                <Route path="/account/scan-device" element={<ProtectedRoute><ScanDevicePage /></ProtectedRoute>} />
                 <Route path="/account/privacy" element={<ProtectedRoute><PrivacyControls /></ProtectedRoute>} />
                 <Route path="/account/notifications" element={<ProtectedRoute><NotificationSettings /></ProtectedRoute>} />
                 <Route path="/account/referrals" element={<ProtectedRoute><AccountReferralsPage /></ProtectedRoute>} />
