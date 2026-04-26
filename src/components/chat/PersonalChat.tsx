@@ -1735,6 +1735,31 @@ export default function PersonalChat({ recipientId, recipientName, recipientAvat
         </Suspense>
       )}
 
+      {/* Forward picker sheet */}
+      {forwardingMsg && (
+        <Suspense fallback={null}>
+          <ForwardPickerSheet
+            open={!!forwardingMsg}
+            onOpenChange={(open) => { if (!open) setForwardingMsg(null); }}
+            onConfirm={async (recipientIds) => {
+              const ok = await forwardMessage(forwardingMsg as unknown as DirectMessage, recipientIds);
+              if (ok) setForwardingMsg(null);
+            }}
+          />
+        </Suspense>
+      )}
+
+      {/* Scheduled messages queue sheet */}
+      {showScheduledSheet && (
+        <Suspense fallback={null}>
+          <ScheduledMessagesSheet
+            open={showScheduledSheet}
+            onOpenChange={setShowScheduledSheet}
+            receiverId={recipientId}
+          />
+        </Suspense>
+      )}
+
       {/* Message effects overlay */}
       {activeEffect && (
         <Suspense fallback={null}>
