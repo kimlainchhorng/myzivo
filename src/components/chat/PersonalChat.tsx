@@ -551,6 +551,8 @@ export default function PersonalChat({ recipientId, recipientName, recipientAvat
     clearDraft();
     const currentReply = replyTo;
     setReplyTo(null);
+    const burnSec = selfDestructSec;
+    if (selfDestructSec) setSelfDestructSec(null);
     setSending(true);
 
     const optimisticId = `opt-${Date.now()}`;
