@@ -81,8 +81,8 @@ export function useLiveKitCall({
   const [isRecording, setIsRecording] = useState(false);
   const [sessionId, setSessionId] = useState<string | null>(null);
   const [isScreenSharing, setIsScreenSharing] = useState(false);
-  const [micEnabled, setMicEnabled] = useState(true);
-  const [camEnabled, setCamEnabled] = useState(callType === "video");
+  const [micEnabled, setMicEnabled] = useState(!startMicMuted);
+  const [camEnabled, setCamEnabled] = useState(callType === "video" && !startCamOff);
   const [handRaised, setHandRaised] = useState(false);
 
   /* ----------------- Refresh participant list ----------------- */
