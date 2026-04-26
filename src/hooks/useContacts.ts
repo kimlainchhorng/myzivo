@@ -38,7 +38,42 @@ export function useContacts() {
 
     if (error || !data) { setContacts([]); setLoading(false); return; }
 
-    const ids = data.map((r) => r.contact_user_id);
+    let rows: Array<{
+      contact_user_id: string;
+      custom_name: string | null;
+      favorite: boolean;
+      added_via: string;
+      created_at: string;
+    }> = data as any;
+
+    // Fallback: if the user has no explicit contacts yet, surface people they
+    // have already chatted with so the page isn't empty.
+    if (rows.length === 0) {
+      const { data: dms } = await (supabase as any)
+        .from("direct_messages")
+        .select("sender_id, receiver_id, created_at")
+        .or(`sender_id.eq.${user.id},receiver_id.eq.${user.id}`)
+        .order("created_at", { ascending: false })
+        .limit(200);
+
+      if (dms?.length) {
+        const seen = new Map<string, string>(); // user_id -> created_at
+        for (const m of dms as Array<{ sender_id: string; receiver_id: string; created_at: string }>) {
+          const other = m.sender_id === user.id ? m.receiver_id : m.sender_id;
+          if (!other || other === user.id) continue;
+          if (!seen.has(other)) seen.set(other, m.created_at);
+        }
+        rows = Array.from(seen.entries()).map(([uid, ts]) => ({
+          contact_user_id: uid,
+          custom_name: null,
+          favorite: false,
+          added_via: "chat_history",
+          created_at: ts,
+        }));
+      }
+    }
+
+    const ids = rows.map((r) => r.contact_user_id);
     let profiles: Record<string, Contact["profile"]> = {};
     if (ids.length) {
       const { data: profs } = await supabase
@@ -48,7 +83,7 @@ export function useContacts() {
       profs?.forEach((p: any) => { profiles[p.user_id] = p; });
     }
 
-    setContacts(data.map((r) => ({ ...r, profile: profiles[r.contact_user_id] ?? null })));
+    setContacts(rows.map((r) => ({ ...r, profile: profiles[r.contact_user_id] ?? null })));
     setLoading(false);
   }, [user]);
 

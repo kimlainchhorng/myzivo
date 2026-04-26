@@ -1,73 +1,39 @@
-# Phase 5 — Track C UI: Channels & Broadcast
+## What I'll fix
 
-Most call-side items in this request are already implemented from the previous round and only need the route the user asked for to be reachable at the path they wrote. The real new build is the Channels UI, which has had its schema, RLS, triggers, and scheduled-publish edge function in place since the prior loop.
+Three issues found in the chat experience:
 
-## Already shipped (this loop just verifies/exposes)
-- Always-visible emoji strip → `CallReactionStrip` mounted in `GroupCallScreenV2`, fans out via existing data channel + `CallReactionsOverlay`.
-- Real-time REC privacy indicator → high-contrast pill in top bar + per-tile pulsing red dot in `VideoTile`, driven by `call.isRecording`.
-- Pre-join recording summary → `CallLobby` shows bucket status (`Bucket ready` / `Checking…` / `Unavailable`) via `useRecordingPreflight`, plus a `REC ON/OFF` chip; switch auto-disables when bucket is unavailable.
-- Auto-start cloud recording → `useLiveKitCall({ autoRecord })` triggers `livekit-recording` start right after `room.connect()`.
-- Lobby + screen share + recording reachable via `GroupCallEntryPage` mounting `GroupCallLauncher`.
+### 1. "Failed to create group" error
+The current `CreateGroupModal` inserts the creator and other members in a single batch into `chat_group_members`. RLS rejects this because the policy only allows inserting rows where the actor is already a member of the group.
 
-### Tiny route fix (1 edit)
-The user asked for `/chat/group-call/:roomName`. Current route is `/chat/call/group/:roomName`. **Add the new path as an alias** so both resolve to `GroupCallEntryPage`. Keep the old one to avoid breaking anything already linked.
+**Fix:** Split into two inserts:
+- Insert creator row first (allowed because creator just made the group / has owner privilege).
+- Then insert remaining members in a second insert.
 
-## New build — Channels UI (the focus of this round)
+If RLS still blocks step 2, add a `SECURITY DEFINER` function `add_group_members(group_id, user_ids[])` that verifies the caller is the group owner and inserts the rows.
 
-Backend is already live (tables, RLS, triggers, view-count RPC, `channel-publish-scheduled` cron job). Adds 4 pages + supporting hook and shared components.
+### 2. Call buttons in chats use legacy 1:1 WebRTC
+`PersonalChat.tsx` Phone/Video icons trigger the old call flow, so none of the new features (pre-join lobby, REC pill, "Record this call", screen-share, reactions strip) appear.
 
-### Pages
-| Path | Purpose |
-|---|---|
-| `/channels` | Directory: search by handle/name, list public channels, "Create" button, "My subscriptions" tab. |
-| `/channels/new` | Composer: name, handle (live availability check), description, public/private, avatar/banner upload. |
-| `/c/:handle` | Channel page: banner, header (name/handle/sub count), Subscribe/Unsubscribe, posts feed with view counts + reaction bar, owner-only "Compose" + "Manage" buttons. |
-| `/c/:handle/manage` | Owner dashboard: edit channel details, member list with role chips (owner/admin/sub), promote/demote/remove, scheduled-post queue, basic stats. |
+**Fix:** Replace the handlers with `GroupCallLauncher` using a deterministic room id:
+- DM: `dm-<sortedUserIdA>-<sortedUserIdB>`
+- Group: `group-<groupId>`
 
-### Shared components (under `src/components/channels/`)
-- `ChannelHeader.tsx` — banner + avatar + name/handle + sub count + Subscribe button.
-- `ChannelPostCard.tsx` — body, media gallery, view count, reactions bar, posted/scheduled timestamp; calls `record_channel_post_view` RPC on first viewport entry.
-- `ChannelPostComposer.tsx` — text + media drop + "Schedule for later" date/time picker; writes to `channel_posts` (with `published_at = now()` for immediate, or `scheduled_for = <future>` for scheduled).
-- `ChannelMemberRow.tsx` — used in `/c/:handle/manage`, shows display name, role chip, action menu.
-- `SubscribeButton.tsx` — toggles `channel_subscribers` row for the current user.
+Both participants land in the same LiveKit room. Keep the legacy path as fallback only if LiveKit secrets are missing.
 
-### Hook
-- `useChannel(handleOrId)` — loads channel + subscriber state + posts (paginated via `published_at desc`), exposes mutations for subscribe/unsubscribe/post/react.
+### 3. Contacts page is empty
+Currently reads from a `contacts` table that has no rows.
 
-### Realtime
-Subscribe to:
-- `channel_posts` (filter by `channel_id`) → live feed updates when scheduled posts publish.
-- `channel_post_reactions` (filter by `post_id` for visible posts) → live reaction counts.
+**Fix:** Fall back to "people you've chatted with" — query distinct counterpart `user_id`s from recent `messages`/`conversations`, join `profiles`, and render them as the contact list. Keep the explicit contacts table as the primary source when populated.
 
-### Storage
-Posts can include media. Reuse the existing `user-posts` bucket (already configured for 500MB uploads) — no new bucket needed for v1. Avatar/banner images go to `user-posts/channels/<channel_id>/...`.
+## Technical change list
 
-### Acceptance
-- Visit `/channels` → see public channels, search filter works.
-- `/channels/new` → handle availability checked live; submit creates channel and redirects to `/c/<handle>`.
-- `/c/<handle>` → public visitors can browse; subscribers see posts in real time; reactions update live for everyone.
-- Schedule a post 2 min in future → it shows in the manage queue, then appears in the feed (via realtime + cron) without refresh.
-- View count on a post increments at most once per viewer per 24h.
-- `/c/<handle>/manage` (owner only) → edit name/banner/description, promote a subscriber to admin, remove a subscriber, see scheduled queue.
-- Visiting `/chat/group-call/<id>` works (alongside `/chat/call/group/<id>`).
+- `src/components/chat/CreateGroupModal.tsx` — split member insert into two steps; surface the real error message.
+- (If needed) new migration: `add_group_members` security-definer RPC + grant.
+- `src/pages/PersonalChat.tsx` (and group chat header if separate) — swap call handlers to mount `GroupCallLauncher` with deterministic room id; pass display name + avatar.
+- `src/pages/Contacts.tsx` (or equivalent) — add chat-history fallback query; dedupe + sort by most recent message.
+- Type-check after changes.
 
-### Files
-**New**
-- `src/pages/channels/ChannelsDirectoryPage.tsx`
-- `src/pages/channels/NewChannelPage.tsx`
-- `src/pages/channels/ChannelPage.tsx`
-- `src/pages/channels/ManageChannelPage.tsx`
-- `src/components/channels/ChannelHeader.tsx`
-- `src/components/channels/ChannelPostCard.tsx`
-- `src/components/channels/ChannelPostComposer.tsx`
-- `src/components/channels/ChannelMemberRow.tsx`
-- `src/components/channels/SubscribeButton.tsx`
-- `src/hooks/useChannel.ts`
+## Out of scope
 
-**Edited**
-- `src/App.tsx` — add 4 channel routes + alias `/chat/group-call/:roomName`.
-
-### Out of scope this round
-- Push notifications for new posts (will plug into existing `device_tokens` infra in a follow-up).
-- Channel-side analytics page beyond basic counts.
-- Track D (chat polish: editing, scheduled send, pin, search, folders, custom notifs).
+- No changes to LiveKit token edge function (already deployed).
+- No redesign of the call UI itself — only routing the buttons to the new launcher.

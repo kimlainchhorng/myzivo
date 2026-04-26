@@ -12,6 +12,8 @@ import ImagePlus from "lucide-react/dist/esm/icons/image-plus";
 import X from "lucide-react/dist/esm/icons/x";
 import Mic from "lucide-react/dist/esm/icons/mic";
 import Square from "lucide-react/dist/esm/icons/square";
+import Phone from "lucide-react/dist/esm/icons/phone";
+import Video from "lucide-react/dist/esm/icons/video";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { motion, AnimatePresence } from "framer-motion";
 import { format, isToday, isYesterday } from "date-fns";
@@ -20,6 +22,8 @@ import VoiceMessagePlayer from "./VoiceMessagePlayer";
 import { useVoiceRecorder } from "@/hooks/useVoiceRecorder";
 import GroupMembersSheet from "./GroupMembersSheet";
 import GroupInviteSheet from "./GroupInviteSheet";
+import GroupCallLauncher from "./call/GroupCallLauncher";
+import { primeCallAudio } from "@/lib/callAudio";
 import Link2 from "lucide-react/dist/esm/icons/link-2";
 
 interface GroupChatProps {
@@ -68,6 +72,7 @@ export default function GroupChat({ groupId, groupName, groupAvatar, onClose }: 
   const [uploadingImage, setUploadingImage] = useState(false);
   const [showMembers, setShowMembers] = useState(false);
   const [showInvites, setShowInvites] = useState(false);
+  const [groupCall, setGroupCall] = useState<"audio" | "video" | null>(null);
   const voice = useVoiceRecorder();
 
   const scrollToBottom = useCallback(() => {
@@ -280,7 +285,23 @@ export default function GroupChat({ groupId, groupName, groupAvatar, onClose }: 
               {members.length} members
             </p>
           </div>
-          <div className="flex items-center gap-1">
+          <div className="flex items-center gap-0.5">
+            <button
+              onClick={() => { void primeCallAudio(); setGroupCall("video"); }}
+              className="h-10 w-10 flex items-center justify-center rounded-full hover:bg-blue-500/10"
+              aria-label="Video call"
+              title="Video call"
+            >
+              <Video className="h-5 w-5 text-blue-500" />
+            </button>
+            <button
+              onClick={() => { void primeCallAudio(); setGroupCall("audio"); }}
+              className="h-10 w-10 flex items-center justify-center rounded-full hover:bg-emerald-500/10"
+              aria-label="Voice call"
+              title="Voice call"
+            >
+              <Phone className="h-[19px] w-[19px] text-emerald-500" />
+            </button>
             <button
               onClick={() => setShowInvites(true)}
               className="min-h-[40px] min-w-[40px] flex items-center justify-center rounded-full hover:bg-muted/50"
@@ -483,6 +504,17 @@ export default function GroupChat({ groupId, groupName, groupAvatar, onClose }: 
         onOpenChange={setShowInvites}
         groupId={groupId}
       />
+
+      {/* LiveKit-powered group call overlay */}
+      {groupCall && (
+        <div className="fixed inset-0 z-[70] bg-background">
+          <GroupCallLauncher
+            roomName={`group-${groupId}`}
+            callType={groupCall}
+            onEnded={() => setGroupCall(null)}
+          />
+        </div>
+      )}
     </motion.div>
   );
 }
