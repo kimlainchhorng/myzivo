@@ -17,6 +17,8 @@ import StoryViewer, { StoryGroup } from "@/components/stories/StoryViewer";
 import StoryTextTile from "@/components/stories/StoryTextTile";
 import { useStoryDeepLink, useStoryViewerLocation } from "@/hooks/useStoryDeepLink";
 import { invalidateAllStoryCaches } from "@/lib/storiesCache";
+import { useUserProfile } from "@/hooks/useUserProfile";
+import { optimizeAvatar } from "@/utils/optimizeAvatar";
 
 const CreateStorySheet = lazy(() => import("@/components/profile/CreateStorySheet"));
 
@@ -25,6 +27,7 @@ export default function ChatStories() {
   const queryClient = useQueryClient();
   const [showCreate, setShowCreate] = useState(false);
   const { activeStoryId, openStory, closeStory, updateStory } = useStoryDeepLink({ source: "chat" });
+  const { data: myProfile } = useUserProfile();
 
   const { data: storyGroups = [] } = useQuery({
     queryKey: ["user-stories"],
@@ -121,8 +124,17 @@ export default function ChatStories() {
                     if (latest && (latest.mediaType === "text" || !latest.mediaUrl)) {
                       return <StoryTextTile text={latest.caption || ""} />;
                     }
-                    if (myStories?.avatarUrl) {
-                      return <img src={myStories.avatarUrl} alt="" className="w-full h-full object-cover" />;
+                    const avatar = myStories?.avatarUrl || myProfile?.avatar_url;
+                    if (avatar) {
+                      return <img src={optimizeAvatar(avatar, 128) || avatar} alt="Your avatar" className="w-full h-full object-cover" />;
+                    }
+                    const initial = (myProfile?.full_name?.[0] || user?.email?.[0] || "").toUpperCase();
+                    if (initial) {
+                      return (
+                        <div className="w-full h-full flex items-center justify-center bg-primary/10 text-base font-bold text-primary">
+                          {initial}
+                        </div>
+                      );
                     }
                     return (
                       <div className="w-full h-full flex items-center justify-center bg-primary/10">

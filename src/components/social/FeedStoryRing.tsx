@@ -22,6 +22,7 @@ import StoryTextTile from "@/components/stories/StoryTextTile";
 import { useStoryDeepLink, useStoryViewerLocation } from "@/hooks/useStoryDeepLink";
 import { invalidateAllStoryCaches } from "@/lib/storiesCache";
 import { useMyStoryViews } from "@/hooks/useMyStoryViews";
+import { useUserProfile } from "@/hooks/useUserProfile";
 
 const CreateStorySheet = lazy(() => import("@/components/profile/CreateStorySheet"));
 
@@ -43,6 +44,7 @@ export default function FeedStoryRing() {
   const [showCreate, setShowCreate] = useState(false);
   const [showOwnSheet, setShowOwnSheet] = useState(false);
   const { activeStoryId, openStory, closeStory, updateStory } = useStoryDeepLink({ source: "feed" });
+  const { data: myProfile } = useUserProfile();
 
   const { data: rawStories = [] } = useQuery({
     queryKey: ["feed-story-users"],
@@ -179,8 +181,10 @@ export default function FeedStoryRing() {
                   <StoryTextTile text={myLatestStory.caption || ""} />
                 ) : (
                   <Avatar className="h-full w-full">
-                    <AvatarImage src={optimizeAvatar(myGroup?.avatarUrl, 64)} loading="lazy" />
-                    <AvatarFallback className="text-sm font-bold">{user.email?.[0]}</AvatarFallback>
+                    <AvatarImage src={optimizeAvatar(myGroup?.avatarUrl || myProfile?.avatar_url || undefined, 128)} loading="lazy" />
+                    <AvatarFallback className="text-sm font-bold">
+                      {(myProfile?.full_name?.[0] || user.email?.[0] || "U").toUpperCase()}
+                    </AvatarFallback>
                   </Avatar>
                 )}
               </div>
