@@ -39,6 +39,8 @@ import ChatAttachMenu from "./ChatAttachMenu";
 const ChatGiftPanel = lazy(() => import("./ChatGiftPanel"));
 const ChatWalletSheet = lazy(() => import("./ChatWalletSheet"));
 const CoinTransferBubble = lazy(() => import("./CoinTransferBubble"));
+const DocumentScanner = lazy(() => import("./DocumentScanner"));
+import { useChatFiles } from "@/hooks/useChatFiles";
 import type { StickerSendPayload } from "./StickerKeyboard";
 import { getWallpaperClass, getWallpaperStyle } from "./ChatPersonalization";
 import CallEventBubble from "./CallEventBubble";
@@ -183,6 +185,7 @@ export default function PersonalChat({ recipientId, recipientName, recipientAvat
   const [showLockedPricePicker, setShowLockedPricePicker] = useState(false);
   const [showGiftPanel, setShowGiftPanel] = useState(false);
   const [showWalletSheet, setShowWalletSheet] = useState(false);
+  const [showScanner, setShowScanner] = useState(false);
   const [pendingLockedFile, setPendingLockedFile] = useState<File | null>(null);
   const [chatStyle, setChatStyle] = useState({ wallpaper: "default", themeColor: "default", fontSize: "medium" });
   const [callEvents, setCallEvents] = useState<CallEvent[]>([]);
@@ -200,6 +203,7 @@ export default function PersonalChat({ recipientId, recipientName, recipientAvat
 
   const { isTyping: recipientTyping, isOnline: recipientOnline, lastSeen: recipientLastSeen, setTyping } = useChatPresence(user?.id, recipientId);
   const voice = useVoiceRecorder();
+  const { uploadFile } = useChatFiles();
   const { draft, updateDraft, clearDraft } = useChatDraft(user?.id, recipientId);
   const { forwardMessage } = useMessageActions();
 
@@ -1476,7 +1480,7 @@ export default function PersonalChat({ recipientId, recipientName, recipientAvat
                   onLockedImageSelect={() => lockedImageInputRef.current?.click()}
                   onSendGift={() => setShowGiftPanel(true)}
                   onOpenWallet={() => setShowWalletSheet(true)}
-
+                  onScanDocument={() => setShowScanner(true)}
                 />
               </div>
 
@@ -1781,6 +1785,43 @@ export default function PersonalChat({ recipientId, recipientName, recipientAvat
             onClose={() => setShowWalletSheet(false)}
             recipientId={recipientId}
             recipientName={recipientName}
+          />
+        </Suspense>
+      )}
+
+      {/* Document scanner → A4 PDF */}
+      {showScanner && (
+        <Suspense fallback={null}>
+          <DocumentScanner
+            open={showScanner}
+            onClose={() => setShowScanner(false)}
+            onComplete={async (pdfBlob, meta) => {
+              if (!user?.id) return;
+              const uploaded = await uploadFile(pdfBlob, {
+                filename: meta.filename,
+                mimeType: "application/pdf",
+                pageCount: meta.pageCount,
+                source: "scan",
+                thumbnail: meta.thumbnail,
+              });
+              if (!uploaded) {
+                toast.error("Couldn't upload scan");
+                return;
+              }
+              // Send as a chat message — link will be linkified by the renderer.
+              const summary = `📄 ${uploaded.filename}\n${uploaded.page_count ?? meta.pageCount} page${(uploaded.page_count ?? meta.pageCount) > 1 ? "s" : ""} · PDF`;
+              const { error } = await supabase.from("direct_messages").insert({
+                sender_id: user.id,
+                receiver_id: recipientId,
+                message: `${summary}\n${uploaded.url}`,
+                message_type: "text",
+              } as any);
+              if (error) {
+                toast.error("Couldn't send PDF");
+              } else {
+                toast.success("Scan sent");
+              }
+            }}
           />
         </Suspense>
       )}

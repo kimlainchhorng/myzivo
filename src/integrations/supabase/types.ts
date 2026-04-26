@@ -9096,9 +9096,12 @@ export type Database = {
           message_id: string | null
           mime: string
           owner_id: string
+          page_count: number | null
           pages: number | null
           sha256: string | null
           size_bytes: number
+          source: string | null
+          thumbnail_url: string | null
         }
         Insert: {
           bucket?: string
@@ -9109,9 +9112,12 @@ export type Database = {
           message_id?: string | null
           mime: string
           owner_id: string
+          page_count?: number | null
           pages?: number | null
           sha256?: string | null
           size_bytes?: number
+          source?: string | null
+          thumbnail_url?: string | null
         }
         Update: {
           bucket?: string
@@ -9122,9 +9128,12 @@ export type Database = {
           message_id?: string | null
           mime?: string
           owner_id?: string
+          page_count?: number | null
           pages?: number | null
           sha256?: string | null
           size_bytes?: number
+          source?: string | null
+          thumbnail_url?: string | null
         }
         Relationships: []
       }
@@ -11717,6 +11726,36 @@ export type Database = {
           status?: string | null
           summary?: string | null
           updated_at?: string | null
+        }
+        Relationships: []
+      }
+      contact_requests: {
+        Row: {
+          created_at: string
+          from_user_id: string
+          id: string
+          message: string | null
+          status: string
+          to_user_id: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          from_user_id: string
+          id?: string
+          message?: string | null
+          status?: string
+          to_user_id: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          from_user_id?: string
+          id?: string
+          message?: string | null
+          status?: string
+          to_user_id?: string
+          updated_at?: string
         }
         Relationships: []
       }
@@ -32055,6 +32094,36 @@ export type Database = {
         }
         Relationships: []
       }
+      nearby_presence: {
+        Row: {
+          expires_at: string
+          geohash: string
+          is_visible: boolean
+          lat: number
+          lng: number
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          expires_at?: string
+          geohash: string
+          is_visible?: boolean
+          lat: number
+          lng: number
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          expires_at?: string
+          geohash?: string
+          is_visible?: boolean
+          lat?: number
+          lng?: number
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       nonce_cache: {
         Row: {
           expires_at: string
@@ -38566,6 +38635,7 @@ export type Database = {
           payout_hold: boolean
           phone: string | null
           phone_e164: string | null
+          phone_hash: string | null
           phone_verified: boolean
           phone_verified_at: string | null
           profile_visibility: string
@@ -38628,6 +38698,7 @@ export type Database = {
           payout_hold?: boolean
           phone?: string | null
           phone_e164?: string | null
+          phone_hash?: string | null
           phone_verified?: boolean
           phone_verified_at?: string | null
           profile_visibility?: string
@@ -38690,6 +38761,7 @@ export type Database = {
           payout_hold?: boolean
           phone?: string | null
           phone_e164?: string | null
+          phone_hash?: string | null
           phone_verified?: boolean
           phone_verified_at?: string | null
           profile_visibility?: string
