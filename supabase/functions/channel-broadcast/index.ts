@@ -45,7 +45,7 @@ Deno.serve(async (req) => {
 
     // Verify caller is owner or admin
     const { data: ch } = await supabase
-      .from("channels").select("id, owner_id, name").eq("id", channel_id).maybeSingle();
+      .from("channels").select("id, owner_id, name, handle").eq("id", channel_id).maybeSingle();
     if (!ch) {
       return new Response(JSON.stringify({ error: "channel not found" }), {
         status: 404, headers: { ...corsHeaders, "Content-Type": "application/json" },
@@ -97,12 +97,14 @@ Deno.serve(async (req) => {
         .map((s: any) => s.user_id);
       // Best-effort: write notifications rows (push fan-out happens via existing notifier)
       if (recipients.length) {
+        const actionUrl = ch.handle ? `/channel/${ch.handle}` : `/channels`;
         const rows = recipients.map((uid: string) => ({
           user_id: uid,
           type: "channel_post",
           title: ch.name,
           body: (text ?? "Sent a new post").slice(0, 140),
-          data: { channel_id, post_id: post.id },
+          action_url: actionUrl,
+          data: { channel_id, post_id: post.id, handle: ch.handle },
         }));
         await supabase.from("notifications").insert(rows).then(() => { notified = rows.length; }).catch(() => {});
       }
