@@ -1474,7 +1474,7 @@ export default function PersonalChat({ recipientId, recipientName, recipientAvat
             {/* Send or Mic */}
             {input.trim() ? (
               <button
-                onClick={() => handleSend()}
+                onClick={() => editingId ? handleSaveEdit() : handleSend()}
                 onContextMenu={(e) => { e.preventDefault(); setShowScheduler(true); }}
                 disabled={sending}
                 className="h-11 w-11 rounded-full bg-primary text-primary-foreground flex items-center justify-center disabled:opacity-40 active:scale-90 transition-all shrink-0 shadow-sm"
