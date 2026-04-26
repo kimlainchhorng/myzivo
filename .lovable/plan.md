@@ -1,76 +1,70 @@
-## Hotels & Resorts Admin — Completion Pass
+## Hotels & Resorts — Phase 4 (Final Completion Pass)
 
-I audited every lodging section under `src/components/admin/store/lodging/` and the wiring in `AdminStoreEditPage.tsx`. The shell, sidebar, and most data-heavy tabs (Rooms, Reservations, Calendar, Front Desk, Housekeeping, Maintenance, Amenities, Property Profile) are solid. Six tabs are still **read-only summary stubs** with no editing, and several common hotel-operations features are missing entirely.
-
-This plan finishes those tabs and adds the missing upgrades.
+Phases 1–3 shipped: 8 new tables, 6 stub tabs converted to editors (Dining, Experiences, Wellness, Transport, Policies, Reviews), and 3 new tabs (Promotions, Channel Manager, Payouts). This phase finishes the remaining items from the original plan.
 
 ---
 
-### 1. Convert read-only stub tabs into real editors
+### 1. iCal sync (Channel Manager backend)
 
-These tabs currently only count linked data and bounce users to other tabs. They will become first-class editors with their own persistence.
+Two edge functions to make the Channel Manager actually move data:
 
-| Tab | Today | Upgrade |
-|---|---|---|
-| **Dining & Meal Plans** | Counts meal plans, lists badges | Add inline editor for meal plans (BB / HB / FB / AI), breakfast hours, restaurant hours, room-service window, dietary options, kids menu toggle |
-| **Experiences & Tours** | Filters add-ons by category | Dedicated experiences catalog (name, type, duration, price, capacity, included items, photo) saved on the property — independent of room add-ons |
-| **Spa & Wellness** | Filters add-ons | Wellness service catalog (treatment, duration, price, therapist, room) + spa hours + booking lead-time |
-| **Transport & Transfers** | Filters add-ons | Transfer pricing matrix (airport / pier / city → property, one-way & round-trip, vehicle type, capacity), parking rates, shuttle schedule |
-| **Policies & Rules** | Reads property profile | In-place editor for cancellation policy, deposit %, child policy, pet policy, smoking, quiet hours, party rules, payment methods, currencies, taxes |
-| **Reviews & Guest Feedback** | Counts checked-out stays | Real review inbox: list reviews, star breakdown, public reply, flag/dispute, request-review CTA after checkout |
+- **`lodging-ical-import`** — Fetches external iCal feeds from `lodging_channel_connections.ical_import_url`, parses VEVENTs, and writes blocked dates into `room_availability` (status = `blocked`, source = channel name). Updates `last_sync_at` and `status`. Triggered manually from the UI ("Sync now" button) and on a daily cron.
+- **`lodging-ical-export`** — Public endpoint `/functions/v1/lodging-ical-export?token=...` that serves a valid `.ics` feed of all confirmed reservations + manual blocks for the room matching `ical_export_token`. No auth (token is the secret).
 
-### 2. New tabs / features (upgrades)
+Wire the Channel Manager UI's "Sync now" button to invoke the import function and surface success/error toasts.
 
-- **Channel Manager** (`lodge-channels`) — Connect / sync Booking.com, Expedia, Airbnb, Agoda via iCal import + iCal export per room. Status indicator, last-sync time, manual re-sync, conflict warnings.
-- **Payouts & Finance** (`lodge-payouts`) — Earnings, pending payout, payout schedule, bank account, tax info, downloadable monthly statements (CSV/PDF). Reuses existing `payment-payouts` plumbing where possible.
-- **Employees / Staff** (`lodge-staff`) — The Employees page the user is on shows zeros. Wire it into `store_employees` with hotel-specific roles (Front desk, Housekeeping, Maintenance, F&B, Spa, Manager), shift schedule, payroll summary.
-- **Promotions & Discounts** (`lodge-promos`) — Promo codes, last-minute %, early-bird %, length-of-stay discount, mobile-only rate, member-only rate.
-- **Taxes & Fees** (within Policies) — VAT %, city/tourism tax (per night / per stay / per guest), service charge %, resort fee.
-- **Inbox / Messaging** (`lodge-inbox`) — Unified guest messaging thread per reservation (pre-arrival, in-stay, post-stay) tied to existing chat infrastructure.
+### 2. Guest Inbox / Messaging (`lodge-inbox`)
 
-### 3. Polish to existing tabs
+New tab under OPERATIONS. One thread per reservation, scoped to the property:
 
-- **Overview**: real "next best action" wired to the new editors (currently links to read-only tabs that can’t fix the issue).
-- **Rooms & Rates**: bulk edit (apply rate / restriction to N rooms at once), copy room type, photo reorder drag.
-- **Reservations**: quick filters (Today / This week / VIP / Unpaid), export CSV, send confirmation email button.
-- **Calendar**: drag to extend stay, color legend, block-out date range UI.
-- **Front Desk**: walk-in booking shortcut, key card status, late-checkout request approval.
-- **Housekeeping**: assign-by-staff member dropdown (uses new Staff tab), priority flag, photo upload on completion.
-- **Property Profile**: add Wi-Fi password (guest-visible), local emergency contacts, language(s) spoken at front desk, accepted ID types.
-- **Setup checklist / completion meter**: include the new tabs so the progress % is honest.
+- New table `lodging_messages` (store_id, reservation_id, guest_id, sender_role, body, attachments jsonb, read_at).
+- Inbox UI: left list of reservations with unread badge + last-message preview; right pane is the thread (guest bubbles vs. staff bubbles, send box, quick replies for "Pre-arrival info", "Wi-Fi", "Late checkout").
+- Templates: pre-arrival, in-stay check, post-stay thank-you (manual send for now; auto-send is out of scope).
 
-### 4. Backend (Supabase)
+### 3. Lodging-aware Staff / Employees (`lodge-staff`)
 
-New tables (all RLS by `store_id` ownership via `store_profiles.owner_id`):
+The current `employees` tab is generic and shows zeros for hotels. Add a hospitality-shaped wrapper that reuses `store_employees`:
 
-- `lodging_meal_plans` (store_id, code, name, includes, hours)
-- `lodging_experiences` (store_id, name, type, duration_min, price_cents, capacity, photo_url, active)
-- `lodging_wellness_services` (store_id, name, duration_min, price_cents, therapist, active)
-- `lodging_transfers` (store_id, from_location, to_location, vehicle_type, one_way_cents, round_trip_cents, capacity)
-- `lodging_promotions` (store_id, code, type, value, starts_at, ends_at, conditions jsonb)
-- `lodging_taxes` (store_id, name, rate_pct, basis, applies_to)
-- `lodging_channel_connections` (store_id, room_id, channel, ical_import_url, ical_export_token, last_sync_at, status)
-- `lodging_reviews` (store_id, reservation_id, guest_id, rating, body, reply, replied_at, flagged)
+- New section component `LodgingStaffSection.tsx` that lists employees with hotel role chips: **Front Desk**, **Housekeeping**, **Maintenance**, **F&B**, **Spa**, **Concierge**, **Manager**.
+- Quick-add dialog with role + shift (Morning / Afternoon / Night) + phone.
+- Workload column: # of housekeeping tasks assigned today (Housekeeping role) / # of check-ins handled (Front Desk).
+- Wires the Housekeeping tab's "assign to" dropdown to the same staff list (already noted in plan polish).
 
-Edge functions:
-- `lodging-ical-sync` — Pull external iCal feeds on a schedule, write blocked dates into `room_availability`.
-- `lodging-ical-export` — Serve per-room iCal feed using export token.
-- `lodging-request-review` — Send post-checkout review email/notification.
+Stored on existing `store_employees` table with a `lodging_role` and `shift` column added via migration — no new table needed.
 
-### 5. Out of scope (intentionally)
+### 4. Operational polish
 
-- Real-time PMS (Opera/Cloudbeds) integration — iCal channel manager only for now.
-- Native POS for restaurant/spa billing — reuse existing folio/charges flow.
-- Multi-property group dashboard — single property scope per store.
+- **Overview**: rewrite "Next best action" to point at the new editors (Dining, Promotions, Channel Manager) when those are empty.
+- **Calendar**: drag handle on reservation bars to extend stay (updates `check_out`); colored legend (Confirmed / Pending / Blocked / OTA); range block-out dialog.
+- **Reservations**: quick-filter chips (Today arrivals / In-house / Departing / Unpaid / VIP); "Export CSV" button; "Send confirmation" action on row.
+- **Front Desk**: walk-in booking shortcut (opens new-reservation dialog pre-set to today); late-checkout request approval inline.
+- **Housekeeping**: assign dropdown sourced from new Staff tab; priority flag toggle; photo upload field on task completion (uses existing storage).
+- **Property Profile**: add Wi-Fi SSID + password (guest-visible flag), local emergency contacts (police/medical), languages spoken, accepted ID types.
+- **Setup Checklist & Completeness Meter**: include the new sections (Promotions optional, Channel Manager optional, Staff required for >5 rooms) so progress % reflects reality.
+
+### 5. Backend changes
+
+Single migration:
+
+- `lodging_messages` table + RLS (store owner / admin read/write; guest can read their own thread via `guest_id`).
+- `store_employees` add columns `lodging_role text`, `shift text`.
+- `room_availability` add columns `source text` (manual / booking_com / airbnb / expedia / agoda) and `external_uid text` for iCal dedupe.
+
+### 6. Out of scope (still)
+
+- Real-time PMS (Opera/Cloudbeds) — iCal only.
+- Auto-scheduled review/messaging emails — manual triggers only.
+- Group/multi-property dashboard.
 
 ---
 
-### Suggested build order
+### Build order
 
-1. Backend migrations (tables + RLS) + types regen.
-2. Convert the 6 stub tabs into real editors (Dining, Experiences, Wellness, Transport, Policies, Reviews).
-3. Add new tabs: Channel Manager, Payouts, Staff, Promotions, Inbox.
-4. Polish pass on Rooms/Reservations/Calendar/Front Desk/Housekeeping/Property Profile.
-5. Update setup checklist + completion meter to include new sections.
+1. Migration: `lodging_messages`, `store_employees` columns, `room_availability` columns.
+2. Edge functions `lodging-ical-import` and `lodging-ical-export`; wire "Sync now" in Channel Manager.
+3. Guest Inbox section + tab registration.
+4. Lodging Staff section + tab registration; feed Housekeeping assign dropdown.
+5. Polish pass: Overview NBA, Calendar drag/legend, Reservations filters/export, Front Desk walk-in, Housekeeping assign/photo, Property Profile Wi-Fi/emergency.
+6. Update setup checklist & completeness meter.
 
-Approve and I'll start executing in this order. If you want a different priority (e.g. Reviews + Channel Manager first because they unlock revenue), tell me and I'll resequence.
+Approve to ship this batch.
