@@ -110,12 +110,22 @@ export default function LodgingChannelManagerSection({ storeId }: { storeId: str
               <button
                 className="flex items-center gap-1.5 truncate text-xs text-primary hover:underline"
                 onClick={() => {
-                  navigator.clipboard.writeText(`${exportBase}${r.ical_export_token}.ics`);
+                  navigator.clipboard.writeText(`${exportBase}${r.ical_export_token}`);
                   toast.success("Copied iCal URL");
                 }}
               >
                 <Copy className="h-3 w-3" /> Copy iCal URL
               </button>
+            )},
+            { key: "sync", label: "Sync", className: "w-24", render: (r) => (
+              <Button
+                size="sm"
+                variant="outline"
+                disabled={!r.ical_import_url || syncingId === r.id}
+                onClick={() => handleSync(r.id)}
+              >
+                {syncingId === r.id ? <Loader2 className="h-3 w-3 animate-spin" /> : <><RefreshCw className="mr-1 h-3 w-3" />Sync</>}
+              </Button>
             )},
           ]}
         />
