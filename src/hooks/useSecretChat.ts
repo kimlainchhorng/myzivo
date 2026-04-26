@@ -65,7 +65,7 @@ export function useSecretChat(partnerId: string | null) {
           {
             user_id: user.id,
             device_fingerprint: getDeviceFingerprint(),
-            public_key_jwk: self.publicKeyJwk as unknown as Record<string, unknown>,
+            public_key_jwk: self.publicKeyJwk as never,
           },
           { onConflict: "user_id,device_fingerprint" },
         );
@@ -252,7 +252,7 @@ export function useSecretChat(partnerId: string | null) {
           .insert({
             chat_id: chatId,
             sender_id: user.id,
-            sender_public_key_jwk: payload.senderPublicKeyJwk as unknown as Record<string, unknown>,
+            sender_public_key_jwk: payload.senderPublicKeyJwk as never,
             iv: payload.iv,
             ciphertext: payload.ciphertext,
             expires_at: expiresAt,
