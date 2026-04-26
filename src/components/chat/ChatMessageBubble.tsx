@@ -199,6 +199,48 @@ const ChatMessageBubble = memo(function ChatMessageBubble({
   const [reactions, setReactions] = useState<{ emoji: string; count: number; hasMyReaction: boolean }[]>(initialReactions || []);
   const [openDown, setOpenDown] = useState(false);
   const [showStickerBurst, setShowStickerBurst] = useState(false);
+  const [translation, setTranslation] = useState<{ text: string; sourceLang?: string } | null>(null);
+  const [translating, setTranslating] = useState(false);
+  const [showTranslation, setShowTranslation] = useState(false);
+
+  const canEdit = isMe && !!createdAt && (Date.now() - new Date(createdAt).getTime() < 48 * 60 * 60 * 1000) && !!message?.trim() && !imageUrl && !videoUrl;
+
+  const handleEdit = useCallback(() => {
+    if (!onEdit) return;
+    onEdit(id, message);
+    setShowActions(false);
+    setShowReactions(false);
+  }, [id, message, onEdit]);
+
+  const handleTranslate = useCallback(async () => {
+    setShowActions(false);
+    setShowReactions(false);
+    if (!message?.trim()) return;
+    if (translation) { setShowTranslation((v) => !v); return; }
+    setTranslating(true);
+    setShowTranslation(true);
+    try {
+      const target = (navigator.language || "en").split("-")[0];
+      const { data, error } = await supabase.functions.invoke("translate-caption", {
+        body: { text: message, target_language: target },
+      });
+      if (error) throw error;
+      const translated = (data as any)?.translated_text || (data as any)?.translation || (data as any)?.text;
+      if (translated) {
+        setTranslation({ text: translated, sourceLang: (data as any)?.source_language });
+      } else {
+        toast.error("Could not translate");
+        setShowTranslation(false);
+      }
+    } catch (err) {
+      console.error("translate failed", err);
+      toast.error("Translation unavailable");
+      setShowTranslation(false);
+    } finally {
+      setTranslating(false);
+    }
+  }, [message, translation]);
+
   const longPressTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const didLongPress = useRef(false);
   const hasMoved = useRef(false);
