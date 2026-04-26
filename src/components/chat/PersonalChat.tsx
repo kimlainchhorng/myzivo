@@ -1365,6 +1365,15 @@ export default function PersonalChat({ recipientId, recipientName, recipientAvat
                           </span>
                         </div>
                       </div>
+                    ) : msg.message_type === "file" && msg.file_payload ? (
+                      <div className={`flex ${isMe ? "justify-end" : "justify-start"} ${msg.id.startsWith("opt-") ? "opacity-60" : ""}`}>
+                        <div className="flex flex-col gap-1">
+                          <FileBubble file={msg.file_payload as FileBubbleData} mine={isMe} />
+                          <span className={`text-[9px] mt-0.5 ${isMe ? "text-right text-muted-foreground/70" : "text-left text-muted-foreground/70"}`}>
+                            {formatMsgTime(msg.created_at)}
+                          </span>
+                        </div>
+                      </div>
                     ) : (
                       <ChatMessageBubble
                         id={msg.id}
