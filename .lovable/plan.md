@@ -1,31 +1,30 @@
-## Problem
+## Goal
 
-On `/chat`, the sticky header (back arrow, "Chat" title, group, bell) sits at `sticky top-0` with no top padding for the iOS safe area. On native iOS the status bar / Dynamic Island overlaps these buttons — the same "stuck in the safe zone" issue we just fixed on the Profile cover.
+Fix the "Create new Business" entry in the profile dropdown so that:
+1. The icon and text render in true **black** (not the green seen in the screenshot).
+2. The button is **always visible** — even when the user already owns one or more business pages — so they can create additional businesses (matching how Facebook lets users own multiple Pages).
 
-Other pages in the app (Feed, Reels, Profile, More) already use the shared token `var(--zivo-safe-top-sticky)` for the same purpose. Chat is the outlier.
+## Changes
 
-## Fix (one file)
+**File: `src/components/home/NavBar.tsx`**
 
-`src/pages/ChatHubPage.tsx` — sticky header wrapper around line 628–633.
+1. Remove the `ownerStores.length === 0` gate so "Create new Business" always appears at the bottom of the business list.
+2. Force the icon and label to render in true black with explicit color classes (`text-black` for both the `Building2` icon and the item), overriding any inherited green/primary token. Keep neutral hover styling (`focus:text-black`) so it doesn't flip to the accent color on hover.
+3. Add a subtle top separator above the "Create new Business" row when there are existing stores, so it visually reads as a secondary action under the list of owned pages.
 
-1. Add `paddingTop: 'var(--zivo-safe-top-sticky)'` to the sticky header `<div>` (only when **not** embedded — embedded mode already lives inside a parent that handles spacing, matching the existing `embedded` branch).
-2. Keep everything else (back/title/bell/group buttons, search, category pills) unchanged.
+### Resulting markup (conceptual)
 
-```text
-┌──── status bar / Dynamic Island ────┐  ← safe-area-inset-top
-├─────────────────────────────────────┤
-│  ←   Chat              👥+   🔔     │  ← header, now pushed below safe zone
-│  🔍 Search conversations…           │
-│  Personal · Shop · Support · Ride   │
-└─────────────────────────────────────┘
+```tsx
+{ownerStores.length > 0 && <DropdownMenuSeparator />}
+<DropdownMenuItem
+  onClick={() => navigate("/business/new")}
+  className="cursor-pointer rounded-lg py-2 gap-2.5 text-black focus:text-black"
+>
+  <Building2 className="w-4 h-4 text-black" /> Create new Business
+</DropdownMenuItem>
 ```
 
-## Out of scope (follow-up)
+## Out of scope
 
-A repo-wide audit found ~40 other pages using `sticky top-0` / `fixed top-0` without the safe-area token (Bookmarks, Explore, Events, Activity, Eats*, Grocery*, Drivers*, Creator*, Communities, Dating, etc.). I'll fix Chat now since that's the one you flagged. If you want, I can do a sweep of the rest in a follow-up pass.
-
-## Acceptance
-
-- On `/chat` at iPhone safe-area viewports the back arrow, "Chat" title, group icon, and bell sit fully below the status bar / Dynamic Island.
-- Web/desktop and embedded chat (right rail on lg+) are unchanged.
-- No layout shift in the conversations list, search, or category pills.
+- No changes to the `useOwnerStores` hook or the business creation wizard.
+- No changes to other dropdown items (Business Page fallback, ZIVO+, Membership, etc.).
