@@ -59,6 +59,7 @@ export default function FeedSidebar() {
   const { user } = useAuth();
   const { data: profile } = useUserProfile();
   const { data: access } = useUserAccess(user?.id);
+  const { username } = useUsername();
   const [showSwitch, setShowSwitch] = useState(false);
   const [showChat, setShowChat] = useState(false);
 
