@@ -470,6 +470,19 @@ export default function GroupChat({ groupId, groupName, groupAvatar, onClose }: 
           </button>
         </div>
       )}
+
+      {/* Phase 4 Track C — Group admin sheets */}
+      <GroupMembersSheet
+        open={showMembers}
+        onOpenChange={setShowMembers}
+        groupId={groupId}
+        onLeft={onClose}
+      />
+      <GroupInviteSheet
+        open={showInvites}
+        onOpenChange={setShowInvites}
+        groupId={groupId}
+      />
     </motion.div>
   );
 }
