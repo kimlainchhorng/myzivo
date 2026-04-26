@@ -4,17 +4,46 @@ import { AddonList, LoadingPanel, NextActions, OpsSnapshot, SectionShell, StatCa
 import LodgingSetupChecklist from "./LodgingSetupChecklist";
 import { useLodgeHousekeeping } from "@/hooks/lodging/useLodgeHousekeeping";
 import { getLodgingCompletion } from "@/lib/lodging/lodgingCompletion";
+import { useQuery } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
 
 const goTab = (tab: string) => window.dispatchEvent(new CustomEvent("lodge-set-tab", { detail: { tab } }));
 
 export default function LodgingOverviewSection({ storeId }: { storeId: string }) {
   const { rooms, profile, addons, reservations, isLoading } = useLodgingOpsData(storeId);
   const { data: housekeeping = [] } = useLodgeHousekeeping(storeId);
+  const { data: phase5Signals } = useQuery({
+    queryKey: ["lodging-phase5-signals", storeId],
+    enabled: Boolean(storeId),
+    queryFn: async () => {
+      const counts = async (table: string, filters: Record<string, any> = {}) => {
+        let q: any = (supabase as any).from(table).select("id", { count: "exact", head: true }).eq("store_id", storeId);
+        for (const [k, v] of Object.entries(filters)) q = q.eq(k, v);
+        const { count } = await q;
+        return count || 0;
+      };
+      const [mealPlansCount, staffCount, channelConnectionsCount, promotionsCount, reviewsAwaitingReply] = await Promise.all([
+        counts("lodging_meal_plans"),
+        counts("store_employees"),
+        counts("lodging_channel_connections"),
+        counts("lodging_promotions"),
+        counts("lodging_reviews", { reply_status: "pending" }).catch(() => 0),
+      ]);
+      return { mealPlansCount, staffCount, channelConnectionsCount, promotionsCount, reviewsAwaitingReply };
+    },
+  });
   const activeReservations = reservations.filter((r) => !["cancelled", "checked_out", "no_show"].includes(r.status)).length;
   const activeAddons = addons.filter((a) => a.active !== false && !a.disabled).length;
   const policiesReady = Boolean(profile?.check_in_from || profile?.check_out_until || profile?.cancellation_policy || profile?.house_rules);
   const guestServicesReady = activeAddons > 0 || Boolean(profile?.facilities?.length || profile?.meal_plans?.length);
-  const completion = getLodgingCompletion({ rooms, profile, addons, housekeepingCount: housekeeping.length, maintenanceReady: true, reservationsCount: reservations.length, reportsReady: reservations.length > 0 || rooms.length > 0 });
+  const completion = getLodgingCompletion({
+    rooms, profile, addons,
+    housekeepingCount: housekeeping.length,
+    maintenanceReady: true,
+    reservationsCount: reservations.length,
+    reportsReady: reservations.length > 0 || rooms.length > 0,
+    ...(phase5Signals || {}),
+  });
   const setupItems = completion.items;
   const hasRates = rooms.some((r) => (r.base_rate_cents || 0) > 0 && (r.units_total || 0) > 0);
   const nextAction = completion.nextBestAction;
