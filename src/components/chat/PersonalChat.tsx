@@ -1750,6 +1750,30 @@ export default function PersonalChat({ recipientId, recipientName, recipientAvat
           <MessageEffects effect={activeEffect} onComplete={() => setActiveEffect(null)} />
         </Suspense>
       )}
+
+      {/* Gift drawer (live-style) */}
+      {showGiftPanel && (
+        <Suspense fallback={null}>
+          <ChatGiftPanel
+            open={showGiftPanel}
+            onClose={() => setShowGiftPanel(false)}
+            recipientId={recipientId}
+            recipientName={recipientName}
+          />
+        </Suspense>
+      )}
+
+      {/* In-chat wallet sheet */}
+      {showWalletSheet && (
+        <Suspense fallback={null}>
+          <ChatWalletSheet
+            open={showWalletSheet}
+            onClose={() => setShowWalletSheet(false)}
+            recipientId={recipientId}
+            recipientName={recipientName}
+          />
+        </Suspense>
+      )}
     </motion.div>
   );
 
