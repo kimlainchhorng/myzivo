@@ -1199,6 +1199,16 @@ export default function PersonalChat({ recipientId, recipientName, recipientAvat
         )}
       </AnimatePresence>
 
+      {/* Pinned message banner */}
+      {conversationId && (
+        <PinnedMessageBanner
+          conversationId={conversationId}
+          onJumpTo={(id) => scrollToMessage(id)}
+          onUnpin={(id) => handlePin(id, false)}
+          canUnpin
+        />
+      )}
+
       {/* Messages */}
       <div
         ref={scrollRef}
