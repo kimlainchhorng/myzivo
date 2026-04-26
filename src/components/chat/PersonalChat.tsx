@@ -34,6 +34,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { format, isToday, isYesterday } from "date-fns";
 import { primeCallAudio } from "@/lib/callAudio";
 import ChatMessageBubble from "./ChatMessageBubble";
+import FileBubble, { type FileBubbleData } from "./FileBubble";
 import HoldToRecordMic from "./HoldToRecordMic";
 import ChatAttachMenu from "./ChatAttachMenu";
 const ChatGiftPanel = lazy(() => import("./ChatGiftPanel"));
@@ -119,6 +120,7 @@ interface Message {
   is_read: boolean;
   locked_price_cents?: number | null;
   edited_at?: string | null;
+  file_payload?: any | null;
 }
 
 interface CallEvent {
@@ -553,13 +555,20 @@ export default function PersonalChat({ recipientId, recipientName, recipientAvat
   const handleSend = async (opts?: {
     imageUrl?: string; voiceUrl?: string; videoUrl?: string;
     locationLat?: number; locationLng?: number; locationLabel?: string;
+    filePayload?: FileBubbleData;
   }) => {
     const text = input.trim();
-    const { imageUrl, voiceUrl, videoUrl, locationLat, locationLng, locationLabel } = opts || {};
-    if (!text && !imageUrl && !voiceUrl && !videoUrl && locationLat == null) return;
+    const { imageUrl, voiceUrl, videoUrl, locationLat, locationLng, locationLabel, filePayload } = opts || {};
+    if (!text && !imageUrl && !voiceUrl && !videoUrl && !filePayload && locationLat == null) return;
     if (!user?.id || sending) return;
 
-    const msgType = voiceUrl ? "voice" : videoUrl ? "video" : imageUrl ? "image" : locationLat != null ? "location" : "text";
+    const msgType = filePayload
+      ? "file"
+      : voiceUrl ? "voice"
+      : videoUrl ? "video"
+      : imageUrl ? "image"
+      : locationLat != null ? "location"
+      : "text";
     setInput("");
     clearDraft();
     const currentReply = replyTo;
@@ -583,6 +592,7 @@ export default function PersonalChat({ recipientId, recipientName, recipientAvat
       location_lng: locationLng || null,
       location_label: locationLabel || null,
       is_pinned: false,
+      file_payload: filePayload || null,
       expires_at: selfDestructSec
         ? new Date(Date.now() + selfDestructSec * 1000).toISOString()
         : disappearingMode
@@ -609,6 +619,7 @@ export default function PersonalChat({ recipientId, recipientName, recipientAvat
       if (imageUrl) insertData.image_url = imageUrl;
       if (videoUrl) insertData.video_url = videoUrl;
       if (voiceUrl) insertData.voice_url = voiceUrl;
+      if (filePayload) insertData.file_payload = filePayload;
       if (currentReply) insertData.reply_to_id = currentReply.id;
       if (locationLat != null) {
         insertData.location_lat = locationLat;
@@ -629,7 +640,7 @@ export default function PersonalChat({ recipientId, recipientName, recipientAvat
         .insert(insertData);
 
       if (error) throw error;
-      void sendChatPush(msgType, text);
+      void sendChatPush(msgType, text || filePayload?.filename || "");
     } catch {
       setMessages((prev) => prev.filter((m) => m.id !== optimisticId));
       toast.error("Failed to send message");
@@ -1354,6 +1365,15 @@ export default function PersonalChat({ recipientId, recipientName, recipientAvat
                           </span>
                         </div>
                       </div>
+                    ) : msg.message_type === "file" && msg.file_payload ? (
+                      <div className={`flex ${isMe ? "justify-end" : "justify-start"} ${msg.id.startsWith("opt-") ? "opacity-60" : ""}`}>
+                        <div className="flex flex-col gap-1">
+                          <FileBubble file={msg.file_payload as FileBubbleData} mine={isMe} />
+                          <span className={`text-[9px] mt-0.5 ${isMe ? "text-right text-muted-foreground/70" : "text-left text-muted-foreground/70"}`}>
+                            {formatMsgTime(msg.created_at)}
+                          </span>
+                        </div>
+                      </div>
                     ) : (
                       <ChatMessageBubble
                         id={msg.id}
@@ -1505,7 +1525,17 @@ export default function PersonalChat({ recipientId, recipientName, recipientAvat
                 onMediaSent={(opts) => {
                   if (opts.imageUrl) handleSend({ imageUrl: opts.imageUrl });
                   else if (opts.videoUrl) handleSend({ videoUrl: opts.videoUrl });
-                  else if (opts.fileUrl) handleSend({ imageUrl: opts.fileUrl });
+                  else if (opts.fileUrl) {
+                    handleSend({
+                      filePayload: {
+                        url: opts.fileUrl,
+                        filename: opts.fileName || "file",
+                        mime_type: opts.fileType || "application/octet-stream",
+                        size: opts.fileSize,
+                        source: "upload",
+                      },
+                    });
+                  }
                 }}
                 renderTrigger={(openFilePicker) => (
                   <button onClick={openFilePicker} className="h-10 w-10 rounded-full flex items-center justify-center text-muted-foreground/60 hover:bg-muted/50 active:scale-90 transition-all shrink-0">
@@ -1808,19 +1838,18 @@ export default function PersonalChat({ recipientId, recipientName, recipientAvat
                 toast.error("Couldn't upload scan");
                 return;
               }
-              // Send as a chat message — link will be linkified by the renderer.
-              const summary = `📄 ${uploaded.filename}\n${uploaded.page_count ?? meta.pageCount} page${(uploaded.page_count ?? meta.pageCount) > 1 ? "s" : ""} · PDF`;
-              const { error } = await supabase.from("direct_messages").insert({
-                sender_id: user.id,
-                receiver_id: recipientId,
-                message: `${summary}\n${uploaded.url}`,
-                message_type: "text",
-              } as any);
-              if (error) {
-                toast.error("Couldn't send PDF");
-              } else {
-                toast.success("Scan sent");
-              }
+              await handleSend({
+                filePayload: {
+                  url: uploaded.url,
+                  filename: uploaded.filename,
+                  mime_type: uploaded.mime_type,
+                  size: uploaded.size,
+                  page_count: uploaded.page_count ?? meta.pageCount,
+                  thumbnail_url: uploaded.thumbnail_url,
+                  source: "scan",
+                },
+              });
+              toast.success("Scan sent");
             }}
           />
         </Suspense>
