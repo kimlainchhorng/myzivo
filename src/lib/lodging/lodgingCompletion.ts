@@ -4,7 +4,8 @@ import type { LodgePropertyProfile } from "@/hooks/lodging/useLodgePropertyProfi
 export type LodgingCompletionTab =
   | "lodge-overview" | "lodge-rooms" | "lodge-rate-plans" | "lodge-calendar" | "lodge-property"
   | "lodge-policies" | "lodge-addons" | "lodge-housekeeping" | "lodge-maintenance"
-  | "lodge-reservations" | "lodge-guest-requests" | "lodge-frontdesk" | "lodge-reports";
+  | "lodge-reservations" | "lodge-guest-requests" | "lodge-frontdesk" | "lodge-reports"
+  | "lodge-dining" | "lodge-staff" | "lodge-channels" | "lodge-promos" | "lodge-reviews";
 
 export type LodgingCompletionItem = {
   key: string;
