@@ -1,134 +1,96 @@
+## Chat Mega Upgrade — Phase B & C
 
-# Chat Mega Upgrade — v2026.5
-
-A large multi-area upgrade focused on five missing pillars: **gifting (live-style)**, **wallet inside chat**, **channels workflow**, **contacts real flow**, and a **document/photo scanner that exports A4 PDFs**. Plus the database, edge function and API plumbing to make it all real.
-
----
-
-## 1) Live-style Gift Sending in Chat
-
-Replace the current static `GiftSendSheet` with a premium, live-stream-grade flow.
-
-- New `ChatGiftPanel` modeled after `LiveStreamPage` gift drawer:
-  - Tabbed catalog (Popular / Animated / Exclusive / Coins) using existing `giftCatalog`.
-  - Coin balance pill at top (reads `useCustomerWallet` / `useZivoWallet`), "Top up" button → `/wallet`.
-  - Long-press to **combo-send** (x2, x5, x10) like in live streams.
-- Full-screen gift animation overlay reused from live (`GiftAnimationOverlay`) plays for both sender and receiver in the chat thread (Realtime trigger via `direct_messages` insert).
-- New `GiftBubble` upgrade: confetti burst, replay button, "Send back" CTA, coin amount badge.
-- Wire from `ChatAttachMenu` → add **Gift** action (replaces the current ad-hoc entry) and from the chat header `+` action.
-- Server: deduct coins atomically through new edge function `chat-send-gift` (validates balance, inserts message, writes `gift_transactions` row, broadcasts realtime).
-
-## 2) Wallet inside Chat
-
-Bring the `/wallet` experience into chat without leaving the conversation.
-
-- New `ChatWalletSheet` (bottom sheet) shows: Z-Coin balance, cash balance, last 5 transactions, "Top up", "Send coins to this contact", "Cash out".
-- Reuses `useZivoWallet`, `useCustomerWallet`, `useStripePaymentMethods` (no duplicate logic).
-- Add **Send Coins** flow (peer-to-peer): amount picker + note → edge function `chat-transfer-coins` (atomic debit/credit + `direct_messages` row of type `coin_transfer` + new `CoinTransferBubble`).
-- Entry points: chat header avatar sheet, `+` attach menu ("Send Money"), and long-press on any gift bubble.
-
-## 3) Channels — real workflow inside chat hub
-
-Today `/channels/*` exists in isolation. Surface and finish it.
-
-- Add **Channels tab** to the Chat hub filters row (next to All / Unread / Personal / Groups).
-- Realtime subscriptions in `useChannel` for new posts, reactions, and subscriber counts.
-- Channel post composer: text, image, video, poll, scheduled posts (reuse `MessageScheduler`).
-- Channel admin tools page wiring: pin post, mute subscribers, broadcast notification, export subscribers CSV.
-- New edge function `channel-broadcast` (fan-out push via existing `send-push-notification`).
-- DB: `channel_posts`, `channel_subscribers`, `channel_post_reactions` (add missing columns: `pinned`, `scheduled_for`, `view_count`).
-
-## 4) Contacts — real workflow
-
-Make `ContactsPage` actually feel like Telegram/WhatsApp contacts.
-
-- Phone-book sync (Capacitor `@capacitor-community/contacts`) with explicit permission screen and on-device matching to ZIVO users via hashed phone numbers.
-- Invite non-ZIVO contacts via SMS/WhatsApp share sheet.
-- QR add: scan/show QR (reuse `QRProfilePage`).
-- Nearby people (Bluetooth/GPS opt-in, mirrors Telegram "People Nearby") — gated behind privacy toggle.
-- Contact request flow (`contact_requests` table) with accept/decline + notification.
-- Block list management page.
-- Realtime presence + last-seen on contact rows (respects `usePrivacy` settings).
-
-## 5) Document & Photo Scanner → A4 PDF
-
-New attach option: **Scan**.
-
-- Multi-page camera capture using `@capacitor/camera` (web fallback: file input).
-- Auto edge-detection + perspective correction with **OpenCV.js** (lazy loaded).
-- Filters: Original / B&W / Grayscale / Magic Color.
-- Reorder pages, retake, delete.
-- Export to **A4 PDF** (jsPDF) with proper DPI and margins; also offer JPEG export.
-- Upload to `chat-files` bucket → send as `message_type='document'` with `file_payload {name, pages, size_bytes, pdf_url, mime}`.
-- New `DocumentBubble` with page-count chip, size, "Open" (in-app PDF viewer using `react-pdf`), Save to device, Forward.
-- Quota enforcement via existing storage manager.
-
-## 6) File & Media Upgrades (cross-cutting)
-
-- Generic file attach (PDF, DOCX, ZIP, audio) — new `FileBubble` with mime icon, size, download progress.
-- Resumable uploads (tus-style) via existing `uploadWithProgress` util — add chunk retry.
-- Preview generation edge function `generate-file-thumbnail` (PDF first page → JPG thumb).
-- Per-mime allow-list + AV scan hook `scan-file-upload` (deferred to ClamAV-compatible API).
-
-## 7) Database / Server / API plumbing (single migration)
-
-New tables:
-- `gift_transactions` (id, sender_id, receiver_id, message_id, gift_key, coins, combo, created_at)
-- `coin_transfers` (id, from_user, to_user, amount, message_id, status, created_at)
-- `channel_posts`, `channel_post_reactions`, `channel_subscribers` enhancements
-- `contact_requests` (id, requester, recipient, status, created_at, message)
-- `blocked_contacts` (owner_id, blocked_user_id, created_at)
-- `nearby_presence` (user_id, geohash, updated_at, ttl) with auto-cleanup
-- `chat_files` registry (id, owner_id, message_id, bucket_path, mime, size, pages, sha256)
-
-Edge functions: `chat-send-gift`, `chat-transfer-coins`, `channel-broadcast`, `generate-file-thumbnail`, `scan-file-upload`, `contacts-match-hashes`.
-
-Storage buckets: `chat-files` (private, RLS by sender/receiver), `chat-scans` (private).
-
-RLS: `has_role`-style helpers; senders & receivers can read their own gift/coin/transfer rows; channels readable by subscribers, writable by owners/admins.
-
-## 8) UX polish
-
-- Unified **Send menu** redesign (Gift • Money • Photo • Video • Doc • Scan • Location • Poll • Sticker) — Telegram-grade grid with haptics.
-- Coin balance always visible in chat header when in a 1:1 with another monetized user.
-- Toast templates for "Gift sent", "Coins received", "Document uploaded".
+Continuing from Phase A (gifting + wallet + DB). Now wiring the document scanner, file bubbles, channels surface in chat, and a real contacts workflow.
 
 ---
 
-## Technical notes (for the engineer)
+### Phase B — Scanner → PDF & File Upgrades
 
-- Reuse existing hooks: `useZivoWallet`, `useCustomerWallet`, `useGiftAnimationQueue`, `useChannel`, `useContacts`, `useMessageActions`, `usePrivacy`.
-- Realtime: subscribe to `direct_messages` filtered by `message_type in ('gift','coin_transfer','document')` to fire animations / refresh balances.
-- Coin debit must happen server-side only — never mutate balance from the client. Use a Postgres function `fn_transfer_coins(from, to, amount)` invoked by the edge function inside a transaction.
-- OpenCV.js & react-pdf are heavy — lazy load only inside the Scanner/Document viewer routes to keep bundle small.
-- Channels realtime: add `channel_posts` to `supabase_realtime` publication.
-- Contacts hash matching: SHA-256 over E.164 phone, send only hashes to `contacts-match-hashes`.
+**Goal:** Camera/photo → auto-cropped A4 PDF, plus richer file/document message bubbles.
 
-## Files to create (high-level)
+1. **DocumentScanner component** (`src/components/chat/DocumentScanner.tsx`)
+   - Full-screen sheet with camera capture (Capacitor Camera on native, `<input capture>` on web).
+   - Multi-page capture (add page, reorder, delete).
+   - Edge detection + perspective correction using **OpenCV.js** (lazy-loaded from CDN to keep bundle small).
+   - Filter modes: Auto, Color, Grayscale, B&W (high-contrast scan look).
+   - Page size selector: A4 (default), Letter, Original.
+   - "Save as PDF" → builds A4 PDF via **jsPDF**, uploads to `chat-files` bucket, sends as `file` message.
 
-- `src/components/chat/ChatGiftPanel.tsx`, `ChatGiftAnimationLayer.tsx`, `CoinTransferBubble.tsx`, `DocumentBubble.tsx`, `FileBubble.tsx`, `ChatWalletSheet.tsx`, `SendMenu.tsx`
-- `src/components/chat/scanner/ScannerCamera.tsx`, `ScannerEditor.tsx`, `ScannerExport.tsx`
-- `src/pages/chat/ChatChannelsTab.tsx` (or extend Chat hub)
-- `src/pages/chat/ContactsNearbyPage.tsx`, `ContactsBlockedPage.tsx`, `ContactsRequestsPage.tsx`
-- `src/hooks/useChatGifts.ts`, `useCoinTransfer.ts`, `useDocumentScanner.ts`, `useChannelPosts.ts`, `useContactRequests.ts`
-- `supabase/functions/chat-send-gift|chat-transfer-coins|channel-broadcast|generate-file-thumbnail|contacts-match-hashes/index.ts`
-- One migration: tables, RLS, helper functions, realtime publication.
+2. **FileBubble component** (`src/components/chat/FileBubble.tsx`)
+   - Renders any non-image/video file message: icon by mime type, filename, size, page count (PDFs).
+   - Tap → preview sheet (PDF.js inline viewer for PDFs, native open for others).
+   - Download button + share-to-other-chat.
 
-## Files to update
+3. **DocumentBubble component** (`src/components/chat/DocumentBubble.tsx`)
+   - Specialized variant for scanner output: shows first-page thumbnail + "X pages · A4 · PDF".
 
-- `src/components/chat/ChatAttachMenu.tsx` → new SendMenu grid
-- `src/components/chat/PersonalChat.tsx`, `GroupChat.tsx` → wire panels, animation layer, realtime gift/coin handlers
-- `src/components/chat/GiftBubble.tsx` → animation replay + send-back
-- `src/pages/Chat.tsx` (hub) → Channels tab + entries for Contacts requests/blocked/nearby
-- `src/App.tsx` → new routes
-- `src/hooks/useChannel.ts` → realtime + admin actions
+4. **Wire scanner into ChatAttachMenu**
+   - Replace the "coming soon" toast with `onScanDocument` opening `DocumentScanner` in `PersonalChat` and `GroupChat`.
 
-## Out of scope (will propose separately if you want)
+5. **`useChatFiles` hook** (`src/hooks/useChatFiles.ts`)
+   - Helpers to upload to `chat-files` bucket (already created in Phase A), insert `chat_files` row, and emit a `file` message.
+   - Generate first-page thumbnail (PDF.js → canvas → upload).
 
-- End-to-end encryption for documents/coins (currently relies on RLS + TLS).
-- Real ClamAV deployment (we add the hook only).
-- Native iOS/Android share-extension for "Save to ZIVO".
+6. **Renderer routing**
+   - In `MessageBubble` (or wherever message types are dispatched), route `message_type='file'` → `FileBubble`, and detect scanner-origin (metadata flag) → `DocumentBubble`.
 
 ---
 
-This is a big plan — approve and I'll execute it in phased commits: (Phase A) DB + edge functions + gift panel & wallet sheet, (Phase B) scanner + document/file bubbles, (Phase C) channels tab + contacts workflow.
+### Phase C — Channels in Chat & Real Contacts Workflow
+
+**Goal:** Surface Channels inside the unified Chat Hub and add a proper contacts flow with requests, sync, and nearby.
+
+1. **Channels tab in Chat Hub** (`src/pages/chat/ChatHub.tsx` or equivalent)
+   - Add a "Channels" segment alongside Chats/Groups.
+   - Lists subscribed channels (via `useChannel` / new `useMyChannels`) with latest post preview, unread dot, and verified badge.
+   - "Discover" button → existing `/channels` directory.
+   - Tap channel → opens `ChannelPage` inside the chat panel (desktop) or full route (mobile).
+
+2. **Channel quick-broadcast composer** (owners/admins only)
+   - Add a compact composer at the top of `ChannelPage` for owners: text + image + schedule.
+   - New edge function `channel-broadcast` that inserts a post and fans out a notification to all subscribers (uses existing `device_tokens`).
+
+3. **Contact requests workflow**
+   - **DB:** new `contact_requests` table (`from_user_id`, `to_user_id`, `status: pending|accepted|declined`, `message`, timestamps) with RLS (only sender/recipient can read; only recipient can update).
+   - Update `useContacts.add()`: if target user has "require approval" privacy on, create a `contact_request` instead of direct insert.
+   - New `ContactRequestsPage` (`/chat/contacts/requests`) — incoming + outgoing tabs, accept/decline.
+   - Notification badge on Contacts tab when pending requests exist.
+
+4. **Phone-book contact sync (native)**
+   - Use `@capacitor-community/contacts` for permission + read.
+   - Hash phone numbers client-side (SHA-256, lowercased E.164) and POST to new `contact-match` edge function.
+   - Edge function compares against hashed `profiles.phone_hash` (new column, indexed) and returns matched user_ids.
+   - "Find Contacts on ZIVO" screen lists matches with one-tap add.
+
+5. **People Nearby**
+   - DB: `nearby_presence` (`user_id`, `geohash`, `lat`, `lng`, `expires_at`, `is_visible`) — RLS so only same-geohash users can read, expires after 30 min.
+   - New `NearbyChatPage` reusing geohash queries: shows users within ~1 km who opted in.
+   - Opt-in toggle in Chat Privacy Hub (default off); broadcasts current location every 60s while screen is open.
+
+---
+
+### Backend Summary (new this round)
+
+**Tables**
+- `contact_requests`
+- `nearby_presence`
+- `profiles.phone_hash` (column add, indexed)
+
+**Edge Functions**
+- `channel-broadcast` — atomic post + push fan-out
+- `contact-match` — hashed phone matching
+- `generate-file-thumbnail` — server-side PDF first-page render fallback (when client render fails)
+
+**Storage**
+- Reuse `chat-files` bucket from Phase A for scans/files.
+- New public-read `channel-media` bucket for channel post images.
+
+---
+
+### Order of Execution
+1. Phase B: scanner + file bubbles (high user-visible value).
+2. Phase C-1: Channels tab in chat hub.
+3. Phase C-2: Contact requests + privacy gating.
+4. Phase C-3: Phone sync + Nearby (optional final pass).
+
+Approve to proceed.
