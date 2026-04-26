@@ -345,6 +345,15 @@ const NavBar = forwardRef<HTMLDivElement>(function NavBar(_, ref) {
                       <motion.button
                         whileHover={{ scale: 1.05, z: 10 }}
                         whileTap={{ scale: 0.95 }}
+                        onClick={(e) => {
+                          // On desktop (lg+) the sidebar already exposes every account action,
+                          // so the avatar acts as a direct shortcut to /profile instead of opening
+                          // an empty dropdown. The dropdown stays available on mobile.
+                          if (typeof window !== "undefined" && window.matchMedia("(min-width: 1024px)").matches) {
+                            e.preventDefault();
+                            navigate("/profile");
+                          }
+                        }}
                         className="flex items-center gap-2 px-2 py-1.5 rounded-full transition-all duration-200 group"
                         style={{
                           background: "hsl(var(--muted) / 0.3)",
@@ -374,7 +383,7 @@ const NavBar = forwardRef<HTMLDivElement>(function NavBar(_, ref) {
                             </div>
                           )}
                         </div>
-                        <ChevronDown className="w-3.5 h-3.5 text-muted-foreground group-hover:text-foreground transition-colors" />
+                        <ChevronDown className="w-3.5 h-3.5 text-muted-foreground group-hover:text-foreground transition-colors lg:hidden" />
                       </motion.button>
                     </DropdownMenuTrigger>
                     <DropdownMenuContent
@@ -390,22 +399,26 @@ const NavBar = forwardRef<HTMLDivElement>(function NavBar(_, ref) {
                         background: "hsl(var(--card) / 0.9)",
                       }}
                     >
-                      <div className="px-3 py-2.5 mb-1">
-                        <p className="text-sm font-semibold text-foreground truncate">{user.email}</p>
-                        {isMember && (
-                          <span className="inline-flex items-center gap-1 text-[10px] font-bold text-amber-600 mt-0.5">
-                            <Crown className="w-3 h-3" /> ZIVO+ Member
-                          </span>
-                        )}
+                      {/* Email + My Profile + My Trips — mobile only.
+                          On lg+ the sidebar already shows identity + profile actions. */}
+                      <div className="lg:hidden">
+                        <div className="px-3 py-2.5 mb-1">
+                          <p className="text-sm font-semibold text-foreground truncate">{user.email}</p>
+                          {isMember && (
+                            <span className="inline-flex items-center gap-1 text-[10px] font-bold text-amber-600 mt-0.5">
+                              <Crown className="w-3 h-3" /> ZIVO+ Member
+                            </span>
+                          )}
+                        </div>
+                        <DropdownMenuSeparator />
+                        <DropdownMenuItem onClick={() => navigate("/profile")} className="cursor-pointer rounded-lg py-2.5 gap-2.5">
+                          <UserCircle className="w-4 h-4 text-muted-foreground" /> My Profile
+                        </DropdownMenuItem>
+                        <DropdownMenuItem onClick={() => navigate("/trips")} className="cursor-pointer rounded-lg py-2.5 gap-2.5">
+                          <Briefcase className="w-4 h-4 text-muted-foreground" /> My Trips
+                        </DropdownMenuItem>
+                        <DropdownMenuSeparator />
                       </div>
-                      <DropdownMenuSeparator />
-                      <DropdownMenuItem onClick={() => navigate("/profile")} className="cursor-pointer rounded-lg py-2.5 gap-2.5">
-                        <UserCircle className="w-4 h-4 text-muted-foreground" /> My Profile
-                      </DropdownMenuItem>
-                      <DropdownMenuItem onClick={() => navigate("/trips")} className="cursor-pointer rounded-lg py-2.5 gap-2.5">
-                        <Briefcase className="w-4 h-4 text-muted-foreground" /> My Trips
-                      </DropdownMenuItem>
-                      <DropdownMenuSeparator />
                       {/* Business Pages, Membership, Sign out — shown on mobile only.
                           On lg+ these live in the left FeedSidebar to avoid duplication. */}
                       <div className="lg:hidden">
