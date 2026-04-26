@@ -761,10 +761,10 @@ export default function PersonalChat({ recipientId, recipientName, recipientAvat
   };
 
   // Forward message
-  const handleForward = useCallback((id: string, message: string) => {
-    navigator.clipboard.writeText(message);
-    toast.success("Message copied — paste it in another chat to forward");
-  }, []);
+  const handleForward = useCallback((id: string, _message: string) => {
+    const msg = messages.find((m) => m.id === id);
+    if (msg) setForwardingMsg(msg);
+  }, [messages]);
 
   // Pin/unpin
   const handlePin = useCallback(async (id: string, pinned: boolean) => {
