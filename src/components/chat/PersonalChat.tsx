@@ -1020,14 +1020,14 @@ export default function PersonalChat({ recipientId, recipientName, recipientAvat
           <div className="flex items-center gap-0.5">
             <motion.button
               whileTap={{ scale: 0.85 }}
-              onClick={() => { void handleStartCall("video"); }}
+              onClick={() => { void primeCallAudio(); setLauncherCall("video"); }}
               className="h-10 w-10 rounded-full flex items-center justify-center hover:bg-blue-500/10 active:bg-blue-500/15 transition-colors"
             >
               <Video className="h-5 w-5 text-blue-500" />
             </motion.button>
             <motion.button
               whileTap={{ scale: 0.85 }}
-              onClick={() => { void handleStartCall("voice"); }}
+              onClick={() => { void primeCallAudio(); setLauncherCall("audio"); }}
               className="h-10 w-10 rounded-full flex items-center justify-center hover:bg-emerald-500/10 active:bg-emerald-500/15 transition-colors"
             >
               <Phone className="h-[19px] w-[19px] text-emerald-500" />
