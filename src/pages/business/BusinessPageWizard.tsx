@@ -136,6 +136,12 @@ export default function BusinessPageWizard() {
   // Auth gate + redirect already-completed owners; resume partial setups.
   useEffect(() => {
     if (!user) return;
+    // When opened with ?new=1, always start a fresh business — don't resume
+    // an existing draft or redirect to an already-completed dashboard.
+    if (forceNew) {
+      setChecking(false);
+      return;
+    }
     (async () => {
       const { data } = await supabase
         .from("store_profiles")
@@ -169,7 +175,7 @@ export default function BusinessPageWizard() {
       }
       setChecking(false);
     })();
-  }, [user, navigate]);
+  }, [user, navigate, forceNew]);
 
   // Prefill from profile (runs once profile loads).
   useEffect(() => {
