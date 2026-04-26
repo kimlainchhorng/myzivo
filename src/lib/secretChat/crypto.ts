@@ -203,7 +203,8 @@ export async function encryptBlob(params: {
 
   // 2. Encrypt blob with blob key
   const iv = crypto.getRandomValues(new Uint8Array(12));
-  const dataBuf = params.data instanceof Uint8Array ? params.data : new Uint8Array(params.data);
+  const rawData = params.data instanceof Uint8Array ? params.data : new Uint8Array(params.data);
+  const dataBuf = rawData.slice().buffer; // ensure plain ArrayBuffer (not SharedArrayBuffer)
   const ciphertext = await crypto.subtle.encrypt({ name: "AES-GCM", iv }, blobKey, dataBuf);
 
   // 3. Wrap blob key with chat key
