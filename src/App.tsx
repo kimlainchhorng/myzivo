@@ -560,6 +560,7 @@ function RouteAwareGlobalUI() {
       <RuntimeSecurityGuard />
       <IncomingCallListener />
       <ChatNotificationListener />
+      <AppLockGate />
     </Suspense>
   );
 }
