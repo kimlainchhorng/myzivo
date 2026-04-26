@@ -49,12 +49,33 @@ export default function SecretChatPage() {
     error,
     messages,
     send,
+    sendMedia,
+    decryptMedia,
     ttlSeconds,
     setTtl,
     getSafetyNumber,
     resetKeys,
     deleteMessage,
   } = useSecretChat(partnerId);
+
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [pickerAccept, setPickerAccept] = useState<string>("*/*");
+  const [attachOpen, setAttachOpen] = useState(false);
+
+  const openPicker = (accept: string) => {
+    setPickerAccept(accept);
+    setAttachOpen(false);
+    // Defer so the input picks up the new accept value.
+    requestAnimationFrame(() => fileInputRef.current?.click());
+  };
+
+  const handleFiles = async (files: FileList | null) => {
+    if (!files || files.length === 0) return;
+    for (const f of Array.from(files)) {
+      await sendMedia(f);
+    }
+    if (fileInputRef.current) fileInputRef.current.value = "";
+  };
 
   const { data: partner } = useQuery({
     queryKey: ["secret-chat-partner", partnerId],
