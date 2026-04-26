@@ -105,8 +105,17 @@ export default function LodgingReservationsSection({ storeId }: { storeId: strin
       <HostReservationOpsSummary reservations={reservations} requests={pendingRequests} onFilter={(value) => setQ(value)} />
       <ChangeRequestsInbox storeId={storeId} />
     <Card>
-      <CardHeader>
+      <CardHeader className="flex flex-row items-center justify-between gap-2">
         <CardTitle className="flex items-center gap-2"><CalendarRange className="h-5 w-5" /> Reservations</CardTitle>
+        <Button
+          size="sm"
+          variant="outline"
+          className="h-8 gap-1.5"
+          disabled={filtered.length === 0}
+          onClick={() => exportReservationsCsv(filtered)}
+        >
+          <Download className="h-3.5 w-3.5" /> Export CSV
+        </Button>
       </CardHeader>
       <CardContent className="space-y-3">
         <div className="flex flex-wrap gap-2 items-center">
@@ -197,6 +206,7 @@ export default function LodgingReservationsSection({ storeId }: { storeId: strin
                 <div className="flex flex-wrap gap-1 mt-2">
                   <Button size="sm" variant="outline" className="h-7 text-xs gap-1" onClick={() => openReservation(r.id)}><ExternalLink className="h-3 w-3" /> Open</Button>
                   {needsReview && <Button size="sm" variant="secondary" className="h-7 text-xs gap-1" onClick={() => openReservation(r.id, reviewWorkflow)}><ClipboardCheck className="h-3 w-3" /> Review</Button>}
+                  {r.guest_email && <Button size="sm" variant="outline" className="h-7 text-xs gap-1" onClick={() => sendConfirmationEmail(r)}><Send className="h-3 w-3" /> Send confirmation</Button>}
                   {r.status === "hold" && <Button size="sm" variant="outline" className="h-7 text-xs gap-1" onClick={() => act(r.id, "confirmed", "Confirmed")}><CheckCircle2 className="h-3 w-3" /> Confirm</Button>}
                   {(r.status === "confirmed" || r.status === "hold") && <Button size="sm" variant="outline" className="h-7 text-xs gap-1" onClick={() => act(r.id, "checked_in", "Checked in")}><LogIn className="h-3 w-3" /> Check-In</Button>}
                   {r.status === "checked_in" && <Button size="sm" variant="outline" className="h-7 text-xs gap-1" onClick={() => act(r.id, "checked_out", "Checked out")}><LogOut className="h-3 w-3" /> Check-Out</Button>}
