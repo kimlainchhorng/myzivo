@@ -44564,30 +44564,57 @@ export type Database = {
           ciphertext: string
           created_at: string
           expires_at: string | null
+          file_name: string | null
           id: string
           iv: string
+          media_iv: string | null
+          media_key_wrapped: string | null
+          media_type: string | null
+          mime: string | null
           sender_id: string
           sender_public_key_jwk: Json
+          size_bytes: number | null
+          storage_path: string | null
+          thumb_iv: string | null
+          thumb_path: string | null
         }
         Insert: {
           chat_id: string
           ciphertext: string
           created_at?: string
           expires_at?: string | null
+          file_name?: string | null
           id?: string
           iv: string
+          media_iv?: string | null
+          media_key_wrapped?: string | null
+          media_type?: string | null
+          mime?: string | null
           sender_id: string
           sender_public_key_jwk: Json
+          size_bytes?: number | null
+          storage_path?: string | null
+          thumb_iv?: string | null
+          thumb_path?: string | null
         }
         Update: {
           chat_id?: string
           ciphertext?: string
           created_at?: string
           expires_at?: string | null
+          file_name?: string | null
           id?: string
           iv?: string
+          media_iv?: string | null
+          media_key_wrapped?: string | null
+          media_type?: string | null
+          mime?: string | null
           sender_id?: string
           sender_public_key_jwk?: Json
+          size_bytes?: number | null
+          storage_path?: string | null
+          thumb_iv?: string | null
+          thumb_path?: string | null
         }
         Relationships: [
           {
@@ -61415,6 +61442,10 @@ export type Database = {
       is_restaurant_user: { Args: { p_user_id?: string }; Returns: boolean }
       is_secret_chat_participant: {
         Args: { _chat_id: string; _user_id: string }
+        Returns: boolean
+      }
+      is_secret_chat_participant_for_path: {
+        Args: { _path: string }
         Returns: boolean
       }
       is_service_available: {

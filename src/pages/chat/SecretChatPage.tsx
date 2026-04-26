@@ -4,13 +4,17 @@
  */
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import { ArrowLeft, Send, Lock, ShieldCheck, Clock, Trash2, RefreshCw, MoreVertical } from "lucide-react";
+import {
+  ArrowLeft, Send, Lock, ShieldCheck, Clock, Trash2, RefreshCw, MoreVertical,
+  Plus, Image as ImageIcon, Video as VideoIcon, Mic, Paperclip,
+} from "lucide-react";
 import { motion } from "framer-motion";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { useSecretChat } from "@/hooks/useSecretChat";
 import SafetyNumberSheet from "@/components/chat/SafetyNumberSheet";
+import SecretMediaBubble from "@/components/chat/SecretMediaBubble";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
@@ -45,12 +49,33 @@ export default function SecretChatPage() {
     error,
     messages,
     send,
+    sendMedia,
+    decryptMedia,
     ttlSeconds,
     setTtl,
     getSafetyNumber,
     resetKeys,
     deleteMessage,
   } = useSecretChat(partnerId);
+
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [pickerAccept, setPickerAccept] = useState<string>("*/*");
+  const [attachOpen, setAttachOpen] = useState(false);
+
+  const openPicker = (accept: string) => {
+    setPickerAccept(accept);
+    setAttachOpen(false);
+    // Defer so the input picks up the new accept value.
+    requestAnimationFrame(() => fileInputRef.current?.click());
+  };
+
+  const handleFiles = async (files: FileList | null) => {
+    if (!files || files.length === 0) return;
+    for (const f of Array.from(files)) {
+      await sendMedia(f);
+    }
+    if (fileInputRef.current) fileInputRef.current.value = "";
+  };
 
   const { data: partner } = useQuery({
     queryKey: ["secret-chat-partner", partnerId],
@@ -181,15 +206,19 @@ export default function SecretChatPage() {
                 className={`flex ${mine ? "justify-end" : "justify-start"}`}
               >
                 <div className="group relative max-w-[78%]">
-                  <div
-                    className={`whitespace-pre-wrap break-words rounded-2xl px-3.5 py-2 text-sm shadow-sm ${
-                      mine
-                        ? "bg-indigo-500 text-white"
-                        : "bg-muted text-foreground"
-                    } ${m.failed ? "opacity-60 italic" : ""}`}
-                  >
-                    {m.plaintext}
-                  </div>
+                  {m.media ? (
+                    <SecretMediaBubble message={m} decryptMedia={decryptMedia} mine={mine} />
+                  ) : (
+                    <div
+                      className={`whitespace-pre-wrap break-words rounded-2xl px-3.5 py-2 text-sm shadow-sm ${
+                        mine
+                          ? "bg-indigo-500 text-white"
+                          : "bg-muted text-foreground"
+                      } ${m.failed ? "opacity-60 italic" : ""}`}
+                    >
+                      {m.plaintext}
+                    </div>
+                  )}
                   <div
                     className={`mt-0.5 flex items-center gap-1 text-[10px] text-muted-foreground ${
                       mine ? "justify-end" : "justify-start"
@@ -228,6 +257,41 @@ export default function SecretChatPage() {
           paddingBottom: "calc(env(safe-area-inset-bottom, 0px) + 10px)",
         }}
       >
+        <input
+          ref={fileInputRef}
+          type="file"
+          accept={pickerAccept}
+          className="hidden"
+          onChange={(e) => void handleFiles(e.target.files)}
+        />
+
+        <DropdownMenu open={attachOpen} onOpenChange={setAttachOpen}>
+          <DropdownMenuTrigger asChild>
+            <button
+              type="button"
+              aria-label="Attach"
+              disabled={!chatId}
+              className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-indigo-500/10 text-indigo-500 hover:bg-indigo-500/20 disabled:opacity-50"
+            >
+              <Plus className="h-4 w-4" />
+            </button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="start" side="top" className="w-44">
+            <DropdownMenuItem onClick={() => openPicker("image/*")}>
+              <ImageIcon className="mr-2 h-4 w-4 text-indigo-500" /> Photo
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={() => openPicker("video/*")}>
+              <VideoIcon className="mr-2 h-4 w-4 text-indigo-500" /> Video
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={() => openPicker("audio/*")}>
+              <Mic className="mr-2 h-4 w-4 text-indigo-500" /> Voice / Audio
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={() => openPicker("*/*")}>
+              <Paperclip className="mr-2 h-4 w-4 text-indigo-500" /> File
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
+
         <textarea
           value={draft}
           onChange={(e) => setDraft(e.target.value)}

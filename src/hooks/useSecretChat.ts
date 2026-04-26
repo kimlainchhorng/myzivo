@@ -11,7 +11,9 @@ import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
 import {
   computeSafetyNumber,
+  decryptBlob,
   decryptMessage,
+  encryptBlob,
   encryptMessage,
   getOrCreateIdentity,
   resetIdentity,
@@ -27,6 +29,8 @@ function getDeviceFingerprint(): string {
   return fp;
 }
 
+export type MediaKind = "image" | "video" | "audio" | "file";
+
 export interface SecretMessage {
   id: string;
   sender_id: string;
@@ -34,6 +38,17 @@ export interface SecretMessage {
   created_at: string;
   expires_at: string | null;
   failed?: boolean;
+  // Media metadata (when message carries an attachment)
+  media?: {
+    type: MediaKind;
+    storage_path: string;
+    iv: string;            // blob IV
+    wrapped_key: string;   // "<wrapIv>:<wrappedKey>" both base64
+    mime: string | null;
+    size: number | null;
+    file_name: string | null;
+    sender_public_key_jwk: JsonWebKey;
+  };
 }
 
 export function useSecretChat(partnerId: string | null) {
@@ -117,32 +132,7 @@ export function useSecretChat(partnerId: string | null) {
 
         const decoded: SecretMessage[] = [];
         for (const row of msgRows ?? []) {
-          try {
-            const plaintext = await decryptMessage({
-              payload: {
-                iv: row.iv,
-                ciphertext: row.ciphertext,
-                senderPublicKeyJwk: row.sender_public_key_jwk as unknown as JsonWebKey,
-              },
-              chatId: chatRow.id,
-            });
-            decoded.push({
-              id: row.id,
-              sender_id: row.sender_id,
-              plaintext,
-              created_at: row.created_at,
-              expires_at: row.expires_at,
-            });
-          } catch {
-            decoded.push({
-              id: row.id,
-              sender_id: row.sender_id,
-              plaintext: "[Cannot decrypt — keys may have been reset]",
-              created_at: row.created_at,
-              expires_at: row.expires_at,
-              failed: true,
-            });
-          }
+          decoded.push(await rowToMessage(row, chatRow.id));
         }
         if (!cancelled) setMessages(decoded);
       } catch (e) {
@@ -167,43 +157,11 @@ export function useSecretChat(partnerId: string | null) {
         "postgres_changes",
         { event: "INSERT", schema: "public", table: "secret_messages", filter: `chat_id=eq.${chatId}` },
         async (payload) => {
-          const row = payload.new as {
-            id: string;
-            sender_id: string;
-            iv: string;
-            ciphertext: string;
-            sender_public_key_jwk: JsonWebKey;
-            created_at: string;
-            expires_at: string | null;
-          };
+          const row = payload.new as Parameters<typeof rowToMessage>[0];
           // Skip our own optimistic message — it's already in state.
           if (user && row.sender_id === user.id && messagesIncludesId(row.id)) return;
-          try {
-            const plaintext = await decryptMessage({
-              payload: {
-                iv: row.iv,
-                ciphertext: row.ciphertext,
-                senderPublicKeyJwk: row.sender_public_key_jwk,
-              },
-              chatId,
-            });
-            setMessages((prev) =>
-              prev.find((m) => m.id === row.id)
-                ? prev
-                : [
-                    ...prev,
-                    {
-                      id: row.id,
-                      sender_id: row.sender_id,
-                      plaintext,
-                      created_at: row.created_at,
-                      expires_at: row.expires_at,
-                    },
-                  ],
-            );
-          } catch {
-            /* ignore undecryptable */
-          }
+          const built = await rowToMessage(row, chatId);
+          setMessages((prev) => (prev.find((m) => m.id === row.id) ? prev : [...prev, built]));
         },
       )
       .on(
@@ -323,6 +281,11 @@ export function useSecretChat(partnerId: string | null) {
   }, [user]);
 
   const deleteMessage = useCallback(async (id: string) => {
+    // Best-effort: remove storage object too. RLS allows owner-only delete.
+    const msg = messagesRef.current.find((m) => m.id === id);
+    if (msg?.media?.storage_path) {
+      void supabase.storage.from("secret-media").remove([msg.media.storage_path]);
+    }
     const { error } = await supabase.from("secret_messages").delete().eq("id", id);
     if (error) {
       toast.error("Could not delete message");
@@ -331,12 +294,196 @@ export function useSecretChat(partnerId: string | null) {
     setMessages((prev) => prev.filter((m) => m.id !== id));
   }, []);
 
+  /** Encrypts a file client-side, uploads ciphertext to `secret-media`, then inserts a row. */
+  const sendMedia = useCallback(
+    async (file: File): Promise<void> => {
+      if (!chatId || !partnerKey || !user) return;
+      if (file.size > 50 * 1024 * 1024) {
+        toast.error("File too large (max 50 MB)");
+        return;
+      }
+      const kind: MediaKind = file.type.startsWith("image/")
+        ? "image"
+        : file.type.startsWith("video/")
+        ? "video"
+        : file.type.startsWith("audio/")
+        ? "audio"
+        : "file";
+      try {
+        const buf = await file.arrayBuffer();
+        const enc = await encryptBlob({
+          data: buf,
+          chatId,
+          recipientPublicKeyJwk: partnerKey,
+        });
+        // Pre-allocate the message id so we know the storage path.
+        const messageId = crypto.randomUUID();
+        const storagePath = `${chatId}/${messageId}.bin`;
+        const { error: upErr } = await supabase.storage
+          .from("secret-media")
+          .upload(storagePath, new Blob([enc.ciphertext], { type: "application/octet-stream" }), {
+            contentType: "application/octet-stream",
+            upsert: false,
+          });
+        if (upErr) throw upErr;
+
+        // Tiny placeholder ciphertext for the text column (still encrypted)
+        const placeholder = await encryptMessage({
+          plaintext: `[${kind}]`,
+          chatId,
+          recipientPublicKeyJwk: partnerKey,
+        });
+
+        const expiresAt =
+          ttlSeconds && ttlSeconds > 0
+            ? new Date(Date.now() + ttlSeconds * 1000).toISOString()
+            : null;
+
+        const { data, error: insErr } = await supabase
+          .from("secret_messages")
+          .insert({
+            id: messageId,
+            chat_id: chatId,
+            sender_id: user.id,
+            sender_public_key_jwk: enc.senderPublicKeyJwk as never,
+            iv: placeholder.iv,
+            ciphertext: placeholder.ciphertext,
+            media_type: kind,
+            storage_path: storagePath,
+            media_iv: enc.iv,
+            // Pack wrapIv:wrappedKey so we don't need an extra column.
+            media_key_wrapped: `${enc.wrapIv}:${enc.wrappedKey}`,
+            mime: file.type || null,
+            size_bytes: file.size,
+            file_name: file.name,
+            expires_at: expiresAt,
+          })
+          .select("id, created_at")
+          .single();
+        if (insErr) throw insErr;
+
+        setMessages((prev) => [
+          ...prev,
+          {
+            id: data.id,
+            sender_id: user.id,
+            plaintext: `[${kind}]`,
+            created_at: data.created_at,
+            expires_at: expiresAt,
+            media: {
+              type: kind,
+              storage_path: storagePath,
+              iv: enc.iv,
+              wrapped_key: `${enc.wrapIv}:${enc.wrappedKey}`,
+              mime: file.type || null,
+              size: file.size,
+              file_name: file.name,
+              sender_public_key_jwk: enc.senderPublicKeyJwk,
+            },
+          },
+        ]);
+      } catch (e) {
+        const msg = e instanceof Error ? e.message : String(e);
+        toast.error(`Could not send: ${msg}`);
+      }
+    },
+    [chatId, partnerKey, user, ttlSeconds],
+  );
+
+  /** Downloads & decrypts a media message → object URL ready for <img>/<video>/<audio>/<a>. */
+  const decryptMedia = useCallback(
+    async (m: SecretMessage): Promise<string | null> => {
+      if (!m.media || !chatId) return null;
+      try {
+        const { data, error } = await supabase.storage
+          .from("secret-media")
+          .download(m.media.storage_path);
+        if (error || !data) throw error ?? new Error("Download failed");
+        const cipherBuf = await data.arrayBuffer();
+        const [wrapIv, wrappedKey] = m.media.wrapped_key.split(":");
+        const plain = await decryptBlob({
+          ciphertext: cipherBuf,
+          iv: m.media.iv,
+          wrapIv,
+          wrappedKey,
+          senderPublicKeyJwk: m.media.sender_public_key_jwk,
+          chatId,
+        });
+        const blob = new Blob([plain], { type: m.media.mime ?? "application/octet-stream" });
+        return URL.createObjectURL(blob);
+      } catch (e) {
+        const msg = e instanceof Error ? e.message : String(e);
+        toast.error(`Could not load media: ${msg}`);
+        return null;
+      }
+    },
+    [chatId],
+  );
+
+  // Helper used by backfill + realtime to map a DB row → SecretMessage.
+  // Defined inside the hook so it can call decryptMessage with the right chatId.
+  async function rowToMessage(
+    row: {
+      id: string;
+      sender_id: string;
+      iv: string;
+      ciphertext: string;
+      sender_public_key_jwk: unknown;
+      created_at: string;
+      expires_at: string | null;
+      media_type?: string | null;
+      storage_path?: string | null;
+      media_iv?: string | null;
+      media_key_wrapped?: string | null;
+      mime?: string | null;
+      size_bytes?: number | null;
+      file_name?: string | null;
+    },
+    cid: string,
+  ): Promise<SecretMessage> {
+    const senderPub = row.sender_public_key_jwk as JsonWebKey;
+    let plaintext = "";
+    let failed = false;
+    try {
+      plaintext = await decryptMessage({
+        payload: { iv: row.iv, ciphertext: row.ciphertext, senderPublicKeyJwk: senderPub },
+        chatId: cid,
+      });
+    } catch {
+      plaintext = "[Cannot decrypt — keys may have been reset]";
+      failed = true;
+    }
+    const base: SecretMessage = {
+      id: row.id,
+      sender_id: row.sender_id,
+      plaintext,
+      created_at: row.created_at,
+      expires_at: row.expires_at,
+      failed: failed || undefined,
+    };
+    if (row.media_type && row.storage_path && row.media_iv && row.media_key_wrapped) {
+      base.media = {
+        type: row.media_type as MediaKind,
+        storage_path: row.storage_path,
+        iv: row.media_iv,
+        wrapped_key: row.media_key_wrapped,
+        mime: row.mime ?? null,
+        size: row.size_bytes ?? null,
+        file_name: row.file_name ?? null,
+        sender_public_key_jwk: senderPub,
+      };
+    }
+    return base;
+  }
+
   return {
     chatId,
     loading,
     error,
     messages,
     send,
+    sendMedia,
+    decryptMedia,
     ttlSeconds,
     setTtl,
     getSafetyNumber,

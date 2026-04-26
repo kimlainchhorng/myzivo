@@ -157,6 +157,109 @@ export async function decryptMessage(params: {
   return new TextDecoder().decode(plainBuf);
 }
 
+/* ============================================================
+ *   Media (blob) encryption — Track A of Phase 5
+ * ============================================================
+ *
+ * Each media message gets a fresh AES-GCM 256 "blob key" that
+ * encrypts the file bytes. That blob key is then itself encrypted
+ * with the per-chat ECDH-derived key (same one used for text)
+ * and stored in `media_key_wrapped`. Recipient unwraps with their
+ * private identity key.
+ */
+
+export interface EncryptedBlob {
+  ciphertext: ArrayBuffer; // bytes to upload to storage
+  iv: string;              // base64
+  wrappedKey: string;      // base64 — AES-GCM ciphertext of the raw 32-byte blob key
+  wrapIv: string;          // base64 — IV used to wrap the blob key
+  senderPublicKeyJwk: JsonWebKey;
+}
+
+async function generateBlobKey(): Promise<{ key: CryptoKey; raw: ArrayBuffer }> {
+  const key = await crypto.subtle.generateKey(
+    { name: "AES-GCM", length: 256 },
+    true,
+    ["encrypt", "decrypt"],
+  );
+  const raw = await crypto.subtle.exportKey("raw", key);
+  return { key, raw };
+}
+
+export async function encryptBlob(params: {
+  data: ArrayBuffer | Uint8Array;
+  chatId: string;
+  recipientPublicKeyJwk: JsonWebKey;
+}): Promise<EncryptedBlob> {
+  const self = await getOrCreateIdentity();
+  const wrapKey = await deriveMessageKey(
+    self.privateKey,
+    params.recipientPublicKeyJwk,
+    params.chatId,
+  );
+
+  // 1. Random per-message blob key
+  const { key: blobKey, raw: rawBlobKey } = await generateBlobKey();
+
+  // 2. Encrypt blob with blob key
+  const iv = crypto.getRandomValues(new Uint8Array(12));
+  const rawData = params.data instanceof Uint8Array ? params.data : new Uint8Array(params.data);
+  const dataBuf = rawData.slice().buffer; // ensure plain ArrayBuffer (not SharedArrayBuffer)
+  const ciphertext = await crypto.subtle.encrypt({ name: "AES-GCM", iv }, blobKey, dataBuf);
+
+  // 3. Wrap blob key with chat key
+  const wrapIv = crypto.getRandomValues(new Uint8Array(12));
+  const wrappedKey = await crypto.subtle.encrypt(
+    { name: "AES-GCM", iv: wrapIv },
+    wrapKey,
+    rawBlobKey,
+  );
+
+  return {
+    ciphertext,
+    iv: bytesToB64(iv),
+    wrappedKey: bytesToB64(wrappedKey),
+    wrapIv: bytesToB64(wrapIv),
+    senderPublicKeyJwk: self.publicKeyJwk,
+  };
+}
+
+export async function decryptBlob(params: {
+  ciphertext: ArrayBuffer;
+  iv: string;
+  wrappedKey: string;
+  wrapIv: string;
+  senderPublicKeyJwk: JsonWebKey;
+  chatId: string;
+}): Promise<ArrayBuffer> {
+  const self = await getOrCreateIdentity();
+  const wrapKey = await deriveMessageKey(
+    self.privateKey,
+    params.senderPublicKeyJwk,
+    params.chatId,
+  );
+
+  // 1. Unwrap blob key
+  const wrapIv = b64ToBytes(params.wrapIv) as unknown as BufferSource;
+  const wrapped = b64ToBytes(params.wrappedKey) as unknown as BufferSource;
+  const rawBlobKey = await crypto.subtle.decrypt(
+    { name: "AES-GCM", iv: wrapIv },
+    wrapKey,
+    wrapped,
+  );
+  const blobKey = await crypto.subtle.importKey(
+    "raw",
+    rawBlobKey,
+    { name: "AES-GCM", length: 256 },
+    false,
+    ["decrypt"],
+  );
+
+  // 2. Decrypt blob
+  const iv = b64ToBytes(params.iv) as unknown as BufferSource;
+  return crypto.subtle.decrypt({ name: "AES-GCM", iv }, blobKey, params.ciphertext);
+}
+
 /** 60-digit Safety Number for SAS verification. */
 export async function computeSafetyNumber(params: {
   jwkA: JsonWebKey;
