@@ -37,3 +37,27 @@ export function useOwnerStoreProfile() {
     enabled: !!user,
   });
 }
+
+export function useOwnerStores() {
+  const { user } = useAuth();
+
+  return useQuery({
+    queryKey: ["owner-stores", user?.id],
+    queryFn: async () => {
+      if (!user) return [];
+      const { data, error } = await supabase
+        .from("store_profiles")
+        .select("id, name, category, logo_url, setup_complete, owner_id")
+        .eq("owner_id", user.id)
+        .order("created_at", { ascending: false });
+      if (error) throw error;
+      return (data || []).map((store) => ({
+        ...store,
+        isLodging: isLodgingStoreCategory(store.category),
+        normalizedCategory: normalizeStoreCategory(store.category),
+      }));
+    },
+    enabled: !!user,
+    staleTime: 30_000,
+  });
+}
