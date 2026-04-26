@@ -55612,6 +55612,118 @@ export type Database = {
         }
         Relationships: []
       }
+      video_call_participants: {
+        Row: {
+          hand_raised: boolean
+          id: string
+          is_host: boolean
+          joined_at: string
+          left_at: string | null
+          session_id: string
+          user_id: string
+        }
+        Insert: {
+          hand_raised?: boolean
+          id?: string
+          is_host?: boolean
+          joined_at?: string
+          left_at?: string | null
+          session_id: string
+          user_id: string
+        }
+        Update: {
+          hand_raised?: boolean
+          id?: string
+          is_host?: boolean
+          joined_at?: string
+          left_at?: string | null
+          session_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "video_call_participants_session_id_fkey"
+            columns: ["session_id"]
+            isOneToOne: false
+            referencedRelation: "video_call_sessions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      video_call_recordings: {
+        Row: {
+          created_at: string
+          duration_seconds: number | null
+          id: string
+          session_id: string
+          size_bytes: number | null
+          storage_path: string
+        }
+        Insert: {
+          created_at?: string
+          duration_seconds?: number | null
+          id?: string
+          session_id: string
+          size_bytes?: number | null
+          storage_path: string
+        }
+        Update: {
+          created_at?: string
+          duration_seconds?: number | null
+          id?: string
+          session_id?: string
+          size_bytes?: number | null
+          storage_path?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "video_call_recordings_session_id_fkey"
+            columns: ["session_id"]
+            isOneToOne: false
+            referencedRelation: "video_call_sessions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      video_call_sessions: {
+        Row: {
+          call_type: string
+          created_at: string
+          ended_at: string | null
+          host_id: string
+          id: string
+          mode: string
+          recording_egress_id: string | null
+          recording_status: string
+          room_name: string
+          started_at: string
+        }
+        Insert: {
+          call_type?: string
+          created_at?: string
+          ended_at?: string | null
+          host_id: string
+          id?: string
+          mode?: string
+          recording_egress_id?: string | null
+          recording_status?: string
+          room_name: string
+          started_at?: string
+        }
+        Update: {
+          call_type?: string
+          created_at?: string
+          ended_at?: string | null
+          host_id?: string
+          id?: string
+          mode?: string
+          recording_egress_id?: string | null
+          recording_status?: string
+          room_name?: string
+          started_at?: string
+        }
+        Relationships: []
+      }
       voice_command_logs: {
         Row: {
           command_type: string
@@ -61463,6 +61575,14 @@ export type Database = {
       is_vehicle_owner: { Args: { p_vehicle_id: string }; Returns: boolean }
       is_verified_car_owner: { Args: { user_uuid: string }; Returns: boolean }
       is_verified_renter: { Args: { user_uuid: string }; Returns: boolean }
+      is_video_call_participant: {
+        Args: { _session_id: string }
+        Returns: boolean
+      }
+      is_video_call_recording_host_for_path: {
+        Args: { _path: string }
+        Returns: boolean
+      }
       link_user_device:
         | { Args: { p_device_id: string; p_role: string }; Returns: undefined }
         | { Args: { p_device_id: string; p_role?: string }; Returns: undefined }
