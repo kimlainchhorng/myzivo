@@ -1,33 +1,23 @@
 ## Problem
 
-On initial open, the New Group sheet's "Create Group" button is clipped below the visible area on iOS Safari. Picture 2 shows that once you touch & scroll the page, Safari recalculates the viewport, the bottom toolbar collapses, and the button becomes visible. So the fix isn't more padding — it's making the modal use the **dynamic viewport height** that always matches the visible area.
+In the screenshots, the "Your story" ring on both **Feed** and **Chat** shows just a letter/initial (or camera icon) instead of the user's profile picture when no active story has been posted.
 
-Root cause in `src/components/chat/CreateGroupModal.tsx`:
-
-```tsx
-<motion.div className="fixed inset-0 z-[60] flex items-end sm:items-center justify-center">
-```
-
-`fixed inset-0` resolves to `100vh` on iOS Safari, which is the *large* viewport height (excluding the dynamic bottom toolbar). When the toolbar is visible, the bottom of the overlay (and the bottom-aligned sheet) extends past the visible screen — hiding the Create button until the user scrolls and Safari recalculates.
+Currently:
+- `FeedStoryRing.tsx` falls back to `myGroup?.avatarUrl` — but `myGroup` is undefined when the user has no story, so it shows only the email initial.
+- `ChatStories.tsx` has the same issue — falls back to a Camera icon when there's no `myStories`.
 
 ## Fix
 
-In `src/components/chat/CreateGroupModal.tsx`, change the overlay container to use `100dvh` instead of `inset-0` so it always matches the *visible* viewport:
+Use the existing `useUserProfile()` hook to load the signed-in user's avatar, and display it as the fallback inside the "Your story" ring whenever there's no story media yet. The green "+" badge stays so it's still clear they can add a story.
 
-```tsx
-// Before
-<motion.div className="fixed inset-0 z-[60] flex items-end sm:items-center justify-center" ...>
-  <div className="absolute inset-0 bg-black/50" />
+### Files to update
 
-// After
-<motion.div
-  className="fixed inset-x-0 top-0 z-[60] flex items-end sm:items-center justify-center w-full"
-  style={{ height: "100dvh" }}
-  ...
->
-  <div className="absolute inset-0 bg-black/50" />
-```
+**1. `src/components/social/FeedStoryRing.tsx`**
+- Import `useUserProfile`.
+- In the empty-story fallback branch, use `profile?.avatar_url` first (via `optimizeAvatar`), then fall back to initials only if no avatar exists.
 
-Also keep the existing `pb-[max(1rem,env(safe-area-inset-bottom))]` on the footer (already done) so the button clears the iOS home indicator.
+**2. `src/components/chat/ChatStories.tsx`**
+- Import `useUserProfile`.
+- Replace the Camera-icon fallback with the user's `profile.avatar_url`. Camera icon stays only as the last-resort fallback when the user truly has no avatar uploaded.
 
-No design or behavior changes — purely a viewport-height fix that makes the Create button visible the moment the sheet opens.
+No backend or schema changes. The "+" / Sparkles badge and gradient ring behavior remain unchanged.
