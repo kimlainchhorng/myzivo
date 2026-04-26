@@ -89,6 +89,8 @@ import LodgingGuestRequestsSection from "@/components/admin/store/lodging/Lodgin
 import LodgingPromotionsSection from "@/components/admin/store/lodging/LodgingPromotionsSection";
 import LodgingChannelManagerSection from "@/components/admin/store/lodging/LodgingChannelManagerSection";
 import LodgingPayoutsSection from "@/components/admin/store/lodging/LodgingPayoutsSection";
+import LodgingInboxSection from "@/components/admin/store/lodging/LodgingInboxSection";
+import LodgingStaffSection from "@/components/admin/store/lodging/LodgingStaffSection";
 import { getLodgingCompletion } from "@/lib/lodging/lodgingCompletion";
 import { LODGING_TAB_IDS, resolveStoreTab, resolveStoreTabFromSearch } from "@/lib/admin/storeTabRouting";
 import { useLodgeRooms } from "@/hooks/lodging/useLodgeRooms";
