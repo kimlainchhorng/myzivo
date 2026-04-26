@@ -21,6 +21,7 @@ import { Badge } from "@/components/ui/badge";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { useAuth } from "@/contexts/AuthContext";
 import { useUserProfile, useUpdateUserProfile, useUploadAvatar } from "@/hooks/useUserProfile";
+import { useUsername } from "@/hooks/useUsername";
 import { useMerchantRole } from "@/hooks/useMerchantRole";
 import { useOwnerStoreProfile } from "@/hooks/useOwnerStoreProfile";
 import { useAffiliateAttribution } from "@/hooks/useAffiliateAttribution";
