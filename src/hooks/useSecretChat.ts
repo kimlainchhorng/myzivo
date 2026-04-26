@@ -157,43 +157,11 @@ export function useSecretChat(partnerId: string | null) {
         "postgres_changes",
         { event: "INSERT", schema: "public", table: "secret_messages", filter: `chat_id=eq.${chatId}` },
         async (payload) => {
-          const row = payload.new as {
-            id: string;
-            sender_id: string;
-            iv: string;
-            ciphertext: string;
-            sender_public_key_jwk: JsonWebKey;
-            created_at: string;
-            expires_at: string | null;
-          };
+          const row = payload.new as Parameters<typeof rowToMessage>[0];
           // Skip our own optimistic message — it's already in state.
           if (user && row.sender_id === user.id && messagesIncludesId(row.id)) return;
-          try {
-            const plaintext = await decryptMessage({
-              payload: {
-                iv: row.iv,
-                ciphertext: row.ciphertext,
-                senderPublicKeyJwk: row.sender_public_key_jwk,
-              },
-              chatId,
-            });
-            setMessages((prev) =>
-              prev.find((m) => m.id === row.id)
-                ? prev
-                : [
-                    ...prev,
-                    {
-                      id: row.id,
-                      sender_id: row.sender_id,
-                      plaintext,
-                      created_at: row.created_at,
-                      expires_at: row.expires_at,
-                    },
-                  ],
-            );
-          } catch {
-            /* ignore undecryptable */
-          }
+          const built = await rowToMessage(row, chatId);
+          setMessages((prev) => (prev.find((m) => m.id === row.id) ? prev : [...prev, built]));
         },
       )
       .on(
