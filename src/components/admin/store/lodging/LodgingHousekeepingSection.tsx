@@ -9,10 +9,12 @@ import {
   AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
   AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { Search, Sparkles } from "lucide-react";
+import { Search, Sparkles, User } from "lucide-react";
 import { useLodgeRooms } from "@/hooks/lodging/useLodgeRooms";
 import { useLodgeHousekeeping, type HousekeepingStatus } from "@/hooks/lodging/useLodgeHousekeeping";
 import { useLodgeMaintenance } from "@/hooks/lodging/useLodgeMaintenance";
+import { useQuery } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 
 const STATUSES: HousekeepingStatus[] = ["clean", "dirty", "in_progress", "inspected", "out_of_service"];
