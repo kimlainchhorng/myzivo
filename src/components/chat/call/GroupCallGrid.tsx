@@ -11,6 +11,7 @@ import type { LKParticipant } from "@/hooks/useLiveKitCall";
 interface Props {
   participants: LKParticipant[];
   screenShareSource: LKParticipant | null;
+  isRecording?: boolean;
 }
 
 function gridClass(n: number): string {
@@ -21,7 +22,7 @@ function gridClass(n: number): string {
   return "grid-cols-2 grid-rows-4 md:grid-cols-4 md:grid-rows-2"; // up to 8
 }
 
-export default function GroupCallGrid({ participants, screenShareSource }: Props) {
+export default function GroupCallGrid({ participants, screenShareSource, isRecording = false }: Props) {
   const orderedParticipants = useMemo(() => {
     // Local first for predictability
     return [...participants].sort((a, b) => Number(b.isLocal) - Number(a.isLocal));
