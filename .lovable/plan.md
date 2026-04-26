@@ -1,117 +1,82 @@
-# Phase 5 — Confirmed Order & Acceptance Criteria
+# Phase 5 — Finish Track B polish, then start Track C
 
-## Status
+Track B (group calls upgrade) is largely built. This plan closes the last gap you flagged (pre-join recording toggle) and wires the new LiveKit screen into the live call entry, then moves on to Channels & Broadcast.
 
-| Track | Scope | Status |
-|---|---|---|
-| **A** | Encrypted media in Secret Chats | ✅ Shipped |
-| **B** | Group calls upgrade (SFU, screen-share, reactions, recording) | ⏭ Next |
-| **C** | Channels & Broadcast | Queued |
-| **D** | Chat polish (edit / schedule / pin / search / folders / per-chat notif) | Queued |
+## Part 1 — Track B closeout (small, ~1 step)
 
-I'll ship B → C → D in that order, pausing after each so you can test before the next starts.
+### 1. Pre-join "Lobby" screen with recording toggle
+New component: `src/components/chat/call/CallLobby.tsx`
 
----
+Shown for ~3 seconds before joining any group call. Contains:
+- Self-preview tile (camera + mic level meter)
+- Mic / camera enable toggles (state pre-set before connect)
+- **"Record this call" switch** (host only — enabled by default off)
+- Participant count preview
+- "Join call" / "Cancel" buttons
 
-## ✅ Track A — Encrypted Media (already done — for the record)
+The recording flag is passed into `useLiveKitCall({ autoRecord: true })`. When the host connects and `autoRecord` is true, the hook calls the existing `livekit-recording` start endpoint immediately after `room.connect()` resolves.
 
-**Acceptance**
-- ✅ In a Secret Chat, **+** menu offers Photo / Video / Voice / File.
-- ✅ Up to 50 MB per file. Encrypted client-side (AES-GCM 256, per-message random key wrapped with chat ECDH key).
-- ✅ Storage bucket `secret-media` is private; only the two participants can read/write the chat's folder.
-- ✅ Bubbles lazy-decrypt on view (image/video inline player, voice player, file download).
-- ✅ Disappearing-message TTL applies to media; expired blobs are deleted by `secret-media-prune` edge function.
-- ✅ Server only ever sees ciphertext — verifiable by inspecting any `secret_messages` row.
+### 2. Wire `GroupCallScreenV2` into the call entry point
+- In the existing call launcher (where `GroupCallScreen` is mounted today), branch on participant count: ≤4 → mesh `GroupCallScreen`, >4 OR `forceSfu=true` → `CallLobby` → `GroupCallScreenV2`.
+- Add a "Use HD group mode" option in the call-start sheet so users can opt in to LiveKit even at 2-4 people (better recording/screen-share quality).
 
----
+### 3. Acceptance
+- Starting a group call shows the lobby with a Record toggle.
+- Toggling on + Join begins recording within 2s of connect; REC pill visible to all.
+- Recording file lands in `call-recordings` bucket, only host can list/download.
+- Screen share + reactions + 8-tile grid still work.
 
-## ⏭ Track B — Group Calls Upgrade
+## Part 2 — Track C: Channels & Broadcast (the real next build)
 
-**What you'll see**
-- Group video grid auto-tiles **1 → 2 → 4 → 6 → 8** participants (FaceTime layout).
-- **Share Screen** button (desktop + Android Chrome). Shared screen becomes the spotlight tile.
-- **In-call reactions** — tap an emoji → it floats over your tile for everyone for ~3 s.
-- **Raise hand**, **mute-all** (host only), **kick participant** (host only).
-- **Record call** (host opt-in) — all participants see a red **REC** dot. Recording lands in Account → Call History (`call-recordings` bucket, host-only access).
-- Adaptive bitrate — drops video quality on poor networks instead of dropping the call.
+Telegram-style one-to-many channels.
 
-**Technical**
-- Mesh up to 4 participants (existing). Switch to **LiveKit Cloud SFU** for 5–8.
-- Edge function `livekit-token` issues short-lived JWTs (room name + participant identity).
-- New tables: `call_sessions`, `call_participants`, `call_recordings`.
-- New components: `GroupCallGrid`, `ScreenShareTile`, `CallReactionsOverlay`, refactored `CallControlsBar`.
-- Recording uses LiveKit's egress API → mp4 → uploaded to private `call-recordings` bucket.
-- Reactions sent over LiveKit data channel — no DB writes.
-
-**Acceptance**
-- 5+ users can join the same call; grid responds correctly to joins/leaves.
-- Screen share appears as a dedicated tile and can be stopped by the sharer.
-- Reactions appear on every participant's screen with no DB row created.
-- Host can start/stop recording; recording appears in Call History within 60 s of stop.
-- 4-person calls still use the existing mesh (no LiveKit cost for small calls).
-
-**Requires from you**
-- Three Lovable Cloud secrets: `LIVEKIT_URL`, `LIVEKIT_API_KEY`, `LIVEKIT_API_SECRET` (free tier at livekit.io covers expected load).
-
----
-
-## Track C — Channels & Broadcast
-
-**What you'll see**
-- New **Channels** tab in the Chat Hub (next to Chats / Groups).
-- **Create Channel** flow: name, handle (`@zivo-news`), avatar, description, public/private toggle.
-- Channel page: post feed (text, media, polls, links), subscriber count, view counts per post, reaction bar.
-- **Schedule Post** — pick future date/time; auto-publishes via cron.
-- Subscribers get a push notification per new post (respecting per-channel mute).
-- Public channels shareable at `hizivo.com/c/<handle>` (deep-link opens app).
-
-**Technical**
-- Tables: `channels`, `channel_subscribers`, `channel_posts` (with `scheduled_for`, `published_at`, `view_count`), `channel_post_reactions`, `channel_post_views` (one row per (post, user)).
-- RLS: public channels readable by all; private gated by `channel_subscribers`. Only owner/admins can post.
-- Edge function `publish-scheduled-posts` runs every minute via pg_cron — flips `published_at` for due rows, fans out push notifications.
-- Pages: `/channels`, `/channel/:handle`, `/channel/:handle/manage`, `/channel/new`.
-- Reuses existing `RichComposer`, `MediaPanel`, and `PollComposer` from Phase 3.
-
-**Acceptance**
-- Creating a channel with a unique handle works; duplicate handles are rejected with a clear error.
-- Subscribing/unsubscribing updates count in realtime.
-- Scheduled post stays hidden from subscribers until `scheduled_for`, then appears + sends push.
-- View count increments at most once per (post, user) pair.
-
----
-
-## Track D — Chat Polish & Power-User Features
-
-**What you'll see**
-- **Edit message** within 24 h (shows "edited" tag). Long-press / hover → Edit. Applies to direct + group chats (not Secret Chats — would break ratchet).
-- **Schedule send** in any non-secret chat.
-- **Pin messages** — up to 3 per chat, sticky banner below the header, tap to jump.
-- **Search messages** — global search bar in Chat Hub; full-text across all RLS-visible messages; jump-to-message on tap.
-- **Chat folders** — user-defined (Work, Family, Custom…) with chip selector above the chat list. Smart folders: Unread, Archived, Mentions.
-- **Per-chat custom notifications** — choose tone, vibration pattern, mute duration, mention-only mode.
-
-**Technical**
-- `direct_messages` + `group_messages` get `edited_at`, `original_text` (audit), `scheduled_for`, `pinned_at`.
-- New tables: `chat_pins`, `chat_folders`, `chat_folder_members`, `chat_notification_prefs`.
-- Postgres `tsvector` column + GIN index on messages; RPC `search_my_messages(q text)` filters by RLS-visible rows only.
-- Edge function `release-scheduled-messages` (pg_cron, every 30 s) inserts due messages.
-- New components: `EditMessageSheet`, `ScheduleSendSheet`, `PinnedBanner`, `ChatSearchSheet`, `FolderTabs`, `ChatNotificationSheet`.
-
-**Acceptance**
-- Edited messages show the "edited" tag and original text is preserved server-side for audit.
-- Scheduled message appears in recipient's chat at the scheduled minute (±30 s).
-- Pinning a 4th message displaces the oldest pin and shows a confirmation toast.
-- Searching "invoice" returns only messages the user can actually read (RLS-respecting).
-- A user-created folder persists across sessions and devices.
-
----
-
-## Build order recap
-
+### Schema
 ```text
-B. Group Calls (LiveKit SFU)          → smoke-test in 5-person call
-C. Channels & Broadcast               → demo @zivo-news channel
-D. Chat polish                        → smoke-test edit/schedule/search/folders
+channels                 channel_posts                channel_subscribers
+─────────                ─────────────                ───────────────────
+id (uuid)                id                           channel_id
+handle (citext, unique)  channel_id                   user_id
+name                     author_id                    role  (owner|admin|sub)
+description              body (text)                  notifications_on
+avatar_url               media (jsonb)                joined_at
+banner_url               scheduled_for (tstz, null)   PK (channel_id, user_id)
+owner_id                 published_at (tstz, null)
+is_public (bool)         view_count (int)             channel_post_reactions
+subscriber_count (int)   reactions_count (jsonb)      ─────────────────────
+created_at               created_at, updated_at       post_id, user_id, emoji
 ```
 
-**One blocker before Track B:** I need the LiveKit secrets. Approve this plan and I'll request them as the first step of Track B.
+RLS:
+- `channels` public-read when `is_public`, owner full-write.
+- `channel_posts` readable by subscribers OR if channel is public; writable only by owner/admin.
+- `channel_subscribers` user can insert/delete their own row; counts maintained by trigger.
+
+### Edge functions / cron
+- `channel-publish-scheduled` — invoked by `pg_cron` every minute; sets `published_at = now()` for due posts and increments fan-out counters.
+- `channel-record-view` — RPC called when a subscriber opens a post; debounced server-side per (post, user) per 24h.
+
+### UI surfaces
+- `/channels` — directory + search by handle.
+- `/c/:handle` — channel page (banner, posts feed, subscribe button, view counts).
+- `/channels/new` — create flow (name, handle, avatar, public/private).
+- `/c/:handle/manage` — owner dashboard: compose post, schedule, see analytics.
+- Post composer reuses media uploader; supports "Schedule for later" date/time picker.
+- Reactions row under each post (emoji bar) writes to `channel_post_reactions`.
+
+### Acceptance
+- Create channel → claim handle → publish post → subscriber sees it in feed instantly (realtime).
+- Schedule a post 2 min in future → it appears at the right time without a refresh.
+- View count increments once per user per 24h.
+- Reactions update live across clients.
+
+## Part 3 — Track D preview (after C ships)
+Message editing (24h), scheduled send, pinned messages (max 3), full-text search (`tsvector` + GIN), chat folders, per-chat custom notification sound. Not built in this round.
+
+## Order of execution this round
+1. Build `CallLobby` + recording-toggle wiring.
+2. Branch the call entry to use lobby + V2 for >4 / opt-in.
+3. Channels migration (tables, RLS, triggers, cron).
+4. Channels edge functions.
+5. Channels UI (directory → channel page → composer → manage).
+
+Stop after step 5 for review before Track D.
