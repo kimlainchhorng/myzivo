@@ -68,6 +68,8 @@ const SENTINEL_KEY = "biz-wizard-guard";
 
 export default function BusinessPageWizard() {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const forceNew = searchParams.get("new") === "1";
   const { user } = useAuth();
   const { data: profile } = useUserProfile();
 
