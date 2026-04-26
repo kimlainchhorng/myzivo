@@ -206,15 +206,19 @@ export default function SecretChatPage() {
                 className={`flex ${mine ? "justify-end" : "justify-start"}`}
               >
                 <div className="group relative max-w-[78%]">
-                  <div
-                    className={`whitespace-pre-wrap break-words rounded-2xl px-3.5 py-2 text-sm shadow-sm ${
-                      mine
-                        ? "bg-indigo-500 text-white"
-                        : "bg-muted text-foreground"
-                    } ${m.failed ? "opacity-60 italic" : ""}`}
-                  >
-                    {m.plaintext}
-                  </div>
+                  {m.media ? (
+                    <SecretMediaBubble message={m} decryptMedia={decryptMedia} mine={mine} />
+                  ) : (
+                    <div
+                      className={`whitespace-pre-wrap break-words rounded-2xl px-3.5 py-2 text-sm shadow-sm ${
+                        mine
+                          ? "bg-indigo-500 text-white"
+                          : "bg-muted text-foreground"
+                      } ${m.failed ? "opacity-60 italic" : ""}`}
+                    >
+                      {m.plaintext}
+                    </div>
+                  )}
                   <div
                     className={`mt-0.5 flex items-center gap-1 text-[10px] text-muted-foreground ${
                       mine ? "justify-end" : "justify-start"
