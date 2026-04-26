@@ -2030,6 +2030,11 @@ export default function AdminStoreEditPage() {
     "lodge-policies": "Policies & Rules",
     "lodge-reviews": "Reviews & Guest Feedback",
     "lodge-reports": "Reports & Analytics",
+    "lodge-promos": "Promotions & Discounts",
+    "lodge-channels": "Channel Manager",
+    "lodge-payouts": "Payouts & Finance",
+    "lodge-inbox": "Guest Inbox",
+    "lodge-staff": "Hotel Staff",
   };
   const productsLabelTitle = isAutoRepair ? "Services" : isLodging ? "Rooms" : "Products";
   const paymentLabelTitle = form.category === "car-dealership" ? t("admin.store.booking_appointment") : isAutoRepair ? "Bookings" : isLodging ? "Payment & Payouts" : t("admin.store.payment");
