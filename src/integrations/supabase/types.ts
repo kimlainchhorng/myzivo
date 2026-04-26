@@ -13883,7 +13883,10 @@ export type Database = {
         Row: {
           created_at: string
           delivered_at: string | null
+          edited_at: string | null
           expires_at: string | null
+          forwarded_from_message_id: string | null
+          forwarded_from_user_id: string | null
           id: string
           image_url: string | null
           is_pinned: boolean
@@ -13894,6 +13897,7 @@ export type Database = {
           locked_price_cents: number | null
           message: string
           message_type: string
+          original_text: string | null
           receiver_id: string
           reply_to_id: string | null
           sender_id: string
@@ -13903,7 +13907,10 @@ export type Database = {
         Insert: {
           created_at?: string
           delivered_at?: string | null
+          edited_at?: string | null
           expires_at?: string | null
+          forwarded_from_message_id?: string | null
+          forwarded_from_user_id?: string | null
           id?: string
           image_url?: string | null
           is_pinned?: boolean
@@ -13914,6 +13921,7 @@ export type Database = {
           locked_price_cents?: number | null
           message: string
           message_type?: string
+          original_text?: string | null
           receiver_id: string
           reply_to_id?: string | null
           sender_id: string
@@ -13923,7 +13931,10 @@ export type Database = {
         Update: {
           created_at?: string
           delivered_at?: string | null
+          edited_at?: string | null
           expires_at?: string | null
+          forwarded_from_message_id?: string | null
+          forwarded_from_user_id?: string | null
           id?: string
           image_url?: string | null
           is_pinned?: boolean
@@ -13934,6 +13945,7 @@ export type Database = {
           locked_price_cents?: number | null
           message?: string
           message_type?: string
+          original_text?: string | null
           receiver_id?: string
           reply_to_id?: string | null
           sender_id?: string
