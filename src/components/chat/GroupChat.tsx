@@ -285,7 +285,23 @@ export default function GroupChat({ groupId, groupName, groupAvatar, onClose }: 
               {members.length} members
             </p>
           </div>
-          <div className="flex items-center gap-1">
+          <div className="flex items-center gap-0.5">
+            <button
+              onClick={() => { void primeCallAudio(); setGroupCall("video"); }}
+              className="h-10 w-10 flex items-center justify-center rounded-full hover:bg-blue-500/10"
+              aria-label="Video call"
+              title="Video call"
+            >
+              <Video className="h-5 w-5 text-blue-500" />
+            </button>
+            <button
+              onClick={() => { void primeCallAudio(); setGroupCall("audio"); }}
+              className="h-10 w-10 flex items-center justify-center rounded-full hover:bg-emerald-500/10"
+              aria-label="Voice call"
+              title="Voice call"
+            >
+              <Phone className="h-[19px] w-[19px] text-emerald-500" />
+            </button>
             <button
               onClick={() => setShowInvites(true)}
               className="min-h-[40px] min-w-[40px] flex items-center justify-center rounded-full hover:bg-muted/50"
