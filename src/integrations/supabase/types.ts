@@ -9086,6 +9086,48 @@ export type Database = {
         }
         Relationships: []
       }
+      chat_files: {
+        Row: {
+          bucket: string
+          bucket_path: string
+          created_at: string
+          file_name: string
+          id: string
+          message_id: string | null
+          mime: string
+          owner_id: string
+          pages: number | null
+          sha256: string | null
+          size_bytes: number
+        }
+        Insert: {
+          bucket?: string
+          bucket_path: string
+          created_at?: string
+          file_name: string
+          id?: string
+          message_id?: string | null
+          mime: string
+          owner_id: string
+          pages?: number | null
+          sha256?: string | null
+          size_bytes?: number
+        }
+        Update: {
+          bucket?: string
+          bucket_path?: string
+          created_at?: string
+          file_name?: string
+          id?: string
+          message_id?: string | null
+          mime?: string
+          owner_id?: string
+          pages?: number | null
+          sha256?: string | null
+          size_bytes?: number
+        }
+        Relationships: []
+      }
       chat_folder_members: {
         Row: {
           conversation_id: string
@@ -10740,6 +10782,39 @@ export type Database = {
           metadata?: Json | null
           reference_id?: string | null
           user_id?: string
+        }
+        Relationships: []
+      }
+      coin_transfers: {
+        Row: {
+          amount: number
+          created_at: string
+          from_user: string
+          id: string
+          message_id: string | null
+          note: string | null
+          status: string
+          to_user: string
+        }
+        Insert: {
+          amount: number
+          created_at?: string
+          from_user: string
+          id?: string
+          message_id?: string | null
+          note?: string | null
+          status?: string
+          to_user: string
+        }
+        Update: {
+          amount?: number
+          created_at?: string
+          from_user?: string
+          id?: string
+          message_id?: string | null
+          note?: string | null
+          status?: string
+          to_user?: string
         }
         Relationships: []
       }
@@ -23540,6 +23615,45 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      gift_transactions: {
+        Row: {
+          coins: number
+          combo: number
+          created_at: string
+          gift_key: string
+          gift_name: string | null
+          id: string
+          message_id: string | null
+          note: string | null
+          receiver_id: string
+          sender_id: string
+        }
+        Insert: {
+          coins: number
+          combo?: number
+          created_at?: string
+          gift_key: string
+          gift_name?: string | null
+          id?: string
+          message_id?: string | null
+          note?: string | null
+          receiver_id: string
+          sender_id: string
+        }
+        Update: {
+          coins?: number
+          combo?: number
+          created_at?: string
+          gift_key?: string
+          gift_name?: string | null
+          id?: string
+          message_id?: string | null
+          note?: string | null
+          receiver_id?: string
+          sender_id?: string
+        }
+        Relationships: []
       }
       goal_completions: {
         Row: {
@@ -61189,6 +61303,23 @@ export type Database = {
               driver_id: string
             }[]
           }
+      fn_record_gift_transaction: {
+        Args: {
+          p_coins: number
+          p_combo: number
+          p_gift_key: string
+          p_gift_name: string
+          p_message_id: string
+          p_note: string
+          p_receiver: string
+          p_sender: string
+        }
+        Returns: string
+      }
+      fn_transfer_coins: {
+        Args: { p_amount: number; p_from: string; p_to: string }
+        Returns: Json
+      }
       generate_all_forecasts: { Args: never; Returns: number }
       generate_compliance_alerts: { Args: never; Returns: undefined }
       generate_referral_code: { Args: never; Returns: string }
