@@ -33,6 +33,18 @@ export default function LodgingHousekeepingSection({ storeId }: { storeId: strin
   const { data: rooms = [] } = useLodgeRooms(storeId);
   const { data: tasks = [], isLoading, upsert, setStatus } = useLodgeHousekeeping(storeId);
   const { upsert: upsertMaintenance } = useLodgeMaintenance(storeId);
+  const { data: housekeepers = [] } = useQuery({
+    queryKey: ["housekeeping-staff", storeId],
+    enabled: Boolean(storeId),
+    queryFn: async () => {
+      const { data } = await (supabase as any)
+        .from("store_employees")
+        .select("id, name, lodging_role, status")
+        .eq("store_id", storeId)
+        .eq("lodging_role", "housekeeping");
+      return ((data || []) as any[]).filter(s => (s.status ?? "active") === "active");
+    },
+  });
   const [pendingOOS, setPendingOOS] = useState<{ roomId: string | null; roomNumber: string | null } | null>(null);
   const [statusFilter, setStatusFilter] = useState<HousekeepingStatus | "all">("all");
   const [query, setQuery] = useState("");
