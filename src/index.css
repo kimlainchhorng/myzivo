@@ -2220,3 +2220,7 @@ html[lang="km"] textarea {
 body[data-story-open="true"] [data-zivo-mobile-nav] {
   display: none !important;
 }
+
+/* Utility: hide horizontal scrollbar but keep scrolling */
+.no-scrollbar { scrollbar-width: none; -ms-overflow-style: none; }
+.no-scrollbar::-webkit-scrollbar { display: none; }
