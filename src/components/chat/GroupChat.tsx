@@ -504,6 +504,17 @@ export default function GroupChat({ groupId, groupName, groupAvatar, onClose }: 
         onOpenChange={setShowInvites}
         groupId={groupId}
       />
+
+      {/* LiveKit-powered group call overlay */}
+      {groupCall && (
+        <div className="fixed inset-0 z-[70] bg-background">
+          <GroupCallLauncher
+            roomName={`group-${groupId}`}
+            callType={groupCall}
+            onEnded={() => setGroupCall(null)}
+          />
+        </div>
+      )}
     </motion.div>
   );
 }
