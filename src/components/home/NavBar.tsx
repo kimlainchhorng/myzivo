@@ -440,7 +440,7 @@ const NavBar = forwardRef<HTMLDivElement>(function NavBar(_, ref) {
                       )}
                       {ownerStores.length > 0 && <DropdownMenuSeparator />}
                       <DropdownMenuItem
-                        onClick={() => navigate("/business/new")}
+                        onClick={() => navigate("/business/new?new=1")}
                         className="cursor-pointer rounded-lg py-2 gap-2.5 text-black focus:text-black"
                       >
                         <Building2 className="w-4 h-4 text-black" /> Create new Business
