@@ -1,38 +1,33 @@
-## What I see in your screenshots
+## Problem
 
-1. **Chat input bar is overcrowded** — the `+ • doc • flame • clock • Message • smile • mic` row has 6 controls fighting for space, so the **Message** field gets squashed and you can't comfortably reach every button. Last screenshot 4 confirms it's tight even on desktop.
-2. **Call screen reaction strip sits in the safe-area zone** — `CallReactionStrip` is positioned `absolute bottom-3` inside the call stage, which on phones (with home-indicator) ends up behind/touching the device safe-area and overlapping the controls bar. Buttons at the very bottom of the call screen also need to clear that zone.
-3. **Contacts page now shows "Kim Thai"** ✅ (chat-history fallback works).
+In your screenshot, the iOS status bar (12:37, signal, battery) is rendering on top of the "Contacts" page header — the title and back arrow collide with the system clock.
 
-## Fixes I will ship
+Root cause: `src/pages/chat/ContactsPage.tsx` uses `sticky top-0` on the header but is missing the `safe-area-top` utility (which adds `padding-top: env(safe-area-inset-top)`). Other chat screens (PersonalChat, GroupChat, CallHistory, ChatContactInfo, ChatMediaGallery) already use it correctly.
 
-### 1. PersonalChat input toolbar — make all action buttons reachable
-File: `src/components/chat/PersonalChat.tsx` (lines ~1471–1545)
+A quick audit shows the same bug exists on several chat settings pages.
 
-Wrap the leading utility buttons (Attach `+`, Document, Self-destruct flame, Scheduled clock) in a horizontally scrollable group with hidden scrollbars:
+## Fix
 
-- Container: `flex items-end gap-1 overflow-x-auto no-scrollbar shrink min-w-0 max-w-[44%] sm:max-w-[55%]`
-- Each button keeps `shrink-0`
-- Input + Send/Mic stay pinned on the right and never get squeezed
-- On larger screens the row still shows everything inline; on narrow screens you can swipe the action group sideways
-- Add a tiny `.no-scrollbar { scrollbar-width: none } .no-scrollbar::-webkit-scrollbar { display: none }` utility in `src/index.css` if not already present
+1. **`src/pages/chat/ContactsPage.tsx`** — add `safe-area-top` to the sticky `<header>` so the title clears the iOS notch/status bar.
 
-### 2. Call screen — lift reactions strip & controls clear of safe area
-Files:
-- `src/components/chat/call/CallReactionStrip.tsx` — change wrapper from `absolute inset-x-0 bottom-3` to position above the controls bar with `bottom: calc(env(safe-area-inset-bottom, 0px) + 84px)` so it floats above the home-indicator AND above the controls row.
-- `src/components/chat/call/GroupCallControls.tsx` — verify `paddingBottom: calc(env(safe-area-inset-bottom, 0px) + 12px)` is applied (already there) and bump to `+ 16px` so tap targets clear the iOS gesture zone.
-- `src/components/chat/CallScreen.tsx` (legacy 1:1 path) — line 802: ensure the bottom controls row uses `max(calc(env(safe-area-inset-bottom, 0px) + 1rem), 1.5rem)` so the End/Mute/Cam buttons don't sit on top of the home-indicator.
+2. **Audit + fix the same issue on these pages** (all use `sticky top-0` without `safe-area-top`):
+   - `src/pages/chat/settings/LoginAlertsPage.tsx`
+   - `src/pages/chat/settings/PasscodeSetupPage.tsx`
+   - `src/pages/chat/settings/TwoStepSetupPage.tsx`
+   - `src/pages/chat/settings/PrivacySecurityPage.tsx`
+   - `src/pages/chat/settings/ActiveSessionsPage.tsx`
+   - `src/components/chat/ChatSearch.tsx`
 
-### 3. Sanity sweep on call buttons only (no other behavior changes)
-- Confirm every button in `GroupCallControls` is tappable (44×44 minimum) and not clipped.
-- Confirm REC pill in the header doesn't collide with the close button on small viewports.
+3. No design changes — only the safe-area padding so the header sits below the device status bar, matching PersonalChat / GroupChat behavior.
 
-### Out of scope
-- No data-model changes.
-- Group-chat input bar (`GroupChat.tsx`) is much simpler and already fits — leaving it.
-- No browser testing — I'll make these layout fixes and type-check.
+## Technical detail
 
-### Why this resolves your message
-- "I need move scroll that I can see all button" → action buttons now scroll horizontally; nothing is hidden.
-- "in call when click some button…have button in safety zone please move" → reaction strip and bottom controls are pushed above the iOS safe-area inset.
-- "check button only" → I won't touch any other logic.
+```tsx
+// Before
+<header className="sticky top-0 z-20 bg-background/80 backdrop-blur border-b px-4 py-3 ...">
+
+// After
+<header className="sticky top-0 z-20 bg-background/80 backdrop-blur border-b px-4 py-3 safe-area-top ...">
+```
+
+`safe-area-top` is the existing project utility that resolves to `padding-top: env(safe-area-inset-top)`, already used across the v2026 chat surfaces per the mobile-native-ux-standards memory.
