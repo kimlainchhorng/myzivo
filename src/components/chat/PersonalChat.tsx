@@ -847,10 +847,23 @@ export default function PersonalChat({ recipientId, recipientName, recipientAvat
     if (typingTimerRef.current) clearTimeout(typingTimerRef.current);
     const hasText = !!val.trim();
     setTyping(hasText);
-    if (hasText) {
-      typingTimerRef.current = setTimeout(() => setTyping(false), 3000);
+    // Broadcast to chat-list typing bus so the hub can show "typing…" preview
+    if (user?.id && recipientId) {
+      import("@/hooks/useTypingBus").then(({ broadcastTyping }) => {
+        broadcastTyping(user.id, recipientId, hasText);
+      });
     }
-  }, [updateDraft, setTyping]);
+    if (hasText) {
+      typingTimerRef.current = setTimeout(() => {
+        setTyping(false);
+        if (user?.id && recipientId) {
+          import("@/hooks/useTypingBus").then(({ broadcastTyping }) => {
+            broadcastTyping(user.id, recipientId, false);
+          });
+        }
+      }, 3000);
+    }
+  }, [updateDraft, setTyping, user?.id, recipientId]);
 
   const handleQuickPanelSend = useCallback(async (payload: StickerSendPayload) => {
     if (!user?.id || sending) return;
