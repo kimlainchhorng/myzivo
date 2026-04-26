@@ -232,6 +232,19 @@ export default function LodgingPropertyProfileSection({ storeId }: { storeId: st
           </AccordionContent>
         </AccordionItem>
 
+        {/* GROUP 1b — Guest essentials */}
+        <AccordionItem value="guest-essentials" className="border rounded-xl bg-card">
+          <AccordionTrigger className="px-3 py-2.5 text-[13px] font-semibold hover:no-underline">
+            <span className="flex items-center gap-2"><Wifi className="h-3.5 w-3.5 text-primary" /> Guest essentials</span>
+          </AccordionTrigger>
+          <AccordionContent className="px-3 pb-3">
+            <GuestEssentialsCard
+              value={(form.contact || {}) as any}
+              onChange={(patch) => setForm({ ...form, contact: { ...(form.contact || {}), ...patch } as any })}
+            />
+          </AccordionContent>
+        </AccordionItem>
+
         {/* GROUP 2 — Facilities & dining */}
         <AccordionItem value="facilities" className="border rounded-xl bg-card">
           <AccordionTrigger className="px-3 py-2.5 text-[13px] font-semibold hover:no-underline">
