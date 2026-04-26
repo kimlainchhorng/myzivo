@@ -115,6 +115,8 @@ const ReelsFeedPage = lazy(() => import("./pages/ReelsFeedPage"));
 const SoundPage = lazy(() => import("./pages/SoundPage"));
 const ChatHubPage = lazy(() => import("./pages/ChatHubPage"));
 const ContactsPage = lazy(() => import("./pages/chat/ContactsPage"));
+const ContactRequestsPage = lazy(() => import("./pages/chat/ContactRequestsPage"));
+const NearbyChatPage = lazy(() => import("./pages/chat/NearbyChatPage"));
 const JoinGroupPage = lazy(() => import("./pages/chat/JoinGroupPage"));
 const PrivacySecurityPage = lazy(() => import("./pages/chat/settings/PrivacySecurityPage"));
 const ActiveSessionsPage = lazy(() => import("./pages/chat/settings/ActiveSessionsPage"));
@@ -699,6 +701,8 @@ const App = () => (
                 <Route path="/refer" element={<ProtectedRoute><ReferAFriendPage /></ProtectedRoute>} />
                 <Route path="/chat" element={<ChatHubPage />} />
                 <Route path="/chat/contacts" element={<ProtectedRoute><ContactsPage /></ProtectedRoute>} />
+                <Route path="/chat/contacts/requests" element={<ProtectedRoute><ContactRequestsPage /></ProtectedRoute>} />
+                <Route path="/chat/nearby" element={<ProtectedRoute><NearbyChatPage /></ProtectedRoute>} />
                 <Route path="/chat/join/:code" element={<JoinGroupPage />} />
                 <Route path="/chat/secret/:partnerId" element={<ProtectedRoute><SecretChatPage /></ProtectedRoute>} />
                 <Route path="/chat/call/group/:roomName" element={<ProtectedRoute><GroupCallEntryPage /></ProtectedRoute>} />
