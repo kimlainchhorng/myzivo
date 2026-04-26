@@ -10,7 +10,7 @@ import {
   Users, Bookmark, Clock, Settings, TrendingUp,
   ArrowLeftRight, Shield, Store, LayoutDashboard,
   Handshake, CarTaxiFront, ChefHat, Building2, Briefcase,
-  Headphones, Eye, Wrench, X as XIcon,
+  Headphones, Eye, Wrench, X as XIcon, BadgeCheck, ChevronRight,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/contexts/AuthContext";
@@ -18,6 +18,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { optimizeAvatar } from "@/utils/optimizeAvatar";
 import { useUserProfile } from "@/hooks/useUserProfile";
 import { useUserAccess } from "@/hooks/useUserAccess";
+import { useUsername } from "@/hooks/useUsername";
 import {
   Sheet,
   SheetContent,
