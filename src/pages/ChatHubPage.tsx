@@ -1143,7 +1143,7 @@ export default function ChatHubPage({ embedded = false }: { embedded?: boolean }
                                       <Car className="w-5 h-5 text-muted-foreground" />
                                     )}
                                   </div>
-                                  {active === "personal" && !(chat as any).isGroup && (chat as any).isOnline && (
+                                  {liveOnline && (
                                     <span className="absolute -bottom-0.5 -right-0.5 h-3.5 w-3.5 rounded-full bg-emerald-500 border-[2.5px] border-card" />
                                   )}
                                 </div>
