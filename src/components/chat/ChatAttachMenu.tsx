@@ -104,10 +104,10 @@ export default function ChatAttachMenu({
         animate={{ y: 0, opacity: 1, scale: 1 }}
         exit={{ y: 16, opacity: 0, scale: 0.92 }}
         transition={{ type: "spring", damping: 24, stiffness: 400 }}
-        className="fixed z-[1401] bg-background border border-border/30 rounded-2xl shadow-2xl p-4"
+        className="fixed z-[1401] bg-background border border-border/30 rounded-2xl shadow-2xl p-4 max-w-[320px]"
         style={{ left: pos.left, bottom: pos.bottom }}
       >
-        <div className="flex gap-5">
+        <div className="grid grid-cols-4 gap-3">
           {menuItems.map((item) => {
             const isLockedGated = item.id === "locked" && !canUseLocked;
             return (
