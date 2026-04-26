@@ -38624,6 +38624,7 @@ export type Database = {
           cover_url: string | null
           created_at: string | null
           date_of_birth: string | null
+          display_brand_name: string | null
           email: string | null
           email_verified: boolean | null
           full_name: string | null
@@ -38687,6 +38688,7 @@ export type Database = {
           cover_url?: string | null
           created_at?: string | null
           date_of_birth?: string | null
+          display_brand_name?: string | null
           email?: string | null
           email_verified?: boolean | null
           full_name?: string | null
@@ -38750,6 +38752,7 @@ export type Database = {
           cover_url?: string | null
           created_at?: string | null
           date_of_birth?: string | null
+          display_brand_name?: string | null
           email?: string | null
           email_verified?: boolean | null
           full_name?: string | null
