@@ -97,7 +97,7 @@ Deno.serve(async (req) => {
         .map((s: any) => s.user_id);
       // Best-effort: write notifications rows (push fan-out happens via existing notifier)
       if (recipients.length) {
-        const actionUrl = ch.handle ? `/channel/${ch.handle}` : `/channels`;
+        const actionUrl = ch.handle ? `/c/${ch.handle}` : `/channels`;
         const rows = recipients.map((uid: string) => ({
           user_id: uid,
           type: "channel_post",
