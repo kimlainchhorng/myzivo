@@ -166,18 +166,24 @@ interface ChatMessageBubbleProps {
   messageType?: string;
   senderId?: string;
   lockedPriceCents?: number | null;
+  /** ISO timestamp of last edit, if any */
+  editedAt?: string | null;
+  /** ISO timestamp of message creation — used to enforce 48h edit window */
+  createdAt?: string | null;
   /** Pre-loaded reactions from parent (avoids N+1 queries) */
   initialReactions?: { emoji: string; count: number; hasMyReaction: boolean }[];
   onReply: (id: string, message: string, isMe: boolean) => void;
   onDelete: (id: string) => void;
   onForward?: (id: string, message: string) => void;
   onPin?: (id: string, pinned: boolean) => void;
+  onEdit?: (id: string, currentText: string) => void;
 }
 
 const ChatMessageBubble = memo(function ChatMessageBubble({
   id, message, time, isMe, isRead, isDelivered, imageUrl, videoUrl, isPinned, expiresAt, messageType, senderId, lockedPriceCents,
+  editedAt, createdAt,
   initialReactions,
-  onReply, onDelete, onForward, onPin,
+  onReply, onDelete, onForward, onPin, onEdit,
 }: ChatMessageBubbleProps) {
   const { user } = useAuth();
   const [showActions, setShowActions] = useState(false);
