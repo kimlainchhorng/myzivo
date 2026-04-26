@@ -89,25 +89,36 @@ export default function CreateGroupModal({ open, onClose, onCreated }: CreateGro
 
       if (gErr) throw gErr;
 
-      // Add members (creator + selected)
-      const memberInserts = [user.id, ...Array.from(selected)].map((uid) => ({
-        group_id: group.id,
-        user_id: uid,
-      }));
-
-      const { error: mErr } = await (supabase as any)
+      // Step 1: insert the creator as the first member (with owner role if column exists).
+      // RLS "Group members or creator can add members" passes because the actor created the group.
+      const creatorInsert: any = { group_id: group.id, user_id: user.id };
+      try { creatorInsert.role = "owner"; } catch { /* role column optional */ }
+      const { error: cErr } = await (supabase as any)
         .from("chat_group_members")
-        .insert(memberInserts);
+        .insert(creatorInsert);
+      if (cErr && !/duplicate|unique/i.test(cErr.message || "")) throw cErr;
 
-      if (mErr) throw mErr;
+      // Step 2: insert remaining members. Now the actor is a member, so the
+      // "members can add members" branch of the RLS policy also covers this.
+      const otherInserts = Array.from(selected)
+        .filter((uid) => uid !== user.id)
+        .map((uid) => ({ group_id: group.id, user_id: uid }));
+
+      if (otherInserts.length) {
+        const { error: mErr } = await (supabase as any)
+          .from("chat_group_members")
+          .insert(otherInserts);
+        if (mErr) throw mErr;
+      }
 
       toast.success("Group created!");
       onCreated({ id: group.id, name: group.name });
       onClose();
       setSelected(new Set());
       setGroupName("");
-    } catch {
-      toast.error("Failed to create group");
+    } catch (err: any) {
+      console.error("[CreateGroup] failed", err);
+      toast.error(err?.message ? `Failed to create group: ${err.message}` : "Failed to create group");
     }
     setCreating(false);
   };
