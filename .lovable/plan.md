@@ -1,50 +1,73 @@
-# Phase 5 — Track B v2: pre-call recording summary, real-time REC indicator, persistent reaction strip, lobby wiring
+# Phase 5 — Track C UI: Channels & Broadcast
 
-Tightens the call lobby/recording UX and ensures every approved feature is reachable from the call entry. All existing LiveKit hooks stay; this round is composition + small UX additions.
+Most call-side items in this request are already implemented from the previous round and only need the route the user asked for to be reachable at the path they wrote. The real new build is the Channels UI, which has had its schema, RLS, triggers, and scheduled-publish edge function in place since the prior loop.
 
-## 1. Pre-call recording summary in lobby
-- New hook `useRecordingPreflight(enabled)` does a low-cost `storage.from('call-recordings').list('', {limit:1})` to determine whether the recordings bucket is reachable for the host.
-- `CallLobby` shows a new info card directly under the Record toggle:
-  - "Recording: **On**" / "Off" with the storage bucket badge: `Bucket ready` (emerald), `Checking…` (zinc), or `Unavailable — recording disabled` (rose, with the toggle force-disabled).
-  - Helper text under the bucket badge (e.g., "Saved privately to call-recordings").
-- If status is `unavailable`, the Record switch becomes disabled and visually muted; lobby still allows joining.
+## Already shipped (this loop just verifies/exposes)
+- Always-visible emoji strip → `CallReactionStrip` mounted in `GroupCallScreenV2`, fans out via existing data channel + `CallReactionsOverlay`.
+- Real-time REC privacy indicator → high-contrast pill in top bar + per-tile pulsing red dot in `VideoTile`, driven by `call.isRecording`.
+- Pre-join recording summary → `CallLobby` shows bucket status (`Bucket ready` / `Checking…` / `Unavailable`) via `useRecordingPreflight`, plus a `REC ON/OFF` chip; switch auto-disables when bucket is unavailable.
+- Auto-start cloud recording → `useLiveKitCall({ autoRecord })` triggers `livekit-recording` start right after `room.connect()`.
+- Lobby + screen share + recording reachable via `GroupCallEntryPage` mounting `GroupCallLauncher`.
 
-## 2. Auto-record at connect (already in `useLiveKitCall`)
-No change — `autoRecord: true` is passed from lobby and starts cloud recording inside the connect flow.
+### Tiny route fix (1 edit)
+The user asked for `/chat/group-call/:roomName`. Current route is `/chat/call/group/:roomName`. **Add the new path as an alias** so both resolve to `GroupCallEntryPage`. Keep the old one to avoid breaking anything already linked.
 
-## 3. Real-time REC privacy indicator
-- Top-bar pill in `GroupCallScreenV2` already pulses; promote it to a stronger banner with shadow + ring when recording.
-- `VideoTile` gains a small pulsing red dot in the top-left when `isRecording` is true (every tile, every viewer) — visual privacy disclosure.
-- `GroupCallGrid` accepts a new `isRecording` prop and forwards it.
+## New build — Channels UI (the focus of this round)
 
-## 4. Quick reaction strip (always visible)
-- New `CallReactionStrip` component: floating horizontal pill above the controls, ~6 emoji (`👍 ❤️ 😂 🎉 👏 🔥`).
-- Renders inside the stage (bottom center) so reactions are 1-tap, no popover.
-- Wires into existing `call.sendReaction` — existing data-channel + overlay already broadcast to everyone.
-- The popover-based picker in `GroupCallControls` stays for less-common emoji.
+Backend is already live (tables, RLS, triggers, view-count RPC, `channel-publish-scheduled` cron job). Adds 4 pages + supporting hook and shared components.
 
-## 5. Mount GroupCallLauncher at the call entry
-- Add a route in `src/App.tsx`:
-  - `/chat/call/group/:roomName` → lazy-loaded `GroupCallEntryPage` that renders `<GroupCallLauncher roomName={roomName} callType="video" onEnded={() => navigate(-1)} />`.
-- Add a small entry component `src/pages/chat/GroupCallEntryPage.tsx` that reads `roomName` and an optional `?audio=1` query.
-- This makes the lobby + screen-sharing + reactions + recording reachable today by linking to `/chat/call/group/<id>` from anywhere (a future task can attach the link to existing chat call buttons).
+### Pages
+| Path | Purpose |
+|---|---|
+| `/channels` | Directory: search by handle/name, list public channels, "Create" button, "My subscriptions" tab. |
+| `/channels/new` | Composer: name, handle (live availability check), description, public/private, avatar/banner upload. |
+| `/c/:handle` | Channel page: banner, header (name/handle/sub count), Subscribe/Unsubscribe, posts feed with view counts + reaction bar, owner-only "Compose" + "Manage" buttons. |
+| `/c/:handle/manage` | Owner dashboard: edit channel details, member list with role chips (owner/admin/sub), promote/demote/remove, scheduled-post queue, basic stats. |
 
-## Files
+### Shared components (under `src/components/channels/`)
+- `ChannelHeader.tsx` — banner + avatar + name/handle + sub count + Subscribe button.
+- `ChannelPostCard.tsx` — body, media gallery, view count, reactions bar, posted/scheduled timestamp; calls `record_channel_post_view` RPC on first viewport entry.
+- `ChannelPostComposer.tsx` — text + media drop + "Schedule for later" date/time picker; writes to `channel_posts` (with `published_at = now()` for immediate, or `scheduled_for = <future>` for scheduled).
+- `ChannelMemberRow.tsx` — used in `/c/:handle/manage`, shows display name, role chip, action menu.
+- `SubscribeButton.tsx` — toggles `channel_subscribers` row for the current user.
+
+### Hook
+- `useChannel(handleOrId)` — loads channel + subscriber state + posts (paginated via `published_at desc`), exposes mutations for subscribe/unsubscribe/post/react.
+
+### Realtime
+Subscribe to:
+- `channel_posts` (filter by `channel_id`) → live feed updates when scheduled posts publish.
+- `channel_post_reactions` (filter by `post_id` for visible posts) → live reaction counts.
+
+### Storage
+Posts can include media. Reuse the existing `user-posts` bucket (already configured for 500MB uploads) — no new bucket needed for v1. Avatar/banner images go to `user-posts/channels/<channel_id>/...`.
+
+### Acceptance
+- Visit `/channels` → see public channels, search filter works.
+- `/channels/new` → handle availability checked live; submit creates channel and redirects to `/c/<handle>`.
+- `/c/<handle>` → public visitors can browse; subscribers see posts in real time; reactions update live for everyone.
+- Schedule a post 2 min in future → it shows in the manage queue, then appears in the feed (via realtime + cron) without refresh.
+- View count on a post increments at most once per viewer per 24h.
+- `/c/<handle>/manage` (owner only) → edit name/banner/description, promote a subscriber to admin, remove a subscriber, see scheduled queue.
+- Visiting `/chat/group-call/<id>` works (alongside `/chat/call/group/<id>`).
+
+### Files
 **New**
-- `src/hooks/useRecordingPreflight.ts`
-- `src/components/chat/call/CallReactionStrip.tsx`
-- `src/pages/chat/GroupCallEntryPage.tsx`
+- `src/pages/channels/ChannelsDirectoryPage.tsx`
+- `src/pages/channels/NewChannelPage.tsx`
+- `src/pages/channels/ChannelPage.tsx`
+- `src/pages/channels/ManageChannelPage.tsx`
+- `src/components/channels/ChannelHeader.tsx`
+- `src/components/channels/ChannelPostCard.tsx`
+- `src/components/channels/ChannelPostComposer.tsx`
+- `src/components/channels/ChannelMemberRow.tsx`
+- `src/components/channels/SubscribeButton.tsx`
+- `src/hooks/useChannel.ts`
 
 **Edited**
-- `src/components/chat/call/CallLobby.tsx` — bucket status card, Record disabled when unavailable.
-- `src/components/chat/call/GroupCallScreenV2.tsx` — pass `isRecording` into grid, mount reaction strip.
-- `src/components/chat/call/GroupCallGrid.tsx` — accept + forward `isRecording`.
-- `src/components/chat/call/VideoTile.tsx` — pulsing per-tile REC dot.
-- `src/App.tsx` — add `/chat/call/group/:roomName` route.
+- `src/App.tsx` — add 4 channel routes + alias `/chat/group-call/:roomName`.
 
-## Acceptance
-- Open `/chat/call/group/test-room` → lobby with self-preview, mic/cam toggles, Record switch, and a bucket status badge.
-- Toggle Record on (when bucket is ready) → join → recording starts within ~2s → REC banner + per-tile dot visible to everyone.
-- Tap any emoji in the persistent reaction strip → it floats up immediately for the local user and on every other client.
-- Screen-share button starts a tile that everyone sees; stop returns to grid.
-- If the bucket is `unavailable`, the Record switch is disabled and labeled accordingly; the call still joins normally.
+### Out of scope this round
+- Push notifications for new posts (will plug into existing `device_tokens` infra in a follow-up).
+- Channel-side analytics page beyond basic counts.
+- Track D (chat polish: editing, scheduled send, pin, search, folders, custom notifs).
