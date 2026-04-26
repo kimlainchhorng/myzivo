@@ -132,32 +132,7 @@ export function useSecretChat(partnerId: string | null) {
 
         const decoded: SecretMessage[] = [];
         for (const row of msgRows ?? []) {
-          try {
-            const plaintext = await decryptMessage({
-              payload: {
-                iv: row.iv,
-                ciphertext: row.ciphertext,
-                senderPublicKeyJwk: row.sender_public_key_jwk as unknown as JsonWebKey,
-              },
-              chatId: chatRow.id,
-            });
-            decoded.push({
-              id: row.id,
-              sender_id: row.sender_id,
-              plaintext,
-              created_at: row.created_at,
-              expires_at: row.expires_at,
-            });
-          } catch {
-            decoded.push({
-              id: row.id,
-              sender_id: row.sender_id,
-              plaintext: "[Cannot decrypt — keys may have been reset]",
-              created_at: row.created_at,
-              expires_at: row.expires_at,
-              failed: true,
-            });
-          }
+          decoded.push(await rowToMessage(row, chatRow.id));
         }
         if (!cancelled) setMessages(decoded);
       } catch (e) {
