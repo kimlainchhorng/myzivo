@@ -57,7 +57,7 @@ export default function GroupCallControls(props: Props) {
   return (
     <div
       className="flex shrink-0 items-center justify-center gap-2 bg-black/60 px-3 backdrop-blur-xl"
-      style={{ paddingTop: 12, paddingBottom: "calc(env(safe-area-inset-bottom, 0px) + 12px)" }}
+      style={{ paddingTop: 14, paddingBottom: "calc(env(safe-area-inset-bottom, 0px) + 18px)" }}
     >
       <Btn onClick={props.onToggleMic} active={!props.micEnabled} label="Toggle microphone">
         {props.micEnabled ? <Mic className="h-5 w-5" /> : <MicOff className="h-5 w-5" />}

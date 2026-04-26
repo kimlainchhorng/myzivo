@@ -1471,77 +1471,82 @@ export default function PersonalChat({ recipientId, recipientName, recipientAvat
       {!voice.isRecording && (
         <div className="bg-background/80 backdrop-blur-2xl border-t border-border/5 px-2.5 py-2 relative" style={{ paddingBottom: "max(env(safe-area-inset-bottom, 0px), 0.5rem)" }}>
           <div className="flex items-end gap-1.5">
-            {/* Attach */}
-            <div className="relative shrink-0">
-              <button
-                data-attach-trigger
-                onClick={() => setShowAttachMenu(!showAttachMenu)}
-                disabled={uploadingMedia}
-                className={`h-10 w-10 rounded-full flex items-center justify-center transition-all shrink-0 ${
-                  showAttachMenu ? "bg-primary text-primary-foreground rotate-45" : "text-muted-foreground/60 hover:bg-muted/50"
-                }`}
-              >
-                {uploadingMedia ? <Loader2 className="h-[18px] w-[18px] animate-spin" /> : <Plus className="h-5 w-5" />}
-              </button>
-              <ChatAttachMenu
-                open={showAttachMenu}
-                onClose={() => setShowAttachMenu(false)}
-                onImageSelect={() => fileInputRef.current?.click()}
-                onVideoSelect={() => videoInputRef.current?.click()}
-                onLocationShare={handleLocationShare}
-                onToggleDisappearing={() => {
-                  setDisappearingMode(!disappearingMode);
-                  toast.success(disappearingMode ? "Disappearing messages OFF" : "Disappearing messages ON — messages auto-delete after 24h");
-                }}
-                disappearingEnabled={disappearingMode}
-                onLockedImageSelect={() => lockedImageInputRef.current?.click()}
-
-              />
-            </div>
-
-            <input ref={fileInputRef} type="file" accept="image/*" className="hidden" onChange={handleImageSelect} />
-            <input ref={videoInputRef} type="file" accept="video/*,.gif" className="hidden" onChange={handleVideoSelect} />
-            <input ref={lockedImageInputRef} type="file" accept="image/*,video/*" className="hidden" onChange={handleLockedMediaSelect} />
-
-            {/* Locked media price picker */}
-            {showLockedPricePicker && (
-              <Suspense fallback={null}>
-                <LockedMediaPricePicker
-                  open={showLockedPricePicker}
-                  onClose={() => { setShowLockedPricePicker(false); setPendingLockedFile(null); }}
-                  onConfirm={handleLockedMediaConfirm}
-                />
-              </Suspense>
-            )}
-
-            {/* Document upload */}
-            <ChatMediaUploader
-              recipientId={recipientId}
-              onMediaSent={(opts) => {
-                if (opts.imageUrl) handleSend({ imageUrl: opts.imageUrl });
-                else if (opts.videoUrl) handleSend({ videoUrl: opts.videoUrl });
-                else if (opts.fileUrl) handleSend({ imageUrl: opts.fileUrl });
-              }}
-              renderTrigger={(openFilePicker) => (
-                <button onClick={openFilePicker} className="h-10 w-10 rounded-full flex items-center justify-center text-muted-foreground/60 hover:bg-muted/50 active:scale-90 transition-all shrink-0">
-                  <FileText className="h-[18px] w-[18px]" />
+            {/* Scrollable action group — keeps every utility button reachable on narrow viewports */}
+            <div className="flex items-end gap-1 overflow-x-auto no-scrollbar shrink min-w-0 max-w-[44%] sm:max-w-[55%]">
+              {/* Attach */}
+              <div className="relative shrink-0">
+                <button
+                  data-attach-trigger
+                  onClick={() => setShowAttachMenu(!showAttachMenu)}
+                  disabled={uploadingMedia}
+                  className={`h-10 w-10 rounded-full flex items-center justify-center transition-all shrink-0 ${
+                    showAttachMenu ? "bg-primary text-primary-foreground rotate-45" : "text-muted-foreground/60 hover:bg-muted/50"
+                  }`}
+                >
+                  {uploadingMedia ? <Loader2 className="h-[18px] w-[18px] animate-spin" /> : <Plus className="h-5 w-5" />}
                 </button>
+                <ChatAttachMenu
+                  open={showAttachMenu}
+                  onClose={() => setShowAttachMenu(false)}
+                  onImageSelect={() => fileInputRef.current?.click()}
+                  onVideoSelect={() => videoInputRef.current?.click()}
+                  onLocationShare={handleLocationShare}
+                  onToggleDisappearing={() => {
+                    setDisappearingMode(!disappearingMode);
+                    toast.success(disappearingMode ? "Disappearing messages OFF" : "Disappearing messages ON — messages auto-delete after 24h");
+                  }}
+                  disappearingEnabled={disappearingMode}
+                  onLockedImageSelect={() => lockedImageInputRef.current?.click()}
+
+                />
+              </div>
+
+              <input ref={fileInputRef} type="file" accept="image/*" className="hidden" onChange={handleImageSelect} />
+              <input ref={videoInputRef} type="file" accept="video/*,.gif" className="hidden" onChange={handleVideoSelect} />
+              <input ref={lockedImageInputRef} type="file" accept="image/*,video/*" className="hidden" onChange={handleLockedMediaSelect} />
+
+              {/* Locked media price picker */}
+              {showLockedPricePicker && (
+                <Suspense fallback={null}>
+                  <LockedMediaPricePicker
+                    open={showLockedPricePicker}
+                    onClose={() => { setShowLockedPricePicker(false); setPendingLockedFile(null); }}
+                    onConfirm={handleLockedMediaConfirm}
+                  />
+                </Suspense>
               )}
-            />
 
-            {/* Self-destruct flame picker */}
-            <SelfDestructPicker value={selfDestructSec} onChange={setSelfDestructSec} />
+              {/* Document upload */}
+              <ChatMediaUploader
+                recipientId={recipientId}
+                onMediaSent={(opts) => {
+                  if (opts.imageUrl) handleSend({ imageUrl: opts.imageUrl });
+                  else if (opts.videoUrl) handleSend({ videoUrl: opts.videoUrl });
+                  else if (opts.fileUrl) handleSend({ imageUrl: opts.fileUrl });
+                }}
+                renderTrigger={(openFilePicker) => (
+                  <button onClick={openFilePicker} className="h-10 w-10 rounded-full flex items-center justify-center text-muted-foreground/60 hover:bg-muted/50 active:scale-90 transition-all shrink-0">
+                    <FileText className="h-[18px] w-[18px]" />
+                  </button>
+                )}
+              />
 
-            {/* Scheduled messages queue */}
-            <button
-              type="button"
-              onClick={() => setShowScheduledSheet(true)}
-              className="h-10 w-10 rounded-full flex items-center justify-center text-muted-foreground/60 hover:bg-muted/50 active:scale-90 transition-all shrink-0"
-              aria-label="Scheduled messages"
-              title="Scheduled messages"
-            >
-              <Clock className="h-[18px] w-[18px]" />
-            </button>
+              {/* Self-destruct flame picker */}
+              <div className="shrink-0">
+                <SelfDestructPicker value={selfDestructSec} onChange={setSelfDestructSec} />
+              </div>
+
+              {/* Scheduled messages queue */}
+              <button
+                type="button"
+                onClick={() => setShowScheduledSheet(true)}
+                className="h-10 w-10 rounded-full flex items-center justify-center text-muted-foreground/60 hover:bg-muted/50 active:scale-90 transition-all shrink-0"
+                aria-label="Scheduled messages"
+                title="Scheduled messages"
+              >
+                <Clock className="h-[18px] w-[18px]" />
+              </button>
+            </div>
 
             {/* Input field */}
             <div className="flex-1 relative">

@@ -1,39 +1,38 @@
-## What I'll fix
+## What I see in your screenshots
 
-Three issues found in the chat experience:
+1. **Chat input bar is overcrowded** — the `+ • doc • flame • clock • Message • smile • mic` row has 6 controls fighting for space, so the **Message** field gets squashed and you can't comfortably reach every button. Last screenshot 4 confirms it's tight even on desktop.
+2. **Call screen reaction strip sits in the safe-area zone** — `CallReactionStrip` is positioned `absolute bottom-3` inside the call stage, which on phones (with home-indicator) ends up behind/touching the device safe-area and overlapping the controls bar. Buttons at the very bottom of the call screen also need to clear that zone.
+3. **Contacts page now shows "Kim Thai"** ✅ (chat-history fallback works).
 
-### 1. "Failed to create group" error
-The current `CreateGroupModal` inserts the creator and other members in a single batch into `chat_group_members`. RLS rejects this because the policy only allows inserting rows where the actor is already a member of the group.
+## Fixes I will ship
 
-**Fix:** Split into two inserts:
-- Insert creator row first (allowed because creator just made the group / has owner privilege).
-- Then insert remaining members in a second insert.
+### 1. PersonalChat input toolbar — make all action buttons reachable
+File: `src/components/chat/PersonalChat.tsx` (lines ~1471–1545)
 
-If RLS still blocks step 2, add a `SECURITY DEFINER` function `add_group_members(group_id, user_ids[])` that verifies the caller is the group owner and inserts the rows.
+Wrap the leading utility buttons (Attach `+`, Document, Self-destruct flame, Scheduled clock) in a horizontally scrollable group with hidden scrollbars:
 
-### 2. Call buttons in chats use legacy 1:1 WebRTC
-`PersonalChat.tsx` Phone/Video icons trigger the old call flow, so none of the new features (pre-join lobby, REC pill, "Record this call", screen-share, reactions strip) appear.
+- Container: `flex items-end gap-1 overflow-x-auto no-scrollbar shrink min-w-0 max-w-[44%] sm:max-w-[55%]`
+- Each button keeps `shrink-0`
+- Input + Send/Mic stay pinned on the right and never get squeezed
+- On larger screens the row still shows everything inline; on narrow screens you can swipe the action group sideways
+- Add a tiny `.no-scrollbar { scrollbar-width: none } .no-scrollbar::-webkit-scrollbar { display: none }` utility in `src/index.css` if not already present
 
-**Fix:** Replace the handlers with `GroupCallLauncher` using a deterministic room id:
-- DM: `dm-<sortedUserIdA>-<sortedUserIdB>`
-- Group: `group-<groupId>`
+### 2. Call screen — lift reactions strip & controls clear of safe area
+Files:
+- `src/components/chat/call/CallReactionStrip.tsx` — change wrapper from `absolute inset-x-0 bottom-3` to position above the controls bar with `bottom: calc(env(safe-area-inset-bottom, 0px) + 84px)` so it floats above the home-indicator AND above the controls row.
+- `src/components/chat/call/GroupCallControls.tsx` — verify `paddingBottom: calc(env(safe-area-inset-bottom, 0px) + 12px)` is applied (already there) and bump to `+ 16px` so tap targets clear the iOS gesture zone.
+- `src/components/chat/CallScreen.tsx` (legacy 1:1 path) — line 802: ensure the bottom controls row uses `max(calc(env(safe-area-inset-bottom, 0px) + 1rem), 1.5rem)` so the End/Mute/Cam buttons don't sit on top of the home-indicator.
 
-Both participants land in the same LiveKit room. Keep the legacy path as fallback only if LiveKit secrets are missing.
+### 3. Sanity sweep on call buttons only (no other behavior changes)
+- Confirm every button in `GroupCallControls` is tappable (44×44 minimum) and not clipped.
+- Confirm REC pill in the header doesn't collide with the close button on small viewports.
 
-### 3. Contacts page is empty
-Currently reads from a `contacts` table that has no rows.
+### Out of scope
+- No data-model changes.
+- Group-chat input bar (`GroupChat.tsx`) is much simpler and already fits — leaving it.
+- No browser testing — I'll make these layout fixes and type-check.
 
-**Fix:** Fall back to "people you've chatted with" — query distinct counterpart `user_id`s from recent `messages`/`conversations`, join `profiles`, and render them as the contact list. Keep the explicit contacts table as the primary source when populated.
-
-## Technical change list
-
-- `src/components/chat/CreateGroupModal.tsx` — split member insert into two steps; surface the real error message.
-- (If needed) new migration: `add_group_members` security-definer RPC + grant.
-- `src/pages/PersonalChat.tsx` (and group chat header if separate) — swap call handlers to mount `GroupCallLauncher` with deterministic room id; pass display name + avatar.
-- `src/pages/Contacts.tsx` (or equivalent) — add chat-history fallback query; dedupe + sort by most recent message.
-- Type-check after changes.
-
-## Out of scope
-
-- No changes to LiveKit token edge function (already deployed).
-- No redesign of the call UI itself — only routing the buttons to the new launcher.
+### Why this resolves your message
+- "I need move scroll that I can see all button" → action buttons now scroll horizontally; nothing is hidden.
+- "in call when click some button…have button in safety zone please move" → reaction strip and bottom controls are pushed above the iOS safe-area inset.
+- "check button only" → I won't touch any other logic.
