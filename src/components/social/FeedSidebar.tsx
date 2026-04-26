@@ -127,24 +127,14 @@ export default function FeedSidebar() {
               style={profile?.cover_url ? { backgroundImage: `url(${profile.cover_url})`, backgroundSize: "cover", backgroundPosition: "center" } : undefined}
             />
             <div className="px-3 pb-3 -mt-7">
-              <div className="flex items-end justify-between">
-                <div className="relative">
-                  <Avatar className="h-14 w-14 border-[3px] border-card shadow-md">
-                    <AvatarImage src={avatarUrl || undefined} />
-                    <AvatarFallback className="bg-primary/10 text-primary font-bold text-lg">
-                      {displayName[0]?.toUpperCase() || "U"}
-                    </AvatarFallback>
-                  </Avatar>
-                  <span className="absolute bottom-0.5 right-0.5 h-3 w-3 rounded-full bg-emerald-500 ring-2 ring-card" aria-label="Online" />
-                </div>
-                <button
-                  onClick={() => setShowSwitch(true)}
-                  className="mt-7 flex items-center gap-1 rounded-full border border-border/50 bg-background/80 px-2.5 py-1 text-[11px] font-medium text-muted-foreground hover:bg-muted hover:text-foreground transition-colors"
-                  aria-label="Switch account"
-                >
-                  <ArrowLeftRight className="h-3 w-3" />
-                  <span>Switch</span>
-                </button>
+              <div className="relative">
+                <Avatar className="h-14 w-14 border-[3px] border-card shadow-md">
+                  <AvatarImage src={avatarUrl || undefined} />
+                  <AvatarFallback className="bg-primary/10 text-primary font-bold text-lg">
+                    {displayName[0]?.toUpperCase() || "U"}
+                  </AvatarFallback>
+                </Avatar>
+                <span className="absolute bottom-0.5 left-12 h-3 w-3 rounded-full bg-emerald-500 ring-2 ring-card" aria-label="Online" />
               </div>
 
               <div className="mt-2 min-w-0">
@@ -174,6 +164,15 @@ export default function FeedSidebar() {
               >
                 <span>View profile</span>
                 <ChevronRight className="h-3.5 w-3.5 text-muted-foreground" />
+              </button>
+
+              <button
+                onClick={() => setShowSwitch(true)}
+                className="mt-1.5 flex w-full items-center justify-center gap-1.5 rounded-lg border border-border/50 bg-background/80 px-3 py-1.5 text-[12px] font-medium text-muted-foreground hover:bg-muted hover:text-foreground transition-colors"
+                aria-label="Switch account"
+              >
+                <ArrowLeftRight className="h-3.5 w-3.5" />
+                <span>Switch</span>
               </button>
             </div>
           </div>
