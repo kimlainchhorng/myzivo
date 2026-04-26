@@ -164,10 +164,14 @@ export function useVoiceRecorder() {
     start,
     stop,
     cancel,
+    pause,
+    resume,
     clearBlob,
     // Legacy aliases used by PersonalChat / GroupChat
     startRecording: start,
     stopRecording: stop,
     cancelRecording: cancel,
+    pauseRecording: pause,
+    resumeRecording: resume,
   };
 }
