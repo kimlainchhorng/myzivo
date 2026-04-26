@@ -72,6 +72,7 @@ export default function GroupChat({ groupId, groupName, groupAvatar, onClose }: 
   const [uploadingImage, setUploadingImage] = useState(false);
   const [showMembers, setShowMembers] = useState(false);
   const [showInvites, setShowInvites] = useState(false);
+  const [groupCall, setGroupCall] = useState<"audio" | "video" | null>(null);
   const voice = useVoiceRecorder();
 
   const scrollToBottom = useCallback(() => {
