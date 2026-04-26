@@ -210,7 +210,7 @@ export default function ChatGiftPanel({ open, onClose, recipientId, recipientNam
       <Suspense fallback={null}>
         {activeGift && (
           <GiftAnimationOverlay
-            gift={activeGift}
+            activeGift={activeGift as any}
             comboCount={comboCount}
             onComplete={onComplete}
           />
