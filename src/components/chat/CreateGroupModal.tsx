@@ -139,7 +139,7 @@ export default function CreateGroupModal({ open, onClose, onCreated }: CreateGro
           initial={{ y: 100, opacity: 0 }}
           animate={{ y: 0, opacity: 1 }}
           exit={{ y: 100, opacity: 0 }}
-          className="relative bg-background rounded-t-2xl sm:rounded-2xl w-full max-w-md max-h-[80vh] flex flex-col overflow-hidden"
+          className="relative bg-background rounded-t-2xl sm:rounded-2xl w-full max-w-md max-h-[85dvh] flex flex-col overflow-hidden"
           onClick={(e) => e.stopPropagation()}
         >
           {/* Header */}
@@ -210,7 +210,7 @@ export default function CreateGroupModal({ open, onClose, onCreated }: CreateGro
           </div>
 
           {/* Create button */}
-          <div className="p-4 border-t border-border/30">
+          <div className="p-4 border-t border-border/30 pb-[max(1rem,env(safe-area-inset-bottom))]">
             <button
               onClick={handleCreate}
               disabled={selected.size < 1 || !groupName.trim() || creating}
