@@ -124,6 +124,9 @@ const LoginAlertsPage = lazy(() => import("./pages/chat/settings/LoginAlertsPage
 const ChatPrivacyHubPage = lazy(() => import("./pages/chat/settings/ChatPrivacyHubPage"));
 const ChatSearchAllPage = lazy(() => import("./pages/chat/ChatSearchAllPage"));
 const CustomFoldersPage = lazy(() => import("./pages/chat/CustomFoldersPage"));
+const BroadcastListsPage = lazy(() => import("./pages/chat/BroadcastListsPage"));
+const NewBroadcastPage = lazy(() => import("./pages/chat/NewBroadcastPage"));
+const StorageManagerPage = lazy(() => import("./pages/chat/settings/StorageManagerPage"));
 const AppLockGate = lazy(() => import("./components/chat/settings/AppLockGate"));
 const GroupCallEntryPage = lazy(() => import("./pages/chat/GroupCallEntryPage"));
 const ChannelsDirectoryPage = lazy(() => import("./pages/channels/ChannelsDirectoryPage"));
@@ -712,6 +715,9 @@ const App = () => (
                 <Route path="/chat/settings/privacy-hub" element={<ProtectedRoute><ChatPrivacyHubPage /></ProtectedRoute>} />
                 <Route path="/chat/search" element={<ProtectedRoute><ChatSearchAllPage /></ProtectedRoute>} />
                 <Route path="/chat/folders" element={<ProtectedRoute><CustomFoldersPage /></ProtectedRoute>} />
+                <Route path="/chat/broadcasts" element={<ProtectedRoute><BroadcastListsPage /></ProtectedRoute>} />
+                <Route path="/chat/broadcasts/new" element={<ProtectedRoute><NewBroadcastPage /></ProtectedRoute>} />
+                <Route path="/chat/settings/storage" element={<ProtectedRoute><StorageManagerPage /></ProtectedRoute>} />
                 <Route path="/explore" element={<ExplorePage />} />
                 <Route path="/saved" element={<ProtectedRoute><BookmarksPage /></ProtectedRoute>} />
                 <Route path="/creator-dashboard" element={<ProtectedRoute><CreatorDashboardPage /></ProtectedRoute>} />
