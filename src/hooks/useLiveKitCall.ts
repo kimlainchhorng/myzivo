@@ -55,6 +55,12 @@ interface UseLiveKitCallOptions {
   callType?: "audio" | "video";
   enabled: boolean;
   onEnded?: () => void;
+  /** Pre-join intent: start with mic muted */
+  startMicMuted?: boolean;
+  /** Pre-join intent: start with camera off */
+  startCamOff?: boolean;
+  /** Host-only: kick off cloud recording immediately after connect */
+  autoRecord?: boolean;
 }
 
 export function useLiveKitCall({
@@ -62,6 +68,9 @@ export function useLiveKitCall({
   callType = "video",
   enabled,
   onEnded,
+  startMicMuted = false,
+  startCamOff = false,
+  autoRecord = false,
 }: UseLiveKitCallOptions) {
   const roomRef = useRef<Room | null>(null);
   const [state, setState] = useState<"connecting" | "connected" | "ended" | "error">("connecting");
