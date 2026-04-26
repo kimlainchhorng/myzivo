@@ -13,6 +13,8 @@ export interface VoiceRecording {
 
 export function useVoiceRecorder() {
   const [isRecording, setIsRecording] = useState(false);
+  const [audioBlob, setAudioBlob] = useState<Blob | null>(null);
+  const [duration, setDuration] = useState(0);
   const [elapsedMs, setElapsedMs] = useState(0);
   const recorder = useRef<MediaRecorder | null>(null);
   const chunks = useRef<Blob[]>([]);
