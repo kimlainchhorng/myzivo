@@ -399,6 +399,9 @@ const NavBar = forwardRef<HTMLDivElement>(function NavBar(_, ref) {
                       <DropdownMenuItem onClick={() => navigate("/trips")} className="cursor-pointer rounded-lg py-2.5 gap-2.5">
                         <Briefcase className="w-4 h-4 text-muted-foreground" /> My Trips
                       </DropdownMenuItem>
+                      <DropdownMenuItem onClick={() => navigate("/business/dashboard")} className="cursor-pointer rounded-lg py-2.5 gap-2.5">
+                        <Building2 className="w-4 h-4 text-muted-foreground" /> Business Page
+                      </DropdownMenuItem>
                       {!isMember && (
                         <DropdownMenuItem onClick={() => navigate("/membership")} className="cursor-pointer rounded-lg py-2.5 gap-2.5 text-amber-600">
                           <Crown className="w-4 h-4" /> Join ZIVO+
