@@ -66,6 +66,7 @@ const getIllustratedPacks = () => {
 };
 
 type ChatCategory = "personal" | "shop" | "support" | "ride";
+type ChatFolder = "all" | "unread" | "personal" | "groups" | "shop" | "support" | "ride";
 
 interface CategoryTab {
   id: ChatCategory;
@@ -76,12 +77,30 @@ interface CategoryTab {
   emptyIcon: string;
 }
 
+interface FolderTab {
+  id: ChatFolder;
+  label: string;
+  category: ChatCategory; // which underlying data source to fetch
+}
+
 const categories: CategoryTab[] = [
   { id: "personal", label: "Personal", icon: MessageCircleIcon, emptyTitle: "No conversations yet", emptyDesc: "Start chatting with friends and family", emptyIcon: "💬" },
   { id: "shop", label: "Shop", icon: StoreIcon, emptyTitle: "No shop chats", emptyDesc: "Your conversations with stores will appear here", emptyIcon: "🛍️" },
   { id: "support", label: "Support", icon: Headphones, emptyTitle: "Need help?", emptyDesc: "Contact our support team anytime", emptyIcon: "🎧" },
   { id: "ride", label: "Ride", icon: Car, emptyTitle: "No ride chats", emptyDesc: "Messages from your drivers will show here", emptyIcon: "🚗" },
 ];
+
+const folders: FolderTab[] = [
+  { id: "all", label: "All", category: "personal" },
+  { id: "unread", label: "Unread", category: "personal" },
+  { id: "personal", label: "Personal", category: "personal" },
+  { id: "groups", label: "Groups", category: "personal" },
+  { id: "shop", label: "Shop", category: "shop" },
+  { id: "support", label: "Support", category: "support" },
+  { id: "ride", label: "Ride", category: "ride" },
+];
+
+const FOLDER_STORAGE_KEY = "zivo:chat-folder";
 
 function formatChatTime(dateStr: string) {
   const d = new Date(dateStr);
