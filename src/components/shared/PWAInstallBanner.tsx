@@ -75,6 +75,8 @@ export function PWAInstallBanner() {
   // Never render on auth routes
   const authRoutes = ["/login", "/signup", "/verify-email", "/verify-otp", "/verify-new-device", "/forgot-password", "/reset-password", "/setup"];
   if (authRoutes.some((r) => location.pathname.startsWith(r))) return null;
+  // Never render over chat or ride flows (they own the bottom of the viewport)
+  if (location.pathname.startsWith("/chat") || location.pathname.startsWith("/rides")) return null;
 
   return (
     <AnimatePresence>
