@@ -1,67 +1,83 @@
-# Restore your profile (fix stuck-loading spinner)
+# Move avatar dropdown items into the left sidebar
 
-## What happened
+## Goal
 
-Your data is **safe and intact** — the database still has:
-- ZIVO Platform name
-- Blue verified badge
-- Brand name = ZIVO
-- Avatar + cover photo
+The top-right avatar dropdown on `/feed` (Picture 1) currently hides important account actions:
+- **Your Business Pages** (e.g. Koh Sdach Resort)
+- **Create new Business**
+- **Join ZIVO+** (or **Membership** when you already subscribe)
+- **Sign out**
+- *(plus My Profile, My Trips)*
 
-The problem is a **permissions bug** introduced when we tightened security on the `profiles` table earlier today.
+These will be moved into the left **FeedSidebar** (Picture 2) as new always-visible sections, so they sit alongside Switch / View profile / Navigate / Services / More — no popover needed on desktop.
 
-## Root cause (technical)
+## New sidebar layout (desktop, lg+)
 
-The earlier security migration (`20260426215638`) replaced wide-open SELECT access on `profiles` with a strict, **column-by-column** GRANT list. Every column the app reads must be explicitly listed.
-
-Then a later migration added a new column — `display_brand_name` (the "ZIVO" override) — but **forgot to grant SELECT on it** to the `authenticated` role.
-
-Confirmed via Postgres:
-```
-has_column_privilege('authenticated', 'profiles', 'display_brand_name', 'SELECT') = false
-has_column_privilege('authenticated', 'profiles', 'full_name',          'SELECT') = true
-```
-
-So when the Profile page runs `SELECT *` on `profiles`, Postgres rejects it with "permission denied for column display_brand_name". The query throws, `profile` stays `null`, and the page is stuck on the green spinner. The bottom-nav Account tab falls back to your email's first letter, which is why it shows "K" instead of the ZIVO logo.
-
-## Fix
-
-### 1. Database migration — grant the missing column
-```sql
-GRANT SELECT (display_brand_name) ON public.profiles TO authenticated;
-```
-
-### 2. Future-proof the GRANT list
-Add a defensive migration that auto-grants SELECT on **all current columns** of `profiles` to `authenticated` (the row-level RLS policy still restricts which rows are returned — column GRANTs only control which fields are visible). This prevents the same bug the next time we add a column.
-
-```sql
-DO $$
-DECLARE cols text;
-BEGIN
-  SELECT string_agg(quote_ident(column_name), ', ')
-    INTO cols
-  FROM information_schema.columns
-  WHERE table_schema='public' AND table_name='profiles';
-  EXECUTE format('GRANT SELECT (%s) ON public.profiles TO authenticated', cols);
-END$$;
+```text
+┌─────────────────────────┐
+│  [profile card]         │
+│  ZIVO ✓   Switch        │
+│  @username              │
+│  View profile           │
+├─────────────────────────┤
+│  YOUR BUSINESS PAGES    │  ← NEW
+│  🏝  Koh Sdach Resort    │
+│      Resort             │
+│  🏢  Create new Business │
+├─────────────────────────┤
+│  NAVIGATE               │
+│  Rides / Eats / Map …   │
+├─────────────────────────┤
+│  SERVICES               │
+│  Flights / Hotels / Cars│
+├─────────────────────────┤
+│  MORE                   │
+│  My Trips, …            │
+├─────────────────────────┤
+│  👑  Join ZIVO+          │  ← NEW (or "Membership" if subscriber)
+│  ↪  Sign out            │  ← NEW
+└─────────────────────────┘
 ```
 
-Sensitive fields (email, phone, kyc, payout, etc.) remain protected by the existing RLS row policy — only the row owner can SELECT their own row, so non-owners still cannot read those values for other users.
+## Implementation
 
-### 3. Make the client query resilient
-In `src/hooks/useUserProfile.ts`, replace `.select("*")` with an explicit list of columns the Profile page actually needs. This way, if a future column is added without a GRANT, only that column is missing — the rest of the profile still loads. Add a small `console.error` if the query fails, so we see this immediately next time instead of an infinite spinner.
+### 1. `src/components/social/FeedSidebar.tsx` — add three new blocks
 
-### 4. Verify after deploy
-- Reload `/account` → should show "ZIVO Platform" + blue badge + cover photo + avatar.
-- Bottom nav Account tab → should show ZIVO logo, not "K".
-- No regression on other users' profile views.
+a. **Business Pages section** (only when `user`):
+- Reuse the existing `useOwnerStores()` hook the NavBar already uses (line 412 of `NavBar.tsx`).
+- For each store: avatar (logo) + name + category, click → `resolveBusinessDashboardRoute(store.category, store.id).path`.
+- Always render a "Create new Business" row → `/business/new?new=1`.
+- Section label: `YOUR BUSINESS PAGES`. Hidden entirely if no user.
+
+b. **Membership row** above the footer:
+- If `!isMember` (from `useZivoPlus`) → "Join ZIVO+" → `/membership` (amber crown).
+- If `isMember` → "Membership" → `/account/membership`.
+
+c. **Sign out** at the bottom of the sidebar (destructive color), calls `signOut()` from `useAuth`.
+
+### 2. `src/components/home/NavBar.tsx` — slim the avatar dropdown on desktop
+
+On lg+ screens (where the sidebar is visible), the avatar dropdown becomes redundant. Two options:
+
+**Option A (recommended):** Keep the avatar dropdown but **remove the duplicated items** (Business Pages, Create new Business, Join ZIVO+, Sign out) when the viewport is lg+. The dropdown then only shows: identity header + My Profile + My Trips + a "Switch account" affordance, since Sidebar already covers the rest. On mobile the dropdown stays unchanged because there is no sidebar.
+
+**Option B:** Hide the avatar dropdown entirely on lg+ and just show the avatar as a link to `/profile`.
+
+I'll go with **Option A** to preserve a quick-access menu without duplicating items.
+
+### 3. Hooks to import in FeedSidebar
+- `useOwnerStores` (or whatever NavBar uses — I'll match its exact import to stay consistent)
+- `useZivoPlus` for `isMember`
+- `signOut` from `useAuth` (already partially used)
+- `resolveBusinessDashboardRoute` from `@/lib/business/dashboardRoute`
+
+### 4. No backend / migration changes
+This is pure UI restructuring. No database, RLS, or edge-function work.
 
 ## Files changed
+- `src/components/social/FeedSidebar.tsx` — add Business Pages section, Membership row, Sign out row
+- `src/components/home/NavBar.tsx` — hide the duplicated dropdown items on lg+ breakpoint
 
-- `supabase/migrations/<new-timestamp>_fix_profiles_column_grants.sql` — adds the missing GRANT and the defensive auto-grant block
-- `src/hooks/useUserProfile.ts` — replace `select("*")` with explicit columns + error logging
-
-## Not changed
-
-- No data is modified. Your profile row is untouched.
-- No RLS policy is loosened. Row-level access stays the same; only column-level visibility is restored to what it was before today.
+## Out of scope
+- Mobile (< lg) layout: the avatar dropdown stays exactly as today.
+- The Switch Account sheet keeps working unchanged.
