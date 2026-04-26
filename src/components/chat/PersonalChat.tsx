@@ -748,8 +748,47 @@ export default function PersonalChat({ recipientId, recipientName, recipientAvat
 
   const handleReply = useCallback((id: string, message: string, isMe: boolean) => {
     setReplyTo({ id, message, isMe });
+    setEditingId(null);
     inputRef.current?.focus();
   }, []);
+
+  const handleEdit = useCallback((id: string, currentText: string) => {
+    setEditingId(id);
+    setReplyTo(null);
+    setInput(currentText);
+    requestAnimationFrame(() => inputRef.current?.focus());
+  }, []);
+
+  const handleCancelEdit = useCallback(() => {
+    setEditingId(null);
+    setInput("");
+  }, []);
+
+  const handleSaveEdit = useCallback(async () => {
+    const id = editingId;
+    const newText = input.trim();
+    if (!id || !newText) return;
+    const original = messages.find((m) => m.id === id);
+    if (!original) { setEditingId(null); return; }
+    if (original.message === newText) { setEditingId(null); setInput(""); return; }
+    const nowIso = new Date().toISOString();
+    setMessages((prev) => prev.map((m) => m.id === id ? { ...m, message: newText, edited_at: nowIso } : m));
+    setEditingId(null);
+    setInput("");
+    try {
+      const { error } = await (supabase as any)
+        .from("direct_messages")
+        .update({ message: newText, edited_at: nowIso, original_text: original.message })
+        .eq("id", id)
+        .eq("sender_id", user?.id);
+      if (error) throw error;
+      toast.success("Message edited");
+    } catch (err: any) {
+      console.error(err);
+      toast.error(err?.message?.includes("48") ? "Edit window expired (48h)" : "Failed to edit");
+      setMessages((prev) => prev.map((m) => m.id === id ? original : m));
+    }
+  }, [editingId, input, messages, user?.id]);
 
   const handleDelete = useCallback(async (id: string) => {
     setMessages((prev) => prev.filter((m) => m.id !== id));
