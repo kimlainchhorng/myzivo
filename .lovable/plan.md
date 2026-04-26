@@ -1,45 +1,31 @@
-## Goal
+## Problem
 
-Make the cover photo controls on `/profile` behave like the floating chat button: a small pill/circle pinned at the **bottom-right of the cover photo**, completely outside the top safe-area / status bar zone, and reliably tappable on iOS Capacitor.
+On `/chat`, the sticky header (back arrow, "Chat" title, group, bell) sits at `sticky top-0` with no top padding for the iOS safe area. On native iOS the status bar / Dynamic Island overlaps these buttons — the same "stuck in the safe zone" issue we just fixed on the Profile cover.
 
-This matches the Facebook mobile pattern (camera icon sits on the bottom-right corner of the cover, just above the avatar) and matches the placement style used by `TripChatFab` in this codebase.
+Other pages in the app (Feed, Reels, Profile, More) already use the shared token `var(--zivo-safe-top-sticky)` for the same purpose. Chat is the outlier.
 
-## What changes (visually)
+## Fix (one file)
+
+`src/pages/ChatHubPage.tsx` — sticky header wrapper around line 628–633.
+
+1. Add `paddingTop: 'var(--zivo-safe-top-sticky)'` to the sticky header `<div>` (only when **not** embedded — embedded mode already lives inside a parent that handles spacing, matching the existing `embedded` branch).
+2. Keep everything else (back/title/bell/group buttons, search, category pills) unchanged.
 
 ```text
-┌────────────────────────── cover photo ──────────────────────────┐
-│  (full-bleed, extends behind status bar)                         │
-│                                                                  │
-│                                                                  │
-│                                                  [📷 Add cover]  │  ← new spot
-└──────────────────────────────────────────────────────────────────┘
-   ⬤ avatar
+┌──── status bar / Dynamic Island ────┐  ← safe-area-inset-top
+├─────────────────────────────────────┤
+│  ←   Chat              👥+   🔔     │  ← header, now pushed below safe zone
+│  🔍 Search conversations…           │
+│  Personal · Shop · Support · Ride   │
+└─────────────────────────────────────┘
 ```
 
-- Buttons no longer live near the top of the cover.
-- They sit ~12px from the bottom edge of the cover and ~12px from the right edge.
-- They never overlap the sticky header (back / name / bell / more) because they are at the opposite end of the cover.
-- They never overlap the iOS status bar / Dynamic Island because they are below the safe-area zone entirely.
+## Out of scope (follow-up)
 
-## What changes (technical)
+A repo-wide audit found ~40 other pages using `sticky top-0` / `fixed top-0` without the safe-area token (Bookmarks, Explore, Events, Activity, Eats*, Grocery*, Drivers*, Creator*, Communities, Dating, etc.). I'll fix Chat now since that's the one you flagged. If you want, I can do a sweep of the rest in a follow-up pass.
 
-File: `src/pages/Profile.tsx` (cover action block around lines 977–1013).
+## Acceptance
 
-1. Replace the absolute-positioned `<div>` that uses
-   `top: calc(var(--zivo-safe-top-sticky) + 3.25rem)` with a bottom-anchored container:
-   - `className="absolute bottom-3 right-3 z-40 flex items-center gap-2 pointer-events-auto"`
-   - Remove the inline `style={{ top: ... }}`.
-2. Keep both controls (Reposition + Add/Change cover) but shrink to the FAB sizing used elsewhere in the app (`h-9 w-9`, icon-only when a cover already exists, pill with “Add cover” label only when there is no cover). This matches `TripChatFab`’s look.
-3. Keep the `<input id="profile-cover-input">` mounted **outside** the motion/transformed cover wrapper (already done) so iOS Capacitor opens the picker reliably from `<label htmlFor>`.
-4. Ensure the avatar (which sits at `-mt-11`) does not collide with the new bottom-right buttons: the avatar is left-aligned (`justify-start`), buttons are right-aligned, so there is no overlap on any viewport ≥320px. No avatar layout change needed.
-5. Keep `data-disable-pull-to-refresh="true"` on the cover wrapper so taps on the buttons are never swallowed by `PullToRefresh`.
-6. Keep the status-bar legibility scrim at the top of the cover unchanged (decorative, `pointer-events-none`).
-
-No other files change. No CSS token changes. No header changes.
-
-## Acceptance criteria
-
-- On `/profile` at 390×607 (current preview): the “Add cover” pill is visible at the bottom-right of the cover photo, fully inside the visible cover area, and tapping it opens the native file picker.
-- The button is never covered by the sticky header, status bar, Dynamic Island, or notification bell.
-- After a cover is uploaded, the bottom-right shows two small circular buttons: reposition (↕) and change cover (📷).
-- Pull-to-refresh still works when pulling on empty cover area but does not fire when tapping the buttons.
+- On `/chat` at iPhone safe-area viewports the back arrow, "Chat" title, group icon, and bell sit fully below the status bar / Dynamic Island.
+- Web/desktop and embedded chat (right rail on lg+) are unchanged.
+- No layout shift in the conversations list, search, or category pills.

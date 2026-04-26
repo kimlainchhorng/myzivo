@@ -625,12 +625,15 @@ export default function ChatHubPage({ embedded = false }: { embedded?: boolean }
     <div className={cn("flex flex-col", embedded ? "h-full min-h-0" : "min-h-screen")}>
       {showListShell && (
         <>
-          <div className={cn(
-            "shrink-0",
-            embedded
-              ? "border-b border-border/15 bg-background/95 backdrop-blur-2xl"
-              : "sticky top-0 z-40 bg-background/95 backdrop-blur-xl border-b border-border/20"
-          )}>
+          <div
+            className={cn(
+              "shrink-0",
+              embedded
+                ? "border-b border-border/15 bg-background/95 backdrop-blur-2xl"
+                : "sticky top-0 z-40 bg-background/95 backdrop-blur-xl border-b border-border/20"
+            )}
+            style={!embedded ? { paddingTop: "var(--zivo-safe-top-sticky)" } : undefined}
+          >
             {!embedded ? (
               <div className="px-5 pt-2 pb-3 flex items-center justify-between">
                 <div className="flex items-center gap-3">
