@@ -14352,6 +14352,7 @@ export type Database = {
           delivered_at: string | null
           edited_at: string | null
           expires_at: string | null
+          file_payload: Json | null
           forwarded_from_message_id: string | null
           forwarded_from_user_id: string | null
           gift_payload: Json | null
@@ -14378,6 +14379,7 @@ export type Database = {
           delivered_at?: string | null
           edited_at?: string | null
           expires_at?: string | null
+          file_payload?: Json | null
           forwarded_from_message_id?: string | null
           forwarded_from_user_id?: string | null
           gift_payload?: Json | null
@@ -14404,6 +14406,7 @@ export type Database = {
           delivered_at?: string | null
           edited_at?: string | null
           expires_at?: string | null
+          file_payload?: Json | null
           forwarded_from_message_id?: string | null
           forwarded_from_user_id?: string | null
           gift_payload?: Json | null
@@ -23853,6 +23856,7 @@ export type Database = {
         Row: {
           created_at: string
           expires_at: string | null
+          file_payload: Json | null
           group_id: string
           id: string
           image_url: string | null
@@ -23870,6 +23874,7 @@ export type Database = {
         Insert: {
           created_at?: string
           expires_at?: string | null
+          file_payload?: Json | null
           group_id: string
           id?: string
           image_url?: string | null
@@ -23887,6 +23892,7 @@ export type Database = {
         Update: {
           created_at?: string
           expires_at?: string | null
+          file_payload?: Json | null
           group_id?: string
           id?: string
           image_url?: string | null
