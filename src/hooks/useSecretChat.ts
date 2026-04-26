@@ -11,7 +11,9 @@ import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
 import {
   computeSafetyNumber,
+  decryptBlob,
   decryptMessage,
+  encryptBlob,
   encryptMessage,
   getOrCreateIdentity,
   resetIdentity,
@@ -27,6 +29,8 @@ function getDeviceFingerprint(): string {
   return fp;
 }
 
+export type MediaKind = "image" | "video" | "audio" | "file";
+
 export interface SecretMessage {
   id: string;
   sender_id: string;
@@ -34,6 +38,18 @@ export interface SecretMessage {
   created_at: string;
   expires_at: string | null;
   failed?: boolean;
+  // Media metadata (when message carries an attachment)
+  media?: {
+    type: MediaKind;
+    storage_path: string;
+    iv: string;
+    wrapped_key: string;
+    wrap_iv: string; // we store this prefixed inside ciphertext field for back-compat? No — see note.
+    mime: string | null;
+    size: number | null;
+    file_name: string | null;
+    sender_public_key_jwk: JsonWebKey;
+  };
 }
 
 export function useSecretChat(partnerId: string | null) {
