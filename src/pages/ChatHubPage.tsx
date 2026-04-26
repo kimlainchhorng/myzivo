@@ -1169,6 +1169,27 @@ export default function ChatHubPage({ embedded = false }: { embedded?: boolean }
                                       )}>
                                         {formatChatTime(chat.lastTime)}
                                       </span>
+                                      {isPersonalChat && !chat.isGroup && (
+                                        <span
+                                          role="button"
+                                          aria-label="Chat options"
+                                          onClick={(e) => {
+                                            e.stopPropagation();
+                                            e.preventDefault();
+                                            setActionsTarget({
+                                              id: chat.id,
+                                              name: chat.name,
+                                              isPinned: pinned,
+                                              isMuted: muted,
+                                              isArchived: isArchived(chat.id),
+                                              hasUnread: (chat.unread || 0) > 0,
+                                            });
+                                          }}
+                                          className="ml-0.5 w-6 h-6 rounded-full hover:bg-muted flex items-center justify-center cursor-pointer"
+                                        >
+                                          <MoreVertical className="w-3.5 h-3.5 text-muted-foreground" />
+                                        </span>
+                                      )}
                                     </span>
                                   </div>
                                   <div className="flex items-center justify-between">
