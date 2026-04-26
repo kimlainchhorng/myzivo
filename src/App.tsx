@@ -689,6 +689,7 @@ const App = () => (
                 <Route path="/chat" element={<ChatHubPage />} />
                 <Route path="/chat/contacts" element={<ProtectedRoute><ContactsPage /></ProtectedRoute>} />
                 <Route path="/chat/join/:code" element={<JoinGroupPage />} />
+                <Route path="/chat/secret/:partnerId" element={<ProtectedRoute><SecretChatPage /></ProtectedRoute>} />
                 <Route path="/chat/settings/privacy" element={<ProtectedRoute><PrivacySecurityPage /></ProtectedRoute>} />
                 <Route path="/chat/settings/sessions" element={<ProtectedRoute><ActiveSessionsPage /></ProtectedRoute>} />
                 <Route path="/chat/settings/two-step" element={<ProtectedRoute><TwoStepSetupPage /></ProtectedRoute>} />
