@@ -39,6 +39,8 @@ import ChatAttachMenu from "./ChatAttachMenu";
 const ChatGiftPanel = lazy(() => import("./ChatGiftPanel"));
 const ChatWalletSheet = lazy(() => import("./ChatWalletSheet"));
 const CoinTransferBubble = lazy(() => import("./CoinTransferBubble"));
+const DocumentScanner = lazy(() => import("./DocumentScanner"));
+import { useChatFiles } from "@/hooks/useChatFiles";
 import type { StickerSendPayload } from "./StickerKeyboard";
 import { getWallpaperClass, getWallpaperStyle } from "./ChatPersonalization";
 import CallEventBubble from "./CallEventBubble";
@@ -183,6 +185,7 @@ export default function PersonalChat({ recipientId, recipientName, recipientAvat
   const [showLockedPricePicker, setShowLockedPricePicker] = useState(false);
   const [showGiftPanel, setShowGiftPanel] = useState(false);
   const [showWalletSheet, setShowWalletSheet] = useState(false);
+  const [showScanner, setShowScanner] = useState(false);
   const [pendingLockedFile, setPendingLockedFile] = useState<File | null>(null);
   const [chatStyle, setChatStyle] = useState({ wallpaper: "default", themeColor: "default", fontSize: "medium" });
   const [callEvents, setCallEvents] = useState<CallEvent[]>([]);
@@ -1476,7 +1479,7 @@ export default function PersonalChat({ recipientId, recipientName, recipientAvat
                   onLockedImageSelect={() => lockedImageInputRef.current?.click()}
                   onSendGift={() => setShowGiftPanel(true)}
                   onOpenWallet={() => setShowWalletSheet(true)}
-
+                  onScanDocument={() => setShowScanner(true)}
                 />
               </div>
 
