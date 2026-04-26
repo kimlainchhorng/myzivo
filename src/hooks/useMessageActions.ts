@@ -17,6 +17,7 @@ export interface DirectMessage {
   video_url?: string | null;
   created_at: string;
   edited_at?: string | null;
+  original_text?: string | null;
   is_pinned?: boolean | null;
   reply_to_id?: string | null;
   forwarded_from_user_id?: string | null;
