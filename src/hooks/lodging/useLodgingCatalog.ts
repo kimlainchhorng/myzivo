@@ -36,13 +36,9 @@ export interface LodgingCatalogRow {
   id: string;
   store_id: string;
   active?: boolean;
-  sort_order?: number | null;
-  created_at?: string;
-  updated_at?: string;
-  [key: string]: unknown;
 }
 
-export function useLodgingCatalog<T extends LodgingCatalogRow = LodgingCatalogRow>(
+export function useLodgingCatalog<T extends { id: string } = LodgingCatalogRow>(
   table: LodgingCatalogTable,
   storeId: string,
 ) {
