@@ -108,24 +108,56 @@ export default function FeedSidebar() {
     <>
     <aside className="hidden lg:flex flex-col w-60 shrink-0 sticky top-[4.5rem] h-[calc(100vh-4.5rem)] overflow-y-auto border-r border-border/30 bg-card/30 backdrop-blur-sm">
       <div className="flex flex-col gap-0.5 p-3">
-        {/* Profile card with Switch Account */}
+        {/* Profile card — premium identity block */}
         {user && (
-          <button
-            onClick={() => setShowSwitch(true)}
-            className="flex items-center gap-3 px-3 py-3 rounded-xl hover:bg-muted/50 transition-colors mb-2 group"
-          >
-            <Avatar className="h-10 w-10 border-2 border-primary/20">
-              <AvatarImage src={avatarUrl || undefined} />
-              <AvatarFallback className="bg-primary/10 text-primary font-bold text-sm">
-                {displayName[0]?.toUpperCase() || "U"}
-              </AvatarFallback>
-            </Avatar>
-            <div className="flex-1 min-w-0 text-left">
-              <p className="text-sm font-semibold text-foreground truncate">{displayName}</p>
-              <p className="text-[10px] text-muted-foreground truncate">{email}</p>
+          <div className="relative mb-3 overflow-hidden rounded-2xl border border-border/40 bg-gradient-to-br from-primary/5 via-card to-card shadow-sm">
+            {/* Decorative cover band */}
+            <div
+              className="h-12 w-full bg-gradient-to-r from-primary/30 via-primary/10 to-emerald-400/20"
+              style={profile?.cover_url ? { backgroundImage: `url(${profile.cover_url})`, backgroundSize: "cover", backgroundPosition: "center" } : undefined}
+            />
+            <div className="px-3 pb-3 -mt-7">
+              <div className="flex items-end justify-between">
+                <div className="relative">
+                  <Avatar className="h-14 w-14 border-[3px] border-card shadow-md">
+                    <AvatarImage src={avatarUrl || undefined} />
+                    <AvatarFallback className="bg-primary/10 text-primary font-bold text-lg">
+                      {displayName[0]?.toUpperCase() || "U"}
+                    </AvatarFallback>
+                  </Avatar>
+                  <span className="absolute bottom-0.5 right-0.5 h-3 w-3 rounded-full bg-emerald-500 ring-2 ring-card" aria-label="Online" />
+                </div>
+                <button
+                  onClick={() => setShowSwitch(true)}
+                  className="mt-7 flex items-center gap-1 rounded-full border border-border/50 bg-background/80 px-2.5 py-1 text-[11px] font-medium text-muted-foreground hover:bg-muted hover:text-foreground transition-colors"
+                  aria-label="Switch account"
+                >
+                  <ArrowLeftRight className="h-3 w-3" />
+                  <span>Switch</span>
+                </button>
+              </div>
+
+              <div className="mt-2 min-w-0">
+                <div className="flex items-center gap-1">
+                  <p className="text-sm font-semibold text-foreground truncate">{displayName}</p>
+                  {profile?.is_verified && (
+                    <BadgeCheck className="h-4 w-4 shrink-0 fill-sky-500 text-white" />
+                  )}
+                </div>
+                <p className="text-[11px] text-muted-foreground truncate">
+                  {username ? `@${username}` : email}
+                </p>
+              </div>
+
+              <button
+                onClick={() => navigate("/profile")}
+                className="mt-3 flex w-full items-center justify-between rounded-lg bg-muted/50 px-3 py-1.5 text-[12px] font-medium text-foreground hover:bg-muted transition-colors"
+              >
+                <span>View profile</span>
+                <ChevronRight className="h-3.5 w-3.5 text-muted-foreground" />
+              </button>
             </div>
-            <ArrowLeftRight className="h-4 w-4 text-muted-foreground group-hover:text-foreground transition-colors shrink-0" />
-          </button>
+          </div>
         )}
 
         {/* Main nav */}
