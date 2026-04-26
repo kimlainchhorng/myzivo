@@ -11,6 +11,7 @@ import {
   ArrowLeftRight, Shield, Store, LayoutDashboard,
   Handshake, CarTaxiFront, ChefHat, Building2, Briefcase,
   Headphones, Eye, Wrench, X as XIcon, BadgeCheck, ChevronRight,
+  Crown, LogOut, Plus,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/contexts/AuthContext";
@@ -19,6 +20,9 @@ import { optimizeAvatar } from "@/utils/optimizeAvatar";
 import { useUserProfile } from "@/hooks/useUserProfile";
 import { useUserAccess } from "@/hooks/useUserAccess";
 import { useUsername } from "@/hooks/useUsername";
+import { useOwnerStores } from "@/hooks/useOwnerStoreProfile";
+import { resolveBusinessDashboardRoute } from "@/lib/business/dashboardRoute";
+import { useZivoPlus } from "@/contexts/ZivoPlusContext";
 import {
   Sheet,
   SheetContent,
@@ -56,10 +60,12 @@ const MORE_ITEMS = [
 
 export default function FeedSidebar() {
   const navigate = useNavigate();
-  const { user } = useAuth();
+  const { user, signOut } = useAuth();
   const { data: profile } = useUserProfile();
   const { data: access } = useUserAccess(user?.id);
   const { username } = useUsername();
+  const { data: ownerStores = [] } = useOwnerStores();
+  const { isPlus: isMember } = useZivoPlus();
   const [showSwitch, setShowSwitch] = useState(false);
   const [showChat, setShowChat] = useState(false);
 
