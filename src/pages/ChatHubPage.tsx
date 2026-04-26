@@ -554,6 +554,37 @@ export default function ChatHubPage({ embedded = false }: { embedded?: boolean }
   const currentCategory = categories.find((c) => c.id === active)!;
   const { isPinned, isMuted, isArchived, togglePin, toggleMute, toggleArchive } = useChatPrefs(user?.id);
 
+  // Live presence dots for visible personal partners
+  const personalPartnerIds = useMemo(
+    () => (personalChats as any[]).filter((c) => !c.isGroup).map((c) => c.id),
+    [personalChats]
+  );
+  const onlineIds = useBulkPresence(user?.id, personalPartnerIds);
+
+  // Live "typing…" preview from other users
+  const typingFrom = useTypingBus(user?.id);
+
+  // Row actions sheet state
+  const [actionsTarget, setActionsTarget] = useState<ChatRowActionsTarget | null>(null);
+  const [showAddContact, setShowAddContact] = useState(false);
+
+  // Saved Messages — Telegram's self-chat
+  const { data: savedMessagesPreview } = useQuery({
+    queryKey: ["chat-hub-saved", user?.id],
+    enabled: !!user && active === "personal",
+    queryFn: async () => {
+      const { data } = await supabase
+        .from("direct_messages")
+        .select("message, created_at")
+        .eq("sender_id", user!.id)
+        .eq("receiver_id", user!.id)
+        .order("created_at", { ascending: false })
+        .limit(1)
+        .maybeSingle();
+      return data as { message: string; created_at: string } | null;
+    },
+  });
+
   // Compute unread counts per tab
   const personalUnread = personalChats.reduce((sum: number, c: any) => sum + (c.unread || 0), 0);
   const shopUnread = shopChats.reduce((sum: number, c: any) => sum + (c.unread || 0), 0);
