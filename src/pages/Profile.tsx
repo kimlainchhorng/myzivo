@@ -1096,6 +1096,20 @@ const Profile = () => {
                         <span>{headerName || t("profile.set_name")}</span>
                         {profile?.is_verified && <VerifiedBadge size={28} />}
                       </CardTitle>
+                      {/* @username line — link or "set" CTA. Email never shown publicly. */}
+                      <div className="mt-1 text-sm text-muted-foreground">
+                        {claimedUsername ? (
+                          <span>@{claimedUsername}</span>
+                        ) : (
+                          <button
+                            type="button"
+                            onClick={() => navigate("/account/profile-edit")}
+                            className="text-primary hover:underline"
+                          >
+                            Set a username
+                          </button>
+                        )}
+                      </div>
                       {/* Email hidden — only visible to account owner in settings */}
                       <div className="flex flex-wrap items-center justify-start gap-2 mt-3">
                         {isPlus && (
