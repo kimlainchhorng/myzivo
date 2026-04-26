@@ -645,7 +645,7 @@ const Profile = () => {
               "font-semibold text-sm truncate",
               overCover ? "text-white drop-shadow-md" : "text-foreground"
             )}>
-              {profile?.full_name || "Profile"}
+              {headerName || "Profile"}
             </span>
             {profile?.is_verified && <VerifiedBadge size={14} />}
           </div>
@@ -1093,7 +1093,7 @@ const Profile = () => {
                     {/* Name & status */}
                     <div className="px-6 pb-1.5 pt-2 text-left">
                       <CardTitle className="flex items-center justify-start gap-2 text-2xl font-bold tracking-tight">
-                        <span>{profile?.full_name || t("profile.set_name")}</span>
+                        <span>{headerName || t("profile.set_name")}</span>
                         {profile?.is_verified && <VerifiedBadge size={28} />}
                       </CardTitle>
                       {/* Email hidden — only visible to account owner in settings */}
@@ -1475,7 +1475,7 @@ const Profile = () => {
               type="button"
               onClick={async () => {
                 const url = `${window.location.origin}/u/${user?.id}`;
-                const title = profile?.full_name || "My ZIVO profile";
+                const title = headerName || "My ZIVO profile";
                 if (navigator.share) {
                   try { await navigator.share({ title, url }); } catch { /* user cancelled */ }
                 } else {
