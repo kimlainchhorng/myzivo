@@ -555,13 +555,20 @@ export default function PersonalChat({ recipientId, recipientName, recipientAvat
   const handleSend = async (opts?: {
     imageUrl?: string; voiceUrl?: string; videoUrl?: string;
     locationLat?: number; locationLng?: number; locationLabel?: string;
+    filePayload?: FileBubbleData;
   }) => {
     const text = input.trim();
-    const { imageUrl, voiceUrl, videoUrl, locationLat, locationLng, locationLabel } = opts || {};
-    if (!text && !imageUrl && !voiceUrl && !videoUrl && locationLat == null) return;
+    const { imageUrl, voiceUrl, videoUrl, locationLat, locationLng, locationLabel, filePayload } = opts || {};
+    if (!text && !imageUrl && !voiceUrl && !videoUrl && !filePayload && locationLat == null) return;
     if (!user?.id || sending) return;
 
-    const msgType = voiceUrl ? "voice" : videoUrl ? "video" : imageUrl ? "image" : locationLat != null ? "location" : "text";
+    const msgType = filePayload
+      ? "file"
+      : voiceUrl ? "voice"
+      : videoUrl ? "video"
+      : imageUrl ? "image"
+      : locationLat != null ? "location"
+      : "text";
     setInput("");
     clearDraft();
     const currentReply = replyTo;
@@ -585,6 +592,7 @@ export default function PersonalChat({ recipientId, recipientName, recipientAvat
       location_lng: locationLng || null,
       location_label: locationLabel || null,
       is_pinned: false,
+      file_payload: filePayload || null,
       expires_at: selfDestructSec
         ? new Date(Date.now() + selfDestructSec * 1000).toISOString()
         : disappearingMode
@@ -611,6 +619,7 @@ export default function PersonalChat({ recipientId, recipientName, recipientAvat
       if (imageUrl) insertData.image_url = imageUrl;
       if (videoUrl) insertData.video_url = videoUrl;
       if (voiceUrl) insertData.voice_url = voiceUrl;
+      if (filePayload) insertData.file_payload = filePayload;
       if (currentReply) insertData.reply_to_id = currentReply.id;
       if (locationLat != null) {
         insertData.location_lat = locationLat;
@@ -631,7 +640,7 @@ export default function PersonalChat({ recipientId, recipientName, recipientAvat
         .insert(insertData);
 
       if (error) throw error;
-      void sendChatPush(msgType, text);
+      void sendChatPush(msgType, text || filePayload?.filename || "");
     } catch {
       setMessages((prev) => prev.filter((m) => m.id !== optimisticId));
       toast.error("Failed to send message");
