@@ -17,6 +17,9 @@ import Clock from "lucide-react/dist/esm/icons/clock";
 import Phone from "lucide-react/dist/esm/icons/phone";
 import ShieldOff from "lucide-react/dist/esm/icons/shield-off";
 import MessageSquare from "lucide-react/dist/esm/icons/message-square";
+import MapPin from "lucide-react/dist/esm/icons/map-pin";
+import Navigation from "lucide-react/dist/esm/icons/navigation";
+import { useLocationSharePrefs } from "@/hooks/useLocationSharePrefs";
 
 type Visibility = "everyone" | "contacts" | "nobody";
 
@@ -53,6 +56,7 @@ export default function ChatPrivacyHubPage() {
   const { user } = useAuth();
   const qc = useQueryClient();
   const [prefs, setPrefs] = useState<Prefs>(() => loadPrefs(user?.id));
+  const { prefs: locPrefs, update: updateLocPrefs } = useLocationSharePrefs();
 
   useEffect(() => { setPrefs(loadPrefs(user?.id)); }, [user?.id]);
 
