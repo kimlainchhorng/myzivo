@@ -1295,25 +1295,43 @@ export default function ChatHubPage({ embedded = false }: { embedded?: boolean }
       )}
 
       {active === "personal" && !sharePayload && !embedded && (
-        <motion.button
-          initial={{ scale: 0 }}
-          animate={{ scale: 1 }}
-          transition={{ type: "spring", delay: 0.2 }}
-          onClick={() => {
-            // Focus search to find users
+        <NewChatFab
+          onNewChat={() => {
             const searchInput = document.querySelector<HTMLInputElement>('input[placeholder="Search conversations..."]');
             if (searchInput) {
               searchInput.focus();
               searchInput.scrollIntoView({ behavior: "smooth" });
             }
           }}
-          className="fixed right-5 z-30 w-14 h-14 bg-primary text-primary-foreground rounded-full shadow-xl shadow-primary/30 flex items-center justify-center active:scale-90 transition-transform"
-          style={{ bottom: "calc(var(--zivo-safe-bottom, 0px) + 7rem)" }}
-          aria-label="Start new chat"
-        >
-          <Edit3 className="w-5 h-5" />
-        </motion.button>
+          onNewGroup={() => setShowCreateGroup(true)}
+          onNewContact={() => setShowAddContact(true)}
+        />
       )}
+
+      <AddContactSheet open={showAddContact} onOpenChange={setShowAddContact} />
+
+      <ChatRowActionsSheet
+        target={actionsTarget}
+        onClose={() => setActionsTarget(null)}
+        onTogglePin={() => actionsTarget && (togglePin(actionsTarget.id), toast.success(actionsTarget.isPinned ? "Unpinned" : "Pinned to top"))}
+        onToggleMute={() => actionsTarget && (toggleMute(actionsTarget.id), toast.success(actionsTarget.isMuted ? "Unmuted" : "Muted"))}
+        onMarkRead={async () => {
+          if (!actionsTarget || !user) return;
+          await supabase.from("direct_messages").update({ is_read: true })
+            .eq("receiver_id", user.id).eq("sender_id", actionsTarget.id).eq("is_read", false);
+          queryClient.invalidateQueries({ queryKey: ["chat-hub-personal"] });
+          toast.success("Marked as read");
+        }}
+        onToggleArchive={() => actionsTarget && (toggleArchive(actionsTarget.id), toast.success(actionsTarget.isArchived ? "Unarchived" : "Archived"))}
+        onClearHistory={async () => {
+          if (!actionsTarget || !user) return;
+          await supabase.from("direct_messages").delete()
+            .or(`and(sender_id.eq.${user.id},receiver_id.eq.${actionsTarget.id}),and(sender_id.eq.${actionsTarget.id},receiver_id.eq.${user.id})`);
+          queryClient.invalidateQueries({ queryKey: ["chat-hub-personal"] });
+          toast.success("History cleared");
+        }}
+        onDelete={() => actionsTarget && setDeleteConfirm({ id: actionsTarget.id, name: actionsTarget.name, category: "personal" })}
+      />
 
       <AnimatePresence>
         {deleteConfirm && (
