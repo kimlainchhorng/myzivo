@@ -5,6 +5,7 @@
  * message effects (confetti, fireworks, hearts, lasers)
  */
 import { useState, useEffect, useRef, useCallback, useMemo, lazy, Suspense } from "react";
+import { createPortal } from "react-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import ArrowLeft from "lucide-react/dist/esm/icons/arrow-left";
