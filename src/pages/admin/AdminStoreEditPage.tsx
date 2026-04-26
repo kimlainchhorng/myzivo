@@ -86,6 +86,9 @@ import LodgingPoliciesSection from "@/components/admin/store/lodging/LodgingPoli
 import LodgingReviewsSection from "@/components/admin/store/lodging/LodgingReviewsSection";
 import LodgingRatePlansSection from "@/components/admin/store/lodging/LodgingRatePlansSection";
 import LodgingGuestRequestsSection from "@/components/admin/store/lodging/LodgingGuestRequestsSection";
+import LodgingPromotionsSection from "@/components/admin/store/lodging/LodgingPromotionsSection";
+import LodgingChannelManagerSection from "@/components/admin/store/lodging/LodgingChannelManagerSection";
+import LodgingPayoutsSection from "@/components/admin/store/lodging/LodgingPayoutsSection";
 import { getLodgingCompletion } from "@/lib/lodging/lodgingCompletion";
 import { LODGING_TAB_IDS, resolveStoreTab, resolveStoreTabFromSearch } from "@/lib/admin/storeTabRouting";
 import { useLodgeRooms } from "@/hooks/lodging/useLodgeRooms";
@@ -3739,6 +3742,9 @@ export default function AdminStoreEditPage() {
               <TabsContent value="lodge-policies" data-testid="lodging-tab-lodge-policies"><LodgingPoliciesSection storeId={storeId!} /></TabsContent>
               <TabsContent value="lodge-reviews" data-testid="lodging-tab-lodge-reviews"><LodgingReviewsSection storeId={storeId!} /></TabsContent>
               <TabsContent value="lodge-reports" data-testid="lodging-tab-lodge-reports"><LodgingReportsSection storeId={storeId!} /></TabsContent>
+              <TabsContent value="lodge-promos" data-testid="lodging-tab-lodge-promos"><LodgingPromotionsSection storeId={storeId!} /></TabsContent>
+              <TabsContent value="lodge-channels" data-testid="lodging-tab-lodge-channels"><LodgingChannelManagerSection storeId={storeId!} /></TabsContent>
+              <TabsContent value="lodge-payouts" data-testid="lodging-tab-lodge-payouts"><LodgingPayoutsSection storeId={storeId!} /></TabsContent>
             </>
           )}
 
