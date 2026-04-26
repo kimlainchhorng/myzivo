@@ -1,29 +1,33 @@
 ## Problem
 
-In your screenshot, the "New Group" bottom sheet opens but the **Create Group button at the bottom is hidden behind the iOS home indicator / safe area** — you can only see the header, "Group name…" input, and the start of the friend list. The Create button is rendered off-screen at the bottom.
+On initial open, the New Group sheet's "Create Group" button is clipped below the visible area on iOS Safari. Picture 2 shows that once you touch & scroll the page, Safari recalculates the viewport, the bottom toolbar collapses, and the button becomes visible. So the fix isn't more padding — it's making the modal use the **dynamic viewport height** that always matches the visible area.
 
 Root cause in `src/components/chat/CreateGroupModal.tsx`:
 
-- The sheet is `max-h-[80vh]` and uses `items-end` on mobile, so it sticks to the bottom edge of the screen.
-- The footer containing the Create button has only `p-4` — no `env(safe-area-inset-bottom)` padding, so iOS pushes it under the home indicator.
-- There's also no top safe-area on the sheet itself, but since it's a bottom sheet that's fine; the real bug is the bottom.
+```tsx
+<motion.div className="fixed inset-0 z-[60] flex items-end sm:items-center justify-center">
+```
+
+`fixed inset-0` resolves to `100vh` on iOS Safari, which is the *large* viewport height (excluding the dynamic bottom toolbar). When the toolbar is visible, the bottom of the overlay (and the bottom-aligned sheet) extends past the visible screen — hiding the Create button until the user scrolls and Safari recalculates.
 
 ## Fix
 
-In `src/components/chat/CreateGroupModal.tsx`:
+In `src/components/chat/CreateGroupModal.tsx`, change the overlay container to use `100dvh` instead of `inset-0` so it always matches the *visible* viewport:
 
-1. Add safe-area bottom padding to the Create Group footer so the button always clears the iOS home indicator:
-   ```tsx
-   // Before
-   <div className="p-4 border-t border-border/30">
-   // After
-   <div className="p-4 border-t border-border/30 pb-[max(1rem,env(safe-area-inset-bottom))]">
-   ```
+```tsx
+// Before
+<motion.div className="fixed inset-0 z-[60] flex items-end sm:items-center justify-center" ...>
+  <div className="absolute inset-0 bg-black/50" />
 
-2. Slightly reduce the sheet max-height to `max-h-[85dvh]` (using `dvh` instead of `vh`) so it correctly accounts for mobile browser chrome and never clips on small devices.
+// After
+<motion.div
+  className="fixed inset-x-0 top-0 z-[60] flex items-end sm:items-center justify-center w-full"
+  style={{ height: "100dvh" }}
+  ...
+>
+  <div className="absolute inset-0 bg-black/50" />
+```
 
-3. No design or logic changes — just safe-area handling.
+Also keep the existing `pb-[max(1rem,env(safe-area-inset-bottom))]` on the footer (already done) so the button clears the iOS home indicator.
 
-## Audit — same pattern elsewhere
-
-Quickly check other bottom-sheet modals in `src/components/chat/` (e.g. `AddContactSheet`, `ForwardPickerSheet`, `UsernameClaimSheet`) and apply the same `pb-[max(1rem,env(safe-area-inset-bottom))]` to any footer/action area that isn't already handling safe-area-bottom. Only fix files that actually have the bug — don't touch ones that already use `safe-area-bottom` or `pb-[env(...)]`.
+No design or behavior changes — purely a viewport-height fix that makes the Create button visible the moment the sheet opens.
