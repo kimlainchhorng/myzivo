@@ -1,13 +1,22 @@
 /**
- * Lodging — Calendar & Availability (simple month grid showing booked + blocked dates).
+ * Lodging — Calendar & Availability.
+ * Month grid with booked + manual blocks + OTA-imported (channel) blocks.
+ * Includes color legend and a "Block date range" dialog.
  */
 import { useMemo, useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { CalendarDays, ChevronLeft, ChevronRight } from "lucide-react";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import {
+  Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle, DialogTrigger,
+} from "@/components/ui/dialog";
+import { CalendarDays, ChevronLeft, ChevronRight, CalendarPlus } from "lucide-react";
 import { useLodgeRooms } from "@/hooks/lodging/useLodgeRooms";
 import { useLodgeBlocks } from "@/hooks/lodging/useLodgeBlocks";
 import { useLodgeReservations } from "@/hooks/lodging/useLodgeReservations";
+import { supabase } from "@/integrations/supabase/client";
+import { useQuery } from "@tanstack/react-query";
 import { toast } from "sonner";
 import LodgingNeedsSetupEmptyState from "./LodgingNeedsSetupEmptyState";
 
@@ -16,15 +25,48 @@ function daysInMonth(year: number, month: number) {
   return new Date(year, month + 1, 0).getDate();
 }
 
+interface OtaBlock { block_date: string; source?: string | null }
+
+function useOtaBlocks(roomId?: string) {
+  return useQuery({
+    queryKey: ["lodging-ota-blocks", roomId],
+    queryFn: async () => {
+      if (!roomId) return [] as OtaBlock[];
+      const { data, error } = await supabase
+        .from("lodging_room_blocks" as any)
+        .select("start_date, end_date, source")
+        .eq("room_id", roomId);
+      if (error) return [] as OtaBlock[];
+      const out: OtaBlock[] = [];
+      for (const row of (data || []) as any[]) {
+        if (!row.start_date) continue;
+        const start = new Date(row.start_date);
+        const end = row.end_date ? new Date(row.end_date) : new Date(row.start_date);
+        for (let d = new Date(start); d <= end; d.setDate(d.getDate() + 1)) {
+          out.push({ block_date: ymd(d), source: row.source });
+        }
+      }
+      return out;
+    },
+    enabled: !!roomId,
+  });
+}
+
 export default function LodgingCalendarSection({ storeId }: { storeId: string }) {
   const { data: rooms = [] } = useLodgeRooms(storeId);
   const [roomId, setRoomId] = useState<string | undefined>();
   const activeRoomId = roomId || rooms[0]?.id;
   const { data: blocks = [], upsert: upsertBlock, remove: removeBlock } = useLodgeBlocks(storeId, activeRoomId);
   const { data: reservations = [] } = useLodgeReservations(storeId, "all");
+  const { data: otaBlocks = [] } = useOtaBlocks(activeRoomId);
 
   const [cursor, setCursor] = useState(() => { const d = new Date(); return new Date(d.getFullYear(), d.getMonth(), 1); });
   const year = cursor.getFullYear(); const month = cursor.getMonth();
+
+  const [rangeOpen, setRangeOpen] = useState(false);
+  const [rangeStart, setRangeStart] = useState(ymd(new Date()));
+  const [rangeEnd, setRangeEnd] = useState(ymd(new Date()));
+  const [rangeReason, setRangeReason] = useState("manual");
 
   const grid = useMemo(() => {
     const dim = daysInMonth(year, month);
@@ -36,6 +78,11 @@ export default function LodgingCalendarSection({ storeId }: { storeId: string })
   }, [year, month]);
 
   const blockedSet = useMemo(() => new Set(blocks.map(b => b.block_date)), [blocks]);
+  const otaMap = useMemo(() => {
+    const m = new Map<string, string>();
+    otaBlocks.forEach(b => m.set(b.block_date, b.source || "ota"));
+    return m;
+  }, [otaBlocks]);
   const reservedSet = useMemo(() => {
     const s = new Set<string>();
     reservations.filter(r => r.room_id === activeRoomId && !["cancelled", "no_show"].includes(r.status))
@@ -55,10 +102,61 @@ export default function LodgingCalendarSection({ storeId }: { storeId: string })
     } catch (e: any) { toast.error(e.message || "Failed"); }
   };
 
+  const blockRange = async () => {
+    if (!activeRoomId) return;
+    const start = new Date(rangeStart);
+    const end = new Date(rangeEnd);
+    if (end < start) { toast.error("End date must be after start date"); return; }
+    try {
+      let count = 0;
+      for (let d = new Date(start); d <= end; d.setDate(d.getDate() + 1)) {
+        const date = ymd(d);
+        if (reservedSet.has(date)) continue;
+        await upsertBlock.mutateAsync({ store_id: storeId, room_id: activeRoomId, block_date: date, reason: rangeReason || "manual" } as any);
+        count++;
+      }
+      toast.success(`${count} date${count === 1 ? "" : "s"} blocked`);
+      setRangeOpen(false);
+    } catch (e: any) { toast.error(e.message || "Failed"); }
+  };
+
   return (
     <Card>
-      <CardHeader>
+      <CardHeader className="flex flex-row items-center justify-between gap-2">
         <CardTitle className="flex items-center gap-2"><CalendarDays className="h-5 w-5" /> Calendar & Availability</CardTitle>
+        {rooms.length > 0 && (
+          <Dialog open={rangeOpen} onOpenChange={setRangeOpen}>
+            <DialogTrigger asChild>
+              <Button size="sm" variant="outline" className="h-8 gap-1.5"><CalendarPlus className="h-3.5 w-3.5" /> Block date range</Button>
+            </DialogTrigger>
+            <DialogContent>
+              <DialogHeader>
+                <DialogTitle>Block date range</DialogTitle>
+              </DialogHeader>
+              <div className="space-y-3">
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <Label className="text-xs">Start date</Label>
+                    <Input type="date" value={rangeStart} onChange={(e) => setRangeStart(e.target.value)} />
+                  </div>
+                  <div>
+                    <Label className="text-xs">End date</Label>
+                    <Input type="date" value={rangeEnd} onChange={(e) => setRangeEnd(e.target.value)} />
+                  </div>
+                </div>
+                <div>
+                  <Label className="text-xs">Reason</Label>
+                  <Input value={rangeReason} onChange={(e) => setRangeReason(e.target.value)} placeholder="Maintenance, owner stay, etc." />
+                </div>
+                <p className="text-[11px] text-muted-foreground">Booked dates in the range are skipped automatically.</p>
+              </div>
+              <DialogFooter>
+                <Button variant="outline" onClick={() => setRangeOpen(false)}>Cancel</Button>
+                <Button onClick={blockRange}>Block dates</Button>
+              </DialogFooter>
+            </DialogContent>
+          </Dialog>
+        )}
       </CardHeader>
       <CardContent className="space-y-4">
         {rooms.length === 0 ? (
@@ -89,23 +187,31 @@ export default function LodgingCalendarSection({ storeId }: { storeId: string })
                 const key = ymd(d);
                 const reserved = reservedSet.has(key);
                 const blocked = blockedSet.has(key);
+                const ota = otaMap.get(key);
+                const cls = reserved
+                  ? "bg-primary/15 text-primary border-primary/30 cursor-not-allowed"
+                  : ota
+                    ? "bg-amber-500/15 text-amber-700 border-amber-500/40"
+                    : blocked
+                      ? "bg-destructive/15 text-destructive border-destructive/30"
+                      : "bg-background border-border hover:bg-muted";
                 return (
-                  <button key={i} onClick={() => !reserved && toggleBlock(key)}
-                    disabled={reserved}
-                    className={`aspect-square rounded-md text-xs font-medium border transition ${
-                      reserved ? "bg-primary/15 text-primary border-primary/30 cursor-not-allowed"
-                        : blocked ? "bg-destructive/15 text-destructive border-destructive/30"
-                        : "bg-background border-border hover:bg-muted"
-                    }`}>
+                  <button key={i} onClick={() => !reserved && !ota && toggleBlock(key)}
+                    disabled={reserved || !!ota}
+                    title={ota ? `OTA: ${ota}` : reserved ? "Booked" : blocked ? "Blocked" : "Available"}
+                    className={`relative aspect-square rounded-md text-xs font-medium border transition ${cls}`}>
                     {d.getDate()}
+                    {ota && <span className="absolute bottom-0.5 right-0.5 text-[8px] uppercase font-bold opacity-80">{(ota || "ota").slice(0, 3)}</span>}
                   </button>
                 );
               })}
             </div>
 
-            <div className="flex gap-3 text-[11px] text-muted-foreground">
+            <div className="flex flex-wrap gap-3 text-[11px] text-muted-foreground">
               <span className="flex items-center gap-1"><span className="w-3 h-3 rounded bg-primary/15 border border-primary/30 inline-block" /> Booked</span>
               <span className="flex items-center gap-1"><span className="w-3 h-3 rounded bg-destructive/15 border border-destructive/30 inline-block" /> Blocked</span>
+              <span className="flex items-center gap-1"><span className="w-3 h-3 rounded bg-amber-500/15 border border-amber-500/40 inline-block" /> OTA-imported</span>
+              <span className="flex items-center gap-1"><span className="w-3 h-3 rounded bg-background border border-border inline-block" /> Available</span>
               <span>Click any free date to block / unblock</span>
             </div>
           </>
