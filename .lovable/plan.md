@@ -1,84 +1,106 @@
-# Phase 4 Track B — End-to-End Encrypted Secret Chats
+# Phase 5 — The "Telegram-class" Chat Upgrade
 
-This is the final piece of Phase 4. After this, ZIVO chat will support a true Signal-style "Secret Chat" mode in addition to the regular `direct_messages` chats already shipped.
+You want all four tracks. I'll ship them in this order so each builds on the last and nothing breaks mid-flight. Each track ends in a self-contained, testable feature.
 
-## What you'll see
+---
 
-- A new entry on every contact: **"Start Secret Chat"**.
-- Inside a Secret Chat:
-  - A purple "lock" header showing "End-to-end encrypted".
-  - Messages are server-blind: even ZIVO support cannot read them.
-  - Optional **disappearing-messages** timer (1 min / 1 h / 1 day) chosen at chat creation.
-  - **Verify Safety Number** screen — compare a 60-digit code with your contact (in person or by voice) to confirm there is no man-in-the-middle.
-  - "Reset encryption keys" option that wipes local keys and forces a fresh handshake.
-- Secret chats live alongside normal chats but are clearly marked with a lock icon and a different (subtle indigo) bubble theme.
+## Track A — Encrypted Media in Secret Chats
 
-## Security model
+Extend the E2E pipeline (already live for text) to photos, videos, voice notes, and files.
 
-- **Identity keypair** per device: ECDH P-256 generated in WebCrypto, **non-extractable** private key, stored in IndexedDB. Public key is published to `device_keys` so others can encrypt to you.
-- **Message key**: ECDH shared secret → HKDF-SHA-256 (salted with chat-id) → AES-GCM 256-bit per message, fresh 12-byte random IV.
-- Server stores only `iv + ciphertext + sender public key`. RLS allows only the two participants to read or write.
-- **Safety Number (SAS)** = SHA-256 of both public keys, formatted as 12 groups of 5 digits.
+### What you'll see
+- In any Secret Chat, the composer's **+** button now offers Photo, Video, Voice Note, File.
+- Sender side: file is encrypted in the browser before upload. ZIVO servers see only ciphertext.
+- Recipient side: blob is downloaded, decrypted in-memory, rendered (image/video/audio player or download link).
+- Same disappearing-timer applies — both DB row and storage object are pruned on expiry.
+- Lock-icon overlay on every encrypted media bubble.
 
-## Technical Section
+### Technical
+- New storage bucket `secret-media` (private, RLS: only chat participants can read/write their own paths `chat_id/message_id.bin`).
+- Extend `secret_messages` with `media_type`, `storage_path`, `media_iv`, `media_key_wrapped`, `mime`, `size`, `thumb_iv`, `thumb_path`.
+- Per-message random AES-GCM 256 key encrypts the blob; that key is itself encrypted with the existing ECDH-derived chat key and stored in `media_key_wrapped`.
+- New helpers in `src/lib/secretChat/crypto.ts`: `encryptBlob`, `decryptBlob`, `wrapKey`, `unwrapKey`.
+- `useSecretChat.ts` gains `sendMedia()` and lazy-decrypt on render.
+- Cron edge function `secret-media-prune` (runs every 5 min) deletes expired storage objects.
 
-### Database (one migration)
+---
 
-Three new tables, all RLS-locked:
+## Track B — Calls Upgrade (Group Video, Screen Share, Reactions, Recording)
+
+Lifts the existing 4-person WebRTC mesh into a proper 8-person experience with pro features.
+
+### What you'll see
+- Group video grid auto-tiles 1 → 2 → 4 → 6 → 8 participants (FaceTime-style).
+- **Share Screen** button (desktop + Android Chrome). Shared screen becomes the spotlight tile.
+- **In-call reactions** — tap an emoji, it floats up over your tile for everyone.
+- **Raise hand**, mute-all (host), kick participant (host).
+- **Record call** (host only, opt-in, all participants see a red REC dot). Recording is uploaded to private bucket `call-recordings`, available in Account → Call History.
+- Adaptive bitrate: drops video quality automatically on poor networks.
+
+### Technical
+- Switch from full-mesh to **mesh up to 4 / SFU above 4**. Use [LiveKit Cloud](https://livekit.io) as the SFU (free tier covers ZIVO's expected load; later self-hostable). Add `LIVEKIT_URL`, `LIVEKIT_API_KEY`, `LIVEKIT_API_SECRET` secrets; edge function `livekit-token` issues short-lived JWTs.
+- New tables: `call_sessions` (room metadata), `call_participants` (join/leave log), `call_recordings` (storage path + duration).
+- New components: `GroupCallGrid`, `ScreenShareTile`, `CallReactionsOverlay`, `CallControlsBar` (refactored).
+- Recording uses LiveKit's egress API → mp4 → uploaded to `call-recordings` bucket.
+- Reactions: ephemeral, sent over LiveKit data channel — no DB write.
+
+---
+
+## Track C — Channels & Broadcast
+
+Telegram-style one-to-many: creator posts, subscribers read.
+
+### What you'll see
+- New tab in Chat Hub: **Channels** (next to Chats / Groups).
+- **Create Channel** flow: name, handle (`@zivo-news`), avatar, description, public/private.
+- Channel page: posts feed (text, media, polls, links), subscriber count, view counts per post, reaction bar.
+- **Schedule Post**: pick future date/time, post auto-publishes.
+- Notifications: subscribers get a push for each new post (respecting per-channel mute setting).
+- Public channels are shareable via `hizivo.com/c/<handle>` (deep-link opens app).
+
+### Technical
+- Tables: `channels`, `channel_subscribers`, `channel_posts` (with `scheduled_for`, `published_at`, `view_count`), `channel_post_reactions`, `channel_post_views` (one row per (post,user)).
+- RLS: public channels readable by all; private gated by `channel_subscribers`. Only owner/admins can post.
+- Edge function `publish-scheduled-posts` runs every minute via pg_cron, flips `published_at` for due rows, fans out push notifications.
+- Pages: `/channels`, `/channel/:handle`, `/channel/:handle/manage`, `/channel/new`.
+- Reuses `RichComposer`, `MediaPanel`, and `PollComposer` already built in Phase 3.
+
+---
+
+## Track D — Chat Polish & Power-User Features
+
+The "feels like a real messenger" pass.
+
+### What you'll see
+- **Edit message** (within 24h, shows "edited" tag). Long-press / hover → Edit.
+- **Schedule send** in any chat (regular + group, not secret in v1).
+- **Pin messages** (up to 3 per chat, shown in a sticky banner below the header).
+- **Search messages** — global search bar in Chat Hub with full-text search across all your chats; jump-to-message on tap.
+- **Chat folders**: user-defined folders (Work, Family, Unread, Custom…) with chip selector above the chat list. Smart folders (Unread, Archived) built-in.
+- **Per-chat custom notifications**: choose tone, vibration pattern, mute duration, mention-only mode.
+
+### Technical
+- `direct_messages` + `group_messages` get `edited_at`, `original_text` (audit), `scheduled_for`, `pinned_at`.
+- New tables: `chat_pins`, `chat_folders`, `chat_folder_members`, `chat_notification_prefs`.
+- Postgres `tsvector` column + GIN index on messages for full-text search; helper RPC `search_my_messages(q text)` filters by RLS-visible rows only.
+- Edge function `release-scheduled-messages` (pg_cron, every 30s) inserts due messages.
+- New components: `EditMessageSheet`, `ScheduleSendSheet`, `PinnedBanner`, `ChatSearchSheet`, `FolderTabs`, `ChatNotificationSheet`.
+
+---
+
+## Build Order & Checkpoints
 
 ```text
-device_keys
-  user_id, device_fingerprint, public_key_jwk, created_at
-  - SELECT: any authenticated user (needed to encrypt to them)
-  - INSERT/UPDATE/DELETE: only owner
-
-secret_chats
-  user_a, user_b (ordered, distinct, unique pair), created_by, ttl_seconds
-  - all ops gated to participants
-
-secret_messages
-  chat_id, sender_id, sender_public_key_jwk, iv, ciphertext, expires_at
-  - SELECT/INSERT gated via is_secret_chat_participant() SECURITY DEFINER fn
-  - Sender can DELETE own row
-  - Added to supabase_realtime publication
+A. Encrypted Media          → ship + smoke-test in Secret Chat
+B. Group Calls Upgrade      → ship + 3-device test (need LIVEKIT_* secrets first)
+C. Channels & Broadcast     → ship + create demo @zivo-news channel
+D. Chat Polish              → ship + verify search/edit/schedule/folders
 ```
 
-No edge functions required — all encryption happens client-side; the server just persists ciphertext.
+After each track I'll pause for you to test before starting the next.
 
-### Client code
+## What I need from you up front
+- For Track B: confirm you're OK using **LiveKit Cloud** as the SFU (free tier, swap-able later). If yes, I'll prompt for the three `LIVEKIT_*` secrets when we get there.
+- Everything else uses infrastructure already in place (Supabase + existing storage + WebCrypto).
 
-- `src/lib/secretChat/crypto.ts` — WebCrypto helpers:
-  - `getOrCreateIdentity()` (IndexedDB-backed, non-extractable private key)
-  - `encryptMessage({ plaintext, chatId, recipientPublicKeyJwk })` → `{ iv, ciphertext, senderPublicKeyJwk }`
-  - `decryptMessage({ payload, chatId })` → plaintext
-  - `computeSafetyNumber({ jwkA, jwkB })` → 60-digit SAS string
-  - `resetIdentity()` — wipes local keys
-
-- `src/hooks/useSecretChat.ts` — wraps:
-  - publishing the local public key to `device_keys` on first use
-  - fetching/creating the `secret_chats` row for a given partner
-  - subscribing to `secret_messages` realtime, decrypting on receive
-  - sending: encrypt → insert into `secret_messages`
-  - applying disappearing-message TTL (`expires_at`) and pruning
-
-- `src/components/chat/SecretChatHeader.tsx` — lock badge + verify button
-- `src/components/chat/SecretChatPage.tsx` — full chat UI (reuses bubble/composer styling, but locked-down: no media/locked-media/voice in v1)
-- `src/components/chat/SafetyNumberSheet.tsx` — shows the SAS code + "Mark verified" toggle
-
-- New routes in `src/App.tsx`:
-  - `/chat/secret/:partnerId`
-- Entry point: add **"Start Secret Chat"** button in `ChatContactInfo.tsx` (and a long-press option on the contact list later).
-
-### Out of scope (v1)
-
-- Media/voice/file attachments inside secret chats (text only — encrypting blobs requires a separate ciphertext-storage pipeline; can ship in a follow-up)
-- Multi-device key sync (each device has its own keypair; messages encrypted to one device's public key are only readable on that device — same as Signal's secret chats)
-- Group secret chats
-
-### Build order
-
-1. Run the SQL migration (3 tables + helper fn).
-2. Add `crypto.ts` + `useSecretChat.ts`.
-3. Build `SecretChatPage` + `SafetyNumberSheet`.
-4. Wire route + "Start Secret Chat" entry in `ChatContactInfo`.
-5. Smoke-test: open between two accounts in two browsers, verify SAS matches, send a message, confirm DB row contains only base64 ciphertext.
+Approve and I'll start with **Track A: Encrypted Media in Secret Chats**.
