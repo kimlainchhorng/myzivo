@@ -9,6 +9,9 @@ import Video from "lucide-react/dist/esm/icons/video";
 import MapPin from "lucide-react/dist/esm/icons/map-pin";
 import Timer from "lucide-react/dist/esm/icons/timer";
 import Lock from "lucide-react/dist/esm/icons/lock";
+import Gift from "lucide-react/dist/esm/icons/gift";
+import Coins from "lucide-react/dist/esm/icons/coins";
+import ScanLine from "lucide-react/dist/esm/icons/scan-line";
 import { useZivoPlus } from "@/contexts/ZivoPlusContext";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
@@ -22,22 +25,29 @@ interface ChatAttachMenuProps {
   onLocationShare: () => void;
   onToggleDisappearing: () => void;
   onLockedImageSelect?: () => void;
+  onSendGift?: () => void;
+  onOpenWallet?: () => void;
+  onScanDocument?: () => void;
   disappearingEnabled: boolean;
 }
 
 const menuItems = [
+  { id: "gift", label: "Gift", icon: Gift, color: "bg-gradient-to-br from-amber-500 to-pink-500" },
+  { id: "money", label: "Money", icon: Coins, color: "bg-gradient-to-br from-emerald-500 to-teal-500" },
   { id: "image", label: "Photo", icon: ImagePlus, color: "bg-emerald-500" },
   { id: "video", label: "Video", icon: Video, color: "bg-violet-500" },
+  { id: "scan", label: "Scan", icon: ScanLine, color: "bg-sky-500" },
   { id: "location", label: "Location", icon: MapPin, color: "bg-blue-500" },
   { id: "locked", label: "Locked", icon: Lock, color: "bg-rose-500" },
-  { id: "disappearing", label: "24h Mode", icon: Timer, color: "bg-amber-500" },
+  { id: "disappearing", label: "24h", icon: Timer, color: "bg-amber-500" },
 ] as const;
 
 /** Plans that include Lock & Unlock */
 const LOCK_UNLOCK_PLANS = new Set(["chat", "pro"]);
 
 export default function ChatAttachMenu({
-  open, onClose, onImageSelect, onVideoSelect, onLocationShare, onToggleDisappearing, onLockedImageSelect, disappearingEnabled,
+  open, onClose, onImageSelect, onVideoSelect, onLocationShare, onToggleDisappearing, onLockedImageSelect,
+  onSendGift, onOpenWallet, onScanDocument, disappearingEnabled,
 }: ChatAttachMenuProps) {
   const { isPlus, plan } = useZivoPlus();
   const navigate = useNavigate();
