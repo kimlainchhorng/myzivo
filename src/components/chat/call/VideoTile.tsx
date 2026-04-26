@@ -10,9 +10,11 @@ import type { LKParticipant } from "@/hooks/useLiveKitCall";
 interface Props {
   participant: LKParticipant;
   emphasized?: boolean;
+  /** When true, every tile shows a small pulsing red dot for privacy disclosure */
+  isRecording?: boolean;
 }
 
-export default function VideoTile({ participant, emphasized = false }: Props) {
+export default function VideoTile({ participant, emphasized = false, isRecording = false }: Props) {
   const videoRef = useRef<HTMLVideoElement>(null);
 
   useEffect(() => {
