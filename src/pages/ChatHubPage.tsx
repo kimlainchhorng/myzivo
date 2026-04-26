@@ -882,14 +882,14 @@ export default function ChatHubPage({ embedded = false }: { embedded?: boolean }
                   </div>
                 ) : displayList.length === 0 ? (
                   <div className={cn(
-                    "flex flex-col items-center justify-center text-center",
-                    embedded ? "py-12" : "py-16"
+                    "flex flex-col items-center text-center",
+                    embedded ? "py-8" : "py-10"
                   )}>
-                    <div className="text-5xl mb-4">{currentCategory.emptyIcon}</div>
-                    <p className="text-base font-bold text-foreground mb-1.5">
+                    <div className="text-5xl mb-3">{currentCategory.emptyIcon}</div>
+                    <p className="text-base font-bold text-foreground mb-1">
                       {active === "personal" && search.trim().length >= 2 ? "No users found" : currentCategory.emptyTitle}
                     </p>
-                    <p className="text-sm text-muted-foreground max-w-[260px] leading-relaxed">
+                    <p className="text-sm text-muted-foreground max-w-[260px] leading-relaxed mb-5">
                       {active === "personal" && search.trim().length >= 2
                         ? `No results for \"${search}\"`
                         : currentCategory.emptyDesc}
@@ -897,176 +897,322 @@ export default function ChatHubPage({ embedded = false }: { embedded?: boolean }
                     {active === "support" && (
                       <button
                         onClick={() => navigate("/support")}
-                        className="mt-5 px-6 py-2.5 bg-primary text-primary-foreground rounded-full text-sm font-bold active:scale-95 transition-transform"
+                        className="px-6 py-2.5 bg-primary text-primary-foreground rounded-full text-sm font-bold active:scale-95 transition-transform"
                       >
                         Contact Support
                       </button>
                     )}
+                    {active === "personal" && search.trim().length < 2 && (
+                      <div className="grid grid-cols-3 gap-2.5 w-full max-w-[360px] mt-1">
+                        <button
+                          onClick={async () => {
+                            const url = `${window.location.origin}/`;
+                            const text = "Join me on ZIVO";
+                            try {
+                              if (navigator.share) await navigator.share({ title: "ZIVO", text, url });
+                              else { await navigator.clipboard.writeText(url); toast.success("Link copied"); }
+                            } catch {}
+                          }}
+                          className="flex flex-col items-center justify-center gap-1.5 p-3 rounded-2xl bg-card border border-border/40 shadow-sm active:scale-95 transition-transform"
+                        >
+                          <div className="w-9 h-9 rounded-full bg-primary/10 flex items-center justify-center">
+                            <Share2 className="w-4 h-4 text-primary" />
+                          </div>
+                          <span className="text-[11px] font-semibold text-foreground leading-tight">Invite friends</span>
+                        </button>
+                        <button
+                          onClick={() => navigate("/nearby")}
+                          className="flex flex-col items-center justify-center gap-1.5 p-3 rounded-2xl bg-card border border-border/40 shadow-sm active:scale-95 transition-transform"
+                        >
+                          <div className="w-9 h-9 rounded-full bg-primary/10 flex items-center justify-center">
+                            <MapPinned className="w-4 h-4 text-primary" />
+                          </div>
+                          <span className="text-[11px] font-semibold text-foreground leading-tight">People nearby</span>
+                        </button>
+                        <button
+                          onClick={() => setShowCreateGroup(true)}
+                          className="flex flex-col items-center justify-center gap-1.5 p-3 rounded-2xl bg-card border border-border/40 shadow-sm active:scale-95 transition-transform"
+                        >
+                          <div className="w-9 h-9 rounded-full bg-primary/10 flex items-center justify-center">
+                            <Users className="w-4 h-4 text-primary" />
+                          </div>
+                          <span className="text-[11px] font-semibold text-foreground leading-tight">New group</span>
+                        </button>
+                      </div>
+                    )}
                   </div>
                 ) : (
                   <div className={cn("space-y-2 px-1", embedded && "space-y-1.5 px-1") }>
-                    {displayList.map((chat: any, idx: number) => (
-                      <motion.div
-                        key={chat.id}
-                        initial={{ opacity: 0, y: 10 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ delay: idx * 0.025, type: "spring", stiffness: 300, damping: 28 }}
-                        className="relative overflow-hidden"
+                    {/* Archived chats row */}
+                    {!search && archivedList.length > 0 && active === "personal" && (
+                      <button
+                        onClick={() => setShowArchived((v) => !v)}
+                        className="w-full flex items-center gap-3 p-3 rounded-2xl bg-card border border-border/40 shadow-sm active:scale-[0.98] transition-all"
                       >
-                        {canDelete && swipedId === chat.id && (
-                          <div className="absolute inset-y-0 right-0 flex items-center pr-2 z-0">
-                            <button
-                              onClick={() => setDeleteConfirm({ id: chat.id, name: chat.name, category: active })}
-                              className="w-14 h-14 rounded-xl bg-destructive flex items-center justify-center active:scale-90 transition-transform"
-                            >
-                              <Trash2 className="w-5 h-5 text-destructive-foreground" />
-                            </button>
-                          </div>
+                        <div className="w-10 h-10 rounded-full bg-muted flex items-center justify-center">
+                          <Archive className="w-4 h-4 text-muted-foreground" />
+                        </div>
+                        <div className="flex-1 text-left">
+                          <p className="text-sm font-semibold text-foreground">Archived chats</p>
+                          <p className="text-[11px] text-muted-foreground">{archivedList.length} conversation{archivedList.length === 1 ? "" : "s"}</p>
+                        </div>
+                        {archivedUnread > 0 && (
+                          <span className="min-w-[22px] h-[22px] px-1.5 bg-muted-foreground/30 text-foreground text-[11px] font-bold rounded-full flex items-center justify-center">
+                            {archivedUnread > 99 ? "99+" : archivedUnread}
+                          </span>
                         )}
-                        <motion.button
-                          className={cn(
-                            "w-full flex items-center gap-3 text-left relative z-10 transition-all",
-                            embedded
-                              ? "p-2.5 rounded-xl bg-card border border-border/30 hover:border-border/50 hover:bg-card/90 gap-2.5"
-                              : "p-3 rounded-2xl bg-card border border-border/40 shadow-sm hover:shadow-md hover:border-border/60",
-                            "active:scale-[0.98] active:shadow-none",
-                            canDelete && swipedId === chat.id && "-translate-x-16",
-                            chat.unread > 0 && "border-primary/20 bg-primary/[0.02] shadow-primary/5"
+                        <ChevronRight className={cn("w-4 h-4 text-muted-foreground transition-transform", showArchived && "rotate-90")} />
+                      </button>
+                    )}
+
+                    {/* Pinned section header */}
+                    {!search && displayList.some((c: any) => isPinned(c.id)) && (
+                      <div className="flex items-center gap-1.5 px-2 pt-1 pb-0.5">
+                        <Pin className="w-3 h-3 text-muted-foreground" />
+                        <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Pinned</span>
+                      </div>
+                    )}
+
+                    {displayList.map((chat: any, idx: number) => {
+                      const pinned = isPinned(chat.id);
+                      const muted = isMuted(chat.id);
+                      const isPersonalChat = active === "personal";
+
+                      // Show separator before first non-pinned item
+                      const prev = displayList[idx - 1];
+                      const showChatsHeader = !search && pinned === false && prev && isPinned(prev.id);
+
+                      return (
+                        <div key={chat.id}>
+                          {showChatsHeader && (
+                            <div className="flex items-center gap-1.5 px-2 pt-2 pb-0.5">
+                              <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">All chats</span>
+                            </div>
                           )}
-                          onClick={() => {
-                            if (swipedId === chat.id) {
-                              setSwipedId(null);
-                              return;
-                            }
-                            if (sharePayload && active === "personal" && !(chat as any).isGroup) {
-                              handleShareToContact(chat.id, chat.name, chat.avatar);
-                              return;
-                            }
-                            if (active === "shop") {
-                              setOpenShopChat({ storeId: chat.storeId, name: chat.name, logo: chat.avatar });
-                            } else if (active === "personal") {
+                          <motion.div
+                            initial={{ opacity: 0, y: 10 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            transition={{ delay: Math.min(idx, 8) * 0.02, type: "spring", stiffness: 300, damping: 28 }}
+                          >
+                            <SwipeableRow
+                              disabled={!isPersonalChat}
+                              leftActions={isPersonalChat ? [
+                                {
+                                  key: "pin",
+                                  label: pinned ? "Unpin" : "Pin",
+                                  icon: <Pin className="w-4 h-4" />,
+                                  onPress: () => { togglePin(chat.id); toast.success(pinned ? "Unpinned" : "Pinned to top"); },
+                                  className: "bg-amber-500 text-white",
+                                },
+                                {
+                                  key: "mute",
+                                  label: muted ? "Unmute" : "Mute",
+                                  icon: <BellOff className="w-4 h-4" />,
+                                  onPress: () => { toggleMute(chat.id); toast.success(muted ? "Unmuted" : "Muted"); },
+                                  className: "bg-slate-500 text-white",
+                                },
+                              ] : []}
+                              rightActions={isPersonalChat ? [
+                                {
+                                  key: "archive",
+                                  label: isArchived(chat.id) ? "Unarchive" : "Archive",
+                                  icon: isArchived(chat.id) ? <ArchiveRestore className="w-4 h-4" /> : <Archive className="w-4 h-4" />,
+                                  onPress: () => { toggleArchive(chat.id); toast.success(isArchived(chat.id) ? "Unarchived" : "Archived"); },
+                                  className: "bg-amber-600 text-white",
+                                },
+                                {
+                                  key: "delete",
+                                  label: "Delete",
+                                  icon: <Trash2 className="w-4 h-4" />,
+                                  onPress: () => setDeleteConfirm({ id: chat.id, name: chat.name, category: active }),
+                                  className: "bg-destructive text-destructive-foreground",
+                                },
+                              ] : []}
+                            >
+                              <button
+                                className={cn(
+                                  "w-full flex items-center gap-3 text-left transition-all",
+                                  embedded
+                                    ? "p-2.5 rounded-2xl bg-card border border-border/30 hover:border-border/50 hover:bg-card/90 gap-2.5"
+                                    : "p-3 rounded-2xl bg-card border border-border/40 shadow-sm hover:shadow-md hover:border-border/60",
+                                  "active:scale-[0.98] active:shadow-none",
+                                  chat.unread > 0 && !muted && "border-primary/20 bg-primary/[0.02] shadow-primary/5"
+                                )}
+                                onClick={() => {
+                                  if (sharePayload && active === "personal" && !(chat as any).isGroup) {
+                                    handleShareToContact(chat.id, chat.name, chat.avatar);
+                                    return;
+                                  }
+                                  if (active === "shop") {
+                                    setOpenShopChat({ storeId: chat.storeId, name: chat.name, logo: chat.avatar });
+                                  } else if (active === "personal") {
+                                    if ((chat as any).isGroup) {
+                                      setOpenGroupChat({ id: chat.id, name: chat.name, avatar: chat.avatar });
+                                    } else {
+                                      setOpenPersonalChat({ id: chat.id, name: chat.name, avatar: chat.avatar, isVerified: (chat as any).isVerified === true });
+                                    }
+                                  } else if (active === "support") {
+                                    navigate(`/support`);
+                                  }
+                                }}
+                              >
+                                <div className="relative flex-shrink-0">
+                                  <div className={cn(
+                                    "flex items-center justify-center overflow-hidden ring-2 ring-border/30",
+                                    embedded ? "h-[44px] w-[44px] rounded-xl" : "w-[50px] h-[50px] rounded-2xl",
+                                    (chat as any).isGroup ? "bg-primary/10" : "bg-muted"
+                                  )}>
+                                    {chat.avatar ? (
+                                      <img src={chat.avatar} alt="" className="w-full h-full object-cover" />
+                                    ) : (chat as any).isGroup ? (
+                                      <Users className="w-5 h-5 text-primary" />
+                                    ) : active === "personal" ? (
+                                      <span className="text-base font-bold text-muted-foreground">
+                                        {(chat.name || "U").split(" ").map((n: string) => n[0]).join("").toUpperCase().slice(0, 2)}
+                                      </span>
+                                    ) : active === "shop" ? (
+                                      <StoreIcon className="w-5 h-5 text-muted-foreground" />
+                                    ) : active === "support" ? (
+                                      <Headphones className="w-5 h-5 text-muted-foreground" />
+                                    ) : (
+                                      <Car className="w-5 h-5 text-muted-foreground" />
+                                    )}
+                                  </div>
+                                  {active === "personal" && !(chat as any).isGroup && (chat as any).isOnline && (
+                                    <span className="absolute -bottom-0.5 -right-0.5 h-3.5 w-3.5 rounded-full bg-emerald-500 border-[2.5px] border-card" />
+                                  )}
+                                </div>
+
+                                <div className="flex-1 min-w-0">
+                                  <div className="flex items-center justify-between mb-1">
+                                    <span className={cn(
+                                      embedded ? "text-sm" : "text-[15px]",
+                                      "truncate leading-tight inline-flex items-center gap-1 min-w-0",
+                                      chat.unread > 0 ? "font-bold text-foreground" : "font-semibold text-foreground"
+                                    )}>
+                                      <span className="truncate">{chat.name}</span>
+                                      {isBlueVerified((chat as any).isVerified) && (
+                                        <VerifiedBadge size={13} interactive={false} />
+                                      )}
+                                      {muted && <BellOff className="w-3 h-3 text-muted-foreground flex-shrink-0" />}
+                                    </span>
+                                    <span className="flex items-center gap-1 flex-shrink-0 ml-2">
+                                      {pinned && <Pin className="w-3 h-3 text-muted-foreground" />}
+                                      <span className={cn(
+                                        "text-[11px] tabular-nums",
+                                        chat.unread > 0 && !muted ? "text-primary font-semibold" : "text-muted-foreground"
+                                      )}>
+                                        {formatChatTime(chat.lastTime)}
+                                      </span>
+                                    </span>
+                                  </div>
+                                  <div className="flex items-center justify-between">
+                                    <div className="flex items-center flex-1 min-w-0 pr-2">
+                                      {active === "personal" && (chat as any).isSentByMe && !(chat as any).isGroup && (
+                                        <span className="mr-1 flex-shrink-0">
+                                          {(chat as any).isRead ? (
+                                            <CheckCheck className="w-3.5 h-3.5 text-sky-500" />
+                                          ) : (chat as any).deliveredAt ? (
+                                            <CheckCheck className="w-3.5 h-3.5 text-muted-foreground/60" />
+                                          ) : (
+                                            <Check className="w-3.5 h-3.5 text-muted-foreground/60" />
+                                          )}
+                                        </span>
+                                      )}
+                                      {(() => {
+                                        const stickerPreview = parseStickerPreview(chat.lastMessage || "");
+                                        if (stickerPreview) {
+                                          return (
+                                            <span className="flex items-center gap-1.5">
+                                              {stickerPreview.src && (
+                                                <img src={stickerPreview.src} alt={stickerPreview.alt} className="w-5 h-5 object-contain" />
+                                              )}
+                                              <span className={cn(
+                                                embedded ? "text-[12px]" : "text-[13px]",
+                                                "leading-snug text-muted-foreground"
+                                              )}>Sticker</span>
+                                            </span>
+                                          );
+                                        }
+                                        const preview = parseRichMessagePreview(chat.lastMessage);
+                                        const youPrefix = active === "personal" && (chat as any).isSentByMe && !(chat as any).isGroup;
+                                        return (
+                                          <>
+                                            {getMessagePreviewIcon(preview)}
+                                            <span className={cn(
+                                              embedded ? "text-[12px]" : "text-[13px]",
+                                              "truncate leading-snug",
+                                              chat.unread > 0 && !muted ? "text-foreground font-medium" : "text-muted-foreground"
+                                            )}>
+                                              {youPrefix && <span className="text-muted-foreground">You: </span>}
+                                              {preview}
+                                            </span>
+                                          </>
+                                        );
+                                      })()}
+                                    </div>
+                                    {chat.unread > 0 && (
+                                      <span className={cn(
+                                        "min-w-[22px] h-[22px] px-1.5 text-[11px] font-bold rounded-full flex items-center justify-center flex-shrink-0 shadow-sm",
+                                        muted ? "bg-muted-foreground/30 text-foreground" : "bg-primary text-primary-foreground"
+                                      )}>
+                                        {chat.unread > 99 ? "99+" : chat.unread}
+                                      </span>
+                                    )}
+                                  </div>
+                                </div>
+                              </button>
+                            </SwipeableRow>
+                          </motion.div>
+                        </div>
+                      );
+                    })}
+
+                    {/* Expanded archived chats list */}
+                    {showArchived && archivedList.length > 0 && active === "personal" && (
+                      <div className="space-y-2 px-1 pt-2 border-t border-border/30 mt-2">
+                        <div className="flex items-center gap-1.5 px-2 pt-1">
+                          <Archive className="w-3 h-3 text-muted-foreground" />
+                          <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Archived</span>
+                        </div>
+                        {archivedList.map((chat: any) => (
+                          <button
+                            key={`archived-${chat.id}`}
+                            onClick={() => {
                               if ((chat as any).isGroup) {
                                 setOpenGroupChat({ id: chat.id, name: chat.name, avatar: chat.avatar });
                               } else {
                                 setOpenPersonalChat({ id: chat.id, name: chat.name, avatar: chat.avatar, isVerified: (chat as any).isVerified === true });
                               }
-                            } else if (active === "support") {
-                              navigate(`/support`);
-                            }
-                          }}
-                          onContextMenu={(e) => {
-                            if (!canDelete) return;
-                            e.preventDefault();
-                            setSwipedId(swipedId === chat.id ? null : chat.id);
-                          }}
-                          drag={canDelete ? "x" : false}
-                          dragConstraints={{ left: -70, right: 0 }}
-                          dragElastic={0.1}
-                          onDragEnd={(_, info) => {
-                            if (info.offset.x < -40) setSwipedId(chat.id);
-                            else setSwipedId(null);
-                          }}
-                          style={{ x: 0 }}
-                        >
-                          <div className="relative flex-shrink-0">
+                            }}
+                            className="w-full flex items-center gap-3 p-2.5 rounded-2xl bg-card/60 border border-border/30 active:scale-[0.98] transition-all"
+                          >
                             <div className={cn(
-                              "flex items-center justify-center overflow-hidden ring-2 ring-border/30",
-                              embedded ? "h-[44px] w-[44px] rounded-xl" : "w-[50px] h-[50px] rounded-2xl",
-                              (chat as any).isGroup ? "bg-primary/10" : "bg-muted"
+                              "w-10 h-10 rounded-xl bg-muted flex items-center justify-center overflow-hidden ring-2 ring-border/20"
                             )}>
                               {chat.avatar ? (
                                 <img src={chat.avatar} alt="" className="w-full h-full object-cover" />
-                              ) : (chat as any).isGroup ? (
-                                <Users className="w-5 h-5 text-primary" />
-                              ) : active === "personal" ? (
-                                <span className="text-base font-bold text-muted-foreground">
+                              ) : (
+                                <span className="text-sm font-bold text-muted-foreground">
                                   {(chat.name || "U").split(" ").map((n: string) => n[0]).join("").toUpperCase().slice(0, 2)}
                                 </span>
-                              ) : active === "shop" ? (
-                                <StoreIcon className="w-5 h-5 text-muted-foreground" />
-                              ) : active === "support" ? (
-                                <Headphones className="w-5 h-5 text-muted-foreground" />
-                              ) : (
-                                <Car className="w-5 h-5 text-muted-foreground" />
                               )}
                             </div>
-                            {active === "personal" && !(chat as any).isGroup && (chat as any).isOnline && (
-                              <span className="absolute -bottom-0.5 -right-0.5 h-3.5 w-3.5 rounded-full bg-emerald-500 border-[2.5px] border-card" />
-                            )}
-                          </div>
-
-                          <div className="flex-1 min-w-0">
-                            <div className="flex items-center justify-between mb-1">
-                              <span className={cn(
-                                embedded ? "text-sm" : "text-[15px]",
-                                "truncate leading-tight inline-flex items-center gap-1 min-w-0",
-                                chat.unread > 0 ? "font-bold text-foreground" : "font-semibold text-foreground"
-                              )}>
-                                <span className="truncate">{chat.name}</span>
-                                {isBlueVerified((chat as any).isVerified) && (
-                                  <VerifiedBadge size={13} interactive={false} />
-                                )}
-                              </span>
-                              <span className={cn(
-                                "text-[11px] flex-shrink-0 ml-2 tabular-nums",
-                                chat.unread > 0 ? "text-primary font-semibold" : "text-muted-foreground"
-                              )}>
-                                {formatChatTime(chat.lastTime)}
-                              </span>
+                            <div className="flex-1 text-left min-w-0">
+                              <p className="text-sm font-semibold text-foreground truncate">{chat.name}</p>
+                              <p className="text-[11px] text-muted-foreground truncate">{parseRichMessagePreview(chat.lastMessage || "")}</p>
                             </div>
-                            <div className="flex items-center justify-between">
-                              <div className="flex items-center flex-1 min-w-0 pr-2">
-                                {active === "personal" && (chat as any).isSentByMe && !(chat as any).isGroup && (
-                                  <span className="mr-1 flex-shrink-0">
-                                    {(chat as any).isRead ? (
-                                      <CheckCheck className="w-3.5 h-3.5 text-sky-500" />
-                                    ) : (chat as any).deliveredAt ? (
-                                      <CheckCheck className="w-3.5 h-3.5 text-muted-foreground/60" />
-                                    ) : (
-                                      <Check className="w-3.5 h-3.5 text-muted-foreground/60" />
-                                    )}
-                                  </span>
-                                )}
-                                {(() => {
-                                  const stickerPreview = parseStickerPreview(chat.lastMessage || "");
-                                  if (stickerPreview) {
-                                    return (
-                                      <span className="flex items-center gap-1.5">
-                                        {stickerPreview.src && (
-                                          <img src={stickerPreview.src} alt={stickerPreview.alt} className="w-5 h-5 object-contain" />
-                                        )}
-                                        <span className={cn(
-                                          embedded ? "text-[12px]" : "text-[13px]",
-                                          "leading-snug text-muted-foreground"
-                                        )}>Sticker</span>
-                                      </span>
-                                    );
-                                  }
-                                  const preview = parseRichMessagePreview(chat.lastMessage);
-                                  return (
-                                    <>
-                                      {getMessagePreviewIcon(preview)}
-                                      <span className={cn(
-                                        embedded ? "text-[12px]" : "text-[13px]",
-                                        "truncate leading-snug",
-                                        chat.unread > 0 ? "text-foreground font-medium" : "text-muted-foreground"
-                                      )}>
-                                        {preview}
-                                      </span>
-                                    </>
-                                  );
-                                })()}
-                              </div>
-                              {chat.unread > 0 && (
-                                <span className="min-w-[22px] h-[22px] px-1.5 bg-primary text-primary-foreground text-[11px] font-bold rounded-full flex items-center justify-center flex-shrink-0 shadow-sm">
-                                  {chat.unread > 99 ? "99+" : chat.unread}
-                                </span>
-                              )}
-                            </div>
-                          </div>
-                        </motion.button>
-                      </motion.div>
-                    ))}
+                            <button
+                              onClick={(e) => { e.stopPropagation(); toggleArchive(chat.id); toast.success("Unarchived"); }}
+                              className="w-8 h-8 rounded-full bg-muted flex items-center justify-center active:scale-90"
+                              aria-label="Unarchive"
+                            >
+                              <ArchiveRestore className="w-4 h-4 text-muted-foreground" />
+                            </button>
+                          </button>
+                        ))}
+                      </div>
+                    )}
                   </div>
                 )}
               </motion.div>
