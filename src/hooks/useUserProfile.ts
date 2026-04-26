@@ -50,7 +50,13 @@ export const useUserProfile = () => {
         .or(`user_id.eq.${user.id},id.eq.${user.id}`)
         .maybeSingle();
 
-      if (error) throw error;
+      if (error) {
+        // Surface the real Postgres error (e.g. column-grant issues) instead of
+        // letting the Profile page hang on an infinite spinner. We log loudly so
+        // the next regression is visible in console immediately.
+        console.error("[useUserProfile] profile fetch failed:", error);
+        throw error;
+      }
       return data as unknown as UserProfile | null;
     },
     enabled: !!user?.id,
