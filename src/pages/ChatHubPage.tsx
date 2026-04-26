@@ -785,30 +785,54 @@ export default function ChatHubPage({ embedded = false }: { embedded?: boolean }
                   </button>
                 )}
               </div>
+              {search.trim().length > 0 && (
+                <div className="flex gap-1.5 mt-2 overflow-x-auto scrollbar-hide">
+                  {(["chats", "media", "links", "files"] as const).map((f) => {
+                    const isActiveFilter = searchFilter === f;
+                    const enabled = f === "chats";
+                    return (
+                      <button
+                        key={f}
+                        onClick={() => enabled && setSearchFilter(f)}
+                        disabled={!enabled}
+                        className={cn(
+                          "px-3 py-1 text-[11px] font-semibold rounded-full whitespace-nowrap capitalize transition-all",
+                          isActiveFilter
+                            ? "bg-primary/15 text-primary"
+                            : enabled
+                              ? "bg-muted/60 text-muted-foreground hover:bg-muted"
+                              : "bg-muted/30 text-muted-foreground/50 cursor-not-allowed"
+                        )}
+                      >
+                        {f}{!enabled && " · soon"}
+                      </button>
+                    );
+                  })}
+                </div>
+              )}
             </div>
 
             <div className={cn("flex px-5 gap-2 pb-3 overflow-x-auto scrollbar-hide", embedded && "px-3 gap-1.5 pb-2")}>
-              {categories.map((cat) => {
-                const isActive = active === cat.id;
-                const unread = unreadMap[cat.id];
+              {folders.map((f) => {
+                const isActiveFolder = folder === f.id;
+                const unread = folderUnreadMap[f.id];
                 return (
                   <button
-                    key={cat.id}
-                    onClick={() => setActive(cat.id)}
+                    key={f.id}
+                    onClick={() => setFolder(f.id)}
                     className={cn(
                       "flex items-center gap-1.5 px-3.5 py-1.5 text-xs font-semibold rounded-full transition-all whitespace-nowrap active:scale-95",
-                      isActive
+                      isActiveFolder
                         ? "bg-primary text-primary-foreground shadow-sm shadow-primary/20"
                         : "bg-muted/60 text-muted-foreground hover:bg-muted",
                       embedded && "px-3 py-1.5 text-[11px]"
                     )}
                   >
-                    <cat.icon className="w-3.5 h-3.5" />
-                    <span>{cat.label}</span>
+                    <span>{f.label}</span>
                     {unread > 0 && (
                       <span className={cn(
                         "min-w-[16px] h-[16px] px-1 text-[9px] font-bold rounded-full flex items-center justify-center",
-                        isActive ? "bg-primary-foreground text-primary" : "bg-primary text-primary-foreground"
+                        isActiveFolder ? "bg-primary-foreground text-primary" : "bg-primary text-primary-foreground"
                       )}>
                         {unread > 99 ? "99+" : unread}
                       </span>
