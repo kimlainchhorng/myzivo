@@ -41,7 +41,15 @@ const CANCEL_PRESETS = [
 export default function LodgingPoliciesSection({ storeId }: { storeId: string }) {
   const opsData = useLodgingOpsData(storeId);
   const profileQ = useLodgePropertyProfile(storeId);
-  const updateProfile = useUpdateLodgePropertyProfile(storeId);
+  const qc = useQueryClient();
+  const updateProfile = useMutation({
+    mutationFn: async (patch: any) => {
+      const { error } = await (supabase as any).from("lodge_property_profiles").upsert({ store_id: storeId, ...patch });
+      if (error) throw error;
+    },
+    onSuccess: () => { toast.success("Policies saved"); qc.invalidateQueries({ queryKey: ["lodge-property-profile", storeId] }); },
+    onError: (e: any) => toast.error(e?.message || "Save failed"),
+  });
   const taxes = useLodgingCatalog<TaxFee>("lodging_taxes_fees", storeId);
   const [editing, setEditing] = useState<Partial<TaxFee> | null>(null);
   const [policyDraft, setPolicyDraft] = useState<any>({});
