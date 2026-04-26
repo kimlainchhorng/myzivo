@@ -54,6 +54,10 @@ import { useI18n } from "@/hooks/useI18n";
 import { useSupportedLanguages } from "@/hooks/useGlobalExpansion";
 
 import { withRedirectParam } from "@/lib/authRedirect";
+import { useOwnerStores } from "@/hooks/useOwnerStoreProfile";
+import { resolveBusinessDashboardRoute } from "@/lib/business/dashboardRoute";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import Plus from "lucide-react/dist/esm/icons/plus";
 
 const serviceNavItems = [
   { label: "Flights", href: "/flights", icon: Plane, cssVar: "var(--flights)" },
