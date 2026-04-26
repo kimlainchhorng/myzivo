@@ -71,6 +71,12 @@ export default function ChatAttachMenu({
 
   const handleAction = (id: string) => {
     switch (id) {
+      case "gift": onSendGift?.(); break;
+      case "money": onOpenWallet?.(); break;
+      case "scan":
+        if (onScanDocument) onScanDocument();
+        else toast("Document scanner is coming soon");
+        break;
       case "image": onImageSelect(); break;
       case "video": onVideoSelect(); break;
       case "location": onLocationShare(); break;
