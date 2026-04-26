@@ -8913,23 +8913,76 @@ export type Database = {
         }
         Relationships: []
       }
+      chat_group_invites: {
+        Row: {
+          code: string
+          created_at: string
+          created_by: string
+          expires_at: string | null
+          group_id: string
+          id: string
+          max_uses: number | null
+          revoked_at: string | null
+          use_count: number
+        }
+        Insert: {
+          code: string
+          created_at?: string
+          created_by: string
+          expires_at?: string | null
+          group_id: string
+          id?: string
+          max_uses?: number | null
+          revoked_at?: string | null
+          use_count?: number
+        }
+        Update: {
+          code?: string
+          created_at?: string
+          created_by?: string
+          expires_at?: string | null
+          group_id?: string
+          id?: string
+          max_uses?: number | null
+          revoked_at?: string | null
+          use_count?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "chat_group_invites_group_id_fkey"
+            columns: ["group_id"]
+            isOneToOne: false
+            referencedRelation: "chat_groups"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       chat_group_members: {
         Row: {
           group_id: string
           id: string
           joined_at: string
+          muted_until: string | null
+          nickname: string | null
+          role: Database["public"]["Enums"]["group_member_role"]
           user_id: string
         }
         Insert: {
           group_id: string
           id?: string
           joined_at?: string
+          muted_until?: string | null
+          nickname?: string | null
+          role?: Database["public"]["Enums"]["group_member_role"]
           user_id: string
         }
         Update: {
           group_id?: string
           id?: string
           joined_at?: string
+          muted_until?: string | null
+          nickname?: string | null
+          role?: Database["public"]["Enums"]["group_member_role"]
           user_id?: string
         }
         Relationships: [
@@ -9165,9 +9218,10 @@ export type Database = {
       }
       chat_polls: {
         Row: {
-          chat_partner_id: string
+          chat_partner_id: string | null
           created_at: string
           creator_id: string
+          group_id: string | null
           id: string
           is_anonymous: boolean | null
           is_closed: boolean | null
@@ -9176,9 +9230,10 @@ export type Database = {
           votes: Json
         }
         Insert: {
-          chat_partner_id: string
+          chat_partner_id?: string | null
           created_at?: string
           creator_id: string
+          group_id?: string | null
           id?: string
           is_anonymous?: boolean | null
           is_closed?: boolean | null
@@ -9187,9 +9242,10 @@ export type Database = {
           votes?: Json
         }
         Update: {
-          chat_partner_id?: string
+          chat_partner_id?: string | null
           created_at?: string
           creator_id?: string
+          group_id?: string | null
           id?: string
           is_anonymous?: boolean | null
           is_closed?: boolean | null
@@ -9197,7 +9253,15 @@ export type Database = {
           question?: string
           votes?: Json
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "chat_polls_group_id_fkey"
+            columns: ["group_id"]
+            isOneToOne: false
+            referencedRelation: "chat_groups"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       chat_read_receipts: {
         Row: {
@@ -61151,6 +61215,18 @@ export type Database = {
       }
       is_driver: { Args: { p_user_id?: string }; Returns: boolean }
       is_following: { Args: { target_user_id: string }; Returns: boolean }
+      is_group_admin: {
+        Args: { _group_id: string; _uid: string }
+        Returns: boolean
+      }
+      is_group_member: {
+        Args: { _group_id: string; _uid: string }
+        Returns: boolean
+      }
+      is_group_owner: {
+        Args: { _group_id: string; _uid: string }
+        Returns: boolean
+      }
       is_hotel_owner: { Args: { _hotel_id: string }; Returns: boolean }
       is_lodge_reservation_guest: {
         Args: { _reservation_id: string; _user_id: string }
@@ -61283,6 +61359,7 @@ export type Database = {
         Returns: undefined
       }
       redeem_company_invite_code: { Args: { _code: string }; Returns: Json }
+      redeem_group_invite: { Args: { _code: string }; Returns: string }
       refresh_wallet_balance: {
         Args: { p_driver_id: string }
         Returns: undefined
@@ -61610,6 +61687,7 @@ export type Database = {
         | "device_fingerprint"
         | "booking_pattern"
         | "cancellation_history"
+      group_member_role: "owner" | "admin" | "member"
       insurance_claim_status:
         | "submitted"
         | "under_review"
@@ -61991,6 +62069,7 @@ export const Constants = {
         "booking_pattern",
         "cancellation_history",
       ],
+      group_member_role: ["owner", "admin", "member"],
       insurance_claim_status: [
         "submitted",
         "under_review",

@@ -18,6 +18,9 @@ import { format, isToday, isYesterday } from "date-fns";
 import { toast } from "sonner";
 import VoiceMessagePlayer from "./VoiceMessagePlayer";
 import { useVoiceRecorder } from "@/hooks/useVoiceRecorder";
+import GroupMembersSheet from "./GroupMembersSheet";
+import GroupInviteSheet from "./GroupInviteSheet";
+import Link2 from "lucide-react/dist/esm/icons/link-2";
 
 interface GroupChatProps {
   groupId: string;
@@ -63,6 +66,8 @@ export default function GroupChat({ groupId, groupName, groupAvatar, onClose }: 
   const inputRef = useRef<HTMLInputElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [uploadingImage, setUploadingImage] = useState(false);
+  const [showMembers, setShowMembers] = useState(false);
+  const [showInvites, setShowInvites] = useState(false);
   const voice = useVoiceRecorder();
 
   const scrollToBottom = useCallback(() => {
@@ -276,8 +281,23 @@ export default function GroupChat({ groupId, groupName, groupAvatar, onClose }: 
             </p>
           </div>
           <div className="flex items-center gap-1">
-            <Users className="h-4 w-4 text-muted-foreground" />
-            <span className="text-xs text-muted-foreground">{members.length}</span>
+            <button
+              onClick={() => setShowInvites(true)}
+              className="min-h-[40px] min-w-[40px] flex items-center justify-center rounded-full hover:bg-muted/50"
+              aria-label="Invite links"
+              title="Invite links"
+            >
+              <Link2 className="h-4 w-4 text-muted-foreground" />
+            </button>
+            <button
+              onClick={() => setShowMembers(true)}
+              className="min-h-[40px] min-w-[40px] flex items-center justify-center rounded-full hover:bg-muted/50"
+              aria-label="Members"
+              title="Members"
+            >
+              <Users className="h-4 w-4 text-muted-foreground" />
+            </button>
+            <span className="text-xs text-muted-foreground pr-1">{members.length}</span>
           </div>
         </div>
       </div>
@@ -450,6 +470,19 @@ export default function GroupChat({ groupId, groupName, groupAvatar, onClose }: 
           </button>
         </div>
       )}
+
+      {/* Phase 4 Track C — Group admin sheets */}
+      <GroupMembersSheet
+        open={showMembers}
+        onOpenChange={setShowMembers}
+        groupId={groupId}
+        onLeft={onClose}
+      />
+      <GroupInviteSheet
+        open={showInvites}
+        onOpenChange={setShowInvites}
+        groupId={groupId}
+      />
     </motion.div>
   );
 }

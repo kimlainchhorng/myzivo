@@ -115,6 +115,7 @@ const ReelsFeedPage = lazy(() => import("./pages/ReelsFeedPage"));
 const SoundPage = lazy(() => import("./pages/SoundPage"));
 const ChatHubPage = lazy(() => import("./pages/ChatHubPage"));
 const ContactsPage = lazy(() => import("./pages/chat/ContactsPage"));
+const JoinGroupPage = lazy(() => import("./pages/chat/JoinGroupPage"));
 const PrivacySecurityPage = lazy(() => import("./pages/chat/settings/PrivacySecurityPage"));
 const ActiveSessionsPage = lazy(() => import("./pages/chat/settings/ActiveSessionsPage"));
 const TwoStepSetupPage = lazy(() => import("./pages/chat/settings/TwoStepSetupPage"));
@@ -683,6 +684,7 @@ const App = () => (
                 <Route path="/refer" element={<ProtectedRoute><ReferAFriendPage /></ProtectedRoute>} />
                 <Route path="/chat" element={<ChatHubPage />} />
                 <Route path="/chat/contacts" element={<ProtectedRoute><ContactsPage /></ProtectedRoute>} />
+                <Route path="/chat/join/:code" element={<JoinGroupPage />} />
                 <Route path="/chat/settings/privacy" element={<ProtectedRoute><PrivacySecurityPage /></ProtectedRoute>} />
                 <Route path="/chat/settings/sessions" element={<ProtectedRoute><ActiveSessionsPage /></ProtectedRoute>} />
                 <Route path="/chat/settings/two-step" element={<ProtectedRoute><TwoStepSetupPage /></ProtectedRoute>} />
