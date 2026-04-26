@@ -149,7 +149,16 @@ export default function FeedSidebar() {
                   )}
                 </div>
                 <p className="text-[11px] text-muted-foreground truncate">
-                  {username ? `@${username}` : email}
+                  {username ? (
+                    `@${username}`
+                  ) : (
+                    <button
+                      onClick={() => navigate("/account/profile-edit")}
+                      className="text-primary hover:underline"
+                    >
+                      Set a username
+                    </button>
+                  )}
                 </p>
               </div>
 
