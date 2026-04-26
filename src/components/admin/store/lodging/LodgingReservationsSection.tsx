@@ -221,3 +221,51 @@ export default function LodgingReservationsSection({ storeId }: { storeId: strin
     </div>
   );
 }
+
+function csvEscape(value: unknown) {
+  const s = value == null ? "" : String(value);
+  if (/[",\n]/.test(s)) return `"${s.replace(/"/g, '""')}"`;
+  return s;
+}
+
+function exportReservationsCsv(rows: any[]) {
+  const headers = ["Number", "Guest", "Email", "Phone", "Room", "Check-in", "Check-out", "Nights", "Adults", "Children", "Status", "Payment", "Total", "Paid", "Balance"];
+  const lines = [headers.join(",")];
+  for (const r of rows) {
+    const total = Number(r.total_cents || 0) / 100;
+    const paid = Number(r.paid_cents || 0) / 100;
+    lines.push([
+      r.number, r.guest_name, r.guest_email, r.guest_phone, r.room_number,
+      r.check_in, r.check_out, r.nights, r.adults, r.children,
+      r.status, r.payment_status, total.toFixed(2), paid.toFixed(2), (total - paid).toFixed(2),
+    ].map(csvEscape).join(","));
+  }
+  const blob = new Blob([lines.join("\n")], { type: "text/csv;charset=utf-8" });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = `reservations-${new Date().toISOString().slice(0, 10)}.csv`;
+  document.body.appendChild(a); a.click(); a.remove();
+  URL.revokeObjectURL(url);
+}
+
+function sendConfirmationEmail(r: any) {
+  const subject = `Booking confirmation · ${r.number || ""}`;
+  const body = [
+    `Hello ${r.guest_name || "guest"},`,
+    "",
+    "Thank you for your booking. Here are your reservation details:",
+    `Reservation: ${r.number || ""}`,
+    `Room: ${r.room_number || "—"}`,
+    `Check-in: ${r.check_in}`,
+    `Check-out: ${r.check_out}`,
+    `Nights: ${r.nights}`,
+    `Guests: ${r.adults} adult(s)${r.children ? ` · ${r.children} child(ren)` : ""}`,
+    `Total: $${(Number(r.total_cents || 0) / 100).toFixed(2)}`,
+    `Balance due: $${((Number(r.total_cents || 0) - Number(r.paid_cents || 0)) / 100).toFixed(2)}`,
+    "",
+    "We look forward to welcoming you.",
+  ].join("\n");
+  const href = `mailto:${encodeURIComponent(r.guest_email)}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+  window.location.href = href;
+}
