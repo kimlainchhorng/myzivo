@@ -181,15 +181,30 @@ export function useLiveKitCall({
           return;
         }
 
-        // Publish defaults
-        await room.localParticipant.setMicrophoneEnabled(true);
+        // Publish defaults (respect pre-join intent)
+        await room.localParticipant.setMicrophoneEnabled(!startMicMuted);
         if (callType === "video") {
-          await room.localParticipant.setCameraEnabled(true);
+          await room.localParticipant.setCameraEnabled(!startCamOff);
         }
         if (data.isHost) {
           await room.localParticipant.setMetadata("host");
         }
         refreshParticipants();
+
+        // Auto-record (host only)
+        if (autoRecord && data.isHost && data.sessionId) {
+          try {
+            const { error: recErr } = await supabase.functions.invoke("livekit-recording", {
+              body: { sessionId: data.sessionId, action: "start" },
+            });
+            if (recErr) throw recErr;
+            setIsRecording(true);
+            toast.success("Recording started");
+          } catch (e) {
+            const m = e instanceof Error ? e.message : String(e);
+            toast.error(`Auto-record failed: ${m}`);
+          }
+        }
       } catch (e) {
         const msg = e instanceof Error ? e.message : String(e);
         if (!cancelled) {
