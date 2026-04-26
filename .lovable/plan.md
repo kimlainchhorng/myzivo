@@ -1,67 +1,56 @@
-# Telegram-2026 Round-4 Add-ons
+# Smooth Hold-to-Record Voice — Round 5
 
-The big infrastructure (pinned banner, reply, reactions, forward, schedule, search, stickers, gallery, personalization, translate, channels, secret chat) is already mounted. The remaining "Telegram 2026" gaps are surfacing and polish. Six focused additions:
+## Problem
+The mic button in `PersonalChat` (and `GroupChat`) is **tap-to-start / tap-to-send**, which feels clunky. Users expect a Telegram/WhatsApp/iMessage-style **press-and-hold** mic with **slide-up-to-lock** and **slide-left-to-cancel** gestures. The standalone `VoiceRecorderButton` already has hold logic but is unused, and only handles cancel — no lock, no haptics, no slide-left, no preview-before-send.
 
-## 1. In-Chat Header Profile Sheet
-Tap the chat header avatar/name → bottom sheet with:
-- Large avatar, name, @username, online/last-seen, bio
-- Quick actions row: Audio, Video, Mute, Search, More
-- Sections: Notifications, Media (count), Files, Links, Shared groups
-- Block / Report / Clear history at the bottom
+## What we'll build
 
-New: `src/components/chat/ChatHeaderProfileSheet.tsx`
-Wire: header tap target in `PersonalChat.tsx` (single line change).
+### 1. New `HoldToRecordMic` component
+A premium, gesture-driven mic that replaces the inline mic button in both `PersonalChat` and `GroupChat`.
 
-## 2. Channels Tab in Chat Hub
-Add a `Channels` folder pill alongside All/Unread/Personal/Groups/Shop. Selecting it lists channels the user follows (from existing `channels` / `channel_subscribers` tables) with subscriber count, broadcast badge, latest post preview. Tap → `/c/:handle`.
+**Gestures (single pointer, no extra taps):**
+- **Press & hold** → start recording instantly (after 120ms guard to ignore accidental taps)
+- **Release** → send the voice note
+- **Slide left past threshold** → cancel with red trash animation + haptic
+- **Slide up past threshold** → lock recording (hands-free); shows a floating Stop/Send/Cancel toolbar
+- **Light haptic** on start, lock, and cancel (via `navigator.vibrate` fallback + Capacitor Haptics if available)
 
-Wire: `src/pages/ChatHubPage.tsx` folders array + a new query branch.
+### 2. Smooth recording overlay
+Replace the current static random-bar overlay with a real-time waveform tied to actual mic input (RMS samples from `useVoiceRecorder` already exist — surface them live).
 
-## 3. Broadcast Lists
-Send the same message to many people without a group. Page to create / manage broadcast lists; "Broadcast" entry added to the New-chat FAB.
+**Visual states:**
+- **Recording (held):** mic pulses, slide-left chevron + "Slide to cancel", upward chevron + lock icon, live waveform, MM:SS timer, drag offset follows finger with rubber-band easing
+- **Locked:** floating compact bar above keyboard with Pause / Trash / Send, waveform continues, finger free
+- **Cancelling preview:** bar turns red, mic shakes, releasing here trashes the recording
 
-New:
-- `src/pages/chat/BroadcastListsPage.tsx`
-- `src/pages/chat/NewBroadcastPage.tsx`
-- DB: `broadcast_lists` and `broadcast_list_members` tables (RLS, owner-only).
+### 3. Tap-vs-hold disambiguation
+- Quick tap (<200 ms or <500 ms recording) → toast "Hold to record" and discard, no error
+- Mic permission denied → friendly inline tooltip with "Enable mic" deep link
 
-## 4. Reply-to-Story in Chat
-When a user views a friend's story they can already reply (story system exists). Surface the reply as a special bubble in the chat with story thumb + caption snippet + "Replied to your story". Adds an inline `StoryReplyBubble.tsx` rendered by `ChatMessageBubble.tsx` when `message_type === "story_reply"`.
+### 4. Hook upgrades — `useVoiceRecorder`
+- Expose **live waveform stream** (last 32 samples) via state, not only on stop
+- Add `pause()` / `resume()` for the locked state
+- Pre-warm `getUserMedia` on first long-press attempt and cache the stream for 5s after stop to avoid the cold-start delay
 
-New: `src/components/chat/StoryReplyBubble.tsx`
-Wire: 1 conditional branch in `ChatMessageBubble.tsx`.
+### 5. Wire-in
+- Replace inline mic in `PersonalChat.tsx` (lines 1604-1609) with `<HoldToRecordMic onRecorded={handleVoiceUpload} />`
+- Replace the existing recording overlay block (lines 1430-1483) — the new component owns its own overlay
+- Same swap inside `GroupChat.tsx`
+- Remove the now-dead inline overlay; keep `voice.audioBlob` upload path intact
 
-## 5. Gift / Tip In-Bubble
-Send Z-Coins as a chat gift. Adds a "Gift" entry to the existing attach menu → opens `GiftSendSheet.tsx` (reuses the existing gift catalog & wallet). Recipient sees a `GiftBubble` with animation, coin amount, optional note, and Accept badge.
+### 6. Polish
+- Smooth Framer Motion spring for the drag offset (stiffness 400, damping 32)
+- Backdrop-blurred floating "lock" pill that animates up as the user drags
+- Sound cue on send (subtle pop) — reuses existing `giftSounds.ts` util pattern
+- iOS safe-area aware so the locked toolbar sits above the home indicator
 
-New:
-- `src/components/chat/GiftSendSheet.tsx`
-- `src/components/chat/GiftBubble.tsx`
-- DB: extend `direct_messages.message_type` to allow `gift` (no schema change — column is text); add `gift_payload jsonb` column.
+## Technical notes
+- Single new file: `src/components/chat/HoldToRecordMic.tsx`
+- Edits: `src/hooks/useVoiceRecorder.ts` (live waveform + pause/resume), `src/components/chat/PersonalChat.tsx`, `src/components/chat/GroupChat.tsx`
+- No DB / migrations / new deps — pure UX layer
+- Existing `VoiceRecorderButton.tsx` left in place (still used elsewhere if any) but the new component supersedes it
 
-## 6. Storage Manager
-Telegram-style "Data and Storage" page: per-chat cache size, clear cache, auto-download rules (photos/videos/files on Wi-Fi vs cellular, max size). Toggles persist to localStorage; clear actually flushes IndexedDB / Cache API entries we control.
-
-New: `src/pages/chat/settings/StorageManagerPage.tsx`
-Route: `/chat/settings/storage`
-Wire: link from the Privacy hub.
-
-## Routes Added
-```
-/chat/broadcasts            → BroadcastListsPage
-/chat/broadcasts/new        → NewBroadcastPage
-/chat/settings/storage      → StorageManagerPage
-```
-
-## Files Touched
-- New (8): ChatHeaderProfileSheet, StoryReplyBubble, GiftSendSheet, GiftBubble, BroadcastListsPage, NewBroadcastPage, StorageManagerPage, useBroadcastLists hook
-- Edits (4): ChatHubPage (channels folder + broadcast in FAB), PersonalChat (header tap, gift attach), ChatMessageBubble (story-reply + gift branches), ChatPrivacyHubPage (storage link), App.tsx (3 routes)
-- Migration (1): `broadcast_lists`, `broadcast_list_members`, add `gift_payload` to `direct_messages`
-
-## Out of Scope (Already Done or Deferred)
-- Pinned message bar, in-chat search, reply, reactions, forward, schedule — already wired
-- Custom folders, global search, privacy hub — shipped Round-3
-- Slash-commands, @mention picker, voice waveform polish — defer to Round-5 (composer-only round)
-
-## Approval
-Approve to build all six. If you want a subset, say which numbers to keep.
+## Out of scope (ask later if wanted)
+- Voice-to-text transcription preview before send
+- Variable playback speed in the bubble (already supported in VoiceMessageBubble)
+- Background noise suppression toggle

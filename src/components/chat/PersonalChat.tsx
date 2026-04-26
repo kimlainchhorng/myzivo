@@ -34,6 +34,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { format, isToday, isYesterday } from "date-fns";
 import { primeCallAudio } from "@/lib/callAudio";
 import ChatMessageBubble from "./ChatMessageBubble";
+import HoldToRecordMic from "./HoldToRecordMic";
 import ChatAttachMenu from "./ChatAttachMenu";
 import type { StickerSendPayload } from "./StickerKeyboard";
 import { getWallpaperClass, getWallpaperStyle } from "./ChatPersonalization";
@@ -1427,64 +1428,10 @@ export default function PersonalChat({ recipientId, recipientName, recipientAvat
         )}
       </AnimatePresence>
 
-      {/* Voice recording overlay */}
-      <AnimatePresence>
-        {voice.isRecording && (
-          <motion.div
-            initial={{ height: 0, opacity: 0 }}
-            animate={{ height: "auto", opacity: 1 }}
-            exit={{ height: 0, opacity: 0 }}
-            className="bg-destructive/5 border-t border-destructive/20 px-3 py-2.5 flex items-center gap-3"
-          >
-            <motion.div
-              className="w-3 h-3 rounded-full bg-destructive shrink-0"
-              animate={{ scale: [1, 1.4, 1], opacity: [1, 0.5, 1] }}
-              transition={{ repeat: Infinity, duration: 1.2, ease: "easeInOut" }}
-            />
-
-            {/* Live waveform visualization */}
-            <div className="flex-1 flex items-center gap-[2px] h-7 overflow-hidden">
-              {Array.from({ length: 24 }, (_, i) => (
-                <motion.div
-                  key={i}
-                  className="flex-1 rounded-full bg-destructive/60"
-                  style={{ minHeight: 3 }}
-                  animate={{
-                    height: ["20%", `${30 + Math.random() * 70}%`, "20%"],
-                  }}
-                  transition={{
-                    repeat: Infinity,
-                    duration: 0.4 + Math.random() * 0.4,
-                    delay: i * 0.03,
-                    ease: "easeInOut",
-                  }}
-                />
-              ))}
-            </div>
-
-            <span className="text-xs font-mono font-semibold text-destructive tabular-nums shrink-0">
-              {Math.floor(voice.duration / 60)}:{(voice.duration % 60).toString().padStart(2, "0")}
-            </span>
-
-            <button
-              onClick={voice.cancelRecording}
-              className="text-[11px] text-muted-foreground px-3 py-1.5 rounded-full bg-muted hover:bg-muted/80 transition-colors font-medium"
-            >
-              Cancel
-            </button>
-            <button
-              onClick={voice.stopRecording}
-              className="w-10 h-10 rounded-full bg-primary text-primary-foreground flex items-center justify-center active:scale-90 transition-transform shadow-sm"
-            >
-              <Send className="w-4 h-4" />
-            </button>
-          </motion.div>
-        )}
-      </AnimatePresence>
+      {/* Voice recording overlay is rendered inside HoldToRecordMic (Round 5) */}
 
       {/* Input area */}
-      {!voice.isRecording && (
-        <div className="bg-background/80 backdrop-blur-2xl border-t border-border/5 px-2.5 py-2 relative" style={{ paddingBottom: "max(env(safe-area-inset-bottom, 0px), 0.5rem)" }}>
+      <div className="bg-background/80 backdrop-blur-2xl border-t border-border/5 px-2.5 py-2 relative" style={{ paddingBottom: "max(env(safe-area-inset-bottom, 0px), 0.5rem)" }}>
           <div className="flex items-end gap-1.5">
             {/* Scrollable action group — keeps every utility button reachable on narrow viewports */}
             <div className="flex items-end gap-1 overflow-x-auto no-scrollbar shrink min-w-0 max-w-[44%] sm:max-w-[55%]">
@@ -1601,16 +1548,10 @@ export default function PersonalChat({ recipientId, recipientName, recipientAvat
                 {sending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-[17px] w-[17px]" />}
               </button>
             ) : (
-              <button
-                onClick={voice.startRecording}
-                className="h-11 w-11 rounded-full bg-primary/10 text-primary flex items-center justify-center hover:bg-primary/15 active:scale-90 transition-all shrink-0"
-              >
-                <Mic className="h-5 w-5" />
-              </button>
+              <HoldToRecordMic voice={voice} />
             )}
           </div>
         </div>
-      )}
 
       {/* Sticker keyboard */}
       <AnimatePresence>
