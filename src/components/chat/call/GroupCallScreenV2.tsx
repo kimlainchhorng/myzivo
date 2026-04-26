@@ -12,6 +12,7 @@ import { useLiveKitCall } from "@/hooks/useLiveKitCall";
 import GroupCallGrid from "./GroupCallGrid";
 import GroupCallControls from "./GroupCallControls";
 import CallReactionsOverlay from "./CallReactionsOverlay";
+import CallReactionStrip from "./CallReactionStrip";
 
 interface Props {
   roomName: string;
