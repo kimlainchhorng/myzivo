@@ -10,7 +10,7 @@
  *   5) Cover photo     (optional, Skip allowed)
  */
 import { useState, useEffect, useRef, useMemo, useCallback } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   ArrowLeft, ArrowRight, Briefcase, Building2, User, Image as ImageIcon,
