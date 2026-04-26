@@ -8833,6 +8833,185 @@ export type Database = {
         }
         Relationships: []
       }
+      channel_post_reactions: {
+        Row: {
+          created_at: string
+          emoji: string
+          post_id: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          emoji: string
+          post_id: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          emoji?: string
+          post_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "channel_post_reactions_post_id_fkey"
+            columns: ["post_id"]
+            isOneToOne: false
+            referencedRelation: "channel_posts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      channel_post_views: {
+        Row: {
+          last_viewed_at: string
+          post_id: string
+          user_id: string
+        }
+        Insert: {
+          last_viewed_at?: string
+          post_id: string
+          user_id: string
+        }
+        Update: {
+          last_viewed_at?: string
+          post_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "channel_post_views_post_id_fkey"
+            columns: ["post_id"]
+            isOneToOne: false
+            referencedRelation: "channel_posts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      channel_posts: {
+        Row: {
+          author_id: string
+          body: string | null
+          channel_id: string
+          created_at: string
+          id: string
+          media: Json
+          published_at: string | null
+          reactions_count: Json
+          scheduled_for: string | null
+          updated_at: string
+          view_count: number
+        }
+        Insert: {
+          author_id: string
+          body?: string | null
+          channel_id: string
+          created_at?: string
+          id?: string
+          media?: Json
+          published_at?: string | null
+          reactions_count?: Json
+          scheduled_for?: string | null
+          updated_at?: string
+          view_count?: number
+        }
+        Update: {
+          author_id?: string
+          body?: string | null
+          channel_id?: string
+          created_at?: string
+          id?: string
+          media?: Json
+          published_at?: string | null
+          reactions_count?: Json
+          scheduled_for?: string | null
+          updated_at?: string
+          view_count?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "channel_posts_channel_id_fkey"
+            columns: ["channel_id"]
+            isOneToOne: false
+            referencedRelation: "channels"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      channel_subscribers: {
+        Row: {
+          channel_id: string
+          joined_at: string
+          notifications_on: boolean
+          role: Database["public"]["Enums"]["channel_role"]
+          user_id: string
+        }
+        Insert: {
+          channel_id: string
+          joined_at?: string
+          notifications_on?: boolean
+          role?: Database["public"]["Enums"]["channel_role"]
+          user_id: string
+        }
+        Update: {
+          channel_id?: string
+          joined_at?: string
+          notifications_on?: boolean
+          role?: Database["public"]["Enums"]["channel_role"]
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "channel_subscribers_channel_id_fkey"
+            columns: ["channel_id"]
+            isOneToOne: false
+            referencedRelation: "channels"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      channels: {
+        Row: {
+          avatar_url: string | null
+          banner_url: string | null
+          created_at: string
+          description: string | null
+          handle: string
+          id: string
+          is_public: boolean
+          name: string
+          owner_id: string
+          subscriber_count: number
+          updated_at: string
+        }
+        Insert: {
+          avatar_url?: string | null
+          banner_url?: string | null
+          created_at?: string
+          description?: string | null
+          handle: string
+          id?: string
+          is_public?: boolean
+          name: string
+          owner_id: string
+          subscriber_count?: number
+          updated_at?: string
+        }
+        Update: {
+          avatar_url?: string | null
+          banner_url?: string | null
+          created_at?: string
+          description?: string | null
+          handle?: string
+          id?: string
+          is_public?: boolean
+          name?: string
+          owner_id?: string
+          subscriber_count?: number
+          updated_at?: string
+        }
+        Relationships: []
+      }
       chat_drafts: {
         Row: {
           chat_partner_id: string
@@ -60545,6 +60724,10 @@ export type Database = {
         Args: { _driver_id: string }
         Returns: boolean
       }
+      can_view_channel: {
+        Args: { _channel_id: string; _user_id: string }
+        Returns: boolean
+      }
       can_view_driver_details: {
         Args: { _driver_id: string }
         Returns: boolean
@@ -61492,6 +61675,10 @@ export type Database = {
         Returns: boolean
       }
       is_business_user: { Args: { p_user_id?: string }; Returns: boolean }
+      is_channel_manager: {
+        Args: { _channel_id: string; _user_id: string }
+        Returns: boolean
+      }
       is_chat_member: { Args: { p_chat_id: string }; Returns: boolean }
       is_chat_participant: {
         Args: { p_order_id: string; p_trip_id: string }
@@ -61668,6 +61855,10 @@ export type Database = {
       }
       recompute_restaurant_rating_stats: {
         Args: { p_restaurant_id: string }
+        Returns: undefined
+      }
+      record_channel_post_view: {
+        Args: { _post_id: string }
         Returns: undefined
       }
       record_sla_metrics: { Args: { p_order_id: string }; Returns: string }
@@ -61980,6 +62171,7 @@ export type Database = {
         | "id_card"
       car_owner_insurance_option: "platform" | "own" | "none"
       car_owner_status: "pending" | "verified" | "rejected" | "suspended"
+      channel_role: "owner" | "admin" | "sub"
       checkout_mode: "redirect" | "iframe"
       document_review_status: "pending" | "approved" | "rejected"
       driver_state: "offline" | "online_available" | "online_busy"
@@ -62361,6 +62553,7 @@ export const Constants = {
       ],
       car_owner_insurance_option: ["platform", "own", "none"],
       car_owner_status: ["pending", "verified", "rejected", "suspended"],
+      channel_role: ["owner", "admin", "sub"],
       checkout_mode: ["redirect", "iframe"],
       document_review_status: ["pending", "approved", "rejected"],
       driver_state: ["offline", "online_available", "online_busy"],

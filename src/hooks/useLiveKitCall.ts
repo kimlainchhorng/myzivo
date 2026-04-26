@@ -55,6 +55,12 @@ interface UseLiveKitCallOptions {
   callType?: "audio" | "video";
   enabled: boolean;
   onEnded?: () => void;
+  /** Pre-join intent: start with mic muted */
+  startMicMuted?: boolean;
+  /** Pre-join intent: start with camera off */
+  startCamOff?: boolean;
+  /** Host-only: kick off cloud recording immediately after connect */
+  autoRecord?: boolean;
 }
 
 export function useLiveKitCall({
@@ -62,6 +68,9 @@ export function useLiveKitCall({
   callType = "video",
   enabled,
   onEnded,
+  startMicMuted = false,
+  startCamOff = false,
+  autoRecord = false,
 }: UseLiveKitCallOptions) {
   const roomRef = useRef<Room | null>(null);
   const [state, setState] = useState<"connecting" | "connected" | "ended" | "error">("connecting");
@@ -72,8 +81,8 @@ export function useLiveKitCall({
   const [isRecording, setIsRecording] = useState(false);
   const [sessionId, setSessionId] = useState<string | null>(null);
   const [isScreenSharing, setIsScreenSharing] = useState(false);
-  const [micEnabled, setMicEnabled] = useState(true);
-  const [camEnabled, setCamEnabled] = useState(callType === "video");
+  const [micEnabled, setMicEnabled] = useState(!startMicMuted);
+  const [camEnabled, setCamEnabled] = useState(callType === "video" && !startCamOff);
   const [handRaised, setHandRaised] = useState(false);
 
   /* ----------------- Refresh participant list ----------------- */
@@ -172,15 +181,30 @@ export function useLiveKitCall({
           return;
         }
 
-        // Publish defaults
-        await room.localParticipant.setMicrophoneEnabled(true);
+        // Publish defaults (respect pre-join intent)
+        await room.localParticipant.setMicrophoneEnabled(!startMicMuted);
         if (callType === "video") {
-          await room.localParticipant.setCameraEnabled(true);
+          await room.localParticipant.setCameraEnabled(!startCamOff);
         }
         if (data.isHost) {
           await room.localParticipant.setMetadata("host");
         }
         refreshParticipants();
+
+        // Auto-record (host only)
+        if (autoRecord && data.isHost && data.sessionId) {
+          try {
+            const { error: recErr } = await supabase.functions.invoke("livekit-recording", {
+              body: { sessionId: data.sessionId, action: "start" },
+            });
+            if (recErr) throw recErr;
+            setIsRecording(true);
+            toast.success("Recording started");
+          } catch (e) {
+            const m = e instanceof Error ? e.message : String(e);
+            toast.error(`Auto-record failed: ${m}`);
+          }
+        }
       } catch (e) {
         const msg = e instanceof Error ? e.message : String(e);
         if (!cancelled) {
