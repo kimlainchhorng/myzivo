@@ -1280,10 +1280,13 @@ export default function PersonalChat({ recipientId, recipientName, recipientAvat
                         senderId={msg.sender_id}
                         lockedPriceCents={msg.locked_price_cents}
                         initialReactions={reactionsMap[msg.id]}
+                        editedAt={msg.edited_at}
+                        createdAt={msg.created_at}
                         onReply={handleReply}
                         onDelete={handleDelete}
                         onForward={handleForward}
                         onPin={handlePin}
+                        onEdit={handleEdit}
                       />
                     )}
                   </div>
