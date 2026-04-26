@@ -115,6 +115,12 @@ const ReelsFeedPage = lazy(() => import("./pages/ReelsFeedPage"));
 const SoundPage = lazy(() => import("./pages/SoundPage"));
 const ChatHubPage = lazy(() => import("./pages/ChatHubPage"));
 const ContactsPage = lazy(() => import("./pages/chat/ContactsPage"));
+const PrivacySecurityPage = lazy(() => import("./pages/chat/settings/PrivacySecurityPage"));
+const ActiveSessionsPage = lazy(() => import("./pages/chat/settings/ActiveSessionsPage"));
+const TwoStepSetupPage = lazy(() => import("./pages/chat/settings/TwoStepSetupPage"));
+const PasscodeSetupPage = lazy(() => import("./pages/chat/settings/PasscodeSetupPage"));
+const LoginAlertsPage = lazy(() => import("./pages/chat/settings/LoginAlertsPage"));
+const AppLockGate = lazy(() => import("./components/chat/settings/AppLockGate"));
 const ExplorePage = lazy(() => import("./pages/ExplorePage"));
 const BookmarksPage = lazy(() => import("./pages/BookmarksPage"));
 const PrivacySettingsPage = lazy(() => import("./pages/account/PrivacySettingsPage"));
@@ -676,6 +682,11 @@ const App = () => (
                 <Route path="/refer" element={<ProtectedRoute><ReferAFriendPage /></ProtectedRoute>} />
                 <Route path="/chat" element={<ChatHubPage />} />
                 <Route path="/chat/contacts" element={<ProtectedRoute><ContactsPage /></ProtectedRoute>} />
+                <Route path="/chat/settings/privacy" element={<ProtectedRoute><PrivacySecurityPage /></ProtectedRoute>} />
+                <Route path="/chat/settings/sessions" element={<ProtectedRoute><ActiveSessionsPage /></ProtectedRoute>} />
+                <Route path="/chat/settings/two-step" element={<ProtectedRoute><TwoStepSetupPage /></ProtectedRoute>} />
+                <Route path="/chat/settings/passcode" element={<ProtectedRoute><PasscodeSetupPage /></ProtectedRoute>} />
+                <Route path="/chat/settings/login-alerts" element={<ProtectedRoute><LoginAlertsPage /></ProtectedRoute>} />
                 <Route path="/explore" element={<ExplorePage />} />
                 <Route path="/saved" element={<ProtectedRoute><BookmarksPage /></ProtectedRoute>} />
                 <Route path="/creator-dashboard" element={<ProtectedRoute><CreatorDashboardPage /></ProtectedRoute>} />
