@@ -19,6 +19,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { format, isToday, isYesterday } from "date-fns";
 import { toast } from "sonner";
 import VoiceMessagePlayer from "./VoiceMessagePlayer";
+import HoldToRecordMic from "./HoldToRecordMic";
 import { useVoiceRecorder } from "@/hooks/useVoiceRecorder";
 import GroupMembersSheet from "./GroupMembersSheet";
 import GroupInviteSheet from "./GroupInviteSheet";
