@@ -238,7 +238,7 @@ export default function FeedSidebar() {
               </Avatar>
               <div className="flex-1 min-w-0">
                 <p className="text-sm font-semibold text-foreground truncate">{displayName}</p>
-                <p className="text-[11px] text-muted-foreground truncate">{email}</p>
+                <p className="text-[11px] text-muted-foreground truncate">{username ? `@${username}` : email}</p>
               </div>
               <div className="h-2.5 w-2.5 rounded-full bg-primary shrink-0" />
             </div>
