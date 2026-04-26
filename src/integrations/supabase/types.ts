@@ -38030,6 +38030,7 @@ export type Database = {
           status: string | null
           updated_at: string | null
           user_id: string | null
+          username: string | null
           zone_id: string | null
         }
         Insert: {
@@ -38091,6 +38092,7 @@ export type Database = {
           status?: string | null
           updated_at?: string | null
           user_id?: string | null
+          username?: string | null
           zone_id?: string | null
         }
         Update: {
@@ -38152,6 +38154,7 @@ export type Database = {
           status?: string | null
           updated_at?: string | null
           user_id?: string | null
+          username?: string | null
           zone_id?: string | null
         }
         Relationships: [
@@ -38984,6 +38987,33 @@ export type Database = {
           date?: string
           push_count?: number | null
           user_id?: string
+        }
+        Relationships: []
+      }
+      qr_login_tokens: {
+        Row: {
+          consumed_at: string | null
+          created_at: string
+          created_by_device: string | null
+          expires_at: string
+          token: string
+          user_id: string | null
+        }
+        Insert: {
+          consumed_at?: string | null
+          created_at?: string
+          created_by_device?: string | null
+          expires_at?: string
+          token: string
+          user_id?: string | null
+        }
+        Update: {
+          consumed_at?: string | null
+          created_at?: string
+          created_by_device?: string | null
+          expires_at?: string
+          token?: string
+          user_id?: string | null
         }
         Relationships: []
       }
@@ -53047,6 +53077,33 @@ export type Database = {
         }
         Relationships: []
       }
+      user_contacts: {
+        Row: {
+          added_via: string
+          contact_user_id: string
+          created_at: string
+          custom_name: string | null
+          favorite: boolean
+          owner_id: string
+        }
+        Insert: {
+          added_via?: string
+          contact_user_id: string
+          created_at?: string
+          custom_name?: string | null
+          favorite?: boolean
+          owner_id: string
+        }
+        Update: {
+          added_via?: string
+          contact_user_id?: string
+          created_at?: string
+          custom_name?: string | null
+          favorite?: boolean
+          owner_id?: string
+        }
+        Relationships: []
+      }
       user_cvs: {
         Row: {
           certifications: Json | null
@@ -53761,6 +53818,48 @@ export type Database = {
         }
         Relationships: []
       }
+      user_privacy_settings: {
+        Row: {
+          bio_visibility: string
+          calls: string
+          exceptions: Json
+          forwards: string
+          group_invites: string
+          last_seen: string
+          phone_visibility: string
+          profile_photo: string
+          read_receipts: boolean
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          bio_visibility?: string
+          calls?: string
+          exceptions?: Json
+          forwards?: string
+          group_invites?: string
+          last_seen?: string
+          phone_visibility?: string
+          profile_photo?: string
+          read_receipts?: boolean
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          bio_visibility?: string
+          calls?: string
+          exceptions?: Json
+          forwards?: string
+          group_invites?: string
+          last_seen?: string
+          phone_visibility?: string
+          profile_photo?: string
+          read_receipts?: boolean
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       user_promo_wallet: {
         Row: {
           assigned_at: string | null
@@ -54269,6 +54368,27 @@ export type Database = {
           user_id?: string
           warned_by?: string | null
           warning_type?: string
+        }
+        Relationships: []
+      }
+      usernames: {
+        Row: {
+          created_at: string
+          reserved: boolean
+          user_id: string | null
+          username: string
+        }
+        Insert: {
+          created_at?: string
+          reserved?: boolean
+          user_id?: string | null
+          username: string
+        }
+        Update: {
+          created_at?: string
+          reserved?: boolean
+          user_id?: string | null
+          username?: string
         }
         Relationships: []
       }
