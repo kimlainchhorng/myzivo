@@ -4,10 +4,14 @@
  * cloud recording before the call begins.
  */
 import { useEffect, useRef, useState } from "react";
-import { Mic, MicOff, Video, VideoOff, Radio, X, ArrowRight } from "lucide-react";
+import {
+  Mic, MicOff, Video, VideoOff, Radio, X, ArrowRight,
+  CheckCircle2, AlertTriangle, Loader2,
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import { toast } from "sonner";
+import { useRecordingPreflight } from "@/hooks/useRecordingPreflight";
 
 export interface CallLobbyResult {
   startMicMuted: boolean;
