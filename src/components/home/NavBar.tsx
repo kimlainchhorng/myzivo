@@ -438,9 +438,11 @@ const NavBar = forwardRef<HTMLDivElement>(function NavBar(_, ref) {
                           <Building2 className="w-4 h-4 text-muted-foreground" /> Business Page
                         </DropdownMenuItem>
                       )}
-                      <DropdownMenuItem onClick={() => navigate("/business/new")} className="cursor-pointer rounded-lg py-2 gap-2.5 text-primary">
-                        <Plus className="w-4 h-4" /> Create new Business
-                      </DropdownMenuItem>
+                      {ownerStores.length === 0 && (
+                        <DropdownMenuItem onClick={() => navigate("/business/new")} className="cursor-pointer rounded-lg py-2 gap-2.5 text-foreground">
+                          <Building2 className="w-4 h-4 text-foreground" /> Create new Business
+                        </DropdownMenuItem>
+                      )}
                       {!isMember && (
                         <DropdownMenuItem onClick={() => navigate("/membership")} className="cursor-pointer rounded-lg py-2.5 gap-2.5 text-amber-600">
                           <Crown className="w-4 h-4" /> Join ZIVO+
