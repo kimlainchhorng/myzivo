@@ -97,6 +97,7 @@ const NavBar = forwardRef<HTMLDivElement>(function NavBar(_, ref) {
   const location = useLocation();
   const { user, signOut } = useAuth();
   const { isActive: isMember } = useMembership();
+  const { data: ownerStores = [] } = useOwnerStores();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [moreOpen, setMoreOpen] = useState(false);
   const [socialOpen, setSocialOpen] = useState(false);
