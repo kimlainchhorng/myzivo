@@ -28579,6 +28579,48 @@ export type Database = {
           },
         ]
       }
+      lodging_messages: {
+        Row: {
+          attachments: Json
+          body: string
+          created_at: string
+          guest_id: string | null
+          id: string
+          read_at: string | null
+          reservation_id: string | null
+          sender_role: string
+          sender_user_id: string | null
+          store_id: string
+          updated_at: string
+        }
+        Insert: {
+          attachments?: Json
+          body: string
+          created_at?: string
+          guest_id?: string | null
+          id?: string
+          read_at?: string | null
+          reservation_id?: string | null
+          sender_role?: string
+          sender_user_id?: string | null
+          store_id: string
+          updated_at?: string
+        }
+        Update: {
+          attachments?: Json
+          body?: string
+          created_at?: string
+          guest_id?: string | null
+          id?: string
+          read_at?: string | null
+          reservation_id?: string | null
+          sender_role?: string
+          sender_user_id?: string | null
+          store_id?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       lodging_promotions: {
         Row: {
           active: boolean
@@ -28726,6 +28768,45 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      lodging_room_blocks: {
+        Row: {
+          created_at: string
+          end_date: string
+          external_uid: string | null
+          id: string
+          room_id: string | null
+          source: string
+          start_date: string
+          store_id: string
+          summary: string | null
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          end_date: string
+          external_uid?: string | null
+          id?: string
+          room_id?: string | null
+          source?: string
+          start_date: string
+          store_id: string
+          summary?: string | null
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          end_date?: string
+          external_uid?: string | null
+          id?: string
+          room_id?: string | null
+          source?: string
+          start_date?: string
+          store_id?: string
+          summary?: string | null
+          updated_at?: string
+        }
+        Relationships: []
       }
       lodging_stripe_webhook_events: {
         Row: {
@@ -48439,11 +48520,13 @@ export type Database = {
           employee_number: number
           hourly_rate: number | null
           id: string
+          lodging_role: string | null
           name: string
           notes: string | null
           pay_type: string
           phone: string | null
           role: string
+          shift: string | null
           status: string
           store_id: string
           updated_at: string
@@ -48455,11 +48538,13 @@ export type Database = {
           employee_number?: number
           hourly_rate?: number | null
           id?: string
+          lodging_role?: string | null
           name: string
           notes?: string | null
           pay_type?: string
           phone?: string | null
           role?: string
+          shift?: string | null
           status?: string
           store_id: string
           updated_at?: string
@@ -48471,11 +48556,13 @@ export type Database = {
           employee_number?: number
           hourly_rate?: number | null
           id?: string
+          lodging_role?: string | null
           name?: string
           notes?: string | null
           pay_type?: string
           phone?: string | null
           role?: string
+          shift?: string | null
           status?: string
           store_id?: string
           updated_at?: string
