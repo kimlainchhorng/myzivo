@@ -13900,6 +13900,7 @@ export type Database = {
           original_text: string | null
           receiver_id: string
           reply_to_id: string | null
+          self_destruct_seconds: number | null
           sender_id: string
           video_url: string | null
           voice_url: string | null
@@ -13924,6 +13925,7 @@ export type Database = {
           original_text?: string | null
           receiver_id: string
           reply_to_id?: string | null
+          self_destruct_seconds?: number | null
           sender_id: string
           video_url?: string | null
           voice_url?: string | null
@@ -13948,6 +13950,7 @@ export type Database = {
           original_text?: string | null
           receiver_id?: string
           reply_to_id?: string | null
+          self_destruct_seconds?: number | null
           sender_id?: string
           video_url?: string | null
           voice_url?: string | null
@@ -55441,6 +55444,9 @@ export type Database = {
           duration_seconds: number | null
           id: string
           is_listened: boolean | null
+          message_id: string | null
+          transcript: string | null
+          transcript_lang: string | null
           user_id: string
           waveform_data: Json | null
         }
@@ -55451,6 +55457,9 @@ export type Database = {
           duration_seconds?: number | null
           id?: string
           is_listened?: boolean | null
+          message_id?: string | null
+          transcript?: string | null
+          transcript_lang?: string | null
           user_id: string
           waveform_data?: Json | null
         }
@@ -55461,6 +55470,9 @@ export type Database = {
           duration_seconds?: number | null
           id?: string
           is_listened?: boolean | null
+          message_id?: string | null
+          transcript?: string | null
+          transcript_lang?: string | null
           user_id?: string
           waveform_data?: Json | null
         }
