@@ -1,96 +1,67 @@
-## Chat Mega Upgrade — Phase B & C
+# Restore your profile (fix stuck-loading spinner)
 
-Continuing from Phase A (gifting + wallet + DB). Now wiring the document scanner, file bubbles, channels surface in chat, and a real contacts workflow.
+## What happened
 
----
+Your data is **safe and intact** — the database still has:
+- ZIVO Platform name
+- Blue verified badge
+- Brand name = ZIVO
+- Avatar + cover photo
 
-### Phase B — Scanner → PDF & File Upgrades
+The problem is a **permissions bug** introduced when we tightened security on the `profiles` table earlier today.
 
-**Goal:** Camera/photo → auto-cropped A4 PDF, plus richer file/document message bubbles.
+## Root cause (technical)
 
-1. **DocumentScanner component** (`src/components/chat/DocumentScanner.tsx`)
-   - Full-screen sheet with camera capture (Capacitor Camera on native, `<input capture>` on web).
-   - Multi-page capture (add page, reorder, delete).
-   - Edge detection + perspective correction using **OpenCV.js** (lazy-loaded from CDN to keep bundle small).
-   - Filter modes: Auto, Color, Grayscale, B&W (high-contrast scan look).
-   - Page size selector: A4 (default), Letter, Original.
-   - "Save as PDF" → builds A4 PDF via **jsPDF**, uploads to `chat-files` bucket, sends as `file` message.
+The earlier security migration (`20260426215638`) replaced wide-open SELECT access on `profiles` with a strict, **column-by-column** GRANT list. Every column the app reads must be explicitly listed.
 
-2. **FileBubble component** (`src/components/chat/FileBubble.tsx`)
-   - Renders any non-image/video file message: icon by mime type, filename, size, page count (PDFs).
-   - Tap → preview sheet (PDF.js inline viewer for PDFs, native open for others).
-   - Download button + share-to-other-chat.
+Then a later migration added a new column — `display_brand_name` (the "ZIVO" override) — but **forgot to grant SELECT on it** to the `authenticated` role.
 
-3. **DocumentBubble component** (`src/components/chat/DocumentBubble.tsx`)
-   - Specialized variant for scanner output: shows first-page thumbnail + "X pages · A4 · PDF".
+Confirmed via Postgres:
+```
+has_column_privilege('authenticated', 'profiles', 'display_brand_name', 'SELECT') = false
+has_column_privilege('authenticated', 'profiles', 'full_name',          'SELECT') = true
+```
 
-4. **Wire scanner into ChatAttachMenu**
-   - Replace the "coming soon" toast with `onScanDocument` opening `DocumentScanner` in `PersonalChat` and `GroupChat`.
+So when the Profile page runs `SELECT *` on `profiles`, Postgres rejects it with "permission denied for column display_brand_name". The query throws, `profile` stays `null`, and the page is stuck on the green spinner. The bottom-nav Account tab falls back to your email's first letter, which is why it shows "K" instead of the ZIVO logo.
 
-5. **`useChatFiles` hook** (`src/hooks/useChatFiles.ts`)
-   - Helpers to upload to `chat-files` bucket (already created in Phase A), insert `chat_files` row, and emit a `file` message.
-   - Generate first-page thumbnail (PDF.js → canvas → upload).
+## Fix
 
-6. **Renderer routing**
-   - In `MessageBubble` (or wherever message types are dispatched), route `message_type='file'` → `FileBubble`, and detect scanner-origin (metadata flag) → `DocumentBubble`.
+### 1. Database migration — grant the missing column
+```sql
+GRANT SELECT (display_brand_name) ON public.profiles TO authenticated;
+```
 
----
+### 2. Future-proof the GRANT list
+Add a defensive migration that auto-grants SELECT on **all current columns** of `profiles` to `authenticated` (the row-level RLS policy still restricts which rows are returned — column GRANTs only control which fields are visible). This prevents the same bug the next time we add a column.
 
-### Phase C — Channels in Chat & Real Contacts Workflow
+```sql
+DO $$
+DECLARE cols text;
+BEGIN
+  SELECT string_agg(quote_ident(column_name), ', ')
+    INTO cols
+  FROM information_schema.columns
+  WHERE table_schema='public' AND table_name='profiles';
+  EXECUTE format('GRANT SELECT (%s) ON public.profiles TO authenticated', cols);
+END$$;
+```
 
-**Goal:** Surface Channels inside the unified Chat Hub and add a proper contacts flow with requests, sync, and nearby.
+Sensitive fields (email, phone, kyc, payout, etc.) remain protected by the existing RLS row policy — only the row owner can SELECT their own row, so non-owners still cannot read those values for other users.
 
-1. **Channels tab in Chat Hub** (`src/pages/chat/ChatHub.tsx` or equivalent)
-   - Add a "Channels" segment alongside Chats/Groups.
-   - Lists subscribed channels (via `useChannel` / new `useMyChannels`) with latest post preview, unread dot, and verified badge.
-   - "Discover" button → existing `/channels` directory.
-   - Tap channel → opens `ChannelPage` inside the chat panel (desktop) or full route (mobile).
+### 3. Make the client query resilient
+In `src/hooks/useUserProfile.ts`, replace `.select("*")` with an explicit list of columns the Profile page actually needs. This way, if a future column is added without a GRANT, only that column is missing — the rest of the profile still loads. Add a small `console.error` if the query fails, so we see this immediately next time instead of an infinite spinner.
 
-2. **Channel quick-broadcast composer** (owners/admins only)
-   - Add a compact composer at the top of `ChannelPage` for owners: text + image + schedule.
-   - New edge function `channel-broadcast` that inserts a post and fans out a notification to all subscribers (uses existing `device_tokens`).
+### 4. Verify after deploy
+- Reload `/account` → should show "ZIVO Platform" + blue badge + cover photo + avatar.
+- Bottom nav Account tab → should show ZIVO logo, not "K".
+- No regression on other users' profile views.
 
-3. **Contact requests workflow**
-   - **DB:** new `contact_requests` table (`from_user_id`, `to_user_id`, `status: pending|accepted|declined`, `message`, timestamps) with RLS (only sender/recipient can read; only recipient can update).
-   - Update `useContacts.add()`: if target user has "require approval" privacy on, create a `contact_request` instead of direct insert.
-   - New `ContactRequestsPage` (`/chat/contacts/requests`) — incoming + outgoing tabs, accept/decline.
-   - Notification badge on Contacts tab when pending requests exist.
+## Files changed
 
-4. **Phone-book contact sync (native)**
-   - Use `@capacitor-community/contacts` for permission + read.
-   - Hash phone numbers client-side (SHA-256, lowercased E.164) and POST to new `contact-match` edge function.
-   - Edge function compares against hashed `profiles.phone_hash` (new column, indexed) and returns matched user_ids.
-   - "Find Contacts on ZIVO" screen lists matches with one-tap add.
+- `supabase/migrations/<new-timestamp>_fix_profiles_column_grants.sql` — adds the missing GRANT and the defensive auto-grant block
+- `src/hooks/useUserProfile.ts` — replace `select("*")` with explicit columns + error logging
 
-5. **People Nearby**
-   - DB: `nearby_presence` (`user_id`, `geohash`, `lat`, `lng`, `expires_at`, `is_visible`) — RLS so only same-geohash users can read, expires after 30 min.
-   - New `NearbyChatPage` reusing geohash queries: shows users within ~1 km who opted in.
-   - Opt-in toggle in Chat Privacy Hub (default off); broadcasts current location every 60s while screen is open.
+## Not changed
 
----
-
-### Backend Summary (new this round)
-
-**Tables**
-- `contact_requests`
-- `nearby_presence`
-- `profiles.phone_hash` (column add, indexed)
-
-**Edge Functions**
-- `channel-broadcast` — atomic post + push fan-out
-- `contact-match` — hashed phone matching
-- `generate-file-thumbnail` — server-side PDF first-page render fallback (when client render fails)
-
-**Storage**
-- Reuse `chat-files` bucket from Phase A for scans/files.
-- New public-read `channel-media` bucket for channel post images.
-
----
-
-### Order of Execution
-1. Phase B: scanner + file bubbles (high user-visible value).
-2. Phase C-1: Channels tab in chat hub.
-3. Phase C-2: Contact requests + privacy gating.
-4. Phase C-3: Phone sync + Nearby (optional final pass).
-
-Approve to proceed.
+- No data is modified. Your profile row is untouched.
+- No RLS policy is loosened. Row-level access stays the same; only column-level visibility is restored to what it was before today.
