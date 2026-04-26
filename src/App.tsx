@@ -124,6 +124,9 @@ const LoginAlertsPage = lazy(() => import("./pages/chat/settings/LoginAlertsPage
 const ChatPrivacyHubPage = lazy(() => import("./pages/chat/settings/ChatPrivacyHubPage"));
 const ChatSearchAllPage = lazy(() => import("./pages/chat/ChatSearchAllPage"));
 const CustomFoldersPage = lazy(() => import("./pages/chat/CustomFoldersPage"));
+const BroadcastListsPage = lazy(() => import("./pages/chat/BroadcastListsPage"));
+const NewBroadcastPage = lazy(() => import("./pages/chat/NewBroadcastPage"));
+const StorageManagerPage = lazy(() => import("./pages/chat/settings/StorageManagerPage"));
 const AppLockGate = lazy(() => import("./components/chat/settings/AppLockGate"));
 const GroupCallEntryPage = lazy(() => import("./pages/chat/GroupCallEntryPage"));
 const ChannelsDirectoryPage = lazy(() => import("./pages/channels/ChannelsDirectoryPage"));
