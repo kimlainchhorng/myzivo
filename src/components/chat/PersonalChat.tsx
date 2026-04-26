@@ -1430,8 +1430,7 @@ export default function PersonalChat({ recipientId, recipientName, recipientAvat
       {/* Voice recording overlay is rendered inside HoldToRecordMic (Round 5) */}
 
       {/* Input area */}
-      {!voice.isRecording && (
-        <div className="bg-background/80 backdrop-blur-2xl border-t border-border/5 px-2.5 py-2 relative" style={{ paddingBottom: "max(env(safe-area-inset-bottom, 0px), 0.5rem)" }}>
+      <div className="bg-background/80 backdrop-blur-2xl border-t border-border/5 px-2.5 py-2 relative" style={{ paddingBottom: "max(env(safe-area-inset-bottom, 0px), 0.5rem)" }}>
           <div className="flex items-end gap-1.5">
             {/* Scrollable action group — keeps every utility button reachable on narrow viewports */}
             <div className="flex items-end gap-1 overflow-x-auto no-scrollbar shrink min-w-0 max-w-[44%] sm:max-w-[55%]">
