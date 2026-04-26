@@ -1,175 +1,79 @@
-# Phase 3 — Messaging Power-ups
+# Phase 3B–3E — Reactions, Voice, Self-Destruct, Translate
 
-Goal: Bring chat to Telegram parity with **edit, forward, reply quote, multi-emoji reactions, voice notes, self-destruct timers, scheduled send, pin, and AI translate/transcribe**.
-
----
-
-## 1. Database
-
-### New columns on `messages` (additive, all nullable)
-- `edited_at timestamptz`
-- `original_text text` (snapshot of pre-edit body for "edited" UI)
-- `forwarded_from_message_id uuid` + `forwarded_from_user_id uuid`
-- `reply_to_message_id uuid`
-- `self_destruct_seconds int` (1–60; null = off)
-- `expires_at timestamptz` (computed when first read)
-- `scheduled_for timestamptz` (null = send now)
-- `is_pinned boolean default false`
-- `pinned_at timestamptz`
-
-### New tables
-- `message_reactions` — already exists (used by `MessageReactionPicker`). Confirm RLS allows owner upsert + read by chat participants.
-- `message_pins` — `id, chat_partner_id, message_id, pinned_by, pinned_at`. One pin per message per conversation.
-- `voice_notes` — `id, message_id, storage_path, duration_ms, waveform jsonb, transcript text, transcript_lang text`.
-- `scheduled_messages` — staging table for `scheduled_for > now()`; a cron edge function flips them into `messages` at fire time.
-
-### Storage
-- Bucket `voice-notes` (private). RLS: owner write, chat participants read.
+Phase 3A (Edit / Reply / Forward / Pin) shipped. Approve to continue with the remaining sub-phases.
 
 ---
 
-## 2. Hooks
+## 3B — Multi-emoji Reactions + Realtime aggregation
 
-```
-src/hooks/
-  useMessageActions.ts    // edit, delete, forward, reply, pin
-  useReactions.ts         // toggle, list, real-time updates
-  useVoiceRecorder.ts     // MediaRecorder + waveform sampling + upload
-  useSelfDestruct.ts      // arm timer on read, fire delete
-  useScheduledSend.ts     // queue + list scheduled
-  useMessageTranslate.ts  // wraps useCaptionTranslation for messages
-  useVoiceTranscribe.ts   // calls transcribe-voice edge function
-```
+**Hooks**
+- `src/hooks/useReactions.ts` — load aggregated reactions per `message_id`, subscribe to realtime inserts/deletes, expose `toggle(emoji)` (insert if absent, delete if I already reacted).
+
+**Components**
+- `MessageReactionPicker.tsx` (rewrite) — switch from 8 lucide icons to **16 native emojis** (❤️ 😂 👍 👎 🔥 🎉 ✨ ⭐ 😮 😢 🙏 💯 👏 🤔 😍 💔), grid layout, hold-to-expand later.
+- `MessageReactionsBar.tsx` (new) — chip row under each bubble showing `❤️ 3` style aggregates; tap to toggle; framer-motion enter/exit; highlight chip if reactedByMe.
+
+Reuses existing `message_reactions` table (columns: `message_id, user_id, emoji`). No schema changes.
 
 ---
 
-## 3. Edge functions
+## 3C — Voice Notes + AI Transcribe
 
-```
-supabase/functions/
-  schedule-fire/         // cron every 60s; moves due rows from scheduled_messages → messages
-  transcribe-voice/      // takes voice_notes.id → calls Lovable AI (whisper-equivalent) → writes transcript
-  translate-message/     // already covered by translate-caption, reuse
-```
+**Hooks**
+- `useVoiceRecorder.ts` — MediaRecorder (`audio/webm;codecs=opus`), 64-bin waveform sampling via Web Audio API, hold-to-record / swipe-up-to-cancel, returns `{ blob, durationMs, waveform }`.
+- `useVoiceTranscribe.ts` — invokes `transcribe-voice` edge function with the storage path; updates `voice_notes.transcript`.
 
----
+**Components**
+- `VoiceRecorderButton.tsx` — replaces the mic icon in composer; long-press to record, animated waveform preview, swipe-up cancels, release sends.
+- `VoiceNotePlayer.tsx` — bubble player: play/pause, scrubbable waveform, duration, "Show transcript" toggle.
 
-## 4. UI components
+**Edge function**
+- `supabase/functions/transcribe-voice/index.ts` — downloads voice blob via signed URL, calls **Lovable AI gateway** (`google/gemini-2.5-flash` for audio transcription with `inline_data` audio input), writes `transcript` + `transcript_lang` back to `voice_notes`.
 
-```
-src/components/chat/
-  MessageBubble.tsx                // (extend) render reply quote, forwarded badge, edited tag, pin icon, burn timer
-  MessageActionsSheet.tsx          // long-press menu: Reply, Forward, Edit, Copy, Pin, Delete, React, Translate
-  ForwardPickerSheet.tsx           // pick contact / chat to forward to
-  EditMessageBar.tsx               // inline edit bar above composer
-  ReplyComposerBar.tsx             // shows quoted message above input
-  VoiceRecorderButton.tsx          // hold-to-record, swipe-to-cancel, waveform
-  VoiceNotePlayer.tsx              // bubble player with waveform + transcript toggle
-  SelfDestructPicker.tsx           // 5s/10s/30s/1m/off
-  ScheduledMessagesSheet.tsx       // list pending scheduled, cancel/edit
-  PinnedMessageBanner.tsx          // top of ChatPage
-  TranslateMenuItem.tsx            // per-message translate to user's locale
-```
+**Storage bucket**: create private `voice-notes` bucket via migration with RLS (owner upload, sender+recipient read).
+
+**Reuses** existing `voice_notes` table (columns: `user_id, conversation_id, audio_url, duration_seconds, waveform_data, is_listened`). I'll add columns `transcript text`, `transcript_lang text`, `message_id uuid`.
 
 ---
 
-## 5. Routes
+## 3D — Self-Destruct + Scheduled Send
 
-```
-/chat/:partnerId/scheduled        ScheduledMessagesSheet (modal route)
-/chat/:partnerId/pinned           PinnedMessagesPage
-```
+**Already in DB**: `direct_messages.expires_at`, `disappearing_message_settings`, `scheduled_messages` table (with `sender_id, receiver_id, message, scheduled_at, status`).
 
----
+**Hooks**
+- `useSelfDestruct.ts` — when recipient first reads a message with `expires_at IS NULL` and a `self_destruct_seconds` value, set `expires_at = now + N`. Client timer hides + deletes locally at expiry; server sweep also deletes.
+- `useScheduledSend.ts` — list pending (`status='pending'`), schedule new, cancel.
 
-## 6. Workflow
+**Components**
+- `SelfDestructPicker.tsx` — popover from composer flame icon: Off, 5s, 10s, 30s, 1m, 5m.
+- `ScheduledMessagesSheet.tsx` — bottom sheet listing user's pending scheduled messages with cancel/edit.
+- Composer: long-press send → date/time picker → inserts into `scheduled_messages`.
 
-```text
-Edit message
-  ├─▶ long-press → MessageActionsSheet → Edit
-  ├─▶ EditMessageBar shows above composer with current text
-  └─▶ Save → messages.update({text, edited_at, original_text})
+**Migration**: add `self_destruct_seconds int` to `direct_messages`.
 
-Forward
-  ├─▶ Actions → Forward → ForwardPickerSheet
-  └─▶ For each target: messages.insert({...copy, forwarded_from_*})
-
-Reply
-  ├─▶ Swipe-right on bubble or Actions → Reply
-  └─▶ ReplyComposerBar mounts; send → messages.insert({reply_to_message_id})
-
-Voice note
-  ├─▶ Hold mic button → MediaRecorder (opus/webm)
-  ├─▶ Release → upload to voice-notes bucket
-  ├─▶ messages.insert({type:'voice'}) + voice_notes.insert({...})
-  └─▶ background: transcribe-voice edge function fills transcript
-
-Self-destruct
-  ├─▶ Composer → flame icon → SelfDestructPicker (5s/10s/30s/1m)
-  ├─▶ messages.insert({self_destruct_seconds: N})
-  ├─▶ Recipient opens chat → first read sets expires_at = now + N
-  └─▶ Client timer + cron sweep delete row at expires_at
-
-Scheduled send
-  ├─▶ Composer long-press send → date/time picker
-  ├─▶ scheduled_messages.insert(...)
-  └─▶ schedule-fire cron (every 60s) flips due rows to messages
-
-Pin
-  ├─▶ Actions → Pin → message_pins.insert; messages.update(is_pinned=true)
-  └─▶ PinnedMessageBanner shows latest pin at top of chat
-
-Reactions (multi-emoji)
-  ├─▶ Long-press → MessageReactionPicker (already exists, extend to 16 emojis)
-  ├─▶ message_reactions.upsert({message_id,user_id,emoji})
-  └─▶ Realtime subscribe → bubble shows aggregated counts
-
-AI translate
-  ├─▶ Actions → Translate
-  └─▶ translate-message → display under bubble, toggle original/translation
-
-AI transcribe
-  └─▶ Auto on voice send; user can tap "Show transcript" on player
-```
+**Edge functions** (cron every minute via `pg_cron` + `pg_net`)
+- `schedule-fire` — flips `scheduled_messages` rows where `scheduled_at <= now()` and `status='pending'` into `direct_messages`, marks `status='sent'`.
+- `cleanup-expired-messages` — deletes `direct_messages` where `expires_at <= now()`.
 
 ---
 
-## 7. Security
-- RLS on all new tables: owner-write, chat-participant-read (uses existing `is_chat_participant` helper).
-- Voice note bucket: signed URLs only, 5-min expiry.
-- Edit window: server trigger blocks edits older than 48h (Telegram parity).
-- Self-destruct: cron `cleanup-expired-messages` runs every minute; also client deletes locally on timer.
-- Scheduled messages: RLS owner-only; fire function uses service role.
+## 3E — Per-message AI Translate
+
+**Hook**
+- `useMessageTranslate.ts` — given a message id + target language (user's locale), check `message_translations` cache; if miss, invoke `translate-caption` (existing) and persist to `message_translations`.
+
+**Component**
+- `TranslateMenuItem` already wired in `MessageActionsSheet`. Tapping opens the translation under the bubble (`MessageBubble` extension): "Translated from {sourceLang}" + translated text + "Show original" toggle.
+
+Reuses existing `message_translations` table.
 
 ---
 
-## 8. Sub-phases (shippable)
+## Acceptance per sub-phase
 
-**3A — Edit / Reply / Forward / Pin** (no new edge functions)
-- DB columns + `useMessageActions`, `MessageActionsSheet`, `ReplyComposerBar`, `EditMessageBar`, `ForwardPickerSheet`, `PinnedMessageBanner`.
+- **3B**: Long-press a bubble → 16-emoji picker → tap emoji → chip appears under bubble for both users in real time. Tap own chip again → removes it.
+- **3C**: Hold mic → record → release → bubble with waveform plays back; transcript appears 2-5s later under the player.
+- **3D**: Send a self-destruct (10s) message → recipient opens it → 10s countdown → bubble vanishes. Schedule "Hello" for tomorrow 9am → appears in chat at 9am.
+- **3E**: Tap Translate on a French message → see English translation under it; toggle back to original.
 
-**3B — Multi-emoji Reactions polish + Realtime**
-- Extend `MessageReactionPicker` to 16 emojis + long-press for full picker; aggregate counts on bubble; realtime channel.
-
-**3C — Voice Notes + AI Transcribe**
-- Bucket, `voice_notes` table, `useVoiceRecorder`, `VoiceRecorderButton`, `VoiceNotePlayer`, `transcribe-voice` edge function (Lovable AI whisper).
-
-**3D — Self-Destruct + Scheduled Send**
-- Columns, `SelfDestructPicker`, `ScheduledMessagesSheet`, `schedule-fire` cron, `cleanup-expired-messages` cron.
-
-**3E — AI Translate per-message**
-- `TranslateMenuItem` reusing `translate-caption` function.
-
----
-
-## 9. Acceptance
-- Long-press a message → see Reply, Forward, Edit (own only), Copy, Pin, React, Translate, Delete.
-- Edit a message within 48h → bubble shows "edited" tag.
-- Forward to another contact → recipient sees "Forwarded from @username".
-- Hold mic → record voice → release → bubble shows waveform + auto transcript.
-- Send a self-destruct (10s) photo → vanishes 10s after recipient opens.
-- Schedule a message for tomorrow 9am → appears in recipient's chat at 9am.
-- Pin a message → banner stays visible at top of chat.
-- Tap Translate on a foreign-language message → see translation under original.
-
-Approve and I'll build 3A first, then continue through 3E.
+Approve to build all four (3B → 3E) sequentially in one loop.
