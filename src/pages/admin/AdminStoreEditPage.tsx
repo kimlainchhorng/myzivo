@@ -89,6 +89,8 @@ import LodgingGuestRequestsSection from "@/components/admin/store/lodging/Lodgin
 import LodgingPromotionsSection from "@/components/admin/store/lodging/LodgingPromotionsSection";
 import LodgingChannelManagerSection from "@/components/admin/store/lodging/LodgingChannelManagerSection";
 import LodgingPayoutsSection from "@/components/admin/store/lodging/LodgingPayoutsSection";
+import LodgingInboxSection from "@/components/admin/store/lodging/LodgingInboxSection";
+import LodgingStaffSection from "@/components/admin/store/lodging/LodgingStaffSection";
 import { getLodgingCompletion } from "@/lib/lodging/lodgingCompletion";
 import { LODGING_TAB_IDS, resolveStoreTab, resolveStoreTabFromSearch } from "@/lib/admin/storeTabRouting";
 import { useLodgeRooms } from "@/hooks/lodging/useLodgeRooms";
@@ -2028,6 +2030,11 @@ export default function AdminStoreEditPage() {
     "lodge-policies": "Policies & Rules",
     "lodge-reviews": "Reviews & Guest Feedback",
     "lodge-reports": "Reports & Analytics",
+    "lodge-promos": "Promotions & Discounts",
+    "lodge-channels": "Channel Manager",
+    "lodge-payouts": "Payouts & Finance",
+    "lodge-inbox": "Guest Inbox",
+    "lodge-staff": "Hotel Staff",
   };
   const productsLabelTitle = isAutoRepair ? "Services" : isLodging ? "Rooms" : "Products";
   const paymentLabelTitle = form.category === "car-dealership" ? t("admin.store.booking_appointment") : isAutoRepair ? "Bookings" : isLodging ? "Payment & Payouts" : t("admin.store.payment");

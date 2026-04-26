@@ -1,0 +1,94 @@
+// Lodging iCal export — public endpoint that returns an .ics feed for a given export token.
+// Usage: GET /functions/v1/lodging-ical-export?token=<ical_export_token>
+//
+// No auth required — the token IS the secret. Service role used internally to bypass RLS.
+
+import "jsr:@supabase/functions-js/edge-runtime.d.ts";
+import { createClient } from "npm:@supabase/supabase-js@2.45.0";
+
+const corsHeaders = {
+  "Access-Control-Allow-Origin": "*",
+  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
+};
+
+function pad(n: number) { return n.toString().padStart(2, "0"); }
+function toICalDate(d: Date) {
+  return `${d.getUTCFullYear()}${pad(d.getUTCMonth() + 1)}${pad(d.getUTCDate())}`;
+}
+function plainDateToICal(s: string) {
+  return s.replace(/-/g, "");
+}
+
+Deno.serve(async (req) => {
+  if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
+
+  try {
+    const url = new URL(req.url);
+    const token = url.searchParams.get("token");
+    if (!token) {
+      return new Response("Missing token", { status: 400, headers: corsHeaders });
+    }
+
+    const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
+    const SERVICE_ROLE = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+    const admin = createClient(SUPABASE_URL, SERVICE_ROLE, {
+      auth: { persistSession: false },
+    });
+
+    const { data: conn } = await admin
+      .from("lodging_channel_connections")
+      .select("id, store_id, room_id, channel, display_name")
+      .eq("ical_export_token", token)
+      .maybeSingle();
+
+    if (!conn) {
+      return new Response("Not found", { status: 404, headers: corsHeaders });
+    }
+
+    // Pull blocks for this room (or property if room_id is null)
+    let blocksQ = admin
+      .from("lodging_room_blocks")
+      .select("id, start_date, end_date, summary, source")
+      .eq("store_id", conn.store_id);
+    if (conn.room_id) blocksQ = blocksQ.eq("room_id", conn.room_id);
+    const { data: blocks = [] } = await blocksQ;
+
+    const now = new Date();
+    const stamp = `${toICalDate(now)}T${pad(now.getUTCHours())}${pad(now.getUTCMinutes())}${pad(now.getUTCSeconds())}Z`;
+
+    const lines = [
+      "BEGIN:VCALENDAR",
+      "VERSION:2.0",
+      "PRODID:-//Zivo//Lodging//EN",
+      "CALSCALE:GREGORIAN",
+      `X-WR-CALNAME:${conn.display_name || "Zivo Lodging Calendar"}`,
+    ];
+
+    for (const b of blocks || []) {
+      lines.push("BEGIN:VEVENT");
+      lines.push(`UID:${b.id}@zivo`);
+      lines.push(`DTSTAMP:${stamp}`);
+      lines.push(`DTSTART;VALUE=DATE:${plainDateToICal(b.start_date)}`);
+      lines.push(`DTEND;VALUE=DATE:${plainDateToICal(b.end_date)}`);
+      lines.push(`SUMMARY:${(b.summary || "Blocked").replace(/[\r\n]+/g, " ")}`);
+      lines.push(`DESCRIPTION:Source ${b.source}`);
+      lines.push("END:VEVENT");
+    }
+
+    lines.push("END:VCALENDAR");
+    const body = lines.join("\r\n");
+
+    return new Response(body, {
+      headers: {
+        ...corsHeaders,
+        "Content-Type": "text/calendar; charset=utf-8",
+        "Cache-Control": "public, max-age=300",
+      },
+    });
+  } catch (err: any) {
+    return new Response(`Error: ${err?.message || String(err)}`, {
+      status: 500,
+      headers: corsHeaders,
+    });
+  }
+});

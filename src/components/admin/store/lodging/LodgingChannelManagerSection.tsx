@@ -1,5 +1,7 @@
 import { useState } from "react";
-import { Link2, RefreshCw, Copy, CheckCircle2, AlertCircle } from "lucide-react";
+import { Link2, RefreshCw, Copy, CheckCircle2, AlertCircle, Loader2 } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
+import { useQueryClient } from "@tanstack/react-query";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
@@ -40,9 +42,28 @@ export default function LodgingChannelManagerSection({ storeId }: { storeId: str
   const { list, upsert, remove, toggleActive } = useLodgingCatalog<ChannelConn>("lodging_channel_connections", storeId);
   const { data: rooms = [] } = useLodgeRooms(storeId);
   const [editing, setEditing] = useState<Partial<ChannelConn> | null>(null);
+  const [syncingId, setSyncingId] = useState<string | null>(null);
+  const qc = useQueryClient();
   const rows = list.data || [];
 
-  const exportBase = `${window.location.origin}/api/ical/`;
+  const projectRef = (import.meta as any).env?.VITE_SUPABASE_PROJECT_ID;
+  const exportBase = `https://${projectRef}.supabase.co/functions/v1/lodging-ical-export?token=`;
+
+  async function handleSync(id: string) {
+    setSyncingId(id);
+    try {
+      const { data, error } = await supabase.functions.invoke("lodging-ical-import", { body: { connection_id: id } });
+      if (error) throw error;
+      const r = data?.results?.[0];
+      if (r?.ok) toast.success(`Synced — ${r.events} blocks imported`);
+      else toast.error(r?.error || "Sync failed");
+      qc.invalidateQueries({ queryKey: ["lodging_channel_connections", storeId] });
+    } catch (e: any) {
+      toast.error(e?.message || "Sync failed");
+    } finally {
+      setSyncingId(null);
+    }
+  }
 
   return (
     <SectionShell title="Channel Manager" subtitle="Sync availability with Booking.com, Expedia, Airbnb, and Agoda using iCal import/export." icon={Link2}>
@@ -89,12 +110,22 @@ export default function LodgingChannelManagerSection({ storeId }: { storeId: str
               <button
                 className="flex items-center gap-1.5 truncate text-xs text-primary hover:underline"
                 onClick={() => {
-                  navigator.clipboard.writeText(`${exportBase}${r.ical_export_token}.ics`);
+                  navigator.clipboard.writeText(`${exportBase}${r.ical_export_token}`);
                   toast.success("Copied iCal URL");
                 }}
               >
                 <Copy className="h-3 w-3" /> Copy iCal URL
               </button>
+            )},
+            { key: "sync", label: "Sync", className: "w-24", render: (r) => (
+              <Button
+                size="sm"
+                variant="outline"
+                disabled={!r.ical_import_url || syncingId === r.id}
+                onClick={() => handleSync(r.id)}
+              >
+                {syncingId === r.id ? <Loader2 className="h-3 w-3 animate-spin" /> : <><RefreshCw className="mr-1 h-3 w-3" />Sync</>}
+              </Button>
             )},
           ]}
         />
