@@ -1791,4 +1791,12 @@ export default function PersonalChat({ recipientId, recipientName, recipientAvat
       )}
     </motion.div>
   );
+
+  // Portal the fullscreen overlay to <body> so ancestor transforms (framer-motion,
+  // CSS transforms on parents) can't break `position: fixed` and shift the header
+  // off-screen on iOS Safari.
+  if (!inline && typeof document !== "undefined") {
+    return createPortal(content, document.body);
+  }
+  return content;
 }
