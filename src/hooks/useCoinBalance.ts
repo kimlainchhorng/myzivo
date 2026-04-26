@@ -39,5 +39,13 @@ export function useCoinBalance() {
     return () => { (supabase as any).removeChannel(ch); };
   }, [user, refresh]);
 
-  return { balance, loading, refresh, recharge: refresh };
+  /** Optimistically add purchased coins; pass nothing to just refetch. */
+  const recharge = useCallback(async (coins?: number) => {
+    if (typeof coins === "number" && coins > 0) {
+      setBalance((b) => b + coins);
+    }
+    await refresh();
+  }, [refresh]);
+
+  return { balance, loading, refresh, recharge };
 }
