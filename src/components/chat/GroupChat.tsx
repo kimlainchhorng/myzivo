@@ -428,69 +428,39 @@ export default function GroupChat({ groupId, groupName, groupAvatar, onClose }: 
         )}
       </AnimatePresence>
 
-      {/* Voice recording overlay */}
-      <AnimatePresence>
-        {voice.isRecording && (
-          <motion.div
-            initial={{ height: 0, opacity: 0 }}
-            animate={{ height: "auto", opacity: 1 }}
-            exit={{ height: 0, opacity: 0 }}
-            className="bg-destructive/5 border-t border-destructive/20 px-4 py-3 flex items-center gap-3"
-          >
-            <motion.div
-              className="w-3 h-3 rounded-full bg-destructive"
-              animate={{ scale: [1, 1.3, 1] }}
-              transition={{ repeat: Infinity, duration: 1 }}
-            />
-            <span className="text-sm font-medium text-foreground flex-1">
-              Recording... {Math.floor(voice.duration / 60)}:{(voice.duration % 60).toString().padStart(2, "0")}
-            </span>
-            <button onClick={voice.cancelRecording} className="text-xs text-muted-foreground px-3 py-1 rounded-full bg-muted">
-              Cancel
-            </button>
-            <button onClick={voice.stopRecording} className="w-9 h-9 rounded-full bg-primary text-primary-foreground flex items-center justify-center">
-              <Square className="w-3.5 h-3.5" />
-            </button>
-          </motion.div>
-        )}
-      </AnimatePresence>
+      {/* Voice recording overlay is rendered inside HoldToRecordMic (Round 5) */}
 
       {/* Input */}
-      {!voice.isRecording && (
-        <div className="bg-background border-t border-border/30 px-3 py-2 flex items-center gap-2" style={{ paddingBottom: "max(env(safe-area-inset-bottom, 0px), 0.5rem)" }}>
-          <button
-            onClick={() => fileInputRef.current?.click()}
-            disabled={uploadingImage}
-            className="h-10 w-10 rounded-full flex items-center justify-center text-muted-foreground hover:text-primary transition-colors shrink-0"
-          >
-            {uploadingImage ? <Loader2 className="h-5 w-5 animate-spin" /> : <ImagePlus className="h-5 w-5" />}
-          </button>
-          <input ref={fileInputRef} type="file" accept="image/*" className="hidden" onChange={handleImageSelect} />
+      <div className="bg-background border-t border-border/30 px-3 py-2 flex items-center gap-2 relative" style={{ paddingBottom: "max(env(safe-area-inset-bottom, 0px), 0.5rem)" }}>
+        <button
+          onClick={() => fileInputRef.current?.click()}
+          disabled={uploadingImage}
+          className="h-10 w-10 rounded-full flex items-center justify-center text-muted-foreground hover:text-primary transition-colors shrink-0"
+        >
+          {uploadingImage ? <Loader2 className="h-5 w-5 animate-spin" /> : <ImagePlus className="h-5 w-5" />}
+        </button>
+        <input ref={fileInputRef} type="file" accept="image/*" className="hidden" onChange={handleImageSelect} />
 
-          <button
-            onClick={voice.startRecording}
-            className="h-10 w-10 rounded-full flex items-center justify-center text-muted-foreground hover:text-primary transition-colors shrink-0"
-          >
-            <Mic className="h-5 w-5" />
-          </button>
-
-          <input
-            ref={inputRef}
-            value={input}
-            onChange={(e) => setInput(e.target.value)}
-            onKeyDown={(e) => e.key === "Enter" && !e.shiftKey && handleSend()}
-            placeholder="Type a message..."
-            className="flex-1 h-10 px-4 rounded-full bg-muted/50 border border-border/30 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/30"
-          />
+        <input
+          ref={inputRef}
+          value={input}
+          onChange={(e) => setInput(e.target.value)}
+          onKeyDown={(e) => e.key === "Enter" && !e.shiftKey && handleSend()}
+          placeholder="Type a message..."
+          className="flex-1 h-10 px-4 rounded-full bg-muted/50 border border-border/30 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/30"
+        />
+        {input.trim() ? (
           <button
             onClick={() => handleSend()}
-            disabled={!input.trim() || sending}
+            disabled={sending}
             className="h-10 w-10 rounded-full bg-primary text-primary-foreground flex items-center justify-center disabled:opacity-40 active:scale-90 transition-all shrink-0"
           >
             {sending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
           </button>
-        </div>
-      )}
+        ) : (
+          <HoldToRecordMic voice={voice} />
+        )}
+      </div>
 
       {/* Phase 4 Track C — Group admin sheets */}
       <GroupMembersSheet
