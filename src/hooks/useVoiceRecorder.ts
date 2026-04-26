@@ -1,92 +1,155 @@
 /**
- * useVoiceRecorder — Hold-to-record voice messages with duration tracking
+ * useVoiceRecorder — Hold-to-record voice notes with waveform sampling
  */
-import { useState, useRef, useCallback } from "react";
+import { useCallback, useRef, useState } from "react";
+import { toast } from "sonner";
 
-interface VoiceRecorderState {
-  isRecording: boolean;
-  duration: number;
-  audioBlob: Blob | null;
+export interface VoiceRecording {
+  blob: Blob;
+  durationMs: number;
+  waveform: number[];
+  mimeType: string;
 }
 
 export function useVoiceRecorder() {
-  const [state, setState] = useState<VoiceRecorderState>({
-    isRecording: false,
-    duration: 0,
-    audioBlob: null,
-  });
-
-  const mediaRecorder = useRef<MediaRecorder | null>(null);
+  const [isRecording, setIsRecording] = useState(false);
+  const [audioBlob, setAudioBlob] = useState<Blob | null>(null);
+  const [duration, setDuration] = useState(0);
+  const [elapsedMs, setElapsedMs] = useState(0);
+  const recorder = useRef<MediaRecorder | null>(null);
   const chunks = useRef<Blob[]>([]);
-  const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
-  const startTimeRef = useRef<number>(0);
+  const stream = useRef<MediaStream | null>(null);
+  const startedAt = useRef(0);
+  const timer = useRef<ReturnType<typeof setInterval> | null>(null);
+  const samples = useRef<number[]>([]);
+  const audioCtx = useRef<AudioContext | null>(null);
+  const analyser = useRef<AnalyserNode | null>(null);
+  const sampleTimer = useRef<ReturnType<typeof setInterval> | null>(null);
+  const cancelled = useRef(false);
 
-  const startRecording = useCallback(async () => {
+  const stopAll = useCallback(() => {
+    if (timer.current) { clearInterval(timer.current); timer.current = null; }
+    if (sampleTimer.current) { clearInterval(sampleTimer.current); sampleTimer.current = null; }
+    stream.current?.getTracks().forEach((t) => t.stop());
+    audioCtx.current?.close().catch(() => {});
+    stream.current = null;
+    audioCtx.current = null;
+    analyser.current = null;
+  }, []);
+
+  const start = useCallback(async () => {
     try {
-      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      cancelled.current = false;
       chunks.current = [];
+      samples.current = [];
+      const s = await navigator.mediaDevices.getUserMedia({ audio: true });
+      stream.current = s;
 
-      const recorder = new MediaRecorder(stream, {
-        mimeType: MediaRecorder.isTypeSupported("audio/webm;codecs=opus")
-          ? "audio/webm;codecs=opus"
-          : "audio/webm",
-      });
+      const mimeType = MediaRecorder.isTypeSupported("audio/webm;codecs=opus")
+        ? "audio/webm;codecs=opus"
+        : "audio/webm";
+      const rec = new MediaRecorder(s, { mimeType });
+      recorder.current = rec;
+      rec.ondataavailable = (e) => { if (e.data.size > 0) chunks.current.push(e.data); };
+      rec.start(100);
 
-      recorder.ondataavailable = (e) => {
-        if (e.data.size > 0) chunks.current.push(e.data);
-      };
+      // Waveform sampling
+      const ctx = new AudioContext();
+      audioCtx.current = ctx;
+      const src = ctx.createMediaStreamSource(s);
+      const an = ctx.createAnalyser();
+      an.fftSize = 256;
+      src.connect(an);
+      analyser.current = an;
+      const buf = new Uint8Array(an.frequencyBinCount);
+      sampleTimer.current = setInterval(() => {
+        an.getByteTimeDomainData(buf);
+        let sum = 0;
+        for (let i = 0; i < buf.length; i++) {
+          const v = (buf[i] - 128) / 128;
+          sum += v * v;
+        }
+        const rms = Math.sqrt(sum / buf.length);
+        samples.current.push(Math.min(1, rms * 2));
+      }, 80);
 
-      recorder.onstop = () => {
-        const blob = new Blob(chunks.current, { type: recorder.mimeType });
-        setState((prev) => ({ ...prev, isRecording: false, audioBlob: blob }));
-        stream.getTracks().forEach((t) => t.stop());
-        if (timerRef.current) clearInterval(timerRef.current);
-      };
-
-      mediaRecorder.current = recorder;
-      recorder.start(100);
-      startTimeRef.current = Date.now();
-
-      timerRef.current = setInterval(() => {
-        setState((prev) => ({
-          ...prev,
-          duration: Math.floor((Date.now() - startTimeRef.current) / 1000),
-        }));
-      }, 200);
-
-      setState({ isRecording: true, duration: 0, audioBlob: null });
-    } catch {
-      // Mic permission denied or unavailable
+      startedAt.current = Date.now();
+      setIsRecording(true);
+      setElapsedMs(0);
+      timer.current = setInterval(() => setElapsedMs(Date.now() - startedAt.current), 100);
+    } catch (e) {
+      toast.error("Microphone permission denied");
+      stopAll();
     }
-  }, []);
+  }, [stopAll]);
 
-  const stopRecording = useCallback(() => {
-    if (mediaRecorder.current && mediaRecorder.current.state !== "inactive") {
-      mediaRecorder.current.stop();
-    }
-  }, []);
-
-  const cancelRecording = useCallback(() => {
-    if (mediaRecorder.current && mediaRecorder.current.state !== "inactive") {
-      mediaRecorder.current.ondataavailable = null;
-      mediaRecorder.current.onstop = () => {
-        mediaRecorder.current?.stream.getTracks().forEach((t) => t.stop());
+  const stop = useCallback(async (): Promise<VoiceRecording | null> => {
+    return new Promise((resolve) => {
+      const rec = recorder.current;
+      if (!rec || rec.state === "inactive") {
+        stopAll();
+        setIsRecording(false);
+        resolve(null);
+        return;
+      }
+      rec.onstop = () => {
+        const duration = Date.now() - startedAt.current;
+        const mimeType = rec.mimeType;
+        const blob = new Blob(chunks.current, { type: mimeType });
+        // Downsample waveform to 64 bins
+        const src = samples.current;
+        const bins = 64;
+        const out: number[] = [];
+        if (src.length > 0) {
+          const step = src.length / bins;
+          for (let i = 0; i < bins; i++) {
+            const start = Math.floor(i * step);
+            const end = Math.max(start + 1, Math.floor((i + 1) * step));
+            let m = 0;
+            for (let j = start; j < end && j < src.length; j++) m = Math.max(m, src[j]);
+            out.push(Number(m.toFixed(3)));
+          }
+        }
+        stopAll();
+        setIsRecording(false);
+        if (cancelled.current) {
+          setAudioBlob(null);
+          setDuration(0);
+          resolve(null);
+        } else {
+          setAudioBlob(blob);
+          setDuration(Math.floor(duration / 1000));
+          resolve({ blob, durationMs: duration, waveform: out, mimeType });
+        }
       };
-      mediaRecorder.current.stop();
-    }
-    if (timerRef.current) clearInterval(timerRef.current);
-    setState({ isRecording: false, duration: 0, audioBlob: null });
-  }, []);
+      rec.stop();
+    });
+  }, [stopAll]);
+
+  const cancel = useCallback(async () => {
+    cancelled.current = true;
+    await stop();
+    setAudioBlob(null);
+    setDuration(0);
+  }, [stop]);
 
   const clearBlob = useCallback(() => {
-    setState((prev) => ({ ...prev, audioBlob: null }));
+    setAudioBlob(null);
+    setDuration(0);
   }, []);
 
   return {
-    ...state,
-    startRecording,
-    stopRecording,
-    cancelRecording,
+    isRecording,
+    elapsedMs,
+    audioBlob,
+    duration,
+    start,
+    stop,
+    cancel,
     clearBlob,
+    // Legacy aliases used by PersonalChat / GroupChat
+    startRecording: start,
+    stopRecording: stop,
+    cancelRecording: cancel,
   };
 }
