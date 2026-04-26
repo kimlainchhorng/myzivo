@@ -34,6 +34,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { format, isToday, isYesterday } from "date-fns";
 import { primeCallAudio } from "@/lib/callAudio";
 import ChatMessageBubble from "./ChatMessageBubble";
+import FileBubble, { type FileBubbleData } from "./FileBubble";
 import HoldToRecordMic from "./HoldToRecordMic";
 import ChatAttachMenu from "./ChatAttachMenu";
 const ChatGiftPanel = lazy(() => import("./ChatGiftPanel"));
@@ -119,6 +120,7 @@ interface Message {
   is_read: boolean;
   locked_price_cents?: number | null;
   edited_at?: string | null;
+  file_payload?: any | null;
 }
 
 interface CallEvent {
