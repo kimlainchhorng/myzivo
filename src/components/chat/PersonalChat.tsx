@@ -66,6 +66,16 @@ import { isBlueVerified } from "@/lib/verification";
 
 const StickerKeyboard = lazy(() => import("./StickerKeyboard"));
 
+// Phase 3B–3D wired components
+import MessageReactionsBar from "./MessageReactionsBar";
+import PinnedMessageBanner from "./PinnedMessageBanner";
+import SelfDestructPicker from "./SelfDestructPicker";
+import Flame from "lucide-react/dist/esm/icons/flame";
+import Clock from "lucide-react/dist/esm/icons/clock";
+const ForwardPickerSheet = lazy(() => import("./ForwardPickerSheet"));
+const ScheduledMessagesSheet = lazy(() => import("./ScheduledMessagesSheet"));
+import { useMessageActions, type DirectMessage } from "@/hooks/useMessageActions";
+
 const INITIAL_VISIBLE_TIMELINE_ITEMS = 25;
 const VISIBLE_TIMELINE_STEP = 30;
 
@@ -182,6 +192,16 @@ export default function PersonalChat({ recipientId, recipientName, recipientAvat
   const { isTyping: recipientTyping, isOnline: recipientOnline, lastSeen: recipientLastSeen, setTyping } = useChatPresence(user?.id, recipientId);
   const voice = useVoiceRecorder();
   const { draft, updateDraft, clearDraft } = useChatDraft(user?.id, recipientId);
+  const { forwardMessage } = useMessageActions();
+
+  // Phase 3 wiring state
+  const [selfDestructSec, setSelfDestructSec] = useState<number | null>(null);
+  const [forwardingMsg, setForwardingMsg] = useState<Message | null>(null);
+  const [showScheduledSheet, setShowScheduledSheet] = useState(false);
+  const conversationId = useMemo(
+    () => (user?.id && recipientId ? [user.id, recipientId].sort().join("_") : ""),
+    [user?.id, recipientId],
+  );
 
   // Sync draft to input on load
   useEffect(() => {
@@ -531,6 +551,8 @@ export default function PersonalChat({ recipientId, recipientName, recipientAvat
     clearDraft();
     const currentReply = replyTo;
     setReplyTo(null);
+    const burnSec = selfDestructSec;
+    if (selfDestructSec) setSelfDestructSec(null);
     setSending(true);
 
     const optimisticId = `opt-${Date.now()}`;
@@ -548,7 +570,11 @@ export default function PersonalChat({ recipientId, recipientName, recipientAvat
       location_lng: locationLng || null,
       location_label: locationLabel || null,
       is_pinned: false,
-      expires_at: disappearingMode ? new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString() : null,
+      expires_at: selfDestructSec
+        ? new Date(Date.now() + selfDestructSec * 1000).toISOString()
+        : disappearingMode
+        ? new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString()
+        : null,
       created_at: new Date().toISOString(),
       is_read: false,
     };
@@ -576,7 +602,10 @@ export default function PersonalChat({ recipientId, recipientName, recipientAvat
         insertData.location_lng = locationLng;
         insertData.location_label = locationLabel || "";
       }
-      if (disappearingMode) {
+      if (selfDestructSec) {
+        insertData.expires_at = new Date(Date.now() + selfDestructSec * 1000).toISOString();
+        insertData.self_destruct_seconds = selfDestructSec;
+      } else if (disappearingMode) {
         insertData.expires_at = new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString();
       }
 
@@ -732,10 +761,10 @@ export default function PersonalChat({ recipientId, recipientName, recipientAvat
   };
 
   // Forward message
-  const handleForward = useCallback((id: string, message: string) => {
-    navigator.clipboard.writeText(message);
-    toast.success("Message copied — paste it in another chat to forward");
-  }, []);
+  const handleForward = useCallback((id: string, _message: string) => {
+    const msg = messages.find((m) => m.id === id);
+    if (msg) setForwardingMsg(msg);
+  }, [messages]);
 
   // Pin/unpin
   const handlePin = useCallback(async (id: string, pinned: boolean) => {
@@ -1170,6 +1199,16 @@ export default function PersonalChat({ recipientId, recipientName, recipientAvat
         )}
       </AnimatePresence>
 
+      {/* Pinned message banner */}
+      {conversationId && (
+        <PinnedMessageBanner
+          conversationId={conversationId}
+          onJumpTo={(id) => scrollToMessage(id)}
+          onUnpin={(id) => handlePin(id, false)}
+          canUnpin
+        />
+      )}
+
       {/* Messages */}
       <div
         ref={scrollRef}
@@ -1288,6 +1327,11 @@ export default function PersonalChat({ recipientId, recipientName, recipientAvat
                         onPin={handlePin}
                         onEdit={handleEdit}
                       />
+                    )}
+
+                    {/* Aggregated emoji reactions chip row */}
+                    {!msg.id.startsWith("opt-") && (
+                      <MessageReactionsBar messageId={msg.id} align={isMe ? "right" : "left"} />
                     )}
                   </div>
                 );
@@ -1468,6 +1512,20 @@ export default function PersonalChat({ recipientId, recipientName, recipientAvat
                 </button>
               )}
             />
+
+            {/* Self-destruct flame picker */}
+            <SelfDestructPicker value={selfDestructSec} onChange={setSelfDestructSec} />
+
+            {/* Scheduled messages queue */}
+            <button
+              type="button"
+              onClick={() => setShowScheduledSheet(true)}
+              className="h-10 w-10 rounded-full flex items-center justify-center text-muted-foreground/60 hover:bg-muted/50 active:scale-90 transition-all shrink-0"
+              aria-label="Scheduled messages"
+              title="Scheduled messages"
+            >
+              <Clock className="h-[18px] w-[18px]" />
+            </button>
 
             {/* Input field */}
             <div className="flex-1 relative">
@@ -1673,6 +1731,31 @@ export default function PersonalChat({ recipientId, recipientName, recipientAvat
             }))}
             onJumpToMessage={scrollToMessage}
             onUnpin={(id) => handlePin(id, false)}
+          />
+        </Suspense>
+      )}
+
+      {/* Forward picker sheet */}
+      {forwardingMsg && (
+        <Suspense fallback={null}>
+          <ForwardPickerSheet
+            open={!!forwardingMsg}
+            onOpenChange={(open) => { if (!open) setForwardingMsg(null); }}
+            onConfirm={async (recipientIds) => {
+              const ok = await forwardMessage(forwardingMsg as unknown as DirectMessage, recipientIds);
+              if (ok) setForwardingMsg(null);
+            }}
+          />
+        </Suspense>
+      )}
+
+      {/* Scheduled messages queue sheet */}
+      {showScheduledSheet && (
+        <Suspense fallback={null}>
+          <ScheduledMessagesSheet
+            open={showScheduledSheet}
+            onOpenChange={setShowScheduledSheet}
+            receiverId={recipientId}
           />
         </Suspense>
       )}
