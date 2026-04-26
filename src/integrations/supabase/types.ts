@@ -6240,6 +6240,56 @@ export type Database = {
         }
         Relationships: []
       }
+      broadcast_list_members: {
+        Row: {
+          added_at: string
+          list_id: string
+          member_id: string
+        }
+        Insert: {
+          added_at?: string
+          list_id: string
+          member_id: string
+        }
+        Update: {
+          added_at?: string
+          list_id?: string
+          member_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "broadcast_list_members_list_id_fkey"
+            columns: ["list_id"]
+            isOneToOne: false
+            referencedRelation: "broadcast_lists"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      broadcast_lists: {
+        Row: {
+          created_at: string
+          id: string
+          name: string
+          owner_id: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          name: string
+          owner_id: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          name?: string
+          owner_id?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       bundle_orders: {
         Row: {
           bundle_id: string | null
@@ -14190,6 +14240,7 @@ export type Database = {
           expires_at: string | null
           forwarded_from_message_id: string | null
           forwarded_from_user_id: string | null
+          gift_payload: Json | null
           id: string
           image_url: string | null
           is_pinned: boolean
@@ -14215,6 +14266,7 @@ export type Database = {
           expires_at?: string | null
           forwarded_from_message_id?: string | null
           forwarded_from_user_id?: string | null
+          gift_payload?: Json | null
           id?: string
           image_url?: string | null
           is_pinned?: boolean
@@ -14240,6 +14292,7 @@ export type Database = {
           expires_at?: string | null
           forwarded_from_message_id?: string | null
           forwarded_from_user_id?: string | null
+          gift_payload?: Json | null
           id?: string
           image_url?: string | null
           is_pinned?: boolean
