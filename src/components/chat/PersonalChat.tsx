@@ -5,6 +5,7 @@
  * message effects (confetti, fireworks, hearts, lasers)
  */
 import { useState, useEffect, useRef, useCallback, useMemo, lazy, Suspense } from "react";
+import { createPortal } from "react-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import ArrowLeft from "lucide-react/dist/esm/icons/arrow-left";
@@ -972,12 +973,13 @@ export default function PersonalChat({ recipientId, recipientName, recipientAvat
     });
   }, []);
 
-  return (
+  const content = (
     <motion.div
       className={inline
         ? "absolute inset-0 z-50 flex flex-col overflow-hidden h-full w-full bg-background"
         : "fixed inset-0 z-[1300] bg-background flex flex-col overflow-hidden"
       }
+      style={inline ? undefined : { height: "100dvh", width: "100vw", top: 0, left: 0 }}
       initial={inline ? { opacity: 0 } : { x: "100%" }}
       animate={inline ? { opacity: 1 } : { x: 0 }}
       exit={inline ? { opacity: 0 } : { x: "100%" }}
@@ -1789,4 +1791,12 @@ export default function PersonalChat({ recipientId, recipientName, recipientAvat
       )}
     </motion.div>
   );
+
+  // Portal the fullscreen overlay to <body> so ancestor transforms (framer-motion,
+  // CSS transforms on parents) can't break `position: fixed` and shift the header
+  // off-screen on iOS Safari.
+  if (!inline && typeof document !== "undefined") {
+    return createPortal(content, document.body);
+  }
+  return content;
 }
