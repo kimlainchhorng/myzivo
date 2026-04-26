@@ -38,7 +38,7 @@ export default function GroupCallGrid({ participants, screenShareSource, isRecor
         <div className="flex gap-2 overflow-x-auto md:flex-col md:overflow-y-auto">
           {orderedParticipants.map((p) => (
             <div key={p.identity} className="aspect-video h-full shrink-0 md:h-auto md:w-full">
-              <VideoTile participant={p} />
+              <VideoTile participant={p} isRecording={isRecording} />
             </div>
           ))}
         </div>
@@ -51,7 +51,7 @@ export default function GroupCallGrid({ participants, screenShareSource, isRecor
   return (
     <div className={`grid h-full gap-2 p-2 ${gridClass(n)}`}>
       {orderedParticipants.map((p) => (
-        <VideoTile key={p.identity} participant={p} />
+        <VideoTile key={p.identity} participant={p} isRecording={isRecording} />
       ))}
     </div>
   );
