@@ -967,7 +967,9 @@ export default function ChatHubPage({ embedded = false }: { embedded?: boolean }
               searchInput.scrollIntoView({ behavior: "smooth" });
             }
           }}
-          className="fixed bottom-24 right-5 z-30 w-14 h-14 bg-primary text-primary-foreground rounded-full shadow-xl shadow-primary/30 flex items-center justify-center active:scale-90 transition-transform"
+          className="fixed right-5 z-30 w-14 h-14 bg-primary text-primary-foreground rounded-full shadow-xl shadow-primary/30 flex items-center justify-center active:scale-90 transition-transform"
+          style={{ bottom: "calc(var(--zivo-safe-bottom, 0px) + 7rem)" }}
+          aria-label="Start new chat"
         >
           <Edit3 className="w-5 h-5" />
         </motion.button>
