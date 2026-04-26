@@ -777,6 +777,12 @@ const ChatMessageBubble = memo(function ChatMessageBubble({
                   {!showDeleteSub ? (
                     <motion.div key="actions" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.1 }}>
                       <MsgMenuItem icon={Reply} label="Reply" onClick={() => { onReply(id, message, isMe); setShowActions(false); setShowReactions(false); }} />
+                      {canEdit && onEdit && (
+                        <MsgMenuItem icon={Pencil} label="Edit" onClick={handleEdit} />
+                      )}
+                      {message?.trim() && !isMe && (
+                        <MsgMenuItem icon={Languages} label={translation ? (showTranslation ? "Hide translation" : "Show translation") : "Translate"} onClick={handleTranslate} />
+                      )}
                       <MsgMenuItem icon={Copy} label="Copy" onClick={handleCopy} />
                       <MsgMenuItem icon={Forward} label="Forward" onClick={handleForward} />
                       <MsgMenuItem icon={Pin} label={isPinned ? "Unpin" : "Pin"} onClick={handlePin} active={isPinned} />
