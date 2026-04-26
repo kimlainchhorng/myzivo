@@ -89,7 +89,11 @@ export default function FeedSidebar() {
   }, [setChatOpen, toggleChat]);
 
   const avatarUrl = optimizeAvatar(profile?.avatar_url, 80) || profile?.avatar_url || user?.user_metadata?.avatar_url;
-  const displayName = profile?.full_name || user?.user_metadata?.full_name || user?.email?.split("@")[0] || "User";
+  const toTitle = (s: string) => s.replace(/\b([a-z])/g, (m) => m.toUpperCase());
+  const brandName = (profile as { display_brand_name?: string | null } | undefined)?.display_brand_name || null;
+  const rawName = brandName || profile?.full_name || user?.user_metadata?.full_name || user?.email?.split("@")[0] || "User";
+  // Brand-name overrides (e.g. "ZIVO") render as-is; real names get title-cased.
+  const displayName = brandName ? rawName : toTitle(rawName);
   const email = user?.email || "";
 
   // Check roles from useUserAccess (admin is invite-only via user_roles table)
@@ -145,7 +149,16 @@ export default function FeedSidebar() {
                   )}
                 </div>
                 <p className="text-[11px] text-muted-foreground truncate">
-                  {username ? `@${username}` : email}
+                  {username ? (
+                    `@${username}`
+                  ) : (
+                    <button
+                      onClick={() => navigate("/account/profile-edit")}
+                      className="text-primary hover:underline"
+                    >
+                      Set a username
+                    </button>
+                  )}
                 </p>
               </div>
 
@@ -225,7 +238,7 @@ export default function FeedSidebar() {
               </Avatar>
               <div className="flex-1 min-w-0">
                 <p className="text-sm font-semibold text-foreground truncate">{displayName}</p>
-                <p className="text-[11px] text-muted-foreground truncate">{email}</p>
+                <p className="text-[11px] text-muted-foreground truncate">{username ? `@${username}` : email}</p>
               </div>
               <div className="h-2.5 w-2.5 rounded-full bg-primary shrink-0" />
             </div>
