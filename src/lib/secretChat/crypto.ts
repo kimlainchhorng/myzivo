@@ -97,9 +97,10 @@ async function deriveMessageKey(
     256,
   );
   const ikm = await crypto.subtle.importKey("raw", sharedBits, "HKDF", false, ["deriveKey"]);
-  const salt = new TextEncoder().encode(`zivo-secret-chat:${chatId}`);
+  const saltBytes = new TextEncoder().encode(`zivo-secret-chat:${chatId}`);
+  const salt = saltBytes.buffer.slice(saltBytes.byteOffset, saltBytes.byteOffset + saltBytes.byteLength) as ArrayBuffer;
   return crypto.subtle.deriveKey(
-    { name: "HKDF", hash: "SHA-256", salt, info: new Uint8Array() },
+    { name: "HKDF", hash: "SHA-256", salt, info: new ArrayBuffer(0) },
     ikm,
     { name: "AES-GCM", length: 256 },
     false,
