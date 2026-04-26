@@ -568,7 +568,11 @@ export default function PersonalChat({ recipientId, recipientName, recipientAvat
       location_lng: locationLng || null,
       location_label: locationLabel || null,
       is_pinned: false,
-      expires_at: disappearingMode ? new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString() : null,
+      expires_at: selfDestructSec
+        ? new Date(Date.now() + selfDestructSec * 1000).toISOString()
+        : disappearingMode
+        ? new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString()
+        : null,
       created_at: new Date().toISOString(),
       is_read: false,
     };
@@ -596,7 +600,10 @@ export default function PersonalChat({ recipientId, recipientName, recipientAvat
         insertData.location_lng = locationLng;
         insertData.location_label = locationLabel || "";
       }
-      if (disappearingMode) {
+      if (selfDestructSec) {
+        insertData.expires_at = new Date(Date.now() + selfDestructSec * 1000).toISOString();
+        insertData.self_destruct_seconds = selfDestructSec;
+      } else if (disappearingMode) {
         insertData.expires_at = new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString();
       }
 
