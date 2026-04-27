@@ -927,7 +927,7 @@ export default function LiveStreamPage() {
 
   return (
     <div className="min-h-screen bg-background pb-20">
-      <div className="sticky top-0 z-40 bg-background/95 backdrop-blur-xl border-b border-border/30" style={{ paddingTop: "max(calc(env(safe-area-inset-top, 0px) + 0.5rem), 0.5rem)" }}>
+      <div className="sticky top-0 z-40 bg-background/95 backdrop-blur-xl border-b border-border/30 pt-safe">
         <div className="flex items-center gap-2 px-4 py-2.5">
           <button onClick={() => navigate(-1)} className="min-h-[44px] min-w-[44px] flex items-center justify-center">
             <ArrowLeft className="h-5 w-5 text-foreground" />
