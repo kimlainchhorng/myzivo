@@ -628,9 +628,10 @@ export default function PersonalChat({ recipientId, recipientName, recipientAvat
     if (!text && !imageUrl && !voiceUrl && !videoUrl && !filePayload && locationLat == null) return;
     if (!user?.id || sending) return;
 
-    const msgType = filePayload
+    const msgType = voiceUrl
+      ? "voice"
+      : filePayload
       ? "file"
-      : voiceUrl ? "voice"
       : videoUrl ? "video"
       : imageUrl ? "image"
       : locationLat != null ? "location"
@@ -720,23 +721,29 @@ export default function PersonalChat({ recipientId, recipientName, recipientAvat
     if (!voice.audioBlob || voice.isRecording || !user?.id || voiceUploadInFlightRef.current) return;
     let cancelled = false;
     voiceUploadInFlightRef.current = true;
+    const blob = voice.audioBlob;
+    const durationMs = Math.max(0, Math.round((voice.duration || 0) * 1000));
 
     const upload = async () => {
-      const path = `${user.id}/${Date.now()}.webm`;
-      const { error } = await supabase.storage
-        .from("chat-media-files")
-        .upload(path, voice.audioBlob, { contentType: "audio/webm" });
-      if (error) {
+      try {
+        const path = `${user.id}/${Date.now()}.webm`;
+        const { error } = await supabase.storage
+          .from("chat-media-files")
+          .upload(path, blob, { contentType: "audio/webm" });
+        if (error) throw error;
+        const { data: urlData } = supabase.storage.from("chat-media-files").getPublicUrl(path);
+        if (cancelled) return;
+        await handleSendRef.current?.({
+          voiceUrl: urlData.publicUrl,
+          filePayload: { duration_ms: durationMs } as unknown as FileBubbleData,
+        });
+      } catch (e) {
         if (!cancelled) {
-          toast.error("Failed to upload voice note");
-          voice.clearBlob();
+          console.warn("[voice] upload/send failed", e);
+          toast.error("Failed to send voice note");
         }
-        return;
-      }
-      const { data: urlData } = supabase.storage.from("chat-media-files").getPublicUrl(path);
-      if (!cancelled) {
-        await handleSendRef.current?.({ voiceUrl: urlData.publicUrl });
-        voice.clearBlob();
+      } finally {
+        if (!cancelled) voice.clearBlob();
       }
     };
 
@@ -1439,7 +1446,11 @@ export default function PersonalChat({ recipientId, recipientName, recipientAvat
                         <div className={`max-w-[80%] min-w-[220px] px-3 py-2.5 rounded-2xl shadow-sm ${
                           isMe ? "bg-primary text-primary-foreground rounded-br-md" : "bg-muted text-foreground rounded-bl-md"
                         } ${msg.id.startsWith("opt-") ? "opacity-60" : ""}`}>
-                          <VoiceMessagePlayer url={msg.voice_url} isMe={isMe} />
+                          <VoiceMessagePlayer
+                            url={msg.voice_url}
+                            isMe={isMe}
+                            durationMs={(msg.file_payload as { duration_ms?: number } | null)?.duration_ms}
+                          />
                           <span className={`text-[9px] block text-right mt-1 ${isMe ? "text-primary-foreground/50" : "text-muted-foreground/70"}`}>
                             {formatMsgTime(msg.created_at)}
                           </span>

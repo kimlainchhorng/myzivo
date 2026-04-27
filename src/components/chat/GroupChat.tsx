@@ -252,21 +252,23 @@ export default function GroupChat({ groupId, groupName, groupAvatar, onClose }: 
   // Voice send
   useEffect(() => {
     if (voice.audioBlob && !voice.isRecording) {
+      const blob = voice.audioBlob;
       const upload = async () => {
-        const ext = "webm";
-        const path = `${user?.id}/${Date.now()}.${ext}`;
-        const { error } = await supabase.storage
-          .from("chat-media-files")
-          .upload(path, voice.audioBlob!, { contentType: "audio/webm" });
-
-        if (error) {
-          toast.error("Failed to upload voice note");
+        try {
+          const ext = "webm";
+          const path = `${user?.id}/${Date.now()}.${ext}`;
+          const { error } = await supabase.storage
+            .from("chat-media-files")
+            .upload(path, blob, { contentType: "audio/webm" });
+          if (error) throw error;
+          const { data: urlData } = supabase.storage.from("chat-media-files").getPublicUrl(path);
+          await handleSend(undefined, urlData.publicUrl);
+        } catch (e) {
+          console.warn("[voice/group] upload/send failed", e);
+          toast.error("Failed to send voice note");
+        } finally {
           voice.clearBlob();
-          return;
         }
-        const { data: urlData } = supabase.storage.from("chat-media-files").getPublicUrl(path);
-        await handleSend(undefined, urlData.publicUrl);
-        voice.clearBlob();
       };
       upload();
     }

@@ -21,6 +21,7 @@ export function useVoiceRecorder() {
   const stream = useRef<MediaStream | null>(null);
   const startedAt = useRef(0);
   const timer = useRef<ReturnType<typeof setInterval> | null>(null);
+  const rafId = useRef<number | null>(null);
   const samples = useRef<number[]>([]);
   const audioCtx = useRef<AudioContext | null>(null);
   const analyser = useRef<AnalyserNode | null>(null);
@@ -29,6 +30,7 @@ export function useVoiceRecorder() {
 
   const stopAll = useCallback(() => {
     if (timer.current) { clearInterval(timer.current); timer.current = null; }
+    if (rafId.current !== null) { cancelAnimationFrame(rafId.current); rafId.current = null; }
     if (sampleTimer.current) { clearInterval(sampleTimer.current); sampleTimer.current = null; }
     stream.current?.getTracks().forEach((t) => t.stop());
     audioCtx.current?.close().catch(() => {});
@@ -76,7 +78,12 @@ export function useVoiceRecorder() {
       startedAt.current = Date.now();
       setIsRecording(true);
       setElapsedMs(0);
-      timer.current = setInterval(() => setElapsedMs(Date.now() - startedAt.current), 100);
+      // Smooth rAF tick — paints from frame 1 instead of waiting 100ms.
+      const tick = () => {
+        setElapsedMs(Date.now() - startedAt.current);
+        rafId.current = requestAnimationFrame(tick);
+      };
+      rafId.current = requestAnimationFrame(tick);
     } catch (e) {
       toast.error("Microphone permission denied");
       stopAll();
@@ -137,7 +144,7 @@ export function useVoiceRecorder() {
     const rec = recorder.current;
     if (rec && rec.state === "recording") {
       try { rec.pause(); } catch { /* noop */ }
-      if (timer.current) { clearInterval(timer.current); timer.current = null; }
+      if (rafId.current !== null) { cancelAnimationFrame(rafId.current); rafId.current = null; }
     }
   }, []);
 
@@ -147,7 +154,11 @@ export function useVoiceRecorder() {
       try { rec.resume(); } catch { /* noop */ }
       const baseElapsed = elapsedMs;
       const resumedAt = Date.now();
-      timer.current = setInterval(() => setElapsedMs(baseElapsed + (Date.now() - resumedAt)), 100);
+      const tick = () => {
+        setElapsedMs(baseElapsed + (Date.now() - resumedAt));
+        rafId.current = requestAnimationFrame(tick);
+      };
+      rafId.current = requestAnimationFrame(tick);
     }
   }, [elapsedMs]);
 
