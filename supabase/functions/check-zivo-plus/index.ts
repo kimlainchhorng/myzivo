@@ -1,5 +1,5 @@
-import Stripe from "https://esm.sh/stripe@18.5.0?target=deno";
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import Stripe from "npm:stripe@18.5.0";
+import { createClient } from "npm:@supabase/supabase-js@2";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -110,7 +110,8 @@ Deno.serve(async (req) => {
 
     const productId = plusSubscription.items.data[0]?.price?.product;
     const plan = productId === PLUS_ANNUAL_PRODUCT ? "annual" : productId === PLUS_PRO_PRODUCT ? "pro" : productId === PLUS_CHAT_PRODUCT ? "chat" : "monthly";
-    const subscriptionEnd = new Date(plusSubscription.current_period_end * 1000).toISOString();
+    const periodEnd = (plusSubscription as any).current_period_end ?? (plusSubscription as any).items?.data?.[0]?.current_period_end;
+    const subscriptionEnd = new Date(periodEnd * 1000).toISOString();
 
     logStep("Active ZIVO+ found", { plan, subscriptionEnd, subId: plusSubscription.id });
 
