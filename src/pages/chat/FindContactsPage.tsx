@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useSmartBack } from "@/lib/smartBack";
 import { useNavigate } from "react-router-dom";
 import { ArrowLeft, Search, UserPlus, Loader2, Phone } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
@@ -21,6 +22,7 @@ interface ContactMatchResponse {
 
 export default function FindContactsPage() {
   const navigate = useNavigate();
+  const goBack = useSmartBack("/chat");
   const [raw, setRaw] = useState("");
   const [scanning, setScanning] = useState(false);
   const [matches, setMatches] = useState<Match[] | null>(null);
@@ -89,8 +91,8 @@ export default function FindContactsPage() {
 
   return (
     <div className="mx-auto max-w-2xl pb-24">
-      <header className="sticky top-0 z-10 flex items-center gap-2 border-b border-border bg-background/95 px-3 py-3 backdrop-blur">
-        <Button variant="ghost" size="icon" onClick={() => navigate(-1)} aria-label="Back">
+      <header className="sticky top-0 z-10 flex items-center gap-2 border-b border-border bg-background/95 pt-safe px-3 py-3 backdrop-blur">
+        <Button variant="ghost" size="icon" onClick={goBack} aria-label="Back">
           <ArrowLeft className="h-5 w-5" />
         </Button>
         <h1 className="text-base font-semibold">Find contacts on ZIVO</h1>

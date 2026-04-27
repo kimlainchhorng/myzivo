@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useSmartBack } from "@/lib/smartBack";
 import { useNavigate } from "react-router-dom";
 import { ArrowLeft, Lock } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -20,6 +21,7 @@ const LOCK_OPTIONS = [
 
 export default function PasscodeSetupPage() {
   const navigate = useNavigate();
+  const goBack = useSmartBack("/chat");
   const { row, isEnabled, setPasscode, updateOptions, disable, loading } = usePasscode();
 
   const [step, setStep] = useState<"enter" | "confirm" | "done">("enter");
@@ -53,7 +55,7 @@ export default function PasscodeSetupPage() {
     <div className="min-h-screen bg-background pb-[env(safe-area-inset-bottom)]">
       <div className="sticky top-0 z-10 bg-background/95 backdrop-blur border-b border-border safe-area-top">
         <div className="flex items-center gap-2 h-14 px-2">
-          <button onClick={() => navigate(-1)} aria-label="Back" className="p-2 -ml-2 rounded-full hover:bg-muted">
+          <button onClick={goBack} aria-label="Back" className="p-2 -ml-2 rounded-full hover:bg-muted">
             <ArrowLeft className="w-5 h-5" />
           </button>
           <h1 className="text-base font-semibold">App passcode</h1>

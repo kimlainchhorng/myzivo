@@ -3,6 +3,7 @@
  * Uses `direct_messages` so results map to the main chat workflow.
  */
 import { useEffect, useState } from "react";
+import { useSmartBack } from "@/lib/smartBack";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
@@ -64,6 +65,7 @@ function makePartnerId(row: { sender_id: string; receiver_id: string }, userId: 
 
 export default function ChatSearchAllPage() {
   const nav = useNavigate();
+  const goBack = useSmartBack("/chat");
   const { user } = useAuth();
   const [tab, setTab] = useState<Tab>("messages");
   const [q, setQ] = useState("");
@@ -134,9 +136,9 @@ export default function ChatSearchAllPage() {
 
   return (
     <div className="min-h-screen bg-background pb-20">
-      <header className="sticky top-0 z-10 bg-background/85 backdrop-blur-xl border-b border-border/40 px-3 py-3">
+      <header className="sticky top-0 z-10 bg-background/85 backdrop-blur-xl border-b border-border/40 pt-safe px-3 py-3">
         <div className="flex items-center gap-2">
-          <button onClick={() => nav(-1)} className="p-1.5 rounded-full hover:bg-muted/60">
+          <button onClick={goBack} className="p-1.5 rounded-full hover:bg-muted/60">
             <ChevronLeft className="w-5 h-5" />
           </button>
           <div className="flex-1 relative">

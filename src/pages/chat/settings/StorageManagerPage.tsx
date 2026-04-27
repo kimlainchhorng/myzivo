@@ -4,6 +4,7 @@
  * entries created by the service worker.
  */
 import { useEffect, useState } from "react";
+import { useSmartBack } from "@/lib/smartBack";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { Switch } from "@/components/ui/switch";
@@ -63,6 +64,7 @@ function savePrefs(uid: string | undefined, p: StoragePrefs) {
 
 export default function StorageManagerPage() {
   const nav = useNavigate();
+  const goBack = useSmartBack("/chat");
   const { user } = useAuth();
   const [prefs, setPrefs] = useState<StoragePrefs>(() => loadPrefs(user?.id));
   const [usageMB, setUsageMB] = useState<number | null>(null);
@@ -116,8 +118,8 @@ export default function StorageManagerPage() {
 
   return (
     <div className="min-h-screen bg-background pb-20">
-      <header className="sticky top-0 z-10 bg-background/85 backdrop-blur-xl border-b border-border/40 px-3 py-3 flex items-center gap-2">
-        <button onClick={() => nav(-1)} className="p-1.5 rounded-full hover:bg-muted/60">
+      <header className="sticky top-0 z-10 bg-background/85 backdrop-blur-xl border-b border-border/40 pt-safe px-3 py-3 flex items-center gap-2">
+        <button onClick={goBack} className="p-1.5 rounded-full hover:bg-muted/60">
           <ChevronLeft className="w-5 h-5" />
         </button>
         <h1 className="text-base font-semibold">Data & Storage</h1>

@@ -6,17 +6,29 @@
  */
 import { useNavigate, useParams, useSearchParams } from "react-router-dom";
 import GroupCallLauncher from "@/components/chat/call/GroupCallLauncher";
+import ChevronLeft from "lucide-react/dist/esm/icons/chevron-left";
+import { useSmartBack } from "@/lib/smartBack";
 
 export default function GroupCallEntryPage() {
   const { roomName = "" } = useParams<{ roomName: string }>();
   const [params] = useSearchParams();
   const navigate = useNavigate();
+  const goBack = useSmartBack("/chat");
   const callType = params.get("audio") === "1" ? "audio" : "video";
 
   if (!roomName) {
     return (
-      <div className="grid min-h-screen place-items-center bg-zinc-950 text-white">
-        Missing room name.
+      <div className="min-h-screen flex flex-col bg-zinc-950 text-white">
+        <header className="pt-safe px-3 py-3 flex items-center gap-2">
+          <button
+            onClick={goBack}
+            aria-label="Back"
+            className="p-1.5 rounded-full hover:bg-white/10"
+          >
+            <ChevronLeft className="w-5 h-5" />
+          </button>
+        </header>
+        <div className="flex-1 grid place-items-center">Missing room name.</div>
       </div>
     );
   }

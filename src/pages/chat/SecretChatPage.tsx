@@ -3,6 +3,7 @@
  * Text-only v1. Lives at /chat/secret/:partnerId.
  */
 import { useEffect, useMemo, useRef, useState } from "react";
+import { useSmartBack } from "@/lib/smartBack";
 import { useNavigate, useParams } from "react-router-dom";
 import {
   ArrowLeft, Send, Lock, ShieldCheck, Clock, Trash2, RefreshCw, MoreVertical,
@@ -38,6 +39,7 @@ const TTL_OPTIONS: { label: string; value: number | null }[] = [
 export default function SecretChatPage() {
   const { partnerId = "" } = useParams<{ partnerId: string }>();
   const navigate = useNavigate();
+  const goBack = useSmartBack("/chat");
   const { user } = useAuth();
   const [draft, setDraft] = useState("");
   const [sasOpen, setSasOpen] = useState(false);
@@ -125,7 +127,7 @@ export default function SecretChatPage() {
       >
         <button
           aria-label="Back"
-          onClick={() => navigate(-1)}
+          onClick={goBack}
           className="-ml-1 rounded-full p-2 hover:bg-foreground/5"
         >
           <ArrowLeft className="h-5 w-5" />

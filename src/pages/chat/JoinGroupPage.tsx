@@ -12,8 +12,25 @@ import { useAuth } from "@/contexts/AuthContext";
 import { redeemGroupInvite } from "@/hooks/useGroupAdmin";
 import Loader2 from "lucide-react/dist/esm/icons/loader-2";
 import Users from "lucide-react/dist/esm/icons/users";
+import ChevronLeft from "lucide-react/dist/esm/icons/chevron-left";
 import { Button } from "@/components/ui/button";
+import { useSmartBack } from "@/lib/smartBack";
 import { toast } from "sonner";
+
+function BackHeader({ onBack }: { onBack: () => void }) {
+  return (
+    <header className="sticky top-0 z-10 bg-background/85 backdrop-blur-xl border-b border-border/40 pt-safe px-3 py-3 flex items-center gap-2">
+      <button
+        onClick={onBack}
+        aria-label="Back"
+        className="p-1.5 rounded-full hover:bg-muted/60"
+      >
+        <ChevronLeft className="w-5 h-5" />
+      </button>
+      <h1 className="text-base font-semibold">Join group</h1>
+    </header>
+  );
+}
 
 interface InvitePreview {
   group_id: string;
@@ -28,6 +45,7 @@ export default function JoinGroupPage() {
   const { code } = useParams<{ code: string }>();
   const { user, isLoading: authLoading } = useAuth();
   const navigate = useNavigate();
+  const goBack = useSmartBack("/chat");
   const [preview, setPreview] = useState<InvitePreview | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [joining, setJoining] = useState(false);
@@ -67,22 +85,28 @@ export default function JoinGroupPage() {
 
   if (authLoading || (!preview && !error)) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <Loader2 className="w-6 h-6 animate-spin text-primary" />
+      <div className="min-h-screen flex flex-col bg-background">
+        <BackHeader onBack={goBack} />
+        <div className="flex-1 flex items-center justify-center">
+          <Loader2 className="w-6 h-6 animate-spin text-primary" />
+        </div>
       </div>
     );
   }
 
   if (error) {
     return (
-      <div className="min-h-screen flex flex-col items-center justify-center p-6 text-center gap-3">
-        <Users className="w-12 h-12 text-muted-foreground" />
-        <h1 className="text-xl font-semibold">Invite unavailable</h1>
-        <p className="text-sm text-muted-foreground max-w-sm">
-          This invite link is invalid or no longer valid. Ask the group admin
-          for a new one.
-        </p>
-        <Button onClick={() => navigate("/chat", { replace: true })}>Back to chats</Button>
+      <div className="min-h-screen flex flex-col bg-background">
+        <BackHeader onBack={goBack} />
+        <div className="flex-1 flex flex-col items-center justify-center p-6 text-center gap-3">
+          <Users className="w-12 h-12 text-muted-foreground" />
+          <h1 className="text-xl font-semibold">Invite unavailable</h1>
+          <p className="text-sm text-muted-foreground max-w-sm">
+            This invite link is invalid or no longer valid. Ask the group admin
+            for a new one.
+          </p>
+          <Button onClick={() => navigate("/chat", { replace: true })}>Back to chats</Button>
+        </div>
       </div>
     );
   }
@@ -95,7 +119,9 @@ export default function JoinGroupPage() {
   const blocked = expired || usedUp || revoked;
 
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center p-6 text-center gap-4">
+    <div className="min-h-screen flex flex-col bg-background">
+      <BackHeader onBack={goBack} />
+      <div className="flex-1 flex flex-col items-center justify-center p-6 text-center gap-4">
       {preview?.group?.avatar_url ? (
         <img
           src={preview.group.avatar_url}
@@ -133,6 +159,7 @@ export default function JoinGroupPage() {
         >
           {joining ? <Loader2 className="w-4 h-4 animate-spin" /> : "Join group"}
         </Button>
+      </div>
       </div>
     </div>
   );

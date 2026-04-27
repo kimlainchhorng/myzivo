@@ -2,6 +2,7 @@
  * NearbyChatPage — opt-in People Nearby (geohash-matched).
  */
 import { useState } from "react";
+import { useSmartBack } from "@/lib/smartBack";
 import { useNavigate } from "react-router-dom";
 import ArrowLeft from "lucide-react/dist/esm/icons/arrow-left";
 import MapPin from "lucide-react/dist/esm/icons/map-pin";
@@ -17,13 +18,14 @@ function fmtDistance(m: number) {
 
 export default function NearbyChatPage() {
   const nav = useNavigate();
+  const goBack = useSmartBack("/chat");
   const [active, setActive] = useState(false);
   const { users, error } = useNearbyPresence(active);
 
   return (
     <div className="min-h-screen bg-background flex flex-col" style={{ paddingTop: "env(safe-area-inset-top)" }}>
       <header className="flex items-center gap-3 px-4 h-14 border-b border-border/30 sticky top-0 bg-background/95 backdrop-blur z-10">
-        <button onClick={() => nav(-1)} className="h-9 w-9 rounded-full hover:bg-muted/60 flex items-center justify-center">
+        <button onClick={goBack} className="h-9 w-9 rounded-full hover:bg-muted/60 flex items-center justify-center">
           <ArrowLeft className="h-5 w-5" />
         </button>
         <h1 className="font-semibold text-lg flex-1">People Nearby</h1>

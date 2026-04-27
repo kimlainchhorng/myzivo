@@ -2,6 +2,7 @@
  * ContactRequestsPage — incoming + outgoing contact requests.
  */
 import { useState } from "react";
+import { useSmartBack } from "@/lib/smartBack";
 import { useNavigate } from "react-router-dom";
 import ArrowLeft from "lucide-react/dist/esm/icons/arrow-left";
 import Check from "lucide-react/dist/esm/icons/check";
@@ -13,6 +14,7 @@ import { formatDistanceToNow } from "date-fns";
 
 export default function ContactRequestsPage() {
   const nav = useNavigate();
+  const goBack = useSmartBack("/chat");
   const { incoming, outgoing, loading, accept, decline, cancel } = useContactRequests();
   const [tab, setTab] = useState<"in" | "out">("in");
   const list = tab === "in" ? incoming : outgoing;
@@ -20,7 +22,7 @@ export default function ContactRequestsPage() {
   return (
     <div className="min-h-screen bg-background flex flex-col" style={{ paddingTop: "env(safe-area-inset-top)" }}>
       <header className="flex items-center gap-3 px-4 h-14 border-b border-border/30 sticky top-0 bg-background/95 backdrop-blur z-10">
-        <button onClick={() => nav(-1)} className="h-9 w-9 rounded-full hover:bg-muted/60 flex items-center justify-center">
+        <button onClick={goBack} className="h-9 w-9 rounded-full hover:bg-muted/60 flex items-center justify-center">
           <ArrowLeft className="h-5 w-5" />
         </button>
         <h1 className="font-semibold text-lg">Contact Requests</h1>
