@@ -3752,6 +3752,8 @@ export default function AdminStoreEditPage() {
               <TabsContent value="lodge-promos" data-testid="lodging-tab-lodge-promos"><LodgingPromotionsSection storeId={storeId!} /></TabsContent>
               <TabsContent value="lodge-channels" data-testid="lodging-tab-lodge-channels"><LodgingChannelManagerSection storeId={storeId!} /></TabsContent>
               <TabsContent value="lodge-payouts" data-testid="lodging-tab-lodge-payouts"><LodgingPayoutsSection storeId={storeId!} /></TabsContent>
+              <TabsContent value="lodge-inbox" data-testid="lodging-tab-lodge-inbox"><LodgingInboxSection storeId={storeId!} /></TabsContent>
+              <TabsContent value="lodge-staff" data-testid="lodging-tab-lodge-staff"><LodgingStaffSection storeId={storeId!} /></TabsContent>
             </>
           )}
 
