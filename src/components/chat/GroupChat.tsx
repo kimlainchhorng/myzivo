@@ -289,7 +289,7 @@ export default function GroupChat({ groupId, groupName, groupAvatar, onClose }: 
         const path = `${user.id}/${Date.now()}.${ext}`;
         const { error: uploadError } = await supabase.storage
           .from("chat-media-files")
-          .upload(path, blob, { contentType, upsert: true });
+          .upload(path, blob, { contentType, upsert: true, cacheControl: "3600" });
         if (uploadError) throw uploadError;
         const { data: urlData } = supabase.storage.from("chat-media-files").getPublicUrl(path);
         if (cancelled) return;
