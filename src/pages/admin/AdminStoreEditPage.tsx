@@ -3406,6 +3406,8 @@ export default function AdminStoreEditPage() {
                 </div>
               </CardContent>
             </Card>
+
+            <SoftwareDownloadsSection storeCategory={form.category} />
             </div>
           </TabsContent>
 
@@ -3757,10 +3759,6 @@ export default function AdminStoreEditPage() {
               <TabsContent value="lodge-staff" data-testid="lodging-tab-lodge-staff"><LodgingStaffSection storeId={storeId!} /></TabsContent>
             </>
           )}
-
-          <TabsContent value="software" data-testid="store-tab-software">
-            <SoftwareDownloadsSection storeCategory={form.category} />
-          </TabsContent>
 
         </Tabs>
       </div>

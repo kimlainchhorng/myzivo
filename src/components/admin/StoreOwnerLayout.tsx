@@ -14,7 +14,7 @@ import {
   FileSignature, Hammer, HardHat, BellRing, CircleDot, ShieldAlert, Truck, BarChart3,
   BedDouble, CalendarRange, CalendarDays, KeyRound, Sparkles, Hotel,
   PackagePlus, Utensils, Palmtree, HeartPulse, MessageSquareText, ListChecks, DollarSign,
-  Inbox, BadgeCheck, Star, Building2, Tag, Tv, Briefcase, BookOpen, UserCog, Banknote, Download
+  Inbox, BadgeCheck, Star, Building2, Tag, Tv, Briefcase, BookOpen, UserCog, Banknote
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -195,7 +195,6 @@ export default function StoreOwnerLayout({ children, title, storeId, storeName, 
     { id: "customers", label: "Customers", icon: Users },
     { id: "marketing", label: "Marketing & Ads", icon: Megaphone },
     { id: "livestream", label: "Live Stream", icon: Tv },
-    { id: "software", label: "Software & Apps", icon: Download },
   ];
 
   const employeeItems = [
