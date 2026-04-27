@@ -1,31 +1,34 @@
-# Make the new Booking.com-style fields visible from the Dashboard
+# Auto-populate Booking.com-style storefront for Koh Sdach Resort by EHM
 
-## Why you can't see anything
+Store `CBD7322B460` (id `7322b460-2c23-4d3d-bdc5-55a31cc65fab`) has empty storefront fields. I'll fill them using the screenshots from Booking.com, picking sensible defaults for anything missing.
 
-You're on the **Overview / Dashboard** tab (`?tab=lodge-overview`), but the new fields I added live on:
-- **Property Profile tab** (`?tab=lodge-property`) → "Storefront content" accordion
-- **Rooms tab** (`?tab=lodge-rooms`) → per-room editor
+## What I'll write to the database
 
-So everything is wired correctly — it's just on a different tab. The only Dashboard-visible addition was the small "Guest reviews" card, which currently shows "No reviews yet."
+### `lodge_property_profile`
+**`description_sections`** (3 blocks based on the listing context — beachfront resort on Koh Sdach island):
+1. **Welcome to Koh Sdach Resort by EHM** — one paragraph intro: beachfront private island setting, garden views, restaurant/bar on site, water sports.
+2. **Things to do** — snorkeling, hiking, bike & walking tours, fishing, cultural tours, themed dinners, beach time.
+3. **Good to know** — daily housekeeping, 24-hour front desk, family-friendly rooms, English & Khmer spoken, free Wi-Fi everywhere, no parking on-site.
 
-## Fix: surface a Storefront preview on the Dashboard
+**`property_highlights`** (mini-card on Booking.com top-right):
+- `perfect_for: "Two travelers · Beach getaway"`
+- `top_location_score: 9.0`
+- `breakfast_info: "Cooked-to-order Asian, Vegetarian and Continental options available."`
+- `rooms_with: ["Sea view", "Garden view", "Private bathroom", "Air conditioning"]`
 
-Add a **Storefront preview card** to the Overview tab so you can see at a glance what guests will see, with a one-click "Edit" button that jumps to the Property Profile editor.
+**`popular_amenities`** (top 9 from screenshot — icon row):
+`Outdoor swimming pool`, `Non-smoking rooms`, `Restaurant`, `Free Wifi`, `Fitness center`, `Beachfront`, `Family rooms`, `Private beach area`, `Breakfast`
 
-### What it shows
-- **About this property** — first 2 description sections (titles + 2-line excerpt) + "+N more"
-- **Property highlights mini-card** — Perfect for, Top location score (badge), Breakfast info, Rooms with
-- **Most popular amenities** — icon row of your top 8
-- **Empty state** — if nothing is filled in yet, a clear "Open Storefront content →" CTA
+**`facilities`** (full list from the screenshot — currently only "Bar"):
+Add ~60 facilities across Bathroom, Bedroom, View, Outdoors, Kitchen, Activities, Living Area, Media & Technology, Food & Drink, Internet, Transportation, Front Desk Services, Cleaning Services, Business Facilities, Safety & security, General, Outdoor swimming pool, Spa, Languages Spoken (English, Khmer), Entertainment & Family Services.
 
-### Files
-- New: `src/components/admin/store/lodging/StorefrontPreviewCard.tsx`
-- Edit: `src/components/admin/store/lodging/LodgingOverviewSection.tsx` — mount the card in the right-side column next to Reviews
+### `lodge_rooms` (all 4 villas)
+- **`badges`**: `["Free cancellation", "No prepayment needed"]` (standard Booking.com offer badges)
+- **`expandable_features`**: `["Free toiletries", "Bidet", "Shower", "Bathrobe", "Slippers", "Hairdryer", "Towels"]` (Bathroom expandable group from screenshot)
 
-### Quick note on the console warning
-The `forwardRef` warning in `LodgingOperationsShared.tsx > NextActions` is **pre-existing**, not caused by these changes. Out of scope here — happy to fix it next pass if you want.
+## How
+
+Single SQL migration that updates the one profile row + 4 room rows. Idempotent (safe to re-run; only fills if currently empty/default).
 
 ## After approval
-1. Create the preview card (above)
-2. Mount it on Overview alongside Revenue Pulse + Reviews
-3. You'll see a clear "Edit" button to jump straight into filling in your About / Highlights / Popular amenities for the Bamboo Cottage / Koh Sdach Resort listing
+Run the migration. You'll see all the new content immediately on the **Storefront preview** card I just added to the Dashboard, and fully editable in the Property Profile + Rooms tabs. You can tweak any wording afterward.
