@@ -3406,6 +3406,8 @@ export default function AdminStoreEditPage() {
                 </div>
               </CardContent>
             </Card>
+
+            <SoftwareDownloadsSection storeCategory={form.category} />
             </div>
           </TabsContent>
 
