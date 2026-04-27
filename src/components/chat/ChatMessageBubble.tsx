@@ -461,7 +461,14 @@ const ChatMessageBubble = memo(function ChatMessageBubble({
   const isDisappearing = !!expiresAt;
 
   return (
-    <div ref={bubbleRef} className={`flex ${isMe ? "justify-end" : "justify-start"} relative px-1`}>
+    <div
+      ref={bubbleRef}
+      className={`chat-no-callout flex ${isMe ? "justify-end" : "justify-start"} relative px-1`}
+      onContextMenu={(e) => e.preventDefault()}
+      onContextMenuCapture={(e) => e.preventDefault()}
+      onDragStartCapture={(e) => e.preventDefault()}
+      style={{ WebkitTouchCallout: "none", WebkitTapHighlightColor: "transparent" }}
+    >
       <motion.div
         drag="x"
         dragConstraints={{ left: isMe ? -80 : 0, right: isMe ? 0 : 80 }}
