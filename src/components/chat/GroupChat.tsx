@@ -44,6 +44,8 @@ interface GroupMessage {
   message_type: string;
   reply_to_id: string | null;
   created_at: string;
+  file_payload?: { duration_ms?: number } | null;
+  _local_voice_url?: string;
 }
 
 interface Member {
@@ -78,6 +80,7 @@ type GroupMessageInsert = {
   image_url?: string;
   voice_url?: string;
   reply_to_id?: string;
+  file_payload?: { duration_ms?: number } | null;
 };
 
 const dbFrom = (table: string): any => (supabase as any).from(table);
