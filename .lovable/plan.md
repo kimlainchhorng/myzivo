@@ -1,50 +1,56 @@
-I see the issue in your screenshot: iOS is still selecting something inside the chat bubble and showing the native “Copy / Look Up / Translate” menu before our app menu can take over. I’ll harden the chat touch handling so holding messages uses ZIVO’s own actions instead of the iPhone text-selection menu.
+I audited every long-press surface in the app. Voice + text bubbles are now protected, but several other chat bubble types and a couple of long-press hotspots elsewhere can still trigger Apple's native menu when held. I'll plug all of them.
 
 Plan:
 
-1. Add a stronger mobile no-selection utility
-   - Create a reusable CSS class for chat action areas that disables:
-     - iOS touch callout
-     - text selection
-     - tap highlight
-     - draggable/selectable child media
-   - Apply it to children too, not only the outer wrapper, because iOS can select nested text/time labels inside the bubble.
+1. Cover every chat row, not just text/voice bubbles
+   - Apply the `chat-no-callout` class + `onContextMenu={preventDefault}` to the per-message wrapper rows in `PersonalChat` and `GroupChat`.
+   - Because the CSS rule cascades to all children, this automatically protects:
+     - File bubbles (FileBubble)
+     - Location share bubbles
+     - Coin transfer bubbles
+     - Image / video bubbles inside ChatMessageBubble
+     - Reply quote previews
+     - Group sender names + avatars
 
-2. Harden voice message bubbles
-   - Add capture-phase handlers to the voice player wrapper:
-     - `onTouchStartCapture`
-     - `onContextMenuCapture`
-     - `onSelectStartCapture`
-     - `onDragStartCapture`
-   - Prevent native iOS selection/callout on long-press while keeping normal tap-to-play and waveform seek working.
-   - Cancel the browser context menu when iOS fires it, so “Copy / Look Up / Translate” does not appear.
+2. Harden CallEventBubble
+   - Wrap with the same `chat-no-callout` class and contextmenu suppression so holding a call event opens our action menu (not iOS Copy/Look Up).
 
-3. Harden normal chat message bubbles too
-   - The text bubble component already has a custom long-press menu, but it does not fully block iOS selection.
-   - Apply the same no-selection class and native-menu suppression to `ChatMessageBubble`, so holding any message does not show Apple’s menu.
+3. Harden the chat input composer
+   - Apply the no-callout treatment to the message composer's surrounding row in `PersonalChat` so iOS can't accidentally pop the loupe over the input bar background while users hover/press near the mic.
 
-4. Update direct voice wrappers in Personal and Group chat
-   - Add the no-selection/touch-callout suppression to the outer green/gray voice bubble containers, not only inside `VoiceMessagePlayer`.
-   - This prevents the timestamp or empty bubble area from triggering the native menu.
+4. Reels reaction picker (long-press)
+   - Add `WebkitTouchCallout: none` and `userSelect: none` to the long-pressable container in `ReelsFeedPage` that opens the reaction picker — currently only `onContextMenu.preventDefault` is set, which is not enough on iOS.
 
-5. Keep scrolling and playback natural
-   - Preserve vertical scroll with `touch-action: pan-y` on message wrappers.
-   - Use movement thresholds so scrolling does not accidentally open the ZIVO action sheet.
-   - Keep buttons and waveform controls responsive.
+5. ProfileFeedCard reaction picker (long-press)
+   - Same treatment as Reels: kill the iOS callout on the post card surface that opens the reaction picker.
+
+6. StickerKeyboard preview long-press
+   - The sticker grid uses a long-press to show the preview. Add the touch-callout suppression so iOS doesn't intercept and show its image action menu.
+
+7. Keep things working
+   - Buttons, video play, audio scrubbing, and link rich previews continue to work normally — the rule only suppresses native selection / callouts, never click handlers.
+   - Vertical scrolling unaffected (still `pan-y` on the messages scroller).
 
 Technical details:
 
 ```text
-Chat bubble / voice bubble
-  touch start capture: mark as chat gesture and prevent native callout when needed
-  pointer long-press: open ZIVO menu
-  contextmenu/selectstart/dragstart capture: prevent iOS/desktop native menu
-  child elements: user-select: none; -webkit-touch-callout: none
+PersonalChat / GroupChat
+  per-message <div key={msg.id}> → className += " chat-no-callout"
+                                  → onContextMenu preventDefault
+                                  → style WebkitTouchCallout: none
+
+CallEventBubble
+  outer wrapper → chat-no-callout + contextmenu preventDefault
+
+ReelsFeedPage / ProfileFeedCard / StickerKeyboard
+  long-press surfaces → WebkitTouchCallout: none, userSelect: none,
+                        WebkitTapHighlightColor: transparent
 ```
 
 Files to update:
-- `src/index.css`
-- `src/components/chat/VoiceMessagePlayer.tsx`
-- `src/components/chat/ChatMessageBubble.tsx`
 - `src/components/chat/PersonalChat.tsx`
 - `src/components/chat/GroupChat.tsx`
+- `src/components/chat/CallEventBubble.tsx`
+- `src/components/chat/StickerKeyboard.tsx`
+- `src/pages/ReelsFeedPage.tsx`
+- `src/components/profile/ProfileFeedCard.tsx`
