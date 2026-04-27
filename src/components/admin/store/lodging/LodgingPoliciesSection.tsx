@@ -38,34 +38,75 @@ const CANCEL_PRESETS = [
   { value: "non_refundable", label: "Non-refundable" },
 ];
 
+type Jsonish = Record<string, unknown>;
+const asObj = (v: unknown): Jsonish => (v && typeof v === "object" && !Array.isArray(v) ? (v as Jsonish) : {});
+const asStr = (v: unknown, fallback = ""): string => (typeof v === "string" ? v : v == null ? fallback : String(v));
+
 export default function LodgingPoliciesSection({ storeId }: { storeId: string }) {
   const opsData = useLodgingOpsData(storeId);
   const profileQ = useLodgePropertyProfile(storeId);
-  const qc = useQueryClient();
-  const updateProfile = useMutation({
-    mutationFn: async (patch: any) => {
-      const { error } = await (supabase as any).from("lodge_property_profiles").upsert({ store_id: storeId, ...patch });
-      if (error) throw error;
-    },
-    onSuccess: () => { toast.success("Policies saved"); qc.invalidateQueries({ queryKey: ["lodge-property-profile", storeId] }); },
-    onError: (e: any) => toast.error(e?.message || "Save failed"),
-  });
   const taxes = useLodgingCatalog<TaxFee>("lodging_taxes_fees", storeId);
   const [editing, setEditing] = useState<Partial<TaxFee> | null>(null);
-  const [policyDraft, setPolicyDraft] = useState<any>({});
+  const [policyDraft, setPolicyDraft] = useState<{
+    cancellation_policy: string;
+    deposit_percent: number;
+    child_policy: string;
+    pet_policy: string;
+    smoking_policy: string;
+    quiet_hours_from: string;
+    quiet_hours_to: string;
+    parties_allowed: boolean;
+  }>({
+    cancellation_policy: "flexible",
+    deposit_percent: 0,
+    child_policy: "",
+    pet_policy: "",
+    smoking_policy: "non_smoking",
+    quiet_hours_from: "22:00",
+    quiet_hours_to: "07:00",
+    parties_allowed: false,
+  });
 
   useEffect(() => {
-    if (profileQ.data) setPolicyDraft({
-      cancellation_policy: (profileQ.data as any).cancellation_policy || "flexible",
-      deposit_pct: (profileQ.data as any).deposit_pct ?? 0,
-      child_policy: (profileQ.data as any).child_policy || "",
-      pet_policy: (profileQ.data as any).pet_policy || "",
-      smoking_policy: (profileQ.data as any).smoking_policy || "non_smoking",
-      quiet_hours_from: (profileQ.data as any).quiet_hours_from || "22:00",
-      quiet_hours_to: (profileQ.data as any).quiet_hours_to || "07:00",
-      parties_allowed: Boolean((profileQ.data as any).parties_allowed),
+    const p = profileQ.data;
+    if (!p) return;
+    const houseRules = asObj((p as { house_rules?: unknown }).house_rules);
+    const childPolicy = asObj((p as { child_policy?: unknown }).child_policy);
+    const petPolicy = asObj((p as { pet_policy?: unknown }).pet_policy);
+    setPolicyDraft({
+      cancellation_policy: asStr((p as { cancellation_policy?: unknown }).cancellation_policy, "flexible"),
+      deposit_percent: Number((p as { deposit_percent?: unknown }).deposit_percent ?? 0) || 0,
+      child_policy: asStr(childPolicy.text, ""),
+      pet_policy: asStr(petPolicy.text, ""),
+      smoking_policy: asStr(houseRules.smoking_policy, "non_smoking"),
+      quiet_hours_from: asStr(houseRules.quiet_hours_from, "22:00"),
+      quiet_hours_to: asStr(houseRules.quiet_hours_to, "07:00"),
+      parties_allowed: Boolean(houseRules.parties_allowed),
     });
   }, [profileQ.data]);
+
+  const handleSavePolicies = async () => {
+    const existingHouseRules = asObj((profileQ.data as { house_rules?: unknown } | null | undefined)?.house_rules);
+    try {
+      await profileQ.upsert.mutateAsync({
+        cancellation_policy: policyDraft.cancellation_policy,
+        deposit_percent: policyDraft.deposit_percent,
+        child_policy: { text: policyDraft.child_policy } as never,
+        pet_policy: { text: policyDraft.pet_policy } as never,
+        house_rules: {
+          ...existingHouseRules,
+          smoking_policy: policyDraft.smoking_policy,
+          quiet_hours_from: policyDraft.quiet_hours_from,
+          quiet_hours_to: policyDraft.quiet_hours_to,
+          parties_allowed: policyDraft.parties_allowed,
+        } as never,
+      });
+      toast.success("Policies saved");
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Save failed");
+    }
+  };
+
 
   const taxRows = taxes.list.data || [];
   const isLoading = opsData.isLoading || profileQ.isLoading || taxes.list.isLoading;
