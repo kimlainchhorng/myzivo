@@ -135,6 +135,7 @@ interface Message {
     amount?: number | string;
     note?: string;
   } | null;
+  _local_voice_url?: string;
 }
 
 interface CallEvent {
@@ -267,6 +268,7 @@ export default function PersonalChat({ recipientId, recipientName, recipientAvat
   const videoInputRef = useRef<HTMLInputElement>(null);
   const lockedImageInputRef = useRef<HTMLInputElement>(null);
   const voiceUploadInFlightRef = useRef(false);
+  const pendingVoiceOptimisticIdRef = useRef<string | null>(null);
   const handleSendRef = useRef<((opts?: SendMessageOptions) => Promise<void>) | null>(null);
   const messageRefs = useRef<Map<string, HTMLDivElement>>(new Map());
   const timelineRef = useRef<HTMLDivElement>(null);
