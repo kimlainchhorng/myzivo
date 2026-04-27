@@ -20,10 +20,11 @@ import AlertCircle from "lucide-react/dist/esm/icons/alert-circle";
 import Info from "lucide-react/dist/esm/icons/info";
 import { motion } from "framer-motion";
 import { toast } from "sonner";
-import { isVoiceDebugEnabled, setVoiceDebugEnabled } from "@/lib/voiceDebug";
+import { isVoiceDebugEnabled, setVoiceDebugEnabled, subscribeVoiceDebug } from "@/lib/voiceDebug";
 import { getVoiceUploadDiagnostics } from "@/lib/voiceUpload";
 
 export type VoiceUploadStatus = "uploading" | "sent" | "failed";
+export type VoiceUploadPhase = "preflight" | "upload" | "insert";
 
 interface VoiceMessagePlayerProps {
   url: string;
@@ -42,6 +43,10 @@ interface VoiceMessagePlayerProps {
   uploadEndpoint?: string;
   /** Last response status code (0 = network error) — shown in debug mode. */
   uploadStatusCode?: number;
+  /** Which phase failed — shown in debug mode. */
+  uploadPhase?: VoiceUploadPhase;
+  /** Raw response body from the failing request — shown in debug mode. */
+  uploadBody?: string;
   /** Retry handler — shown when failed. */
   onRetry?: () => void;
   /** Discard handler — shown when failed or uploading. */
