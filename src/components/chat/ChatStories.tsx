@@ -114,22 +114,22 @@ export default function ChatStories() {
 
   return (
     <>
-      {/* Stories Row — Instagram style */}
-      <div className="px-4 pt-3 pb-2">
-        <div className="flex gap-3 overflow-x-auto scrollbar-hide pb-1">
+      {/* Stories Row — Telegram-style compact */}
+      <div className="px-3 pt-2 pb-1.5">
+        <div className="flex gap-2.5 overflow-x-auto scrollbar-hide pb-0.5">
           {/* Your Story */}
           <button
             onClick={() => {
               if (hasMyStory) openViewer(myStories!);
               else setShowCreate(true);
             }}
-            className="flex flex-col items-center gap-1 flex-shrink-0 w-[72px]"
+            className="flex flex-col items-center gap-1 flex-shrink-0 w-[58px]"
           >
             <div className="relative">
               <div className={cn(
-                "h-[64px] w-[64px] rounded-full p-[2.5px] box-border",
+                "h-[54px] w-[54px] rounded-full p-[2px] box-border",
                 hasMyStory
-                  ? "bg-[conic-gradient(from_140deg,hsl(160_84%_45%),hsl(174_72%_45%),hsl(190_85%_55%),hsl(160_84%_45%))] shadow-[0_0_12px_-3px_hsl(160_84%_45%/0.55)]"
+                  ? "bg-[conic-gradient(from_140deg,hsl(160_84%_45%),hsl(174_72%_45%),hsl(190_85%_55%),hsl(160_84%_45%))] shadow-[0_0_10px_-3px_hsl(160_84%_45%/0.55)]"
                   : "bg-muted-foreground/25"
               )}>
                 <div className="h-full w-full rounded-full overflow-hidden border-2 border-background bg-card flex items-center justify-center">
@@ -151,14 +151,14 @@ export default function ChatStories() {
                     const initial = (myProfile?.full_name?.[0] || user?.email?.[0] || "").toUpperCase();
                     if (initial) {
                       return (
-                        <div className="w-full h-full flex items-center justify-center bg-primary/10 text-base font-bold text-primary">
+                        <div className="w-full h-full flex items-center justify-center bg-primary/10 text-sm font-bold text-primary">
                           {initial}
                         </div>
                       );
                     }
                     return (
                       <div className="w-full h-full flex items-center justify-center bg-primary/10">
-                        <Camera className="w-5 h-5 text-primary/60" />
+                        <Camera className="w-4 h-4 text-primary/60" />
                       </div>
                     );
                   })()}
@@ -168,16 +168,16 @@ export default function ChatStories() {
                 onClick={(e) => { e.stopPropagation(); setShowCreate(true); }}
                 role="button"
                 aria-label="Add story"
-                className="absolute -bottom-0.5 -right-0.5 h-[22px] w-[22px] rounded-full bg-gradient-to-br from-[hsl(160_84%_45%)] to-[hsl(174_72%_40%)] flex items-center justify-center border-[2.5px] border-background shadow-[0_2px_6px_-1px_hsl(160_84%_45%/0.6)]"
+                className="absolute -bottom-0.5 -right-0.5 h-[18px] w-[18px] rounded-full bg-gradient-to-br from-[hsl(160_84%_45%)] to-[hsl(174_72%_40%)] flex items-center justify-center border-2 border-background shadow-[0_2px_5px_-1px_hsl(160_84%_45%/0.6)]"
               >
                 {hasMyStory ? (
-                  <Sparkles className="w-3 h-3 text-white" strokeWidth={2.5} />
+                  <Sparkles className="w-2.5 h-2.5 text-white" strokeWidth={2.5} />
                 ) : (
-                  <Plus className="w-3 h-3 text-white" strokeWidth={3} />
+                  <Plus className="w-2.5 h-2.5 text-white" strokeWidth={3} />
                 )}
               </span>
             </div>
-            <span className="text-[11px] text-foreground font-medium max-w-[68px] truncate">
+            <span className="text-[10px] text-foreground font-medium max-w-[56px] truncate leading-tight">
               Your story
             </span>
           </button>
@@ -189,20 +189,20 @@ export default function ChatStories() {
               <button
                 key={group.userId}
                 onClick={() => openViewer(group)}
-                className="flex flex-col items-center gap-1 flex-shrink-0 w-[72px]"
+                className="flex flex-col items-center gap-1 flex-shrink-0 w-[58px]"
               >
-                <div className="h-[64px] w-[64px] rounded-full p-[2.5px] bg-[conic-gradient(from_140deg,hsl(160_84%_45%),hsl(174_72%_45%),hsl(190_85%_55%),hsl(160_84%_45%))] shadow-[0_0_12px_-3px_hsl(160_84%_45%/0.55)]">
+                <div className="h-[54px] w-[54px] rounded-full p-[2px] bg-[conic-gradient(from_140deg,hsl(160_84%_45%),hsl(174_72%_45%),hsl(190_85%_55%),hsl(160_84%_45%))] shadow-[0_0_10px_-3px_hsl(160_84%_45%/0.55)]">
                   <div className="w-full h-full rounded-full border-2 border-background overflow-hidden bg-muted">
                     {group.avatarUrl ? (
                       <img src={group.avatarUrl} alt="" className="w-full h-full object-cover" />
                     ) : (
-                      <div className="w-full h-full flex items-center justify-center text-sm font-bold text-muted-foreground">
+                      <div className="w-full h-full flex items-center justify-center text-xs font-bold text-muted-foreground">
                         {group.userName.charAt(0).toUpperCase()}
                       </div>
                     )}
                   </div>
                 </div>
-                <span className="text-[11px] text-foreground font-semibold max-w-[68px] truncate">
+                <span className="text-[10px] text-foreground font-semibold max-w-[56px] truncate leading-tight">
                   {group.userName.split(" ")[0]}
                 </span>
               </button>
