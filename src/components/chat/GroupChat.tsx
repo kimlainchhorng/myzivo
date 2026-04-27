@@ -474,11 +474,12 @@ export default function GroupChat({ groupId, groupName, groupAvatar, onClose }: 
     void runVoiceJob(clientSendId, false);
   }, [voice.audioBlob, voice.isRecording, voice, user?.id, groupId, replyTo?.id, scrollToBottom, runVoiceJob]);
 
+  // Abort in-flight uploads on unmount, but preserve cached blob URLs so any
+  // failed bubbles still showing can replay/resend until next clear.
   useEffect(() => {
     return () => {
       for (const [, job] of voiceJobsRef.current) {
         try { job.controller.abort(); } catch { /* noop */ }
-        try { URL.revokeObjectURL(job.localUrl); } catch { /* noop */ }
       }
       voiceJobsRef.current.clear();
     };
