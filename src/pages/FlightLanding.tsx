@@ -430,13 +430,13 @@ function DesktopCinematicHero() {
             style={{ transformStyle: "preserve-3d", scale: formScale }}
             className="max-w-3xl mx-auto relative"
           >
-            {/* Outer glow */}
+            {/* Outer glow — subtle */}
             <motion.div
-              className="absolute -inset-2 rounded-3xl blur-xl opacity-40"
+              className="absolute -inset-1 rounded-3xl blur-lg opacity-20"
               animate={{
                 background: [
-                  `linear-gradient(135deg, hsl(${currentAccent} / 0.3), hsl(var(--primary) / 0.2))`,
-                  `linear-gradient(225deg, hsl(var(--primary) / 0.3), hsl(${currentAccent} / 0.2))`,
+                  `linear-gradient(135deg, hsl(${currentAccent} / 0.25), hsl(var(--primary) / 0.15))`,
+                  `linear-gradient(225deg, hsl(var(--primary) / 0.25), hsl(${currentAccent} / 0.15))`,
                 ],
               }}
               transition={{ duration: 3, repeat: Infinity, repeatType: "reverse" }}
