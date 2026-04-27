@@ -1,43 +1,73 @@
-## What's wrong
+# Booking.com-style Property Enhancements for Lodge Admin
 
-Your 4 villas are **safe in the database** (`VILLA`, `VILLA Class`, `VILLA A`, `VILLA Class A`, all `is_active=true`). Nothing was deleted.
+You shared a Booking.com property page (Bamboo Cottage / Koh Sdach Resort) and asked to add similar features to your store `7322b460-2c23-4d3d-bdc5-55a31cc65fab`. The lodge admin already has Rooms, Rates, Reservations, Property Profile, Gallery, Policies, etc. — but several of the "shop window" pieces that make a Booking.com listing feel complete are missing or thin.
 
-The Rooms tab shows "No rooms yet" because Phase 13's security migration accidentally revoked `EXECUTE` permission on the helper functions used inside RLS policies. Result: every read/write to `lodge_rooms` (and any other table whose policy calls those helpers) fails with:
+## What already exists (no rebuild needed)
+- Rooms & rate plans (your 4 villas), Reservations, Front Desk
+- Property Profile: hero badges, included highlights, languages, facilities, meal plans, house rules, check-in/out times, cancellation policy, pet/child policy, contact, payment methods
+- Gallery section
+- Policies & Amenities sections
 
-```
-403 — permission denied for function is_lodge_store_owner
-```
+## What's missing vs. the Booking.com page (the gaps to fill)
 
-This is a one-line-class regression. Your data, photos, rates, and add-ons are all intact and will reappear the moment the grant is restored.
+1. **Rich "About this property" description** — Booking shows multi-paragraph storytelling (Comfortable Accommodations, Exceptional Facilities, Dining Experience, Prime Location, Couples favorite). We have hero badges and chips but no long-form description fields.
+2. **Property highlights side card** — "Perfect for a 1-night stay", "Top location: highly rated by guests (8.6)", "Breakfast info" mini-card. Needs a dedicated `property_highlights` JSON block.
+3. **Most popular amenities row** — A curated, icon-led "top 8" surfacing of the best amenities (Non-smoking rooms, Restaurant, Free WiFi, Room service, Family rooms, Bar, Private beach, Breakfast). Today only the full chip grid exists.
+4. **Reviews summary & guest quote** — "Good 7.8 (50 reviews)" + a featured guest quote + sub-scores (Great location 8.6). Needs a reviews summary aggregator surfaced on overview.
+5. **Genius / member savings banner** — A "Sign in, save money" promo block. We have promotions but not a flagged "member discount" type.
+6. **Distance-from-landmarks (nearby) UX** — `nearby` exists in the schema, but there's no clean editor to add Shianouk International Airport (114 mi), beach (1 min walk), etc. with mode icons.
+7. **Per-room rich attribute chips** — Booking shows per-room icons: bed type, m², balcony, garden view, A/C, private bathroom, terrace, minibar, plus an expandable feature list (toiletries, bidet, towels, slippers, hairdryer, etc.). Our rooms section has basic fields but no structured amenity chips per room.
+8. **Rate-plan offer labels** — Booking decorates each rate row with badges: "Non-refundable", "Free cancellation before May 2", "No prepayment needed", "Genius discount may be available", "Getaway Deal -20%", "Exceptional breakfast included". We have rate plans but no badge/labels system.
 
-## Fix — one migration
+## Proposed scope (one focused phase)
 
-Re-grant `EXECUTE` on the security-definer helpers to `authenticated` (and `anon` where the policy is public-readable). Because the functions are `SECURITY DEFINER`, this does NOT widen privileges — they still only return the boolean their internal logic computes; callers cannot read underlying tables directly.
+Group the work into a single shippable phase rather than 8 small ones:
 
-```sql
--- Restore execute on RLS helper functions
-GRANT EXECUTE ON FUNCTION public.is_lodge_store_owner(uuid)        TO authenticated, anon;
-GRANT EXECUTE ON FUNCTION public.is_lodge_store_manager(uuid, uuid) TO authenticated, anon;
-GRANT EXECUTE ON FUNCTION public.safe_uuid(text)                   TO authenticated, anon;
-GRANT EXECUTE ON FUNCTION public.has_role(uuid, text)              TO authenticated, anon;
-```
+### A. Property storefront content (Profile section)
+- Add `description_sections` JSONB to `lodge_property_profile` — array of `{title, body}` blocks (Accommodations, Facilities, Dining, Location, etc.) with a rich-text editor.
+- Add `property_highlights` JSONB — `{perfect_for, top_location_score, breakfast_info, rooms_with[]}` for the right-side highlights card.
+- Add `popular_amenities` text[] (max 8, ordered) — curated from the full facilities list with a drag-to-reorder picker.
+- Add `nearby` editor UI (already in schema, just needs a proper editor with label / minutes / km / mode dropdown).
 
-(Exact list will be derived by querying `pg_proc` for any helper referenced in lodge_*/store_* policies, so we don't miss one.)
+### B. Room amenity chips
+- Add `amenities` text[] and `expandable_features` text[] to `lodge_rooms` (or a sibling `lodge_room_amenities` table if multi-select needs categorization).
+- New chip-group editor in the room detail drawer with the same icon set Booking uses (Bed, Ruler, Balcony, View, AC, Bathroom, Terrace, Minibar…).
 
-## Verification after migration
+### C. Rate plan badges
+- Add `badges` text[] to `lodge_rate_plans` with a fixed catalog: `non_refundable`, `free_cancellation`, `no_prepayment`, `genius_discount`, `getaway_deal`, `breakfast_included`, `late_checkout`, `high_speed_internet`.
+- Render badges on the public room/rate UI (not in scope to rebuild storefront — only emit data + admin editor).
 
-1. Re-open `/admin/stores/7322b460-…?tab=lodge-rooms` — the 4 VILLA rooms should reappear with their photos, rates, and add-ons.
-2. Confirm sibling tabs work: `lodge-rate-plans`, `lodge-calendar`, `lodge-housekeeping`, `documents`, `training`, `audit-log`.
-3. Re-run Supabase linter to confirm no new warnings.
+### D. Reviews summary (read-only roll-up)
+- New `LodgingReviewsSummaryCard` on Overview — aggregates existing `lodging_reviews` into average score, count, top-rated tag, and one featured quote (highest-rated recent review with reply allowed).
 
-## Why this is safe
+### E. Member savings flag
+- Add `member_only` boolean to `lodging_promotions` so a promo can be marked as Genius-style and surface a "Sign in, save 10%+" banner on the storefront.
 
-- `SECURITY DEFINER` functions run as their owner (postgres), so granting EXECUTE to `authenticated` only lets the client *call* the function — it cannot bypass the function's internal checks.
-- The original Phase 13 intent (preventing arbitrary callers from probing internals) is preserved by `search_path` pinning and the function bodies themselves; the blanket REVOKE was overly aggressive.
-- No data migration, no schema change, no frontend change required.
+## Files to create / change
 
-## Files touched
+**Migrations**
+- Add columns: `lodge_property_profile.description_sections`, `property_highlights`, `popular_amenities`; `lodge_rooms.amenities`, `expandable_features`; `lodge_rate_plans.badges`; `lodging_promotions.member_only`.
 
-- `supabase/migrations/<timestamp>_restore_rls_helper_grants.sql` (new, ~15 lines)
+**Hooks**
+- Extend `useLodgePropertyProfile` typings.
+- Extend `useLodgeRooms` and `useLodgeRatePlans` typings.
+- New `useLodgeReviewsSummary(storeId)`.
 
-That's it. Approve to apply and your villas come back immediately.
+**Components**
+- `src/components/admin/store/lodging/property-profile/DescriptionSectionsCard.tsx`
+- `src/components/admin/store/lodging/property-profile/PropertyHighlightsCard.tsx`
+- `src/components/admin/store/lodging/property-profile/PopularAmenitiesPicker.tsx`
+- `src/components/admin/store/lodging/property-profile/NearbyEditorCard.tsx` (replace inline)
+- `src/components/admin/store/lodging/RoomAmenityChipsEditor.tsx` (used inside room drawer)
+- `src/components/admin/store/lodging/RatePlanBadgesEditor.tsx` (used inside rate plan drawer)
+- `src/components/admin/store/lodging/LodgingReviewsSummaryCard.tsx` (mounted in `LodgingOverviewSection`)
+- Wire `member_only` toggle into existing promotions form.
+
+**No changes** to navigation/tabs — everything plugs into existing Overview / Profile / Rooms / Rates / Promotions sections.
+
+## Out of scope
+- Rebuilding the public storefront listing page
+- Channel-manager pushes of new fields to OTAs
+- Translating descriptions (i18n) — single-language for now
+
+After approval I'll run the migration and ship A–E in one pass. Confirm and I'll proceed.
