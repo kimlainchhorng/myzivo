@@ -1,81 +1,48 @@
-# Plan: make New Group creation reliable and debuggable
+# Fix "User" + blank avatars on Feed
 
-## What I found
+## Root cause confirmed
 
-The screenshot shows the real failure now:
+The previous fix added `display_name` to the profiles query in `FeedPage.tsx`:
 
-```text
-infinite recursion detected in policy for relation "chat_group_members" (42P17)
+```ts
+.select("id, user_id, full_name, display_name, avatar_url, is_verified")
 ```
 
-The database currently has older recursive RLS policies still active on `chat_group_members`, including policies that query `chat_group_members` from inside policies on the same table. That causes PostgreSQL to recurse when the app inserts/selects group members. The newer helper functions exist, but the old policies were not fully removed.
+But `profiles.display_name` **does not exist** in the database. The columns available for naming are `full_name` and `username` (verified via `information_schema`).
 
-## Fix plan
+Result: the entire profile fetch errors out silently, `profileMap` is empty, and every user post falls back to `author_name = "User"` and `author_avatar = null` — exactly what the screenshot shows.
 
-1. **Fix the database RLS recursion first**
-   - Add a migration that drops the old recursive `chat_group_members` policies:
-     - `Group members or creator can add members`
-     - `Members can view members`
-     - `Members see group members`
-     - old duplicate self/leave/update policies if still present
-   - Keep the non-recursive SECURITY DEFINER helper-function approach:
-     - `is_group_member(auth.uid(), group_id)`
-     - `is_group_admin(auth.uid(), group_id)`
-     - `is_group_owner(auth.uid(), group_id)`
-   - Keep insert policies that allow:
-     - the current user to insert themselves as owner/member
-     - admins/owners to add other members
-   - This directly fixes the error in your screenshot.
+The same bad column is also referenced in the mapping line:
 
-2. **Add a client-side preflight check before creating**
-   - In `CreateGroupModal.tsx`, verify the expected schema before insert by reading the Supabase-generated app metadata already available in code:
-     - `chat_groups` supports required `name` and `created_by`
-     - `chat_group_members` supports `group_id`, `user_id`, and `role`
-     - allowed roles include `owner`, `admin`, `member`
-   - If something is missing or incompatible, block creation and show a clear error instead of attempting a broken insert.
+```ts
+author_name: profile?.display_name || profile?.full_name || "User",
+```
 
-3. **Validate the payload before submission**
-   - Block if:
-     - session/user is missing
-     - group name is blank or too long
-     - no friend is selected
-     - selected IDs are malformed or not in the loaded friends list
-     - creator role is not one of the allowed database roles
-   - Show a short clear toast message for each validation failure.
+## Fixes
 
-4. **Add one automatic retry for auth/RLS-like failures**
-   - Wrap the group creation operation in a single retry controller.
-   - If the first attempt fails with an auth/RLS/session-shaped error, re-check `supabase.auth.getUser()` and retry once.
-   - Do not retry validation errors or schema/preflight errors.
-   - If retry succeeds, show normal success.
-   - If retry fails, show the detailed error panel.
+### 1. Repair the profiles query (primary fix)
 
-5. **Cancel if auth changes during creation**
-   - While `creating` is true, subscribe to `supabase.auth.onAuthStateChange`.
-   - If `SIGNED_OUT`, missing session, or token expiry is detected during creation:
-     - mark the request as cancelled
-     - stop updating the UI from the in-flight request
-     - show: `Group creation cancelled — please sign in again.`
+In `src/pages/FeedPage.tsx` (`useQuery(["customer-feed"])`):
 
-6. **Replace the plain error toast with expandable details**
-   - Add a compact custom Sonner toast for group creation errors:
-     - title: `Failed to create group`
-     - short explanation visible immediately
-     - collapsible `View error details`
-     - details panel shows Supabase `message`, `details`, `hint`, and Postgres `code`
-   - Keep the design compact and mobile-friendly for the 428px preview width.
+- Replace `display_name` with `username` in the `.select(...)`.
+- Update the mapping fallback to: `profile?.full_name || profile?.username || "User"`.
 
-## Technical notes
+This restores names AND avatars for every user post in the feed (photo and video).
 
-- Main file: `src/components/chat/CreateGroupModal.tsx`
-- New helper/component likely added near chat code:
-  - `src/components/chat/GroupCreationErrorToast.tsx`
-- Database migration required to remove recursive policies and keep safe function-based RLS.
-- Current real schema is compatible:
-  - `chat_groups.created_by` exists and is NOT NULL
-  - `chat_group_members.role` is enum `group_member_role`
-  - allowed role values are `owner`, `admin`, `member`
+### 2. Apply the same fix to the sound-overlay query
 
-## Expected result
+Lines ~1054–1068 also use `profiles(display_name)` for `user_posts`. Switch to `profiles(full_name, username)` and update the fallback.
 
-After this, tapping **Create Group** should create the group smoothly. If the session expires or RLS rejects once because auth refresh is in progress, the app retries once automatically. If it still fails, the toast shows a clean expandable error panel instead of a long red message covering the top of the screen.
+### 3. Other issues visible in the screenshot (smaller polish)
+
+- **Duplicate "Search people…" bar**: there's one in the global header and another at the top of the feed body. Hide the in-feed one on desktop (lg+) since the header search already covers it.
+- **Feed not centered**: on desktop the post column is pushed to the right. Add `mx-auto` / proper grid sizing to the feed container so it sits centered between the sidebar and the right edge.
+- **"Starting live preview…" toast**: this is a Lovable preview environment toast, not part of the app. No action needed.
+
+## Files to change
+
+- `src/pages/FeedPage.tsx` — fix profiles select + mapping in 2 places, center feed column, hide duplicate search bar on desktop.
+
+## Verification
+
+After the fix, query `profiles` with the actual user_ids from `user_posts` to confirm rows return, then reload `/feed` — names and avatars should populate. No DB migration needed.

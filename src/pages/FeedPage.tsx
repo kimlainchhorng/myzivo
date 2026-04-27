@@ -1388,7 +1388,7 @@ export default function FeedPage() {
           ? supabase.from("store_profiles").select("id, name, logo_url, slug, is_verified").in("id", storeIds)
           : Promise.resolve({ data: [] as any[] }),
         userIds.length
-          ? supabase.from("profiles").select("id, user_id, full_name, display_name, avatar_url, is_verified").or(`user_id.in.(${(userIds as string[]).join(",")}),id.in.(${(userIds as string[]).join(",")})`)
+          ? supabase.from("profiles").select("id, user_id, full_name, username, avatar_url, is_verified").or(`user_id.in.(${(userIds as string[]).join(",")}),id.in.(${(userIds as string[]).join(",")})`)
           : Promise.resolve({ data: [] as any[] }),
       ]);
 
