@@ -986,30 +986,46 @@ export default function ReelsFeedPage() {
           </AnimatePresence>
           </Suspense>
 
-          {/* TikTok/Reels-style Fullscreen Video Viewer */}
-          <AnimatePresence>
-            {reelsStartIndex !== null && (
-              <motion.div
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                exit={{ opacity: 0 }}
-                transition={{ duration: 0.2 }}
-                className="fixed inset-0 z-[100] bg-black lg:top-[4.5rem]"
-              >
-                {/* Snap-scroll container */}
-                <div ref={reelsScrollRef} className="h-full w-full overflow-y-scroll snap-y snap-mandatory">
-                  {items.filter((it) => it.media_type === 'video').map((item) => (
-                    <ReelSlide
-                      key={item.id}
-                      item={item}
-                      currentUserId={userId}
-                      onClose={() => setReelsStartIndex(null)}
-                    />
-                  ))}
-                </div>
-              </motion.div>
+          {/* TikTok/Reels-style Fullscreen Video Viewer.
+              Portaled to <body> so the `fixed` positioning escapes
+              <PullToRefresh>'s transform (a transformed ancestor would
+              otherwise become the containing block and collapse the viewer
+              into the middle column on desktop).
+              z-[1500] covers NavBar (z-50/1200) and chat hub (z-[1401]). */}
+          {reelsStartIndex !== null && typeof document !== "undefined" &&
+            createPortal(
+              <AnimatePresence>
+                <motion.div
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  exit={{ opacity: 0 }}
+                  transition={{ duration: 0.2 }}
+                  className="fixed inset-0 z-[1500] bg-black"
+                >
+                  {/* Snap-scroll container */}
+                  <div ref={reelsScrollRef} className="h-full w-full overflow-y-scroll snap-y snap-mandatory">
+                    {items.filter((it) => it.media_type === 'video').map((item) => (
+                      <ReelSlide
+                        key={item.id}
+                        item={item}
+                        currentUserId={userId}
+                        onClose={() => setReelsStartIndex(null)}
+                      />
+                    ))}
+                  </div>
+                  {/* Always-visible close button — desktop. */}
+                  <button
+                    type="button"
+                    onClick={() => setReelsStartIndex(null)}
+                    aria-label="Close reels viewer"
+                    className="hidden lg:flex fixed top-4 right-4 z-[1510] h-11 w-11 items-center justify-center rounded-full bg-background/90 text-foreground shadow-xl ring-1 ring-border/50 backdrop-blur-md hover:bg-background transition-colors"
+                  >
+                    <XIcon className="h-5 w-5" />
+                  </button>
+                </motion.div>
+              </AnimatePresence>,
+              document.body,
             )}
-          </AnimatePresence>
 
           {/* Post Detail Viewer */}
           <AnimatePresence>
