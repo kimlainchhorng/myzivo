@@ -1229,6 +1229,26 @@ export default function PersonalChat({ recipientId, recipientName, recipientAvat
     }
   }, [user?.id, recipientId]);
 
+  // Toggle a reaction on any message (used by the voice-bubble long-press menu).
+  const toggleMessageReaction = useCallback(async (messageId: string, emoji: string) => {
+    if (!user?.id || messageId.startsWith("opt-")) return;
+    try {
+      const { data: existing } = await dbFrom("message_reactions")
+        .select("id")
+        .eq("message_id", messageId)
+        .eq("user_id", user.id)
+        .eq("emoji", emoji)
+        .maybeSingle();
+      if (existing?.id) {
+        await dbFrom("message_reactions").delete().eq("id", existing.id);
+      } else {
+        await dbFrom("message_reactions").insert({ message_id: messageId, user_id: user.id, emoji });
+      }
+    } catch {
+      toast.error("Couldn't react");
+    }
+  }, [user?.id]);
+
   const typingTimerRef = useRef<ReturnType<typeof setTimeout>>();
   const handleInputChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
     const val = e.target.value;
