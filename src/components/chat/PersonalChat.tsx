@@ -966,12 +966,14 @@ export default function PersonalChat({ recipientId, recipientName, recipientAvat
     void runVoiceJob(clientSendId, false);
   }, [voice.audioBlob, voice.isRecording, voice, user?.id, recipientId, replyTo?.id, scrollToBottom, runVoiceJob]);
 
-  // Abort every pending voice job when the component unmounts.
+  // Abort every pending voice job when the component unmounts. We deliberately
+  // do NOT revoke local blob URLs here — failed jobs may still have visible
+  // bubbles in the message list (after a quick re-mount), and revoking would
+  // break the waveform/playback fallback for the cached audio.
   useEffect(() => {
     return () => {
       for (const [, job] of voiceJobsRef.current) {
         try { job.controller.abort(); } catch { /* noop */ }
-        try { URL.revokeObjectURL(job.localUrl); } catch { /* noop */ }
       }
       voiceJobsRef.current.clear();
     };
