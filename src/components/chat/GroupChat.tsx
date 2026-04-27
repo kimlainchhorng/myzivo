@@ -291,10 +291,12 @@ export default function GroupChat({ groupId, groupName, groupAvatar, onClose }: 
 
     const upload = async () => {
       try {
-        const path = `${user.id}/${Date.now()}.webm`;
+        const contentType = blob.type || "audio/webm";
+        const ext = contentType.includes("mp4") ? "m4a" : "webm";
+        const path = `${user.id}/${Date.now()}.${ext}`;
         const { error: uploadError } = await supabase.storage
           .from("chat-media-files")
-          .upload(path, blob, { contentType: "audio/webm" });
+          .upload(path, blob, { contentType, upsert: true });
         if (uploadError) throw uploadError;
         const { data: urlData } = supabase.storage.from("chat-media-files").getPublicUrl(path);
         if (cancelled) return;
@@ -307,12 +309,12 @@ export default function GroupChat({ groupId, groupName, groupAvatar, onClose }: 
           reply_to_id: replyTo?.id || undefined,
           file_payload: { duration_ms: durationMs },
         };
-        const { data, error: insertError } = await dbFrom("group_messages")
-          .insert(insertData)
-          .select()
-          .single();
+        // Fire-and-forget insert; realtime echo replaces the optimistic bubble.
+        const { error: insertError } = await dbFrom("group_messages").insert(insertData);
         if (insertError) throw insertError;
-        setMessages((prev) => prev.map((m) => m.id === optimisticId ? (data as GroupMessage) : m));
+        setMessages((prev) => prev.map((m) => m.id === optimisticId
+          ? { ...m, voice_url: urlData.publicUrl }
+          : m));
       } catch (e) {
         if (!cancelled) {
           console.warn("[voice/group] upload/send failed", e);
@@ -320,7 +322,7 @@ export default function GroupChat({ groupId, groupName, groupAvatar, onClose }: 
           toast.error("Failed to send voice note");
         }
       } finally {
-        URL.revokeObjectURL(localUrl);
+        setTimeout(() => URL.revokeObjectURL(localUrl), 30000);
         if (!cancelled) voice.clearBlob();
         voiceUploadInFlightRef.current = false;
       }
@@ -329,7 +331,6 @@ export default function GroupChat({ groupId, groupName, groupAvatar, onClose }: 
 
     return () => {
       cancelled = true;
-      URL.revokeObjectURL(localUrl);
     };
   }, [voice.audioBlob, voice.isRecording, voice, user?.id, groupId, replyTo?.id, scrollToBottom]);
 
