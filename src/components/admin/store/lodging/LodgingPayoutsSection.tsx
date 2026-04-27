@@ -1,28 +1,65 @@
-import { useEffect, useMemo } from "react";
-import { Wallet, DollarSign, TrendingUp, Calendar, CalendarClock, CheckCircle2, AlertCircle, Loader2 } from "lucide-react";
-import { useQueryClient } from "@tanstack/react-query";
+import { useEffect, useMemo, useState } from "react";
+import { Wallet, DollarSign, TrendingUp, Calendar, CalendarClock, CheckCircle2, AlertCircle, Loader2, Send } from "lucide-react";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { LoadingPanel, NextActions, SectionShell, StatCard, money, useLodgingOpsData } from "./LodgingOperationsShared";
 import { useConnectStatus, useConnectOnboard } from "@/hooks/useStripeConnect";
 import LodgingPayoutAccountCard from "./LodgingPayoutAccountCard";
+import PayoutInstructionsPanel from "./PayoutInstructionsPanel";
+import LodgingPayoutHistoryTable from "./LodgingPayoutHistoryTable";
+import LodgingRequestPayoutSheet from "./LodgingRequestPayoutSheet";
+import { supabase } from "@/integrations/supabase/client";
+import { recommendedRail, normalizeCountry } from "@/lib/payouts/payoutRails";
 
 /**
- * Payouts & Finance — full end-to-end flow:
- *  - Live Stripe Connect Express onboarding/status (reuses driver/wallet flow)
- *  - Revenue, fees, net payout, upcoming, pending, paid count
- *  - Monthly revenue trend
- *  - Payout history (per-month, until a real `payouts` table is wired)
- *  - Reservation-level CSV export
+ * Payouts & Finance — full multi-rail flow:
+ *  - Stripe Connect (US + supported countries) with auto-fallback to manual rails
+ *  - ABA / bank wire / PayPal for unsupported markets (Cambodia, etc.)
+ *  - Country-aware fees & instructions
+ *  - Real payout history with status flow (requested → processing → completed/failed)
+ *  - Host-initiated payout request sheet
  */
 export default function LodgingPayoutsSection({ storeId }: { storeId: string }) {
   const { reservations, isLoading } = useLodgingOpsData(storeId);
   const { data: connect, isLoading: connectLoading } = useConnectStatus();
   const onboard = useConnectOnboard();
   const queryClient = useQueryClient();
+  const [requestOpen, setRequestOpen] = useState(false);
 
-  // Handle return from Stripe onboarding (?connect=done) — preserve tab=lodge-payouts
+  // Pull store country from the store profile (more reliable than reservation rows)
+  const { data: store } = useQuery({
+    queryKey: ["lodge-store-country", storeId],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("store_profiles")
+        .select("id, country")
+        .eq("id", storeId)
+        .maybeSingle();
+      if (error) throw error;
+      return data as { id: string; country: string | null } | null;
+    },
+    enabled: !!storeId,
+  });
+  const storeCountry = normalizeCountry(store?.country || (reservations[0] as any)?.country || "US");
+
+  // Already-requested amount (so available = net − pending/approved)
+  const { data: openRequests = [] } = useQuery({
+    queryKey: ["lodge-payout-open-amounts", storeId],
+    queryFn: async () => {
+      const { data, error } = await (supabase
+        .from("lodge_payout_requests") as any)
+        .select("amount_cents,status")
+        .eq("store_id", storeId)
+        .in("status", ["pending", "approved"]);
+      if (error) throw error;
+      return (data || []) as { amount_cents: number; status: string }[];
+    },
+    enabled: !!storeId,
+  });
+
+  // Handle return from Stripe onboarding
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     if (params.get("connect") === "done") {
@@ -40,12 +77,11 @@ export default function LodgingPayoutsSection({ storeId }: { storeId: string }) 
     const upcoming = reservations.filter((r) => ["confirmed", "checked_in"].includes(r.status));
 
     const totalRevenue = paid.reduce((s: number, r: any) => s + (r.total_cents || 0), 0);
-    const platformFee = Math.round(totalRevenue * 0.02); // 2% standard
+    const platformFee = Math.round(totalRevenue * 0.02);
     const netPayout = totalRevenue - platformFee;
     const pendingAmount = pending.reduce((s: number, r: any) => s + (r.total_cents || 0), 0);
     const upcomingAmount = upcoming.reduce((s: number, r: any) => s + (r.total_cents || 0), 0);
 
-    // Group paid by month (used for trend + payout history)
     const byMonth: Record<string, number> = {};
     paid.forEach((r: any) => {
       const month = (r.check_out || r.check_in || r.created_at || "").slice(0, 7);
@@ -54,12 +90,15 @@ export default function LodgingPayoutsSection({ storeId }: { storeId: string }) 
     });
     const months = Object.entries(byMonth).sort(([a], [b]) => b.localeCompare(a)).slice(0, 6);
 
+    const reservedForPayout = openRequests.reduce((s, r) => s + (r.amount_cents || 0), 0);
+    const available = Math.max(0, netPayout - reservedForPayout);
+
     return {
       totalRevenue, platformFee, netPayout, pendingAmount, upcomingAmount,
       paidCount: paid.length, upcomingCount: upcoming.length, months,
-      paidReservations: paid,
+      paidReservations: paid, available,
     };
-  }, [reservations]);
+  }, [reservations, openRequests]);
 
   const exportCsv = () => {
     const header = "Reservation ID,Guest,Check-in,Check-out,Status,Gross USD,Platform Fee USD,Net USD";
@@ -80,19 +119,34 @@ export default function LodgingPayoutsSection({ storeId }: { storeId: string }) 
     URL.revokeObjectURL(url);
   };
 
-  const startOnboarding = () => onboard.mutate("US");
+  // Re-use the country-aware fallback logic when host clicks "Finish setup"
+  const startOnboarding = () => {
+    const recommended = recommendedRail(storeCountry);
+    if (recommended !== "stripe") {
+      toast.info(`Stripe Connect isn't available in ${storeCountry}. Set up a manual payout method below.`);
+      return;
+    }
+    onboard.mutate(storeCountry);
+  };
+
   const payoutsEnabled = !!connect?.payouts_enabled;
-  const showPayoutBlockedBanner = !connectLoading && !payoutsEnabled && stats.pendingAmount > 0;
+  const showPayoutBlockedBanner = !connectLoading && !payoutsEnabled && stats.pendingAmount > 0 && recommendedRail(storeCountry) === "stripe";
 
   return (
     <SectionShell
       title="Payouts & Finance"
-      subtitle="Revenue, platform fees, pending payouts, and downloadable monthly statements."
+      subtitle="Revenue, platform fees, payout methods, and status of every payout."
       icon={Wallet}
-      actions={<Button size="sm" variant="outline" onClick={exportCsv}>Export CSV</Button>}
+      actions={
+        <div className="flex gap-1.5">
+          <Button size="sm" variant="outline" onClick={exportCsv}>Export CSV</Button>
+          <Button size="sm" onClick={() => setRequestOpen(true)} disabled={stats.available <= 0}>
+            <Send className="h-3.5 w-3.5 mr-1.5" />Request payout
+          </Button>
+        </div>
+      }
     >
       {isLoading ? <LoadingPanel /> : <>
-        {/* Payouts paused warning */}
         {showPayoutBlockedBanner && (
           <div className="rounded-lg border border-amber-500/40 bg-amber-500/10 p-3 flex items-start gap-3">
             <AlertCircle className="h-4 w-4 text-amber-600 mt-0.5 shrink-0" />
@@ -108,18 +162,20 @@ export default function LodgingPayoutsSection({ storeId }: { storeId: string }) 
           </div>
         )}
 
-        {/* Stat grid */}
         <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6">
           <StatCard label="Total revenue" value={money(stats.totalRevenue)} icon={DollarSign} />
           <StatCard label="Platform fee (2%)" value={money(stats.platformFee)} icon={TrendingUp} />
-          <StatCard label="Net payout" value={money(stats.netPayout)} icon={Wallet} />
+          <StatCard label="Available" value={money(stats.available)} icon={Wallet} />
           <StatCard label="Upcoming revenue" value={money(stats.upcomingAmount)} icon={CalendarClock} />
           <StatCard label="Pending" value={money(stats.pendingAmount)} icon={Calendar} />
           <StatCard label="Paid bookings" value={String(stats.paidCount)} icon={CheckCircle2} />
         </div>
 
-        {/* Multi-rail payout account (Stripe / ABA / Bank wire / PayPal) */}
-        <LodgingPayoutAccountCard storeId={storeId} storeCountry={(reservations[0] as any)?.country || "US"} />
+        {/* Country-aware fees + processing time + admin notes */}
+        <PayoutInstructionsPanel country={storeCountry} />
+
+        {/* Multi-rail payout account setup */}
+        <LodgingPayoutAccountCard storeId={storeId} storeCountry={storeCountry} />
 
         {/* Monthly revenue */}
         <div className="rounded-lg border border-border bg-card p-4">
@@ -150,53 +206,8 @@ export default function LodgingPayoutsSection({ storeId }: { storeId: string }) 
           )}
         </div>
 
-        {/* Payout history */}
-        <div className="rounded-lg border border-border bg-card p-4">
-          <div className="mb-3 flex items-center justify-between">
-            <p className="text-sm font-semibold">Payout history</p>
-            <Badge variant="outline">{stats.months.length}</Badge>
-          </div>
-          {stats.months.length === 0 ? (
-            <p className="text-sm text-muted-foreground">No payouts yet. Each month's net amount will appear here once reservations are paid.</p>
-          ) : (
-            <div className="overflow-x-auto">
-              <table className="w-full text-xs">
-                <thead>
-                  <tr className="text-left text-muted-foreground border-b border-border">
-                    <th className="py-2 font-medium">Period</th>
-                    <th className="py-2 font-medium text-right">Gross</th>
-                    <th className="py-2 font-medium text-right">Fee (2%)</th>
-                    <th className="py-2 font-medium text-right">Net</th>
-                    <th className="py-2 font-medium text-right">Status</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {stats.months.map(([month, gross]) => {
-                    const fee = Math.round(gross * 0.02);
-                    const net = gross - fee;
-                    return (
-                      <tr key={month} className="border-b border-border/50 last:border-0">
-                        <td className="py-2 font-medium">
-                          {new Date(month + "-01").toLocaleString("default", { month: "short", year: "numeric" })}
-                        </td>
-                        <td className="py-2 text-right">{money(gross)}</td>
-                        <td className="py-2 text-right text-muted-foreground">{money(fee)}</td>
-                        <td className="py-2 text-right font-semibold">{money(net)}</td>
-                        <td className="py-2 text-right">
-                          {payoutsEnabled ? (
-                            <Badge className="bg-emerald-500/15 text-emerald-700 border-emerald-500/30">Paid</Badge>
-                          ) : (
-                            <Badge variant="secondary">Awaiting setup</Badge>
-                          )}
-                        </td>
-                      </tr>
-                    );
-                  })}
-                </tbody>
-              </table>
-            </div>
-          )}
-        </div>
+        {/* Real payout history with status badges + failure reasons */}
+        <LodgingPayoutHistoryTable storeId={storeId} />
 
         <NextActions actions={[
           { label: "Review reservations", tab: "lodge-reservations", hint: "Confirm bookings are tagged with correct payment status." },
@@ -204,6 +215,14 @@ export default function LodgingPayoutsSection({ storeId }: { storeId: string }) 
           { label: "Run promotions", tab: "lodge-promos", hint: "Drive occupancy with discounts and codes." },
         ]} />
       </>}
+
+      <LodgingRequestPayoutSheet
+        storeId={storeId}
+        storeCountry={storeCountry}
+        availableCents={stats.available}
+        open={requestOpen}
+        onOpenChange={setRequestOpen}
+      />
     </SectionShell>
   );
 }
