@@ -9,6 +9,7 @@ import { LoadingPanel, NextActions, SectionShell, StatCard } from "./LodgingOper
 import { CatalogTable, EditorDialog } from "./CatalogTable";
 import { useLodgingCatalog } from "@/hooks/lodging/useLodgingCatalog";
 import LodgingQuickJump from "./LodgingQuickJump";
+import LodgingSectionStatusBanner from "./LodgingSectionStatusBanner";
 import LostFoundPhotoUploader from "./LostFoundPhotoUploader";
 
 interface LostFoundItem {
@@ -48,6 +49,7 @@ export default function LodgingLostFoundSection({ storeId }: { storeId: string }
   return (
     <SectionShell title="Lost & Found" subtitle="Log items left behind, contact owners, and track claims, shipments, or disposal." icon={Search}>
       <LodgingQuickJump active="lodge-lostfound" />
+      <LodgingSectionStatusBanner title="Lost & Found" icon={Search} countLabel="Items holding" countValue={stats.holding} fixLabel="Open Front Desk" fixTab="lodge-frontdesk" />
       {list.isLoading ? <LoadingPanel /> : <>
         <div className="grid gap-3 sm:grid-cols-4">
           <StatCard label="All items" value={String(stats.total)} icon={Search} />

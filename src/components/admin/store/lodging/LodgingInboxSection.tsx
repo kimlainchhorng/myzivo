@@ -8,6 +8,7 @@ import { Badge } from "@/components/ui/badge";
 import { MessageSquareText, Send, Inbox, User, BellRing } from "lucide-react";
 import { LoadingPanel, SectionShell, StatCard } from "./LodgingOperationsShared";
 import LodgingQuickJump from "./LodgingQuickJump";
+import LodgingSectionStatusBanner from "./LodgingSectionStatusBanner";
 import { useLodgeReservations } from "@/hooks/lodging/useLodgeReservations";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
@@ -149,6 +150,7 @@ export default function LodgingInboxSection({ storeId }: { storeId: string }) {
   return (
     <SectionShell title="Guest Inbox" subtitle="One conversation per reservation. Send pre-arrival, in-stay, and post-stay messages." icon={MessageSquareText}>
       <LodgingQuickJump active="lodge-inbox" />
+      <LodgingSectionStatusBanner title="Guest Inbox" icon={MessageSquareText} countLabel="Unread from guests" countValue={unreadCount} fixLabel="Open Reservations" fixTab="lodge-reservations" />
       <div className="grid gap-3 sm:grid-cols-3">
         <StatCard label="Threads" value={String(threads.size)} icon={Inbox} />
         <StatCard label="Messages" value={String(messages.length)} icon={MessageSquareText} />

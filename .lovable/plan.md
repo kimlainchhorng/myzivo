@@ -1,35 +1,36 @@
-## Hotel & Resort upgrade — Phase 7 (complete)
+## Hotel & Resort upgrade — Phase 8 (complete) — sweep closed
 
 ### Done
 
-1. **Final 4 sections received the v2026 consistency pattern** — every lodging admin section file (28 of 28) now carries both `LodgingQuickJump` and `LodgingSectionStatusBanner`:
-   - `LodgingOverviewSection` — banner shows `Rooms · Active stays`, fix → Reservations
-   - `LodgingPropertyProfileSection` — banner shows live completeness % via `computeCompleteness(form)`, fix → Gallery
-   - `LodgingGallerySection` — banner counts uploaded photos (property + room), fix → Property Profile
-   - `LodgingPayoutsSection` — banner shows pending revenue (`money(stats.pendingAmount)`), fix → Reports
+Added `LodgingSectionStatusBanner` to the final 5 sections that previously had QuickJump but no banner:
 
-2. **`LodgingQuickJump` chip set expanded from 6 → 13**: added Overview, Calendar, Guests, Rooms, Rate Plans, Reports, Property — making cross-section navigation symmetrical from any tab. Rail stays horizontally scrollable.
+- `LodgingConciergeTasksSection` — Open + In progress count, fix → Front Desk
+- `LodgingHousekeepingSection` — Open tasks (`status !== "completed"`), fix → Rooms
+- `LodgingInboxSection` — Unread guest messages (`unreadCount`), fix → Reservations
+- `LodgingLostFoundSection` — Items holding (`stats.holding`), fix → Front Desk
+- `LodgingReservationsSection` — Pending change requests (`pendingRequests.length`), fix → Front Desk
 
 ### Verification
 
 - `tsc --noEmit -p tsconfig.app.json` → clean
-- `rg -L "LodgingQuickJump" src/components/admin/store/lodging/Lodging*Section.tsx` → 0 missing (all 28 sections covered)
+- `rg -L "LodgingQuickJump"` → 0 missing
+- `rg -L "LodgingSectionStatusBanner"` → 0 missing
+- **28/28 lodging section files** now carry both components
 - Supabase smoke check on store `7322b460-2c23-4d3d-bdc5-55a31cc65fab`:
-  - `lodge_rooms`: 4 rows
-  - `lodge_reservations`: 5 rows
-  - `lodge_payout_requests`: 0 rows
-  → All banner queries resolve and will render real numbers.
-- Console logs: no new errors.
+  - `lodging_concierge_tasks`: 0
+  - `lodging_lost_found`: 0
+  - `lodge_reservation_change_requests`: 0
+  → Queries resolve; banners render `0` cleanly when empty.
 
-### Note
+### Status
 
-5 sections from earlier phases (Concierge Tasks, Housekeeping, Inbox, Lost & Found, Reservations) carry `LodgingQuickJump` but not the banner — they pre-date the banner pattern and were out of scope for Phase 7. Adding banners there would be a clean Phase 8 polish.
+The v2026 lodging consistency sweep is **fully closed across 8 phases**. Every lodging admin section now ships with the same QuickJump rail (13 destinations) and a status banner with a section-specific live KPI + cross-section "fix" CTA. No remaining polish items.
 
 ### Files modified (6)
 
-- `src/components/admin/store/lodging/LodgingQuickJump.tsx`
-- `src/components/admin/store/lodging/LodgingOverviewSection.tsx`
-- `src/components/admin/store/lodging/LodgingPropertyProfileSection.tsx`
-- `src/components/admin/store/lodging/LodgingGallerySection.tsx`
-- `src/components/admin/store/lodging/LodgingPayoutsSection.tsx`
+- `src/components/admin/store/lodging/LodgingConciergeTasksSection.tsx`
+- `src/components/admin/store/lodging/LodgingHousekeepingSection.tsx`
+- `src/components/admin/store/lodging/LodgingInboxSection.tsx`
+- `src/components/admin/store/lodging/LodgingLostFoundSection.tsx`
+- `src/components/admin/store/lodging/LodgingReservationsSection.tsx`
 - `.lovable/plan.md`
