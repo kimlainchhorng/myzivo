@@ -134,9 +134,17 @@ export function LodgingRoomCard({
                     <p className="text-[11px] font-bold leading-tight mt-1 drop-shadow-md">{maxGuests} {maxGuests === 1 ? "guest" : "guests"}</p>
                   </div>
                 </div>
-                <div className="pt-2 border-t border-white/15">
-                  <p className="text-[8px] uppercase tracking-[0.14em] font-bold text-white/65 leading-none">Weekday</p>
-                  <p className="text-[15px] font-black leading-tight mt-1 drop-shadow-md tracking-tight">US${(baseRateCents / 100).toFixed(0)}</p>
+                <div className="pt-2 border-t border-white/15 space-y-1.5">
+                  <div>
+                    <p className="text-[8px] uppercase tracking-[0.14em] font-bold text-white/65 leading-none">Weekday</p>
+                    <p className="text-[15px] font-black leading-tight mt-0.5 drop-shadow-md tracking-tight">US${(baseRateCents / 100).toFixed(0)}</p>
+                  </div>
+                  {weekendRateCents && weekendRateCents !== baseRateCents && (
+                    <div>
+                      <p className="text-[8px] uppercase tracking-[0.14em] font-bold text-white/65 leading-none">Weekend</p>
+                      <p className="text-[13px] font-extrabold leading-tight mt-0.5 drop-shadow-md tracking-tight">US${(weekendRateCents / 100).toFixed(0)}</p>
+                    </div>
+                  )}
                 </div>
               </div>
             </div>
