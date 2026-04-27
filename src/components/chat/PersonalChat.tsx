@@ -868,9 +868,15 @@ export default function PersonalChat({ recipientId, recipientName, recipientAvat
       }
       vwarn("failed", { clientSendId, error: e });
       const message = e instanceof Error ? e.message : "Upload failed";
-      updateOpt({ _upload_status: "failed", _upload_error: message });
+      const httpErr = e instanceof UploadHttpError ? e : null;
+      updateOpt({
+        _upload_status: "failed",
+        _upload_error: message,
+        _upload_endpoint: httpErr?.url,
+        _upload_status_code: httpErr?.status,
+      });
       toast.error("Voice note failed to send", {
-        description: "Tap retry on the message to try again.",
+        description: "Tap Resend on the message to try again.",
       });
     }
   }, [user?.id, recipientId, sendChatPush]);
@@ -883,7 +889,14 @@ export default function PersonalChat({ recipientId, recipientName, recipientAvat
     setMessages((prev) => prev.map((m) => {
       const csid = (m.file_payload as { client_send_id?: string } | null)?.client_send_id;
       if (csid !== clientSendId) return m;
-      return { ...m, _upload_status: "uploading", _upload_progress: 0, _upload_error: undefined };
+      return {
+        ...m,
+        _upload_status: "uploading",
+        _upload_progress: 0,
+        _upload_error: undefined,
+        _upload_endpoint: undefined,
+        _upload_status_code: undefined,
+      };
     }));
     void runVoiceJob(clientSendId, !!job.publicUrl);
   }, [runVoiceJob]);
