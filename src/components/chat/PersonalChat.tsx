@@ -760,7 +760,7 @@ export default function PersonalChat({ recipientId, recipientName, recipientAvat
         const path = `${user.id}/${Date.now()}.${ext}`;
         const { error: uploadError } = await supabase.storage
           .from("chat-media-files")
-          .upload(path, blob, { contentType, upsert: true });
+          .upload(path, blob, { contentType, upsert: true, cacheControl: "3600" });
         if (uploadError) throw uploadError;
         const { data: urlData } = supabase.storage.from("chat-media-files").getPublicUrl(path);
         if (cancelled) return;
@@ -804,39 +804,85 @@ export default function PersonalChat({ recipientId, recipientName, recipientAvat
     };
   }, [voice.audioBlob, voice.isRecording, voice, user?.id, recipientId, replyTo?.id, scrollToBottom, sendChatPush]);
 
-  // Image upload
-  const handleImageSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
+  // Optimistic media send: show the bubble instantly, upload + insert in background.
+  const sendOptimisticMedia = (file: File, kind: "image" | "video") => {
+    if (!user?.id) return;
+    const localUrl = URL.createObjectURL(file);
+    const optimisticId = `opt-media-${Date.now()}`;
+    const optimisticMsg: Message = {
+      id: optimisticId,
+      sender_id: user.id,
+      receiver_id: recipientId,
+      message: "",
+      image_url: kind === "image" ? localUrl : null,
+      video_url: kind === "video" ? localUrl : null,
+      voice_url: null,
+      message_type: kind,
+      reply_to_id: replyTo?.id || null,
+      location_lat: null,
+      location_lng: null,
+      location_label: null,
+      is_pinned: false,
+      file_payload: null,
+      expires_at: null,
+      created_at: new Date().toISOString(),
+      is_read: false,
+    };
+    setMessages((prev) => [...prev, optimisticMsg]);
+    scrollToBottom(true);
+    const currentReply = replyTo;
+    setReplyTo(null);
+
+    void (async () => {
+      try {
+        const ext = file.name.split(".").pop() || (kind === "video" ? "mp4" : "jpg");
+        const path = `${user.id}/${Date.now()}.${ext}`;
+        const { error: upErr } = await supabase.storage
+          .from("chat-media-files")
+          .upload(path, file, { contentType: file.type, upsert: true, cacheControl: "3600" });
+        if (upErr) throw upErr;
+        const { data: urlData } = supabase.storage.from("chat-media-files").getPublicUrl(path);
+        // Swap local blob URL for the real one so the bubble becomes "real".
+        setMessages((prev) => prev.map((m) => m.id === optimisticId
+          ? { ...m, image_url: kind === "image" ? urlData.publicUrl : null, video_url: kind === "video" ? urlData.publicUrl : null }
+          : m));
+        const insertData: DirectMessageInsert = {
+          sender_id: user.id,
+          receiver_id: recipientId,
+          message: "",
+          message_type: kind,
+        };
+        if (kind === "image") insertData.image_url = urlData.publicUrl;
+        if (kind === "video") insertData.video_url = urlData.publicUrl;
+        if (currentReply) insertData.reply_to_id = currentReply.id;
+        const { error: insErr } = await dbFrom("direct_messages").insert(insertData);
+        if (insErr) throw insErr;
+        void sendChatPush(kind, "");
+      } catch (e) {
+        console.warn("[media] upload/send failed", e);
+        setMessages((prev) => prev.filter((m) => m.id !== optimisticId));
+        toast.error(`Failed to send ${kind}`);
+      } finally {
+        setTimeout(() => URL.revokeObjectURL(localUrl), 30000);
+      }
+    })();
+  };
+
+  // Image upload (instant bubble, background upload)
+  const handleImageSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file || !user?.id) return;
     if (file.size > 5 * 1024 * 1024) { toast.error("Image must be under 5MB"); return; }
-    setUploadingMedia(true);
-    try {
-      const ext = file.name.split(".").pop() || "jpg";
-      const path = `${user.id}/${Date.now()}.${ext}`;
-      const { error } = await supabase.storage.from("chat-media-files").upload(path, file, { contentType: file.type });
-      if (error) throw error;
-      const { data: urlData } = supabase.storage.from("chat-media-files").getPublicUrl(path);
-      await handleSend({ imageUrl: urlData.publicUrl });
-    } catch { toast.error("Failed to upload image"); }
-    setUploadingMedia(false);
+    sendOptimisticMedia(file, "image");
     if (fileInputRef.current) fileInputRef.current.value = "";
   };
 
-  // Video upload
-  const handleVideoSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
+  // Video upload (instant bubble, background upload)
+  const handleVideoSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file || !user?.id) return;
     if (file.size > 25 * 1024 * 1024) { toast.error("Video must be under 25MB"); return; }
-    setUploadingMedia(true);
-    try {
-      const ext = file.name.split(".").pop() || "mp4";
-      const path = `${user.id}/${Date.now()}.${ext}`;
-      const { error } = await supabase.storage.from("chat-media-files").upload(path, file, { contentType: file.type });
-      if (error) throw error;
-      const { data: urlData } = supabase.storage.from("chat-media-files").getPublicUrl(path);
-      await handleSend({ videoUrl: urlData.publicUrl });
-    } catch { toast.error("Failed to upload video"); }
-    setUploadingMedia(false);
+    sendOptimisticMedia(file, "video");
     if (videoInputRef.current) videoInputRef.current.value = "";
   };
 

@@ -247,16 +247,9 @@ export default function GroupChat({ groupId, groupName, groupAvatar, onClose }: 
       if (voiceUrl) insertData.voice_url = voiceUrl;
       if (replyTo) insertData.reply_to_id = replyTo.id;
 
-      const { data, error } = await dbFrom("group_messages")
-        .insert(insertData)
-        .select()
-        .single();
-
+      // Fire-and-forget insert; realtime echo will replace the optimistic row.
+      const { error } = await dbFrom("group_messages").insert(insertData);
       if (error) throw error;
-      const inserted = data as GroupMessage | null;
-      if (inserted) {
-        setMessages((prev) => prev.map((m) => m.id === optimisticId ? inserted : m));
-      }
     } catch {
       setMessages((prev) => prev.filter((m) => m.id !== optimisticId));
       toast.error("Failed to send message");
@@ -296,7 +289,7 @@ export default function GroupChat({ groupId, groupName, groupAvatar, onClose }: 
         const path = `${user.id}/${Date.now()}.${ext}`;
         const { error: uploadError } = await supabase.storage
           .from("chat-media-files")
-          .upload(path, blob, { contentType, upsert: true });
+          .upload(path, blob, { contentType, upsert: true, cacheControl: "3600" });
         if (uploadError) throw uploadError;
         const { data: urlData } = supabase.storage.from("chat-media-files").getPublicUrl(path);
         if (cancelled) return;
@@ -334,22 +327,60 @@ export default function GroupChat({ groupId, groupName, groupAvatar, onClose }: 
     };
   }, [voice.audioBlob, voice.isRecording, voice, user?.id, groupId, replyTo?.id, scrollToBottom]);
 
-  // Image upload
-  const handleImageSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
+  // Image upload — optimistic bubble, background upload + insert.
+  const handleImageSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file || !user?.id) return;
     if (file.size > 5 * 1024 * 1024) { toast.error("Image must be under 5MB"); return; }
 
-    setUploadingImage(true);
-    try {
-      const ext = file.name.split(".").pop() || "jpg";
-      const path = `${user.id}/${Date.now()}.${ext}`;
-      const { error } = await supabase.storage.from("chat-media-files").upload(path, file, { contentType: file.type });
-      if (error) throw error;
-      const { data: urlData } = supabase.storage.from("chat-media-files").getPublicUrl(path);
-      await handleSend(urlData.publicUrl);
-    } catch { toast.error("Failed to upload image"); }
-    setUploadingImage(false);
+    const localUrl = URL.createObjectURL(file);
+    const optimisticId = `opt-img-${Date.now()}`;
+    const optimisticMsg: GroupMessage = {
+      id: optimisticId,
+      group_id: groupId,
+      sender_id: user.id,
+      message: "",
+      image_url: localUrl,
+      voice_url: null,
+      message_type: "image",
+      reply_to_id: replyTo?.id || null,
+      created_at: new Date().toISOString(),
+    };
+    setMessages((prev) => [...prev, optimisticMsg]);
+    scrollToBottom();
+    const currentReply = replyTo;
+    setReplyTo(null);
+
+    void (async () => {
+      try {
+        const ext = file.name.split(".").pop() || "jpg";
+        const path = `${user.id}/${Date.now()}.${ext}`;
+        const { error: upErr } = await supabase.storage
+          .from("chat-media-files")
+          .upload(path, file, { contentType: file.type, upsert: true, cacheControl: "3600" });
+        if (upErr) throw upErr;
+        const { data: urlData } = supabase.storage.from("chat-media-files").getPublicUrl(path);
+        setMessages((prev) => prev.map((m) => m.id === optimisticId
+          ? { ...m, image_url: urlData.publicUrl }
+          : m));
+        const insertData: GroupMessageInsert = {
+          group_id: groupId,
+          sender_id: user.id,
+          message: "",
+          message_type: "image",
+          image_url: urlData.publicUrl,
+        };
+        if (currentReply) insertData.reply_to_id = currentReply.id;
+        const { error: insErr } = await dbFrom("group_messages").insert(insertData);
+        if (insErr) throw insErr;
+      } catch (e) {
+        console.warn("[group/image] upload/send failed", e);
+        setMessages((prev) => prev.filter((m) => m.id !== optimisticId));
+        toast.error("Failed to send image");
+      } finally {
+        setTimeout(() => URL.revokeObjectURL(localUrl), 30000);
+      }
+    })();
     if (fileInputRef.current) fileInputRef.current.value = "";
   };
 
