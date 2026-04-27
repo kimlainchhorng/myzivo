@@ -1593,20 +1593,8 @@ export default function PersonalChat({ recipientId, recipientName, recipientAvat
         )}
       </AnimatePresence>
 
-      {/* New LiveKit-powered call (lobby + recording + reactions + screen-share) */}
-      <AnimatePresence>
-        {launcherCall && conversationId && (
-          <Suspense fallback={null}>
-            <div className="fixed inset-0 z-[70] bg-background">
-              <GroupCallLauncher
-                roomName={`dm-${conversationId}`}
-                callType={launcherCall}
-                onEnded={() => setLauncherCall(null)}
-              />
-            </div>
-          </Suspense>
-        )}
-      </AnimatePresence>
+      {/* DM calls use the personal WebRTC call UI above (activeCall). Group calls
+          live in GroupChat.tsx — never mount GroupCallLauncher for 1-on-1 chats. */}
 
       <AnimatePresence>
         {activeCall && pipMode && (
