@@ -70,6 +70,7 @@ export default function HoldToRecordMic({ voice, className }: Props) {
   const guardTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const pendingStart = useRef(false);
   const recordingStarted = useRef(false);
+  const recordingBeganAt = useRef(0);
   const startPromise = useRef<Promise<void> | null>(null);
   const willCancel = dragX < -CANCEL_THRESHOLD;
   const willLock = dragY < -LOCK_THRESHOLD;
@@ -85,6 +86,7 @@ export default function HoldToRecordMic({ voice, className }: Props) {
       setLocked(false);
       setPaused(false);
       recordingStarted.current = false;
+      recordingBeganAt.current = 0;
       startPromise.current = null;
     }
   }, [voice.isRecording, dragXMV, dragYMV]);
@@ -109,8 +111,10 @@ export default function HoldToRecordMic({ voice, className }: Props) {
       haptic(15);
       startPromise.current = voice.startRecording().then(() => {
         recordingStarted.current = true;
+        recordingBeganAt.current = Date.now();
       }).catch(() => {
         recordingStarted.current = false;
+        recordingBeganAt.current = 0;
       });
     }, HOLD_GUARD_MS);
   };
@@ -154,7 +158,10 @@ export default function HoldToRecordMic({ voice, className }: Props) {
     // Measure actual recording duration (excludes the 120ms hold guard) and
     // re-evaluate cancel intent from the final dragX so a tiny jitter on
     // release can't accidentally throw the recording away.
-    const recordedMs = voice.elapsedMs ?? 0;
+    const recordedMs = Math.max(
+      voice.elapsedMs ?? 0,
+      recordingBeganAt.current ? Date.now() - recordingBeganAt.current : 0,
+    );
     const finalWillCancel = dragX < -CANCEL_THRESHOLD;
 
     if (finalWillCancel) {
