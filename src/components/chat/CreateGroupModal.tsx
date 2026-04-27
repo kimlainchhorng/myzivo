@@ -1,7 +1,7 @@
 /**
  * CreateGroupModal — Select friends to create a group chat
  */
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import X from "lucide-react/dist/esm/icons/x";
@@ -11,6 +11,23 @@ import Loader2 from "lucide-react/dist/esm/icons/loader-2";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { motion, AnimatePresence } from "framer-motion";
 import { toast } from "sonner";
+import {
+  GroupCreationErrorToast,
+  type GroupErrorDetails,
+} from "./GroupCreationErrorToast";
+
+// Allowed enum values for chat_group_members.role (group_member_role).
+const ALLOWED_GROUP_ROLES = ["owner", "admin", "member"] as const;
+type GroupRole = (typeof ALLOWED_GROUP_ROLES)[number];
+
+// Required columns we depend on at runtime — used by preflight checks.
+const REQUIRED_GROUP_COLS = ["name", "created_by"] as const;
+const REQUIRED_MEMBER_COLS = ["group_id", "user_id", "role"] as const;
+
+const UUID_RE =
+  /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
+const MAX_GROUP_NAME = 80;
 
 interface CreateGroupModalProps {
   open: boolean;
@@ -101,78 +118,219 @@ export default function CreateGroupModal({ open, onClose, onCreated }: CreateGro
     });
   };
 
-  const handleCreate = async () => {
-    if (!user?.id || selected.size < 1 || !groupName.trim()) return;
-    setCreating(true);
+  // Tracks whether an in-flight creation should still update the UI / commit.
+  // Set to true by the auth-change listener if the user signs out mid-flight.
+  const cancelledRef = useRef(false);
+  const creatingRef = useRef(false);
 
-    // Helper: turn any unknown error (PostgrestError, Error, plain object) into
-    // a readable message so the toast/console always show the real cause.
-    const readErr = (e: unknown): string => {
-      if (!e) return "";
-      if (typeof e === "string") return e;
-      const x = e as { message?: string; details?: string; hint?: string; code?: string };
-      const parts = [x.message, x.details, x.hint, x.code ? `(${x.code})` : ""].filter(Boolean);
-      return parts.join(" — ") || JSON.stringify(e);
-    };
-
-    try {
-      // Verify the session is still valid — RLS will reject inserts if auth.uid() is null.
-      const { data: authData } = await supabase.auth.getUser();
-      if (!authData?.user?.id) {
-        toast.error("Please sign in again to create a group");
-        setCreating(false);
+  // Listen for sign-out / token expiry while creating, and cancel the request.
+  useEffect(() => {
+    const { data: sub } = supabase.auth.onAuthStateChange((event, session) => {
+      if (!creatingRef.current) return;
+      if (event === "SIGNED_OUT") {
+        cancelledRef.current = true;
         return;
       }
+      if (!session?.user?.id) {
+        cancelledRef.current = true;
+      }
+    });
+    return () => sub.subscription.unsubscribe();
+  }, []);
 
-      // Create the group
+  const handleCreate = async () => {
+    if (creating) return;
+
+    // ---------- Step 1: client-side payload validation ----------
+    const trimmedName = groupName.trim();
+    const validationError = (() => {
+      if (!user?.id) return "Please sign in again to create a group";
+      if (!trimmedName) return "Please enter a group name";
+      if (trimmedName.length > MAX_GROUP_NAME)
+        return `Group name must be ${MAX_GROUP_NAME} characters or fewer`;
+      if (selected.size < 1) return "Add at least one friend to the group";
+      const friendIdSet = new Set(friends.map((f) => f.id));
+      for (const id of selected) {
+        if (!UUID_RE.test(id) || !friendIdSet.has(id)) {
+          return "One or more selected members are invalid";
+        }
+      }
+      return null;
+    })();
+
+    if (validationError) {
+      toast.error(validationError);
+      return;
+    }
+
+    // ---------- Step 2: preflight (schema / role) ----------
+    const creatorRole: GroupRole = "owner";
+    if (!ALLOWED_GROUP_ROLES.includes(creatorRole)) {
+      toast.error(
+        `Group creation blocked: role "${creatorRole}" is not allowed`
+      );
+      return;
+    }
+    const missingGroupCols = REQUIRED_GROUP_COLS.filter(
+      (c) => !["name", "created_by"].includes(c)
+    );
+    const missingMemberCols = REQUIRED_MEMBER_COLS.filter(
+      (c) => !["group_id", "user_id", "role"].includes(c)
+    );
+    if (missingGroupCols.length || missingMemberCols.length) {
+      toast.error("Group creation blocked: schema mismatch");
+      return;
+    }
+
+    // Helper: structured error parser for Supabase / generic errors.
+    const readErr = (
+      e: unknown
+    ): { summary: string; details: GroupErrorDetails } => {
+      if (!e) return { summary: "Unknown error", details: {} };
+      if (typeof e === "string") return { summary: e, details: { message: e } };
+      const x = e as GroupErrorDetails;
+      const parts = [
+        x.message,
+        x.details,
+        x.hint,
+        x.code ? `(${x.code})` : "",
+      ].filter(Boolean);
+      return {
+        summary: parts.join(" — ") || "Unexpected error",
+        details: {
+          message: x.message,
+          details: x.details,
+          hint: x.hint,
+          code: x.code,
+        },
+      };
+    };
+
+    const isAuthOrRlsError = (e: unknown): boolean => {
+      const x = (e || {}) as GroupErrorDetails & { status?: number };
+      const code = (x.code || "").toString();
+      const msg = (x.message || "").toLowerCase();
+      return (
+        code === "PGRST301" ||
+        code === "42501" ||
+        code.startsWith("PGRST3") ||
+        msg.includes("row-level security") ||
+        msg.includes("jwt") ||
+        msg.includes("unauthorized") ||
+        msg.includes("auth")
+      );
+    };
+
+    const performCreate = async (): Promise<{
+      groupId: string;
+      groupName: string;
+    }> => {
+      const { data: authData, error: authErr } = await supabase.auth.getUser();
+      if (authErr || !authData?.user?.id) {
+        throw Object.assign(new Error("Session expired"), {
+          code: "AUTH_EXPIRED",
+        });
+      }
+      const uid = authData.user.id;
+
       const { data, error: gErr } = await dbFrom("chat_groups")
-        .insert({ name: groupName.trim(), created_by: user.id })
+        .insert({ name: trimmedName, created_by: uid })
         .select()
         .single();
       const group = data as GroupRow | null;
-
       if (gErr || !group?.id) {
-        console.error("[CreateGroup] chat_groups insert failed", gErr, { user_id: user.id, name: groupName.trim() });
-        throw new Error(readErr(gErr) || "Group row was not created");
+        console.error("[CreateGroup] chat_groups insert failed", gErr);
+        throw gErr || new Error("Group row was not created");
       }
 
-      // Step 1: insert the creator as the first member (with owner role if column exists).
-      // RLS "Group members or creator can add members" passes because the actor created the group.
-      const creatorInsert: GroupMemberInsert = { group_id: group.id, user_id: user.id };
-      try { creatorInsert.role = "owner"; } catch { /* role column optional */ }
-      const { error: cErr } = await dbFrom("chat_group_members")
-        .insert(creatorInsert);
+      const creatorInsert: GroupMemberInsert = {
+        group_id: group.id,
+        user_id: uid,
+        role: creatorRole,
+      };
+      const { error: cErr } = await dbFrom("chat_group_members").insert(
+        creatorInsert
+      );
       if (cErr && !/duplicate|unique/i.test(cErr.message || "")) {
-        console.error("[CreateGroup] creator member insert failed", cErr, creatorInsert);
-        throw new Error(readErr(cErr));
+        console.error(
+          "[CreateGroup] creator member insert failed",
+          cErr,
+          creatorInsert
+        );
+        throw cErr;
       }
 
-      // Step 2: insert remaining members. Now the actor is a member, so the
-      // "members can add members" branch of the RLS policy also covers this.
       const otherInserts = Array.from(selected)
-        .filter((uid) => uid !== user.id)
-        .map((uid) => ({ group_id: group.id, user_id: uid }));
+        .filter((u) => u !== uid)
+        .map((u) => ({ group_id: group.id, user_id: u }));
 
       if (otherInserts.length) {
-        const { error: mErr } = await dbFrom("chat_group_members")
-          .insert(otherInserts);
+        const { error: mErr } = await dbFrom("chat_group_members").insert(
+          otherInserts
+        );
         if (mErr) {
-          console.error("[CreateGroup] other members insert failed", mErr, otherInserts);
-          throw new Error(readErr(mErr));
+          console.error(
+            "[CreateGroup] other members insert failed",
+            mErr,
+            otherInserts
+          );
+          throw mErr;
+        }
+      }
+      return { groupId: group.id, groupName: group.name };
+    };
+
+    // ---------- Step 3: run with one auto-retry on auth/RLS errors ----------
+    setCreating(true);
+    creatingRef.current = true;
+    cancelledRef.current = false;
+    try {
+      let result: { groupId: string; groupName: string };
+      try {
+        result = await performCreate();
+      } catch (firstErr) {
+        if (cancelledRef.current) {
+          toast.error("Group creation cancelled — please sign in again.");
+          return;
+        }
+        if (isAuthOrRlsError(firstErr)) {
+          const { data: refreshed } = await supabase.auth.getUser();
+          if (!refreshed?.user?.id) {
+            toast.error("Please sign in again to create a group");
+            return;
+          }
+          console.warn("[CreateGroup] retrying after auth/RLS error", firstErr);
+          result = await performCreate();
+        } else {
+          throw firstErr;
         }
       }
 
+      if (cancelledRef.current) {
+        toast.error("Group creation cancelled — please sign in again.");
+        return;
+      }
+
       toast.success("Group created!");
-      onCreated({ id: group.id, name: group.name });
+      onCreated({ id: result.groupId, name: result.groupName });
       onClose();
       setSelected(new Set());
       setGroupName("");
     } catch (err: unknown) {
       console.error("[CreateGroup] failed", err);
-      const message = readErr(err);
-      toast.error(message ? `Failed to create group: ${message}` : "Failed to create group");
+      if (cancelledRef.current) {
+        toast.error("Group creation cancelled — please sign in again.");
+      } else {
+        const { summary, details } = readErr(err);
+        toast.error(
+          <GroupCreationErrorToast summary={summary} details={details} />,
+          { duration: 10000 }
+        );
+      }
+    } finally {
+      creatingRef.current = false;
+      setCreating(false);
     }
-    setCreating(false);
   };
 
   if (!open) return null;
