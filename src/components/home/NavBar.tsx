@@ -204,7 +204,7 @@ const NavBar = forwardRef<HTMLDivElement>(function NavBar(_, ref) {
                 whileTap={{ scale: 0.95 }}
                 style={{ transformStyle: "preserve-3d" }}
               >
-                <ZivoLogo size="md" />
+                <ZivoLogo size="sm" />
               </motion.div>
 
               {/* Center: Page title + nav pills */}
