@@ -127,7 +127,7 @@ const Header = () => {
             </nav>
 
             {/* Desktop Actions - Enhanced */}
-            <div className="hidden md:flex items-center gap-1.5">
+            <div className="hidden md:flex items-center gap-1 ml-auto">
               {/* Language Selector */}
               <Popover open={isLangOpen} onOpenChange={setIsLangOpen}>
                 <PopoverTrigger asChild>
