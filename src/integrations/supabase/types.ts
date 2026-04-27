@@ -28220,29 +28220,41 @@ export type Database = {
         Row: {
           block_date: string
           created_at: string
+          external_uid: string | null
           id: string
           rate_override_cents: number | null
           reason: string | null
           room_id: string
+          source: string
           store_id: string
+          summary: string | null
+          updated_at: string
         }
         Insert: {
           block_date: string
           created_at?: string
+          external_uid?: string | null
           id?: string
           rate_override_cents?: number | null
           reason?: string | null
           room_id: string
+          source?: string
           store_id: string
+          summary?: string | null
+          updated_at?: string
         }
         Update: {
           block_date?: string
           created_at?: string
+          external_uid?: string | null
           id?: string
           rate_override_cents?: number | null
           reason?: string | null
           room_id?: string
+          source?: string
           store_id?: string
+          summary?: string | null
+          updated_at?: string
         }
         Relationships: []
       }
@@ -28768,45 +28780,6 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
-      }
-      lodging_room_blocks: {
-        Row: {
-          created_at: string
-          end_date: string
-          external_uid: string | null
-          id: string
-          room_id: string | null
-          source: string
-          start_date: string
-          store_id: string
-          summary: string | null
-          updated_at: string
-        }
-        Insert: {
-          created_at?: string
-          end_date: string
-          external_uid?: string | null
-          id?: string
-          room_id?: string | null
-          source?: string
-          start_date: string
-          store_id: string
-          summary?: string | null
-          updated_at?: string
-        }
-        Update: {
-          created_at?: string
-          end_date?: string
-          external_uid?: string | null
-          id?: string
-          room_id?: string | null
-          source?: string
-          start_date?: string
-          store_id?: string
-          summary?: string | null
-          updated_at?: string
-        }
-        Relationships: []
       }
       lodging_stripe_webhook_events: {
         Row: {
