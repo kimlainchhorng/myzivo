@@ -1,12 +1,13 @@
 /**
- * Lodging — Front Desk: today board (arrivals / in-house / departures).
+ * Lodging — Front Desk: today board (arrivals / in-house / departures) + walk-in + search + rebook.
  */
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import LodgingQuickJump from "./LodgingQuickJump";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { BedDouble, CalendarRange, ClipboardCheck, DollarSign, Download, KeyRound, ListChecks, LogIn, LogOut, MessageSquareText, UserPlus } from "lucide-react";
+import { Input } from "@/components/ui/input";
+import { BedDouble, CalendarRange, ClipboardCheck, DollarSign, Download, KeyRound, ListChecks, LogIn, LogOut, MessageSquareText, RefreshCw, Search as SearchIcon, UserPlus } from "lucide-react";
 import { useLodgeReservations, type ReservationStatus, type LodgeReservation } from "@/hooks/lodging/useLodgeReservations";
 import { useStoreChangeRequestInbox } from "@/hooks/lodging/useReservationChangeRequests";
 import { useHostLodgingOpsToasts } from "@/hooks/lodging/useHostLodgingOpsToasts";
@@ -17,23 +18,34 @@ import { getFrontDeskOperationalStats } from "@/lib/lodging/frontDeskQa";
 import { getLodgingCompletion } from "@/lib/lodging/lodgingCompletion";
 import { runLodgingQa } from "@/lib/lodging/lodgingQa";
 import { exportFrontDeskQaPdf } from "@/lib/lodging/frontDeskQaReport";
+import WalkInBookingSheet from "./WalkInBookingSheet";
 
 function ymd(d: Date) { return d.toISOString().slice(0, 10); }
 const timeRange = (r: LodgeReservation) => r.room?.check_in_time || r.room?.check_out_time ? `${r.room?.check_in_time || "15:00"} → ${r.room?.check_out_time || "11:00"}` : "Standard hotel times";
 const goTab = (tab: string) => window.dispatchEvent(new CustomEvent("lodge-set-tab", { detail: { tab } }));
 
 export default function LodgingFrontDeskSection({ storeId }: { storeId: string }) {
-  const { data: reservations = [], setStatus } = useLodgeReservations(storeId, "all");
+  const { data: reservations = [], setStatus, upsert: upsertReservation } = useLodgeReservations(storeId, "all");
   const { data: guestRequests = [] } = useStoreChangeRequestInbox(storeId);
   useHostLodgingOpsToasts(storeId);
   const today = ymd(new Date());
+  const [search, setSearch] = useState("");
+  const [walkInOpen, setWalkInOpen] = useState(false);
+  const [walkInPrefill, setWalkInPrefill] = useState<{ name: string; room: string | null }>({ name: "", room: "" });
+
+  const matchSearch = (r: LodgeReservation) => {
+    if (!search.trim()) return true;
+    const q = search.toLowerCase();
+    return (r.guest_name || "").toLowerCase().includes(q) || (r.room_number || "").toLowerCase().includes(q);
+  };
 
   const { arrivals, inHouse, departures } = useMemo(() => {
-    const arrivals = reservations.filter(r => r.check_in === today && ["confirmed", "hold"].includes(r.status));
-    const departures = reservations.filter(r => r.check_out === today && r.status === "checked_in");
-    const inHouse = reservations.filter(r => r.status === "checked_in" && r.check_in <= today && r.check_out > today);
+    const arrivals = reservations.filter(r => r.check_in === today && ["confirmed", "hold"].includes(r.status)).filter(matchSearch);
+    const departures = reservations.filter(r => r.check_out === today && r.status === "checked_in").filter(matchSearch);
+    const inHouse = reservations.filter(r => r.status === "checked_in" && r.check_in <= today && r.check_out > today).filter(matchSearch);
     return { arrivals, inHouse, departures };
-  }, [reservations, today]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [reservations, today, search]);
 
   const act = async (id: string, s: ReservationStatus, msg: string) => {
     try { await setStatus.mutateAsync({ id, status: s }); toast.success(msg); }
