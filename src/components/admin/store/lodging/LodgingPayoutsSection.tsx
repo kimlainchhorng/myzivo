@@ -5,6 +5,8 @@ import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { LoadingPanel, NextActions, SectionShell, StatCard, money, useLodgingOpsData } from "./LodgingOperationsShared";
+import LodgingQuickJump from "./LodgingQuickJump";
+import LodgingSectionStatusBanner from "./LodgingSectionStatusBanner";
 import { useConnectStatus, useConnectOnboard } from "@/hooks/useStripeConnect";
 import LodgingPayoutAccountCard from "./LodgingPayoutAccountCard";
 import PayoutInstructionsPanel from "./PayoutInstructionsPanel";
@@ -146,6 +148,8 @@ export default function LodgingPayoutsSection({ storeId }: { storeId: string }) 
         </div>
       }
     >
+      <LodgingQuickJump active="lodge-payouts" />
+      <LodgingSectionStatusBanner title="Payouts & Finance" icon={Wallet} countLabel="Pending revenue" countValue={money(stats.pendingAmount)} fixLabel="Open Reports" fixTab="lodge-reports" />
       {isLoading ? <LoadingPanel /> : <>
         {showPayoutBlockedBanner && (
           <div className="rounded-lg border border-amber-500/40 bg-amber-500/10 p-3 flex items-start gap-3">
