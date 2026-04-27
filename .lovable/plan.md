@@ -1,53 +1,40 @@
-I re-checked the voice-message path end-to-end as far as read-only mode allows.
+## What you're seeing
 
-Findings:
-- Supabase storage is reachable and the `chat-media-files` bucket exists.
-- Storage policies allow authenticated users to upload into their own user-id folder and delete their own uploads.
-- Recent database data shows voice files successfully uploaded into `chat-media-files` and matching `direct_messages` voice rows were inserted, so the storage + direct-message insert path has worked at least recently.
-- The current preview session is not logged in, so I cannot perform a live voice-send test from the UI in this mode.
-- I found a few remaining issues that can make the feature look broken or hide the real reason:
-  - Failed-bubble debug text still labels the request as `PUT` even though uploads now use `POST`.
-  - The debug toggle can be enabled, but the failed bubble may not re-render immediately, so the details may not appear until another UI update.
-  - The failure phase/body are captured in parts of the upload layer but are not fully surfaced in the chat bubble state.
-  - The diagnostics depend on `import.meta.env` even though the Supabase client already has the correct hardcoded connected-project values, so the missing-key warning can be more fragile than necessary.
+In your screenshot, the oval shape with the two blue dots is **iOS's native text-selection magnifier (the "loupe")**. When you touch-and-hold a voice bubble, iOS grabs the gesture for text selection instead of letting the app handle it. That's why nothing useful happens — and it also blocks the long-press-to-toggle-debug gesture we wired into the failed badge.
 
-Plan to make sure all works:
+So today, touch-and-hold on a voice bubble does:
+- **iOS native**: shows the selection loupe + handles + a "Copy / Look Up" callout (sometimes hidden behind the bubble)
+- **App**: nothing — the long-press never reaches our handlers because iOS swallows it
 
-1. Finalize voice upload diagnostics
-- Update the debug UI to display the real method: `POST`, not `PUT`.
-- Add explicit failed phase labels: `preflight`, `upload`, or `insert`.
-- Surface the raw server response body when debug mode is on, so RLS/storage errors are visible under the failed bubble.
-- Make debug mode reactive so long-pressing the failed label immediately shows/hides details.
+## Plan
 
-2. Make Supabase key/config checks robust
-- Change `src/lib/voiceUpload.ts` to use the same exported `SUPABASE_URL` and `SUPABASE_PUBLISHABLE_KEY` as the main Supabase client, instead of relying only on `import.meta.env`.
-- Keep the runtime anon-key warning, but make it validate the actual key the upload request uses.
+### 1. Kill the iOS loupe / callout on chat bubbles
+In `VoiceMessagePlayer.tsx` (and the text bubble wrappers in `PersonalChat.tsx` / `GroupChat.tsx`), add to the outermost bubble div:
+- `style={{ WebkitUserSelect: "none", userSelect: "none", WebkitTouchCallout: "none" }}`
+- `onContextMenu={(e) => e.preventDefault()}`
 
-3. Harden the resend flow
-- Preserve the original audio blob for failed sends.
-- If storage upload succeeded but DB insert failed, resend should skip re-upload and retry only the insert.
-- If the user discards a failed bubble after successful upload, cleanup should delete the orphaned storage object.
-- Ensure retry resets progress/debug state and reuses the same `client_send_id` so the optimistic bubble gets replaced correctly by realtime.
+This removes the magnifier, the selection handles, and the "Copy / Look Up" iOS popup.
 
-4. Verify direct and group chat paths
-- Check both `PersonalChat.tsx` and `GroupChat.tsx` receive and render the same diagnostic fields.
-- Confirm both paths use the same bucket, method, preflight, retry, discard, and debug behavior.
-- Fix any type gaps so `file_payload.client_send_id`, duration, endpoint, status code, phase, and response body are consistently available.
+### 2. Add a real long-press action menu on voice bubbles
+Wire a 500 ms long-press (pointerdown/pointerup with movement cancellation) on the whole voice bubble — not just the failed badge — that opens a small bottom-sheet / popover with:
+- **Reply** (sets `replyTo` like text bubbles already do via `onContextMenu`)
+- **Copy link** (the public URL of the audio)
+- **Resend** (only when `_upload_status === "failed"`, reuses existing `retryVoiceSend`)
+- **Delete / Discard** (uses existing `discardVoiceSend` for failed/uploading, or a normal delete for sent)
+- **Toggle voice debug** (moves the hidden gesture off the tiny badge onto the whole bubble — much easier to hit)
 
-5. Run verification after changes
-- Run a production build/type check to catch TypeScript or Vite issues.
-- Re-check Supabase policies for `chat-media-files`, `direct_messages`, and `group_messages`.
-- Use the preview in a logged-in state if available to send a short voice note, then confirm:
-  - preflight request completes,
-  - upload request uses `POST`,
-  - message row is inserted,
-  - failed bubbles show exact URL/status/phase/body when debug is on,
-  - Resend works without re-recording.
+### 3. Keep the failed-badge shortcut working
+The existing 700 ms long-press on the "Failed" badge stays as a power-user shortcut, but now it actually fires (because we no longer let iOS steal the gesture).
 
-If approved, I’ll apply these final fixes and run the verification pass.
+### 4. Haptic + visual feedback
+On long-press fire, trigger a light haptic (`navigator.vibrate?.(10)`) and a quick scale pulse on the bubble so you know the gesture registered.
 
-<lov-actions>
-<lov-link url="https://supabase.com/dashboard/project/slirphzzwcogdbkeicff/storage/buckets">Supabase Storage</lov-link>
-<lov-open-history>View History</lov-open-history>
-<lov-link url="https://docs.lovable.dev/tips-tricks/troubleshooting">Troubleshooting docs</lov-link>
-</lov-actions>
+## Files to change
+- `src/components/chat/VoiceMessagePlayer.tsx` — disable iOS selection/callout, add bubble-level long-press, open action sheet
+- `src/components/chat/PersonalChat.tsx` — same selection/callout suppression on text bubbles, pass `onDelete` into the voice player
+- `src/components/chat/GroupChat.tsx` — same as PersonalChat
+- (new) `src/components/chat/VoiceBubbleActionSheet.tsx` — small Radix `Drawer`/`Popover` with the 4–5 actions above
+
+## Out of scope
+- Reactions on voice bubbles (can be added later if you want the iMessage tap-back row above the menu)
+- Forwarding voice notes to another chat

@@ -1744,6 +1744,7 @@ export default function PersonalChat({ recipientId, recipientName, recipientAvat
                                 uploadBody={msg._upload_body}
                                 onRetry={csid && msg._upload_status === "failed" ? () => retryVoiceSend(csid) : undefined}
                                 onDiscard={csid && (msg._upload_status === "uploading" || msg._upload_status === "failed") ? () => discardVoiceSend(csid) : undefined}
+                                onReply={!msg.id.startsWith("opt-") ? () => setReplyTo({ id: msg.id, message: "🎤 Voice message", isMe }) : undefined}
                               />
                             );
                           })()}
