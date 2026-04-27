@@ -340,11 +340,12 @@ export default function VoiceMessagePlayer({
 
   return (
     <div
-      className={`relative min-w-[200px] max-w-[260px] ${debugOn || showAnonKeyWarning ? "flex flex-col gap-1.5" : ""} ${isFailed ? "ring-1 ring-destructive/60 rounded-xl -mx-1 px-1 py-0.5" : ""}`}
+      className={`chat-no-callout relative min-w-[200px] max-w-[260px] ${debugOn || showAnonKeyWarning ? "flex flex-col gap-1.5" : ""} ${isFailed ? "ring-1 ring-destructive/60 rounded-xl -mx-1 px-1 py-0.5" : ""}`}
       style={{
         WebkitUserSelect: "none",
         userSelect: "none",
         WebkitTouchCallout: "none",
+        WebkitTapHighlightColor: "transparent",
       } as React.CSSProperties}
       onPointerDown={onBubblePointerDown}
       onPointerMove={onBubblePointerMove}
@@ -352,7 +353,11 @@ export default function VoiceMessagePlayer({
       onPointerCancel={cancelBubbleLongPress}
       onPointerLeave={cancelBubbleLongPress}
       onContextMenu={onBubbleContextMenu}
+      onContextMenuCapture={onBubbleContextMenu}
+      onDragStartCapture={(e) => e.preventDefault()}
+      onSelectCapture={(e) => e.preventDefault()}
     >
+
       <VoiceBubbleActionSheet
         open={sheetOpen}
         onOpenChange={setSheetOpen}
