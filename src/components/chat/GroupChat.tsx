@@ -673,6 +673,8 @@ export default function GroupChat({ groupId, groupName, groupAvatar, onClose }: 
                             uploadStatus={msg._upload_status}
                             uploadProgress={msg._upload_progress}
                             uploadError={msg._upload_error}
+                            uploadEndpoint={msg._upload_endpoint}
+                            uploadStatusCode={msg._upload_status_code}
                             onRetry={csid && msg._upload_status === "failed" ? () => retryVoiceSend(csid) : undefined}
                             onDiscard={csid && (msg._upload_status === "uploading" || msg._upload_status === "failed") ? () => discardVoiceSend(csid) : undefined}
                           />
