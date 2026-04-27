@@ -1330,6 +1330,9 @@ export default function FeedPage() {
   const { t } = useI18n();
   const navigate = useNavigate();
   const location = useLocation();
+  // On `/reels` we render the TikTok-style hero — hide the desktop side rails
+  // so the video can fill the viewport. `/feed` keeps the 3-column layout.
+  const isReelsRoute = location.pathname.startsWith("/reels");
   const [globalMuted, setGlobalMuted] = useState(true);
   const [activeIndex, setActiveIndex] = useState(0);
   const cardRefs = useRef<(HTMLDivElement | null)[]>([]);
