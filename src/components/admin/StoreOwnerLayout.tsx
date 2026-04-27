@@ -14,7 +14,7 @@ import {
   FileSignature, Hammer, HardHat, BellRing, CircleDot, ShieldAlert, Truck, BarChart3,
   BedDouble, CalendarRange, CalendarDays, KeyRound, Sparkles, Hotel, LayoutDashboard, Images, Search,
   PackagePlus, Utensils, Palmtree, HeartPulse, MessageSquareText, ListChecks, DollarSign,
-  Inbox, BadgeCheck, Star, Building2, Tag, Tv, Briefcase, BookOpen, UserCog, Banknote, Download
+  Inbox, BadgeCheck, Star, Building2, Tag, Tv, Briefcase, BookOpen, UserCog, Banknote, Download, ScrollText
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";

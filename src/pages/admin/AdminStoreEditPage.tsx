@@ -1994,7 +1994,7 @@ export default function AdminStoreEditPage() {
     }
   };
 
-  const employeeTitles: Record<string, string> = { employees: "Employees", payroll: "Payroll", "employee-schedule": "Employee Schedule", "time-clock": "Time Clock", "employee-rules": "Employee Rules", attendance: "Attendance & Leave", training: "Training & Onboarding", documents: "Documents & Files" };
+  const employeeTitles: Record<string, string> = { employees: "Employees", payroll: "Payroll", "employee-schedule": "Employee Schedule", "time-clock": "Time Clock", "employee-rules": "Employee Rules", attendance: "Attendance & Leave", training: "Training & Onboarding", documents: "Documents & Files", "audit-log": "Audit Log" };
   const normalizedCategory = (form.category || "").toLowerCase().trim();
   const isAutoRepair = normalizedCategory === "auto-repair";
   const isLodging = isLodgingStoreCategory(normalizedCategory);
@@ -3704,6 +3704,10 @@ export default function AdminStoreEditPage() {
 
           <TabsContent value="documents">
             <StoreDocumentsSection storeId={storeId!} />
+          </TabsContent>
+
+          <TabsContent value="audit-log">
+            <AuditLogSection storeId={storeId!} />
           </TabsContent>
 
           {form.category === "auto-repair" && (
