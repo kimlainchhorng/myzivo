@@ -609,11 +609,21 @@ export default function GroupChat({ groupId, groupName, groupAvatar, onClose }: 
                     <div className={`px-3 py-2.5 rounded-2xl ${
                       isMe ? "bg-primary text-primary-foreground rounded-br-md" : "bg-muted text-foreground rounded-bl-md"
                     }`}>
-                      <VoiceMessagePlayer
-                        url={msg.voice_url}
-                        isMe={isMe}
-                        durationMs={msg.file_payload?.duration_ms}
-                      />
+                      {(() => {
+                        const csid = msg.file_payload?.client_send_id;
+                        return (
+                          <VoiceMessagePlayer
+                            url={msg.voice_url}
+                            isMe={isMe}
+                            durationMs={msg.file_payload?.duration_ms}
+                            uploadStatus={msg._upload_status}
+                            uploadProgress={msg._upload_progress}
+                            uploadError={msg._upload_error}
+                            onRetry={csid && msg._upload_status === "failed" ? () => retryVoiceSend(csid) : undefined}
+                            onDiscard={csid && (msg._upload_status === "uploading" || msg._upload_status === "failed") ? () => discardVoiceSend(csid) : undefined}
+                          />
+                        );
+                      })()}
                     </div>
                   )}
 
