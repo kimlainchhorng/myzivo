@@ -13410,6 +13410,8 @@ export type Database = {
           store_id: string | null
           updated_at: string
           user_id: string
+          verification_note: string | null
+          verification_status: string
         }
         Insert: {
           aba_account_id?: string | null
@@ -13427,6 +13429,8 @@ export type Database = {
           store_id?: string | null
           updated_at?: string
           user_id: string
+          verification_note?: string | null
+          verification_status?: string
         }
         Update: {
           aba_account_id?: string | null
@@ -13444,6 +13448,8 @@ export type Database = {
           store_id?: string | null
           updated_at?: string
           user_id?: string
+          verification_note?: string | null
+          verification_status?: string
         }
         Relationships: [
           {
@@ -27656,6 +27662,7 @@ export type Database = {
           amount_cents: number
           created_at: string
           currency: string
+          failure_reason: string | null
           id: string
           note: string | null
           paid_at: string | null
@@ -27672,6 +27679,7 @@ export type Database = {
           amount_cents: number
           created_at?: string
           currency?: string
+          failure_reason?: string | null
           id?: string
           note?: string | null
           paid_at?: string | null
@@ -27688,6 +27696,7 @@ export type Database = {
           amount_cents?: number
           created_at?: string
           currency?: string
+          failure_reason?: string | null
           id?: string
           note?: string | null
           paid_at?: string | null

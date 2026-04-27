@@ -1,95 +1,101 @@
 ## Goal
+Complete the multi-rail payout flow so US hosts use Stripe Connect automatically while Cambodia (and other unsupported countries) get routed to manual ABA / bank wire / PayPal — with clear instructions, verification, and an end-to-end status history.
 
-Enable ZIVO (a US company) to pay out hotel/lodge hosts in **multiple countries**, including markets that **Stripe Connect does not support** (Cambodia, Laos, Myanmar, Vietnam). Today the Payouts page only offers Stripe Connect Express, which silently fails for those hosts.
+The DB tables (`customer_payout_methods` with `store_id/country_code/rail`, `lodge_payout_requests`) and the country router (`payoutRails.ts`) are already in place from the previous step. The backend already rejects unsupported Stripe countries with `stripe_unsupported_country`. This plan adds the missing UX, validation, and routing wiring.
 
-## The Stripe Reality (important)
+---
 
-Stripe Connect Express **only accepts connected accounts in supported countries**. In Asia that's: Singapore, Hong Kong, Japan, Malaysia, Thailand, Indonesia, Philippines, India, UAE. **Cambodia, Laos, Myanmar, Vietnam are not supported by Stripe at all** — there's no way to send money directly into a Cambodian bank from a Stripe Connect account today.
+## 1. Auto-fallback when Stripe is rejected (frontend)
+File: `src/components/admin/store/lodging/LodgingPayoutAccountCard.tsx`
 
-So the solution must be **multi-rail**: route each host to whichever rail actually works for their country.
+- In `startStripe()`, catch the `stripe_unsupported_country` error from `useConnectOnboard`. When it fires:
+  - Disable the Stripe tab for this country.
+  - Switch `activeRail` to the recommended manual rail (`recommendedRail(country)`).
+  - Show a toast: "Stripe Connect isn't available in {country}. Switched to {RAIL_LABELS[fallback]}."
+- File: `src/components/admin/store/lodging/LodgingPayoutsSection.tsx` — remove the hard-coded `onboard.mutate("US")` in the "Finish setup" banner. Pass the actual store country and reuse the same fallback path.
 
-## Architecture: Multi-Rail Payout Router
+## 2. Eligibility + verification UI on each manual rail
+File: `LodgingPayoutAccountCard.tsx` → extend `ManualMethodForm`.
 
-```text
-                 Host's country
-                       │
-        ┌──────────────┼──────────────┬─────────────┐
-        ▼              ▼              ▼             ▼
-   Stripe Connect   Manual ABA    Manual Bank     PayPal
-   (US, EU, SG,    Wire (KH)    Wire (any)     (where avail.)
-    HK, JP, MY,    via Telegram   reviewed by
-    TH, ID, PH,    confirmation   admin
-    IN, AE...)
-```
+- Add a verification step after "Save":
+  - For **ABA**: require 8-digit ABA account number format, account holder name match, and a confirmation checkbox "I confirm this ABA account is mine and the name matches my ID".
+  - For **bank wire**: require SWIFT/BIC for non-US countries, and IBAN length validation for EU.
+  - For **PayPal**: require valid email + a "send a $0 verification" checkbox (deferred — for now just confirmation).
+- Mark the saved row as `verification_status: 'pending' | 'verified'` (use existing `is_default` UI pattern, no schema change needed — store in `metadata` jsonb column on `customer_payout_methods` if present, else add migration with one new column `verification_status text default 'pending'`).
+- Show a per-method badge: "Verified" / "Pending verification".
 
-Reuse infrastructure that **already exists** in the consumer wallet:
-- `payout_methods` table (bank_transfer, aba, paypal types) — already used by `WalletPage`.
-- `cashout_requests` table + admin review flow — already wired.
-- `connect-onboard` / `connect-status` edge functions — already working.
+## 3. Cambodia (and per-country) instruction panels
+File: New `src/components/admin/store/lodging/PayoutInstructionsPanel.tsx`
 
-We just need to surface this on the **lodge admin** side and add a country-aware router.
+- Country-aware copy block rendered above the rail tabs.
+- For **KH**:
+  - Fees: "ZIVO covers ABA transfer fees. Net payout = booking total − 2% platform fee."
+  - Processing time: "Manual ABA transfer within 1 business day after host requests payout."
+  - Required fields: ABA account number, account holder full name (Khmer/English), phone linked to ABA.
+  - Admin contact: "Payouts are processed by the ZIVO finance team via Telegram alert to admins."
+- For **US**: Stripe Express auto-payout in 2 business days, 1099-K issued by Stripe.
+- Generic fallback for other countries.
+- Render in `LodgingPayoutsSection.tsx` directly under the stat grid.
 
-## Plan
+## 4. Payout history table with full status flow
+File: New `src/components/admin/store/lodging/LodgingPayoutHistoryTable.tsx`
 
-### 1. Country-aware rail picker (`src/lib/payouts/payoutRails.ts` — new)
-Single source of truth that maps an ISO country code to available rails:
-- `STRIPE_CONNECT_COUNTRIES`: full Stripe-supported list (~46 countries) — gets Stripe Express.
-- `MANUAL_ABA_COUNTRIES`: `["KH"]` — gets ABA / KHQR rail.
-- All others fall back to `manual_bank_wire` + `paypal` if eligible.
-- Exposes `getAvailableRails(country)` → `{ stripe?: true, aba?: true, bank_wire?: true, paypal?: true }` and `recommendedRail(country)`.
+- Read from `lodge_payout_requests` filtered by `store_id`, ordered desc.
+- Columns: Requested at · Amount · Method (rail + last-4 / ABA id / PayPal email) · Status · Reference · Failure reason.
+- Status badges using existing color system:
+  - `pending` → amber "Requested"
+  - `approved` → blue "Processing"
+  - `paid` → emerald "Completed"
+  - `rejected` → red "Failed" (show `admin_note` as failure reason)
+  - `cancelled` → gray "Cancelled"
+- Replace the current month-bucket "Payout history" block in `LodgingPayoutsSection.tsx` with this real table. Keep the monthly *revenue* trend chart.
 
-### 2. Replace single-rail UI with `LodgingPayoutAccountCard` (`src/components/admin/store/lodging/LodgingPayoutAccountCard.tsx` — new)
-Replaces the "Payout account" card we just added in `LodgingPayoutsSection`. Behaviour:
-1. Reads the store's `country_code` (from `store_profiles`, fallback to user profile / "US").
-2. Calls `getAvailableRails(country)`.
-3. Shows tabs/segments for each available rail:
-   - **Stripe Connect** → existing `useConnectOnboard()` flow (passes the host's country, not hardcoded "US").
-   - **ABA / KHQR** → form to add an ABA payout method (`payout_methods` insert with `method_type: "aba"`).
-   - **Bank wire** → form for IBAN/SWIFT/account-holder + country.
-   - **PayPal** → email entry.
-4. Shows "Active" badge on the rail currently configured for this store.
+## 5. Request payout sheet (host-initiated)
+File: New `src/components/admin/store/lodging/LodgingRequestPayoutSheet.tsx`
 
-### 3. Fix `connect-onboard` to honor the host's country
-Today the edge function defaults `country = "US"`. The frontend now passes the actual store country. Add a guard: if country isn't in `STRIPE_CONNECT_COUNTRIES`, return `{ error: "stripe_unsupported_country", supported: false }` so the UI can fall through to manual rails instead of failing inside Stripe.
+- Triggered by "Request payout" button next to "Export CSV".
+- Pre-fills available net balance (`stats.netPayout − already requested`).
+- Lets host pick from saved verified payout methods (filtered by `store_id`).
+- Inserts into `lodge_payout_requests` with `rail = method.rail`, `status='pending'`.
+- Shows the Cambodia-specific note for KH ("Admin will process within 1 business day via ABA").
+- After success, invalidates `lodge-payout-history` query.
 
-### 4. Lodging-scoped payout methods
-The existing `payout_methods` table is keyed by `user_id`. Add an optional `store_id uuid` column (nullable, FK to `store_profiles`) so a host who manages multiple properties can have **different bank accounts per property**. Migration:
-```sql
-ALTER TABLE public.payout_methods
-  ADD COLUMN IF NOT EXISTS store_id uuid REFERENCES public.store_profiles(id) ON DELETE CASCADE;
-CREATE INDEX IF NOT EXISTS idx_payout_methods_store ON public.payout_methods(store_id);
-```
-RLS update so store owners can manage their store's methods.
+## 6. Backend: notify admin + double-check country on request
+File: New edge function `supabase/functions/lodge-payout-request/index.ts`
 
-### 5. Cashout request flow for lodges
-Add a "Request payout" button on the Payouts & Finance section that opens a sheet (`LodgingCashoutSheet`):
-- Pre-fills net payout balance.
-- Choose configured payout method.
-- Inserts a `cashout_requests` row tagged with `store_id` and `source: "lodge"` for admin review.
-- Cambodia hosts see a note: *"ABA transfer is processed manually within 1 business day; you'll be notified on Telegram."*
+- Validates: user owns the store, payout_method_id belongs to the same store, requested amount ≤ available net.
+- Re-validates rail vs country (defence-in-depth: if rail='stripe' but country not in `STRIPE_COUNTRIES`, reject).
+- Inserts the row server-side (RLS already allows this, but we centralize validation).
+- Sends Telegram alert to admin chat (reuses existing pattern from cashout flow): "New {rail} payout request: {storeName} · {amount} · {country}".
 
-### 6. Admin-side approval surface
-Reuse the existing admin cashout review page (already exists for consumer wallet). Add a `source` filter so ops can see lodge payout requests separately.
+## 7. Wire it together
+File: `LodgingPayoutsSection.tsx`
 
-### 7. UI polish in `LodgingPayoutsSection.tsx`
-- Replace inline Stripe-only card with new `LodgingPayoutAccountCard`.
-- Update warning banner copy: *"Set up a payout method to receive funds"* (rail-agnostic).
-- Add a "Payout method" line to the Payout History table showing how each batch was/will be paid.
+- Header actions: `[Export CSV] [Request payout]`.
+- Order on the page:
+  1. Payouts paused banner (if any)
+  2. Stat grid (6 cards)
+  3. `PayoutInstructionsPanel` (country-aware fees + processing time)
+  4. `LodgingPayoutAccountCard` (multi-rail setup with verification)
+  5. Monthly revenue chart
+  6. `LodgingPayoutHistoryTable` (real `lodge_payout_requests` rows with statuses)
+  7. Next actions
 
-## Files Changed / Added
+---
 
-**New**
-- `src/lib/payouts/payoutRails.ts` — country → rail map.
-- `src/components/admin/store/lodging/LodgingPayoutAccountCard.tsx` — multi-rail UI.
-- `src/components/admin/store/lodging/LodgingCashoutSheet.tsx` — request payout sheet.
-- One migration adding `store_id` to `payout_methods` + RLS.
+## Technical details
+- New migration: add `verification_status text default 'pending'` and `failure_reason text` to `customer_payout_methods`; add `failure_reason text` to `lodge_payout_requests` (separate from `admin_note` so we can surface it cleanly).
+- Frontend uses existing `useConnectOnboard` mutation; we just intercept its `onError` to switch rails.
+- Telegram alerts reuse `TELEGRAM_BOT_TOKEN` / `TELEGRAM_ADMIN_CHAT_ID` secrets already present from the cashout flow.
+- All new UI follows the v2026 high-density compact standard (`text-[11px/13px]`, `p-2/p-3`, lucide icons only).
 
-**Modified**
-- `src/components/admin/store/lodging/LodgingPayoutsSection.tsx` — swap card, add request-payout button, payout-method column.
-- `supabase/functions/connect-onboard/index.ts` — accept dynamic country, reject unsupported countries cleanly.
+## Files to create
+- `src/components/admin/store/lodging/PayoutInstructionsPanel.tsx`
+- `src/components/admin/store/lodging/LodgingPayoutHistoryTable.tsx`
+- `src/components/admin/store/lodging/LodgingRequestPayoutSheet.tsx`
+- `supabase/functions/lodge-payout-request/index.ts`
+- One new migration for the two extra columns
 
-## Out of Scope (follow-ups)
-
-- Wise / Payoneer API integration (would let us automate KH/LA/MM payouts instead of manual ABA). Plumbing in `payoutRails.ts` makes this a drop-in addition later.
-- Multi-currency display (still USD; FX handled at manual transfer time).
-- Tax form collection for non-Stripe rails (today admins collect W-8BEN out-of-band).
+## Files to edit
+- `src/components/admin/store/lodging/LodgingPayoutAccountCard.tsx` (auto-fallback + verification UI)
+- `src/components/admin/store/lodging/LodgingPayoutsSection.tsx` (use store country, request button, new history table, instructions panel)
