@@ -1,52 +1,39 @@
-## Goal
-Fix the broken post-detail viewer on `/feed`. Today, clicking a reel opens a "fullscreen" overlay that is actually trapped inside a transformed `<PullToRefresh>` ancestor — so it doesn't cover the NavBar or sidebars, and the close button is hidden behind the header.
+## Status: previous fix targeted the wrong overlay
 
-## Root cause
-`PostDetailOverlay` uses `position: fixed` + `createPortal`, but it's rendered as a child of `<PullToRefresh>`, which applies a CSS `transform`. A transformed ancestor becomes the containing block for `position: fixed`, so the overlay collapses into the middle column. The same gotcha is already documented in the file for `ZivoMobileNav` (line 1068) — we need to apply the same fix to the overlay.
+The screenshot shows the bug is **still happening** — NavBar, sidebars and right rail all bleeding through. Investigation:
 
-## Changes
+Clicking a video post does **not** open `PostDetailOverlay` (which I already fixed last turn). It opens a **different** component: the TikTok-style **Reels viewer** at line 989 of `src/pages/ReelsFeedPage.tsx`:
 
-### 1. `src/pages/ReelsFeedPage.tsx` — move overlay outside `<PullToRefresh>`
-- Move the entire `<AnimatePresence>{fullscreenIndex !== null && …}</AnimatePresence>` block out of `<PullToRefresh>` and place it as a sibling of `<ZivoMobileNav />` (which is already outside for the same reason).
-- Bump overlay z-index from `z-[9999]` to `z-[1500]` (above NavBar `z-[1200]` and chat hub `z-[1401]`).
-
-### 2. Desktop layout for the detail viewer (Instagram-style)
-Inside `PostDetailOverlay`, branch on `lg:` breakpoint:
-
-```text
-Mobile (<lg)                  Desktop (lg+)
-┌─────────────┐               ┌──────────────────────────────────┐
-│  [X]  user  │               │   dark backdrop (click to close) │
-│             │               │     ┌────────┐  ┌─────────────┐  │
-│   video     │               │     │        │  │ user header │  │
-│             │               │     │ video  │  │ caption     │  │
-│  ❤ 💬 👁 ↗  │               │     │ 9:16   │  │ comments    │  │
-│  caption    │               │     │ max-h  │  │ actions     │  │
-│  comments   │               │     │ 90vh   │  │             │  │
-│             │               │     └────────┘  └─────────────┘  │
-└─────────────┘               │                       [X] top-right│
-                              └──────────────────────────────────┘
+```tsx
+{reelsStartIndex !== null && (
+  <motion.div className="fixed inset-0 z-[100] bg-black lg:top-[4.5rem]">
+    ...
+  </motion.div>
+)}
 ```
 
-- Mobile: keep current swipe-down behavior, full-bleed.
-- Desktop: dark backdrop (`bg-black/85`), click-outside-to-close, video card centered (max 90vh, 9:16), big always-visible Close button in viewport top-right corner (`fixed top-4 right-4`).
+Two bugs in that block:
 
-### 3. `src/components/social/FeedCard.tsx` — action button positioning in `detailMode`
-- When `detailMode` is true on desktop, render the heart/comment/eye/share rail **inside** the video container as an overlay (Reels-style), not floating in the page gutter.
-- Mobile detailMode unchanged.
+1. **`lg:top-[4.5rem]`** — on desktop, the viewer is *intentionally* offset 72px from the top so the NavBar shows above it. Combined with bug #2, it creates the broken layout.
+2. **Rendered inside `<PullToRefresh>`** which applies a CSS `transform`. A transformed ancestor becomes the containing block for `position: fixed`, so the "fullscreen" viewer collapses into the middle column (~672px wide), with the sidebars and NavBar visible around it and the close-X (which is rendered inside `ReelSlide`) clipped/hidden behind the NavBar.
+3. **z-[100]** — too low to cover NavBar (z-[1200] per project memory) anyway.
 
-### 4. Body scroll lock
-- While the overlay is open, set `document.body.style.overflow = 'hidden'` and restore on close (prevents page scroll behind the modal on desktop).
+This is the exact same gotcha already documented for `ZivoMobileNav` two lines below the closing `</PullToRefresh>` tag.
 
-## Acceptance checks (manual)
-- Click a reel on desktop: NavBar, left sidebar, and right rail are all covered by a dark backdrop. Close (X) is visible top-right and always works. Clicking outside the video card closes the overlay.
-- Click a reel on mobile: behavior is unchanged — full-bleed, swipe-down to close still works.
-- Action buttons (❤ 💬 👁 ↗) appear over the video, not in the gutter.
-- No regression to the NavBar top-gap fix from the previous turn.
+## Fix
 
-## Files modified
-- `src/pages/ReelsFeedPage.tsx` (move overlay out of PullToRefresh, bump z-index, desktop branch, body scroll lock)
-- `src/components/social/FeedCard.tsx` (detailMode action-rail positioning)
+Wrap the Reels viewer in `createPortal(..., document.body)` so it escapes PullToRefresh's transform; also:
+
+- Drop `lg:top-[4.5rem]` → use plain `inset-0` so it covers the viewport including the NavBar.
+- Bump `z-[100]` → `z-[1500]` so it stacks above NavBar (z-50/1200) and the chat hub (z-[1401]).
+- Add an always-visible Close (X) button pinned to viewport top-right (lg+ only) — guaranteed to never be hidden behind anything.
+
+## File modified
+- `src/pages/ReelsFeedPage.tsx` — rewrite the `{reelsStartIndex !== null && …}` block (lines 989–1012) to portal the viewer to body, fix positioning/z-index, add desktop close button.
 
 ## Files unchanged
-- NavBar, sidebars, PullToRefresh, useSwipeDownClose, data layer.
+- `ReelSlide` markup, video logic, navigation, swipe gestures, NavBar, sidebars, mobile behavior.
+
+## Acceptance
+- Click a reel on desktop: video viewer covers the entire viewport — NavBar + both sidebars are no longer visible. Close (X) sits in the top-right corner and works. Esc still works (handled inside `ReelSlide`).
+- Mobile: unchanged (`lg:top-[4.5rem]` was a no-op below lg, and `inset-0` on mobile is identical to before).
