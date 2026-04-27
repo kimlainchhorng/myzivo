@@ -670,9 +670,13 @@ export default function GroupChat({ groupId, groupName, groupAvatar, onClose }: 
 
                   {/* Voice */}
                   {msg.message_type === "voice" && msg.voice_url && (
-                    <div className={`px-3 py-2.5 rounded-2xl ${
+                    <div
+                      className={`chat-no-callout px-3 py-2.5 rounded-2xl ${
                       isMe ? "bg-primary text-primary-foreground rounded-br-md" : "bg-muted text-foreground rounded-bl-md"
-                    }`}>
+                    }`}
+                      onContextMenu={(e) => e.preventDefault()}
+                      style={{ WebkitTouchCallout: "none", WebkitUserSelect: "none", userSelect: "none" }}
+                    >
                       {(() => {
                         const csid = msg.file_payload?.client_send_id;
                         return (
