@@ -273,14 +273,18 @@ export default function GroupChat({ groupId, groupName, groupAvatar, onClose }: 
   }, [groupId, input, replyTo, scrollToBottom, sending, user?.id]);
 
   // Voice send — show local bubble immediately, then replace with uploaded row.
+  const handledVoiceBlobsRef = useRef<WeakSet<Blob>>(new WeakSet());
   useEffect(() => {
-    if (!voice.audioBlob || voice.isRecording || !user?.id || voiceUploadInFlightRef.current) return;
-    let cancelled = false;
-    voiceUploadInFlightRef.current = true;
+    if (!voice.audioBlob || voice.isRecording || !user?.id) return;
     const blob = voice.audioBlob;
+    if (handledVoiceBlobsRef.current.has(blob)) return;
+    handledVoiceBlobsRef.current.add(blob);
+
+    let cancelled = false;
     const durationMs = Math.max(0, Math.round(voice.durationMs || (voice.duration || 0) * 1000));
     const localUrl = URL.createObjectURL(blob);
-    const optimisticId = `opt-voice-${Date.now()}`;
+    const clientSendId = `csid-${Date.now()}-${Math.random().toString(36).slice(2, 9)}`;
+    const optimisticId = `opt-voice-${clientSendId}`;
     const optimisticMsg: GroupMessage = {
       id: optimisticId,
       group_id: groupId,
@@ -291,17 +295,18 @@ export default function GroupChat({ groupId, groupName, groupAvatar, onClose }: 
       message_type: "voice",
       reply_to_id: replyTo?.id || null,
       created_at: new Date().toISOString(),
-      file_payload: { duration_ms: durationMs },
+      file_payload: { duration_ms: durationMs, client_send_id: clientSendId } as { duration_ms?: number },
       _local_voice_url: localUrl,
     };
     setMessages((prev) => [...prev, optimisticMsg]);
     scrollToBottom();
+    voice.clearBlob();
 
     const upload = async () => {
       try {
         const contentType = blob.type || "audio/webm";
         const ext = contentType.includes("mp4") ? "m4a" : "webm";
-        const path = `${user.id}/${Date.now()}.${ext}`;
+        const path = `${user.id}/${Date.now()}-${clientSendId}.${ext}`;
         const { error: uploadError } = await supabase.storage
           .from("chat-media-files")
           .upload(path, blob, { contentType, upsert: true, cacheControl: "3600" });
@@ -315,9 +320,8 @@ export default function GroupChat({ groupId, groupName, groupAvatar, onClose }: 
           message_type: "voice",
           voice_url: urlData.publicUrl,
           reply_to_id: replyTo?.id || undefined,
-          file_payload: { duration_ms: durationMs },
+          file_payload: { duration_ms: durationMs, client_send_id: clientSendId } as { duration_ms?: number },
         };
-        // Fire-and-forget insert; realtime echo replaces the optimistic bubble.
         const { error: insertError } = await dbFrom("group_messages").insert(insertData);
         if (insertError) throw insertError;
         setMessages((prev) => prev.map((m) => m.id === optimisticId
@@ -331,8 +335,6 @@ export default function GroupChat({ groupId, groupName, groupAvatar, onClose }: 
         }
       } finally {
         setTimeout(() => URL.revokeObjectURL(localUrl), 30000);
-        if (!cancelled) voice.clearBlob();
-        voiceUploadInFlightRef.current = false;
       }
     };
     void upload();
