@@ -14,7 +14,7 @@ import {
   FileSignature, Hammer, HardHat, BellRing, CircleDot, ShieldAlert, Truck, BarChart3,
   BedDouble, CalendarRange, CalendarDays, KeyRound, Sparkles, Hotel,
   PackagePlus, Utensils, Palmtree, HeartPulse, MessageSquareText, ListChecks, DollarSign,
-  Inbox, BadgeCheck, Star, Building2, Tag, Tv, Briefcase, BookOpen, UserCog, Banknote
+  Inbox, BadgeCheck, Star, Building2, Tag, Tv, Briefcase, BookOpen, UserCog, Banknote, Download
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -424,6 +424,16 @@ export default function StoreOwnerLayout({ children, title, storeId, storeName, 
           >
             <Settings className="w-3.5 h-3.5" />
             Settings
+          </button>
+          <button
+            onClick={() => { onTabChange?.("software"); closeSidebar(); }}
+            className={cn(
+              "w-full flex items-center gap-2 px-2 py-1 rounded-md text-[12px] transition-colors",
+              activeTab === "software" ? "bg-primary/12 text-primary font-semibold" : "text-foreground/75 hover:bg-muted hover:text-foreground"
+            )}
+          >
+            <Download className="w-3.5 h-3.5" />
+            Software & Apps
           </button>
           <button
             onClick={() => navigate("/")}
