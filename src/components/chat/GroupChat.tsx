@@ -173,6 +173,17 @@ export default function GroupChat({ groupId, groupName, groupAvatar, onClose }: 
         const msg = payload.new as GroupMessage;
         setMessages((prev) => {
           if (prev.some((m) => m.id === msg.id)) return prev;
+          const optIdx = prev.findIndex((m) =>
+            m.id.startsWith("opt-") &&
+            m.sender_id === msg.sender_id &&
+            (m.message || "") === (msg.message || "") &&
+            (m.message_type || "text") === (msg.message_type || "text")
+          );
+          if (optIdx >= 0) {
+            const next = [...prev];
+            next[optIdx] = msg;
+            return next;
+          }
           return [...prev, msg];
         });
         scrollToBottom();
