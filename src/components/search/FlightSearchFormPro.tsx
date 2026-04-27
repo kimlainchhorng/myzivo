@@ -609,26 +609,23 @@ export default function FlightSearchFormPro({
             </div>
           </div>
 
-          {/* Search Button — 3D with photo background */}
+          {/* Search Button — solid, high-contrast */}
           <Button
             onClick={handleSearch}
             disabled={!isFormValid}
             size="lg"
             className={cn(
               "relative w-full h-13 sm:h-14 mt-6 font-bold text-base sm:text-lg rounded-2xl overflow-hidden",
-              "text-primary-foreground",
-              "shadow-[0_6px_24px_-4px_hsl(var(--primary)/0.4),0_2px_8px_-2px_hsl(var(--primary)/0.3),inset_0_1px_0_rgba(255,255,255,0.2),inset_0_-1px_0_rgba(0,0,0,0.1)]",
-              "hover:shadow-[0_8px_32px_-4px_hsl(var(--primary)/0.5),0_4px_12px_-2px_hsl(var(--primary)/0.35)]",
-              "hover:-translate-y-0.5",
-              "transition-all duration-200 active:translate-y-0 active:scale-[0.98] active:shadow-[0_2px_8px_-2px_hsl(var(--primary)/0.3)]",
+              "text-white",
+              "bg-[hsl(var(--flights))] hover:bg-[hsl(var(--flights))]/90",
+              "shadow-[0_8px_24px_-6px_hsl(var(--flights)/0.55),inset_0_1px_0_rgba(255,255,255,0.18)]",
+              "hover:shadow-[0_12px_32px_-6px_hsl(var(--flights)/0.65)]",
+              "hover:-translate-y-0.5 transition-all duration-200 active:translate-y-0 active:scale-[0.98]",
               "disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:translate-y-0 disabled:hover:shadow-none"
             )}
-            style={{ transform: "translateZ(12px)", background: "transparent" }}
           >
-            <img src={tabFlightsBg} alt="" className="absolute inset-0 w-full h-full object-cover" style={{ opacity: 0.6 }} />
-            <span className="absolute inset-0" style={{ background: "linear-gradient(135deg, hsl(var(--flights) / 0.75), hsl(var(--flights) / 0.55))" }} />
             <Search className="relative z-10 w-5 h-5 mr-2" />
-            <span className="relative z-10">{t("flights.search_title")}</span>
+            <span className="relative z-10 tracking-wide">{t("flights.search_title")}</span>
           </Button>
           
           <p className="relative text-xs text-muted-foreground text-center mt-3">
