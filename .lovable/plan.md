@@ -1,65 +1,57 @@
-# Fix: Status bar overlapping page titles across chat & account pages
+# Fix: Status bar still overlapping titles on more pages
 
-## Problem
+## What's wrong
 
-On iOS (and in the Lovable preview iframe on mobile), the status bar (e.g. "9:49") overlaps page titles like "Chat Folders". This affects every sub-page that uses our recently added `pt-safe` utility on a sticky header.
+The screenshots show the iOS status bar (9:55, 9:56) overlapping titles on three pages:
 
-Root cause:
-- `pt-safe` resolves to `max(env(safe-area-inset-top, 0px), 12px)`.
-- In the Lovable preview iframe and in some webview contexts, `env(safe-area-inset-top)` returns `0px`, so the padding falls back to a tiny 12px floor — not enough to clear the iOS status bar (~44–59px).
-- The codebase already has a better, proven utility (`safe-area-top`, used by `AccountSettingsPage`) that adds true safe-area inset on top of Tailwind padding (`pt-3`, `py-3`, etc.).
+1. **Chat Folders** — header has `pt-safe` but the floor I set last pass (44px) is just shy of what's needed for iPhones with Dynamic Island (47–59px), so the title still touches the time.
+2. **Privacy & Notifications** — same `pt-safe` issue.
+3. **New channel** — has **no header at all**, no back button, no safe-area handling. The bare `<h1>New channel</h1>` sits at the very top of the page.
+
+In addition, the entire `/channels/*` route family shares the same problem:
+- `ChannelsDirectoryPage` — bare `<h1>Channels</h1>` at top, no safe-area.
+- `ManageChannelPage` — bare `<h1>` and a custom "Back" link, no safe-area, inconsistent with the rest of the app.
+- `ChannelPage` — relies on `<ChannelHeader>` which also has no safe-area padding.
 
 ## Fix
 
-### 1. Raise the floor on `pt-safe` (one-line CSS change)
+### 1. Increase `pt-safe` floor to 47px
 
-In `src/index.css`, change the floor from `12px` to `max(env(safe-area-inset-top, 0px), 44px)`. This guarantees a minimum of 44px (standard iOS status bar height) when the env() var isn't reported, while still honoring the real notch/Dynamic Island value when available.
+In `src/index.css`, bump the `pt-safe` floor from 44px to 47px (Apple's official Dynamic Island/notch reserve). This removes the last sliver of overlap on Chat Folders, Privacy & Notifications, and the 16+ other pages that already use `pt-safe`.
 
 ```css
 .pt-safe {
-  padding-top: max(env(safe-area-inset-top, 0px), 44px);
+  padding-top: max(env(safe-area-inset-top, 0px), 47px);
 }
 ```
 
-This single change instantly fixes every page we updated in the last pass (18+ chat sub-pages) without touching them again.
+### 2. Add a proper safe-area header to all four channel pages
 
-### 2. Audit remaining sticky headers without any safe-area handling
+Apply the standard chat-page header pattern (sticky, blurred, back button, `pt-safe`) to:
 
-Scan the rest of `src/pages/` for `sticky top-0` headers that use neither `pt-safe` nor `safe-area-top`, and add `safe-area-top` to them. Likely candidates from the search:
-- `src/pages/account/WalletPage.tsx`
-- `src/pages/account/ReferralsPage.tsx`
-- `src/pages/account/GiftCardsPage.tsx`
-- `src/pages/account/PromosPage.tsx`
-- `src/pages/account/NotificationSettings.tsx`
-- `src/pages/account/ActivityLogPage.tsx`
-- `src/pages/account/ProfileEditPage.tsx`
-- `src/pages/account/PrivacySettingsPage.tsx`
-- `src/pages/account/AccountSecurity.tsx`
-- `src/pages/account/AccountAnalyticsPage.tsx`
-- `src/pages/account/FavoritesPage.tsx`
-- `src/pages/account/AccountExportPage.tsx`
-- `src/pages/account/AddressesPage.tsx`
-- `src/pages/account/LinkedDevicesPage.tsx`
-- `src/pages/account/LegalPoliciesPage.tsx`
-- `src/pages/account/LoyaltyPage.tsx`
-- `src/pages/account/BusinessInvoicesPage.tsx`
-- `src/pages/account/VerificationRequestPage.tsx`
-- `src/pages/account/GiftCardSuccessPage.tsx`
-- `src/pages/account/ScanDevicePage.tsx`
-- `src/pages/account/LinkDevicePage.tsx`
+- **`NewChannelPage.tsx`** — replace the bare `<h1>` with a sticky header containing a back button (using `useSmartBack("/channels")`) and the title "New channel".
+- **`ChannelsDirectoryPage.tsx`** — convert the title row into a sticky `pt-safe` header with the title "Channels" and a `+` icon button (replacing the existing "New" button) for parity with Chat Folders.
+- **`ManageChannelPage.tsx`** — replace the inline "Back" link with the standard sticky header (back button + "Manage @handle" title).
+- **`ChannelPage.tsx`** — wrap `<ChannelHeader>` so the channel hero respects safe-area, OR add a thin top spacer of `pt-safe` above it.
 
-Each gets the same minimal change: add `safe-area-top` to the sticky header's class list (it composes with existing `py-*` padding correctly).
+Each header follows the proven pattern already used by `CustomFoldersPage`:
 
-### 3. Verify with build check
+```tsx
+<header className="sticky top-0 z-10 bg-background/85 backdrop-blur-xl border-b border-border/40 pt-safe px-3 py-3 flex items-center gap-2">
+  <button onClick={goBack} className="p-1.5 rounded-full hover:bg-muted/60">
+    <ChevronLeft className="w-5 h-5" />
+  </button>
+  <h1 className="text-base font-semibold flex-1">…</h1>
+</header>
+```
 
-Run `bunx tsc --noEmit` to confirm no regressions.
+### 3. Verify
+
+- Run `bunx tsc --noEmit` to confirm no type regressions.
+- Visually re-check the three screenshots' pages — title should sit ~3–6px below the status bar, never under it.
 
 ## Out of scope
 
-- No changes to `safe-area-top` semantics (it works as designed for Capacitor native).
-- No changes to bottom-safe utilities or the home indicator handling.
-- No changes to the navigation logic added in the previous pass — only the visual top-padding fix.
-
-## Result
-
-After this change, every sticky header — whether in a Capacitor native build, a PWA, mobile Safari, or the Lovable preview iframe — will reserve at least 44px of clearance above the title, eliminating the status-bar overlap shown in the screenshot.
+- No backend, routing, or data changes.
+- No restyling beyond adding the standard header pattern.
+- No changes to pages already verified in the previous pass.
