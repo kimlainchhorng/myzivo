@@ -195,7 +195,6 @@ export default function StoreOwnerLayout({ children, title, storeId, storeName, 
     { id: "customers", label: "Customers", icon: Users },
     { id: "marketing", label: "Marketing & Ads", icon: Megaphone },
     { id: "livestream", label: "Live Stream", icon: Tv },
-    { id: "software", label: "Software & Apps", icon: Download },
   ];
 
   const employeeItems = [
