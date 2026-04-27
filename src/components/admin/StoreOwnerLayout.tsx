@@ -14,7 +14,7 @@ import {
   FileSignature, Hammer, HardHat, BellRing, CircleDot, ShieldAlert, Truck, BarChart3,
   BedDouble, CalendarRange, CalendarDays, KeyRound, Sparkles, Hotel, LayoutDashboard, Images, Search,
   PackagePlus, Utensils, Palmtree, HeartPulse, MessageSquareText, ListChecks, DollarSign,
-  Inbox, BadgeCheck, Star, Building2, Tag, Tv, Briefcase, BookOpen, UserCog, Banknote, Download
+  Inbox, BadgeCheck, Star, Building2, Tag, Tv, Briefcase, BookOpen, UserCog, Banknote, Download, ScrollText
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -48,7 +48,7 @@ export default function StoreOwnerLayout({ children, title, storeId, storeName, 
   const asideRef = useRef<HTMLElement | null>(null);
   const navRef = useRef<HTMLElement | null>(null);
   const scrollMemoryRef = useRef<Record<string, number>>({});
-  const employeeIds = ["employees", "payroll", "employee-schedule", "time-clock", "attendance", "training", "documents", "employee-rules"];
+  const employeeIds = ["employees", "payroll", "employee-schedule", "time-clock", "attendance", "training", "documents", "employee-rules", "audit-log"];
   const [employeesOpen, setEmployeesOpen] = useState(employeeIds.includes(activeTab || ""));
 
   const tabKey = activeTab || "_default";
@@ -222,6 +222,7 @@ export default function StoreOwnerLayout({ children, title, storeId, storeName, 
     { id: "training", label: "Training & Onboarding", icon: GraduationCap },
     { id: "documents", label: "Documents & Files", icon: FolderOpen },
     { id: "employee-rules", label: "Employee Rules", icon: Shield },
+    { id: "audit-log", label: "Audit Log", icon: ScrollText },
   ];
 
   return (
