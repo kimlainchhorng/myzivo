@@ -5,6 +5,8 @@ import { Input } from "@/components/ui/input";
 import { PackagePlus, Search } from "lucide-react";
 import { AddonList, EmptyPanel, LoadingPanel, NextActions, SectionShell, StatCard, addonCategories, money, useLodgingOpsData } from "./LodgingOperationsShared";
 import { cn } from "@/lib/utils";
+import LodgingQuickJump from "./LodgingQuickJump";
+import LodgingSectionStatusBanner from "./LodgingSectionStatusBanner";
 
 const statusFilters = ["All", "Active", "Hidden", "Free", "Paid"];
 const goRooms = () => window.dispatchEvent(new CustomEvent("lodge-set-tab", { detail: { tab: "lodge-rooms" } }));
@@ -26,6 +28,8 @@ export default function LodgingAddOnsSection({ storeId }: { storeId: string }) {
 
   return (
     <SectionShell title="Add-ons & Packages" subtitle="Search, filter, and audit guest-visible extras saved inside room records." icon={PackagePlus} actions={<Button size="sm" onClick={goRooms}>Manage room add-ons</Button>}>
+      <LodgingQuickJump active="lodge-addons" />
+      <LodgingSectionStatusBanner title="Add-ons & Packages" icon={PackagePlus} countLabel="Active add-ons" countValue={active.length} fixLabel="Open rate plans" fixTab="lodge-rate-plans" />
       {isLoading ? <LoadingPanel /> : <>
         <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
           <StatCard label="Active add-ons" value={String(active.length)} icon={PackagePlus} />

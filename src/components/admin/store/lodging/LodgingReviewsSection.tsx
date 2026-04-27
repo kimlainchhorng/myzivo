@@ -5,6 +5,8 @@ import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { LoadingPanel, NextActions, SectionShell, StatCard } from "./LodgingOperationsShared";
 import { useLodgingCatalog } from "@/hooks/lodging/useLodgingCatalog";
+import LodgingQuickJump from "./LodgingQuickJump";
+import LodgingSectionStatusBanner from "./LodgingSectionStatusBanner";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { useQueryClient } from "@tanstack/react-query";
@@ -77,6 +79,8 @@ export default function LodgingReviewsSection({ storeId }: { storeId: string }) 
 
   return (
     <SectionShell title="Reviews & Guest Feedback" subtitle="Read guest reviews, post public replies, flag inappropriate content." icon={MessageSquareText}>
+      <LodgingQuickJump active="lodge-reviews" />
+      <LodgingSectionStatusBanner title="Reviews & Guest Feedback" icon={MessageSquareText} countLabel={`${stats.total} reviews · avg`} countValue={stats.avg ? stats.avg.toFixed(1) : "—"} fixLabel="Open property profile" fixTab="lodge-property" />
       {list.isLoading ? <LoadingPanel /> : <>
         <div className="grid gap-3 sm:grid-cols-4">
           <StatCard label="Total reviews" value={String(stats.total)} icon={MessageSquareText} />

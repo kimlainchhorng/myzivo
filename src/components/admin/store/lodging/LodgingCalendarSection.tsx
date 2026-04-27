@@ -19,6 +19,8 @@ import { supabase } from "@/integrations/supabase/client";
 import { useQuery } from "@tanstack/react-query";
 import { toast } from "sonner";
 import LodgingNeedsSetupEmptyState from "./LodgingNeedsSetupEmptyState";
+import LodgingQuickJump from "./LodgingQuickJump";
+import LodgingSectionStatusBanner from "./LodgingSectionStatusBanner";
 
 function ymd(d: Date) { return d.toISOString().slice(0, 10); }
 function daysInMonth(year: number, month: number) {
@@ -115,7 +117,10 @@ export default function LodgingCalendarSection({ storeId }: { storeId: string })
   };
 
   return (
-    <Card>
+    <div className="space-y-3">
+      <LodgingQuickJump active="lodge-calendar" />
+      <LodgingSectionStatusBanner title="Calendar & Availability" icon={CalendarDays} countLabel="Manual blocks" countValue={blocks.length} fixLabel="Open Reservations" fixTab="lodge-reservations" />
+      <Card>
       <CardHeader className="flex flex-row items-center justify-between gap-2">
         <CardTitle className="flex items-center gap-2"><CalendarDays className="h-5 w-5" /> Calendar & Availability</CardTitle>
         {rooms.length > 0 && (
@@ -212,5 +217,6 @@ export default function LodgingCalendarSection({ storeId }: { storeId: string })
         )}
       </CardContent>
     </Card>
+    </div>
   );
 }

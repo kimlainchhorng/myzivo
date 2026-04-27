@@ -5,6 +5,8 @@ import { EmptyPanel, LoadingPanel, NextActions, SectionShell, StatCard, money } 
 import { useStoreChangeRequestInbox } from "@/hooks/lodging/useReservationChangeRequests";
 import { useLodgeReservations } from "@/hooks/lodging/useLodgeReservations";
 import LodgingNeedsSetupEmptyState from "./LodgingNeedsSetupEmptyState";
+import LodgingQuickJump from "./LodgingQuickJump";
+import LodgingSectionStatusBanner from "./LodgingSectionStatusBanner";
 
 const goReservations = () => window.dispatchEvent(new CustomEvent("lodge-set-tab", { detail: { tab: "lodge-reservations" } }));
 
@@ -19,6 +21,8 @@ export default function LodgingGuestRequestsSection({ storeId }: { storeId: stri
 
   return (
     <SectionShell title="Guest Requests" subtitle="Service requests, add-on follow-up, and reservation actions for front-desk teams." icon={MessageSquareText} actions={<Button size="sm" onClick={goReservations}>Open Reservations</Button>}>
+      <LodgingQuickJump active="lodge-guest-requests" />
+      <LodgingSectionStatusBanner title="Guest Requests" icon={MessageSquareText} countLabel="Pending requests" countValue={pendingAddons.length} fixLabel="Open Concierge" fixTab="lodge-concierge" />
       {isLoading ? <LoadingPanel /> : <>
         <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
           <StatCard label="Pending add-ons" value={String(pendingAddons.length)} icon={PackagePlus} />

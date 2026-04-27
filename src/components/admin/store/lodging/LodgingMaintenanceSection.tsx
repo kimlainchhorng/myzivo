@@ -16,6 +16,8 @@ import {
 } from "@/hooks/lodging/useLodgeMaintenance";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
+import LodgingQuickJump from "./LodgingQuickJump";
+import LodgingSectionStatusBanner from "./LodgingSectionStatusBanner";
 
 const STATUS_LABEL: Record<MaintenanceStatus, string> = {
   open: "Open", in_progress: "In Progress", blocked: "Blocked", done: "Done",
@@ -165,7 +167,10 @@ export default function LodgingMaintenanceSection({ storeId }: { storeId: string
   const selectCls = "h-9 text-xs rounded-md border border-input bg-background px-2";
 
   return (
-    <Card>
+    <div className="space-y-3">
+      <LodgingQuickJump active="lodge-maintenance" />
+      <LodgingSectionStatusBanner title="Maintenance & Work Orders" icon={Wrench} countLabel="Open tickets" countValue={stats.open + stats.inProgress} fixLabel="Open Housekeeping" fixTab="lodge-housekeeping" />
+      <Card>
       <CardHeader>
         <div className="flex items-center justify-between gap-2 flex-wrap">
           <CardTitle className="flex items-center gap-2"><Wrench className="h-5 w-5" /> Maintenance & Work Orders</CardTitle>
@@ -376,5 +381,6 @@ export default function LodgingMaintenanceSection({ storeId }: { storeId: string
         </DialogContent>
       </Dialog>
     </Card>
+    </div>
   );
 }

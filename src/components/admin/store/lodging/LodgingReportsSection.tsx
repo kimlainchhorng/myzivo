@@ -9,6 +9,8 @@ import { Label } from "@/components/ui/label";
 import { BarChart3, CreditCard, Download, PackagePlus } from "lucide-react";
 import { useLodgeReports } from "@/hooks/lodging/useLodgeReports";
 import LodgingNeedsSetupEmptyState from "./LodgingNeedsSetupEmptyState";
+import LodgingQuickJump from "./LodgingQuickJump";
+import LodgingSectionStatusBanner from "./LodgingSectionStatusBanner";
 
 function ymd(d: Date) { return d.toISOString().slice(0, 10); }
 
@@ -50,7 +52,10 @@ export default function LodgingReportsSection({ storeId }: { storeId: string }) 
   };
 
   return (
-    <Card>
+    <div className="space-y-3">
+      <LodgingQuickJump active="lodge-reports" />
+      <LodgingSectionStatusBanner title="Reports & Analytics" icon={BarChart3} countLabel="Period" countValue={`${from} → ${to}`} fixLabel="Open Reservations" fixTab="lodge-reservations" />
+      <Card>
       <CardHeader className="flex flex-row items-center justify-between">
         <CardTitle className="flex items-center gap-2"><BarChart3 className="h-5 w-5" /> Reports</CardTitle>
         <Button variant="outline" size="sm" onClick={exportCsv} disabled={!data} className="gap-1"><Download className="h-4 w-4" /> CSV</Button>
@@ -121,6 +126,7 @@ export default function LodgingReportsSection({ storeId }: { storeId: string }) 
         )}
       </CardContent>
     </Card>
+    </div>
   );
 }
 

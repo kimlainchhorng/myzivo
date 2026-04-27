@@ -25,6 +25,8 @@ import { toast } from "sonner";
 import { useLodgeRooms, type LodgeRoom, type LodgeAddon, type RoomFees, type ChildPolicy } from "@/hooks/lodging/useLodgeRooms";
 import { LodgingRoomPhotoUploader } from "@/components/lodging/LodgingRoomPhotoUploader";
 import { BedConfigBuilder, bedConfigSummary, bedConfigSleeps } from "@/components/lodging/BedConfigBuilder";
+import LodgingQuickJump from "./LodgingQuickJump";
+import LodgingSectionStatusBanner from "./LodgingSectionStatusBanner";
 
 const VIEW_OPTIONS = ["", "Sea view", "Garden view", "Pool view", "Mountain view", "City view", "Courtyard view", "River view"];
 const WEEKDAYS = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
@@ -356,7 +358,10 @@ export default function LodgingRoomsSection({ storeId }: { storeId: string }) {
   const removeAddon = (idx: number) => setEditing({ ...editing, addons: (editing?.addons || []).filter((_, i) => i !== idx) });
 
   return (
-    <Card>
+    <div className="space-y-3">
+      <LodgingQuickJump active="lodge-rooms" />
+      <LodgingSectionStatusBanner title="Rooms & Rates" icon={BedDouble} countLabel="Active rooms" countValue={rooms.filter((r) => r.is_active).length} fixLabel="Open Rate Plans" fixTab="lodge-rate-plans" />
+      <Card>
       <CardHeader className="flex flex-row items-center justify-between gap-2">
         <CardTitle className="flex items-center gap-2"><BedDouble className="h-5 w-5" /> Rooms & Rates</CardTitle>
         <Button onClick={openNew} size="sm" className="gap-1"><Plus className="h-4 w-4" /> Add Room</Button>
@@ -834,6 +839,7 @@ export default function LodgingRoomsSection({ storeId }: { storeId: string }) {
         </DialogContent>
       </Dialog>
     </Card>
+    </div>
   );
 }
 
