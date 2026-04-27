@@ -257,7 +257,7 @@ export default function AdminLodgingReservationDetailPage() {
   return (
     <div className="min-h-screen bg-background pb-12">
       {/* Header */}
-      <div className="sticky top-0 z-20 bg-background/95 backdrop-blur border-b border-border">
+      <div className="sticky top-0 z-20 bg-background/95 backdrop-blur border-b border-border pt-safe">
         <div className="max-w-3xl mx-auto px-4 py-3 flex items-center gap-3">
           <Button variant="ghost" size="icon" onClick={goBack} className="shrink-0" aria-label="Back to reservations">
             <ArrowLeft className="h-5 w-5" />

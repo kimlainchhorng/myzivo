@@ -883,7 +883,7 @@ export default function StickerKeyboard({ open, onClose, onSendSticker, onStartV
         className="bg-background border-t border-border/30 rounded-t-3xl shadow-2xl max-h-[58vh] overflow-hidden flex flex-col"
       >
         {/* ── Compact header ── */}
-        <div className="sticky top-0 bg-background/95 backdrop-blur-xl border-b border-border/20 px-3 pt-2 pb-1.5 z-10 shrink-0">
+        <div className="sticky top-0 bg-background/95 backdrop-blur-xl border-b border-border/20 px-3 pt-2 pb-1.5 z-10 shrink-0 pt-safe">
           <div className="w-12 h-1 rounded-full bg-muted mx-auto mb-2" />
 
           {/* Tab row + Done */}

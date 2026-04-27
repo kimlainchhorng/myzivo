@@ -231,7 +231,7 @@ export default function SocialListModal({ open, onClose, initialTab = "friends",
         transition={{ type: "spring", damping: 25, stiffness: 300 }}
       >
         {/* Header */}
-        <div className="sticky top-0 z-10 bg-background/95 backdrop-blur-xl border-b border-border/30 px-4 py-2.5 flex items-center gap-3">
+        <div className="sticky top-0 z-10 bg-background/95 backdrop-blur-xl border-b border-border/30 px-4 py-2.5 flex items-center gap-3 pt-safe">
           <button onClick={onClose} className="min-h-[44px] min-w-[44px] flex items-center justify-center">
             <ArrowLeft className="h-5 w-5 text-foreground" />
           </button>

@@ -1146,7 +1146,7 @@ export default function ChatHubPage({ embedded = false }: { embedded?: boolean }
               "shrink-0",
               embedded
                 ? "border-b border-border/15 bg-background/95 backdrop-blur-2xl"
-                : "sticky top-0 z-40 bg-background/95 backdrop-blur-xl border-b border-border/20"
+                : "sticky top-0 z-40 bg-background/95 backdrop-blur-xl border-b border-border/20 pt-safe"
             )}
             style={!embedded ? { paddingTop: "var(--zivo-safe-top-sticky)" } : undefined}
           >

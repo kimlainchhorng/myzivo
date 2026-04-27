@@ -147,7 +147,7 @@ export default function ChatSecurity({ open, onClose, chatPartnerId, chatPartner
           className="relative bg-background rounded-t-3xl w-full max-w-md max-h-[85vh] overflow-y-auto"
           onClick={(e) => e.stopPropagation()}
         >
-          <div className="sticky top-0 bg-background/95 backdrop-blur-xl z-10 px-5 pt-5 pb-3 border-b border-border/30">
+          <div className="sticky top-0 bg-background/95 backdrop-blur-xl z-10 px-5 pt-5 pb-3 border-b border-border/30 pt-safe">
             <div className="w-10 h-1 rounded-full bg-muted-foreground/30 mx-auto mb-4" />
             <div className="flex items-center justify-between">
               <h3 className="text-lg font-bold text-foreground flex items-center gap-2">

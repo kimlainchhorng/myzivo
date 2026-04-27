@@ -51,7 +51,7 @@ export default function ChatSearch({ messages, onClose, onScrollToMessage, curre
       initial={{ y: -40, opacity: 0 }}
       animate={{ y: 0, opacity: 1 }}
       exit={{ y: -40, opacity: 0 }}
-      className="sticky top-0 z-20 bg-background border-b border-border/30 px-3 py-2 flex items-center gap-2"
+      className="sticky top-0 z-20 bg-background border-b border-border/30 px-3 py-2 flex items-center gap-2 pt-safe"
     >
       <Search className="w-4 h-4 text-muted-foreground shrink-0" />
       <input

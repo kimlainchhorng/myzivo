@@ -1,88 +1,48 @@
-# Correct fix: make safe-area padding actually win everywhere
+## Final safe-area sweep
 
-## Real problem
+Audited every `sticky top-0` element in the codebase. After the previous batches, **15 real mobile headers** still lack safe-area padding, plus a few using inline `paddingTop: var(...)` that should be standardized.
 
-The screenshots still overlap because the previous fix did not always take effect.
+### Files to update (add `pt-safe`)
 
-Two CSS issues are happening:
+**Shared chat components (used as fullscreen panels on mobile):**
+- `src/components/chat/ChatSearch.tsx` (line 54)
+- `src/components/chat/ChatNotificationSettings.tsx` (line 161)
+- `src/components/chat/ChatMiniApps.tsx` (line 215)
+- `src/components/chat/ChatSecurity.tsx` (line 150)
+- `src/components/chat/StickerKeyboard.tsx` (line 886) — only when used as fullscreen; safe to add since it just adds top padding when at top of screen
 
-1. **Tailwind padding overrides `pt-safe`**
-   Headers use classes like:
-   ```tsx
-   className="... pt-safe px-3 py-3 ..."
-   ```
-   Tailwind generates `.py-3` later than our custom `.pt-safe`, so `.py-3` can override the top padding. Result: the page still only gets `py-3` instead of the iPhone-safe top padding.
+**Pages:**
+- `src/pages/ChatHubPage.tsx` (line 1149) — conditional sticky branch
+- `src/pages/MorePage.tsx` (line 542)
+- `src/pages/PublicProfilePage.tsx` (line 1212) — drag handle header
+- `src/pages/Profile.tsx` (line 710)
+- `src/pages/business/PartnerOnboarding.tsx` (line 177)
+- `src/pages/business/BusinessPageWizard.tsx` (line 466)
+- `src/pages/app/personal/PersonalSchedulePage.tsx` (line 186)
+- `src/pages/admin/lodging/AdminLodgingReservationDetailPage.tsx` (line 260)
+- `src/components/profile/SocialListModal.tsx` (line 234)
 
-2. **`safe-area-top` still uses only `env()`**
-   Some chat pages use `safe-area-top`, but that utility currently resolves to `0px` when `env(safe-area-inset-top)` is unavailable in the Lovable preview / some WebView contexts. Result: no safe spacing.
+**Standardize inline style → class:**
+- `src/pages/ReelsFeedPage.tsx` (line 713) — replace inline `style={{ paddingTop: 'var(--zivo-safe-top-sticky)' }}` with `pt-safe` class for consistency
 
-External references for this class of issue confirm the same root causes: `viewport-fit=cover`, Capacitor `StatusBar.overlaysWebView`, and a reliable fallback padding are required. The project already has `viewport-fit=cover` and overlays enabled, so the missing piece is a CSS fallback that actually wins over Tailwind utilities.
+### Excluded (intentionally)
 
-## Changes
+- `src/components/admin/AdminLayout.tsx`, `StoreOwnerLayout.tsx` — desktop sidebars
+- `src/components/admin/ads/ResponsiveBreakdown.tsx` — table `<thead>`
+- `src/components/social/CreatePostModal.tsx` — modal inside dialog (no status bar overlap)
+- `src/pages/PublicProfilePage.tsx` line 809 — `hidden lg:block` (desktop only)
+- `src/components/admin/store/lodging/LodgingPropertyProfileSection.tsx` — admin desktop section
+- `src/pages/dev/SafeAreaQAPage.tsx` — QA harness page
 
-### 1. Fix the CSS utilities globally
+### Change pattern
 
-Update `src/index.css`:
+Append `pt-safe` to each header's className. Where `pt-4`/`py-3` is already present, the global `!important` rule from the previous fix ensures `pt-safe` wins.
 
-- `pt-safe` becomes `!important` and uses the existing sticky token:
-  ```css
-  .pt-safe {
-    padding-top: var(--zivo-safe-top-sticky) !important;
-  }
-  ```
+### Verify
 
-- `safe-area-top` gets a real fallback on small/mobile screens instead of raw `env()`:
-  ```css
-  .safe-area-top {
-    --_safe-top: var(--zivo-safe-top-sticky);
-    padding-top: var(--_safe-top) !important;
-  }
-  ```
+- `bunx tsc --noEmit`
+- Spot-check Profile, MorePage, ChatHub, PartnerOnboarding, ReelsFeed at 428×703 viewport.
 
-- Update comments to match the behavior.
+### Expected result
 
-This is the core fix: all existing headers that already have `pt-safe`/`safe-area-top` will finally move below the iPhone clock.
-
-### 2. Apply safe-area to the remaining chat headers
-
-Add `pt-safe` or equivalent safe padding to the remaining missing chat headers:
-
-- `src/pages/chat/ContactRequestsPage.tsx`
-- `src/pages/chat/NearbyChatPage.tsx`
-- `src/pages/chat/NewBroadcastPage.tsx`
-- `src/pages/chat/SecretChatPage.tsx`
-- `src/components/chat/ChatSecurity.tsx`
-- `src/components/chat/ChatSearch.tsx`
-- `src/components/chat/ChatNotificationSettings.tsx`
-- `src/components/chat/ChatMiniApps.tsx`
-- `src/components/chat/StickerKeyboard.tsx`
-
-For `SecretChatPage`, remove the inline `env(...) + 10px` style and use the global safe utility so it cannot collapse to 10px.
-
-### 3. Clean channel form spacing
-
-`NewChannelPage` is now using a header, but the form starts too close visually after the header. Keep the safe header and ensure the body spacing is normal (`p-4`) with no title duplicated.
-
-### 4. Verify
-
-Run:
-
-```bash
-bunx tsc --noEmit
-```
-
-## Expected result
-
-On iPhone/mobile preview, the page titles and back buttons will sit clearly below the status bar on:
-
-- Chat Folders
-- Privacy & Notifications
-- New channel
-- Contact Requests
-- Nearby
-- New Broadcast
-- Secret Chat
-- Chat Search / Security / Mini Apps / Notification Settings
-- Channel pages
-
-No more title text under the clock/battery area.
+This completes the safe-area pass — no remaining mobile sticky headers will sit under the iPhone status bar / Dynamic Island.
