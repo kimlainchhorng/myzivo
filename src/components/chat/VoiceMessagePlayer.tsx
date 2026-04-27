@@ -21,6 +21,7 @@ import Info from "lucide-react/dist/esm/icons/info";
 import { motion } from "framer-motion";
 import { toast } from "sonner";
 import { isVoiceDebugEnabled, setVoiceDebugEnabled } from "@/lib/voiceDebug";
+import { getVoiceUploadDiagnostics } from "@/lib/voiceUpload";
 
 export type VoiceUploadStatus = "uploading" | "sent" | "failed";
 
@@ -37,6 +38,10 @@ interface VoiceMessagePlayerProps {
   uploadProgress?: number;
   /** Last error message — only used while `uploadStatus === "failed"`. */
   uploadError?: string;
+  /** Last attempted endpoint URL — shown in debug mode under failed bubbles. */
+  uploadEndpoint?: string;
+  /** Last response status code (0 = network error) — shown in debug mode. */
+  uploadStatusCode?: number;
   /** Retry handler — shown when failed. */
   onRetry?: () => void;
   /** Discard handler — shown when failed or uploading. */
@@ -67,6 +72,8 @@ export default function VoiceMessagePlayer({
   uploadStatus,
   uploadProgress = 0,
   uploadError,
+  uploadEndpoint,
+  uploadStatusCode,
   onRetry,
   onDiscard,
 }: VoiceMessagePlayerProps) {
