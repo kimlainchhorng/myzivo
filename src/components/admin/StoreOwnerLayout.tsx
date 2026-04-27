@@ -23,6 +23,7 @@ import { useFocusTrap } from "./useFocusTrap";
 import { useFocusReturn } from "./ads/useFocusReturn";
 import { isLodgingStoreCategory } from "@/hooks/useOwnerStoreProfile";
 import type { LodgingCompletionItem } from "@/lib/lodging/lodgingCompletion";
+import { useLodgingSidebarBadges } from "@/hooks/lodging/useLodgingSidebarBadges";
 
 interface StoreOwnerLayoutProps {
   children: ReactNode;
@@ -137,6 +138,16 @@ export default function StoreOwnerLayout({ children, title, storeId, storeName, 
   const isLodging = isLodgingStoreCategory(storeCategory);
   const productsLabel = isAutoRepair ? "Services" : isLodging ? "Rooms" : "Products";
   const paymentLabel = isAutoRepair ? "Bookings" : "Payment & Payouts";
+
+  const { data: lodgingBadges } = useLodgingSidebarBadges(storeId, isLodging);
+  const badgeFor = (id: string): number | undefined => {
+    if (!isLodging || !lodgingBadges) return undefined;
+    if (id === "lodge-inbox") return lodgingBadges.inboxUnread || undefined;
+    if (id === "lodge-concierge") return lodgingBadges.conciergeOpen || undefined;
+    if (id === "lodge-lostfound") return lodgingBadges.lostFoundUnclaimed || undefined;
+    if (id === "lodge-frontdesk") return lodgingBadges.frontDeskToday || undefined;
+    return undefined;
+  };
 
   const navItems = [
     { id: "profile", label: "Profile", icon: Store },
@@ -352,6 +363,7 @@ export default function StoreOwnerLayout({ children, title, storeId, storeName, 
                 );
               }
               const isActive = activeTab === item.id;
+              const badgeCount = badgeFor(item.id);
               return (
                 <button
                   key={item.id}
@@ -367,7 +379,12 @@ export default function StoreOwnerLayout({ children, title, storeId, storeName, 
                     <span className="absolute left-0 top-1/2 -translate-y-1/2 h-5 w-1 rounded-r-full bg-primary" />
                   )}
                   <item.icon className={cn("w-4 h-4 shrink-0", isActive ? "text-primary" : "text-muted-foreground")} />
-                  <span className="truncate">{item.label}</span>
+                  <span className="truncate flex-1 text-left">{item.label}</span>
+                  {badgeCount ? (
+                    <span className="shrink-0 rounded-full bg-primary px-1.5 min-w-[18px] text-center text-[10px] font-bold leading-[18px] text-primary-foreground">
+                      {badgeCount > 99 ? "99+" : badgeCount}
+                    </span>
+                  ) : null}
                 </button>
               );
             })}
