@@ -1435,7 +1435,7 @@ export default function FeedPage() {
           audio_name: post.audio_name || null,
           source: "user",
           author_id: post.user_id,
-          author_name: profile?.display_name || profile?.full_name || "User",
+          author_name: profile?.full_name || profile?.username || "User",
           author_avatar: profile?.avatar_url || null,
           author_is_verified: !!profile?.is_verified,
         });
