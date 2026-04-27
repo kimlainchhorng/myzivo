@@ -1,35 +1,81 @@
-# Fix "Failed to create group"
+# Plan: make New Group creation reliable and debuggable
 
-## What's happening
+## What I found
 
-When you tap **Create Group** in the New Group sheet, the toast shows just "Failed to create group" with no reason. The current code swallows the actual Supabase error: it does `err.message` on a Supabase `PostgrestError`, which often has the real cause in `details`/`hint`/`code` instead of `message`, so the toast ends up blank-suffixed and we can't see what's wrong.
+The screenshot shows the real failure now:
 
-I verified the database side is healthy:
-- Tables `chat_groups` and `chat_group_members` exist with the expected columns.
-- RLS policies allow the creator to insert into `chat_groups` (`auth.uid() = created_by`) and to insert themselves + friends into `chat_group_members` ("Self can join group" + "Group members or creator can add members").
-- The `role` column on `chat_group_members` exists and accepts `"owner"`.
+```text
+infinite recursion detected in policy for relation "chat_group_members" (42P17)
+```
 
-So the failure is happening at runtime and we need the real error message to know whether it's:
-1. A session/auth issue (`auth.uid()` is null → RLS rejects),
-2. A duplicate group name constraint we don't know about, or
-3. A specific RLS policy mismatch on one of the two member inserts.
+The database currently has older recursive RLS policies still active on `chat_group_members`, including policies that query `chat_group_members` from inside policies on the same table. That causes PostgreSQL to recurse when the app inserts/selects group members. The newer helper functions exist, but the old policies were not fully removed.
 
-## The fix
+## Fix plan
 
-Update `src/components/chat/CreateGroupModal.tsx` `handleCreate` to:
+1. **Fix the database RLS recursion first**
+   - Add a migration that drops the old recursive `chat_group_members` policies:
+     - `Group members or creator can add members`
+     - `Members can view members`
+     - `Members see group members`
+     - old duplicate self/leave/update policies if still present
+   - Keep the non-recursive SECURITY DEFINER helper-function approach:
+     - `is_group_member(auth.uid(), group_id)`
+     - `is_group_admin(auth.uid(), group_id)`
+     - `is_group_owner(auth.uid(), group_id)`
+   - Keep insert policies that allow:
+     - the current user to insert themselves as owner/member
+     - admins/owners to add other members
+   - This directly fixes the error in your screenshot.
 
-1. **Surface the real Supabase error** — read `message`, `details`, `hint`, and `code` from the `PostgrestError` object (Supabase puts the useful info in `details`/`hint`, not always in `message`). Concatenate them into the toast and `console.error`.
-2. **Log every step** — separate `console.error` for (a) `chat_groups` insert failure, (b) creator self-insert failure, (c) other-members insert failure, each including the payload that was sent.
-3. **Verify auth before insert** — call `supabase.auth.getUser()` once at the top; if no user, show "Please sign in again" instead of attempting the inserts and getting a confusing RLS rejection.
-4. **Pass `as { onConflict: "group_id,user_id" }` ignore** for the creator insert when a unique constraint exists, so a stale row from a previous attempt doesn't block creation.
+2. **Add a client-side preflight check before creating**
+   - In `CreateGroupModal.tsx`, verify the expected schema before insert by reading the Supabase-generated app metadata already available in code:
+     - `chat_groups` supports required `name` and `created_by`
+     - `chat_group_members` supports `group_id`, `user_id`, and `role`
+     - allowed roles include `owner`, `admin`, `member`
+   - If something is missing or incompatible, block creation and show a clear error instead of attempting a broken insert.
 
-After this, when you tap Create Group again, the toast will tell us exactly why it's failing (e.g. `new row violates row-level security policy "..."` or `null value in column "..."`), and the same line will be in the browser console. Then I can target the root cause directly.
+3. **Validate the payload before submission**
+   - Block if:
+     - session/user is missing
+     - group name is blank or too long
+     - no friend is selected
+     - selected IDs are malformed or not in the loaded friends list
+     - creator role is not one of the allowed database roles
+   - Show a short clear toast message for each validation failure.
 
-## Files
+4. **Add one automatic retry for auth/RLS-like failures**
+   - Wrap the group creation operation in a single retry controller.
+   - If the first attempt fails with an auth/RLS/session-shaped error, re-check `supabase.auth.getUser()` and retry once.
+   - Do not retry validation errors or schema/preflight errors.
+   - If retry succeeds, show normal success.
+   - If retry fails, show the detailed error panel.
 
-- `src/components/chat/CreateGroupModal.tsx` — replace `handleCreate` with a verbose, auth-checked version. No DB or schema changes in this pass.
+5. **Cancel if auth changes during creation**
+   - While `creating` is true, subscribe to `supabase.auth.onAuthStateChange`.
+   - If `SIGNED_OUT`, missing session, or token expiry is detected during creation:
+     - mark the request as cancelled
+     - stop updating the UI from the in-flight request
+     - show: `Group creation cancelled — please sign in again.`
 
-## Out of scope
+6. **Replace the plain error toast with expandable details**
+   - Add a compact custom Sonner toast for group creation errors:
+     - title: `Failed to create group`
+     - short explanation visible immediately
+     - collapsible `View error details`
+     - details panel shows Supabase `message`, `details`, `hint`, and Postgres `code`
+   - Keep the design compact and mobile-friendly for the 428px preview width.
 
-- No schema/RLS migrations until we see the actual error.
-- No UI changes to the modal layout.
+## Technical notes
+
+- Main file: `src/components/chat/CreateGroupModal.tsx`
+- New helper/component likely added near chat code:
+  - `src/components/chat/GroupCreationErrorToast.tsx`
+- Database migration required to remove recursive policies and keep safe function-based RLS.
+- Current real schema is compatible:
+  - `chat_groups.created_by` exists and is NOT NULL
+  - `chat_group_members.role` is enum `group_member_role`
+  - allowed role values are `owner`, `admin`, `member`
+
+## Expected result
+
+After this, tapping **Create Group** should create the group smoothly. If the session expires or RLS rejects once because auth refresh is in progress, the app retries once automatically. If it still fails, the toast shows a clean expandable error panel instead of a long red message covering the top of the screen.
