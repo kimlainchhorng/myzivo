@@ -38,6 +38,7 @@ interface PayoutMethodRow {
   aba_account_id: string | null;
   country_code: string | null;
   is_default: boolean;
+  verification_status?: string | null;
   created_at: string;
 }
 
@@ -91,10 +92,21 @@ export default function LodgingPayoutAccountCard({ storeId, storeCountry }: Prop
 
   const startStripe = () => {
     if (!rails.stripe) {
-      toast.error(`Stripe Connect isn't available in ${country}. Try ABA, bank wire, or PayPal.`);
+      const fallback = recommended;
+      setActiveRail(fallback);
+      toast.error(`Stripe Connect isn't available in ${country}. Switched to ${fallback.replace("_", " ")}.`);
       return;
     }
-    onboard.mutate(country);
+    onboard.mutate(country, {
+      onError: (e: any) => {
+        const msg = String(e?.message || "");
+        if (msg.includes("stripe_unsupported_country") || msg.toLowerCase().includes("not available")) {
+          const fallback = recommended === "stripe" ? "bank_wire" : recommended;
+          setActiveRail(fallback);
+          toast.error(`Stripe Connect rejected ${country}. Switched to ${fallback.replace("_", " ")}.`);
+        }
+      },
+    });
   };
 
   const removeMethod = useMutation({
