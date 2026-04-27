@@ -456,7 +456,7 @@ function DesktopCinematicHero() {
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.4, duration: 0.5 }}
-            className="flex items-center justify-center gap-6 mt-6 text-[11px] text-muted-foreground"
+            className="flex items-center justify-center gap-4 mt-6 text-[11px] text-muted-foreground"
           >
             {[
               { icon: Sparkles, label: "500+ Airlines" },
@@ -467,10 +467,10 @@ function DesktopCinematicHero() {
               <motion.span
                 key={item.label}
                 className="flex items-center gap-1.5"
-                whileHover={{ scale: 1.08, y: -2 }}
+                whileHover={{ scale: 1.06, y: -1 }}
                 transition={{ type: "spring", stiffness: 400, damping: 20 }}
               >
-                {i > 0 && <span className="w-1 h-1 rounded-full bg-border mr-4" />}
+                {i > 0 && <span className="w-0.5 h-0.5 rounded-full bg-muted-foreground/40 mr-3" />}
                 <item.icon className="w-3.5 h-3.5 text-primary/60" /> {item.label}
               </motion.span>
             ))}
