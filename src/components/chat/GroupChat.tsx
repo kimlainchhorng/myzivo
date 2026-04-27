@@ -173,16 +173,31 @@ export default function GroupChat({ groupId, groupName, groupAvatar, onClose }: 
         const msg = payload.new as GroupMessage;
         setMessages((prev) => {
           if (prev.some((m) => m.id === msg.id)) return prev;
-          const optIdx = prev.findIndex((m) =>
-            m.id.startsWith("opt-") &&
-            m.sender_id === msg.sender_id &&
-            (m.message || "") === (msg.message || "") &&
-            (m.message_type || "text") === (msg.message_type || "text")
-          );
-          if (optIdx >= 0) {
-            const next = [...prev];
-            next[optIdx] = msg;
-            return next;
+          // Prefer exact match on client_send_id stored in file_payload
+          const incomingCsid = (msg.file_payload as { client_send_id?: string } | null)?.client_send_id;
+          if (incomingCsid) {
+            const csidIdx = prev.findIndex((m) => {
+              const mc = (m.file_payload as { client_send_id?: string } | null)?.client_send_id;
+              return mc && mc === incomingCsid;
+            });
+            if (csidIdx >= 0) {
+              const next = [...prev];
+              next[csidIdx] = { ...msg, _local_voice_url: prev[csidIdx]._local_voice_url };
+              return next;
+            }
+          }
+          if ((msg.message_type || "text") !== "voice") {
+            const optIdx = prev.findIndex((m) =>
+              m.id.startsWith("opt-") &&
+              m.sender_id === msg.sender_id &&
+              (m.message || "") === (msg.message || "") &&
+              (m.message_type || "text") === (msg.message_type || "text")
+            );
+            if (optIdx >= 0) {
+              const next = [...prev];
+              next[optIdx] = msg;
+              return next;
+            }
           }
           return [...prev, msg];
         });
