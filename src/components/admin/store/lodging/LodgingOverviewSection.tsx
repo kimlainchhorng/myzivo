@@ -22,12 +22,15 @@ export default function LodgingOverviewSection({ storeId }: { storeId: string })
         const { count } = await q;
         return count || 0;
       };
-      const [mealPlansCount, staffCount, channelConnectionsCount, promotionsCount, reviewsAwaitingReply] = await Promise.all([
+      const reviewsAwaitingReply = await (async () => {
+        const { count } = await (supabase as any).from("lodging_reviews").select("id", { count: "exact", head: true }).eq("store_id", storeId).is("reply", null);
+        return count || 0;
+      })().catch(() => 0);
+      const [mealPlansCount, staffCount, channelConnectionsCount, promotionsCount] = await Promise.all([
         counts("lodging_meal_plans"),
         counts("store_employees"),
         counts("lodging_channel_connections"),
         counts("lodging_promotions"),
-        counts("lodging_reviews", { reply_status: "pending" }).catch(() => 0),
       ]);
       return { mealPlansCount, staffCount, channelConnectionsCount, promotionsCount, reviewsAwaitingReply };
     },
