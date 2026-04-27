@@ -1216,6 +1216,8 @@ export default function ChatHubPage({ embedded = false }: { embedded?: boolean }
               </div>
             ) : null}
 
+            {!embedded && <Suspense fallback={null}><ChatStories /></Suspense>}
+
             <div className={cn("px-5 pb-3", embedded && "px-3 pb-2")}>
               <div className="relative">
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground" />
