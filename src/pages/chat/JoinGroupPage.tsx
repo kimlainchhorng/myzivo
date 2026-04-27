@@ -160,6 +160,7 @@ export default function JoinGroupPage() {
           {joining ? <Loader2 className="w-4 h-4 animate-spin" /> : "Join group"}
         </Button>
       </div>
+      </div>
     </div>
   );
 }
