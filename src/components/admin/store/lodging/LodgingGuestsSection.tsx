@@ -35,7 +35,10 @@ export default function LodgingGuestsSection({ storeId }: { storeId: string }) {
   };
 
   return (
-    <Card>
+    <div className="space-y-3">
+      <LodgingQuickJump active="lodge-guests" />
+      <LodgingSectionStatusBanner title="Guests CRM" icon={Users} countLabel="Saved guests" countValue={guests.length} fixLabel="Open Front Desk" fixTab="lodge-frontdesk" />
+      <Card>
       <CardHeader className="flex flex-row items-center justify-between">
         <CardTitle className="flex items-center gap-2"><Users className="h-5 w-5" /> Guests</CardTitle>
         <Button onClick={openNew} size="sm" className="gap-1"><Plus className="h-4 w-4" /> Add Guest</Button>
