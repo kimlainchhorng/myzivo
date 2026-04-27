@@ -755,10 +755,12 @@ export default function PersonalChat({ recipientId, recipientName, recipientAvat
 
     const upload = async () => {
       try {
-        const path = `${user.id}/${Date.now()}.webm`;
+        const contentType = blob.type || "audio/webm";
+        const ext = contentType.includes("mp4") ? "m4a" : "webm";
+        const path = `${user.id}/${Date.now()}.${ext}`;
         const { error: uploadError } = await supabase.storage
           .from("chat-media-files")
-          .upload(path, blob, { contentType: "audio/webm" });
+          .upload(path, blob, { contentType, upsert: true });
         if (uploadError) throw uploadError;
         const { data: urlData } = supabase.storage.from("chat-media-files").getPublicUrl(path);
         if (cancelled) return;
@@ -770,12 +772,14 @@ export default function PersonalChat({ recipientId, recipientName, recipientAvat
           voice_url: urlData.publicUrl,
           file_payload: { duration_ms: durationMs } as unknown as FileBubbleData,
         };
-        const { data, error: insertError } = await dbFrom("direct_messages")
-          .insert(insertData)
-          .select("id,sender_id,receiver_id,message,image_url,video_url,voice_url,message_type,delivered_at,reply_to_id,location_lat,location_lng,location_label,is_pinned,expires_at,created_at,is_read,locked_price_cents,edited_at,file_payload,gift_payload")
-          .single();
+        // Fire-and-forget insert; realtime echo replaces the optimistic bubble.
+        const { error: insertError } = await dbFrom("direct_messages").insert(insertData);
         if (insertError) throw insertError;
-        setMessages((prev) => prev.map((m) => m.id === optimisticId ? (data as Message) : m));
+        // Swap the optimistic local URL with the remote one so the bubble
+        // becomes the "real" message (no flicker, same playable audio).
+        setMessages((prev) => prev.map((m) => m.id === optimisticId
+          ? { ...m, voice_url: urlData.publicUrl }
+          : m));
         void sendChatPush("voice", "");
       } catch (e) {
         if (!cancelled) {
@@ -784,7 +788,8 @@ export default function PersonalChat({ recipientId, recipientName, recipientAvat
           toast.error("Failed to send voice note");
         }
       } finally {
-        URL.revokeObjectURL(localUrl);
+        // Defer revoke so the player keeps working until realtime row arrives.
+        setTimeout(() => URL.revokeObjectURL(localUrl), 30000);
         if (pendingVoiceOptimisticIdRef.current === optimisticId) pendingVoiceOptimisticIdRef.current = null;
         if (!cancelled) voice.clearBlob();
       }
@@ -796,7 +801,6 @@ export default function PersonalChat({ recipientId, recipientName, recipientAvat
 
     return () => {
       cancelled = true;
-      URL.revokeObjectURL(localUrl);
     };
   }, [voice.audioBlob, voice.isRecording, voice, user?.id, recipientId, replyTo?.id, scrollToBottom, sendChatPush]);
 
@@ -1489,15 +1493,20 @@ export default function PersonalChat({ recipientId, recipientName, recipientAvat
                       <div className={`flex ${isMe ? "justify-end" : "justify-start"}`}>
                         <div className={`max-w-[80%] min-w-[220px] px-3 py-2.5 rounded-2xl shadow-sm ${
                           isMe ? "bg-primary text-primary-foreground rounded-br-md" : "bg-muted text-foreground rounded-bl-md"
-                        } ${msg.id.startsWith("opt-") ? "opacity-60" : ""}`}>
+                        }`}>
                           <VoiceMessagePlayer
                             url={msg.voice_url}
                             isMe={isMe}
                             durationMs={(msg.file_payload as { duration_ms?: number } | null)?.duration_ms}
                           />
-                          <span className={`text-[9px] block text-right mt-1 ${isMe ? "text-primary-foreground/50" : "text-muted-foreground/70"}`}>
-                            {formatMsgTime(msg.created_at)}
-                          </span>
+                          <div className="flex items-center justify-end gap-1 mt-1">
+                            {msg.id.startsWith("opt-") && (
+                              <Loader2 className={`h-2.5 w-2.5 animate-spin ${isMe ? "text-primary-foreground/60" : "text-muted-foreground/60"}`} />
+                            )}
+                            <span className={`text-[9px] ${isMe ? "text-primary-foreground/50" : "text-muted-foreground/70"}`}>
+                              {formatMsgTime(msg.created_at)}
+                            </span>
+                          </div>
                         </div>
                       </div>
                     ) : msg.message_type === "file" && msg.file_payload ? (
