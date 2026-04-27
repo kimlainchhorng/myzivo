@@ -1,38 +1,33 @@
-## Polish the `/flights` desktop hero
+## Goal
+Eliminate the large empty gaps in the desktop header (visible between logo↔nav pills and nav pills↔language selector) so the header feels compact, like a real app bar.
 
-The current page has visual mismatches and readability issues. Fixes are scoped to two files.
+## Root Cause
+`Header.tsx` uses `justify-between` on a 3-child flex row (Logo | Nav | Actions). With only 3 small pills in the middle and small clusters on each side, the browser pushes them to the far edges of a `container mx-auto` (max ~1280px) — leaving hundreds of px of empty space on each side of the nav.
 
-### Issues to fix
-1. **"Search Flights" button text is washed out** — sky/cloud gradient behind the label kills contrast.
-2. **Hotel-themed headlines** appear in a flights page ("Dream Destinations / Best prices guaranteed", "Travel Your Way") — recycled from a multi-vertical hero slider.
-3. **"Departure → Return" label** looks awkward and is redundant since each field has its own label.
-4. **Inputs feel flat / placeholders too light** — "From where?", "To where?", "Select date" are barely visible.
-5. **Card has an oversized cyan blur glow** that washes out the search form on light backgrounds.
-6. **Slide indicators (3 dashes)** under the headline are unlabeled and look accidental.
-7. **Trust strip dots/icons** alignment is loose.
+## Changes (single file: `src/components/Header.tsx`)
 
-### Changes
+1. **Restructure flex layout** at line 106:
+   - Change `justify-between` → `justify-start gap-4`
+   - Group Logo + Nav together on the left
+   - Push Actions cluster to the right with `ml-auto`
 
-**`src/pages/FlightLanding.tsx`**
-- Replace the 3-slide rotating hero copy with flight-only headlines:
-  - "Search & Compare Flights" / "500+ airlines, one search"
-  - "Find Your Next Trip" / "Best fares, real-time pricing"
-  - "Fly Smarter with ZIVO" / "Trusted licensed partners"
-- Remove the slide indicator dots (or hide unless 2+ slides intentionally shown).
-- Reduce the outer card glow opacity from `opacity-40` to `opacity-20` and tighten blur.
-- Tighten trust strip spacing (`gap-4` instead of `gap-6`, smaller separator dots).
+   Result:
+   ```text
+   [ZIVO] [Flights][Hotels][Car Rental] ………………… [EN] [USD] [🔔] [Account]
+   ```
+   Logo and nav pills sit naturally next to each other (no big gap between them); only the actions float right.
 
-**`src/components/flight/FlightSearchFormPro.tsx`** (the actual form rendered on desktop)
-- Search button: replace cloudy gradient with solid `bg-primary` (or sky-600 → blue-700) + white bold text, add `shadow-md`, stronger hover state. Ensure `text-primary-foreground` not muted.
-- Replace "Departure → Return" group label with two clear field labels ("Departure date" / "Return date") that stay above each input individually.
-- Increase placeholder contrast: `placeholder:text-foreground/55` instead of muted/30.
-- Field backgrounds: `bg-muted/70` with `border-border` (not `border-border/30`) so fields read as inputs on light hero.
+2. **Compact the Account button** (lines 205-214):
+   - Remove the two-line "Account / Menu" stacked label
+   - Replace with a single compact "Account" label + chevron, matching the height of the other pills
+   - Keeps the avatar circle but reduces overall width by ~40px
 
-### Out of scope
-- Mobile hero (different component path)
-- Flight results page styling
-- Header/nav (already polished separately)
+3. **Tighten action cluster gap** (line 130): `gap-1.5` → `gap-1` so EN / USD / bell / account sit closer.
 
-### Files touched
-- `src/pages/FlightLanding.tsx`
-- `src/components/flight/FlightSearchFormPro.tsx`
+## Out of Scope
+- No changes to mobile header (already compact)
+- No color, icon, or font changes
+- No changes to FlightLanding hero spacing (already adjusted)
+
+## Files Modified
+- `src/components/Header.tsx`

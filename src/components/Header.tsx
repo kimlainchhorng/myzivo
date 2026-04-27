@@ -103,7 +103,7 @@ const Header = () => {
     <>
       <header className="fixed top-0 left-0 right-0 z-50 bg-background/80 backdrop-blur-xl border-b border-border/30 safe-area-top">
         <div className="container mx-auto px-3 sm:px-4">
-          <div className="flex items-center justify-between h-11 sm:h-12">
+          <div className="flex items-center gap-3 h-11 sm:h-12">
             {/* Logo */}
             <div className="flex items-center gap-2">
               <div 
@@ -127,7 +127,7 @@ const Header = () => {
             </nav>
 
             {/* Desktop Actions - Enhanced */}
-            <div className="hidden md:flex items-center gap-1.5">
+            <div className="hidden md:flex items-center gap-1 ml-auto">
               {/* Language Selector */}
               <Popover open={isLangOpen} onOpenChange={setIsLangOpen}>
                 <PopoverTrigger asChild>
@@ -202,15 +202,12 @@ const Header = () => {
                   {/* User Menu - Enhanced */}
                   <DropdownMenu>
                     <DropdownMenuTrigger asChild>
-                      <Button variant="ghost" size="sm" className="gap-2 ml-1 rounded-xl hover:bg-muted/50 pr-2 h-8 transition-all duration-150 hover:scale-[1.02] active:scale-[0.98]">
-                        <div className="w-7 h-7 rounded-lg bg-gradient-to-br from-primary/20 to-teal-400/10 flex items-center justify-center ring-2 ring-primary/20">
-                          <User className="h-3.5 w-3.5 text-primary" />
+                      <Button variant="ghost" size="sm" className="gap-1.5 ml-1 rounded-xl hover:bg-muted/50 px-2 h-8 transition-all duration-150 hover:scale-[1.02] active:scale-[0.98]">
+                        <div className="w-6 h-6 rounded-lg bg-gradient-to-br from-primary/20 to-teal-400/10 flex items-center justify-center ring-1 ring-primary/20">
+                          <User className="h-3 w-3 text-primary" />
                         </div>
-                        <div className="hidden lg:flex flex-col items-start">
-                          <span className="text-sm font-semibold">Account</span>
-                          <span className="text-[10px] text-muted-foreground">Menu</span>
-                        </div>
-                        <ChevronDown className="w-4 h-4 text-muted-foreground hidden lg:block" />
+                        <span className="hidden lg:inline text-[13px] font-semibold">Account</span>
+                        <ChevronDown className="w-3.5 h-3.5 text-muted-foreground hidden lg:block" />
                       </Button>
                     </DropdownMenuTrigger>
                     <DropdownMenuContent align="end" className="w-64 bg-card/95 backdrop-blur-xl border-border/50 shadow-2xl rounded-2xl p-2">
