@@ -48701,6 +48701,51 @@ export type Database = {
           },
         ]
       }
+      store_employee_rules: {
+        Row: {
+          applies_to: string
+          category: string
+          created_at: string
+          created_by: string
+          description: string
+          id: string
+          is_active: boolean
+          position: number
+          severity: string
+          store_id: string
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          applies_to?: string
+          category?: string
+          created_at?: string
+          created_by: string
+          description?: string
+          id?: string
+          is_active?: boolean
+          position?: number
+          severity?: string
+          store_id: string
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          applies_to?: string
+          category?: string
+          created_at?: string
+          created_by?: string
+          description?: string
+          id?: string
+          is_active?: boolean
+          position?: number
+          severity?: string
+          store_id?: string
+          title?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       store_employees: {
         Row: {
           created_at: string
