@@ -66,7 +66,12 @@ export default function LodgingFrontDeskSection({ storeId }: { storeId: string }
     exportFrontDeskQaPdf({ storeId, completion, qa, stats: liveStats, baseUrl: window.location.origin });
   };
 
-  const Column = ({ title, empty, items, action, color, emptyKind }: { title: string; empty: string; items: LodgeReservation[]; action?: { label: string; icon: any; status: ReservationStatus; msg: string }; color: string; emptyKind: keyof typeof FRONT_DESK_EMPTY_ACTIONS }) => (
+  const rebook = async (r: LodgeReservation) => {
+    setWalkInPrefill({ name: r.guest_name || "", room: r.room_number || null });
+    setWalkInOpen(true);
+  };
+
+  const Column = ({ title, empty, items, action, color, emptyKind, showRebook }: { title: string; empty: string; items: LodgeReservation[]; action?: { label: string; icon: any; status: ReservationStatus; msg: string }; color: string; emptyKind: keyof typeof FRONT_DESK_EMPTY_ACTIONS; showRebook?: boolean }) => (
     <div className="flex-1 min-w-0">
       <div className="flex items-center justify-between mb-2">
         <p className="font-semibold text-sm">{title}</p>
@@ -84,6 +89,12 @@ export default function LodgingFrontDeskSection({ storeId }: { storeId: string }
                 <Button size="sm" variant="outline" className="h-7 text-xs gap-1 mt-2 w-full"
                   onClick={() => act(r.id, action.status, action.msg)}>
                   <action.icon className="h-3 w-3" /> {action.label}
+                </Button>
+              )}
+              {showRebook && (
+                <Button size="sm" variant="ghost" className="h-7 text-[11px] gap-1 mt-1 w-full text-primary hover:bg-primary/10"
+                  onClick={() => rebook(r)}>
+                  <RefreshCw className="h-3 w-3" /> Quick rebook +1 night
                 </Button>
               )}
             </div>
@@ -106,13 +117,18 @@ export default function LodgingFrontDeskSection({ storeId }: { storeId: string }
         <div className="rounded-lg border border-border bg-muted/20 p-3">
           <p className="text-sm font-semibold text-foreground">What this section does</p>
           <p className="mt-1 text-xs text-muted-foreground">Tracks same-day arrivals, in-house guests, departures, key handoff, check-in, and check-out. Empty columns mean there is no live reservation data for today.</p>
-          <div className="mt-3 flex flex-wrap gap-2"><Button size="sm" onClick={() => goTab("lodge-reservations")}><UserPlus className="mr-2 h-4 w-4" /> Walk-in booking</Button><Button size="sm" variant="outline" onClick={() => goTab("lodge-rate-plans")}><DollarSign className="mr-2 h-4 w-4" /> Open rate plans</Button><Button size="sm" variant="outline" onClick={() => goTab("lodge-rooms")}><BedDouble className="mr-2 h-4 w-4" /> Open rooms</Button><Button size="sm" variant="outline" onClick={() => goTab("lodge-guest-requests")}><MessageSquareText className="mr-2 h-4 w-4" /> Guest requests</Button><Button size="sm" variant="outline" onClick={() => window.location.assign("/admin/lodging/qa-checklist")}><ListChecks className="mr-2 h-4 w-4" /> Run QA</Button><Button size="sm" variant="outline" onClick={() => window.location.assign("/admin/lodging/completion-verification")}><ClipboardCheck className="mr-2 h-4 w-4" /> Completion Verification</Button><Button size="sm" variant="outline" onClick={exportReport}><Download className="mr-2 h-4 w-4" /> Export Front Desk QA Report</Button></div>
+          <div className="mt-3 flex flex-wrap gap-2"><Button size="sm" onClick={() => { setWalkInPrefill({ name: "", room: "" }); setWalkInOpen(true); }}><UserPlus className="mr-2 h-4 w-4" /> Walk-in booking</Button><Button size="sm" variant="outline" onClick={() => goTab("lodge-rate-plans")}><DollarSign className="mr-2 h-4 w-4" /> Open rate plans</Button><Button size="sm" variant="outline" onClick={() => goTab("lodge-rooms")}><BedDouble className="mr-2 h-4 w-4" /> Open rooms</Button><Button size="sm" variant="outline" onClick={() => goTab("lodge-guest-requests")}><MessageSquareText className="mr-2 h-4 w-4" /> Guest requests</Button><Button size="sm" variant="outline" onClick={() => window.location.assign("/admin/lodging/qa-checklist")}><ListChecks className="mr-2 h-4 w-4" /> Run QA</Button><Button size="sm" variant="outline" onClick={() => window.location.assign("/admin/lodging/completion-verification")}><ClipboardCheck className="mr-2 h-4 w-4" /> Completion Verification</Button><Button size="sm" variant="outline" onClick={exportReport}><Download className="mr-2 h-4 w-4" /> Export Front Desk QA Report</Button></div>
+        </div>
+        <div className="relative">
+          <SearchIcon className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+          <Input value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Search by guest name or room number…" className="pl-9 h-9" />
         </div>
         <div className="flex flex-col md:flex-row gap-4">
           <Column title="Arrivals" empty="No arrivals today" items={arrivals} color="text-primary" emptyKind="arrivals" action={{ label: "Check In", icon: LogIn, status: "checked_in", msg: "Checked in" }} />
           <Column title="In-House" empty="No in-house guests" items={inHouse} color="text-primary" emptyKind="inHouse" />
-          <Column title="Departures" empty="No departures today" items={departures} color="text-primary" emptyKind="departures" action={{ label: "Check Out", icon: LogOut, status: "checked_out", msg: "Checked out" }} />
+          <Column title="Departures" empty="No departures today" items={departures} color="text-primary" emptyKind="departures" action={{ label: "Check Out", icon: LogOut, status: "checked_out", msg: "Checked out" }} showRebook />
         </div>
+        <WalkInBookingSheet storeId={storeId} open={walkInOpen} onOpenChange={setWalkInOpen} prefillGuestName={walkInPrefill.name} prefillRoom={walkInPrefill.room} />
       </CardContent>
     </Card>
   );
