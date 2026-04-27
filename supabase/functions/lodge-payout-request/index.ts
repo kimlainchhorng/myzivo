@@ -50,7 +50,7 @@ serve(async (req) => {
     // Verify store ownership
     const { data: store, error: se } = await supabase
       .from("store_profiles")
-      .select("id, owner_id, country, name")
+      .select("id, owner_id, market, name")
       .eq("id", store_id)
       .maybeSingle();
     if (se || !store) throw new Error("Store not found");
@@ -67,7 +67,7 @@ serve(async (req) => {
       throw new Error("Payout method does not belong to this store");
     }
 
-    const country = String(store.country || method.country_code || "US").toUpperCase().slice(0, 2);
+    const country = String(store.market || method.country_code || "US").toUpperCase().slice(0, 2);
     const rail = (method.rail || method.method_type || "bank_wire") as string;
 
     // Defence-in-depth: a Stripe rail must be in a Stripe-supported country.
