@@ -15,6 +15,7 @@ export function useVoiceRecorder() {
   const [isRecording, setIsRecording] = useState(false);
   const [audioBlob, setAudioBlob] = useState<Blob | null>(null);
   const [duration, setDuration] = useState(0);
+  const [durationMs, setDurationMs] = useState(0);
   const [elapsedMs, setElapsedMs] = useState(0);
   const recorder = useRef<MediaRecorder | null>(null);
   const chunks = useRef<Blob[]>([]);
@@ -122,10 +123,12 @@ export function useVoiceRecorder() {
         if (cancelled.current) {
           setAudioBlob(null);
           setDuration(0);
+          setDurationMs(0);
           resolve(null);
         } else {
           setAudioBlob(blob);
           setDuration(Math.floor(duration / 1000));
+          setDurationMs(duration);
           resolve({ blob, durationMs: duration, waveform: out, mimeType });
         }
       };
@@ -138,6 +141,7 @@ export function useVoiceRecorder() {
     await stop();
     setAudioBlob(null);
     setDuration(0);
+    setDurationMs(0);
   }, [stop]);
 
   const pause = useCallback(() => {
@@ -165,6 +169,7 @@ export function useVoiceRecorder() {
   const clearBlob = useCallback(() => {
     setAudioBlob(null);
     setDuration(0);
+    setDurationMs(0);
   }, []);
 
   return {
@@ -172,6 +177,7 @@ export function useVoiceRecorder() {
     elapsedMs,
     audioBlob,
     duration,
+    durationMs,
     start,
     stop,
     cancel,
