@@ -110,7 +110,8 @@ Deno.serve(async (req) => {
 
     const productId = plusSubscription.items.data[0]?.price?.product;
     const plan = productId === PLUS_ANNUAL_PRODUCT ? "annual" : productId === PLUS_PRO_PRODUCT ? "pro" : productId === PLUS_CHAT_PRODUCT ? "chat" : "monthly";
-    const subscriptionEnd = new Date(plusSubscription.current_period_end * 1000).toISOString();
+    const periodEnd = (plusSubscription as any).current_period_end ?? (plusSubscription as any).items?.data?.[0]?.current_period_end;
+    const subscriptionEnd = new Date(periodEnd * 1000).toISOString();
 
     logStep("Active ZIVO+ found", { plan, subscriptionEnd, subId: plusSubscription.id });
 
