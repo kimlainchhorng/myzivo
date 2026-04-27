@@ -35,17 +35,17 @@ import { Loader2 } from "lucide-react";
 const ChatHubPage = lazy(() => import("@/pages/ChatHubPage"));
 
 const NAV_ITEMS = [
-  { label: "Rides", icon: Car, path: "/rides", color: "text-emerald-500" },
-  { label: "Eats", icon: UtensilsCrossed, path: "/eats", color: "text-orange-500" },
-  { label: "Map", icon: MapPin, path: "/map", color: "text-red-500" },
+  { label: "Rides", icon: Car, path: "/rides", color: "text-foreground" },
+  { label: "Eats", icon: UtensilsCrossed, path: "/eats", color: "text-foreground" },
+  { label: "Map", icon: MapPin, path: "/map", color: "text-foreground" },
 ];
 
 const SERVICE_ITEMS = [
-  { label: "Flights", icon: Plane, path: "/flights", color: "text-sky-500" },
-  { label: "Hotels", icon: Hotel, path: "/hotels", color: "text-amber-500" },
-  { label: "Cars", icon: CarFront, path: "/cars", color: "text-violet-500" },
-  { label: "Delivery", icon: Package, path: "/delivery", color: "text-teal-500" },
-  { label: "Shopping", icon: ShoppingBag, path: "/grocery", color: "text-pink-500" },
+  { label: "Flights", icon: Plane, path: "/flights", color: "text-foreground" },
+  { label: "Hotels", icon: Hotel, path: "/hotels", color: "text-foreground" },
+  { label: "Cars", icon: CarFront, path: "/cars", color: "text-foreground" },
+  { label: "Delivery", icon: Package, path: "/delivery", color: "text-foreground" },
+  { label: "Shopping", icon: ShoppingBag, path: "/grocery", color: "text-foreground" },
 ];
 
 const MORE_ITEMS = [
