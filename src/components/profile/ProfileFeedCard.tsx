@@ -403,6 +403,7 @@ export default function ProfileFeedCard({
             onContextMenu={(e) => { e.preventDefault(); setShowReactionPicker(!showReactionPicker); }}
             aria-label={isLiked ? `Unlike post${formatCount(item.likes) ? `, ${formatCount(item.likes)} likes` : ""}` : `Like post${formatCount(item.likes) ? `, ${formatCount(item.likes)} likes` : ""}`}
             aria-pressed={isLiked}
+            style={{ WebkitTouchCallout: "none", WebkitUserSelect: "none", userSelect: "none", WebkitTapHighlightColor: "transparent" } as React.CSSProperties}
             className={cn(
               "min-h-[44px] h-11 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40 inline-flex items-center justify-center gap-1.5 px-2.5 rounded-full transition-all",
               isLiked

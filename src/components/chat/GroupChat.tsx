@@ -638,7 +638,12 @@ export default function GroupChat({ groupId, groupName, groupAvatar, onClose }: 
             const isOptimistic = msg.id.startsWith("opt-");
 
             return (
-              <div key={msg.id} className={`flex ${isMe ? "justify-end" : "justify-start"} gap-1.5`}>
+              <div
+                key={msg.id}
+                className={`chat-no-callout flex ${isMe ? "justify-end" : "justify-start"} gap-1.5`}
+                onContextMenu={(e) => e.preventDefault()}
+                style={{ WebkitTouchCallout: "none" } as React.CSSProperties}
+              >
                 {!isMe && (
                   <Avatar className="h-6 w-6 mt-1 shrink-0">
                     <AvatarImage src={senderAvatar || undefined} />

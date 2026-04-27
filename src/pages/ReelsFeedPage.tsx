@@ -2699,6 +2699,7 @@ function FeedCard({ item, currentUserId, onOpenFullscreen, autoPlayVideo, detail
             onContextMenu={(e) => { e.preventDefault(); setShowReactionPicker(!showReactionPicker); }}
             aria-label={liked ? `Unlike post${!item.hide_like_counts && formatCount(localLikes) ? `, ${formatCount(localLikes)} likes` : ""}` : `Like post${!item.hide_like_counts && formatCount(localLikes) ? `, ${formatCount(localLikes)} likes` : ""}`}
             aria-pressed={liked}
+            style={{ WebkitTouchCallout: "none", WebkitUserSelect: "none", userSelect: "none", WebkitTapHighlightColor: "transparent" } as React.CSSProperties}
             className="min-h-[44px] min-w-[36px] sm:min-w-[40px] flex items-center justify-center gap-1 group"
           >
             {selectedReaction ? (
