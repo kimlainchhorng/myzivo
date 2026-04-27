@@ -419,19 +419,7 @@ function DesktopCinematicHero() {
               </AnimatePresence>
             </motion.div>
 
-            {/* Slide indicators */}
-            <div className="flex justify-center gap-2 mt-4">
-              {heroSlides.map((_, i) => (
-                <button
-                  key={i}
-                  onClick={() => setCurrentSlide(i)}
-                  className={cn(
-                    "h-1.5 rounded-full transition-all duration-500",
-                    i === currentSlide ? "w-8 bg-primary" : "w-3 bg-muted-foreground/30 hover:bg-muted-foreground/50"
-                  )}
-                />
-              ))}
-            </div>
+            {/* Slide indicators removed for a cleaner hero */}
           </motion.div>
 
           {/* ── Search Form — 3D floating card ── */}
