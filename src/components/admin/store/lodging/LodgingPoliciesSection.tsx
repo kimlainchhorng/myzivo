@@ -135,7 +135,7 @@ export default function LodgingPoliciesSection({ storeId }: { storeId: string })
             </div>
             <div>
               <Label>Deposit (%)</Label>
-              <Input type="number" min={0} max={100} value={policyDraft.deposit_pct || 0} onChange={(e) => setPolicyDraft({ ...policyDraft, deposit_pct: parseInt(e.target.value || "0", 10) })} />
+              <Input type="number" min={0} max={100} value={policyDraft.deposit_percent || 0} onChange={(e) => setPolicyDraft({ ...policyDraft, deposit_percent: parseInt(e.target.value || "0", 10) })} />
             </div>
             <div>
               <Label>Child policy</Label>
