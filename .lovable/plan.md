@@ -1,64 +1,129 @@
-# Add "Software & Apps" Sidebar Section (Hotel & Shop)
+# Hotel & Resort Admin — Next-Level Upgrade
 
-Add a new sidebar entry that lets store owners (both hotels and regular shops) **download companion software / mobile apps** to operate their business — e.g., POS app, Front-Desk app, Housekeeping app, Driver app, Printer drivers.
+You asked to "complete update" the Hotel admin: fix where things sit in the sidebar, connect workflows side-by-side, make sure data is real (not mock), add more add-ons, and rename / reorder things that are in the wrong place.
 
-## What the user gets
+After auditing every Lodging section, **all 25 sections are already real Supabase-backed** (Promotions, Channel Manager, Reports, Reviews, Add-ons, Experiences, Transport, Wellness, Dining, etc. all use `useLodgingCatalog` / `useLodgeReports` / `useLodgeRooms` etc.). So this plan focuses on **structure, flow, naming, polish, and 4 net-new modules** rather than re-replacing real with real.
 
-A new **Software & Apps** item in the sidebar (visible to both lodging and non-lodging stores). Clicking it opens a dedicated tab with a clean grid of downloadable apps:
+---
 
-- **For Hotels:** Front Desk app, Housekeeping app, Property Manager (desktop), Receipt Printer driver
-- **For Shops/Eats/Auto-Repair:** POS app, Kitchen Display, Inventory Scanner, Receipt Printer driver
-- **For everyone:** ZIVO Driver app, ZIVO Manager mobile app
+## 1. Sidebar reorganization & renames
 
-Each card shows: app icon, name, short description, supported platforms (iOS / Android / Windows / macOS), version badge, and **Download** buttons (App Store, Google Play, .exe, .dmg). Coming-soon apps show a "Notify me" button instead.
+Current order mixes operations, sales, and property setup awkwardly. New grouping in `StoreOwnerLayout.tsx`:
 
-## Files to change
+```text
+MANAGE
+  Hotel Admin (setup progress chip)
+  Profile
+  Orders
+  Payment & Payouts
 
-**1. `src/components/admin/StoreOwnerLayout.tsx`**
-- Add `Download` icon import.
-- Insert a new sidebar item near the bottom of `navItems`:
-  ```ts
-  { id: "software", label: "Software & Apps", icon: Download }
-  ```
-- Place it after `livestream` so it appears for both lodging and non-lodging stores.
+HOTEL OPERATIONS                ← daily running
+  Front Desk          (was buried below)
+  Reservations
+  Calendar & Availability
+  Rooms & Rates
+  Rate Plans & Availability
+  Guests
+  Housekeeping
+  Maintenance
 
-**2. `src/lib/admin/storeTabRouting.ts`**
-- Add `"software"` to `BASE_TAB_IDS` so the tab is recognized by the router and survives reload via `?tab=software`.
+GUEST SERVICES                  ← what guests see / request
+  Guest Inbox
+  Guest Requests
+  Add-ons & Packages
+  Dining & Meal Plans
+  Experiences & Tours
+  Transport & Transfers
+  Spa & Wellness
+  Concierge Tasks      ← NEW
+  Lost & Found         ← NEW
 
-**3. `src/components/admin/store/SoftwareDownloadsSection.tsx` (NEW)**
-- Self-contained section component, accepts `storeCategory` prop.
-- Defines a `SOFTWARE_CATALOG` array with entries:
-  ```ts
-  { id, name, description, audience: "hotel" | "shop" | "all",
-    platforms: ["ios"|"android"|"windows"|"macos"],
-    downloads: { ios?, android?, windows?, macos? },
-    icon, status: "available" | "coming-soon", version }
-  ```
-- Filters catalog by `storeCategory` (hotel-only apps hidden for shops, and vice-versa).
-- Renders responsive grid (`grid-cols-1 md:grid-cols-2 xl:grid-cols-3`), v2026 high-density compact cards using `.zivo-card-organic`, Lucide icons, emerald accents.
-- Platform badges + Download buttons that open external links via `window.open(url, "_blank", "noopener,noreferrer")` (use `urlSafety` allowlist for store URLs).
+PROPERTY                        ← setup / identity (NEW group)
+  Property Profile
+  Amenities & Policies
+  Policies & Rules
+  Photos & Gallery     ← NEW (delegates to Property Profile media)
 
-**4. `src/pages/admin/AdminStoreEditPage.tsx`**
-- Add title entry: `activeTab === "software" ? "Software & Apps"` to `storeOwnerTitle`.
-- Add a new `<TabsContent value="software">` rendering `<SoftwareDownloadsSection storeCategory={form.category} />` near the other tab contents.
+SALES & GROWTH
+  Promotions & Discounts
+  Channel Manager
+  Reviews & Guest Feedback
+  Marketing & Ads
+  Live Stream
+  Reports
+  Customers
 
-## Initial catalog (placeholder links — owner can swap real URLs later)
+TEAM
+  Hotel Staff
+  Employees (collapsible: Payroll / Schedule / Time Clock / Attendance / Training / Documents / Rules)
 
-| App | Audience | Platforms |
+(Footer)
+  Settings
+  Software & Apps
+  Back to App
+  Sign Out
+```
+
+Renames: **"Hotel Operations" entry → "Dashboard"** (it's the overview, not a duplicate header). Move **Front Desk to the top of operations** (it's the most-used screen).
+
+## 2. Polish the Promotions screen (the one you screenshotted)
+
+Right now the page has 3 stat tiles, a small empty card, and a flat add button. Upgrade to v2026 high-density layout:
+
+- 4 stat tiles instead of 3: Active / Total redemptions / Code-based / **Revenue impact (from `lodging_promotions.redemptions_used × avg discount`)**
+- Filter chips above the table: **All · Code · Early bird · Last minute · Length of stay · Member · Mobile**
+- Quick-create presets row ("Early-bird 15%", "Last-minute 10%", "3+ nights free breakfast") that pre-fill the editor
+- Add a **"Pair with rate plan"** select inside the editor → writes `rate_plan_id` so promos auto-attach
+- Show inline performance bar per row (used / total)
+
+## 3. Cross-section workflow connectors ("side-to-side")
+
+Add a small `LodgingQuickJump` strip at the top of every operations section: 5 contextual chips that route to the next logical step (Front Desk → Today's arrivals → Housekeeping board → Guest Inbox → Reservations). Implemented once in `LodgingOperationsShared.tsx`, consumed by every section so flow is consistent.
+
+## 4. Four new add-on modules (real, Supabase-backed)
+
+| Module | Sidebar slot | Purpose |
 |---|---|---|
-| ZIVO Manager | all | iOS, Android |
-| ZIVO POS | shop | iOS, Android, Windows |
-| ZIVO Front Desk | hotel | iOS, iPad, Windows |
-| ZIVO Housekeeping | hotel | iOS, Android |
-| ZIVO Kitchen Display | shop (eats) | iPad, Android tablet |
-| ZIVO Driver | all | iOS, Android |
-| Receipt Printer Driver | all | Windows, macOS |
-| Inventory Scanner | shop | Android |
+| **Concierge Tasks** | Guest Services | Track guest-side requests beyond rooms (book taxi, restaurant reservation, gift). Table: `lodging_concierge_tasks`. |
+| **Lost & Found** | Guest Services | Log items, owner contact, status (found / claimed / shipped). Table: `lodging_lost_found`. |
+| **Photos & Gallery** | Property | Centralized media manager that re-uses property profile media bucket — drag-reorder, mark hero, alt text. |
+| **Revenue Pulse** widget | Dashboard | Top of `LodgingOverviewSection`: today's arrivals, occupancy, ADR, RevPAR, unpaid balances — pulled from existing `useLodgeReports` (no new tables). |
 
-Coming-soon entries get a disabled button + "Notify me" toast.
+New tables `lodging_concierge_tasks` and `lodging_lost_found` follow the same pattern as `lodging_experiences` (store_id, RLS by store ownership, soft-delete `active`).
 
-## Notes
+## 5. Real-data audit + safety pass
 
-- No backend changes needed — this is a static catalog page.
-- Follows existing sidebar conventions (Lucide icon, label string, id wired through `storeTabRouting`).
-- Honors the project's "no emojis, Lucide-only" icon standard and v2026 compact UI density.
+- Verify every section's empty states route to a real "create" action (not a dead text block) — fix any that don't via `LodgingNeedsSetupEmptyState`.
+- Add `useHostLodgingOpsToasts` (already exists) wiring to **all** lodging sections — currently only some pages mount it.
+- Confirm RLS on the 2 new tables (owner can CRUD own store; staff with `lodging_staff` membership can read).
+
+## 6. Icon corrections
+
+- Dashboard: `LayoutDashboard` (currently uses `Hotel`, conflicts with "Hotel Admin" chip)
+- Front Desk: `KeyRound` ✓ keep
+- Concierge Tasks: `BellRing`
+- Lost & Found: `Search`
+- Photos & Gallery: `Images`
+- Revenue Pulse: `TrendingUp`
+
+---
+
+## Technical notes
+
+**Files touched**
+- `src/components/admin/StoreOwnerLayout.tsx` — reorder `navItems`, rename, new icons
+- `src/lib/admin/storeTabRouting.ts` — add `lodge-concierge`, `lodge-lostfound`, `lodge-gallery`
+- `src/pages/admin/AdminStoreEditPage.tsx` — 3 new `<TabsContent>` blocks, title map entries
+- `src/components/admin/store/lodging/LodgingPromotionsSection.tsx` — 4-tile stats, filter chips, presets, performance bar, rate-plan link
+- `src/components/admin/store/lodging/LodgingOperationsShared.tsx` — add `LodgingQuickJump` strip
+- `src/components/admin/store/lodging/LodgingOverviewSection.tsx` — Revenue Pulse header
+- New: `LodgingConciergeTasksSection.tsx`, `LodgingLostFoundSection.tsx`, `LodgingGallerySection.tsx`
+- Migration: 2 new tables + RLS policies
+
+**No mock data** — all new modules read/write Supabase from day one via the existing `useLodgingCatalog` hook pattern.
+
+**Nothing removed.** Every existing tab keeps working; this is purely additive + reordering.
+
+---
+
+Approve and I'll implement in this order: (1) sidebar reorder + renames + icons, (2) Promotions polish, (3) QuickJump strip, (4) DB migration + 3 new sections, (5) Revenue Pulse on Dashboard.
