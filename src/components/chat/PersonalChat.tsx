@@ -724,7 +724,34 @@ export default function PersonalChat({ recipientId, recipientName, recipientAvat
     let cancelled = false;
     voiceUploadInFlightRef.current = true;
     const blob = voice.audioBlob;
-    const durationMs = Math.max(0, Math.round((voice.duration || 0) * 1000));
+      const durationMs = Math.max(0, Math.round(voice.durationMs || (voice.duration || 0) * 1000));
+      const localUrl = URL.createObjectURL(blob);
+      const optimisticId = `opt-voice-${Date.now()}`;
+      pendingVoiceOptimisticIdRef.current = optimisticId;
+
+      const optimisticVoice: Message = {
+        id: optimisticId,
+        sender_id: user.id,
+        receiver_id: recipientId,
+        message: "",
+        image_url: null,
+        video_url: null,
+        voice_url: localUrl,
+        _local_voice_url: localUrl,
+        message_type: "voice",
+        reply_to_id: replyTo?.id || null,
+        location_lat: null,
+        location_lng: null,
+        location_label: null,
+        is_pinned: false,
+        file_payload: { duration_ms: durationMs } as unknown as FileBubbleData,
+        expires_at: null,
+        created_at: new Date().toISOString(),
+        is_read: false,
+      };
+
+      setMessages((prev) => [...prev, optimisticVoice]);
+      scrollToBottom(true);
 
     const upload = async () => {
       try {
@@ -735,16 +762,30 @@ export default function PersonalChat({ recipientId, recipientName, recipientAvat
         if (error) throw error;
         const { data: urlData } = supabase.storage.from("chat-media-files").getPublicUrl(path);
         if (cancelled) return;
-        await handleSendRef.current?.({
-          voiceUrl: urlData.publicUrl,
-          filePayload: { duration_ms: durationMs } as unknown as FileBubbleData,
-        });
+        const insertData: DirectMessageInsert = {
+          sender_id: user.id,
+          receiver_id: recipientId,
+          message: "",
+          message_type: "voice",
+          voice_url: urlData.publicUrl,
+          file_payload: { duration_ms: durationMs } as unknown as FileBubbleData,
+        };
+        const { data, error } = await dbFrom("direct_messages")
+          .insert(insertData)
+          .select("id,sender_id,receiver_id,message,image_url,video_url,voice_url,message_type,delivered_at,reply_to_id,location_lat,location_lng,location_label,is_pinned,expires_at,created_at,is_read,locked_price_cents,edited_at,file_payload,gift_payload")
+          .single();
+        if (error) throw error;
+        setMessages((prev) => prev.map((m) => m.id === optimisticId ? (data as Message) : m));
+        void sendChatPush("voice", "");
       } catch (e) {
         if (!cancelled) {
           console.warn("[voice] upload/send failed", e);
+          setMessages((prev) => prev.filter((m) => m.id !== optimisticId));
           toast.error("Failed to send voice note");
         }
       } finally {
+        URL.revokeObjectURL(localUrl);
+        if (pendingVoiceOptimisticIdRef.current === optimisticId) pendingVoiceOptimisticIdRef.current = null;
         if (!cancelled) voice.clearBlob();
       }
     };
@@ -755,8 +796,9 @@ export default function PersonalChat({ recipientId, recipientName, recipientAvat
 
     return () => {
       cancelled = true;
+      URL.revokeObjectURL(localUrl);
     };
-  }, [voice.audioBlob, voice.isRecording, voice, user?.id]);
+  }, [voice.audioBlob, voice.isRecording, voice, user?.id, recipientId, replyTo?.id, scrollToBottom, sendChatPush]);
 
   // Image upload
   const handleImageSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
