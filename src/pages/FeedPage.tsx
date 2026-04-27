@@ -1053,7 +1053,7 @@ function SoundOverlay({
 
       const { data: userPosts } = await db
         .from("user_posts")
-        .select("id, media_urls, media_type, profiles(display_name)")
+        .select("id, media_urls, media_type, profiles(full_name, username)")
         .eq("audio_name", soundName)
         .order("created_at", { ascending: false })
         .limit(30);
