@@ -24,6 +24,7 @@ export interface UploadVoiceResult {
 }
 
 const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL as string;
+const SUPABASE_ANON_KEY = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY as string;
 
 export class UploadAbortedError extends Error {
   constructor() {
@@ -57,8 +58,11 @@ export async function uploadVoiceWithProgress(opts: UploadVoiceOpts): Promise<Up
 
   return await new Promise<UploadVoiceResult>((resolve, reject) => {
     const xhr = new XMLHttpRequest();
-    xhr.open("POST", url, true);
+    // PUT upserts (POST returns 409 on duplicate). Storage REST requires BOTH
+    // the project anon `apikey` header and the user's Bearer token.
+    xhr.open("PUT", url, true);
     xhr.setRequestHeader("Authorization", `Bearer ${accessToken}`);
+    if (SUPABASE_ANON_KEY) xhr.setRequestHeader("apikey", SUPABASE_ANON_KEY);
     xhr.setRequestHeader("x-upsert", "true");
     xhr.setRequestHeader("cache-control", `max-age=${cacheControl}`);
     if (contentType) xhr.setRequestHeader("Content-Type", contentType);

@@ -1,54 +1,31 @@
-## Goal
+## Diagnosis
 
-Add a lightweight runtime debug mode that surfaces the full last upload/insert error reason in the failed voice bubble. Items 1–4 in the request are already implemented in the current code (cancellable jobs with abort-on-unmount/discard, in-bubble progress + percentage, Retry/Discard with exponential backoff, orphaned-storage cleanup + revoked object URLs), so this plan only covers the new debug-mode work.
+The voice note in your screenshot shows "Failed to send" immediately after recording. The cause is in the new XHR-based upload helper (`src/lib/voiceUpload.ts`) introduced in the previous turn:
 
-## Changes
+1. **Missing `apikey` header** — Supabase Storage's REST endpoint requires *both* the user's `Authorization: Bearer <access_token>` *and* the project `apikey` header. We only send the Bearer token, so the gateway rejects the request before it reaches the bucket policies.
+2. **Wrong HTTP verb** — we send `POST` with `x-upsert: true`. `POST` on Storage REST always *creates* and returns 409 if the key exists. The correct verb for upsert is `PUT`. Even though duplicate paths are rare here (the path includes `Date.now()` + a random `client_send_id`), the `apikey` issue alone is enough to fail every request.
 
-### 1. New `src/lib/voiceDebug.ts`
+The retry logic correctly retries the failure 3 times, then surfaces the error — exactly what the screenshot shows.
 
-A tiny module that owns a single boolean flag persisted in `localStorage` under the key `zivo:voice-debug`. Exports:
+## Fix
 
-- `isVoiceDebugEnabled(): boolean` — cached read.
-- `setVoiceDebugEnabled(on: boolean): void` — persists + updates cache.
-- `vlog(...args)` — `console.log` only when debug is on.
-- `vwarn(...args)` — always warns (failures should always log).
+Update `src/lib/voiceUpload.ts`:
 
-Also installs `window.__zivoVoiceDebug(true | false)` so the flag can be flipped from the browser console without DevTools digging.
+1. Read `VITE_SUPABASE_PUBLISHABLE_KEY` at module load.
+2. Switch the request from `POST` → `PUT` (so `x-upsert: true` works as intended).
+3. Add the required `apikey: <anon key>` header alongside the existing `Authorization` header.
 
-### 2. Wire debug logs into the voice send pipeline
+Tiny diff, single file, no DB changes, no UI changes. Once the request includes both headers, the upload will succeed, the optimistic bubble will swap to the server URL, and the realtime echo will dedupe normally.
 
-In `src/components/chat/PersonalChat.tsx` and `src/components/chat/GroupChat.tsx`, inside `runVoiceJob`:
+## Verification after the fix
 
-- `vlog("send:start", { clientSendId, sizeBytes, durationMs })` before upload.
-- `vlog("upload:progress", { clientSendId, ratio })` (throttled to log only on 25/50/75/100% to avoid console spam).
-- `vlog("upload:done", { clientSendId, publicUrl })` after upload.
-- `vlog("insert:done", { clientSendId })` after insert.
-- On retriable failure inside `retryWithBackoff`, log `vlog("retry", { attempt, error })`.
-- On terminal failure, `vwarn("failed", { clientSendId, step, error })` — replaces the current `console.warn`.
+After deploying, recording a voice note should:
+- Show the bubble instantly with the progress strip filling 0 → 100%.
+- Flip to the normal "sent" state (speed pill replaces the spinner).
+- Network tab should show a `PUT https://<project>.supabase.co/storage/v1/object/chat-media-files/...` returning `200`.
 
-### 3. Surface error reason in the failed bubble
-
-Update `src/components/chat/VoiceMessagePlayer.tsx`:
-
-- Read `isVoiceDebugEnabled()` once per render.
-- When `uploadStatus === "failed"`:
-  - Default behavior (debug off): keep the current compact `Failed to send` label with the full error in the `title` tooltip (already implemented).
-  - Debug on: render an additional small line under the bubble row showing `uploadError` in `text-[10px] text-destructive/80 break-all max-w-[240px]`, so the user can read the full reason inline (e.g., `403 row-level security`, `Network error`, `payload too large`).
-- Also add a tiny "i" info icon button next to the Failed label that, when tapped, copies `uploadError` to clipboard and shows a toast — useful for sharing diagnostics even when debug mode is off.
-
-### 4. Settings entry point (optional, in-app toggle)
-
-Add a single switch in `src/components/chat/settings/` (or the nearest existing chat-settings sheet — to be confirmed during implementation): "Show voice send error details". Bound to `isVoiceDebugEnabled` / `setVoiceDebugEnabled`. This avoids requiring users to open the browser console.
+If a failure still happens after this fix, the bubble's Info button copies the exact error reason to the clipboard so we can pinpoint a deeper cause (RLS on the bucket, content-length, etc.).
 
 ## Files
 
-- `src/lib/voiceDebug.ts` — new
-- `src/components/chat/VoiceMessagePlayer.tsx` — debug-aware error rendering + copy button
-- `src/components/chat/PersonalChat.tsx` — `vlog`/`vwarn` calls in `runVoiceJob`
-- `src/components/chat/GroupChat.tsx` — same, mirrored
-- One existing chat-settings component — add the toggle row (file picked during implementation based on what exists)
-
-## Out of scope
-
-- No new persisted error log table — failures live in memory and are dropped on reload (matches the current optimistic-bubble lifecycle).
-- No changes to the upload, retry, abort, or cleanup logic — those are already in place.
+- `src/lib/voiceUpload.ts` — change `POST` to `PUT`, add `apikey` header, read anon key from env.
