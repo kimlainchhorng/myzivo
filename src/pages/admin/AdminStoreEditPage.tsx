@@ -3761,6 +3761,9 @@ export default function AdminStoreEditPage() {
               <TabsContent value="lodge-payouts" data-testid="lodging-tab-lodge-payouts"><LodgingPayoutsSection storeId={storeId!} /></TabsContent>
               <TabsContent value="lodge-inbox" data-testid="lodging-tab-lodge-inbox"><LodgingInboxSection storeId={storeId!} /></TabsContent>
               <TabsContent value="lodge-staff" data-testid="lodging-tab-lodge-staff"><LodgingStaffSection storeId={storeId!} /></TabsContent>
+              <TabsContent value="lodge-concierge" data-testid="lodging-tab-lodge-concierge"><LodgingConciergeTasksSection storeId={storeId!} /></TabsContent>
+              <TabsContent value="lodge-lostfound" data-testid="lodging-tab-lodge-lostfound"><LodgingLostFoundSection storeId={storeId!} /></TabsContent>
+              <TabsContent value="lodge-gallery" data-testid="lodging-tab-lodge-gallery"><LodgingGallerySection storeId={storeId!} /></TabsContent>
             </>
           )}
 
