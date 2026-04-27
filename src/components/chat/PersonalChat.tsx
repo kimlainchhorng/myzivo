@@ -59,6 +59,7 @@ import CallEventBubble from "./CallEventBubble";
 const CallScreen = lazy(() => import("./CallScreen"));
 const CallPiP = lazy(() => import("./CallPiP"));
 const VoiceMessagePlayer = lazy(() => import("./VoiceMessagePlayer"));
+const VoiceMessageBubble = lazy(() => import("./VoiceMessageBubble"));
 const LocationShareBubble = lazy(() => import("./LocationShareBubble"));
 const ChatSearch = lazy(() => import("./ChatSearch"));
 const ChatNotificationSettings = lazy(() => import("./ChatNotificationSettings"));
