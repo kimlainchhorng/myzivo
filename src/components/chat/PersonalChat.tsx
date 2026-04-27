@@ -73,7 +73,7 @@ const LockedMediaPricePicker = lazy(() => import("./LockedMediaPricePicker"));
 const ChatContactInfo = lazy(() => import("./ChatContactInfo"));
 const MessageScheduler = lazy(() => import("./MessageScheduler"));
 const PinnedMessagesPanel = lazy(() => import("./PinnedMessagesPanel"));
-const GroupCallLauncher = lazy(() => import("./call/GroupCallLauncher"));
+
 import type { EffectType } from "./messageEffectUtils";
 import { detectMessageEffect } from "./messageEffectUtils";
 const MessageEffects = lazy(() => import("./MessageEffects"));
