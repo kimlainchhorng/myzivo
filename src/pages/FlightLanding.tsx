@@ -380,7 +380,7 @@ function DesktopCinematicHero() {
       </div>
 
       {/* ── Content ── */}
-      <div className="relative z-10 pt-16 sm:pt-20">
+      <div className="relative z-10 pt-14 sm:pt-16">
         <div className="container mx-auto px-4">
           {/* Hero text */}
           <motion.div className="max-w-3xl mx-auto text-center mb-6" style={{ y: textY }}>

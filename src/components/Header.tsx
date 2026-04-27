@@ -66,9 +66,9 @@ function Nav3DButton({ item }: { item: Nav3DItem }) {
       onMouseMove={onMouseMove}
       onMouseLeave={onMouseLeave}
       className={cn(
-        "relative flex items-center gap-2 px-4 py-2 rounded-2xl text-sm font-bold text-white overflow-hidden",
+        "relative flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-[13px] font-bold text-white overflow-hidden",
         "transition-all duration-300 ease-out will-change-transform",
-        `shadow-lg ${item.shadow} hover:shadow-xl ring-1 ${item.ring}`
+        `shadow-md ${item.shadow} hover:shadow-lg ring-1 ${item.ring}`
       )}
       style={{ transformStyle: "preserve-3d" }}
     >
@@ -82,7 +82,7 @@ function Nav3DButton({ item }: { item: Nav3DItem }) {
       {/* Gradient overlay */}
       <div className={cn("absolute inset-0 bg-gradient-to-r", item.gradient)} />
       {/* Content */}
-      <Icon className="w-4 h-4 relative z-10 drop-shadow-md" />
+      <Icon className="w-3.5 h-3.5 relative z-10 drop-shadow-md" />
       <span className="relative z-10 drop-shadow-md">{item.label}</span>
     </Link>
   );
@@ -103,7 +103,7 @@ const Header = () => {
     <>
       <header className="fixed top-0 left-0 right-0 z-50 bg-background/80 backdrop-blur-xl border-b border-border/30 safe-area-top">
         <div className="container mx-auto px-3 sm:px-4">
-          <div className="flex items-center justify-between h-14 sm:h-16 md:h-20">
+          <div className="flex items-center justify-between h-12 sm:h-14 md:h-14">
             {/* Logo */}
             <div className="flex items-center gap-2">
               <div 
