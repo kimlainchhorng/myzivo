@@ -82,7 +82,7 @@ function Nav3DButton({ item }: { item: Nav3DItem }) {
       {/* Gradient overlay */}
       <div className={cn("absolute inset-0 bg-gradient-to-r", item.gradient)} />
       {/* Content */}
-      <Icon className="w-4 h-4 relative z-10 drop-shadow-md" />
+      <Icon className="w-3.5 h-3.5 relative z-10 drop-shadow-md" />
       <span className="relative z-10 drop-shadow-md">{item.label}</span>
     </Link>
   );
