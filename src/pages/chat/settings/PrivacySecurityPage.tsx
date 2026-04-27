@@ -1,4 +1,5 @@
 import { useNavigate } from "react-router-dom";
+import { useSmartBack } from "@/lib/smartBack";
 import { ArrowLeft, ShieldCheck, Smartphone, KeyRound, Lock, Bell, AtSign, Eye, Phone, Forward, Image, Users } from "lucide-react";
 import { Switch } from "@/components/ui/switch";
 import PrivacyMatrixRow from "@/components/chat/settings/PrivacyMatrixRow";
@@ -9,6 +10,7 @@ import { usePasscode } from "@/hooks/usePasscode";
 
 export default function PrivacySecurityPage() {
   const navigate = useNavigate();
+  const goBack = useSmartBack("/chat");
   const { settings, update } = usePrivacy();
   const { sessions } = useSessions();
   const { isEnabled: twoStepOn } = useTwoStep();
@@ -18,7 +20,7 @@ export default function PrivacySecurityPage() {
     <div className="min-h-screen bg-background pb-[env(safe-area-inset-bottom)]">
       <div className="sticky top-0 z-10 bg-background/95 backdrop-blur border-b border-border safe-area-top">
         <div className="flex items-center gap-2 h-14 px-2">
-          <button onClick={() => navigate(-1)} aria-label="Back" className="p-2 -ml-2 rounded-full hover:bg-muted">
+          <button onClick={goBack} aria-label="Back" className="p-2 -ml-2 rounded-full hover:bg-muted">
             <ArrowLeft className="w-5 h-5" />
           </button>
           <h1 className="text-base font-semibold">Privacy & Security</h1>

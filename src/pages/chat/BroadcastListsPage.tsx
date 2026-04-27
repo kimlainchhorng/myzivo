@@ -2,6 +2,7 @@
  * BroadcastListsPage — Manage broadcast lists and send a broadcast message.
  */
 import { useState } from "react";
+import { useSmartBack } from "@/lib/smartBack";
 import { useNavigate } from "react-router-dom";
 import { useBroadcastLists } from "@/hooks/useBroadcastLists";
 import ChevronLeft from "lucide-react/dist/esm/icons/chevron-left";
@@ -13,6 +14,7 @@ import X from "lucide-react/dist/esm/icons/x";
 
 export default function BroadcastListsPage() {
   const nav = useNavigate();
+  const goBack = useSmartBack("/chat");
   const { lists, isLoading, deleteList, sendBroadcast } = useBroadcastLists();
   const [composeFor, setComposeFor] = useState<string | null>(null);
   const [text, setText] = useState("");
@@ -28,8 +30,8 @@ export default function BroadcastListsPage() {
 
   return (
     <div className="min-h-screen bg-background pb-20">
-      <header className="sticky top-0 z-10 bg-background/85 backdrop-blur-xl border-b border-border/40 px-3 py-3 flex items-center gap-2">
-        <button onClick={() => nav(-1)} className="p-1.5 rounded-full hover:bg-muted/60">
+      <header className="sticky top-0 z-10 bg-background/85 backdrop-blur-xl border-b border-border/40 pt-safe px-3 py-3 flex items-center gap-2">
+        <button onClick={goBack} className="p-1.5 rounded-full hover:bg-muted/60">
           <ChevronLeft className="w-5 h-5" />
         </button>
         <h1 className="text-base font-semibold flex-1">Broadcast Lists</h1>

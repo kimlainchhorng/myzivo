@@ -1,4 +1,5 @@
 import { useNavigate } from "react-router-dom";
+import { useSmartBack } from "@/lib/smartBack";
 import { ArrowLeft, LogIn, LogOut, ShieldOff, KeyRound, AlertTriangle, ShieldAlert } from "lucide-react";
 import { useLoginAlerts, type LoginAlert } from "@/hooks/useLoginAlerts";
 import { formatDistanceToNow } from "date-fns";
@@ -23,13 +24,14 @@ const LABELS: Record<LoginAlert["event"], string> = {
 
 export default function LoginAlertsPage() {
   const navigate = useNavigate();
+  const goBack = useSmartBack("/chat");
   const { alerts, loading } = useLoginAlerts(50);
 
   return (
     <div className="min-h-screen bg-background pb-[env(safe-area-inset-bottom)]">
       <div className="sticky top-0 z-10 bg-background/95 backdrop-blur border-b border-border safe-area-top">
         <div className="flex items-center gap-2 h-14 px-2">
-          <button onClick={() => navigate(-1)} aria-label="Back" className="p-2 -ml-2 rounded-full hover:bg-muted">
+          <button onClick={goBack} aria-label="Back" className="p-2 -ml-2 rounded-full hover:bg-muted">
             <ArrowLeft className="w-5 h-5" />
           </button>
           <h1 className="text-base font-semibold">Login alerts</h1>

@@ -3,6 +3,7 @@
  * Add via @username, view, favorite, rename, remove.
  */
 import { useMemo, useState } from "react";
+import { useSmartBack } from "@/lib/smartBack";
 import { useNavigate } from "react-router-dom";
 import { ArrowLeft, Search, UserPlus, Star, MoreVertical, MessageCircle, Trash2, AtSign, Phone, Inbox, MapPin, Lock } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -17,6 +18,7 @@ import { toast } from "sonner";
 
 export default function ContactsPage() {
   const navigate = useNavigate();
+  const goBack = useSmartBack("/chat");
   const { contacts, loading, toggleFavorite, remove } = useContacts();
   const { username } = useUsername();
   const [q, setQ] = useState("");
@@ -35,7 +37,7 @@ export default function ContactsPage() {
   return (
     <div className="min-h-[100dvh] bg-background">
       <header className="sticky top-0 z-20 bg-background/80 backdrop-blur border-b px-4 py-3 flex items-center gap-2 safe-area-top">
-        <button onClick={() => navigate(-1)} className="w-9 h-9 flex items-center justify-center rounded-full hover:bg-muted">
+        <button onClick={goBack} className="w-9 h-9 flex items-center justify-center rounded-full hover:bg-muted">
           <ArrowLeft className="w-5 h-5" />
         </button>
         <h1 className="text-xl font-bold flex-1">Contacts</h1>
