@@ -245,24 +245,38 @@ export function LodgingRoomCard({
             >
               View details <ChevronRight className="h-3 w-3" />
             </button>
-            <p className="text-xl font-extrabold text-foreground mt-0.5 leading-none">
-              ${(baseRateCents / 100).toFixed(2)}
-              <span className="text-xs font-medium text-muted-foreground"> /night</span>
-            </p>
-            {(weeklyDiscountPct > 0 || monthlyDiscountPct > 0) && (
-              <div className="flex flex-wrap gap-1 mt-1.5">
-                {weeklyDiscountPct > 0 && (
-                  <span className="text-[10px] px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-100 font-bold dark:bg-emerald-500/10 dark:text-emerald-300 dark:border-emerald-500/20">
-                    −{weeklyDiscountPct}% weekly
-                  </span>
-                )}
-                {monthlyDiscountPct > 0 && (
-                  <span className="text-[10px] px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-100 font-bold dark:bg-emerald-500/10 dark:text-emerald-300 dark:border-emerald-500/20">
-                    −{monthlyDiscountPct}% monthly
-                  </span>
-                )}
-              </div>
-            )}
+            {(() => {
+              const price = baseRateCents / 100;
+              const rack = Math.round(price * 1.25); // 20% off rack rate
+              const discountPct = Math.round(((rack - price) / rack) * 100);
+              return (
+                <>
+                  <div className="flex items-baseline gap-1.5 mt-0.5 leading-none">
+                    <span className="text-xl font-extrabold text-foreground">${price.toFixed(0)}</span>
+                    <span className="text-[11px] font-medium text-muted-foreground">/night</span>
+                  </div>
+                  <div className="flex items-baseline gap-1.5 mt-1 leading-none">
+                    <span className="text-[12px] font-semibold text-red-600 dark:text-red-400 line-through">${rack}</span>
+                    <span className="text-[12px] font-bold text-foreground">${price.toFixed(0)}</span>
+                  </div>
+                  <div className="flex flex-wrap gap-1 mt-1.5">
+                    <span className="text-[10px] px-2 py-0.5 rounded-md bg-emerald-600 text-white font-bold">
+                      {discountPct}% off
+                    </span>
+                    <span className="text-[10px] px-2 py-0.5 rounded-md bg-emerald-600 text-white font-bold">
+                      Getaway Deal
+                    </span>
+                  </div>
+                  {(weeklyDiscountPct > 0 || monthlyDiscountPct > 0) && (
+                    <p className="text-[10px] text-muted-foreground mt-1.5 leading-tight">
+                      {weeklyDiscountPct > 0 && <>−{weeklyDiscountPct}% for 7+ nights</>}
+                      {weeklyDiscountPct > 0 && monthlyDiscountPct > 0 && " · "}
+                      {monthlyDiscountPct > 0 && <>−{monthlyDiscountPct}% for 28+ nights</>}
+                    </p>
+                  )}
+                </>
+              );
+            })()}
           </div>
           <Button
             onClick={onReserve}
