@@ -22,6 +22,7 @@ import { motion } from "framer-motion";
 import { toast } from "sonner";
 import { isVoiceDebugEnabled, setVoiceDebugEnabled, subscribeVoiceDebug } from "@/lib/voiceDebug";
 import { getVoiceUploadDiagnostics } from "@/lib/voiceUpload";
+import VoiceBubbleActionSheet from "./VoiceBubbleActionSheet";
 
 export type VoiceUploadStatus = "uploading" | "sent" | "failed";
 export type VoiceUploadPhase = "preflight" | "upload" | "insert";
