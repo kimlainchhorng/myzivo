@@ -10,6 +10,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { LoadingPanel, NextActions, SectionShell, StatCard } from "./LodgingOperationsShared";
 import { CatalogTable, EditorDialog } from "./CatalogTable";
 import { useLodgingCatalog } from "@/hooks/lodging/useLodgingCatalog";
+import LodgingQuickJump from "./LodgingQuickJump";
+import LodgingSectionStatusBanner from "./LodgingSectionStatusBanner";
 import { useLodgeRooms } from "@/hooks/lodging/useLodgeRooms";
 import { toast } from "sonner";
 
@@ -67,6 +69,8 @@ export default function LodgingChannelManagerSection({ storeId }: { storeId: str
 
   return (
     <SectionShell title="Channel Manager" subtitle="Sync availability with Booking.com, Expedia, Airbnb, and Agoda using iCal import/export." icon={Link2}>
+      <LodgingQuickJump active="lodge-channels" />
+      <LodgingSectionStatusBanner title="Channel Manager" icon={Link2} countLabel="Active connections" countValue={rows.filter((r) => r.active !== false).length} fixLabel="Open rooms" fixTab="lodge-rooms" />
       {list.isLoading ? <LoadingPanel /> : <>
         <div className="grid gap-3 sm:grid-cols-4">
           <StatCard label="Connections" value={String(rows.length)} icon={Link2} />

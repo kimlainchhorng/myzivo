@@ -8,6 +8,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Badge } from "@/components/ui/badge";
 import { LoadingPanel, SectionShell, StatCard, NextActions } from "./LodgingOperationsShared";
 import { CatalogTable, EditorDialog } from "./CatalogTable";
+import LodgingQuickJump from "./LodgingQuickJump";
+import LodgingSectionStatusBanner from "./LodgingSectionStatusBanner";
 import { toast } from "sonner";
 
 interface StaffRow {
@@ -94,6 +96,8 @@ export default function LodgingStaffSection({ storeId }: { storeId: string }) {
 
   return (
     <SectionShell title="Hotel Staff" subtitle="Front desk, housekeeping, F&B, spa, maintenance — assign roles and shifts." icon={Users}>
+      <LodgingQuickJump active="lodge-staff" />
+      <LodgingSectionStatusBanner title="Hotel Staff" icon={Users} countLabel="Active staff" countValue={rows.filter((s) => (s.status ?? "active") !== "inactive").length} fixLabel="Open Housekeeping" fixTab="lodge-housekeeping" />
       <div className="grid gap-3 sm:grid-cols-4">
         <StatCard label="Total staff" value={String(rows.length)} icon={Users} />
         <StatCard label="Front desk" value={String(byRole.find((r) => r.v === "front_desk")?.count || 0)} icon={KeyRound} />

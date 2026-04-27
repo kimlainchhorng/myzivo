@@ -7,6 +7,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { LoadingPanel, NextActions, SectionShell, StatCard, money } from "./LodgingOperationsShared";
 import { CatalogTable, EditorDialog } from "./CatalogTable";
 import { useLodgingCatalog } from "@/hooks/lodging/useLodgingCatalog";
+import LodgingQuickJump from "./LodgingQuickJump";
+import LodgingSectionStatusBanner from "./LodgingSectionStatusBanner";
 
 interface MealPlan {
   id: string;
@@ -41,6 +43,8 @@ export default function LodgingDiningSection({ storeId }: { storeId: string }) {
 
   return (
     <SectionShell title="Dining & Meal Plans" subtitle="Configure board plans (BB/HB/FB/AI), serving hours, and per-guest pricing." icon={Utensils}>
+      <LodgingQuickJump active="lodge-dining" />
+      <LodgingSectionStatusBanner title="Dining & Meal Plans" icon={Utensils} countLabel="Active meal plans" countValue={totalActive} fixLabel="Open rate plans" fixTab="lodge-rate-plans" />
       {list.isLoading ? <LoadingPanel /> : <>
         <div className="grid gap-3 sm:grid-cols-3">
           <StatCard label="Meal plans" value={String(rows.length)} icon={Utensils} />

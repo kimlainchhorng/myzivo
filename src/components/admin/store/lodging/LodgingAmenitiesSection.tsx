@@ -19,6 +19,8 @@ import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/component
 import { Hotel, Search, ChevronDown, ChevronRight, Tag, Save, X } from "lucide-react";
 import { toast } from "sonner";
 import { useLodgeAmenities } from "@/hooks/lodging/useLodgeAmenities";
+import LodgingQuickJump from "./LodgingQuickJump";
+import LodgingSectionStatusBanner from "./LodgingSectionStatusBanner";
 import {
   AMENITY_CATEGORIES,
   TOTAL_AMENITY_COUNT,
@@ -277,6 +279,8 @@ export default function LodgingAmenitiesSection({ storeId }: { storeId: string }
 
   return (
     <div className="space-y-3 pb-20">
+      <LodgingQuickJump active="lodge-amenities" />
+      <LodgingSectionStatusBanner title="Amenities & Policies" icon={Hotel} countLabel="Selected amenities" countValue={`${counts.selected}/${counts.total}`} fixLabel="Open policies" fixTab="lodge-policies" />
       <Card>
         <CardHeader className="pb-3">
           <div className="flex flex-wrap items-center gap-2 justify-between">

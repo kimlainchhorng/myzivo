@@ -7,6 +7,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { LoadingPanel, NextActions, SectionShell, StatCard, money } from "./LodgingOperationsShared";
 import { CatalogTable, EditorDialog } from "./CatalogTable";
 import { useLodgingCatalog } from "@/hooks/lodging/useLodgingCatalog";
+import LodgingQuickJump from "./LodgingQuickJump";
+import LodgingSectionStatusBanner from "./LodgingSectionStatusBanner";
 
 interface Experience {
   id: string;
@@ -34,6 +36,8 @@ export default function LodgingExperiencesSection({ storeId }: { storeId: string
 
   return (
     <SectionShell title="Experiences & Tours" subtitle="Sell snorkeling, island hopping, fishing trips, sunset cruises, and destination experiences." icon={Palmtree}>
+      <LodgingQuickJump active="lodge-experiences" />
+      <LodgingSectionStatusBanner title="Experiences & Tours" icon={Palmtree} countLabel="Active experiences" countValue={rows.filter((r) => r.active !== false).length} fixLabel="Open gallery" fixTab="lodge-gallery" />
       {list.isLoading ? <LoadingPanel /> : <>
         <div className="grid gap-3 sm:grid-cols-3">
           <StatCard label="Total" value={String(rows.length)} icon={Palmtree} />
