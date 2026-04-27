@@ -25,7 +25,7 @@ const timeRange = (r: LodgeReservation) => r.room?.check_in_time || r.room?.chec
 const goTab = (tab: string) => window.dispatchEvent(new CustomEvent("lodge-set-tab", { detail: { tab } }));
 
 export default function LodgingFrontDeskSection({ storeId }: { storeId: string }) {
-  const { data: reservations = [], setStatus, upsert: upsertReservation } = useLodgeReservations(storeId, "all");
+  const { data: reservations = [], setStatus } = useLodgeReservations(storeId, "all");
   const { data: guestRequests = [] } = useStoreChangeRequestInbox(storeId);
   useHostLodgingOpsToasts(storeId);
   const today = ymd(new Date());
