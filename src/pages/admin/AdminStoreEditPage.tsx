@@ -51,6 +51,7 @@ import StoreAttendanceSection from "@/components/admin/store/StoreAttendanceSect
 import StoreTrainingSection from "@/components/admin/store/StoreTrainingSection";
 import StorePerformanceSection from "@/components/admin/store/StorePerformanceSection";
 import StoreDocumentsSection from "@/components/admin/store/StoreDocumentsSection";
+import AuditLogSection from "@/components/admin/store/AuditLogSection";
 import StoreEmployeeRulesSection from "@/components/admin/store/StoreEmployeeRulesSection";
 import StoreOrdersSection from "@/components/admin/StoreOrdersSection";
 import AutoRepairInvoicesSection from "@/components/admin/store/autorepair/AutoRepairInvoicesSection";
