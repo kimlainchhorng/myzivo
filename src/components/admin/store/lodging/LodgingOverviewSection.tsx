@@ -6,6 +6,7 @@ import LodgingQuickJump from "./LodgingQuickJump";
 import LodgingSectionStatusBanner from "./LodgingSectionStatusBanner";
 import RevenuePulseCard from "./RevenuePulseCard";
 import LodgingReviewsSummaryCard from "./LodgingReviewsSummaryCard";
+import StorefrontPreviewCard from "./StorefrontPreviewCard";
 import { useLodgeHousekeeping } from "@/hooks/lodging/useLodgeHousekeeping";
 import { getLodgingCompletion } from "@/lib/lodging/lodgingCompletion";
 import { useQuery } from "@tanstack/react-query";
