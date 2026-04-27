@@ -3,6 +3,7 @@
  */
 import { useEffect, useMemo, useState } from "react";
 import LodgingQuickJump from "./LodgingQuickJump";
+import LodgingSectionStatusBanner from "./LodgingSectionStatusBanner";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
@@ -108,6 +109,7 @@ export default function LodgingHousekeepingSection({ storeId }: { storeId: strin
       </CardHeader>
       <CardContent>
         <LodgingQuickJump active="lodge-housekeeping" />
+        <LodgingSectionStatusBanner title="Housekeeping" icon={Sparkles} countLabel="Open tasks" countValue={tasks.filter((t: any) => t.status !== "completed").length} fixLabel="Open Rooms" fixTab="lodge-rooms" />
         {isLoading ? <p className="text-sm text-muted-foreground py-8 text-center">Loading…</p>
           : tasks.length === 0 ? <p className="text-sm text-muted-foreground py-8 text-center">Add rooms first</p>
           : (

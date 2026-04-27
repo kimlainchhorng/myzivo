@@ -4,6 +4,7 @@
  */
 import { useMemo, useState } from "react";
 import LodgingQuickJump from "./LodgingQuickJump";
+import LodgingSectionStatusBanner from "./LodgingSectionStatusBanner";
 import { useLocation, useNavigate, useSearchParams } from "react-router-dom";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -104,6 +105,7 @@ export default function LodgingReservationsSection({ storeId }: { storeId: strin
   return (
     <div className="space-y-4">
       <LodgingQuickJump active="lodge-reservations" />
+      <LodgingSectionStatusBanner title="Reservations" icon={CalendarRange} countLabel="Pending change requests" countValue={pendingRequests.length} fixLabel="Open Front Desk" fixTab="lodge-frontdesk" />
       <HostReservationOpsSummary reservations={reservations} requests={pendingRequests} onFilter={(value) => setQ(value)} />
       <ChangeRequestsInbox storeId={storeId} />
     <Card>

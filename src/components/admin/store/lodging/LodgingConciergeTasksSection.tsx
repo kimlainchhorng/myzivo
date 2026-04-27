@@ -9,6 +9,7 @@ import { LoadingPanel, NextActions, SectionShell, StatCard } from "./LodgingOper
 import { CatalogTable, EditorDialog } from "./CatalogTable";
 import { useLodgingCatalog } from "@/hooks/lodging/useLodgingCatalog";
 import LodgingQuickJump from "./LodgingQuickJump";
+import LodgingSectionStatusBanner from "./LodgingSectionStatusBanner";
 
 interface ConciergeTask {
   id: string;
@@ -48,6 +49,7 @@ export default function LodgingConciergeTasksSection({ storeId }: { storeId: str
   return (
     <SectionShell title="Concierge Tasks" subtitle="Track guest service requests beyond rooms — taxis, restaurant bookings, gifts, tickets, errands." icon={BellRing}>
       <LodgingQuickJump active="lodge-concierge" />
+      <LodgingSectionStatusBanner title="Concierge Tasks" icon={BellRing} countLabel="Open + In progress" countValue={stats.open + stats.inProgress} fixLabel="Open Front Desk" fixTab="lodge-frontdesk" />
       {list.isLoading ? <LoadingPanel /> : <>
         <div className="grid gap-3 sm:grid-cols-4">
           <StatCard label="All tasks" value={String(stats.total)} icon={BellRing} />
