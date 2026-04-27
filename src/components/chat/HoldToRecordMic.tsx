@@ -11,7 +11,7 @@
  * effects (which watch `voice.audioBlob`) keep working unchanged.
  */
 import { useEffect, useRef, useState } from "react";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion, AnimatePresence, useMotionValue, useSpring, useTransform } from "framer-motion";
 import Mic from "lucide-react/dist/esm/icons/mic";
 import Trash2 from "lucide-react/dist/esm/icons/trash-2";
 import Send from "lucide-react/dist/esm/icons/send";
@@ -51,6 +51,20 @@ export default function HoldToRecordMic({ voice, className }: Props) {
   const [dragY, setDragY] = useState(0);
   const [locked, setLocked] = useState(false);
   const [paused, setPaused] = useState(false);
+
+  // Smooth springed motion values for the overlay visuals (decouples render
+  // from the raw pointer values so the slide hint glides instead of stuttering).
+  const dragXMV = useMotionValue(0);
+  const dragYMV = useMotionValue(0);
+  const SPRING = { stiffness: 320, damping: 28, mass: 0.4 };
+  const dragXSpring = useSpring(dragXMV, SPRING);
+  const dragYSpring = useSpring(dragYMV, SPRING);
+  const slideHintX = useTransform(dragXSpring, (v) => v * 0.45);
+  const slideHintOpacity = useTransform(dragXSpring, (v) => 1 - Math.min(1, Math.abs(v) / CANCEL_THRESHOLD) * 0.6);
+  const lockChipY = useTransform(dragYSpring, (v) => Math.max(-LOCK_THRESHOLD * 0.7, v * 0.7));
+  const lockChipOpacity = useTransform(dragYSpring, (v) => 0.85 + Math.min(1, Math.abs(v) / LOCK_THRESHOLD) * 0.15);
+  const cancelGlowWidth = useTransform(dragXSpring, (v) => `${Math.min(1, Math.abs(v) / CANCEL_THRESHOLD) * 100}%`);
+
   const startPos = useRef({ x: 0, y: 0 });
   const startTime = useRef(0);
   const guardTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -64,10 +78,12 @@ export default function HoldToRecordMic({ voice, className }: Props) {
     if (!voice.isRecording) {
       setDragX(0);
       setDragY(0);
+      dragXMV.set(0);
+      dragYMV.set(0);
       setLocked(false);
       setPaused(false);
     }
-  }, [voice.isRecording]);
+  }, [voice.isRecording, dragXMV, dragYMV]);
 
   const clearGuard = () => {
     if (guardTimer.current) {
@@ -95,8 +111,13 @@ export default function HoldToRecordMic({ voice, className }: Props) {
     const dx = Math.min(0, e.clientX - startPos.current.x);
     const dy = Math.min(0, e.clientY - startPos.current.y);
     // rubber-band easing past thresholds
-    setDragX(dx < -CANCEL_THRESHOLD ? -CANCEL_THRESHOLD + (dx + CANCEL_THRESHOLD) * 0.35 : dx);
-    setDragY(dy < -LOCK_THRESHOLD ? -LOCK_THRESHOLD + (dy + LOCK_THRESHOLD) * 0.35 : dy);
+    const easedX = dx < -CANCEL_THRESHOLD ? -CANCEL_THRESHOLD + (dx + CANCEL_THRESHOLD) * 0.35 : dx;
+    const easedY = dy < -LOCK_THRESHOLD ? -LOCK_THRESHOLD + (dy + LOCK_THRESHOLD) * 0.35 : dy;
+    setDragX(easedX);
+    setDragY(easedY);
+    // Push to springed motion values for the overlay (decoupled from React render).
+    dragXMV.set(easedX);
+    dragYMV.set(easedY);
 
     if (isRecording) {
       if (dx < -CANCEL_THRESHOLD && dragX >= -CANCEL_THRESHOLD) haptic(20);
@@ -134,6 +155,8 @@ export default function HoldToRecordMic({ voice, className }: Props) {
     }
     setDragX(0);
     setDragY(0);
+    dragXMV.set(0);
+    dragYMV.set(0);
   };
 
   // Locked-mode actions
@@ -203,25 +226,27 @@ export default function HoldToRecordMic({ voice, className }: Props) {
           >
             {/* Lock hint chip — small, sits just above the mic */}
             <motion.div
-              animate={{
-                y: -Math.abs(dragY) * 0.6,
-                opacity: 0.85 + Math.min(1, Math.abs(dragY) / LOCK_THRESHOLD) * 0.15,
-                scale: willLock ? 1.1 : 1,
+              style={{
+                y: lockChipY,
+                opacity: lockChipOpacity,
+                willChange: "transform, opacity",
               }}
+              animate={{ scale: willLock ? 1.1 : 1 }}
+              transition={{ type: "spring", stiffness: 320, damping: 24 }}
               className="absolute right-5 -top-14 bg-card/95 backdrop-blur-xl border border-border/40 rounded-full p-2 shadow-lg"
             >
               <Lock className={`h-4 w-4 ${willLock ? "text-primary" : "text-muted-foreground"}`} />
             </motion.div>
 
-            {/* Bottom recording pill */}
+            {/* Bottom recording pill — fixed height so layout doesn't reflow */}
             <div
-              className="mx-2 mb-1 pl-4 pr-2 py-2 rounded-full backdrop-blur-2xl border border-border/40 bg-card/90 flex items-center gap-3 shadow-xl relative overflow-hidden"
+              className="mx-2 mb-1 pl-4 pr-2 rounded-full backdrop-blur-2xl border border-border/40 bg-card/90 flex items-center gap-3 shadow-xl relative overflow-hidden"
+              style={{ height: 44 }}
             >
-              {/* Subtle progress glow that grows with slide-to-cancel */}
+              {/* Subtle progress glow that grows with slide-to-cancel (springed) */}
               <motion.div
                 className="absolute inset-y-0 left-0 bg-destructive/10 pointer-events-none"
-                animate={{ width: `${dragRatio * 100}%` }}
-                transition={{ type: "tween", duration: 0.1 }}
+                style={{ width: cancelGlowWidth, willChange: "width" }}
               />
 
               {/* Left: red dot + time */}
@@ -236,10 +261,10 @@ export default function HoldToRecordMic({ voice, className }: Props) {
                 </span>
               </div>
 
-              {/* Center: slide-to-cancel hint */}
+              {/* Center: slide-to-cancel hint (springed) */}
               <motion.div
                 className="flex-1 flex items-center justify-center gap-1 text-sm text-muted-foreground relative"
-                animate={{ x: dragX * 0.45, opacity: 1 - dragRatio * 0.6 }}
+                style={{ x: slideHintX, opacity: slideHintOpacity, willChange: "transform, opacity" }}
               >
                 <ChevronLeft className="h-4 w-4" />
                 <span>Slide to cancel</span>
@@ -249,6 +274,7 @@ export default function HoldToRecordMic({ voice, className }: Props) {
                 <motion.div
                   initial={{ scale: 0.6, opacity: 0 }}
                   animate={{ scale: 1, opacity: 1 }}
+                  transition={{ type: "spring", stiffness: 380, damping: 28 }}
                   className="absolute inset-0 flex items-center justify-center gap-1.5 text-sm font-medium text-destructive bg-card/95 rounded-full"
                 >
                   <Trash2 className="h-4 w-4" />
