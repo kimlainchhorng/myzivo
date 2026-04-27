@@ -348,6 +348,11 @@ function ManualMethodForm({
               <FieldRow label="Account number / IBAN">
                 <Input value={form.account_number} onChange={(e) => setForm((f) => ({ ...f, account_number: e.target.value }))} placeholder="Account number or IBAN" />
               </FieldRow>
+              {country !== "US" && (
+                <FieldRow label="SWIFT / BIC">
+                  <Input value={form.swift} onChange={(e) => setForm((f) => ({ ...f, swift: e.target.value }))} placeholder="e.g. ACLBKHPP" />
+                </FieldRow>
+              )}
             </>
           )}
           {rail === "paypal" && (
@@ -358,6 +363,11 @@ function ManualMethodForm({
           <FieldRow label="Nickname (optional)">
             <Input value={form.label} onChange={(e) => setForm((f) => ({ ...f, label: e.target.value }))} placeholder={defaultLabel(rail)} />
           </FieldRow>
+
+          <label className="flex items-start gap-2 text-[11px] text-muted-foreground cursor-pointer">
+            <input type="checkbox" checked={confirmed} onChange={(e) => setConfirmed(e.target.checked)} className="mt-0.5" />
+            <span>I confirm these account details are correct and the holder name matches my ID. ZIVO will mark this method as verified after the first successful payout.</span>
+          </label>
           <div className="flex justify-end gap-1.5 pt-1">
             <Button size="sm" variant="ghost" onClick={() => { setOpen(false); reset(); }}>Cancel</Button>
             <Button size="sm" onClick={() => save.mutate()} disabled={save.isPending}>
