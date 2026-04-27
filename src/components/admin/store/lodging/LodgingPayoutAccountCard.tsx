@@ -241,20 +241,31 @@ function ManualMethodForm({
   const { user } = useAuth();
   const queryClient = useQueryClient();
   const [open, setOpen] = useState(false);
+  const [confirmed, setConfirmed] = useState(false);
   const [form, setForm] = useState({
     label: "", account_holder_name: "", bank_name: "", account_number: "",
-    aba_account_id: "", paypal_email: "",
+    aba_account_id: "", paypal_email: "", swift: "",
   });
   const ownMethods = methods.filter((m) => (m.rail || mapMethodTypeToRail(m.method_type)) === rail);
 
-  const reset = () => setForm({ label: "", account_holder_name: "", bank_name: "", account_number: "", aba_account_id: "", paypal_email: "" });
+  const reset = () => { setForm({ label: "", account_holder_name: "", bank_name: "", account_number: "", aba_account_id: "", paypal_email: "", swift: "" }); setConfirmed(false); };
 
   const save = useMutation({
     mutationFn: async () => {
       if (!user) throw new Error("Sign in required");
-      // Light validation per rail
-      if (rail === "aba" && !form.aba_account_id.trim()) throw new Error("ABA account ID is required");
-      if (rail === "bank_wire" && (!form.bank_name.trim() || !form.account_number.trim())) throw new Error("Bank name and account number are required");
+      if (!confirmed) throw new Error("Please confirm the account details are correct");
+
+      // Per-rail validation (eligibility + format)
+      if (rail === "aba") {
+        if (!form.aba_account_id.trim()) throw new Error("ABA account ID is required");
+        if (!form.account_holder_name.trim()) throw new Error("Account holder name is required");
+        if (!/^[0-9]{6,12}$/.test(form.aba_account_id.replace(/\s/g, ""))) throw new Error("ABA account ID should be 6–12 digits");
+      }
+      if (rail === "bank_wire") {
+        if (!form.bank_name.trim() || !form.account_number.trim()) throw new Error("Bank name and account number are required");
+        if (!form.account_holder_name.trim()) throw new Error("Account holder name is required");
+        if (country !== "US" && !form.swift.trim()) throw new Error("SWIFT/BIC is required for international wires");
+      }
       if (rail === "paypal" && !/.+@.+\..+/.test(form.paypal_email)) throw new Error("Valid PayPal email required");
 
       const method_type = rail === "aba" ? "aba" : rail === "paypal" ? "paypal" : "bank_transfer";
@@ -269,6 +280,8 @@ function ManualMethodForm({
         bank_name: rail === "bank_wire" ? form.bank_name : (rail === "aba" ? "ABA Bank" : null),
         account_number: rail === "bank_wire" ? form.account_number : (rail === "paypal" ? form.paypal_email : null),
         aba_account_id: rail === "aba" ? form.aba_account_id : null,
+        verification_status: "pending",
+        verification_note: rail === "bank_wire" && form.swift ? `SWIFT/BIC: ${form.swift}` : null,
         is_default: methods.length === 0,
       };
       const { error } = await (supabase.from("customer_payout_methods") as any).insert(payload);
