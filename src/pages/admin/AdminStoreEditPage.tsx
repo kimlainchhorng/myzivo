@@ -3758,6 +3758,10 @@ export default function AdminStoreEditPage() {
             </>
           )}
 
+          <TabsContent value="software" data-testid="store-tab-software">
+            <SoftwareDownloadsSection storeCategory={form.category} />
+          </TabsContent>
+
         </Tabs>
       </div>
 
