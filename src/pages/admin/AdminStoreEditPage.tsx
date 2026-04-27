@@ -2039,6 +2039,9 @@ export default function AdminStoreEditPage() {
     "lodge-payouts": "Payouts & Finance",
     "lodge-inbox": "Guest Inbox",
     "lodge-staff": "Hotel Staff",
+    "lodge-concierge": "Concierge Tasks",
+    "lodge-lostfound": "Lost & Found",
+    "lodge-gallery": "Photos & Gallery",
   };
   const productsLabelTitle = isAutoRepair ? "Services" : isLodging ? "Rooms" : "Products";
   const paymentLabelTitle = form.category === "car-dealership" ? t("admin.store.booking_appointment") : isAutoRepair ? "Bookings" : isLodging ? "Payment & Payouts" : t("admin.store.payment");
