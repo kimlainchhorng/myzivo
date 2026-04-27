@@ -122,6 +122,7 @@ export default function LodgingInboxSection({ storeId }: { storeId: string }) {
       const { error } = await (supabase as any).from("lodging_concierge_tasks").insert({
         store_id: storeId,
         reservation_id: msg.reservation_id,
+        source_message_id: msg.id,
         guest_name: guestName,
         room_number: roomNumber,
         request_type: "general",
@@ -134,8 +135,12 @@ export default function LodgingInboxSection({ storeId }: { storeId: string }) {
       if (error) throw error;
     },
     onSuccess: () => {
-      toast.success("Concierge task created", { description: "Open in Concierge Tasks tab.", action: { label: "Open", onClick: () => window.dispatchEvent(new CustomEvent("lodge-set-tab", { detail: { tab: "lodge-concierge" } })) } });
+      toast.success("Concierge task created", {
+        description: "Linked back to this guest message.",
+        action: { label: "Open task", onClick: () => window.dispatchEvent(new CustomEvent("lodge-set-tab", { detail: { tab: "lodge-concierge" } })) },
+      });
       qc.invalidateQueries({ queryKey: ["lodging-sidebar-badges", storeId] });
+      qc.invalidateQueries({ queryKey: ["lodging_concierge_tasks", storeId] });
     },
     onError: (e: any) => toast.error(e?.message || "Could not create task"),
   });

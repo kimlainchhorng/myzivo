@@ -1,8 +1,10 @@
 /**
  * useLodgingSidebarBadges - lightweight head counts to power sidebar badges.
  * Single hook so we never fan out duplicate count queries.
+ * Subscribes to Supabase Realtime to invalidate on insert/update/delete.
  */
-import { useQuery } from "@tanstack/react-query";
+import { useEffect } from "react";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 
 export interface LodgingSidebarBadges {
@@ -14,11 +16,31 @@ export interface LodgingSidebarBadges {
 
 const ZERO: LodgingSidebarBadges = { inboxUnread: 0, conciergeOpen: 0, lostFoundUnclaimed: 0, frontDeskToday: 0 };
 
+const REALTIME_TABLES = ["lodging_messages", "lodging_concierge_tasks", "lodging_lost_found", "lodge_reservations"] as const;
+
 export function useLodgingSidebarBadges(storeId?: string, enabled = true) {
+  const qc = useQueryClient();
+  const queryKey = ["lodging-sidebar-badges", storeId];
+
+  // Realtime: invalidate when any of the 4 source tables change for this store
+  useEffect(() => {
+    if (!storeId || !enabled) return;
+    const channels = REALTIME_TABLES.map((table) => {
+      return supabase
+        .channel(`lodging-badges-${table}-${storeId}`)
+        .on("postgres_changes", { event: "*", schema: "public", table, filter: `store_id=eq.${storeId}` }, () => {
+          qc.invalidateQueries({ queryKey });
+        })
+        .subscribe();
+    });
+    return () => { channels.forEach((c) => { try { supabase.removeChannel(c); } catch {} }); };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [storeId, enabled]);
+
   return useQuery<LodgingSidebarBadges>({
-    queryKey: ["lodging-sidebar-badges", storeId],
+    queryKey,
     enabled: Boolean(storeId) && enabled,
-    staleTime: 5 * 60 * 1000,
+    staleTime: 60 * 1000,
     queryFn: async () => {
       if (!storeId) return ZERO;
       const today = new Date().toISOString().slice(0, 10);
