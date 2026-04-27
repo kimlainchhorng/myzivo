@@ -79,6 +79,8 @@ export default function VoiceMessagePlayer({
   uploadError,
   uploadEndpoint,
   uploadStatusCode,
+  uploadPhase,
+  uploadBody,
   onRetry,
   onDiscard,
 }: VoiceMessagePlayerProps) {
