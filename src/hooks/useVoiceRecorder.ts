@@ -30,6 +30,7 @@ export function useVoiceRecorder() {
 
   const stopAll = useCallback(() => {
     if (timer.current) { clearInterval(timer.current); timer.current = null; }
+    if (rafId.current !== null) { cancelAnimationFrame(rafId.current); rafId.current = null; }
     if (sampleTimer.current) { clearInterval(sampleTimer.current); sampleTimer.current = null; }
     stream.current?.getTracks().forEach((t) => t.stop());
     audioCtx.current?.close().catch(() => {});
@@ -77,7 +78,12 @@ export function useVoiceRecorder() {
       startedAt.current = Date.now();
       setIsRecording(true);
       setElapsedMs(0);
-      timer.current = setInterval(() => setElapsedMs(Date.now() - startedAt.current), 100);
+      // Smooth rAF tick — paints from frame 1 instead of waiting 100ms.
+      const tick = () => {
+        setElapsedMs(Date.now() - startedAt.current);
+        rafId.current = requestAnimationFrame(tick);
+      };
+      rafId.current = requestAnimationFrame(tick);
     } catch (e) {
       toast.error("Microphone permission denied");
       stopAll();
