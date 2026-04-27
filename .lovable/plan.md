@@ -1,101 +1,64 @@
-## Goal
-Complete the multi-rail payout flow so US hosts use Stripe Connect automatically while Cambodia (and other unsupported countries) get routed to manual ABA / bank wire / PayPal — with clear instructions, verification, and an end-to-end status history.
+# Add "Software & Apps" Sidebar Section (Hotel & Shop)
 
-The DB tables (`customer_payout_methods` with `store_id/country_code/rail`, `lodge_payout_requests`) and the country router (`payoutRails.ts`) are already in place from the previous step. The backend already rejects unsupported Stripe countries with `stripe_unsupported_country`. This plan adds the missing UX, validation, and routing wiring.
+Add a new sidebar entry that lets store owners (both hotels and regular shops) **download companion software / mobile apps** to operate their business — e.g., POS app, Front-Desk app, Housekeeping app, Driver app, Printer drivers.
 
----
+## What the user gets
 
-## 1. Auto-fallback when Stripe is rejected (frontend)
-File: `src/components/admin/store/lodging/LodgingPayoutAccountCard.tsx`
+A new **Software & Apps** item in the sidebar (visible to both lodging and non-lodging stores). Clicking it opens a dedicated tab with a clean grid of downloadable apps:
 
-- In `startStripe()`, catch the `stripe_unsupported_country` error from `useConnectOnboard`. When it fires:
-  - Disable the Stripe tab for this country.
-  - Switch `activeRail` to the recommended manual rail (`recommendedRail(country)`).
-  - Show a toast: "Stripe Connect isn't available in {country}. Switched to {RAIL_LABELS[fallback]}."
-- File: `src/components/admin/store/lodging/LodgingPayoutsSection.tsx` — remove the hard-coded `onboard.mutate("US")` in the "Finish setup" banner. Pass the actual store country and reuse the same fallback path.
+- **For Hotels:** Front Desk app, Housekeeping app, Property Manager (desktop), Receipt Printer driver
+- **For Shops/Eats/Auto-Repair:** POS app, Kitchen Display, Inventory Scanner, Receipt Printer driver
+- **For everyone:** ZIVO Driver app, ZIVO Manager mobile app
 
-## 2. Eligibility + verification UI on each manual rail
-File: `LodgingPayoutAccountCard.tsx` → extend `ManualMethodForm`.
+Each card shows: app icon, name, short description, supported platforms (iOS / Android / Windows / macOS), version badge, and **Download** buttons (App Store, Google Play, .exe, .dmg). Coming-soon apps show a "Notify me" button instead.
 
-- Add a verification step after "Save":
-  - For **ABA**: require 8-digit ABA account number format, account holder name match, and a confirmation checkbox "I confirm this ABA account is mine and the name matches my ID".
-  - For **bank wire**: require SWIFT/BIC for non-US countries, and IBAN length validation for EU.
-  - For **PayPal**: require valid email + a "send a $0 verification" checkbox (deferred — for now just confirmation).
-- Mark the saved row as `verification_status: 'pending' | 'verified'` (use existing `is_default` UI pattern, no schema change needed — store in `metadata` jsonb column on `customer_payout_methods` if present, else add migration with one new column `verification_status text default 'pending'`).
-- Show a per-method badge: "Verified" / "Pending verification".
+## Files to change
 
-## 3. Cambodia (and per-country) instruction panels
-File: New `src/components/admin/store/lodging/PayoutInstructionsPanel.tsx`
+**1. `src/components/admin/StoreOwnerLayout.tsx`**
+- Add `Download` icon import.
+- Insert a new sidebar item near the bottom of `navItems`:
+  ```ts
+  { id: "software", label: "Software & Apps", icon: Download }
+  ```
+- Place it after `livestream` so it appears for both lodging and non-lodging stores.
 
-- Country-aware copy block rendered above the rail tabs.
-- For **KH**:
-  - Fees: "ZIVO covers ABA transfer fees. Net payout = booking total − 2% platform fee."
-  - Processing time: "Manual ABA transfer within 1 business day after host requests payout."
-  - Required fields: ABA account number, account holder full name (Khmer/English), phone linked to ABA.
-  - Admin contact: "Payouts are processed by the ZIVO finance team via Telegram alert to admins."
-- For **US**: Stripe Express auto-payout in 2 business days, 1099-K issued by Stripe.
-- Generic fallback for other countries.
-- Render in `LodgingPayoutsSection.tsx` directly under the stat grid.
+**2. `src/lib/admin/storeTabRouting.ts`**
+- Add `"software"` to `BASE_TAB_IDS` so the tab is recognized by the router and survives reload via `?tab=software`.
 
-## 4. Payout history table with full status flow
-File: New `src/components/admin/store/lodging/LodgingPayoutHistoryTable.tsx`
+**3. `src/components/admin/store/SoftwareDownloadsSection.tsx` (NEW)**
+- Self-contained section component, accepts `storeCategory` prop.
+- Defines a `SOFTWARE_CATALOG` array with entries:
+  ```ts
+  { id, name, description, audience: "hotel" | "shop" | "all",
+    platforms: ["ios"|"android"|"windows"|"macos"],
+    downloads: { ios?, android?, windows?, macos? },
+    icon, status: "available" | "coming-soon", version }
+  ```
+- Filters catalog by `storeCategory` (hotel-only apps hidden for shops, and vice-versa).
+- Renders responsive grid (`grid-cols-1 md:grid-cols-2 xl:grid-cols-3`), v2026 high-density compact cards using `.zivo-card-organic`, Lucide icons, emerald accents.
+- Platform badges + Download buttons that open external links via `window.open(url, "_blank", "noopener,noreferrer")` (use `urlSafety` allowlist for store URLs).
 
-- Read from `lodge_payout_requests` filtered by `store_id`, ordered desc.
-- Columns: Requested at · Amount · Method (rail + last-4 / ABA id / PayPal email) · Status · Reference · Failure reason.
-- Status badges using existing color system:
-  - `pending` → amber "Requested"
-  - `approved` → blue "Processing"
-  - `paid` → emerald "Completed"
-  - `rejected` → red "Failed" (show `admin_note` as failure reason)
-  - `cancelled` → gray "Cancelled"
-- Replace the current month-bucket "Payout history" block in `LodgingPayoutsSection.tsx` with this real table. Keep the monthly *revenue* trend chart.
+**4. `src/pages/admin/AdminStoreEditPage.tsx`**
+- Add title entry: `activeTab === "software" ? "Software & Apps"` to `storeOwnerTitle`.
+- Add a new `<TabsContent value="software">` rendering `<SoftwareDownloadsSection storeCategory={form.category} />` near the other tab contents.
 
-## 5. Request payout sheet (host-initiated)
-File: New `src/components/admin/store/lodging/LodgingRequestPayoutSheet.tsx`
+## Initial catalog (placeholder links — owner can swap real URLs later)
 
-- Triggered by "Request payout" button next to "Export CSV".
-- Pre-fills available net balance (`stats.netPayout − already requested`).
-- Lets host pick from saved verified payout methods (filtered by `store_id`).
-- Inserts into `lodge_payout_requests` with `rail = method.rail`, `status='pending'`.
-- Shows the Cambodia-specific note for KH ("Admin will process within 1 business day via ABA").
-- After success, invalidates `lodge-payout-history` query.
+| App | Audience | Platforms |
+|---|---|---|
+| ZIVO Manager | all | iOS, Android |
+| ZIVO POS | shop | iOS, Android, Windows |
+| ZIVO Front Desk | hotel | iOS, iPad, Windows |
+| ZIVO Housekeeping | hotel | iOS, Android |
+| ZIVO Kitchen Display | shop (eats) | iPad, Android tablet |
+| ZIVO Driver | all | iOS, Android |
+| Receipt Printer Driver | all | Windows, macOS |
+| Inventory Scanner | shop | Android |
 
-## 6. Backend: notify admin + double-check country on request
-File: New edge function `supabase/functions/lodge-payout-request/index.ts`
+Coming-soon entries get a disabled button + "Notify me" toast.
 
-- Validates: user owns the store, payout_method_id belongs to the same store, requested amount ≤ available net.
-- Re-validates rail vs country (defence-in-depth: if rail='stripe' but country not in `STRIPE_COUNTRIES`, reject).
-- Inserts the row server-side (RLS already allows this, but we centralize validation).
-- Sends Telegram alert to admin chat (reuses existing pattern from cashout flow): "New {rail} payout request: {storeName} · {amount} · {country}".
+## Notes
 
-## 7. Wire it together
-File: `LodgingPayoutsSection.tsx`
-
-- Header actions: `[Export CSV] [Request payout]`.
-- Order on the page:
-  1. Payouts paused banner (if any)
-  2. Stat grid (6 cards)
-  3. `PayoutInstructionsPanel` (country-aware fees + processing time)
-  4. `LodgingPayoutAccountCard` (multi-rail setup with verification)
-  5. Monthly revenue chart
-  6. `LodgingPayoutHistoryTable` (real `lodge_payout_requests` rows with statuses)
-  7. Next actions
-
----
-
-## Technical details
-- New migration: add `verification_status text default 'pending'` and `failure_reason text` to `customer_payout_methods`; add `failure_reason text` to `lodge_payout_requests` (separate from `admin_note` so we can surface it cleanly).
-- Frontend uses existing `useConnectOnboard` mutation; we just intercept its `onError` to switch rails.
-- Telegram alerts reuse `TELEGRAM_BOT_TOKEN` / `TELEGRAM_ADMIN_CHAT_ID` secrets already present from the cashout flow.
-- All new UI follows the v2026 high-density compact standard (`text-[11px/13px]`, `p-2/p-3`, lucide icons only).
-
-## Files to create
-- `src/components/admin/store/lodging/PayoutInstructionsPanel.tsx`
-- `src/components/admin/store/lodging/LodgingPayoutHistoryTable.tsx`
-- `src/components/admin/store/lodging/LodgingRequestPayoutSheet.tsx`
-- `supabase/functions/lodge-payout-request/index.ts`
-- One new migration for the two extra columns
-
-## Files to edit
-- `src/components/admin/store/lodging/LodgingPayoutAccountCard.tsx` (auto-fallback + verification UI)
-- `src/components/admin/store/lodging/LodgingPayoutsSection.tsx` (use store country, request button, new history table, instructions panel)
+- No backend changes needed — this is a static catalog page.
+- Follows existing sidebar conventions (Lucide icon, label string, id wired through `storeTabRouting`).
+- Honors the project's "no emojis, Lucide-only" icon standard and v2026 compact UI density.
