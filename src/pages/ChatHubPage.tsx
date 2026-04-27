@@ -1331,7 +1331,7 @@ export default function ChatHubPage({ embedded = false }: { embedded?: boolean }
             </div>
           )}
 
-          {!embedded && <Suspense fallback={null}><ChatStories /></Suspense>}
+          
 
           <div className={cn("flex-1 min-h-0", embedded ? "overflow-y-auto" : "") }>
             <AnimatePresence mode="wait">
