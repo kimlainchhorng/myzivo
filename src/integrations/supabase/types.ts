@@ -13399,12 +13399,15 @@ export type Database = {
           account_holder_name: string | null
           account_number: string | null
           bank_name: string | null
+          country_code: string | null
           created_at: string
           id: string
           is_default: boolean
           is_verified: boolean
           label: string | null
           method_type: string
+          rail: string | null
+          store_id: string | null
           updated_at: string
           user_id: string
         }
@@ -13413,12 +13416,15 @@ export type Database = {
           account_holder_name?: string | null
           account_number?: string | null
           bank_name?: string | null
+          country_code?: string | null
           created_at?: string
           id?: string
           is_default?: boolean
           is_verified?: boolean
           label?: string | null
           method_type: string
+          rail?: string | null
+          store_id?: string | null
           updated_at?: string
           user_id: string
         }
@@ -13427,16 +13433,27 @@ export type Database = {
           account_holder_name?: string | null
           account_number?: string | null
           bank_name?: string | null
+          country_code?: string | null
           created_at?: string
           id?: string
           is_default?: boolean
           is_verified?: boolean
           label?: string | null
           method_type?: string
+          rail?: string | null
+          store_id?: string | null
           updated_at?: string
           user_id?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "customer_payout_methods_store_id_fkey"
+            columns: ["store_id"]
+            isOneToOne: false
+            referencedRelation: "store_profiles"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       customer_profiles: {
         Row: {
@@ -27632,6 +27649,72 @@ export type Database = {
           updated_at?: string
         }
         Relationships: []
+      }
+      lodge_payout_requests: {
+        Row: {
+          admin_note: string | null
+          amount_cents: number
+          created_at: string
+          currency: string
+          id: string
+          note: string | null
+          paid_at: string | null
+          payout_method_id: string | null
+          rail: string
+          reference: string | null
+          requested_by: string
+          status: string
+          store_id: string
+          updated_at: string
+        }
+        Insert: {
+          admin_note?: string | null
+          amount_cents: number
+          created_at?: string
+          currency?: string
+          id?: string
+          note?: string | null
+          paid_at?: string | null
+          payout_method_id?: string | null
+          rail: string
+          reference?: string | null
+          requested_by: string
+          status?: string
+          store_id: string
+          updated_at?: string
+        }
+        Update: {
+          admin_note?: string | null
+          amount_cents?: number
+          created_at?: string
+          currency?: string
+          id?: string
+          note?: string | null
+          paid_at?: string | null
+          payout_method_id?: string | null
+          rail?: string
+          reference?: string | null
+          requested_by?: string
+          status?: string
+          store_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "lodge_payout_requests_payout_method_id_fkey"
+            columns: ["payout_method_id"]
+            isOneToOne: false
+            referencedRelation: "customer_payout_methods"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "lodge_payout_requests_store_id_fkey"
+            columns: ["store_id"]
+            isOneToOne: false
+            referencedRelation: "store_profiles"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       lodge_property_profile: {
         Row: {
