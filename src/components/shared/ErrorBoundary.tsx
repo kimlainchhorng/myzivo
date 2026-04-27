@@ -37,17 +37,29 @@ export class ErrorBoundary extends Component<Props, State> {
       error.message?.includes("Loading CSS chunk");
 
     if (isChunkError) {
-      const reloadKey = "eb_chunk_reload";
-      if (!sessionStorage.getItem(reloadKey)) {
-        sessionStorage.setItem(reloadKey, "1");
-        window.location.reload();
-        return;
-      }
-      sessionStorage.removeItem(reloadKey);
+      const reloadKey = "zivo_chunk_reload";
+      try {
+        if (!sessionStorage.getItem(reloadKey)) {
+          sessionStorage.setItem(reloadKey, "1");
+          window.location.reload();
+          return;
+        }
+      } catch {}
     }
   }
 
   handleRetry = () => {
+    const msg = this.state.error?.message || "";
+    const isChunkError =
+      msg.includes("Importing a module script failed") ||
+      msg.includes("Failed to fetch dynamically imported module") ||
+      msg.includes("Loading chunk") ||
+      msg.includes("Loading CSS chunk");
+    if (isChunkError) {
+      try { sessionStorage.removeItem("zivo_chunk_reload"); } catch {}
+      window.location.reload();
+      return;
+    }
     this.setState({ hasError: false, error: null });
   };
 
