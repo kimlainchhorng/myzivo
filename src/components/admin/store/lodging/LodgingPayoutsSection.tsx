@@ -1,11 +1,12 @@
 import { useEffect, useMemo } from "react";
-import { Wallet, DollarSign, TrendingUp, Calendar, CalendarClock, CheckCircle2, AlertCircle, Loader2, ArrowRight, ShieldCheck } from "lucide-react";
+import { Wallet, DollarSign, TrendingUp, Calendar, CalendarClock, CheckCircle2, AlertCircle, Loader2 } from "lucide-react";
 import { useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { LoadingPanel, NextActions, SectionShell, StatCard, money, useLodgingOpsData } from "./LodgingOperationsShared";
 import { useConnectStatus, useConnectOnboard } from "@/hooks/useStripeConnect";
+import LodgingPayoutAccountCard from "./LodgingPayoutAccountCard";
 
 /**
  * Payouts & Finance — full end-to-end flow:
