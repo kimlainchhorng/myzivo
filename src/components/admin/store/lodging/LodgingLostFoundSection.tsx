@@ -1,5 +1,5 @@
 import { useMemo, useState } from "react";
-import { Search, PackageCheck, PackageOpen, Truck } from "lucide-react";
+import { Search, PackageCheck, PackageOpen, Truck, ImageIcon } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
@@ -9,6 +9,7 @@ import { LoadingPanel, NextActions, SectionShell, StatCard } from "./LodgingOper
 import { CatalogTable, EditorDialog } from "./CatalogTable";
 import { useLodgingCatalog } from "@/hooks/lodging/useLodgingCatalog";
 import LodgingQuickJump from "./LodgingQuickJump";
+import LostFoundPhotoUploader from "./LostFoundPhotoUploader";
 
 interface LostFoundItem {
   id: string;
@@ -66,6 +67,11 @@ export default function LodgingLostFoundSection({ storeId }: { storeId: string }
           onDelete={(id) => remove.mutate(id)}
           onToggleActive={(r) => toggleActive.mutate({ id: r.id, active: r.active === false })}
           columns={[
+            { key: "photo", label: "Photo", className: "w-14", render: (r) => r.photo_url ? (
+              <img src={r.photo_url} alt={r.item_name} className="h-10 w-10 rounded-md object-cover border border-border" loading="lazy" />
+            ) : (
+              <div className="flex h-10 w-10 items-center justify-center rounded-md border border-dashed border-border bg-muted/30 text-muted-foreground"><ImageIcon className="h-3.5 w-3.5" /></div>
+            )},
             { key: "item", label: "Item", render: (r) => (
               <>
                 <span className="font-semibold">{r.item_name}</span>
@@ -117,9 +123,9 @@ export default function LodgingLostFoundSection({ storeId }: { storeId: string }
                   <SelectContent>{STATUSES.map((s) => <SelectItem key={s} value={s} className="capitalize">{s}</SelectItem>)}</SelectContent>
                 </Select>
               </div>
-              <div>
-                <Label>Photo URL (optional)</Label>
-                <Input value={editing.photo_url || ""} onChange={(e) => setEditing({ ...editing, photo_url: e.target.value })} placeholder="https://…" />
+              <div className="sm:col-span-2">
+                <Label>Photo of the item</Label>
+                <LostFoundPhotoUploader value={editing.photo_url} onChange={(url) => setEditing({ ...editing, photo_url: url })} storeId={storeId} />
               </div>
               <div>
                 <Label>Owner name</Label>

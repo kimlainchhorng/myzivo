@@ -28538,6 +28538,7 @@ export type Database = {
           request_type: string
           reservation_id: string | null
           room_number: string | null
+          source_message_id: string | null
           status: string
           store_id: string
           title: string
@@ -28557,6 +28558,7 @@ export type Database = {
           request_type?: string
           reservation_id?: string | null
           room_number?: string | null
+          source_message_id?: string | null
           status?: string
           store_id: string
           title: string
@@ -28576,6 +28578,7 @@ export type Database = {
           request_type?: string
           reservation_id?: string | null
           room_number?: string | null
+          source_message_id?: string | null
           status?: string
           store_id?: string
           title?: string
