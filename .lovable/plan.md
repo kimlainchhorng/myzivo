@@ -1,48 +1,59 @@
-## Final safe-area sweep
+## Telegram-style voice messages
 
-Audited every `sticky top-0` element in the codebase. After the previous batches, **15 real mobile headers** still lack safe-area padding, plus a few using inline `paddingTop: var(...)` that should be standardized.
+Compare current ZIVO voice UI vs Telegram screenshots and align.
 
-### Files to update (add `pt-safe`)
+### Differences identified
 
-**Shared chat components (used as fullscreen panels on mobile):**
-- `src/components/chat/ChatSearch.tsx` (line 54)
-- `src/components/chat/ChatNotificationSettings.tsx` (line 161)
-- `src/components/chat/ChatMiniApps.tsx` (line 215)
-- `src/components/chat/ChatSecurity.tsx` (line 150)
-- `src/components/chat/StickerKeyboard.tsx` (line 886) — only when used as fullscreen; safe to add since it just adds top padding when at top of screen
+**Player bubble (`VoiceMessagePlayer.tsx`):**
 
-**Pages:**
-- `src/pages/ChatHubPage.tsx` (line 1149) — conditional sticky branch
-- `src/pages/MorePage.tsx` (line 542)
-- `src/pages/PublicProfilePage.tsx` (line 1212) — drag handle header
-- `src/pages/Profile.tsx` (line 710)
-- `src/pages/business/PartnerOnboarding.tsx` (line 177)
-- `src/pages/business/BusinessPageWizard.tsx` (line 466)
-- `src/pages/app/personal/PersonalSchedulePage.tsx` (line 186)
-- `src/pages/admin/lodging/AdminLodgingReservationDetailPage.tsx` (line 260)
-- `src/components/profile/SocialListModal.tsx` (line 234)
+| Aspect | Telegram | ZIVO now |
+|---|---|---|
+| Bar count | ~50 thin bars filling bubble width | 32 chunkier bars |
+| Bar style | Rounded thin (~2px), tight gap, even baseline gap | OK but spacing too wide, varying minHeights look noisy |
+| Idle animation | Static (no loop) | Each bar pulses on play (busy/distracting) |
+| Time format | Single `0:05` shown bottom-left | `0:00 / -0:05` dual time (cluttered) |
+| Speed pill | Compact `1x` chip on right of waveform | `1×` button below waveform |
+| Bubble bg | Solid green for `isMe`, white for other | Already matches via primary token |
+| Played-state dot | Telegram shows tiny "unread voice" dot before play | Missing |
+| Play icon | Filled play, large 40px circle | Already similar |
 
-**Standardize inline style → class:**
-- `src/pages/ReelsFeedPage.tsx` (line 713) — replace inline `style={{ paddingTop: 'var(--zivo-safe-top-sticky)' }}` with `pt-safe` class for consistency
+**Recorder overlay (`HoldToRecordMic.tsx`):**
 
-### Excluded (intentionally)
+| Aspect | Telegram | ZIVO now |
+|---|---|---|
+| Layout | Single rounded pill at very bottom: red dot + `0:01` left, `< Slide to cancel` center, mic on right with green ring growing as you slide | Card-style bar with extra lock pill floating high above |
+| Lock affordance | Small lock icon directly above mic, slides up smoothly | Floats far up (-top-24), feels detached |
+| Cancel link | "Cancel" plain text (when locked) | OK |
+| Time format | `0:01` mono digits, no leading space | OK |
 
-- `src/components/admin/AdminLayout.tsx`, `StoreOwnerLayout.tsx` — desktop sidebars
-- `src/components/admin/ads/ResponsiveBreakdown.tsx` — table `<thead>`
-- `src/components/social/CreatePostModal.tsx` — modal inside dialog (no status bar overlap)
-- `src/pages/PublicProfilePage.tsx` line 809 — `hidden lg:block` (desktop only)
-- `src/components/admin/store/lodging/LodgingPropertyProfileSection.tsx` — admin desktop section
-- `src/pages/dev/SafeAreaQAPage.tsx` — QA harness page
+### Changes
 
-### Change pattern
+**1. `src/components/chat/VoiceMessagePlayer.tsx`** — refine to match Telegram density:
+- Increase bar count 32 → 48
+- Reduce gap from 1.5px → 1px; use `min-w-[1.5px]` per bar
+- Remove per-bar pulse animation on play (keep only the "filled" color transition); waveform should look like Telegram's static bars filling left-to-right
+- Show only single time (`currentTime` while playing/seeked, `duration` otherwise) — drop the `/ -remaining` half
+- Move speed pill inline to right side of waveform row (replace `flex-col` layout): `[play] [waveform] [time + 1x pill stacked tightly]`
+- Add small "unheard" indicator dot for incoming, unplayed messages (only `!isMe && progress === 0 && !playing`)
+- Trim `min-w-[220px]` → `min-w-[200px]`, `max-w-[260px]` so bubble matches Telegram's compact look
 
-Append `pt-safe` to each header's className. Where `pt-4`/`py-3` is already present, the global `!important` rule from the previous fix ensures `pt-safe` wins.
+**2. `src/components/chat/HoldToRecordMic.tsx`** — make recorder overlay match Telegram pill:
+- Reduce overlay to a single rounded-full pill (not rounded-2xl card)
+- Move the lock indicator from `-top-24` to `-top-16` and shrink it to a tight rounded-full chip (just lock icon, no chevron stack)
+- Replace text `"Slide to cancel"` arrangement with: red blinking dot + mono time on far left, `‹ Slide to cancel` centered, growing green progress halo on the mic on far right
+- Add subtle background glow that grows with `dragRatio` instead of switching to destructive bg (Telegram keeps the bar neutral until release)
+
+**3. Keep unchanged**
+- `VoiceNotePlayer.tsx` (different surface, used elsewhere)
+- Storage / upload pipeline
+- Bubble container colors (already use semantic tokens)
 
 ### Verify
 
 - `bunx tsc --noEmit`
-- Spot-check Profile, MorePage, ChatHub, PartnerOnboarding, ReelsFeed at 428×703 viewport.
+- Spot-check `/chat` on 428×703 viewport with both incoming and outgoing voice messages
+- Hold mic to confirm new pill layout
 
 ### Expected result
 
-This completes the safe-area pass — no remaining mobile sticky headers will sit under the iPhone status bar / Dynamic Island.
+Voice bubbles look as dense and clean as Telegram's; recording overlay collapses to the familiar single pill with slide-to-cancel + lock above mic.
