@@ -44,7 +44,7 @@ interface GroupMessage {
   message_type: string;
   reply_to_id: string | null;
   created_at: string;
-  file_payload?: { duration_ms?: number } | null;
+  file_payload?: { duration_ms?: number; client_send_id?: string } | null;
   _local_voice_url?: string;
 }
 
