@@ -7,6 +7,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { LoadingPanel, NextActions, SectionShell, StatCard, money } from "./LodgingOperationsShared";
 import { CatalogTable, EditorDialog } from "./CatalogTable";
 import { useLodgingCatalog } from "@/hooks/lodging/useLodgingCatalog";
+import LodgingQuickJump from "./LodgingQuickJump";
+import LodgingSectionStatusBanner from "./LodgingSectionStatusBanner";
 
 interface Transfer {
   id: string;
@@ -32,6 +34,8 @@ export default function LodgingTransportSection({ storeId }: { storeId: string }
 
   return (
     <SectionShell title="Transport & Transfers" subtitle="Airport, ferry, boat, scooter, and car transfer pricing matrix." icon={Car}>
+      <LodgingQuickJump active="lodge-transport" />
+      <LodgingSectionStatusBanner title="Transport & Transfers" icon={Car} countLabel="Active routes" countValue={rows.filter((r) => r.active !== false).length} fixLabel="Open Front Desk" fixTab="lodge-frontdesk" />
       {list.isLoading ? <LoadingPanel /> : <>
         <div className="grid gap-3 sm:grid-cols-3">
           <StatCard label="Transfer routes" value={String(rows.length)} icon={Car} />

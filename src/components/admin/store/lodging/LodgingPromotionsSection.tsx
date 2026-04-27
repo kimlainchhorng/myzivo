@@ -10,6 +10,8 @@ import { LoadingPanel, NextActions, SectionShell, StatCard } from "./LodgingOper
 import { CatalogTable, EditorDialog } from "./CatalogTable";
 import { useLodgingCatalog } from "@/hooks/lodging/useLodgingCatalog";
 import { PROMO_PRESETS } from "./PromoPresets";
+import LodgingQuickJump from "./LodgingQuickJump";
+import LodgingSectionStatusBanner from "./LodgingSectionStatusBanner";
 
 interface Promotion {
   id: string;
@@ -72,6 +74,8 @@ export default function LodgingPromotionsSection({ storeId }: { storeId: string 
 
   return (
     <SectionShell title="Promotions & Discounts" subtitle="Promo codes, early-bird, last-minute, length-of-stay, and member-only rates." icon={Tag}>
+      <LodgingQuickJump active="lodge-promotions" />
+      <LodgingSectionStatusBanner title="Promotions & Discounts" icon={Tag} countLabel="Active promos" countValue={stats.activeCount} fixLabel="Open rate plans" fixTab="lodge-rate-plans" />
       {list.isLoading ? <LoadingPanel /> : <>
         <div className="grid gap-3 sm:grid-cols-4">
           <StatCard label="Active promos" value={String(stats.activeCount)} icon={Tag} />
