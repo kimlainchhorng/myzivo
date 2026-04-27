@@ -119,7 +119,7 @@ export default function LodgingPoliciesSection({ storeId }: { storeId: string })
         <div className="grid gap-3 sm:grid-cols-3">
           <StatCard label="Active taxes/fees" value={String(taxRows.filter((r) => r.active !== false).length)} icon={ShieldCheck} />
           <StatCard label="Cancellation" value={(policyDraft.cancellation_policy || "—").replace(/_/g, " ")} icon={ShieldCheck} />
-          <StatCard label="Deposit %" value={`${policyDraft.deposit_pct || 0}%`} icon={ShieldCheck} />
+          <StatCard label="Deposit %" value={`${policyDraft.deposit_percent || 0}%`} icon={ShieldCheck} />
         </div>
 
         {/* House policies editor */}
