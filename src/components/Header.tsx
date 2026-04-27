@@ -202,9 +202,9 @@ const Header = () => {
                   {/* User Menu - Enhanced */}
                   <DropdownMenu>
                     <DropdownMenuTrigger asChild>
-                      <Button variant="ghost" size="sm" className="gap-2 ml-1.5 rounded-xl hover:bg-muted/50 pr-3 transition-all duration-150 hover:scale-[1.02] active:scale-[0.98]">
-                        <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-primary/20 to-teal-400/10 flex items-center justify-center ring-2 ring-primary/20">
-                          <User className="h-4 w-4 text-primary" />
+                      <Button variant="ghost" size="sm" className="gap-2 ml-1 rounded-xl hover:bg-muted/50 pr-2 h-8 transition-all duration-150 hover:scale-[1.02] active:scale-[0.98]">
+                        <div className="w-7 h-7 rounded-lg bg-gradient-to-br from-primary/20 to-teal-400/10 flex items-center justify-center ring-2 ring-primary/20">
+                          <User className="h-3.5 w-3.5 text-primary" />
                         </div>
                         <div className="hidden lg:flex flex-col items-start">
                           <span className="text-sm font-semibold">Account</span>
