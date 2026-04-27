@@ -73,7 +73,7 @@ const LockedMediaPricePicker = lazy(() => import("./LockedMediaPricePicker"));
 const ChatContactInfo = lazy(() => import("./ChatContactInfo"));
 const MessageScheduler = lazy(() => import("./MessageScheduler"));
 const PinnedMessagesPanel = lazy(() => import("./PinnedMessagesPanel"));
-const GroupCallLauncher = lazy(() => import("./call/GroupCallLauncher"));
+
 import type { EffectType } from "./messageEffectUtils";
 import { detectMessageEffect } from "./messageEffectUtils";
 const MessageEffects = lazy(() => import("./MessageEffects"));
@@ -241,7 +241,7 @@ export default function PersonalChat({ recipientId, recipientName, recipientAvat
   const [loading, setLoading] = useState(true);
   const [sending, setSending] = useState(false);
   const [activeCall, setActiveCall] = useState<"voice" | "video" | null>(null);
-  const [launcherCall, setLauncherCall] = useState<"audio" | "video" | null>(null);
+  
   const [pipMode, setPipMode] = useState(false);
   const [pipData, setPipData] = useState<{ remoteStream: MediaStream | null; duration: number; isMuted: boolean; callType: "voice" | "video"; isCameraOff: boolean } | null>(null);
   const [pipControls, setPipControls] = useState<{ toggleMute: () => void; endCall: () => void; toggleCamera: () => void } | null>(null);
@@ -1446,14 +1446,14 @@ export default function PersonalChat({ recipientId, recipientName, recipientAvat
           <div className="flex items-center gap-0.5">
             <motion.button
               whileTap={{ scale: 0.85 }}
-              onClick={() => { void primeCallAudio(); setLauncherCall("video"); }}
+              onClick={() => { void primeCallAudio(); void handleStartCall("video"); }}
               className="h-10 w-10 rounded-full flex items-center justify-center hover:bg-blue-500/10 active:bg-blue-500/15 transition-colors"
             >
               <Video className="h-5 w-5 text-blue-500" />
             </motion.button>
             <motion.button
               whileTap={{ scale: 0.85 }}
-              onClick={() => { void primeCallAudio(); setLauncherCall("audio"); }}
+              onClick={() => { void primeCallAudio(); void handleStartCall("voice"); }}
               className="h-10 w-10 rounded-full flex items-center justify-center hover:bg-emerald-500/10 active:bg-emerald-500/15 transition-colors"
             >
               <Phone className="h-[19px] w-[19px] text-emerald-500" />
@@ -1593,20 +1593,8 @@ export default function PersonalChat({ recipientId, recipientName, recipientAvat
         )}
       </AnimatePresence>
 
-      {/* New LiveKit-powered call (lobby + recording + reactions + screen-share) */}
-      <AnimatePresence>
-        {launcherCall && conversationId && (
-          <Suspense fallback={null}>
-            <div className="fixed inset-0 z-[70] bg-background">
-              <GroupCallLauncher
-                roomName={`dm-${conversationId}`}
-                callType={launcherCall}
-                onEnded={() => setLauncherCall(null)}
-              />
-            </div>
-          </Suspense>
-        )}
-      </AnimatePresence>
+      {/* DM calls use the personal WebRTC call UI above (activeCall). Group calls
+          live in GroupChat.tsx — never mount GroupCallLauncher for 1-on-1 chats. */}
 
       <AnimatePresence>
         {activeCall && pipMode && (
