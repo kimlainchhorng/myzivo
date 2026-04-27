@@ -1,5 +1,5 @@
 /**
- * VoiceMessagePlayer — 2026-style waveform audio player with speed control
+ * VoiceMessagePlayer — Telegram-style waveform audio player with speed control
  */
 import { useState, useRef, useEffect, useCallback } from "react";
 import Play from "lucide-react/dist/esm/icons/play";
@@ -23,7 +23,7 @@ function generateWaveform(url: string, count: number): number[] {
   return Array.from({ length: count }, (_, i) => {
     const seed = Math.abs(((hash * (i + 1) * 2654435761) >> 16) % 100);
     const positionWeight = 1 - Math.abs((i / count) * 2 - 1) * 0.3;
-    return 0.15 + (seed / 100) * 0.85 * positionWeight;
+    return 0.2 + (seed / 100) * 0.8 * positionWeight;
   });
 }
 
@@ -34,7 +34,8 @@ export default function VoiceMessagePlayer({ url, duration, isMe }: VoiceMessage
   const [currentTime, setCurrentTime] = useState(0);
   const [totalDuration, setTotalDuration] = useState(0);
   const [speed, setSpeed] = useState<(typeof SPEED_OPTIONS)[number]>(1);
-  const barCount = 32;
+  const [hasPlayed, setHasPlayed] = useState(false);
+  const barCount = 48;
   const waveform = generateWaveform(url, barCount);
 
   useEffect(() => {
@@ -77,7 +78,10 @@ export default function VoiceMessagePlayer({ url, duration, isMe }: VoiceMessage
       setPlaying(false);
     } else {
       audio.playbackRate = speed;
-      audio.play().then(() => setPlaying(true)).catch(() => {});
+      audio.play().then(() => {
+        setPlaying(true);
+        setHasPlayed(true);
+      }).catch(() => {});
     }
   }, [playing, speed]);
 
@@ -108,12 +112,11 @@ export default function VoiceMessagePlayer({ url, duration, isMe }: VoiceMessage
     ? formatTime(currentTime)
     : (duration || formatTime(totalDuration));
 
-  const remaining = totalDuration > 0 && (playing || progress > 0)
-    ? formatTime(totalDuration - currentTime)
-    : null;
+  // Telegram shows a tiny dot for unheard incoming voice notes
+  const showUnheardDot = !isMe && !hasPlayed && progress === 0 && !playing;
 
   return (
-    <div className="flex items-center gap-2.5 min-w-[220px]">
+    <div className="flex items-center gap-2.5 min-w-[200px] max-w-[260px]">
       <audio ref={audioRef} src={url} preload="metadata" />
 
       {/* Play/Pause button */}
@@ -125,6 +128,7 @@ export default function VoiceMessagePlayer({ url, duration, isMe }: VoiceMessage
             ? "bg-primary-foreground/20 hover:bg-primary-foreground/30 text-primary-foreground"
             : "bg-primary/15 hover:bg-primary/25 text-primary"
         }`}
+        aria-label={playing ? "Pause" : "Play"}
       >
         {playing ? (
           <Pause className="w-4 h-4" />
@@ -133,10 +137,10 @@ export default function VoiceMessagePlayer({ url, duration, isMe }: VoiceMessage
         )}
       </motion.button>
 
-      <div className="flex-1 flex flex-col gap-1">
+      <div className="flex-1 min-w-0 flex flex-col gap-1">
         {/* Waveform bars — tappable for seeking */}
         <div
-          className="flex items-center gap-[1.5px] h-7 cursor-pointer"
+          className="flex items-center gap-[1px] h-7 cursor-pointer"
           onClick={(e) => {
             const rect = e.currentTarget.getBoundingClientRect();
             const x = e.clientX - rect.left;
@@ -147,47 +151,48 @@ export default function VoiceMessagePlayer({ url, duration, isMe }: VoiceMessage
         >
           {waveform.map((h, i) => {
             const filled = i / barCount <= progress;
-            const isActive = playing && filled;
             return (
-              <motion.div
+              <div
                 key={i}
-                className={`flex-1 rounded-full transition-colors duration-100 ${
+                className={`flex-1 min-w-[1.5px] rounded-full transition-colors duration-150 ${
                   filled
                     ? isMe ? "bg-primary-foreground" : "bg-primary"
-                    : isMe ? "bg-primary-foreground/25" : "bg-primary/20"
+                    : isMe ? "bg-primary-foreground/30" : "bg-primary/25"
                 }`}
                 style={{
                   height: `${h * 100}%`,
                   minHeight: "3px",
-                  maxHeight: "100%",
                 }}
-                animate={isActive ? { scaleY: [1, 1.15, 1] } : { scaleY: 1 }}
-                transition={isActive ? { repeat: Infinity, duration: 0.5, delay: i * 0.02 } : {}}
               />
             );
           })}
         </div>
 
-        {/* Time + Speed */}
-        <div className="flex items-center justify-between">
-          <span className={`text-[10px] font-medium tabular-nums leading-none ${
-            isMe ? "text-primary-foreground/60" : "text-muted-foreground"
-          }`}>
-            {displayTime}
-            {remaining && <span className="ml-1 opacity-50">/ -{remaining}</span>}
-          </span>
+        {/* Time + Speed row */}
+        <div className="flex items-center justify-between gap-2">
+          <div className="flex items-center gap-1.5">
+            <span className={`text-[11px] font-medium tabular-nums leading-none ${
+              isMe ? "text-primary-foreground/70" : "text-muted-foreground"
+            }`}>
+              {displayTime}
+            </span>
+            {showUnheardDot && (
+              <span className="w-1.5 h-1.5 rounded-full bg-primary inline-block" aria-label="Unheard" />
+            )}
+          </div>
 
-          {/* Speed toggle */}
+          {/* Speed pill */}
           <motion.button
             whileTap={{ scale: 0.85 }}
             onClick={cycleSpeed}
-            className={`text-[9px] font-bold px-1.5 py-0.5 rounded-full leading-none transition-all ${
+            className={`text-[10px] font-bold px-1.5 py-[2px] rounded-full leading-none transition-all ${
               speed !== 1
                 ? isMe ? "bg-primary-foreground/30 text-primary-foreground" : "bg-primary/20 text-primary"
-                : isMe ? "bg-primary-foreground/15 text-primary-foreground/50" : "bg-primary/10 text-muted-foreground"
+                : isMe ? "bg-primary-foreground/15 text-primary-foreground/60" : "bg-muted text-muted-foreground"
             }`}
+            aria-label={`Playback speed ${speed}x`}
           >
-            {speed}×
+            {speed}x
           </motion.button>
         </div>
       </div>

@@ -16,7 +16,7 @@ import Mic from "lucide-react/dist/esm/icons/mic";
 import Trash2 from "lucide-react/dist/esm/icons/trash-2";
 import Send from "lucide-react/dist/esm/icons/send";
 import Lock from "lucide-react/dist/esm/icons/lock";
-import ChevronUp from "lucide-react/dist/esm/icons/chevron-up";
+
 import ChevronLeft from "lucide-react/dist/esm/icons/chevron-left";
 import Pause from "lucide-react/dist/esm/icons/pause";
 import Play from "lucide-react/dist/esm/icons/play";
@@ -190,7 +190,7 @@ export default function HoldToRecordMic({ voice, className }: Props) {
         )}
       </motion.button>
 
-      {/* Recording overlay — covers the composer with iMessage-style hint UI */}
+      {/* Recording overlay — Telegram-style single pill at the bottom */}
       <AnimatePresence>
         {isRecording && !locked && (
           <motion.div
@@ -201,38 +201,47 @@ export default function HoldToRecordMic({ voice, className }: Props) {
             className="absolute inset-x-0 bottom-0 z-40 pointer-events-none"
             style={{ paddingBottom: "max(env(safe-area-inset-bottom, 0px), 0.5rem)" }}
           >
-            {/* Lock hint pill — floats above the mic */}
+            {/* Lock hint chip — small, sits just above the mic */}
             <motion.div
-              animate={{ y: -Math.abs(dragY) * 0.6, opacity: 0.7 + dragRatio * 0.3 }}
-              className="absolute right-4 -top-24 bg-card/90 backdrop-blur-xl border border-border/40 rounded-full px-2 py-3 flex flex-col items-center gap-1 shadow-lg"
+              animate={{
+                y: -Math.abs(dragY) * 0.6,
+                opacity: 0.85 + Math.min(1, Math.abs(dragY) / LOCK_THRESHOLD) * 0.15,
+                scale: willLock ? 1.1 : 1,
+              }}
+              className="absolute right-5 -top-14 bg-card/95 backdrop-blur-xl border border-border/40 rounded-full p-2 shadow-lg"
             >
               <Lock className={`h-4 w-4 ${willLock ? "text-primary" : "text-muted-foreground"}`} />
-              <ChevronUp className="h-3 w-3 text-muted-foreground/60" />
             </motion.div>
 
-            {/* Bottom recording bar */}
+            {/* Bottom recording pill */}
             <div
-              className={`mx-2 mb-1 px-4 py-3 rounded-2xl backdrop-blur-2xl border flex items-center gap-3 shadow-xl transition-colors ${
-                willCancel
-                  ? "bg-destructive/15 border-destructive/40"
-                  : "bg-card/85 border-border/40"
-              }`}
+              className="mx-2 mb-1 pl-4 pr-2 py-2 rounded-full backdrop-blur-2xl border border-border/40 bg-card/90 flex items-center gap-3 shadow-xl relative overflow-hidden"
             >
+              {/* Subtle progress glow that grows with slide-to-cancel */}
               <motion.div
-                className={`w-2.5 h-2.5 rounded-full shrink-0 ${willCancel ? "bg-destructive" : "bg-destructive"}`}
-                animate={{ opacity: [1, 0.3, 1] }}
-                transition={{ repeat: Infinity, duration: 1 }}
+                className="absolute inset-y-0 left-0 bg-destructive/10 pointer-events-none"
+                animate={{ width: `${dragRatio * 100}%` }}
+                transition={{ type: "tween", duration: 0.1 }}
               />
-              <span className="text-xs font-mono font-semibold tabular-nums shrink-0 text-foreground">
-                {fmt(voice.elapsedMs ?? voice.duration * 1000)}
-              </span>
 
-              {/* Slide-to-cancel hint */}
+              {/* Left: red dot + time */}
+              <div className="flex items-center gap-2 shrink-0 relative">
+                <motion.div
+                  className="w-2.5 h-2.5 rounded-full bg-destructive"
+                  animate={{ opacity: [1, 0.3, 1] }}
+                  transition={{ repeat: Infinity, duration: 1 }}
+                />
+                <span className="text-sm font-mono font-medium tabular-nums text-foreground">
+                  {fmt(voice.elapsedMs ?? voice.duration * 1000)}
+                </span>
+              </div>
+
+              {/* Center: slide-to-cancel hint */}
               <motion.div
-                className="flex-1 flex items-center justify-center gap-1.5 text-xs text-muted-foreground"
-                animate={{ x: dragX * 0.4, opacity: willCancel ? 0 : 1 - dragRatio * 0.5 }}
+                className="flex-1 flex items-center justify-center gap-1 text-sm text-muted-foreground relative"
+                animate={{ x: dragX * 0.45, opacity: 1 - dragRatio * 0.6 }}
               >
-                <ChevronLeft className="h-3.5 w-3.5" />
+                <ChevronLeft className="h-4 w-4" />
                 <span>Slide to cancel</span>
               </motion.div>
 
@@ -240,12 +249,15 @@ export default function HoldToRecordMic({ voice, className }: Props) {
                 <motion.div
                   initial={{ scale: 0.6, opacity: 0 }}
                   animate={{ scale: 1, opacity: 1 }}
-                  className="flex items-center gap-1.5 text-xs font-medium text-destructive"
+                  className="absolute inset-0 flex items-center justify-center gap-1.5 text-sm font-medium text-destructive bg-card/95 rounded-full"
                 >
-                  <Trash2 className="h-3.5 w-3.5" />
+                  <Trash2 className="h-4 w-4" />
                   Release to cancel
                 </motion.div>
               )}
+
+              {/* Right: spacer to balance the visual since the actual mic button sits over the composer */}
+              <div className="w-11 h-9 shrink-0" aria-hidden />
             </div>
           </motion.div>
         )}
