@@ -463,7 +463,7 @@ export default function BusinessPageWizard() {
     <div className="mx-auto flex min-h-screen w-full max-w-xl flex-col bg-background pb-32">
       {/* Header */}
       <header
-        className="sticky top-0 z-10 flex items-center gap-3 border-b border-border bg-background/95 px-4 py-3 backdrop-blur"
+        className="sticky top-0 z-10 flex items-center gap-3 border-b border-border bg-background/95 px-4 py-3 backdrop-blur pt-safe"
         style={{ paddingTop: "calc(env(safe-area-inset-top) + 12px)" }}
       >
         <button

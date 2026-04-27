@@ -183,7 +183,7 @@ export default function PersonalSchedulePage() {
     <AppLayout title="Schedule" hideHeader>
       <div className="flex flex-col min-h-screen bg-background">
         {/* Sticky Header */}
-        <div className="sticky top-0 z-20 bg-background/80 backdrop-blur-xl border-b border-border/40">
+        <div className="sticky top-0 z-20 bg-background/80 backdrop-blur-xl border-b border-border/40 pt-safe">
           <div className="safe-area-top" />
           <div className="flex items-center gap-3 px-4 h-11">
             <button onClick={() => navigate(-1)} className="w-8 h-8 rounded-full flex items-center justify-center active:scale-90 transition-transform -ml-1">

@@ -1209,7 +1209,7 @@ export default function PublicProfilePage() {
                       <>
                         {/* Header bar */}
                         <div
-                          className="sticky top-0 z-10 flex items-center gap-3 px-4 py-2 bg-background/80 backdrop-blur-lg border-b border-border cursor-grab active:cursor-grabbing select-none"
+                          className="sticky top-0 z-10 flex items-center gap-3 px-4 py-2 bg-background/80 backdrop-blur-lg border-b border-border cursor-grab active:cursor-grabbing select-none pt-safe"
                           style={{ touchAction: "none" }}
                           onPointerDown={(e) => {
                             const target = e.target as HTMLElement | null;

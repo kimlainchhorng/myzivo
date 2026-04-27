@@ -174,7 +174,7 @@ export default function PartnerOnboarding() {
   return (
     <div className="min-h-screen bg-background safe-area-top safe-area-bottom flex flex-col">
       {/* Header */}
-      <header className="sticky top-0 z-40 bg-card/80 backdrop-blur-xl border-b border-border/50 px-4 py-3">
+      <header className="sticky top-0 z-40 bg-card/80 backdrop-blur-xl border-b border-border/50 px-4 py-3 pt-safe">
         <div className="max-w-2xl mx-auto flex items-center gap-3">
           <Button variant="ghost" size="icon" onClick={back} className="rounded-xl" aria-label="Back">
             <ArrowLeft className="h-5 w-5" />

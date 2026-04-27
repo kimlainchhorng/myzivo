@@ -707,7 +707,7 @@ const Profile = () => {
                 {/* Caret pointing at the bell */}
                 <div className="pointer-events-none absolute -top-1.5 right-12 h-3 w-3 rotate-45 rounded-sm border-l border-t border-border/60 bg-card lg:right-6" />
                 {/* Header (sticky) */}
-                <div className="sticky top-0 z-10 flex items-center justify-between gap-2 border-b border-border/40 bg-card/95 px-4 pt-3 pb-2.5 backdrop-blur">
+                <div className="sticky top-0 z-10 flex items-center justify-between gap-2 border-b border-border/40 bg-card/95 px-4 pt-3 pb-2.5 backdrop-blur pt-safe">
                   <div className="flex items-center gap-2" aria-live="polite">
                     <h3 className="text-[15px] font-bold leading-none tracking-tight">Notifications</h3>
                     {totalNotifCount > 0 && (
