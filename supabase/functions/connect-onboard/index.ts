@@ -26,7 +26,25 @@ serve(async (req) => {
     if (uErr || !userData.user) throw new Error("Invalid auth");
     const user = userData.user;
 
-    const { country = "US", return_url } = await req.json().catch(() => ({}));
+    const { country: rawCountry = "US", return_url } = await req.json().catch(() => ({}));
+    const country = String(rawCountry || "US").trim().toUpperCase();
+
+    // Stripe Connect Express only supports a fixed list of countries. Reject
+    // unsupported markets up-front so the UI can route to a manual rail
+    // (e.g. ABA / KHQR for Cambodia) instead of failing inside Stripe.
+    const STRIPE_COUNTRIES = new Set([
+      "US","CA","MX","BR",
+      "AT","BE","BG","HR","CY","CZ","DK","EE","FI","FR","DE","GR","HU","IE","IT","LV","LI","LT","LU","MT","NL","NO","PL","PT","RO","SK","SI","ES","SE","CH","GB",
+      "AU","NZ","HK","JP","SG","MY","TH","ID","PH","IN","AE",
+    ]);
+    if (!STRIPE_COUNTRIES.has(country)) {
+      return new Response(JSON.stringify({
+        error: "stripe_unsupported_country",
+        country,
+        message: `Stripe Connect is not available in ${country}. Use ABA, bank wire, or PayPal instead.`,
+      }), { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+    }
+
     const origin = req.headers.get("origin") || "https://hizivo.com";
     const stripe = new Stripe(stripeKey, { apiVersion: "2025-08-27.basil" });
 
