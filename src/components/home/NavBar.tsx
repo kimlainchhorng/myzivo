@@ -262,7 +262,7 @@ const NavBar = forwardRef<HTMLDivElement>(function NavBar(_, ref) {
               </nav>
 
               {/* Search Bar */}
-              <div className="hidden lg:flex flex-1 max-w-xs mx-4 relative">
+              <div className="hidden lg:flex flex-1 max-w-md ml-auto mr-3 relative">
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />
                 <input
                   placeholder="Search people..."
