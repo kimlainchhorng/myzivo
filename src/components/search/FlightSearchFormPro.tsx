@@ -320,8 +320,8 @@ export default function FlightSearchFormPro({
 
             {/* Row 2: Dates */}
             <div>
-              <Label className="text-xs text-muted-foreground mb-1.5 block">
-                {tripType === "roundtrip" ? `${t("flights.departure")} → ${t("flights.return")}` : t("flights.departure")}
+              <Label className="text-xs font-semibold text-foreground/80 mb-1.5 block">
+                {tripType === "roundtrip" ? `${t("flights.departure")} & ${t("flights.return")}` : t("flights.departure")}
                 <span className="text-destructive"> *</span>
               </Label>
 
