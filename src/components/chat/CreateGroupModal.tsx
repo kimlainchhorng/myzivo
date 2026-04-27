@@ -105,7 +105,25 @@ export default function CreateGroupModal({ open, onClose, onCreated }: CreateGro
     if (!user?.id || selected.size < 1 || !groupName.trim()) return;
     setCreating(true);
 
+    // Helper: turn any unknown error (PostgrestError, Error, plain object) into
+    // a readable message so the toast/console always show the real cause.
+    const readErr = (e: unknown): string => {
+      if (!e) return "";
+      if (typeof e === "string") return e;
+      const x = e as { message?: string; details?: string; hint?: string; code?: string };
+      const parts = [x.message, x.details, x.hint, x.code ? `(${x.code})` : ""].filter(Boolean);
+      return parts.join(" — ") || JSON.stringify(e);
+    };
+
     try {
+      // Verify the session is still valid — RLS will reject inserts if auth.uid() is null.
+      const { data: authData } = await supabase.auth.getUser();
+      if (!authData?.user?.id) {
+        toast.error("Please sign in again to create a group");
+        setCreating(false);
+        return;
+      }
+
       // Create the group
       const { data, error: gErr } = await dbFrom("chat_groups")
         .insert({ name: groupName.trim(), created_by: user.id })
@@ -113,7 +131,10 @@ export default function CreateGroupModal({ open, onClose, onCreated }: CreateGro
         .single();
       const group = data as GroupRow | null;
 
-      if (gErr || !group?.id) throw gErr || new Error("Group creation failed");
+      if (gErr || !group?.id) {
+        console.error("[CreateGroup] chat_groups insert failed", gErr, { user_id: user.id, name: groupName.trim() });
+        throw new Error(readErr(gErr) || "Group row was not created");
+      }
 
       // Step 1: insert the creator as the first member (with owner role if column exists).
       // RLS "Group members or creator can add members" passes because the actor created the group.
@@ -121,7 +142,10 @@ export default function CreateGroupModal({ open, onClose, onCreated }: CreateGro
       try { creatorInsert.role = "owner"; } catch { /* role column optional */ }
       const { error: cErr } = await dbFrom("chat_group_members")
         .insert(creatorInsert);
-      if (cErr && !/duplicate|unique/i.test(cErr.message || "")) throw cErr;
+      if (cErr && !/duplicate|unique/i.test(cErr.message || "")) {
+        console.error("[CreateGroup] creator member insert failed", cErr, creatorInsert);
+        throw new Error(readErr(cErr));
+      }
 
       // Step 2: insert remaining members. Now the actor is a member, so the
       // "members can add members" branch of the RLS policy also covers this.
@@ -132,7 +156,10 @@ export default function CreateGroupModal({ open, onClose, onCreated }: CreateGro
       if (otherInserts.length) {
         const { error: mErr } = await dbFrom("chat_group_members")
           .insert(otherInserts);
-        if (mErr) throw mErr;
+        if (mErr) {
+          console.error("[CreateGroup] other members insert failed", mErr, otherInserts);
+          throw new Error(readErr(mErr));
+        }
       }
 
       toast.success("Group created!");
@@ -142,7 +169,7 @@ export default function CreateGroupModal({ open, onClose, onCreated }: CreateGro
       setGroupName("");
     } catch (err: unknown) {
       console.error("[CreateGroup] failed", err);
-      const message = err instanceof Error ? err.message : "";
+      const message = readErr(err);
       toast.error(message ? `Failed to create group: ${message}` : "Failed to create group");
     }
     setCreating(false);
