@@ -136,6 +136,10 @@ interface Message {
     note?: string;
   } | null;
   _local_voice_url?: string;
+  // Transient client-only upload state for optimistic voice bubbles
+  _upload_status?: "uploading" | "sent" | "failed";
+  _upload_progress?: number;
+  _upload_error?: string;
 }
 
 interface CallEvent {
