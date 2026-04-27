@@ -34,15 +34,15 @@ export default function LodgingPayoutsSection({ storeId }: { storeId: string }) 
     queryFn: async () => {
       const { data, error } = await supabase
         .from("store_profiles")
-        .select("id, country")
+        .select("id, market")
         .eq("id", storeId)
         .maybeSingle();
       if (error) throw error;
-      return data as { id: string; country: string | null } | null;
+      return data as { id: string; market: string | null } | null;
     },
     enabled: !!storeId,
   });
-  const storeCountry = normalizeCountry(store?.country || (reservations[0] as any)?.country || "US");
+  const storeCountry = normalizeCountry(store?.market || (reservations[0] as any)?.country || "US");
 
   // Already-requested amount (so available = net − pending/approved)
   const { data: openRequests = [] } = useQuery({
