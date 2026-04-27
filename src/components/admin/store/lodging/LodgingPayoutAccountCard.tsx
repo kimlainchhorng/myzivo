@@ -290,7 +290,14 @@ function ManualMethodForm({
           {ownMethods.map((m) => (
             <li key={m.id} className="flex items-center justify-between rounded-md border border-border bg-background/50 px-2.5 py-1.5">
               <div className="min-w-0">
-                <p className="text-xs font-semibold truncate">{m.label || defaultLabel(rail)}</p>
+                <p className="text-xs font-semibold truncate flex items-center gap-1.5">
+                  {m.label || defaultLabel(rail)}
+                  {m.verification_status === "verified" ? (
+                    <Badge className="bg-emerald-500/15 text-emerald-700 border-emerald-500/30 h-4 px-1 text-[9px]">Verified</Badge>
+                  ) : (
+                    <Badge variant="outline" className="h-4 px-1 text-[9px]">Pending verification</Badge>
+                  )}
+                </p>
                 <p className="text-[11px] text-muted-foreground truncate">
                   {m.method_type === "aba" ? `ABA: ${m.aba_account_id}` : m.method_type === "paypal" ? m.account_number : `${m.bank_name || ""} ···${(m.account_number || "").slice(-4)}`}
                 </p>
