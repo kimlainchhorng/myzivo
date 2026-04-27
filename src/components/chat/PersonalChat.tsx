@@ -144,6 +144,8 @@ interface Message {
   _upload_error?: string;
   _upload_endpoint?: string;
   _upload_status_code?: number;
+  _upload_phase?: "preflight" | "upload" | "insert";
+  _upload_body?: string;
 }
 
 interface CallEvent {
