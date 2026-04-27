@@ -28523,6 +28523,66 @@ export type Database = {
           },
         ]
       }
+      lodging_concierge_tasks: {
+        Row: {
+          active: boolean
+          assigned_to: string | null
+          completed_at: string | null
+          created_at: string
+          description: string | null
+          due_at: string | null
+          guest_name: string | null
+          id: string
+          notes: string | null
+          priority: string
+          request_type: string
+          reservation_id: string | null
+          room_number: string | null
+          status: string
+          store_id: string
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          active?: boolean
+          assigned_to?: string | null
+          completed_at?: string | null
+          created_at?: string
+          description?: string | null
+          due_at?: string | null
+          guest_name?: string | null
+          id?: string
+          notes?: string | null
+          priority?: string
+          request_type?: string
+          reservation_id?: string | null
+          room_number?: string | null
+          status?: string
+          store_id: string
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          active?: boolean
+          assigned_to?: string | null
+          completed_at?: string | null
+          created_at?: string
+          description?: string | null
+          due_at?: string | null
+          guest_name?: string | null
+          id?: string
+          notes?: string | null
+          priority?: string
+          request_type?: string
+          reservation_id?: string | null
+          room_number?: string | null
+          status?: string
+          store_id?: string
+          title?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       lodging_deposit_retry_attempts: {
         Row: {
           admin_id: string | null
@@ -28626,6 +28686,66 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      lodging_lost_found: {
+        Row: {
+          active: boolean
+          claimed_at: string | null
+          created_at: string
+          description: string | null
+          finder_contact: string | null
+          found_by: string | null
+          id: string
+          item_name: string
+          location_found: string | null
+          notes: string | null
+          owner_contact: string | null
+          owner_name: string | null
+          photo_url: string | null
+          reservation_id: string | null
+          status: string
+          store_id: string
+          updated_at: string
+        }
+        Insert: {
+          active?: boolean
+          claimed_at?: string | null
+          created_at?: string
+          description?: string | null
+          finder_contact?: string | null
+          found_by?: string | null
+          id?: string
+          item_name: string
+          location_found?: string | null
+          notes?: string | null
+          owner_contact?: string | null
+          owner_name?: string | null
+          photo_url?: string | null
+          reservation_id?: string | null
+          status?: string
+          store_id: string
+          updated_at?: string
+        }
+        Update: {
+          active?: boolean
+          claimed_at?: string | null
+          created_at?: string
+          description?: string | null
+          finder_contact?: string | null
+          found_by?: string | null
+          id?: string
+          item_name?: string
+          location_found?: string | null
+          notes?: string | null
+          owner_contact?: string | null
+          owner_name?: string | null
+          photo_url?: string | null
+          reservation_id?: string | null
+          status?: string
+          store_id?: string
+          updated_at?: string
+        }
+        Relationships: []
       }
       lodging_meal_plans: {
         Row: {
