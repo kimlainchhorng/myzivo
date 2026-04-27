@@ -1388,14 +1388,16 @@ export default function FeedPage() {
           ? supabase.from("store_profiles").select("id, name, logo_url, slug, is_verified").in("id", storeIds)
           : Promise.resolve({ data: [] as any[] }),
         userIds.length
-          ? supabase.from("profiles").select("id, user_id, full_name, avatar_url, is_verified").in("id", userIds as string[])
+          ? supabase.from("profiles").select("id, user_id, full_name, display_name, avatar_url, is_verified").or(`user_id.in.(${(userIds as string[]).join(",")}),id.in.(${(userIds as string[]).join(",")})`)
           : Promise.resolve({ data: [] as any[] }),
       ]);
 
       const storeMap = new Map((stores || []).map((s: any) => [s.id, s]));
-      const profileMap = new Map((profiles || []).map((p: any) => [p.id, p]));
-      // Also map by user_id
-      (profiles || []).forEach((p: any) => { if (p.user_id) profileMap.set(p.user_id, p); });
+      const profileMap = new Map<string, any>();
+      (profiles || []).forEach((p: any) => {
+        if (p.id) profileMap.set(p.id, p);
+        if (p.user_id) profileMap.set(p.user_id, p);
+      });
 
       const allPosts: FeedPost[] = [];
 
@@ -1433,7 +1435,7 @@ export default function FeedPage() {
           audio_name: post.audio_name || null,
           source: "user",
           author_id: post.user_id,
-          author_name: profile?.full_name || "User",
+          author_name: profile?.display_name || profile?.full_name || "User",
           author_avatar: profile?.avatar_url || null,
           author_is_verified: !!profile?.is_verified,
         });
