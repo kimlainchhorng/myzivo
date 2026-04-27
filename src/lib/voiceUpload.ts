@@ -3,8 +3,19 @@
  * plus a small retry-with-backoff helper.
  *
  * Why XHR? supabase-js's storage `upload()` doesn't expose progress events.
- * For voice notes we want a per-bubble progress bar, so we PUT directly to the
+ * For voice notes we want a per-bubble progress bar, so we POST directly to the
  * Storage REST endpoint with the user's session access token.
+ *
+ * Notes on Storage REST semantics:
+ *   - POST  /object/{bucket}/{path}  → create a new object (matches the
+ *     bucket's INSERT RLS policy). This is what `supabase.storage.upload()`
+ *     uses by default.
+ *   - PUT   /object/{bucket}/{path}  → overwrite an existing object (requires
+ *     an UPDATE RLS policy). The chat-media-files bucket only grants INSERT
+ *     and DELETE to authenticated users, so PUT will RLS-fail.
+ *
+ * Voice notes always use a unique path (timestamp + random id), so POST is
+ * safe and matches the existing storage policy.
  */
 import { supabase } from "@/integrations/supabase/client";
 
@@ -37,11 +48,14 @@ export class UploadHttpError extends Error {
   status: number;
   retriable: boolean;
   url?: string;
-  constructor(status: number, message: string, url?: string) {
+  phase?: "preflight" | "upload" | "insert";
+  body?: string;
+  constructor(status: number, message: string, url?: string, body?: string) {
     super(message);
     this.name = "UploadHttpError";
     this.status = status;
     this.url = url;
+    this.body = body;
     // 408 timeout, 429 rate limit, 5xx — safe to retry
     this.retriable = status === 408 || status === 429 || (status >= 500 && status < 600);
   }
@@ -63,49 +77,79 @@ export interface PreflightResult {
   status: number;
   url: string;
   reason?: string;
+  body?: string;
 }
 
+// Cache successful write-preflight per bucket for the page lifetime — re-checking
+// every voice note is wasteful once we've proven the bucket accepts writes.
+const preflightOkCache = new Map<string, number>();
+const PREFLIGHT_TTL_MS = 5 * 60 * 1000;
+
 /**
- * Lightweight bucket/RLS preflight. Fires a single OPTIONS to the storage
- * object endpoint with the user's auth headers. A 401/403 response means
- * the bucket policy will reject the actual PUT — we surface that immediately
- * instead of burning the full retry budget on a guaranteed failure.
+ * Real write-preflight: POSTs a 1-byte probe object into the user's own folder
+ * inside the target bucket and immediately deletes it. This actually exercises
+ * the INSERT RLS policy, so a failure here is a guaranteed indicator that
+ * the real upload would also fail.
  *
- * Note: this never throws. Network errors → { ok: true, status: 0 } (we let
- * the actual upload attempt the request and produce the real error).
+ * Network errors are NOT treated as a failure — we let the actual upload
+ * surface the real error. Only HTTP 4xx/5xx responses block.
  */
 export async function preflightVoiceBucket(opts: {
   bucket: string;
   path: string;
   signal?: AbortSignal;
 }): Promise<PreflightResult> {
-  const url = `${SUPABASE_URL}/storage/v1/object/${opts.bucket}/${encodeURI(opts.path)}`;
-  try {
-    const { data: sessionData } = await supabase.auth.getSession();
-    const accessToken = sessionData.session?.access_token;
-    if (!accessToken) return { ok: false, status: 401, url, reason: "Not authenticated" };
-    const headers: Record<string, string> = {
-      Authorization: `Bearer ${accessToken}`,
+  const { bucket, signal } = opts;
+
+  const cachedAt = preflightOkCache.get(bucket);
+  if (cachedAt && Date.now() - cachedAt < PREFLIGHT_TTL_MS) {
+    return { ok: true, status: 200, url: `${SUPABASE_URL}/storage/v1/object/${bucket}/<cached>` };
+  }
+
+  const { data: sessionData } = await supabase.auth.getSession();
+  const accessToken = sessionData.session?.access_token;
+  const userId = sessionData.session?.user?.id;
+  if (!accessToken || !userId) {
+    return {
+      ok: false,
+      status: 401,
+      url: `${SUPABASE_URL}/storage/v1/object/${bucket}/`,
+      reason: "Not authenticated — please sign in again.",
     };
-    if (SUPABASE_ANON_KEY) headers["apikey"] = SUPABASE_ANON_KEY;
+  }
+
+  const probePath = `${userId}/.preflight-${Date.now()}-${Math.random().toString(36).slice(2, 8)}.txt`;
+  const url = `${SUPABASE_URL}/storage/v1/object/${bucket}/${encodeURI(probePath)}`;
+  const headers: Record<string, string> = {
+    Authorization: `Bearer ${accessToken}`,
+    "Content-Type": "text/plain",
+  };
+  if (SUPABASE_ANON_KEY) headers["apikey"] = SUPABASE_ANON_KEY;
+
+  try {
     const res = await fetch(url, {
-      method: "OPTIONS",
+      method: "POST",
       headers,
-      signal: opts.signal,
+      body: "preflight",
+      signal,
     });
-    // Storage returns 200 (or 204) for OPTIONS regardless of object existence
-    // when the caller is allowed. 401/403 means the gateway / RLS will block.
-    if (res.status === 401 || res.status === 403) {
-      return {
-        ok: false,
-        status: res.status,
-        url,
-        reason: `Storage permissions blocked this request (HTTP ${res.status}). Check the chat-media-files bucket RLS policies.`,
-      };
+    if (res.ok) {
+      preflightOkCache.set(bucket, Date.now());
+      // Best-effort cleanup of the probe object.
+      void supabase.storage.from(bucket).remove([probePath]).catch(() => {});
+      return { ok: true, status: res.status, url };
     }
-    return { ok: true, status: res.status, url };
-  } catch {
-    // CORS or network — don't block; let the real PUT surface the error.
+    const body = await res.text().catch(() => "");
+    let reason = `Storage write blocked (HTTP ${res.status}). RLS or bucket policy denied the upload.`;
+    if (res.status === 401) reason = "Not authorized to upload (HTTP 401). Sign in again.";
+    if (res.status === 403) reason = `Storage RLS denied write to '${bucket}' (HTTP 403). Check bucket INSERT policy.`;
+    if (res.status === 404) reason = `Storage bucket '${bucket}' not found (HTTP 404).`;
+    return { ok: false, status: res.status, url, reason, body };
+  } catch (err) {
+    if (err instanceof DOMException && err.name === "AbortError") {
+      throw new UploadAbortedError();
+    }
+    // Network / CORS — don't block; the real PUT will surface the error.
     return { ok: true, status: 0, url };
   }
 }
@@ -124,12 +168,12 @@ export async function uploadVoiceWithProgress(opts: UploadVoiceOpts): Promise<Up
 
   return await new Promise<UploadVoiceResult>((resolve, reject) => {
     const xhr = new XMLHttpRequest();
-    // PUT upserts (POST returns 409 on duplicate). Storage REST requires BOTH
-    // the project anon `apikey` header and the user's Bearer token.
-    xhr.open("PUT", url, true);
+    // POST = create new object (matches the bucket's INSERT RLS policy).
+    // Voice paths are always unique (timestamp + random id), so we never need
+    // upsert/PUT semantics here.
+    xhr.open("POST", url, true);
     xhr.setRequestHeader("Authorization", `Bearer ${accessToken}`);
     if (SUPABASE_ANON_KEY) xhr.setRequestHeader("apikey", SUPABASE_ANON_KEY);
-    xhr.setRequestHeader("x-upsert", "true");
     xhr.setRequestHeader("cache-control", `max-age=${cacheControl}`);
     if (contentType) xhr.setRequestHeader("Content-Type", contentType);
 
@@ -150,7 +194,19 @@ export async function uploadVoiceWithProgress(opts: UploadVoiceOpts): Promise<Up
         onProgress?.(1);
         resolve({ publicUrl: data.publicUrl, path });
       } else {
-        reject(new UploadHttpError(xhr.status, xhr.responseText || `HTTP ${xhr.status}`, url));
+        const body = xhr.responseText || "";
+        let msg = `HTTP ${xhr.status}`;
+        try {
+          const parsed = body ? JSON.parse(body) : null;
+          if (parsed?.message) msg = `${msg}: ${parsed.message}`;
+          else if (parsed?.error) msg = `${msg}: ${parsed.error}`;
+          else if (body) msg = `${msg}: ${body.slice(0, 160)}`;
+        } catch {
+          if (body) msg = `${msg}: ${body.slice(0, 160)}`;
+        }
+        const err = new UploadHttpError(xhr.status, msg, url, body);
+        err.phase = "upload";
+        reject(err);
       }
     };
     xhr.onerror = () => {
@@ -158,6 +214,7 @@ export async function uploadVoiceWithProgress(opts: UploadVoiceOpts): Promise<Up
       // Network-level failure — retriable
       const err = new UploadHttpError(0, "Network error", url);
       err.retriable = true;
+      err.phase = "upload";
       reject(err);
     };
     xhr.onabort = () => {
