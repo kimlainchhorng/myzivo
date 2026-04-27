@@ -106,18 +106,59 @@ function PostDetailOverlay({
   children: (startDrag: (e: React.PointerEvent) => void) => React.ReactNode;
 }) {
   const { motionProps, startDrag } = useSwipeDownClose(onClose);
+
+  // Body scroll lock + Esc to close while overlay is mounted.
+  useEffect(() => {
+    if (typeof document === "undefined") return;
+    const prev = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") onClose();
+    };
+    window.addEventListener("keydown", onKey);
+    return () => {
+      document.body.style.overflow = prev;
+      window.removeEventListener("keydown", onKey);
+    };
+  }, [onClose]);
+
   if (typeof document === "undefined") return null;
   return createPortal(
-    <motion.div
-      initial={{ opacity: 0, y: 40 }}
-      animate={{ opacity: 1, y: 0 }}
-      exit={{ opacity: 0, y: 60 }}
-      transition={{ type: "spring", damping: 30, stiffness: 320 }}
-      {...motionProps}
-      className="fixed inset-0 z-[9999] bg-background flex flex-col overflow-hidden"
-    >
-      {children(startDrag)}
-    </motion.div>,
+    <>
+      {/* Solid backdrop — guarantees NavBar / sidebars are fully covered.
+          z-[1500] sits above NavBar (z-50/1200) and the chat hub (z-[1401]). */}
+      <motion.div
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        exit={{ opacity: 0 }}
+        transition={{ duration: 0.18 }}
+        onClick={onClose}
+        className="fixed inset-0 z-[1490] bg-background lg:bg-black/85 lg:backdrop-blur-md"
+        aria-hidden="true"
+      />
+      {/* Always-visible close button (desktop). Lives outside the draggable
+          card so it's never clipped or hidden behind a header. */}
+      <button
+        type="button"
+        onClick={onClose}
+        aria-label="Close post"
+        className="hidden lg:flex fixed top-4 right-4 z-[1510] h-11 w-11 items-center justify-center rounded-full bg-background/90 text-foreground shadow-xl ring-1 ring-border/50 backdrop-blur-md hover:bg-background transition-colors"
+      >
+        <XIcon className="h-5 w-5" />
+      </button>
+      <motion.div
+        initial={{ opacity: 0, y: 40 }}
+        animate={{ opacity: 1, y: 0 }}
+        exit={{ opacity: 0, y: 60 }}
+        transition={{ type: "spring", damping: 30, stiffness: 320 }}
+        {...motionProps}
+        className="fixed inset-0 z-[1500] flex flex-col overflow-hidden bg-background lg:bg-transparent lg:items-center lg:justify-center lg:p-6 pointer-events-none"
+      >
+        <div className="relative flex flex-col w-full h-full lg:h-auto lg:max-h-[calc(100vh-3rem)] lg:w-auto lg:max-w-[min(440px,calc((100vh-3rem)*9/16))] lg:rounded-2xl lg:overflow-hidden lg:shadow-2xl lg:bg-background pointer-events-auto">
+          {children(startDrag)}
+        </div>
+      </motion.div>
+    </>,
     document.body,
   );
 }
