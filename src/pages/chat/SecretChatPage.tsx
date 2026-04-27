@@ -122,8 +122,7 @@ export default function SecretChatPage() {
 
       {/* Header */}
       <header
-        className="flex shrink-0 items-center gap-2 border-b border-indigo-500/20 bg-background/85 px-3 backdrop-blur-xl"
-        style={{ paddingTop: "calc(env(safe-area-inset-top, 0px) + 10px)", paddingBottom: 10 }}
+        className="flex shrink-0 items-center gap-2 border-b border-indigo-500/20 bg-background/85 px-3 pb-2.5 backdrop-blur-xl pt-safe"
       >
         <button
           aria-label="Back"

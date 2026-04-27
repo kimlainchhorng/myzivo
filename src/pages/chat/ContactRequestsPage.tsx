@@ -20,8 +20,8 @@ export default function ContactRequestsPage() {
   const list = tab === "in" ? incoming : outgoing;
 
   return (
-    <div className="min-h-screen bg-background flex flex-col" style={{ paddingTop: "env(safe-area-inset-top)" }}>
-      <header className="flex items-center gap-3 px-4 h-14 border-b border-border/30 sticky top-0 bg-background/95 backdrop-blur z-10">
+    <div className="min-h-screen bg-background flex flex-col">
+      <header className="flex items-center gap-3 px-4 h-14 border-b border-border/30 sticky top-0 bg-background/95 backdrop-blur z-10 pt-safe">
         <button onClick={goBack} className="h-9 w-9 rounded-full hover:bg-muted/60 flex items-center justify-center">
           <ArrowLeft className="h-5 w-5" />
         </button>
