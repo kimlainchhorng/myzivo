@@ -21,6 +21,7 @@ export function useVoiceRecorder() {
   const stream = useRef<MediaStream | null>(null);
   const startedAt = useRef(0);
   const timer = useRef<ReturnType<typeof setInterval> | null>(null);
+  const rafId = useRef<number | null>(null);
   const samples = useRef<number[]>([]);
   const audioCtx = useRef<AudioContext | null>(null);
   const analyser = useRef<AnalyserNode | null>(null);
