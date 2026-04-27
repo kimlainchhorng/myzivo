@@ -103,14 +103,14 @@ const Header = () => {
     <>
       <header className="fixed top-0 left-0 right-0 z-50 bg-background/80 backdrop-blur-xl border-b border-border/30 safe-area-top">
         <div className="container mx-auto px-3 sm:px-4">
-          <div className="flex items-center justify-between h-12 sm:h-14 md:h-14">
+          <div className="flex items-center justify-between h-11 sm:h-12">
             {/* Logo */}
             <div className="flex items-center gap-2">
               <div 
                 className="cursor-pointer transition-transform duration-150 hover:scale-[1.02] active:scale-[0.98]" 
                 onClick={() => navigate("/")}
               >
-                <ZivoLogo size="md" />
+                <ZivoLogo size="sm" />
               </div>
               <BetaBadge variant="compact" className="hidden sm:flex" />
             </div>
@@ -134,7 +134,7 @@ const Header = () => {
                   <Button
                     variant="ghost"
                     size="sm"
-                    className="relative gap-1.5 px-3 h-9 text-white font-bold rounded-2xl overflow-hidden shadow-lg shadow-indigo-500/20 ring-1 ring-indigo-400/30 transition-all duration-300 hover:scale-[1.06] hover:shadow-xl active:scale-[0.97]"
+                    className="relative gap-1.5 px-2.5 h-8 text-white font-bold rounded-xl overflow-hidden shadow-md shadow-indigo-500/20 ring-1 ring-indigo-400/30 transition-all duration-300 hover:scale-[1.06] hover:shadow-lg active:scale-[0.97]"
                   >
                     <img src={bgLang} alt="" className="absolute inset-0 w-full h-full object-cover" loading="eager" />
                     <div className="absolute inset-0 bg-gradient-to-r from-indigo-800/60 to-violet-600/50" />
@@ -202,9 +202,9 @@ const Header = () => {
                   {/* User Menu - Enhanced */}
                   <DropdownMenu>
                     <DropdownMenuTrigger asChild>
-                      <Button variant="ghost" size="sm" className="gap-2 ml-1.5 rounded-xl hover:bg-muted/50 pr-3 transition-all duration-150 hover:scale-[1.02] active:scale-[0.98]">
-                        <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-primary/20 to-teal-400/10 flex items-center justify-center ring-2 ring-primary/20">
-                          <User className="h-4 w-4 text-primary" />
+                      <Button variant="ghost" size="sm" className="gap-2 ml-1 rounded-xl hover:bg-muted/50 pr-2 h-8 transition-all duration-150 hover:scale-[1.02] active:scale-[0.98]">
+                        <div className="w-7 h-7 rounded-lg bg-gradient-to-br from-primary/20 to-teal-400/10 flex items-center justify-center ring-2 ring-primary/20">
+                          <User className="h-3.5 w-3.5 text-primary" />
                         </div>
                         <div className="hidden lg:flex flex-col items-start">
                           <span className="text-sm font-semibold">Account</span>
