@@ -191,7 +191,27 @@ export default function LodgingPropertyProfileSection({ storeId }: { storeId: st
         </div>
       </div>
 
-      <Accordion type="multiple" defaultValue={["essentials", "facilities", "rules", "trust"]} className="space-y-2">
+      <Accordion type="multiple" defaultValue={["essentials", "storefront", "facilities", "rules", "trust"]} className="space-y-2">
+        {/* GROUP 0 — Storefront content (Booking.com-style About this property) */}
+        <AccordionItem value="storefront" className="border rounded-xl bg-card">
+          <AccordionTrigger className="px-3 py-2.5 text-[13px] font-semibold hover:no-underline">
+            <span className="flex items-center gap-2"><BookOpen className="h-3.5 w-3.5 text-primary" /> Storefront content
+              <span className="text-[10px] font-normal text-muted-foreground">· About · Highlights · Popular amenities</span>
+            </span>
+          </AccordionTrigger>
+          <AccordionContent className="px-3 pb-3">
+            <StorefrontContentCard
+              descriptionSections={form.description_sections || []}
+              propertyHighlights={form.property_highlights || {}}
+              popularAmenities={form.popular_amenities || []}
+              facilityPool={[...(form.facilities || []), ...(form.included_highlights || [])]}
+              onChangeSections={(next) => setForm({ ...form, description_sections: next })}
+              onChangeHighlights={(patch) => setForm({ ...form, property_highlights: { ...(form.property_highlights || {}), ...patch } })}
+              onChangePopular={(next) => setForm({ ...form, popular_amenities: next })}
+            />
+          </AccordionContent>
+        </AccordionItem>
+
         {/* GROUP 1 — Storefront essentials */}
         <AccordionItem value="essentials" className="border rounded-xl bg-card">
           <AccordionTrigger className="px-3 py-2.5 text-[13px] font-semibold hover:no-underline">
