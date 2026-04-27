@@ -273,7 +273,8 @@ export default function VoiceMessagePlayer({
   }, []);
 
   return (
-    <div className={`relative flex items-center gap-2.5 min-w-[200px] max-w-[260px] ${isFailed ? "ring-1 ring-destructive/60 rounded-xl -mx-1 px-1 py-0.5" : ""}`}>
+    <div className={`relative min-w-[200px] max-w-[260px] ${debugOn ? "flex flex-col gap-1.5" : ""} ${isFailed ? "ring-1 ring-destructive/60 rounded-xl -mx-1 px-1 py-0.5" : ""}`}>
+      <div className="flex items-center gap-2.5">
       <audio ref={audioRef} src={url} preload="metadata" />
 
       {/* Play/Pause button (or spinner / alert when in upload state) */}
@@ -440,6 +441,11 @@ export default function VoiceMessagePlayer({
           )}
         </div>
       </div>
+      {debugOn && uploadError && (
+        <div className="text-[10px] leading-snug text-destructive/80 break-all max-w-[240px] font-mono">
+          {uploadError}
+        </div>
+      )}
     </div>
   );
 }
