@@ -26,14 +26,15 @@ import { RouteErrorBoundary } from "./components/shared/RouteErrorBoundary";
 import PreserveQueryRedirect from "./components/routing/PreserveQueryRedirect";
 
 // Defer non-critical overlays — these don't need to block FCP/LCP
-const CookieConsent = lazy(() => import("./components/common/CookieConsent"));
-const PWAUpdatePrompt = lazy(() => import("./components/shared/PWAUpdatePrompt").then(m => ({ default: m.PWAUpdatePrompt })));
-const PWAInstallBanner = lazy(() => import("./components/shared/PWAInstallBanner").then(m => ({ default: m.PWAInstallBanner })));
-const InAppBrowserInterstitial = lazy(() => import("./components/shared/InAppBrowserInterstitial"));
-const IncomingCallListener = lazy(() => import("@/components/chat/IncomingCallListener"));
-const ChatNotificationListener = lazy(() => import("@/components/chat/ChatNotificationListener"));
-const RuntimeSecurityGuard = lazy(() => import("@/components/security/RuntimeSecurityGuard"));
-const SpatialCursor = lazy(() => import("./components/ui/SpatialCursor").then(m => ({ default: m.SpatialCursor })));
+import { lazyWithRetry } from "@/lib/lazyWithRetry";
+const CookieConsent = lazyWithRetry(() => import("./components/common/CookieConsent"));
+const PWAUpdatePrompt = lazyWithRetry(() => import("./components/shared/PWAUpdatePrompt").then(m => ({ default: m.PWAUpdatePrompt })));
+const PWAInstallBanner = lazyWithRetry(() => import("./components/shared/PWAInstallBanner").then(m => ({ default: m.PWAInstallBanner })));
+const InAppBrowserInterstitial = lazyWithRetry(() => import("./components/shared/InAppBrowserInterstitial"));
+const IncomingCallListener = lazyWithRetry(() => import("@/components/chat/IncomingCallListener"));
+const ChatNotificationListener = lazyWithRetry(() => import("@/components/chat/ChatNotificationListener"));
+const RuntimeSecurityGuard = lazyWithRetry(() => import("@/components/security/RuntimeSecurityGuard"));
+const SpatialCursor = lazyWithRetry(() => import("./components/ui/SpatialCursor").then(m => ({ default: m.SpatialCursor })));
 const PostMenuRegressionPage = lazy(() => import("./pages/dev/PostMenuRegressionPage"));
 const SafeAreaQAPage = lazy(() => import("./pages/dev/SafeAreaQAPage"));
 
