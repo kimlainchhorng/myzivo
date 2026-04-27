@@ -75,9 +75,9 @@ function ScrollReveal3D({ children, className, delay = 0 }: { children: React.Re
 
 /* ─── Cinematic hero backgrounds ─── */
 const heroSlides = [
-  { src: heroFlights, accent: "210 100% 55%", label: "Explore the Skies", sub: "500+ airlines worldwide" },
-  { src: heroHotels, accent: "38 90% 55%", label: "Dream Destinations", sub: "Best prices guaranteed" },
-  { src: heroCars, accent: "270 70% 55%", label: "Travel Your Way", sub: "Search. Compare. Save." },
+  { src: heroFlights, accent: "210 100% 55%", label: "Search & Compare Flights", sub: "500+ airlines, one search" },
+  { src: heroHotels, accent: "210 90% 55%", label: "Find Your Next Trip", sub: "Best fares, real-time pricing" },
+  { src: heroCars, accent: "210 80% 55%", label: "Fly Smarter with ZIVO", sub: "Trusted licensed partners" },
 ];
 
 /* ─── Fallback routes ─── */
