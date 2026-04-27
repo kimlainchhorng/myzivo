@@ -19,6 +19,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { format, isToday, isYesterday } from "date-fns";
 import { toast } from "sonner";
 import VoiceMessagePlayer from "./VoiceMessagePlayer";
+import VoiceMessageBubble from "./VoiceMessageBubble";
 import HoldToRecordMic from "./HoldToRecordMic";
 import { useVoiceRecorder } from "@/hooks/useVoiceRecorder";
 import { uploadVoiceWithProgress, retryWithBackoff, UploadAbortedError, UploadHttpError, preflightVoiceBucket } from "@/lib/voiceUpload";
@@ -674,36 +675,28 @@ export default function GroupChat({ groupId, groupName, groupAvatar, onClose }: 
                   )}
 
                   {/* Voice */}
-                  {msg.message_type === "voice" && msg.voice_url && (
-                    <div
-                      className={`chat-no-callout px-3 py-2.5 rounded-2xl ${
-                      isMe ? "bg-primary text-primary-foreground rounded-br-md" : "bg-muted text-foreground rounded-bl-md"
-                    }`}
-                      onContextMenu={(e) => e.preventDefault()}
-                      style={{ WebkitTouchCallout: "none", WebkitUserSelect: "none", userSelect: "none" }}
-                    >
-                      {(() => {
-                        const csid = msg.file_payload?.client_send_id;
-                        return (
-                          <VoiceMessagePlayer
-                            url={msg.voice_url}
-                            isMe={isMe}
-                            durationMs={msg.file_payload?.duration_ms}
-                            uploadStatus={msg._upload_status}
-                            uploadProgress={msg._upload_progress}
-                            uploadError={msg._upload_error}
-                            uploadEndpoint={msg._upload_endpoint}
-                            uploadStatusCode={msg._upload_status_code}
-                            uploadPhase={msg._upload_phase}
-                            uploadBody={msg._upload_body}
-                            onRetry={csid && msg._upload_status === "failed" ? () => retryVoiceSend(csid) : undefined}
-                            onDiscard={csid && (msg._upload_status === "uploading" || msg._upload_status === "failed") ? () => discardVoiceSend(csid) : undefined}
-                            onReply={!msg.id.startsWith("opt-") ? () => setReplyTo({ id: msg.id, message: "🎤 Voice message", senderName }) : undefined}
-                          />
-                        );
-                      })()}
-                    </div>
-                  )}
+                  {msg.message_type === "voice" && msg.voice_url && (() => {
+                    const csid = msg.file_payload?.client_send_id;
+                    const isOpt = msg.id.startsWith("opt-");
+                    return (
+                      <VoiceMessageBubble
+                        isMe={isMe}
+                        time={formatTime(msg.created_at)}
+                        url={msg.voice_url}
+                        durationMs={msg.file_payload?.duration_ms}
+                        uploadStatus={msg._upload_status}
+                        uploadProgress={msg._upload_progress}
+                        uploadError={msg._upload_error}
+                        uploadEndpoint={msg._upload_endpoint}
+                        uploadStatusCode={msg._upload_status_code}
+                        uploadPhase={msg._upload_phase}
+                        uploadBody={msg._upload_body}
+                        onReply={!isOpt ? () => setReplyTo({ id: msg.id, message: "🎤 Voice message", senderName }) : undefined}
+                        onResend={csid && msg._upload_status === "failed" ? () => retryVoiceSend(csid) : undefined}
+                        onDiscard={csid && (msg._upload_status === "uploading" || msg._upload_status === "failed") ? () => discardVoiceSend(csid) : undefined}
+                      />
+                    );
+                  })()}
 
                   {/* Text */}
                   {msg.message && msg.message_type !== "voice" && (
