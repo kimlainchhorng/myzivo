@@ -91,6 +91,9 @@ import LodgingChannelManagerSection from "@/components/admin/store/lodging/Lodgi
 import LodgingPayoutsSection from "@/components/admin/store/lodging/LodgingPayoutsSection";
 import LodgingInboxSection from "@/components/admin/store/lodging/LodgingInboxSection";
 import LodgingStaffSection from "@/components/admin/store/lodging/LodgingStaffSection";
+import LodgingConciergeTasksSection from "@/components/admin/store/lodging/LodgingConciergeTasksSection";
+import LodgingLostFoundSection from "@/components/admin/store/lodging/LodgingLostFoundSection";
+import LodgingGallerySection from "@/components/admin/store/lodging/LodgingGallerySection";
 import SoftwareDownloadsSection from "@/components/admin/store/SoftwareDownloadsSection";
 import { getLodgingCompletion } from "@/lib/lodging/lodgingCompletion";
 import { LODGING_TAB_IDS, resolveStoreTab, resolveStoreTabFromSearch } from "@/lib/admin/storeTabRouting";
