@@ -226,25 +226,27 @@ export default function HoldToRecordMic({ voice, className }: Props) {
           >
             {/* Lock hint chip — small, sits just above the mic */}
             <motion.div
-              animate={{
-                y: -Math.abs(dragY) * 0.6,
-                opacity: 0.85 + Math.min(1, Math.abs(dragY) / LOCK_THRESHOLD) * 0.15,
-                scale: willLock ? 1.1 : 1,
+              style={{
+                y: lockChipY,
+                opacity: lockChipOpacity,
+                willChange: "transform, opacity",
               }}
+              animate={{ scale: willLock ? 1.1 : 1 }}
+              transition={{ type: "spring", stiffness: 320, damping: 24 }}
               className="absolute right-5 -top-14 bg-card/95 backdrop-blur-xl border border-border/40 rounded-full p-2 shadow-lg"
             >
               <Lock className={`h-4 w-4 ${willLock ? "text-primary" : "text-muted-foreground"}`} />
             </motion.div>
 
-            {/* Bottom recording pill */}
+            {/* Bottom recording pill — fixed height so layout doesn't reflow */}
             <div
-              className="mx-2 mb-1 pl-4 pr-2 py-2 rounded-full backdrop-blur-2xl border border-border/40 bg-card/90 flex items-center gap-3 shadow-xl relative overflow-hidden"
+              className="mx-2 mb-1 pl-4 pr-2 rounded-full backdrop-blur-2xl border border-border/40 bg-card/90 flex items-center gap-3 shadow-xl relative overflow-hidden"
+              style={{ height: 44 }}
             >
-              {/* Subtle progress glow that grows with slide-to-cancel */}
+              {/* Subtle progress glow that grows with slide-to-cancel (springed) */}
               <motion.div
                 className="absolute inset-y-0 left-0 bg-destructive/10 pointer-events-none"
-                animate={{ width: `${dragRatio * 100}%` }}
-                transition={{ type: "tween", duration: 0.1 }}
+                style={{ width: cancelGlowWidth, willChange: "width" }}
               />
 
               {/* Left: red dot + time */}
@@ -259,10 +261,10 @@ export default function HoldToRecordMic({ voice, className }: Props) {
                 </span>
               </div>
 
-              {/* Center: slide-to-cancel hint */}
+              {/* Center: slide-to-cancel hint (springed) */}
               <motion.div
                 className="flex-1 flex items-center justify-center gap-1 text-sm text-muted-foreground relative"
-                animate={{ x: dragX * 0.45, opacity: 1 - dragRatio * 0.6 }}
+                style={{ x: slideHintX, opacity: slideHintOpacity, willChange: "transform, opacity" }}
               >
                 <ChevronLeft className="h-4 w-4" />
                 <span>Slide to cancel</span>
@@ -272,6 +274,7 @@ export default function HoldToRecordMic({ voice, className }: Props) {
                 <motion.div
                   initial={{ scale: 0.6, opacity: 0 }}
                   animate={{ scale: 1, opacity: 1 }}
+                  transition={{ type: "spring", stiffness: 380, damping: 28 }}
                   className="absolute inset-0 flex items-center justify-center gap-1.5 text-sm font-medium text-destructive bg-card/95 rounded-full"
                 >
                   <Trash2 className="h-4 w-4" />
