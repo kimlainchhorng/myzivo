@@ -441,6 +441,7 @@ export default function VoiceMessagePlayer({
           )}
         </div>
       </div>
+      </div>{/* /inner flex row */}
       {debugOn && uploadError && (
         <div className="text-[10px] leading-snug text-destructive/80 break-all max-w-[240px] font-mono">
           {uploadError}
