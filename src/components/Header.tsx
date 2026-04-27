@@ -134,7 +134,7 @@ const Header = () => {
                   <Button
                     variant="ghost"
                     size="sm"
-                    className="relative gap-1.5 px-3 h-9 text-white font-bold rounded-2xl overflow-hidden shadow-lg shadow-indigo-500/20 ring-1 ring-indigo-400/30 transition-all duration-300 hover:scale-[1.06] hover:shadow-xl active:scale-[0.97]"
+                    className="relative gap-1.5 px-2.5 h-8 text-white font-bold rounded-xl overflow-hidden shadow-md shadow-indigo-500/20 ring-1 ring-indigo-400/30 transition-all duration-300 hover:scale-[1.06] hover:shadow-lg active:scale-[0.97]"
                   >
                     <img src={bgLang} alt="" className="absolute inset-0 w-full h-full object-cover" loading="eager" />
                     <div className="absolute inset-0 bg-gradient-to-r from-indigo-800/60 to-violet-600/50" />
