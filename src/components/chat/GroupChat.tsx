@@ -21,7 +21,7 @@ import { toast } from "sonner";
 import VoiceMessagePlayer from "./VoiceMessagePlayer";
 import HoldToRecordMic from "./HoldToRecordMic";
 import { useVoiceRecorder } from "@/hooks/useVoiceRecorder";
-import { uploadVoiceWithProgress, retryWithBackoff, UploadAbortedError } from "@/lib/voiceUpload";
+import { uploadVoiceWithProgress, retryWithBackoff, UploadAbortedError, UploadHttpError, preflightVoiceBucket } from "@/lib/voiceUpload";
 import { vlog, vwarn } from "@/lib/voiceDebug";
 import GroupMembersSheet from "./GroupMembersSheet";
 import GroupInviteSheet from "./GroupInviteSheet";
@@ -51,6 +51,8 @@ interface GroupMessage {
   _upload_status?: "uploading" | "sent" | "failed";
   _upload_progress?: number;
   _upload_error?: string;
+  _upload_endpoint?: string;
+  _upload_status_code?: number;
 }
 
 interface Member {
