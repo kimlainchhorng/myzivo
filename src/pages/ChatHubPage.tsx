@@ -5,7 +5,7 @@
  */
 /* eslint-disable @typescript-eslint/no-explicit-any */
 /* eslint-disable no-empty */
-import { useState, useEffect, useMemo, lazy, Suspense } from "react";
+import { useState, useEffect, useMemo, useRef, lazy, Suspense } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import MessageCircleIcon from "lucide-react/dist/esm/icons/message-circle";
 import StoreIcon from "lucide-react/dist/esm/icons/store";
@@ -212,6 +212,26 @@ export default function ChatHubPage({ embedded = false }: { embedded?: boolean }
   const setActive = (c: ChatCategory) => setFolder(c);
   const [search, setSearch] = useState("");
   const [searchFilter, setSearchFilter] = useState<"chats" | "media" | "links" | "files">("chats");
+  // Telegram-style: collapse Stories strip on scroll-down, restore on scroll-up
+  const [storiesCollapsed, setStoriesCollapsed] = useState(false);
+  const lastScrollYRef = useRef(0);
+  useEffect(() => {
+    const onScroll = () => {
+      const y = window.scrollY || document.documentElement.scrollTop || 0;
+      const last = lastScrollYRef.current;
+      const delta = y - last;
+      if (y <= 4) {
+        setStoriesCollapsed(false);
+      } else if (delta > 6 && y > 20) {
+        setStoriesCollapsed(true);
+      } else if (delta < -4) {
+        setStoriesCollapsed(false);
+      }
+      lastScrollYRef.current = y;
+    };
+    window.addEventListener("scroll", onScroll, { passive: true });
+    return () => window.removeEventListener("scroll", onScroll);
+  }, []);
   const [showArchived, setShowArchived] = useState(false);
   const { user } = useAuth();
   const navigate = useNavigate();
@@ -1216,7 +1236,15 @@ export default function ChatHubPage({ embedded = false }: { embedded?: boolean }
               </div>
             ) : null}
 
-            {!embedded && <Suspense fallback={null}><ChatStories /></Suspense>}
+            {!embedded && (
+              <motion.div
+                animate={{ height: storiesCollapsed ? 0 : "auto", opacity: storiesCollapsed ? 0 : 1 }}
+                transition={{ duration: 0.22, ease: "easeOut" }}
+                style={{ overflow: "hidden" }}
+              >
+                <Suspense fallback={null}><ChatStories /></Suspense>
+              </motion.div>
+            )}
 
             <div className={cn("px-5 pb-3", embedded && "px-3 pb-2")}>
               <div className="relative">
