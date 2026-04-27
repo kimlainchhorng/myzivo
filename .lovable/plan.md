@@ -1,103 +1,106 @@
-# Phase 11 — Audit follow-ups + Real Employee Rules backend
+# Phase 12 — Training + Documents Persistence
 
-Phase 10 fixed a silently-broken Policies tab and shipped the bucket lockdown. The audit afterward surfaced **3 fully fake admin sections** (no DB, no persistence) and confirmed the rest of the `(supabase as any).from(...)` calls are stylistic, not buggy.
+Replace the in-memory demo data in `StoreTrainingSection` and `StoreDocumentsSection` with a real Supabase backend. Add file uploads for documents via a new private storage bucket. Same playbook as Phase 11 (Employee Rules).
 
-## Audit results (a)
+## What you'll get
 
-| File | Status |
-|------|--------|
-| `LodgingPoliciesSection.tsx` | ✅ Fixed in Phase 10 (wrong table + 3 wrong columns) |
-| `LodgingHousekeepingSection`, `Inbox`, `Reviews`, `Gallery`, `Staff`, `Overview` | ✅ Table & column names correct — `as any` is just stylistic |
-| `StoreEmployeeRulesSection.tsx` | ❌ Fully in-memory `useState` — refresh wipes everything |
-| `StoreTrainingSection.tsx` | ❌ Fully in-memory `DEMO_PROGRAMS` constant |
-| `StoreDocumentsSection.tsx` | ❌ Fully in-memory `DEMO_DOCS` constant |
-
-The 3 fake sections all live under `src/components/admin/store/`, are wired into `AdminStoreEditPage`, and currently let store owners "configure" things that vanish on refresh.
-
-## Phase 11 scope (b) — Build real persistence for Employee Rules
-
-We'll do **Employee Rules** end-to-end now (the tab the user is on). Training and Documents follow the exact same pattern, so I'll defer them to Phase 12 unless you say otherwise — doing all 3 in one pass would be a huge migration + 3 hooks + 3 rewrites + storage policies.
-
-### Schema
-
-```sql
-create table public.store_employee_rules (
-  id uuid primary key default gen_random_uuid(),
-  store_id uuid not null,
-  title text not null,
-  category text not null,
-  description text not null default '',
-  severity text not null default 'medium' check (severity in ('low','medium','high','critical')),
-  applies_to text not null default 'All Staff',
-  is_active boolean not null default true,
-  position int not null default 0,
-  created_by uuid not null,
-  created_at timestamptz not null default now(),
-  updated_at timestamptz not null default now()
-);
-create index store_employee_rules_store_idx on public.store_employee_rules(store_id, position);
-```
-
-### RLS — store owners + admins can manage; everyone else is locked out
-
-We already have a `is_lodge_store_manager(uuid, uuid)` style helper pattern — we'll reuse the existing `store_employees` ownership check. Effective rules:
-- **SELECT**: store owner, store admin (via `store_employees.role`), or platform admin (`has_role(auth.uid(),'admin')`).
-- **INSERT/UPDATE/DELETE**: same set.
-- No anonymous access at all.
-
-### Hook: `src/hooks/store/useStoreEmployeeRules.ts`
-
-```text
-useStoreEmployeeRules(storeId)
-  ├─ list:       useQuery → ordered by position then created_at
-  ├─ upsert:     create or update one rule (sets created_by = auth.uid())
-  ├─ remove:     delete by id
-  └─ toggleActive: flip is_active
-```
-
-### Component rewrite: `StoreEmployeeRulesSection.tsx`
-
-- Replace `useState<Rule[]>(DEMO_RULES)` with the hook.
-- Keep the existing 3-tab UI (Rules / Access / Policies) and the search + category filter.
-- Replace direct color classes (`bg-blue-100`, `text-emerald-500`, `bg-red-100`) with semantic tokens (`bg-primary/10 text-primary`, `bg-emerald-500/10 text-emerald-600 dark:text-emerald-400` via existing `severity` config rebuilt with tokens).
-- Add empty state, loading skeleton, error toast, optimistic updates on toggle.
-- Add "Seed default rules" button that bulk-inserts the 8 existing demo rules (only shown when list is empty) so existing screens don't suddenly look bare.
-
-### Files
-
-Migration (1):
-- `supabase/migrations/<ts>_store_employee_rules.sql`
-
-New code:
-- `src/hooks/store/useStoreEmployeeRules.ts`
-
-Edited code:
-- `src/components/admin/store/StoreEmployeeRulesSection.tsx`
-
-Docs:
-- `SECURITY.md` — note the 54 intentional Phase 9 re-grants + this new table's RLS shape
-- `.lovable/plan.md` — Phase 11 entry, plus a Phase 12 note for Training/Documents
-
-### Verification
-
-1. `tsc --noEmit -p tsconfig.app.json` → clean
-2. `supabase--linter` → still 54 (no new warnings)
-3. Manual smoke on `?tab=employee-rules`:
-   - Empty state shows "Seed defaults" button
-   - Create rule → refresh → still there
-   - Toggle is_active → refresh → still there
-   - Delete → refresh → still gone
-   - Non-owner user (different store) sees nothing / 403
-4. Confirm hardcoded colors are gone: `rg "bg-(blue|emerald|red|amber|purple|gray)-(100|500)" src/components/admin/store/StoreEmployeeRulesSection.tsx | wc -l` → 0
-
-## Outcome
-
-After Phase 11: the Employee Rules tab is a real feature backed by a properly RLS'd table, with fixed design tokens. Training and Documents stay fake (clearly flagged in the plan for Phase 12).
-
-## Heads-up about Training & Documents
-
-Both have similar size and complexity. Documents additionally needs a storage bucket + policies (file uploads). I'd estimate Phase 12 = ~1.5x Phase 11.
+- Training programs, modules, and per-employee assignments survive refresh
+- Documents are real file uploads (PDF/image), stored privately in Supabase Storage with signed-URL downloads
+- Expiry tracking, "expiring soon" alerts, and per-store isolation via RLS
+- "Seed defaults" buttons in both sections to bootstrap the demo content as real rows
+- Loading skeletons, empty states, hardcoded colors swapped for semantic tokens
 
 ---
 
-**Approve to proceed**, or tell me if you want all 3 sections (Rules + Training + Documents) in one phase.
+## Database schema (new tables)
+
+### `store_training_programs`
+- `id uuid pk`, `store_id uuid` (FK stores), `name`, `type` (`onboarding|training|certification`), `description`, `created_by`, timestamps
+
+### `store_training_modules`
+- `id uuid pk`, `program_id uuid` (FK, cascade delete), `title`, `duration_minutes int`, `sort_order int`, timestamps
+
+### `store_training_assignments`
+- `id uuid pk`, `program_id`, `employee_id` (FK store_employees), `status` (`assigned|in_progress|completed`), `progress_pct`, `completed_at`, `assigned_at`
+- Unique constraint on `(program_id, employee_id)`
+
+### `store_documents`
+- `id uuid pk`, `store_id`, `employee_id` (nullable — null = company-wide), `name`, `category`, `file_path` (storage key), `file_type`, `size_bytes bigint`, `expires_at`, `status` (`active|expired|pending`), `uploaded_by`, timestamps
+- Trigger to auto-flip `status` to `expired` when queried past `expires_at` (or compute client-side)
+
+**RLS on all 4 tables**: `is_lodge_store_manager(store_id, auth.uid())` for SELECT/INSERT/UPDATE/DELETE. Assignments derive store_id via `program_id` join in the policy.
+
+---
+
+## Storage bucket
+
+- **Bucket**: `store-documents` (private)
+- **Path convention**: `{store_id}/{document_id}/{filename}`
+- **RLS on `storage.objects`**: only managers of the matching `store_id` (parsed from path prefix) can SELECT/INSERT/DELETE
+- Downloads via short-lived signed URLs (60s)
+
+---
+
+## New hooks
+
+- `useStoreTrainingPrograms(storeId)` — list/create/update/delete programs + modules, `seedDefaults()`
+- `useStoreTrainingAssignments(programId)` — assign/unassign employees, update progress
+- `useStoreDocuments(storeId)` — list (with category/search filter), upload (file → storage → row), delete, getSignedUrl, `seedDefaults()`
+
+All hooks: React Query with optimistic updates and toast feedback.
+
+---
+
+## Component rewrites
+
+### `StoreTrainingSection.tsx`
+- Remove `DEMO_PROGRAMS` constant and `useState<Program[]>`
+- Wire to `useStoreTrainingPrograms` + `useStoreTrainingAssignments`
+- Add loading skeleton + empty state with "Seed defaults" CTA
+- Replace `text-indigo-500/bg-indigo-500/10` etc. with semantic tokens (`text-primary`, `bg-primary/10`, `text-success`, `bg-success/10`, etc.)
+
+### `StoreDocumentsSection.tsx`
+- Remove `DEMO_DOCS` and `useState<Doc[]>`
+- Replace fake "Upload" with real `<input type="file" accept=".pdf,image/*">` → uploads to `store-documents` bucket
+- Eye/Download buttons call `getSignedUrl` and open in new tab
+- Trash deletes both row and storage object
+- Add expiry date picker in upload dialog
+- Same color-token cleanup
+
+---
+
+## Verification
+
+1. `tsc --noEmit` clean
+2. Smoke test: create program → refresh → still there
+3. Upload PDF → refresh → download via signed URL works
+4. Try uploading to a store you don't manage → blocked by RLS
+5. Run `supabase--linter` after migration
+
+---
+
+## Files
+
+**New:**
+- `supabase/migrations/{ts}_training_documents_backend.sql`
+- `src/hooks/store/useStoreTrainingPrograms.ts`
+- `src/hooks/store/useStoreTrainingAssignments.ts`
+- `src/hooks/store/useStoreDocuments.ts`
+
+**Edited:**
+- `src/components/admin/store/StoreTrainingSection.tsx` (full rewrite)
+- `src/components/admin/store/StoreDocumentsSection.tsx` (full rewrite)
+- `.lovable/plan.md`
+
+---
+
+## Out of scope (future phases)
+
+- Module-level completion tracking UI (table supports it; UI is just program-level for now)
+- Document e-signature flow
+- Document version history
+- Bulk assign / CSV import
+- Splitting `LodgingPropertyProfileSection` (Phase 13)
+- Token sweep across remaining admin files (Phase 13)
+
+Approve and I'll build it.
