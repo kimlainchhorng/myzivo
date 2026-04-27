@@ -83,19 +83,25 @@ async function syncConnection(
     let written = 0;
     for (const ev of events) {
       if (!ev.start || !ev.end) continue;
-      const { error } = await admin.from("lodging_room_blocks").upsert(
-        {
-          store_id: conn.store_id,
-          room_id: conn.room_id,
-          source: conn.channel,
-          external_uid: ev.uid,
-          start_date: ev.start,
-          end_date: ev.end,
-          summary: ev.summary || null,
-        },
-        { onConflict: "store_id,room_id,source,external_uid" },
-      );
-      if (!error) written++;
+      // Expand range into per-day rows; check_out is exclusive in iCal
+      const start = new Date(ev.start + "T00:00:00Z");
+      const end = new Date(ev.end + "T00:00:00Z");
+      for (let d = new Date(start); d < end; d.setUTCDate(d.getUTCDate() + 1)) {
+        const blockDate = d.toISOString().slice(0, 10);
+        const { error } = await admin.from("lodge_room_blocks").upsert(
+          {
+            store_id: conn.store_id,
+            room_id: conn.room_id,
+            block_date: blockDate,
+            source: conn.channel,
+            external_uid: ev.uid,
+            summary: ev.summary || null,
+            reason: ev.summary || `Imported from ${conn.channel}`,
+          },
+          { onConflict: "room_id,block_date" },
+        );
+        if (!error) written++;
+      }
     }
 
     await admin
