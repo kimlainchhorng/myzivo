@@ -12,8 +12,25 @@ import { useAuth } from "@/contexts/AuthContext";
 import { redeemGroupInvite } from "@/hooks/useGroupAdmin";
 import Loader2 from "lucide-react/dist/esm/icons/loader-2";
 import Users from "lucide-react/dist/esm/icons/users";
+import ChevronLeft from "lucide-react/dist/esm/icons/chevron-left";
 import { Button } from "@/components/ui/button";
+import { useSmartBack } from "@/lib/smartBack";
 import { toast } from "sonner";
+
+function BackHeader({ onBack }: { onBack: () => void }) {
+  return (
+    <header className="sticky top-0 z-10 bg-background/85 backdrop-blur-xl border-b border-border/40 pt-safe px-3 py-3 flex items-center gap-2">
+      <button
+        onClick={onBack}
+        aria-label="Back"
+        className="p-1.5 rounded-full hover:bg-muted/60"
+      >
+        <ChevronLeft className="w-5 h-5" />
+      </button>
+      <h1 className="text-base font-semibold">Join group</h1>
+    </header>
+  );
+}
 
 interface InvitePreview {
   group_id: string;
