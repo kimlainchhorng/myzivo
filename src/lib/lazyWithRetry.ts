@@ -2,10 +2,13 @@
  * lazyWithRetry — React.lazy with automatic retry for transient chunk-load
  * failures. After exhausted retries, triggers a one-time hard reload to pull
  * the latest chunk hashes from a new deploy.
+ *
+ * Uses a SHARED reload key with lazyRetry + ErrorBoundary so we never reload
+ * twice in a row for the same broken deploy.
  */
 import { lazy, type ComponentType } from "react";
 
-const RELOAD_KEY = "__lazy_chunk_reload__";
+const RELOAD_KEY = "zivo_chunk_reload";
 
 function isChunkError(err: unknown): boolean {
   const msg = (err as Error)?.message || String(err);
@@ -28,7 +31,6 @@ export function lazyWithRetry<T extends ComponentType<any>>(
     for (let i = 0; i <= retries; i++) {
       try {
         const mod = await factory();
-        // Reset reload flag on success
         try { sessionStorage.removeItem(RELOAD_KEY); } catch {}
         return mod;
       } catch (err) {
@@ -39,12 +41,10 @@ export function lazyWithRetry<T extends ComponentType<any>>(
         }
       }
     }
-    // Final fallback: hard reload once to recover from stale deploy
     try {
       if (typeof window !== "undefined" && !sessionStorage.getItem(RELOAD_KEY)) {
         sessionStorage.setItem(RELOAD_KEY, "1");
         window.location.reload();
-        // Return a never-resolving promise so React doesn't render fallback
         return new Promise(() => {}) as never;
       }
     } catch {}

@@ -321,9 +321,10 @@
     <script>
       (function () {
         if (window.Capacitor && window.Capacitor.isNativePlatform && window.Capacitor.isNativePlatform()) return;
-        // Only load on flight-related routes where the partner script is relevant
+        // Only load on flight-related routes where the partner script is relevant.
+        // Excluded from "/" to keep the home screen lighter and smoother.
         var path = location.pathname || '';
-        var isFlightRoute = path === '/' || path.indexOf('/flight') === 0 || path.indexOf('/hotel') === 0 || path.indexOf('/car') === 0;
+        var isFlightRoute = path.indexOf('/flight') === 0 || path.indexOf('/hotel') === 0 || path.indexOf('/car') === 0;
         if (!isFlightRoute) return;
         function load(){
           var script = document.createElement("script");

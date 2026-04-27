@@ -18,13 +18,9 @@ export function PWAUpdatePrompt() {
   const onAuthRoute = authRoutes.some((route) => location.pathname.startsWith(route));
 
   useEffect(() => {
-    // Never auto-update on native Capacitor or auth routes — avoid blocking form input
+    // Never auto-update — wait for user to tap "Update" so we don't reload
+    // the page out from under an interaction.
     if (isNative || onAuthRoute || !needRefresh) return;
-
-    autoUpdateTimer.current = setTimeout(() => {
-      updateSW(true);
-    }, 10_000);
-
     return () => {
       if (autoUpdateTimer.current) {
         clearTimeout(autoUpdateTimer.current);
@@ -51,7 +47,7 @@ export function PWAUpdatePrompt() {
         </div>
         <div className="flex-1 min-w-0">
           <p className="text-sm font-semibold">New version available</p>
-          <p className="text-xs text-muted-foreground">Updating in a few seconds…</p>
+          <p className="text-xs text-muted-foreground">Tap update to refresh</p>
         </div>
         <button
           onClick={handleUpdate}
