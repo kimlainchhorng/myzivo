@@ -423,6 +423,25 @@
     -webkit-touch-callout: none;
   }
 
+  /* Chat bubble gesture surface — fully kills the iOS native
+     "Copy / Look Up / Translate" callout AND the selection loupe so our
+     custom long-press action sheet can take over. Applies to children too
+     because iOS can otherwise select nested timestamps / labels. */
+  .chat-no-callout,
+  .chat-no-callout * {
+    -webkit-user-select: none !important;
+    -moz-user-select: none !important;
+    -ms-user-select: none !important;
+    user-select: none !important;
+    -webkit-touch-callout: none !important;
+    -webkit-tap-highlight-color: transparent !important;
+    -webkit-user-drag: none !important;
+  }
+  .chat-no-callout img,
+  .chat-no-callout video {
+    pointer-events: none;
+  }
+
   /* iOS-style momentum scrolling */
   .scroll-momentum {
     -webkit-overflow-scrolling: touch;
