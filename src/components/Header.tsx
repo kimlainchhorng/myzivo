@@ -66,9 +66,9 @@ function Nav3DButton({ item }: { item: Nav3DItem }) {
       onMouseMove={onMouseMove}
       onMouseLeave={onMouseLeave}
       className={cn(
-        "relative flex items-center gap-2 px-4 py-2 rounded-2xl text-sm font-bold text-white overflow-hidden",
+        "relative flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-[13px] font-bold text-white overflow-hidden",
         "transition-all duration-300 ease-out will-change-transform",
-        `shadow-lg ${item.shadow} hover:shadow-xl ring-1 ${item.ring}`
+        `shadow-md ${item.shadow} hover:shadow-lg ring-1 ${item.ring}`
       )}
       style={{ transformStyle: "preserve-3d" }}
     >
