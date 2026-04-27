@@ -29,7 +29,8 @@ import CancellationPolicyCard from "./property-profile/CancellationPolicyCard";
 import PetChildPolicyCard from "./property-profile/PetChildPolicyCard";
 import ContactCard from "./property-profile/ContactCard";
 import GuestEssentialsCard from "./property-profile/GuestEssentialsCard";
-import { Wifi } from "lucide-react";
+import StorefrontContentCard from "./property-profile/StorefrontContentCard";
+import { Wifi, BookOpen } from "lucide-react";
 
 const LANGUAGES = ["English", "Spanish", "French", "German", "Italian", "Portuguese", "Khmer", "Thai", "Vietnamese", "Chinese", "Japanese", "Korean", "Russian", "Arabic", "Hindi"];
 const FACILITY_GROUPS: { label: string; items: string[] }[] = [
