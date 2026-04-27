@@ -1,7 +1,7 @@
 /**
  * CreateGroupModal — Select friends to create a group chat
  */
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import X from "lucide-react/dist/esm/icons/x";
@@ -11,6 +11,23 @@ import Loader2 from "lucide-react/dist/esm/icons/loader-2";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { motion, AnimatePresence } from "framer-motion";
 import { toast } from "sonner";
+import {
+  GroupCreationErrorToast,
+  type GroupErrorDetails,
+} from "./GroupCreationErrorToast";
+
+// Allowed enum values for chat_group_members.role (group_member_role).
+const ALLOWED_GROUP_ROLES = ["owner", "admin", "member"] as const;
+type GroupRole = (typeof ALLOWED_GROUP_ROLES)[number];
+
+// Required columns we depend on at runtime — used by preflight checks.
+const REQUIRED_GROUP_COLS = ["name", "created_by"] as const;
+const REQUIRED_MEMBER_COLS = ["group_id", "user_id", "role"] as const;
+
+const UUID_RE =
+  /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
+const MAX_GROUP_NAME = 80;
 
 interface CreateGroupModalProps {
   open: boolean;
