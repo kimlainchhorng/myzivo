@@ -1,40 +1,50 @@
-## What you're seeing
+I see the issue in your screenshot: iOS is still selecting something inside the chat bubble and showing the native “Copy / Look Up / Translate” menu before our app menu can take over. I’ll harden the chat touch handling so holding messages uses ZIVO’s own actions instead of the iPhone text-selection menu.
 
-In your screenshot, the oval shape with the two blue dots is **iOS's native text-selection magnifier (the "loupe")**. When you touch-and-hold a voice bubble, iOS grabs the gesture for text selection instead of letting the app handle it. That's why nothing useful happens — and it also blocks the long-press-to-toggle-debug gesture we wired into the failed badge.
+Plan:
 
-So today, touch-and-hold on a voice bubble does:
-- **iOS native**: shows the selection loupe + handles + a "Copy / Look Up" callout (sometimes hidden behind the bubble)
-- **App**: nothing — the long-press never reaches our handlers because iOS swallows it
+1. Add a stronger mobile no-selection utility
+   - Create a reusable CSS class for chat action areas that disables:
+     - iOS touch callout
+     - text selection
+     - tap highlight
+     - draggable/selectable child media
+   - Apply it to children too, not only the outer wrapper, because iOS can select nested text/time labels inside the bubble.
 
-## Plan
+2. Harden voice message bubbles
+   - Add capture-phase handlers to the voice player wrapper:
+     - `onTouchStartCapture`
+     - `onContextMenuCapture`
+     - `onSelectStartCapture`
+     - `onDragStartCapture`
+   - Prevent native iOS selection/callout on long-press while keeping normal tap-to-play and waveform seek working.
+   - Cancel the browser context menu when iOS fires it, so “Copy / Look Up / Translate” does not appear.
 
-### 1. Kill the iOS loupe / callout on chat bubbles
-In `VoiceMessagePlayer.tsx` (and the text bubble wrappers in `PersonalChat.tsx` / `GroupChat.tsx`), add to the outermost bubble div:
-- `style={{ WebkitUserSelect: "none", userSelect: "none", WebkitTouchCallout: "none" }}`
-- `onContextMenu={(e) => e.preventDefault()}`
+3. Harden normal chat message bubbles too
+   - The text bubble component already has a custom long-press menu, but it does not fully block iOS selection.
+   - Apply the same no-selection class and native-menu suppression to `ChatMessageBubble`, so holding any message does not show Apple’s menu.
 
-This removes the magnifier, the selection handles, and the "Copy / Look Up" iOS popup.
+4. Update direct voice wrappers in Personal and Group chat
+   - Add the no-selection/touch-callout suppression to the outer green/gray voice bubble containers, not only inside `VoiceMessagePlayer`.
+   - This prevents the timestamp or empty bubble area from triggering the native menu.
 
-### 2. Add a real long-press action menu on voice bubbles
-Wire a 500 ms long-press (pointerdown/pointerup with movement cancellation) on the whole voice bubble — not just the failed badge — that opens a small bottom-sheet / popover with:
-- **Reply** (sets `replyTo` like text bubbles already do via `onContextMenu`)
-- **Copy link** (the public URL of the audio)
-- **Resend** (only when `_upload_status === "failed"`, reuses existing `retryVoiceSend`)
-- **Delete / Discard** (uses existing `discardVoiceSend` for failed/uploading, or a normal delete for sent)
-- **Toggle voice debug** (moves the hidden gesture off the tiny badge onto the whole bubble — much easier to hit)
+5. Keep scrolling and playback natural
+   - Preserve vertical scroll with `touch-action: pan-y` on message wrappers.
+   - Use movement thresholds so scrolling does not accidentally open the ZIVO action sheet.
+   - Keep buttons and waveform controls responsive.
 
-### 3. Keep the failed-badge shortcut working
-The existing 700 ms long-press on the "Failed" badge stays as a power-user shortcut, but now it actually fires (because we no longer let iOS steal the gesture).
+Technical details:
 
-### 4. Haptic + visual feedback
-On long-press fire, trigger a light haptic (`navigator.vibrate?.(10)`) and a quick scale pulse on the bubble so you know the gesture registered.
+```text
+Chat bubble / voice bubble
+  touch start capture: mark as chat gesture and prevent native callout when needed
+  pointer long-press: open ZIVO menu
+  contextmenu/selectstart/dragstart capture: prevent iOS/desktop native menu
+  child elements: user-select: none; -webkit-touch-callout: none
+```
 
-## Files to change
-- `src/components/chat/VoiceMessagePlayer.tsx` — disable iOS selection/callout, add bubble-level long-press, open action sheet
-- `src/components/chat/PersonalChat.tsx` — same selection/callout suppression on text bubbles, pass `onDelete` into the voice player
-- `src/components/chat/GroupChat.tsx` — same as PersonalChat
-- (new) `src/components/chat/VoiceBubbleActionSheet.tsx` — small Radix `Drawer`/`Popover` with the 4–5 actions above
-
-## Out of scope
-- Reactions on voice bubbles (can be added later if you want the iMessage tap-back row above the menu)
-- Forwarding voice notes to another chat
+Files to update:
+- `src/index.css`
+- `src/components/chat/VoiceMessagePlayer.tsx`
+- `src/components/chat/ChatMessageBubble.tsx`
+- `src/components/chat/PersonalChat.tsx`
+- `src/components/chat/GroupChat.tsx`

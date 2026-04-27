@@ -1725,9 +1725,13 @@ export default function PersonalChat({ recipientId, recipientName, recipientAvat
                       />
                     ) : msg.message_type === "voice" && msg.voice_url ? (
                       <div className={`flex ${isMe ? "justify-end" : "justify-start"}`}>
-                        <div className={`max-w-[80%] min-w-[220px] px-3 py-2.5 rounded-2xl shadow-sm ${
+                        <div
+                          className={`chat-no-callout max-w-[80%] min-w-[220px] px-3 py-2.5 rounded-2xl shadow-sm ${
                           isMe ? "bg-primary text-primary-foreground rounded-br-md" : "bg-muted text-foreground rounded-bl-md"
-                        }`}>
+                        }`}
+                          onContextMenu={(e) => e.preventDefault()}
+                          style={{ WebkitTouchCallout: "none", WebkitUserSelect: "none", userSelect: "none" }}
+                        >
                           {(() => {
                             const csid = (msg.file_payload as { client_send_id?: string } | null)?.client_send_id;
                             return (
