@@ -48631,6 +48631,39 @@ export type Database = {
           },
         ]
       }
+      store_audit_log: {
+        Row: {
+          action: string
+          actor_user_id: string | null
+          created_at: string
+          diff: Json
+          id: string
+          resource_id: string | null
+          resource_type: string
+          store_id: string
+        }
+        Insert: {
+          action: string
+          actor_user_id?: string | null
+          created_at?: string
+          diff?: Json
+          id?: string
+          resource_id?: string | null
+          resource_type: string
+          store_id: string
+        }
+        Update: {
+          action?: string
+          actor_user_id?: string | null
+          created_at?: string
+          diff?: Json
+          id?: string
+          resource_id?: string | null
+          resource_type?: string
+          store_id?: string
+        }
+        Relationships: []
+      }
       store_chat_messages: {
         Row: {
           chat_id: string
@@ -63194,6 +63227,7 @@ export type Database = {
         Returns: undefined
       }
       safe_parse_timestamptz: { Args: { input: string }; Returns: string }
+      safe_uuid: { Args: { _text: string }; Returns: string }
       score_driver_for_assignment: {
         Args: {
           p_driver_id: string
