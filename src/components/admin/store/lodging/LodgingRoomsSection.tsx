@@ -707,7 +707,51 @@ export default function LodgingRoomsSection({ storeId }: { storeId: string }) {
                 </div>
               </div>
 
-              {/* Add-ons editor */}
+              {/* Booking-style offer badges */}
+              <div>
+                <Label>Offer badges</Label>
+                <p className="text-[11px] text-muted-foreground mb-2">Decorate this room's rate rows on the storefront. Booking.com calls these "Genius / Getaway / Free cancellation" tags.</p>
+                <div className="flex flex-wrap gap-1.5">
+                  {[
+                    { v: "non_refundable", label: "Non-refundable" },
+                    { v: "free_cancellation", label: "Free cancellation" },
+                    { v: "no_prepayment", label: "No prepayment" },
+                    { v: "breakfast_included", label: "Breakfast included" },
+                    { v: "high_speed_internet", label: "High-speed internet" },
+                    { v: "late_checkout", label: "Late checkout" },
+                    { v: "genius_discount", label: "Genius discount" },
+                    { v: "getaway_deal", label: "Getaway Deal" },
+                    { v: "best_seller", label: "Best seller" },
+                  ].map(b => {
+                    const on = (editing.badges || []).includes(b.v);
+                    return (
+                      <button
+                        key={b.v} type="button"
+                        onClick={() => {
+                          const cur = editing.badges || [];
+                          setEditing({ ...editing, badges: on ? cur.filter((x: string) => x !== b.v) : [...cur, b.v] });
+                        }}
+                        className={`px-2.5 py-1 rounded-full text-[11px] border transition ${on ? "bg-primary text-primary-foreground border-primary font-semibold" : "bg-background border-border hover:border-primary/40"}`}
+                      >{b.label}</button>
+                    );
+                  })}
+                </div>
+              </div>
+
+              {/* Expandable features (Booking's "More" toggle) */}
+              <div>
+                <Label>Expandable features</Label>
+                <p className="text-[11px] text-muted-foreground mb-2">Extra in-room details revealed when guests tap "More". One per line.</p>
+                <textarea
+                  value={(editing.expandable_features || []).join("\n")}
+                  onChange={e => setEditing({ ...editing, expandable_features: e.target.value.split("\n").map(s => s.trim()).filter(Boolean) })}
+                  placeholder={"Free toiletries\nSlippers\nBathrobe\nBidet\nHairdryer\nSafe\nElectric kettle\nClothes rack\nDrying rack\nToilet paper"}
+                  rows={5}
+                  className="w-full rounded-md border border-border bg-background px-2.5 py-2 text-[12px] font-mono"
+                />
+                <p className="text-[10px] text-muted-foreground mt-1">{(editing.expandable_features || []).length} feature{(editing.expandable_features || []).length === 1 ? "" : "s"}</p>
+              </div>
+
               <div className="space-y-2">
                 <div className="flex items-center justify-between">
                   <Label>Add-ons (optional extras)</Label>
