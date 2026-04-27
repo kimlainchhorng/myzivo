@@ -48,6 +48,18 @@ export interface ContactInfo {
   phone_verified_at?: string | null;
 }
 
+export interface DescriptionSection {
+  title: string;
+  body: string;
+}
+
+export interface PropertyHighlights {
+  perfect_for?: string;
+  top_location_score?: number;
+  breakfast_info?: string;
+  rooms_with?: string[];
+}
+
 export interface LodgePropertyProfile {
   id: string;
   store_id: string;
@@ -59,6 +71,9 @@ export interface LodgePropertyProfile {
   sustainability: string[];
   hero_badges: string[];
   included_highlights: string[];
+  description_sections: DescriptionSection[];
+  property_highlights: PropertyHighlights;
+  popular_amenities: string[];
   nearby: NearbyDistance[];
   // New Booking-grade fields
   check_in_from?: string;
