@@ -823,6 +823,9 @@ export default function StoreProfilePage() {
                   beds={r.beds}
                   maxGuests={r.max_guests}
                   baseRateCents={r.base_rate_cents}
+                  weekendRateCents={r.weekend_rate_cents}
+                  weeklyDiscountPct={r.weekly_discount_pct}
+                  monthlyDiscountPct={r.monthly_discount_pct}
                   amenities={r.amenities || []}
                   breakfastIncluded={r.breakfast_included}
                   photos={(r.photos as string[]) || []}

@@ -1,37 +1,31 @@
-# Recalculate Koh Sdach Resort prices + add stay discounts
+# Show weekend price + discount badges on villa cards
 
-## What's wrong now
+## Why nothing changed visually
+The database update worked (weekend prices and weekly/monthly discounts are now stored correctly), but the storefront villa card (`LodgingRoomCard`) only displays the **weekday price** — it never reads `weekend_rate_cents`, `weekly_discount_pct`, or `monthly_discount_pct`. So the page looks identical even though the data is correct underneath.
 
-1. **Original 4 villas have inconsistent weekend prices** — all set to $172, which is way out of line with their $77–$109 weekday rates.
-2. **No long-stay discount** — every room has `weekly_discount_pct = 0` and `monthly_discount_pct = 0`, so guests staying a week or month see no savings.
+The values only appear inside the booking modal after a guest taps "Reserve" and picks dates.
 
-## Pricing rules I'll apply (Booking.com-style)
+## Fix
+Make the new pricing visible directly on each villa card, Booking.com-style.
 
-- **Weekend rate = weekday × 1.18** (rounded to nearest $1) — typical Fri/Sat surcharge.
-- **Weekly discount = 10%** on every room (auto-applied for stays of 7+ nights).
-- **Monthly discount = 20%** on every room (auto-applied for stays of 28+ nights).
-- Weekday base rates kept as-is (already low → high, $65 → $259).
+### 1. `src/components/lodging/LodgingRoomCard.tsx`
+Add 3 new optional props: `weekendRateCents`, `weeklyDiscountPct`, `monthlyDiscountPct`.
 
-## New per-room values
+- **In the dark image overlay** (where "WEEKDAY US$65" sits): add a second line right under it — `WEEKEND US$77` — so guests immediately see both rates.
+- **Under the footer price** (`$65.00 /night`): add a small emerald pill row showing `−10% weekly` and `−20% monthly` when those discounts are > 0. Same lightweight chip style already used for amenities.
 
-| Room | Weekday | New Weekend | Weekly −10% | Monthly −20% |
-|---|---|---|---|---|
-| Garden Bungalow | $65 | $77 | $58.50 | $52 |
-| Twin Garden Bungalow | $69 | $81 | $62.10 | $55.20 |
-| VILLA | $77 | $91 | $69.30 | $61.60 |
-| VILLA A | $89 | $105 | $80.10 | $71.20 |
-| VILLA Class | $91 | $107 | $81.90 | $72.80 |
-| VILLA Class A | $109 | $129 | $98.10 | $87.20 |
-| Sea View Villa | $119 | $140 | $107.10 | $95.20 |
-| Sea View Villa Class | $139 | $164 | $125.10 | $111.20 |
-| Family Villa | $145 | $171 | $130.50 | $116 |
-| Beachfront Villa | $159 | $188 | $143.10 | $127.20 |
-| Family Villa Class | $169 | $199 | $152.10 | $135.20 |
-| Beachfront Villa Class | $179 | $211 | $161.10 | $143.20 |
-| Honeymoon Suite | $199 | $235 | $179.10 | $159.20 |
-| Two-Bedroom Pool Villa | $259 | $306 | $233.10 | $207.20 |
+### 2. `src/pages/StoreProfilePage.tsx` (line ~825)
+Pass the 3 new fields from the room record into `<LodgingRoomCard>`:
+```tsx
+weekendRateCents={r.weekend_rate_cents}
+weeklyDiscountPct={r.weekly_discount_pct}
+monthlyDiscountPct={r.monthly_discount_pct}
+```
 
-## How
-Single migration: one UPDATE that recomputes `weekend_rate_cents = ROUND(base_rate_cents * 1.18)` and sets `weekly_discount_pct = 10`, `monthly_discount_pct = 20` for all 14 rooms.
+## Result
+Each of the 14 Koh Sdach villa cards will now visibly show:
+- Weekday price (existing)
+- Weekend price (new, on hero overlay)
+- "−10% weekly" / "−20% monthly" discount pills (new, under the footer price)
 
-The booking flow already reads these fields (it picks weekend rate on Fri/Sat and applies the % discount for long stays), so guests will immediately see correct totals at checkout. No UI change needed.
+No database changes needed — the data is already there.

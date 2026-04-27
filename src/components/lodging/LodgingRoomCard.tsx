@@ -18,6 +18,9 @@ interface Props {
   beds?: string | null;
   maxGuests: number;
   baseRateCents: number;
+  weekendRateCents?: number;
+  weeklyDiscountPct?: number;
+  monthlyDiscountPct?: number;
   amenities?: string[];
   breakfastIncluded?: boolean;
   imageUrl?: string;
@@ -48,7 +51,9 @@ function OrnamentDivider() {
 }
 
 export function LodgingRoomCard({
-  name, type, beds, maxGuests, baseRateCents, amenities = [], breakfastIncluded, imageUrl,
+  name, type, beds, maxGuests, baseRateCents,
+  weekendRateCents, weeklyDiscountPct = 0, monthlyDiscountPct = 0,
+  amenities = [], breakfastIncluded, imageUrl,
   description, addonsCount = 0, photos, coverIndex, sizeSqm, addons, cancellationPolicy,
   checkInTime, checkOutTime, onReserve,
 }: Props) {
@@ -129,9 +134,17 @@ export function LodgingRoomCard({
                     <p className="text-[11px] font-bold leading-tight mt-1 drop-shadow-md">{maxGuests} {maxGuests === 1 ? "guest" : "guests"}</p>
                   </div>
                 </div>
-                <div className="pt-2 border-t border-white/15">
-                  <p className="text-[8px] uppercase tracking-[0.14em] font-bold text-white/65 leading-none">Weekday</p>
-                  <p className="text-[15px] font-black leading-tight mt-1 drop-shadow-md tracking-tight">US${(baseRateCents / 100).toFixed(0)}</p>
+                <div className="pt-2 border-t border-white/15 space-y-1.5">
+                  <div>
+                    <p className="text-[8px] uppercase tracking-[0.14em] font-bold text-white/65 leading-none">Weekday</p>
+                    <p className="text-[15px] font-black leading-tight mt-0.5 drop-shadow-md tracking-tight">US${(baseRateCents / 100).toFixed(0)}</p>
+                  </div>
+                  {weekendRateCents && weekendRateCents !== baseRateCents && (
+                    <div>
+                      <p className="text-[8px] uppercase tracking-[0.14em] font-bold text-white/65 leading-none">Weekend</p>
+                      <p className="text-[13px] font-extrabold leading-tight mt-0.5 drop-shadow-md tracking-tight">US${(weekendRateCents / 100).toFixed(0)}</p>
+                    </div>
+                  )}
                 </div>
               </div>
             </div>
@@ -236,6 +249,20 @@ export function LodgingRoomCard({
               ${(baseRateCents / 100).toFixed(2)}
               <span className="text-xs font-medium text-muted-foreground"> /night</span>
             </p>
+            {(weeklyDiscountPct > 0 || monthlyDiscountPct > 0) && (
+              <div className="flex flex-wrap gap-1 mt-1.5">
+                {weeklyDiscountPct > 0 && (
+                  <span className="text-[10px] px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-100 font-bold dark:bg-emerald-500/10 dark:text-emerald-300 dark:border-emerald-500/20">
+                    −{weeklyDiscountPct}% weekly
+                  </span>
+                )}
+                {monthlyDiscountPct > 0 && (
+                  <span className="text-[10px] px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-100 font-bold dark:bg-emerald-500/10 dark:text-emerald-300 dark:border-emerald-500/20">
+                    −{monthlyDiscountPct}% monthly
+                  </span>
+                )}
+              </div>
+            )}
           </div>
           <Button
             onClick={onReserve}
