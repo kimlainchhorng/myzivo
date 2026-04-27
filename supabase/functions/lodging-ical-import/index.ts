@@ -68,7 +68,7 @@ function normDate(v: string): string {
 }
 
 async function syncConnection(
-  admin: ReturnType<typeof createClient>,
+  admin: any,
   conn: any,
 ): Promise<{ id: string; ok: boolean; events: number; error?: string }> {
   if (!conn.ical_import_url) {
