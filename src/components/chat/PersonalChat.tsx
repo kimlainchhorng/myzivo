@@ -755,10 +755,12 @@ export default function PersonalChat({ recipientId, recipientName, recipientAvat
 
     const upload = async () => {
       try {
-        const path = `${user.id}/${Date.now()}.webm`;
+        const contentType = blob.type || "audio/webm";
+        const ext = contentType.includes("mp4") ? "m4a" : "webm";
+        const path = `${user.id}/${Date.now()}.${ext}`;
         const { error: uploadError } = await supabase.storage
           .from("chat-media-files")
-          .upload(path, blob, { contentType: "audio/webm" });
+          .upload(path, blob, { contentType, upsert: true });
         if (uploadError) throw uploadError;
         const { data: urlData } = supabase.storage.from("chat-media-files").getPublicUrl(path);
         if (cancelled) return;
@@ -770,12 +772,14 @@ export default function PersonalChat({ recipientId, recipientName, recipientAvat
           voice_url: urlData.publicUrl,
           file_payload: { duration_ms: durationMs } as unknown as FileBubbleData,
         };
-        const { data, error: insertError } = await dbFrom("direct_messages")
-          .insert(insertData)
-          .select("id,sender_id,receiver_id,message,image_url,video_url,voice_url,message_type,delivered_at,reply_to_id,location_lat,location_lng,location_label,is_pinned,expires_at,created_at,is_read,locked_price_cents,edited_at,file_payload,gift_payload")
-          .single();
+        // Fire-and-forget insert; realtime echo replaces the optimistic bubble.
+        const { error: insertError } = await dbFrom("direct_messages").insert(insertData);
         if (insertError) throw insertError;
-        setMessages((prev) => prev.map((m) => m.id === optimisticId ? (data as Message) : m));
+        // Swap the optimistic local URL with the remote one so the bubble
+        // becomes the "real" message (no flicker, same playable audio).
+        setMessages((prev) => prev.map((m) => m.id === optimisticId
+          ? { ...m, voice_url: urlData.publicUrl }
+          : m));
         void sendChatPush("voice", "");
       } catch (e) {
         if (!cancelled) {
@@ -784,7 +788,8 @@ export default function PersonalChat({ recipientId, recipientName, recipientAvat
           toast.error("Failed to send voice note");
         }
       } finally {
-        URL.revokeObjectURL(localUrl);
+        // Defer revoke so the player keeps working until realtime row arrives.
+        setTimeout(() => URL.revokeObjectURL(localUrl), 30000);
         if (pendingVoiceOptimisticIdRef.current === optimisticId) pendingVoiceOptimisticIdRef.current = null;
         if (!cancelled) voice.clearBlob();
       }
