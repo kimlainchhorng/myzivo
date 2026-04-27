@@ -33,7 +33,7 @@ export default function PinnedMessageBanner({ conversationId, onJumpTo, onUnpin,
   useEffect(() => {
     let mounted = true;
     const load = async () => {
-      const { data } = await supabase
+      const { data } = await (supabase as any)
         .from("pinned_messages" as any)
         .select("message_id, direct_messages:message_id (id, message)")
         .eq("conversation_id", conversationId)

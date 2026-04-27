@@ -54,7 +54,7 @@ export default function GroupMembersSheet({ open, onOpenChange, groupId, onLeft 
     if (!open || members.length === 0) return;
     (async () => {
       const ids = members.map((m) => m.user_id);
-      const { data } = await supabase
+      const { data } = await (supabase as any)
         .from("profiles" as any)
         .select("user_id, display_name, username, avatar_url")
         .in("user_id", ids);

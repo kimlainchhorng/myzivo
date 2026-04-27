@@ -37,7 +37,7 @@ export default function ChatBackupExport({ open, onClose, recipientId, recipient
     if (!user) return;
     setExporting(true);
     try {
-      const { data, error } = await supabase
+      const { data, error } = await (supabase as any)
         .from("direct_messages" as any)
         .select("message, sender_id, created_at, message_type")
         .or(`and(sender_id.eq.${user.id},receiver_id.eq.${recipientId}),and(sender_id.eq.${recipientId},receiver_id.eq.${user.id})`)

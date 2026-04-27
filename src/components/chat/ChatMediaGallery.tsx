@@ -51,7 +51,7 @@ export default function ChatMediaGallery({ open, onClose, recipientId, recipient
     if (!open || !user?.id) return;
     const load = async () => {
       setLoading(true);
-      const { data } = await supabase
+      const { data } = await (supabase as any)
         .from("direct_messages" as any)
         .select("id, image_url, video_url, voice_url, message_type, message, created_at, sender_id")
         .or(`and(sender_id.eq.${user.id},receiver_id.eq.${recipientId}),and(sender_id.eq.${recipientId},receiver_id.eq.${user.id})`)
