@@ -461,7 +461,11 @@ export default function GroupChat({ groupId, groupName, groupAvatar, onClose }: 
                     <div className={`px-3 py-2.5 rounded-2xl ${
                       isMe ? "bg-primary text-primary-foreground rounded-br-md" : "bg-muted text-foreground rounded-bl-md"
                     }`}>
-                      <VoiceMessagePlayer url={msg.voice_url} isMe={isMe} />
+                      <VoiceMessagePlayer
+                        url={msg.voice_url}
+                        isMe={isMe}
+                        durationMs={msg.file_payload?.duration_ms}
+                      />
                     </div>
                   )}
 
