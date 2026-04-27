@@ -50,8 +50,10 @@ interface VoiceMessagePlayerProps {
   uploadBody?: string;
   /** Retry handler — shown when failed. */
   onRetry?: () => void;
-  /** Discard handler — shown when failed or uploading. */
+  /** Discard handler — shown when failed or uploading. Also used as Delete in the action sheet. */
   onDiscard?: () => void;
+  /** Reply handler — opens reply composer for this message via the long-press action sheet. */
+  onReply?: () => void;
 }
 
 const SPEED_OPTIONS = [1, 1.5, 2] as const;
