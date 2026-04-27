@@ -106,6 +106,7 @@ export default function LodgingHousekeepingSection({ storeId }: { storeId: strin
         <CardTitle className="flex items-center gap-2"><Sparkles className="h-5 w-5" /> Housekeeping</CardTitle>
       </CardHeader>
       <CardContent>
+        <LodgingQuickJump active="lodge-housekeeping" />
         {isLoading ? <p className="text-sm text-muted-foreground py-8 text-center">Loading…</p>
           : tasks.length === 0 ? <p className="text-sm text-muted-foreground py-8 text-center">Add rooms first</p>
           : (

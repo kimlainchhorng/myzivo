@@ -102,6 +102,7 @@ export default function LodgingReservationsSection({ storeId }: { storeId: strin
 
   return (
     <div className="space-y-4">
+      <LodgingQuickJump active="lodge-reservations" />
       <HostReservationOpsSummary reservations={reservations} requests={pendingRequests} onFilter={(value) => setQ(value)} />
       <ChangeRequestsInbox storeId={storeId} />
     <Card>
