@@ -86,6 +86,11 @@ import LodgingPoliciesSection from "@/components/admin/store/lodging/LodgingPoli
 import LodgingReviewsSection from "@/components/admin/store/lodging/LodgingReviewsSection";
 import LodgingRatePlansSection from "@/components/admin/store/lodging/LodgingRatePlansSection";
 import LodgingGuestRequestsSection from "@/components/admin/store/lodging/LodgingGuestRequestsSection";
+import LodgingPromotionsSection from "@/components/admin/store/lodging/LodgingPromotionsSection";
+import LodgingChannelManagerSection from "@/components/admin/store/lodging/LodgingChannelManagerSection";
+import LodgingPayoutsSection from "@/components/admin/store/lodging/LodgingPayoutsSection";
+import LodgingInboxSection from "@/components/admin/store/lodging/LodgingInboxSection";
+import LodgingStaffSection from "@/components/admin/store/lodging/LodgingStaffSection";
 import { getLodgingCompletion } from "@/lib/lodging/lodgingCompletion";
 import { LODGING_TAB_IDS, resolveStoreTab, resolveStoreTabFromSearch } from "@/lib/admin/storeTabRouting";
 import { useLodgeRooms } from "@/hooks/lodging/useLodgeRooms";
@@ -2025,6 +2030,11 @@ export default function AdminStoreEditPage() {
     "lodge-policies": "Policies & Rules",
     "lodge-reviews": "Reviews & Guest Feedback",
     "lodge-reports": "Reports & Analytics",
+    "lodge-promos": "Promotions & Discounts",
+    "lodge-channels": "Channel Manager",
+    "lodge-payouts": "Payouts & Finance",
+    "lodge-inbox": "Guest Inbox",
+    "lodge-staff": "Hotel Staff",
   };
   const productsLabelTitle = isAutoRepair ? "Services" : isLodging ? "Rooms" : "Products";
   const paymentLabelTitle = form.category === "car-dealership" ? t("admin.store.booking_appointment") : isAutoRepair ? "Bookings" : isLodging ? "Payment & Payouts" : t("admin.store.payment");
@@ -3739,6 +3749,9 @@ export default function AdminStoreEditPage() {
               <TabsContent value="lodge-policies" data-testid="lodging-tab-lodge-policies"><LodgingPoliciesSection storeId={storeId!} /></TabsContent>
               <TabsContent value="lodge-reviews" data-testid="lodging-tab-lodge-reviews"><LodgingReviewsSection storeId={storeId!} /></TabsContent>
               <TabsContent value="lodge-reports" data-testid="lodging-tab-lodge-reports"><LodgingReportsSection storeId={storeId!} /></TabsContent>
+              <TabsContent value="lodge-promos" data-testid="lodging-tab-lodge-promos"><LodgingPromotionsSection storeId={storeId!} /></TabsContent>
+              <TabsContent value="lodge-channels" data-testid="lodging-tab-lodge-channels"><LodgingChannelManagerSection storeId={storeId!} /></TabsContent>
+              <TabsContent value="lodge-payouts" data-testid="lodging-tab-lodge-payouts"><LodgingPayoutsSection storeId={storeId!} /></TabsContent>
             </>
           )}
 

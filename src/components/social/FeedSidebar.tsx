@@ -11,6 +11,7 @@ import {
   ArrowLeftRight, Shield, Store, LayoutDashboard,
   Handshake, CarTaxiFront, ChefHat, Building2, Briefcase,
   Headphones, Eye, Wrench, X as XIcon, BadgeCheck, ChevronRight,
+  Crown, LogOut, Plus,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/contexts/AuthContext";
@@ -19,6 +20,9 @@ import { optimizeAvatar } from "@/utils/optimizeAvatar";
 import { useUserProfile } from "@/hooks/useUserProfile";
 import { useUserAccess } from "@/hooks/useUserAccess";
 import { useUsername } from "@/hooks/useUsername";
+import { useOwnerStores } from "@/hooks/useOwnerStoreProfile";
+import { resolveBusinessDashboardRoute } from "@/lib/business/dashboardRoute";
+import { useZivoPlus } from "@/contexts/ZivoPlusContext";
 import {
   Sheet,
   SheetContent,
@@ -56,10 +60,12 @@ const MORE_ITEMS = [
 
 export default function FeedSidebar() {
   const navigate = useNavigate();
-  const { user } = useAuth();
+  const { user, signOut } = useAuth();
   const { data: profile } = useUserProfile();
   const { data: access } = useUserAccess(user?.id);
   const { username } = useUsername();
+  const { data: ownerStores = [] } = useOwnerStores();
+  const { isPlus: isMember } = useZivoPlus();
   const [showSwitch, setShowSwitch] = useState(false);
   const [showChat, setShowChat] = useState(false);
 
@@ -121,24 +127,14 @@ export default function FeedSidebar() {
               style={profile?.cover_url ? { backgroundImage: `url(${profile.cover_url})`, backgroundSize: "cover", backgroundPosition: "center" } : undefined}
             />
             <div className="px-3 pb-3 -mt-7">
-              <div className="flex items-end justify-between">
-                <div className="relative">
-                  <Avatar className="h-14 w-14 border-[3px] border-card shadow-md">
-                    <AvatarImage src={avatarUrl || undefined} />
-                    <AvatarFallback className="bg-primary/10 text-primary font-bold text-lg">
-                      {displayName[0]?.toUpperCase() || "U"}
-                    </AvatarFallback>
-                  </Avatar>
-                  <span className="absolute bottom-0.5 right-0.5 h-3 w-3 rounded-full bg-emerald-500 ring-2 ring-card" aria-label="Online" />
-                </div>
-                <button
-                  onClick={() => setShowSwitch(true)}
-                  className="mt-7 flex items-center gap-1 rounded-full border border-border/50 bg-background/80 px-2.5 py-1 text-[11px] font-medium text-muted-foreground hover:bg-muted hover:text-foreground transition-colors"
-                  aria-label="Switch account"
-                >
-                  <ArrowLeftRight className="h-3 w-3" />
-                  <span>Switch</span>
-                </button>
+              <div className="relative">
+                <Avatar className="h-14 w-14 border-[3px] border-card shadow-md">
+                  <AvatarImage src={avatarUrl || undefined} />
+                  <AvatarFallback className="bg-primary/10 text-primary font-bold text-lg">
+                    {displayName[0]?.toUpperCase() || "U"}
+                  </AvatarFallback>
+                </Avatar>
+                <span className="absolute bottom-0.5 left-12 h-3 w-3 rounded-full bg-emerald-500 ring-2 ring-card" aria-label="Online" />
               </div>
 
               <div className="mt-2 min-w-0">
@@ -169,12 +165,64 @@ export default function FeedSidebar() {
                 <span>View profile</span>
                 <ChevronRight className="h-3.5 w-3.5 text-muted-foreground" />
               </button>
+
+              <button
+                onClick={() => setShowSwitch(true)}
+                className="mt-1.5 flex w-full items-center justify-center gap-1.5 rounded-lg border border-border/50 bg-background/80 px-3 py-1.5 text-[12px] font-medium text-muted-foreground hover:bg-muted hover:text-foreground transition-colors"
+                aria-label="Switch account"
+              >
+                <ArrowLeftRight className="h-3.5 w-3.5" />
+                <span>Switch</span>
+              </button>
             </div>
           </div>
         )}
 
+        {/* Your Business Pages — placed at top, right under the profile card */}
+        {user && (
+          <>
+            <p className="text-[11px] font-semibold text-muted-foreground/60 uppercase tracking-wider px-3 pt-2 pb-1">
+              Your Business Pages
+            </p>
+            {ownerStores.length > 0 && ownerStores.map((store) => (
+              <button
+                key={store.id}
+                onClick={() => {
+                  const { path } = resolveBusinessDashboardRoute(store.category, store.id);
+                  navigate(path);
+                }}
+                className="flex items-center gap-3 px-3 py-2 rounded-xl text-sm font-medium text-foreground hover:bg-muted/50 transition-colors group"
+              >
+                <Avatar className="h-6 w-6 shrink-0">
+                  <AvatarImage src={store.logo_url || undefined} alt={store.name || "Business"} />
+                  <AvatarFallback className="text-[10px] bg-primary/10 text-primary">
+                    {(store.name || "B").charAt(0).toUpperCase()}
+                  </AvatarFallback>
+                </Avatar>
+                <div className="flex-1 min-w-0 text-left">
+                  <p className="text-sm font-medium text-foreground truncate leading-tight">
+                    {store.name || "Untitled page"}
+                  </p>
+                  {store.normalizedCategory && (
+                    <p className="text-[10px] text-muted-foreground capitalize truncate">
+                      {store.normalizedCategory}
+                    </p>
+                  )}
+                </div>
+              </button>
+            ))}
+            <button
+              onClick={() => navigate("/business/new?new=1")}
+              className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-foreground hover:bg-muted/50 transition-colors"
+            >
+              <Building2 className="h-5 w-5 text-foreground" />
+              <span>Create new Business</span>
+            </button>
+          </>
+        )}
+
         {/* Main nav */}
-        <p className="text-[11px] font-semibold text-muted-foreground/60 uppercase tracking-wider px-3 pt-2 pb-1">Navigate</p>
+        <p className="text-[11px] font-semibold text-muted-foreground/60 uppercase tracking-wider px-3 pt-4 pb-1">Navigate</p>
         {NAV_ITEMS.map((item) => (
           <button
             key={item.label}
@@ -219,6 +267,36 @@ export default function FeedSidebar() {
             <span>{item.label}</span>
           </button>
         ))}
+
+        {/* Account footer — Membership + Sign out */}
+        {user && (
+          <div className="mt-4 pt-3 border-t border-border/30 space-y-0.5">
+            {isMember ? (
+              <button
+                onClick={() => navigate("/account/membership")}
+                className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-foreground hover:bg-muted/50 transition-colors w-full"
+              >
+                <Crown className="h-5 w-5 text-amber-500" />
+                <span>Membership</span>
+              </button>
+            ) : (
+              <button
+                onClick={() => navigate("/membership")}
+                className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-amber-600 hover:bg-amber-500/10 transition-colors w-full"
+              >
+                <Crown className="h-5 w-5" />
+                <span>Join ZIVO+</span>
+              </button>
+            )}
+            <button
+              onClick={() => signOut()}
+              className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-destructive hover:bg-destructive/10 transition-colors w-full"
+            >
+              <LogOut className="h-5 w-5" />
+              <span>Sign out</span>
+            </button>
+          </div>
+        )}
       </div>
 
       {/* Switch Account Sheet */}

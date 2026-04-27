@@ -345,7 +345,7 @@ const NavBar = forwardRef<HTMLDivElement>(function NavBar(_, ref) {
                       <motion.button
                         whileHover={{ scale: 1.05, z: 10 }}
                         whileTap={{ scale: 0.95 }}
-                        className="flex items-center gap-2 px-2 py-1.5 rounded-full transition-all duration-200 group"
+                        className="lg:hidden flex items-center gap-2 px-2 py-1.5 rounded-full transition-all duration-200 group"
                         style={{
                           background: "hsl(var(--muted) / 0.3)",
                           boxShadow: "0 2px 10px -2px hsl(var(--foreground) / 0.06), inset 0 1px 1px hsl(var(--background) / 0.4)",
@@ -374,7 +374,7 @@ const NavBar = forwardRef<HTMLDivElement>(function NavBar(_, ref) {
                             </div>
                           )}
                         </div>
-                        <ChevronDown className="w-3.5 h-3.5 text-muted-foreground group-hover:text-foreground transition-colors" />
+                        <ChevronDown className="w-3.5 h-3.5 text-muted-foreground group-hover:text-foreground transition-colors lg:hidden" />
                       </motion.button>
                     </DropdownMenuTrigger>
                     <DropdownMenuContent
@@ -390,78 +390,86 @@ const NavBar = forwardRef<HTMLDivElement>(function NavBar(_, ref) {
                         background: "hsl(var(--card) / 0.9)",
                       }}
                     >
-                      <div className="px-3 py-2.5 mb-1">
-                        <p className="text-sm font-semibold text-foreground truncate">{user.email}</p>
-                        {isMember && (
-                          <span className="inline-flex items-center gap-1 text-[10px] font-bold text-amber-600 mt-0.5">
-                            <Crown className="w-3 h-3" /> ZIVO+ Member
-                          </span>
-                        )}
+                      {/* Email + My Profile + My Trips — mobile only.
+                          On lg+ the sidebar already shows identity + profile actions. */}
+                      <div className="lg:hidden">
+                        <div className="px-3 py-2.5 mb-1">
+                          <p className="text-sm font-semibold text-foreground truncate">{user.email}</p>
+                          {isMember && (
+                            <span className="inline-flex items-center gap-1 text-[10px] font-bold text-amber-600 mt-0.5">
+                              <Crown className="w-3 h-3" /> ZIVO+ Member
+                            </span>
+                          )}
+                        </div>
+                        <DropdownMenuSeparator />
+                        <DropdownMenuItem onClick={() => navigate("/profile")} className="cursor-pointer rounded-lg py-2.5 gap-2.5">
+                          <UserCircle className="w-4 h-4 text-muted-foreground" /> My Profile
+                        </DropdownMenuItem>
+                        <DropdownMenuItem onClick={() => navigate("/trips")} className="cursor-pointer rounded-lg py-2.5 gap-2.5">
+                          <Briefcase className="w-4 h-4 text-muted-foreground" /> My Trips
+                        </DropdownMenuItem>
+                        <DropdownMenuSeparator />
                       </div>
-                      <DropdownMenuSeparator />
-                      <DropdownMenuItem onClick={() => navigate("/profile")} className="cursor-pointer rounded-lg py-2.5 gap-2.5">
-                        <UserCircle className="w-4 h-4 text-muted-foreground" /> My Profile
-                      </DropdownMenuItem>
-                      <DropdownMenuItem onClick={() => navigate("/trips")} className="cursor-pointer rounded-lg py-2.5 gap-2.5">
-                        <Briefcase className="w-4 h-4 text-muted-foreground" /> My Trips
-                      </DropdownMenuItem>
-                      <DropdownMenuSeparator />
-                      <div className="px-3 pt-1.5 pb-1 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
-                        Your Business Pages
-                      </div>
-                      {ownerStores.length > 0 ? (
-                        ownerStores.map((store) => (
-                          <DropdownMenuItem
-                            key={store.id}
-                            onClick={() => {
-                              const { path } = resolveBusinessDashboardRoute(store.category, store.id);
-                              navigate(path);
-                            }}
-                            className="cursor-pointer rounded-lg py-2 gap-2.5"
-                          >
-                            <Avatar className="w-6 h-6 shrink-0">
-                              <AvatarImage src={store.logo_url || undefined} alt={store.name || "Business"} />
-                              <AvatarFallback className="text-[10px] bg-primary/10 text-primary">
-                                {(store.name || "B").charAt(0).toUpperCase()}
-                              </AvatarFallback>
-                            </Avatar>
-                            <div className="flex-1 min-w-0">
-                              <p className="text-sm font-medium text-foreground truncate">{store.name || "Untitled page"}</p>
-                              {store.normalizedCategory && (
-                                <p className="text-[10px] text-muted-foreground capitalize truncate">{store.normalizedCategory}</p>
-                              )}
-                            </div>
+                      {/* Business Pages, Membership, Sign out — shown on mobile only.
+                          On lg+ these live in the left FeedSidebar to avoid duplication. */}
+                      <div className="lg:hidden">
+                        <div className="px-3 pt-1.5 pb-1 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
+                          Your Business Pages
+                        </div>
+                        {ownerStores.length > 0 ? (
+                          ownerStores.map((store) => (
+                            <DropdownMenuItem
+                              key={store.id}
+                              onClick={() => {
+                                const { path } = resolveBusinessDashboardRoute(store.category, store.id);
+                                navigate(path);
+                              }}
+                              className="cursor-pointer rounded-lg py-2 gap-2.5"
+                            >
+                              <Avatar className="w-6 h-6 shrink-0">
+                                <AvatarImage src={store.logo_url || undefined} alt={store.name || "Business"} />
+                                <AvatarFallback className="text-[10px] bg-primary/10 text-primary">
+                                  {(store.name || "B").charAt(0).toUpperCase()}
+                                </AvatarFallback>
+                              </Avatar>
+                              <div className="flex-1 min-w-0">
+                                <p className="text-sm font-medium text-foreground truncate">{store.name || "Untitled page"}</p>
+                                {store.normalizedCategory && (
+                                  <p className="text-[10px] text-muted-foreground capitalize truncate">{store.normalizedCategory}</p>
+                                )}
+                              </div>
+                            </DropdownMenuItem>
+                          ))
+                        ) : (
+                          <DropdownMenuItem onClick={() => navigate("/business")} className="cursor-pointer rounded-lg py-2.5 gap-2.5">
+                            <Building2 className="w-4 h-4 text-muted-foreground" /> Business Page
                           </DropdownMenuItem>
-                        ))
-                      ) : (
-                        <DropdownMenuItem onClick={() => navigate("/business")} className="cursor-pointer rounded-lg py-2.5 gap-2.5">
-                          <Building2 className="w-4 h-4 text-muted-foreground" /> Business Page
+                        )}
+                        {ownerStores.length > 0 && <DropdownMenuSeparator />}
+                        <DropdownMenuItem
+                          onClick={() => navigate("/business/new?new=1")}
+                          className="cursor-pointer rounded-lg py-2 gap-2.5 text-black focus:text-black"
+                        >
+                          <Building2 className="w-4 h-4 text-black" /> Create new Business
                         </DropdownMenuItem>
-                      )}
-                      {ownerStores.length > 0 && <DropdownMenuSeparator />}
-                      <DropdownMenuItem
-                        onClick={() => navigate("/business/new?new=1")}
-                        className="cursor-pointer rounded-lg py-2 gap-2.5 text-black focus:text-black"
-                      >
-                        <Building2 className="w-4 h-4 text-black" /> Create new Business
-                      </DropdownMenuItem>
-                      {!isMember && (
-                        <DropdownMenuItem onClick={() => navigate("/membership")} className="cursor-pointer rounded-lg py-2.5 gap-2.5 text-amber-600">
-                          <Crown className="w-4 h-4" /> Join ZIVO+
+                        {!isMember && (
+                          <DropdownMenuItem onClick={() => navigate("/membership")} className="cursor-pointer rounded-lg py-2.5 gap-2.5 text-amber-600">
+                            <Crown className="w-4 h-4" /> Join ZIVO+
+                          </DropdownMenuItem>
+                        )}
+                        {isMember && (
+                          <DropdownMenuItem onClick={() => navigate("/account/membership")} className="cursor-pointer rounded-lg py-2.5 gap-2.5">
+                            <Crown className="w-4 h-4 text-amber-500" /> Membership
+                          </DropdownMenuItem>
+                        )}
+                        <DropdownMenuSeparator />
+                        <DropdownMenuItem
+                          onClick={() => signOut()}
+                          className="cursor-pointer rounded-lg py-2.5 gap-2.5 text-destructive focus:text-destructive"
+                        >
+                          <LogOut className="w-4 h-4" /> Sign out
                         </DropdownMenuItem>
-                      )}
-                      {isMember && (
-                        <DropdownMenuItem onClick={() => navigate("/account/membership")} className="cursor-pointer rounded-lg py-2.5 gap-2.5">
-                          <Crown className="w-4 h-4 text-amber-500" /> Membership
-                        </DropdownMenuItem>
-                      )}
-                      <DropdownMenuSeparator />
-                      <DropdownMenuItem
-                        onClick={() => signOut()}
-                        className="cursor-pointer rounded-lg py-2.5 gap-2.5 text-destructive focus:text-destructive"
-                      >
-                        <LogOut className="w-4 h-4" /> Sign out
-                      </DropdownMenuItem>
+                      </div>
                     </DropdownMenuContent>
                   </DropdownMenu>
                 ) : (

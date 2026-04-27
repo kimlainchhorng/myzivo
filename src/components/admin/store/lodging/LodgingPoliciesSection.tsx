@@ -1,16 +1,218 @@
-import { ShieldCheck } from "lucide-react";
-import { LoadingPanel, NextActions, PolicySummary, SectionShell, StatCard, useLodgingOpsData } from "./LodgingOperationsShared";
+import { useEffect, useState } from "react";
+import { ShieldCheck, Save } from "lucide-react";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import { Button } from "@/components/ui/button";
+import { Switch } from "@/components/ui/switch";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { LoadingPanel, NextActions, SectionShell, StatCard, money, useLodgingOpsData } from "./LodgingOperationsShared";
+import { CatalogTable, EditorDialog } from "./CatalogTable";
+import { useLodgingCatalog } from "@/hooks/lodging/useLodgingCatalog";
+import { useLodgePropertyProfile } from "@/hooks/lodging/useLodgePropertyProfile";
+import { supabase } from "@/integrations/supabase/client";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { toast } from "sonner";
+
+interface TaxFee {
+  id: string;
+  store_id: string;
+  name: string;
+  fee_type: string;
+  basis: string;
+  rate_value: number;
+  applies_to: string;
+  inclusive: boolean;
+  active: boolean;
+}
+
+const FEE_TYPES = ["tax", "service_charge", "resort_fee", "city_tax", "tourism_tax"];
+const BASES = ["percent", "per_night", "per_stay", "per_guest", "per_guest_per_night"];
+const APPLIES = ["room", "room_and_addons", "total"];
+const blank: Partial<TaxFee> = { name: "VAT", fee_type: "tax", basis: "percent", rate_value: 10, applies_to: "room", inclusive: false, active: true };
+
+const CANCEL_PRESETS = [
+  { value: "flexible", label: "Flexible (free until 24h before)" },
+  { value: "moderate", label: "Moderate (free until 5 days before)" },
+  { value: "strict", label: "Strict (50% refund until 7 days before)" },
+  { value: "non_refundable", label: "Non-refundable" },
+];
 
 export default function LodgingPoliciesSection({ storeId }: { storeId: string }) {
-  const { rooms, profile, isLoading } = useLodgingOpsData(storeId);
-  const rules = profile?.house_rules || {};
+  const opsData = useLodgingOpsData(storeId);
+  const profileQ = useLodgePropertyProfile(storeId);
+  const qc = useQueryClient();
+  const updateProfile = useMutation({
+    mutationFn: async (patch: any) => {
+      const { error } = await (supabase as any).from("lodge_property_profiles").upsert({ store_id: storeId, ...patch });
+      if (error) throw error;
+    },
+    onSuccess: () => { toast.success("Policies saved"); qc.invalidateQueries({ queryKey: ["lodge-property-profile", storeId] }); },
+    onError: (e: any) => toast.error(e?.message || "Save failed"),
+  });
+  const taxes = useLodgingCatalog<TaxFee>("lodging_taxes_fees", storeId);
+  const [editing, setEditing] = useState<Partial<TaxFee> | null>(null);
+  const [policyDraft, setPolicyDraft] = useState<any>({});
+
+  useEffect(() => {
+    if (profileQ.data) setPolicyDraft({
+      cancellation_policy: (profileQ.data as any).cancellation_policy || "flexible",
+      deposit_pct: (profileQ.data as any).deposit_pct ?? 0,
+      child_policy: (profileQ.data as any).child_policy || "",
+      pet_policy: (profileQ.data as any).pet_policy || "",
+      smoking_policy: (profileQ.data as any).smoking_policy || "non_smoking",
+      quiet_hours_from: (profileQ.data as any).quiet_hours_from || "22:00",
+      quiet_hours_to: (profileQ.data as any).quiet_hours_to || "07:00",
+      parties_allowed: Boolean((profileQ.data as any).parties_allowed),
+    });
+  }, [profileQ.data]);
+
+  const taxRows = taxes.list.data || [];
+  const isLoading = opsData.isLoading || profileQ.isLoading || taxes.list.isLoading;
+
   return (
-    <SectionShell title="Policies & Rules" subtitle="Check-in, cancellation, deposit, child, pet, payment, and house-rule status." icon={ShieldCheck}>
+    <SectionShell title="Policies & Rules" subtitle="Cancellation, deposits, child & pet policies, smoking, quiet hours, and tax/fee setup." icon={ShieldCheck}>
       {isLoading ? <LoadingPanel /> : <>
-        <div className="grid gap-3 sm:grid-cols-3"><StatCard label="Payment methods" value={String(profile?.payment_methods?.length || 0)} icon={ShieldCheck} /><StatCard label="Currencies" value={String(profile?.currencies_accepted?.length || 0)} icon={ShieldCheck} /><StatCard label="House rules" value={Object.keys(rules).length ? "Set" : "Missing"} icon={ShieldCheck} /></div>
-        <PolicySummary profile={profile} rooms={rooms} />
-        <div className="rounded-lg border border-border bg-muted/20 p-3 text-sm text-muted-foreground">Quiet hours: <span className="font-medium text-foreground">{rules.quiet_hours || [rules.quiet_from, rules.quiet_to].filter(Boolean).join("–") || "Not set"}</span> · Parties: <span className="font-medium text-foreground">{rules.parties_allowed ? "Allowed" : "Not allowed / not set"}</span> · Smoking: <span className="font-medium text-foreground">{rules.smoking_zones || "Not set"}</span></div>
-        <NextActions actions={[{ label: "Edit property policies", tab: "lodge-property", hint: "Set check-in/out, deposit, contact, pet, and child policies." }, { label: "Edit amenities policies", tab: "lodge-amenities", hint: "Set parking, internet, smoking, and extra-charge rules." }, { label: "Review reservations", tab: "lodge-reservations", hint: "Apply policies to current stays." }]} />
+        <div className="grid gap-3 sm:grid-cols-3">
+          <StatCard label="Active taxes/fees" value={String(taxRows.filter((r) => r.active !== false).length)} icon={ShieldCheck} />
+          <StatCard label="Cancellation" value={(policyDraft.cancellation_policy || "—").replace(/_/g, " ")} icon={ShieldCheck} />
+          <StatCard label="Deposit %" value={`${policyDraft.deposit_pct || 0}%`} icon={ShieldCheck} />
+        </div>
+
+        {/* House policies editor */}
+        <div className="rounded-lg border border-border bg-card p-4 space-y-3">
+          <p className="text-sm font-semibold">House policies</p>
+          <div className="grid gap-3 sm:grid-cols-2">
+            <div>
+              <Label>Cancellation policy</Label>
+              <Select value={policyDraft.cancellation_policy} onValueChange={(v) => setPolicyDraft({ ...policyDraft, cancellation_policy: v })}>
+                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectContent>{CANCEL_PRESETS.map((p) => <SelectItem key={p.value} value={p.value}>{p.label}</SelectItem>)}</SelectContent>
+              </Select>
+            </div>
+            <div>
+              <Label>Deposit (%)</Label>
+              <Input type="number" min={0} max={100} value={policyDraft.deposit_pct || 0} onChange={(e) => setPolicyDraft({ ...policyDraft, deposit_pct: parseInt(e.target.value || "0", 10) })} />
+            </div>
+            <div>
+              <Label>Child policy</Label>
+              <Textarea rows={2} value={policyDraft.child_policy} onChange={(e) => setPolicyDraft({ ...policyDraft, child_policy: e.target.value })} placeholder="Children under 6 stay free; cribs available on request." />
+            </div>
+            <div>
+              <Label>Pet policy</Label>
+              <Textarea rows={2} value={policyDraft.pet_policy} onChange={(e) => setPolicyDraft({ ...policyDraft, pet_policy: e.target.value })} placeholder="No pets / Pets allowed (max 1, $20/night)" />
+            </div>
+            <div>
+              <Label>Smoking</Label>
+              <Select value={policyDraft.smoking_policy} onValueChange={(v) => setPolicyDraft({ ...policyDraft, smoking_policy: v })}>
+                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="non_smoking">Non-smoking property</SelectItem>
+                  <SelectItem value="designated_areas">Designated areas only</SelectItem>
+                  <SelectItem value="smoking_allowed">Smoking allowed</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="flex items-end gap-3">
+              <div className="flex-1">
+                <Label>Quiet hours from</Label>
+                <Input type="time" value={policyDraft.quiet_hours_from} onChange={(e) => setPolicyDraft({ ...policyDraft, quiet_hours_from: e.target.value })} />
+              </div>
+              <div className="flex-1">
+                <Label>to</Label>
+                <Input type="time" value={policyDraft.quiet_hours_to} onChange={(e) => setPolicyDraft({ ...policyDraft, quiet_hours_to: e.target.value })} />
+              </div>
+            </div>
+            <label className="sm:col-span-2 flex items-center gap-3 rounded-md border border-border p-3">
+              <Switch checked={policyDraft.parties_allowed} onCheckedChange={(v) => setPolicyDraft({ ...policyDraft, parties_allowed: v })} />
+              <span className="text-sm">Parties / events allowed</span>
+            </label>
+          </div>
+          <Button size="sm" onClick={() => updateProfile.mutate(policyDraft as any)} disabled={updateProfile.isPending}>
+            <Save className="mr-1.5 h-4 w-4" /> {updateProfile.isPending ? "Saving…" : "Save policies"}
+          </Button>
+        </div>
+
+        {/* Taxes & fees */}
+        <div className="rounded-lg border border-border bg-card p-4 space-y-3">
+          <div className="flex items-center justify-between">
+            <p className="text-sm font-semibold">Taxes & fees</p>
+            <span className="text-xs text-muted-foreground">{taxRows.length} item{taxRows.length === 1 ? "" : "s"}</span>
+          </div>
+          <CatalogTable
+            rows={taxRows}
+            isLoading={taxes.list.isLoading}
+            emptyTitle="No taxes or fees configured"
+            emptyBody="Add VAT, tourism tax, service charge, or resort fees that apply to bookings."
+            addLabel="Add tax / fee"
+            onAddClick={() => setEditing({ ...blank })}
+            onEdit={(r) => setEditing(r)}
+            onDelete={(id) => taxes.remove.mutate(id)}
+            onToggleActive={(r) => taxes.toggleActive.mutate({ id: r.id, active: r.active === false })}
+            columns={[
+              { key: "name", label: "Name", render: (r) => <><span className="font-semibold">{r.name}</span><p className="text-xs text-muted-foreground capitalize">{r.fee_type.replace(/_/g, " ")}</p></> },
+              { key: "rate", label: "Rate", className: "w-32", render: (r) => r.basis === "percent" ? `${r.rate_value}%` : `${money(Math.round(r.rate_value * 100))} ${r.basis.replace(/_/g, " ")}` },
+              { key: "applies", label: "Applies to", className: "w-32", render: (r) => r.applies_to.replace(/_/g, " ") },
+              { key: "inclusive", label: "Inclusive", className: "w-20", render: (r) => r.inclusive ? "Yes" : "No" },
+            ]}
+          />
+        </div>
+
+        <NextActions actions={[
+          { label: "Update property profile", tab: "lodge-property", hint: "Add contact info, ID requirements, and Wi-Fi details." },
+          { label: "Edit amenities & services", tab: "lodge-amenities", hint: "Mark parking, internet, and other extras." },
+          { label: "Review reservations", tab: "lodge-reservations", hint: "Verify policies are visible on bookings." },
+        ]} />
+
+        {editing && (
+          <EditorDialog
+            open
+            onOpenChange={(v) => !v && setEditing(null)}
+            title={editing.id ? "Edit tax / fee" : "New tax / fee"}
+            saving={taxes.upsert.isPending}
+            onSave={() => {
+              if (!editing.name?.trim()) return;
+              taxes.upsert.mutate(editing as TaxFee, { onSuccess: () => setEditing(null) });
+            }}
+          >
+            <div className="grid gap-3 sm:grid-cols-2">
+              <div className="sm:col-span-2">
+                <Label>Name</Label>
+                <Input value={editing.name || ""} onChange={(e) => setEditing({ ...editing, name: e.target.value })} placeholder="VAT 10%" />
+              </div>
+              <div>
+                <Label>Type</Label>
+                <Select value={editing.fee_type} onValueChange={(v) => setEditing({ ...editing, fee_type: v })}>
+                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectContent>{FEE_TYPES.map((t) => <SelectItem key={t} value={t} className="capitalize">{t.replace(/_/g, " ")}</SelectItem>)}</SelectContent>
+                </Select>
+              </div>
+              <div>
+                <Label>Basis</Label>
+                <Select value={editing.basis} onValueChange={(v) => setEditing({ ...editing, basis: v })}>
+                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectContent>{BASES.map((t) => <SelectItem key={t} value={t} className="capitalize">{t.replace(/_/g, " ")}</SelectItem>)}</SelectContent>
+                </Select>
+              </div>
+              <div>
+                <Label>Rate / amount</Label>
+                <Input type="number" min={0} step="0.01" value={editing.rate_value || 0} onChange={(e) => setEditing({ ...editing, rate_value: parseFloat(e.target.value || "0") })} />
+                <p className="mt-1 text-xs text-muted-foreground">{editing.basis === "percent" ? "Enter as percent (e.g. 10 = 10%)" : "Enter currency amount"}</p>
+              </div>
+              <div>
+                <Label>Applies to</Label>
+                <Select value={editing.applies_to} onValueChange={(v) => setEditing({ ...editing, applies_to: v })}>
+                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectContent>{APPLIES.map((t) => <SelectItem key={t} value={t} className="capitalize">{t.replace(/_/g, " ")}</SelectItem>)}</SelectContent>
+                </Select>
+              </div>
+              <label className="sm:col-span-2 flex items-center gap-3 rounded-md border border-border p-3">
+                <Switch checked={Boolean(editing.inclusive)} onCheckedChange={(v) => setEditing({ ...editing, inclusive: v })} />
+                <span className="text-sm">Already included in displayed price</span>
+              </label>
+            </div>
+          </EditorDialog>
+        )}
       </>}
     </SectionShell>
   );

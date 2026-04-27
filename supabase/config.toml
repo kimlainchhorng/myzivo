@@ -83,3 +83,7 @@ project_id = "slirphzzwcogdbkeicff"
     verify_jwt = false
   [functions.walmart-search]
     verify_jwt = false
+  [functions.lodging-ical-import]
+    verify_jwt = false
+  [functions.lodging-ical-export]
+    verify_jwt = false

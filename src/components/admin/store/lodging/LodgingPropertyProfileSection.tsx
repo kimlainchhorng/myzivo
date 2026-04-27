@@ -26,6 +26,8 @@ import CheckInOutCard from "./property-profile/CheckInOutCard";
 import CancellationPolicyCard from "./property-profile/CancellationPolicyCard";
 import PetChildPolicyCard from "./property-profile/PetChildPolicyCard";
 import ContactCard from "./property-profile/ContactCard";
+import GuestEssentialsCard from "./property-profile/GuestEssentialsCard";
+import { Wifi } from "lucide-react";
 
 const LANGUAGES = ["English", "Spanish", "French", "German", "Italian", "Portuguese", "Khmer", "Thai", "Vietnamese", "Chinese", "Japanese", "Korean", "Russian", "Arabic", "Hindi"];
 const FACILITY_GROUPS: { label: string; items: string[] }[] = [
@@ -227,6 +229,19 @@ export default function LodgingPropertyProfileSection({ storeId }: { storeId: st
               <CardHeader className="py-2.5"><CardTitle className="text-[12px] flex items-center gap-1.5"><Globe className="h-3.5 w-3.5" /> Languages spoken</CardTitle></CardHeader>
               <CardContent className="pt-0"><ChipGroup options={LANGUAGES.filter(matches)} selected={form.languages || []} onToggle={v => toggleIn("languages", v)} /></CardContent>
             </Card>
+          </AccordionContent>
+        </AccordionItem>
+
+        {/* GROUP 1b — Guest essentials */}
+        <AccordionItem value="guest-essentials" className="border rounded-xl bg-card">
+          <AccordionTrigger className="px-3 py-2.5 text-[13px] font-semibold hover:no-underline">
+            <span className="flex items-center gap-2"><Wifi className="h-3.5 w-3.5 text-primary" /> Guest essentials</span>
+          </AccordionTrigger>
+          <AccordionContent className="px-3 pb-3">
+            <GuestEssentialsCard
+              value={(form.contact || {}) as any}
+              onChange={(patch) => setForm({ ...form, contact: { ...(form.contact || {}), ...patch } as any })}
+            />
           </AccordionContent>
         </AccordionItem>
 

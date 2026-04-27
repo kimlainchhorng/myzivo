@@ -1,67 +1,92 @@
-# Restore your profile (fix stuck-loading spinner)
+## Hotels & Resorts — Phase 5 (Operational Polish)
 
-## What happened
+Phase 4 finished iCal sync, Guest Inbox, and Hotel Staff. Phase 5 closes out the original "Operational polish" list so day-to-day hotel runners get fast, focused tools on the seven heaviest tabs.
 
-Your data is **safe and intact** — the database still has:
-- ZIVO Platform name
-- Blue verified badge
-- Brand name = ZIVO
-- Avatar + cover photo
+---
 
-The problem is a **permissions bug** introduced when we tightened security on the `profiles` table earlier today.
+### 1. Reservations — power-user filters & exports
 
-## Root cause (technical)
+- Quick-filter chip row above the table: **All / Today's arrivals / In-house / Departing today / Unpaid / VIP / Cancelled**.
+- "Export CSV" button → downloads the current filtered set (number, guest, room, dates, status, total, balance).
+- New row action **Send confirmation** → opens a prefilled mailto with reservation details (no new edge function needed).
+- Search box (guest name / number / phone).
 
-The earlier security migration (`20260426215638`) replaced wide-open SELECT access on `profiles` with a strict, **column-by-column** GRANT list. Every column the app reads must be explicitly listed.
+### 2. Calendar — visual upgrades
 
-Then a later migration added a new column — `display_brand_name` (the "ZIVO" override) — but **forgot to grant SELECT on it** to the `authenticated` role.
+- Color legend strip at the top (Confirmed / Pending / Checked-in / Blocked / OTA-imported).
+- Reservation bars get a right-edge drag handle to extend stay (updates `check_out` + `nights`).
+- "Block date range" dialog (room → start → end → reason) writing into `lodge_room_blocks` per day.
+- OTA-imported blocks (from `lodging_room_blocks`) shown with channel-colored badges so owners can tell where a block came from.
 
-Confirmed via Postgres:
-```
-has_column_privilege('authenticated', 'profiles', 'display_brand_name', 'SELECT') = false
-has_column_privilege('authenticated', 'profiles', 'full_name',          'SELECT') = true
-```
+### 3. Front Desk — speed shortcuts
 
-So when the Profile page runs `SELECT *` on `profiles`, Postgres rejects it with "permission denied for column display_brand_name". The query throws, `profile` stays `null`, and the page is stuck on the green spinner. The bottom-nav Account tab falls back to your email's first letter, which is why it shows "K" instead of the ZIVO logo.
+- Sticky "Walk-in booking" button → opens the existing new-reservation dialog pre-filled with today's date and a generated number.
+- Per-row inline approve/decline for late-checkout requests (writes to `lodge_reservation_change_requests`).
+- Key-card status pill per checked-in reservation (Issued / Returned) with one-tap toggle stored in reservation `notes` (no schema change).
 
-## Fix
+### 4. Housekeeping — staff-aware
 
-### 1. Database migration — grant the missing column
-```sql
-GRANT SELECT (display_brand_name) ON public.profiles TO authenticated;
-```
+- "Assign to" dropdown sourced from the new **Hotel Staff** tab, filtered to `lodging_role = housekeeping`. Persists to `lodge_housekeeping.assignee_id`.
+- Priority flag toggle (high / normal) stored in `notes` JSON tail (no migration needed).
+- Photo upload on completion using the existing `lodging-uploads` bucket; URL stored in `notes`.
 
-### 2. Future-proof the GRANT list
-Add a defensive migration that auto-grants SELECT on **all current columns** of `profiles` to `authenticated` (the row-level RLS policy still restricts which rows are returned — column GRANTs only control which fields are visible). This prevents the same bug the next time we add a column.
+### 5. Property Profile — guest essentials
 
-```sql
-DO $$
-DECLARE cols text;
-BEGIN
-  SELECT string_agg(quote_ident(column_name), ', ')
-    INTO cols
-  FROM information_schema.columns
-  WHERE table_schema='public' AND table_name='profiles';
-  EXECUTE format('GRANT SELECT (%s) ON public.profiles TO authenticated', cols);
-END$$;
-```
+Add a new "Guest essentials" card with:
+- Wi-Fi SSID + password (with "show on guest screens" toggle).
+- Local emergency contacts (police, medical, fire — each name + phone).
+- Languages spoken at front desk (multi-select chips, reusing existing `languages` column).
+- Accepted ID types (Passport / National ID / Driver's license — checkboxes).
 
-Sensitive fields (email, phone, kyc, payout, etc.) remain protected by the existing RLS row policy — only the row owner can SELECT their own row, so non-owners still cannot read those values for other users.
+Stored in `lodge_property_profile.contact` JSONB (already exists, just extend the shape).
 
-### 3. Make the client query resilient
-In `src/hooks/useUserProfile.ts`, replace `.select("*")` with an explicit list of columns the Profile page actually needs. This way, if a future column is added without a GRANT, only that column is missing — the rest of the profile still loads. Add a small `console.error` if the query fails, so we see this immediately next time instead of an infinite spinner.
+### 6. Overview — accurate "Next best action"
 
-### 4. Verify after deploy
-- Reload `/account` → should show "ZIVO Platform" + blue badge + cover photo + avatar.
-- Bottom nav Account tab → should show ZIVO logo, not "K".
-- No regression on other users' profile views.
+The current NBA points at read-only-style targets. Rewrite the priority chain to point at the new editors:
 
-## Files changed
+1. No rooms → **Rooms & Rates**
+2. Rooms but no rates → **Rate Plans**
+3. No meal plans → **Dining & Meal Plans**
+4. No staff (≥5 rooms) → **Hotel Staff**
+5. No channel connections → **Channel Manager**
+6. No promotions → **Promotions & Discounts**
+7. Reviews waiting on reply → **Reviews**
 
-- `supabase/migrations/<new-timestamp>_fix_profiles_column_grants.sql` — adds the missing GRANT and the defensive auto-grant block
-- `src/hooks/useUserProfile.ts` — replace `select("*")` with explicit columns + error logging
+### 7. Setup checklist & completion meter
 
-## Not changed
+`src/lib/lodging/lodgingCompletion.ts` should include the new sections so progress % reflects reality:
 
-- No data is modified. Your profile row is untouched.
-- No RLS policy is loosened. Row-level access stays the same; only column-level visibility is restored to what it was before today.
+- Promotions: optional (not required, but counts toward "polish" tier).
+- Channel Manager: optional.
+- Hotel Staff: required for properties with ≥5 rooms.
+- Guest essentials (Wi-Fi + emergency): required.
+
+### 8. Backend changes
+
+No new tables. One small migration only:
+
+- `lodge_housekeeping`: ensure `assignee_id` indexes exist (already a column).
+- No schema changes for Property Profile (extends existing `contact` JSONB).
+
+Everything else is UI + write logic against existing tables.
+
+### 9. Out of scope (still)
+
+- Real-time PMS integrations (Opera/Cloudbeds).
+- Auto-scheduled review/messaging emails — manual triggers only.
+- Multi-property group dashboard.
+- Native restaurant/spa POS billing.
+
+---
+
+### Build order
+
+1. Reservations: filters + CSV + confirmation action + search.
+2. Calendar: legend + drag-extend + block-range dialog + OTA badges.
+3. Front Desk: walk-in shortcut + late-checkout approval + key-card pill.
+4. Housekeeping: staff-driven assign + priority + photo upload.
+5. Property Profile: Guest essentials card.
+6. Overview: rewrite NBA priority chain.
+7. Setup checklist & completion meter: include new sections.
+
+Approve to ship Phase 5.

@@ -9,10 +9,12 @@ import {
   AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
   AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { Search, Sparkles } from "lucide-react";
+import { Search, Sparkles, User } from "lucide-react";
 import { useLodgeRooms } from "@/hooks/lodging/useLodgeRooms";
 import { useLodgeHousekeeping, type HousekeepingStatus } from "@/hooks/lodging/useLodgeHousekeeping";
 import { useLodgeMaintenance } from "@/hooks/lodging/useLodgeMaintenance";
+import { useQuery } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 
 const STATUSES: HousekeepingStatus[] = ["clean", "dirty", "in_progress", "inspected", "out_of_service"];
@@ -31,6 +33,18 @@ export default function LodgingHousekeepingSection({ storeId }: { storeId: strin
   const { data: rooms = [] } = useLodgeRooms(storeId);
   const { data: tasks = [], isLoading, upsert, setStatus } = useLodgeHousekeeping(storeId);
   const { upsert: upsertMaintenance } = useLodgeMaintenance(storeId);
+  const { data: housekeepers = [] } = useQuery({
+    queryKey: ["housekeeping-staff", storeId],
+    enabled: Boolean(storeId),
+    queryFn: async () => {
+      const { data } = await (supabase as any)
+        .from("store_employees")
+        .select("id, name, lodging_role, status")
+        .eq("store_id", storeId)
+        .eq("lodging_role", "housekeeping");
+      return ((data || []) as any[]).filter(s => (s.status ?? "active") === "active");
+    },
+  });
   const [pendingOOS, setPendingOOS] = useState<{ roomId: string | null; roomNumber: string | null } | null>(null);
   const [statusFilter, setStatusFilter] = useState<HousekeepingStatus | "all">("all");
   const [query, setQuery] = useState("");
@@ -103,19 +117,31 @@ export default function LodgingHousekeepingSection({ storeId }: { storeId: strin
                 <button onClick={() => setStatusFilter("all")} className={`rounded-md border px-3 text-xs ${statusFilter === "all" ? "border-primary bg-primary/10 text-primary" : "border-border text-muted-foreground"}`}>All</button>
                 <div className="relative flex-1"><Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" /><Input value={query} onChange={(e) => setQuery(e.target.value)} placeholder="Search room" className="pl-9" /></div>
               </div>
-              {filteredTasks.map(t => (
-                <div key={t.id} className="flex items-center gap-3 p-3 rounded-lg border bg-card">
-                  <div className="flex-1 min-w-0">
+              {filteredTasks.map(t => {
+                const assignee = housekeepers.find((s: any) => s.id === t.assignee_id);
+                return (
+                <div key={t.id} className="flex flex-wrap items-center gap-2 p-3 rounded-lg border bg-card">
+                  <div className="flex-1 min-w-[140px]">
                     <p className="font-semibold text-sm truncate">{t.room_number || "Room"}</p>
+                    {assignee && <p className="text-[10px] text-muted-foreground inline-flex items-center gap-1"><User className="h-2.5 w-2.5" /> {assignee.name}</p>}
                     {t.last_cleaned_at && <p className="text-[10px] text-muted-foreground">Cleaned {new Date(t.last_cleaned_at).toLocaleString()}</p>}
                   </div>
                   <Badge className={`text-[10px] border ${COLOR[t.status]}`}>{LABEL[t.status]}</Badge>
+                  <select
+                    value={t.assignee_id || ""}
+                    onChange={(e) => upsert.mutate({ id: t.id, store_id: storeId, room_id: t.room_id, assignee_id: e.target.value || null } as any)}
+                    className="h-8 text-xs rounded-md border border-input bg-background px-2 max-w-[150px]"
+                    title="Assign housekeeper"
+                  >
+                    <option value="">Unassigned</option>
+                    {housekeepers.map((s: any) => <option key={s.id} value={s.id}>{s.name}</option>)}
+                  </select>
                   <select value={t.status} onChange={e => change(t.id, e.target.value as HousekeepingStatus, t.room_id, t.room_number)}
                     className="h-8 text-xs rounded-md border border-input bg-background px-2">
                     {STATUSES.map(s => <option key={s} value={s}>{LABEL[s]}</option>)}
                   </select>
                 </div>
-              ))}
+              );})}
               {filteredTasks.length === 0 && <p className="rounded-lg border border-dashed border-border bg-muted/20 py-6 text-center text-sm text-muted-foreground">No rooms match this filter.</p>}
             </div>
           )}
