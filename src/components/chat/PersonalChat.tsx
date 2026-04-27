@@ -79,6 +79,7 @@ const MessageEffects = lazy(() => import("./MessageEffects"));
 import { toast } from "sonner";
 import { useChatPresence } from "@/hooks/useChatPresence";
 import { useVoiceRecorder } from "@/hooks/useVoiceRecorder";
+import { uploadVoiceWithProgress, retryWithBackoff, UploadAbortedError } from "@/lib/voiceUpload";
 import { useChatDraft } from "@/hooks/useChatDraft";
 import VerifiedBadge from "@/components/VerifiedBadge";
 import { isBlueVerified } from "@/lib/verification";
@@ -273,6 +274,16 @@ export default function PersonalChat({ recipientId, recipientName, recipientAvat
   const lockedImageInputRef = useRef<HTMLInputElement>(null);
   const voiceUploadInFlightRef = useRef(false);
   const pendingVoiceOptimisticIdRef = useRef<string | null>(null);
+  // Per-voice-message cancellable jobs keyed by client_send_id
+  const voiceJobsRef = useRef<Map<string, {
+    controller: AbortController;
+    blob: Blob;
+    durationMs: number;
+    localUrl: string;
+    optimisticId: string;
+    publicUrl?: string;
+    storagePath?: string;
+  }>>(new Map());
   const handleSendRef = useRef<((opts?: SendMessageOptions) => Promise<void>) | null>(null);
   const messageRefs = useRef<Map<string, HTMLDivElement>>(new Map());
   const timelineRef = useRef<HTMLDivElement>(null);
