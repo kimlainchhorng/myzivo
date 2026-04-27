@@ -734,46 +734,52 @@ export default function PersonalChat({ recipientId, recipientName, recipientAvat
   };
   handleSendRef.current = handleSend;
 
-  // Voice recording complete → upload
+  // Voice recording complete → upload (per-blob guard so rapid notes don't block each other)
+  const handledVoiceBlobsRef = useRef<WeakSet<Blob>>(new WeakSet());
   useEffect(() => {
-    if (!voice.audioBlob || voice.isRecording || !user?.id || voiceUploadInFlightRef.current) return;
-    let cancelled = false;
-    voiceUploadInFlightRef.current = true;
+    if (!voice.audioBlob || voice.isRecording || !user?.id) return;
     const blob = voice.audioBlob;
-      const durationMs = Math.max(0, Math.round(voice.durationMs || (voice.duration || 0) * 1000));
-      const localUrl = URL.createObjectURL(blob);
-      const optimisticId = `opt-voice-${Date.now()}`;
-      pendingVoiceOptimisticIdRef.current = optimisticId;
+    if (handledVoiceBlobsRef.current.has(blob)) return;
+    handledVoiceBlobsRef.current.add(blob);
 
-      const optimisticVoice: Message = {
-        id: optimisticId,
-        sender_id: user.id,
-        receiver_id: recipientId,
-        message: "",
-        image_url: null,
-        video_url: null,
-        voice_url: localUrl,
-        _local_voice_url: localUrl,
-        message_type: "voice",
-        reply_to_id: replyTo?.id || null,
-        location_lat: null,
-        location_lng: null,
-        location_label: null,
-        is_pinned: false,
-        file_payload: { duration_ms: durationMs } as unknown as FileBubbleData,
-        expires_at: null,
-        created_at: new Date().toISOString(),
-        is_read: false,
-      };
+    let cancelled = false;
+    const durationMs = Math.max(0, Math.round(voice.durationMs || (voice.duration || 0) * 1000));
+    const localUrl = URL.createObjectURL(blob);
+    const clientSendId = `csid-${Date.now()}-${Math.random().toString(36).slice(2, 9)}`;
+    const optimisticId = `opt-voice-${clientSendId}`;
+    pendingVoiceOptimisticIdRef.current = optimisticId;
 
-      setMessages((prev) => [...prev, optimisticVoice]);
-      scrollToBottom(true);
+    const optimisticVoice: Message = {
+      id: optimisticId,
+      sender_id: user.id,
+      receiver_id: recipientId,
+      message: "",
+      image_url: null,
+      video_url: null,
+      voice_url: localUrl,
+      _local_voice_url: localUrl,
+      message_type: "voice",
+      reply_to_id: replyTo?.id || null,
+      location_lat: null,
+      location_lng: null,
+      location_label: null,
+      is_pinned: false,
+      file_payload: { duration_ms: durationMs, client_send_id: clientSendId } as unknown as FileBubbleData,
+      expires_at: null,
+      created_at: new Date().toISOString(),
+      is_read: false,
+    };
+
+    setMessages((prev) => [...prev, optimisticVoice]);
+    scrollToBottom(true);
+    // Free recorder state immediately so the next recording can start without waiting.
+    voice.clearBlob();
 
     const upload = async () => {
       try {
         const contentType = blob.type || "audio/webm";
         const ext = contentType.includes("mp4") ? "m4a" : "webm";
-        const path = `${user.id}/${Date.now()}.${ext}`;
+        const path = `${user.id}/${Date.now()}-${clientSendId}.${ext}`;
         const { error: uploadError } = await supabase.storage
           .from("chat-media-files")
           .upload(path, blob, { contentType, upsert: true, cacheControl: "3600" });
@@ -786,13 +792,12 @@ export default function PersonalChat({ recipientId, recipientName, recipientAvat
           message: "",
           message_type: "voice",
           voice_url: urlData.publicUrl,
-          file_payload: { duration_ms: durationMs } as unknown as FileBubbleData,
+          file_payload: { duration_ms: durationMs, client_send_id: clientSendId } as unknown as FileBubbleData,
         };
-        // Fire-and-forget insert; realtime echo replaces the optimistic bubble.
+        // Fire-and-forget; realtime echo replaces the optimistic bubble via client_send_id.
         const { error: insertError } = await dbFrom("direct_messages").insert(insertData);
         if (insertError) throw insertError;
-        // Swap the optimistic local URL with the remote one so the bubble
-        // becomes the "real" message (no flicker, same playable audio).
+        // Swap local URL with remote so the bubble keeps playing even if realtime is delayed.
         setMessages((prev) => prev.map((m) => m.id === optimisticId
           ? { ...m, voice_url: urlData.publicUrl }
           : m));
@@ -804,16 +809,12 @@ export default function PersonalChat({ recipientId, recipientName, recipientAvat
           toast.error("Failed to send voice note");
         }
       } finally {
-        // Defer revoke so the player keeps working until realtime row arrives.
         setTimeout(() => URL.revokeObjectURL(localUrl), 30000);
         if (pendingVoiceOptimisticIdRef.current === optimisticId) pendingVoiceOptimisticIdRef.current = null;
-        if (!cancelled) voice.clearBlob();
       }
     };
 
-    void upload().finally(() => {
-      voiceUploadInFlightRef.current = false;
-    });
+    void upload();
 
     return () => {
       cancelled = true;
