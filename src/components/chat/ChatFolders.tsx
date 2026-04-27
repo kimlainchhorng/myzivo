@@ -37,7 +37,7 @@ export default function ChatFolders({ activeFolder, onSelectFolder }: ChatFolder
     queryKey: ["chat-folders", user?.id],
     queryFn: async () => {
       if (!user) return [];
-      const { data } = await supabase
+      const { data } = await (supabase as any)
         .from("chat_folders" as any)
         .select("*")
         .eq("user_id", user.id)

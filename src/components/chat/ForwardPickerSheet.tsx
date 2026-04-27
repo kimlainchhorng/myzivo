@@ -51,7 +51,7 @@ export default function ForwardPickerSheet({ open, onOpenChange, onConfirm }: Pr
   useEffect(() => {
     if (!open || !user) return;
     (async () => {
-      const { data } = await supabase
+      const { data } = await (supabase as any)
         .from("user_contacts" as any)
         .select(`
           id, contact_user_id, custom_name,

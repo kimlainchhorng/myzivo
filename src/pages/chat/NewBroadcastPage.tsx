@@ -40,7 +40,7 @@ export default function NewBroadcastPage() {
     let alive = true;
     (async () => {
       // Pull recent chat partners as the contact pool.
-      const { data } = await supabase
+      const { data } = await (supabase as any)
         .from("direct_messages" as any)
         .select("sender_id,receiver_id")
         .or(`sender_id.eq.${user.id},receiver_id.eq.${user.id}`)
@@ -54,7 +54,7 @@ export default function NewBroadcastPage() {
         if (r.receiver_id !== user.id) ids.add(r.receiver_id);
       });
       if (ids.size === 0) { if (alive) setContacts([]); return; }
-      const { data: profs } = await supabase
+      const { data: profs } = await (supabase as any)
         .from("profiles")
         .select("id,user_id,full_name,username,avatar_url")
         .in("user_id", Array.from(ids));

@@ -52,7 +52,7 @@ export default function ChatStories() {
     enabled: !!user,
     refetchInterval: 60000,
     queryFn: async () => {
-      const { data } = await supabase
+      const { data } = await (supabase as any)
         .from("stories" as any)
         .select("id, user_id, media_url, media_type, text_overlay, audio_url, created_at, expires_at, view_count")
         .gt("expires_at", new Date().toISOString())
@@ -62,7 +62,7 @@ export default function ChatStories() {
       if (stories.length === 0) return [];
 
       const userIds = [...new Set(stories.map((s) => s.user_id))];
-      const { data: profiles } = await supabase
+      const { data: profiles } = await (supabase as any)
         .from("profiles")
         .select("user_id, full_name, avatar_url")
         .in("user_id", userIds);

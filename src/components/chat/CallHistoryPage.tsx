@@ -89,13 +89,13 @@ export default function CallHistoryPage({ onClose, onCallUser }: CallHistoryPage
     const load = async () => {
       setLoading(true);
       const [callsRes, vmRes] = await Promise.all([
-        supabase
+        (supabase as any)
           .from("call_history" as any)
           .select("*")
           .or(`caller_id.eq.${user.id},callee_id.eq.${user.id}`)
           .order("created_at", { ascending: false })
           .limit(50),
-        supabase
+        (supabase as any)
           .from("voicemails" as any)
           .select("*")
           .eq("recipient_id", user.id)
@@ -116,7 +116,7 @@ export default function CallHistoryPage({ onClose, onCallUser }: CallHistoryPage
       vmData.forEach((v) => { if (v.caller_id !== user.id) userIds.add(v.caller_id); });
 
       if (userIds.size > 0) {
-        const { data: profilesData } = await supabase
+        const { data: profilesData } = await (supabase as any)
           .from("profiles")
           .select("id, full_name, avatar_url")
           .in("id", Array.from(userIds));
