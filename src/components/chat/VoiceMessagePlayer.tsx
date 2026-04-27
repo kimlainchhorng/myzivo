@@ -13,7 +13,13 @@
 import { useState, useRef, useEffect, useCallback, useMemo } from "react";
 import Play from "lucide-react/dist/esm/icons/play";
 import Pause from "lucide-react/dist/esm/icons/pause";
+import Loader2 from "lucide-react/dist/esm/icons/loader-2";
+import RefreshCw from "lucide-react/dist/esm/icons/refresh-cw";
+import Trash2 from "lucide-react/dist/esm/icons/trash-2";
+import AlertCircle from "lucide-react/dist/esm/icons/alert-circle";
 import { motion } from "framer-motion";
+
+export type VoiceUploadStatus = "uploading" | "sent" | "failed";
 
 interface VoiceMessagePlayerProps {
   url: string;
@@ -22,6 +28,16 @@ interface VoiceMessagePlayerProps {
   /** Known total duration in milliseconds — shown immediately, no waiting on metadata. */
   durationMs?: number;
   isMe: boolean;
+  /** Optional upload state for in-flight optimistic bubbles. */
+  uploadStatus?: VoiceUploadStatus;
+  /** Upload progress 0..1 — only used while `uploadStatus === "uploading"`. */
+  uploadProgress?: number;
+  /** Last error message — only used while `uploadStatus === "failed"`. */
+  uploadError?: string;
+  /** Retry handler — shown when failed. */
+  onRetry?: () => void;
+  /** Discard handler — shown when failed or uploading. */
+  onDiscard?: () => void;
 }
 
 const SPEED_OPTIONS = [1, 1.5, 2] as const;
@@ -40,7 +56,20 @@ function generateWaveform(url: string, count: number): number[] {
   });
 }
 
-export default function VoiceMessagePlayer({ url, duration, durationMs, isMe }: VoiceMessagePlayerProps) {
+export default function VoiceMessagePlayer({
+  url,
+  duration,
+  durationMs,
+  isMe,
+  uploadStatus,
+  uploadProgress = 0,
+  uploadError,
+  onRetry,
+  onDiscard,
+}: VoiceMessagePlayerProps) {
+  const isUploading = uploadStatus === "uploading";
+  const isFailed = uploadStatus === "failed";
+  const interactionDisabled = isUploading || isFailed;
   const audioRef = useRef<HTMLAudioElement>(null);
   const waveContainerRef = useRef<HTMLDivElement>(null);
   const timeLabelRef = useRef<HTMLSpanElement>(null);
