@@ -1662,15 +1662,22 @@ export default function PersonalChat({ recipientId, recipientName, recipientAvat
                         <div className={`max-w-[80%] min-w-[220px] px-3 py-2.5 rounded-2xl shadow-sm ${
                           isMe ? "bg-primary text-primary-foreground rounded-br-md" : "bg-muted text-foreground rounded-bl-md"
                         }`}>
-                          <VoiceMessagePlayer
-                            url={msg.voice_url}
-                            isMe={isMe}
-                            durationMs={(msg.file_payload as { duration_ms?: number } | null)?.duration_ms}
-                          />
+                          {(() => {
+                            const csid = (msg.file_payload as { client_send_id?: string } | null)?.client_send_id;
+                            return (
+                              <VoiceMessagePlayer
+                                url={msg.voice_url}
+                                isMe={isMe}
+                                durationMs={(msg.file_payload as { duration_ms?: number } | null)?.duration_ms}
+                                uploadStatus={msg._upload_status}
+                                uploadProgress={msg._upload_progress}
+                                uploadError={msg._upload_error}
+                                onRetry={csid && msg._upload_status === "failed" ? () => retryVoiceSend(csid) : undefined}
+                                onDiscard={csid && (msg._upload_status === "uploading" || msg._upload_status === "failed") ? () => discardVoiceSend(csid) : undefined}
+                              />
+                            );
+                          })()}
                           <div className="flex items-center justify-end gap-1 mt-1">
-                            {msg.id.startsWith("opt-") && (
-                              <Loader2 className={`h-2.5 w-2.5 animate-spin ${isMe ? "text-primary-foreground/60" : "text-muted-foreground/60"}`} />
-                            )}
                             <span className={`text-[9px] ${isMe ? "text-primary-foreground/50" : "text-muted-foreground/70"}`}>
                               {formatMsgTime(msg.created_at)}
                             </span>
