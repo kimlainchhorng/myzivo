@@ -285,15 +285,110 @@ export default function GroupChat({ groupId, groupName, groupAvatar, onClose }: 
     setSending(false);
   }, [groupId, input, replyTo, scrollToBottom, sending, user?.id]);
 
-  // Voice send — show local bubble immediately, then replace with uploaded row.
+  // ─── Voice send pipeline (cancellable + retriable) ────────────────────
   const handledVoiceBlobsRef = useRef<WeakSet<Blob>>(new WeakSet());
+
+  const runVoiceJob = useCallback(async (clientSendId: string, startFromInsert = false) => {
+    const job = voiceJobsRef.current.get(clientSendId);
+    if (!job || !user?.id) return;
+    const { controller, blob, durationMs, optimisticId } = job;
+
+    const updateOpt = (patch: Partial<GroupMessage>) => {
+      setMessages((prev) => prev.map((m) => (m.id === optimisticId ? { ...m, ...patch } : m)));
+    };
+
+    try {
+      let publicUrl = job.publicUrl;
+      let storagePath = job.storagePath;
+
+      if (!startFromInsert || !publicUrl) {
+        const contentType = blob.type || "audio/webm";
+        const ext = contentType.includes("mp4") ? "m4a" : "webm";
+        const path = `${user.id}/${Date.now()}-${clientSendId}.${ext}`;
+        const result = await retryWithBackoff(
+          () => uploadVoiceWithProgress({
+            blob,
+            bucket: "chat-media-files",
+            path,
+            contentType,
+            cacheControl: "3600",
+            signal: controller.signal,
+            onProgress: (ratio) => updateOpt({ _upload_progress: ratio }),
+          }),
+          { signal: controller.signal, attempts: 3, baseDelayMs: 600 },
+        );
+        publicUrl = result.publicUrl;
+        storagePath = result.path;
+        job.publicUrl = publicUrl;
+        job.storagePath = storagePath;
+      }
+
+      const insertData: GroupMessageInsert = {
+        group_id: groupId,
+        sender_id: user.id,
+        message: "",
+        message_type: "voice",
+        voice_url: publicUrl!,
+        reply_to_id: undefined,
+        file_payload: { duration_ms: durationMs, client_send_id: clientSendId } as { duration_ms?: number },
+      };
+      await retryWithBackoff(
+        async () => {
+          const { error: insertError } = await dbFrom("group_messages").insert(insertData);
+          if (insertError) throw insertError;
+        },
+        { signal: controller.signal, attempts: 3, baseDelayMs: 600 },
+      );
+
+      updateOpt({
+        voice_url: publicUrl!,
+        _upload_status: "sent",
+        _upload_progress: 1,
+        _upload_error: undefined,
+      });
+      setTimeout(() => URL.revokeObjectURL(job.localUrl), 30000);
+      voiceJobsRef.current.delete(clientSendId);
+    } catch (e) {
+      if (e instanceof UploadAbortedError || controller.signal.aborted) return;
+      console.warn("[voice/group] upload/send failed", e);
+      const message = e instanceof Error ? e.message : "Upload failed";
+      updateOpt({ _upload_status: "failed", _upload_error: message });
+      toast.error("Voice note failed to send", {
+        description: "Tap retry on the message to try again.",
+      });
+    }
+  }, [user?.id, groupId]);
+
+  const retryVoiceSend = useCallback((clientSendId: string) => {
+    const job = voiceJobsRef.current.get(clientSendId);
+    if (!job) return;
+    job.controller = new AbortController();
+    setMessages((prev) => prev.map((m) => {
+      const csid = m.file_payload?.client_send_id;
+      if (csid !== clientSendId) return m;
+      return { ...m, _upload_status: "uploading", _upload_progress: 0, _upload_error: undefined };
+    }));
+    void runVoiceJob(clientSendId, !!job.publicUrl);
+  }, [runVoiceJob]);
+
+  const discardVoiceSend = useCallback((clientSendId: string) => {
+    const job = voiceJobsRef.current.get(clientSendId);
+    if (!job) return;
+    try { job.controller.abort(); } catch { /* noop */ }
+    setMessages((prev) => prev.filter((m) => m.file_payload?.client_send_id !== clientSendId));
+    try { URL.revokeObjectURL(job.localUrl); } catch { /* noop */ }
+    if (job.storagePath) {
+      void supabase.storage.from("chat-media-files").remove([job.storagePath]).catch(() => {});
+    }
+    voiceJobsRef.current.delete(clientSendId);
+  }, []);
+
   useEffect(() => {
     if (!voice.audioBlob || voice.isRecording || !user?.id) return;
     const blob = voice.audioBlob;
     if (handledVoiceBlobsRef.current.has(blob)) return;
     handledVoiceBlobsRef.current.add(blob);
 
-    let cancelled = false;
     const durationMs = Math.max(0, Math.round(voice.durationMs || (voice.duration || 0) * 1000));
     const localUrl = URL.createObjectURL(blob);
     const clientSendId = `csid-${Date.now()}-${Math.random().toString(36).slice(2, 9)}`;
@@ -308,54 +403,34 @@ export default function GroupChat({ groupId, groupName, groupAvatar, onClose }: 
       message_type: "voice",
       reply_to_id: replyTo?.id || null,
       created_at: new Date().toISOString(),
-      file_payload: { duration_ms: durationMs, client_send_id: clientSendId } as { duration_ms?: number },
+      file_payload: { duration_ms: durationMs, client_send_id: clientSendId },
       _local_voice_url: localUrl,
+      _upload_status: "uploading",
+      _upload_progress: 0,
     };
+    voiceJobsRef.current.set(clientSendId, {
+      controller: new AbortController(),
+      blob,
+      durationMs,
+      localUrl,
+      optimisticId,
+    });
     setMessages((prev) => [...prev, optimisticMsg]);
     scrollToBottom();
     voice.clearBlob();
+    void runVoiceJob(clientSendId, false);
+  }, [voice.audioBlob, voice.isRecording, voice, user?.id, groupId, replyTo?.id, scrollToBottom, runVoiceJob]);
 
-    const upload = async () => {
-      try {
-        const contentType = blob.type || "audio/webm";
-        const ext = contentType.includes("mp4") ? "m4a" : "webm";
-        const path = `${user.id}/${Date.now()}-${clientSendId}.${ext}`;
-        const { error: uploadError } = await supabase.storage
-          .from("chat-media-files")
-          .upload(path, blob, { contentType, upsert: true, cacheControl: "3600" });
-        if (uploadError) throw uploadError;
-        const { data: urlData } = supabase.storage.from("chat-media-files").getPublicUrl(path);
-        if (cancelled) return;
-        const insertData: GroupMessageInsert = {
-          group_id: groupId,
-          sender_id: user.id,
-          message: "",
-          message_type: "voice",
-          voice_url: urlData.publicUrl,
-          reply_to_id: replyTo?.id || undefined,
-          file_payload: { duration_ms: durationMs, client_send_id: clientSendId } as { duration_ms?: number },
-        };
-        const { error: insertError } = await dbFrom("group_messages").insert(insertData);
-        if (insertError) throw insertError;
-        setMessages((prev) => prev.map((m) => m.id === optimisticId
-          ? { ...m, voice_url: urlData.publicUrl }
-          : m));
-      } catch (e) {
-        if (!cancelled) {
-          console.warn("[voice/group] upload/send failed", e);
-          setMessages((prev) => prev.filter((m) => m.id !== optimisticId));
-          toast.error("Failed to send voice note");
-        }
-      } finally {
-        setTimeout(() => URL.revokeObjectURL(localUrl), 30000);
-      }
-    };
-    void upload();
-
+  useEffect(() => {
     return () => {
-      cancelled = true;
+      for (const [, job] of voiceJobsRef.current) {
+        try { job.controller.abort(); } catch { /* noop */ }
+        try { URL.revokeObjectURL(job.localUrl); } catch { /* noop */ }
+      }
+      voiceJobsRef.current.clear();
     };
-  }, [voice.audioBlob, voice.isRecording, voice, user?.id, groupId, replyTo?.id, scrollToBottom]);
+  }, []);
+
 
   // Image upload — optimistic bubble, background upload + insert.
   const handleImageSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
