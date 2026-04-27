@@ -8,6 +8,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { LoadingPanel, NextActions, SectionShell, StatCard } from "./LodgingOperationsShared";
 import { CatalogTable, EditorDialog } from "./CatalogTable";
 import { useLodgingCatalog } from "@/hooks/lodging/useLodgingCatalog";
+import LodgingQuickJump from "./LodgingQuickJump";
 
 interface ConciergeTask {
   id: string;
@@ -46,6 +47,7 @@ export default function LodgingConciergeTasksSection({ storeId }: { storeId: str
 
   return (
     <SectionShell title="Concierge Tasks" subtitle="Track guest service requests beyond rooms — taxis, restaurant bookings, gifts, tickets, errands." icon={BellRing}>
+      <LodgingQuickJump active="lodge-concierge" />
       {list.isLoading ? <LoadingPanel /> : <>
         <div className="grid gap-3 sm:grid-cols-4">
           <StatCard label="All tasks" value={String(stats.total)} icon={BellRing} />
