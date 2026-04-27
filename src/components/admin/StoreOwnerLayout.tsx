@@ -48,7 +48,7 @@ export default function StoreOwnerLayout({ children, title, storeId, storeName, 
   const asideRef = useRef<HTMLElement | null>(null);
   const navRef = useRef<HTMLElement | null>(null);
   const scrollMemoryRef = useRef<Record<string, number>>({});
-  const employeeIds = ["employees", "payroll", "employee-schedule", "time-clock", "attendance", "training", "documents", "employee-rules"];
+  const employeeIds = ["employees", "payroll", "employee-schedule", "time-clock", "attendance", "training", "documents", "employee-rules", "audit-log"];
   const [employeesOpen, setEmployeesOpen] = useState(employeeIds.includes(activeTab || ""));
 
   const tabKey = activeTab || "_default";
@@ -222,6 +222,7 @@ export default function StoreOwnerLayout({ children, title, storeId, storeName, 
     { id: "training", label: "Training & Onboarding", icon: GraduationCap },
     { id: "documents", label: "Documents & Files", icon: FolderOpen },
     { id: "employee-rules", label: "Employee Rules", icon: Shield },
+    { id: "audit-log", label: "Audit Log", icon: ScrollText },
   ];
 
   return (
