@@ -12,6 +12,7 @@ import { Check, X, ChevronLeft } from "lucide-react";
 
 export default function NewChannelPage() {
   const nav = useNavigate();
+  const goBack = useSmartBack("/channels");
   const [name, setName] = useState("");
   const [handle, setHandle] = useState("");
   const [desc, setDesc] = useState("");
@@ -72,9 +73,15 @@ export default function NewChannelPage() {
   };
 
   return (
-    <div className="mx-auto max-w-lg p-4">
-      <h1 className="mb-4 text-2xl font-bold">New channel</h1>
-      <div className="space-y-4 rounded-lg border border-border bg-card p-4">
+    <div className="min-h-screen bg-background">
+      <header className="sticky top-0 z-10 bg-background/85 backdrop-blur-xl border-b border-border/40 pt-safe px-3 py-3 flex items-center gap-2">
+        <button onClick={goBack} className="p-1.5 rounded-full hover:bg-muted/60" aria-label="Back">
+          <ChevronLeft className="w-5 h-5" />
+        </button>
+        <h1 className="text-base font-semibold flex-1">New channel</h1>
+      </header>
+      <div className="mx-auto max-w-lg p-4">
+        <div className="space-y-4 rounded-lg border border-border bg-card p-4">
         <div>
           <Label>Name</Label>
           <Input value={name} onChange={(e) => setName(e.target.value)} placeholder="My channel" />
