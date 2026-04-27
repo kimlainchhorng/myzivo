@@ -13,6 +13,8 @@ import { useLodgePropertyProfile } from "@/hooks/lodging/useLodgePropertyProfile
 import { supabase } from "@/integrations/supabase/client";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
+import LodgingQuickJump from "./LodgingQuickJump";
+import LodgingSectionStatusBanner from "./LodgingSectionStatusBanner";
 
 interface TaxFee {
   id: string;
@@ -72,6 +74,8 @@ export default function LodgingPoliciesSection({ storeId }: { storeId: string })
 
   return (
     <SectionShell title="Policies & Rules" subtitle="Cancellation, deposits, child & pet policies, smoking, quiet hours, and tax/fee setup." icon={ShieldCheck}>
+      <LodgingQuickJump active="lodge-policies" />
+      <LodgingSectionStatusBanner title="Policies & Rules" icon={ShieldCheck} countLabel="Active taxes & fees" countValue={taxRows.filter((r) => r.active !== false).length} fixLabel="Open Amenities" fixTab="lodge-amenities" />
       {isLoading ? <LoadingPanel /> : <>
         <div className="grid gap-3 sm:grid-cols-3">
           <StatCard label="Active taxes/fees" value={String(taxRows.filter((r) => r.active !== false).length)} icon={ShieldCheck} />

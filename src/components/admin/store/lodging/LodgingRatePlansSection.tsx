@@ -3,6 +3,8 @@ import { Button } from "@/components/ui/button";
 import { BedDouble, CalendarDays, DollarSign } from "lucide-react";
 import { EmptyPanel, LoadingPanel, NextActions, SectionShell, StatCard, money } from "./LodgingOperationsShared";
 import { useLodgeRooms } from "@/hooks/lodging/useLodgeRooms";
+import LodgingQuickJump from "./LodgingQuickJump";
+import LodgingSectionStatusBanner from "./LodgingSectionStatusBanner";
 
 const weekdays = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
 const goRooms = () => window.dispatchEvent(new CustomEvent("lodge-set-tab", { detail: { tab: "lodge-rooms" } }));
@@ -15,6 +17,8 @@ export default function LodgingRatePlansSection({ storeId }: { storeId: string }
 
   return (
     <SectionShell title="Rate Plans & Availability" subtitle="Room pricing, inventory, seasonal rates, discounts, and stay restrictions from Rooms & Rates." icon={CalendarDays} actions={<Button size="sm" onClick={goRooms}>Edit Rooms & Rates</Button>}>
+      <LodgingQuickJump active="lodge-rate-plans" />
+      <LodgingSectionStatusBanner title="Rate Plans & Availability" icon={CalendarDays} countLabel="Active room types" countValue={activeRooms.length} fixLabel="Open Rooms" fixTab="lodge-rooms" />
       {isLoading ? <LoadingPanel /> : rooms.length === 0 ? <EmptyPanel title="No rooms to price yet" body="Create room types first, then add base rates, weekend pricing, seasonal rules, and unit inventory." actionLabel="Open Rooms & Rates" tab="lodge-rooms" /> : <>
         {activeRooms.some((room) => !room.base_rate_cents || !room.units_total) && <div className="rounded-lg border border-primary/20 bg-primary/5 p-3"><p className="text-sm font-semibold text-foreground">Rate readiness needs attention</p><p className="mt-1 text-xs text-muted-foreground">Add base rates and unit inventory to every active room so availability and booking flows stay accurate.</p><Button size="sm" className="mt-3 h-8" onClick={goRooms}>Update room pricing</Button></div>}
         <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">

@@ -19,6 +19,8 @@ import { supabase } from "@/integrations/supabase/client";
 import { useQuery } from "@tanstack/react-query";
 import { toast } from "sonner";
 import LodgingNeedsSetupEmptyState from "./LodgingNeedsSetupEmptyState";
+import LodgingQuickJump from "./LodgingQuickJump";
+import LodgingSectionStatusBanner from "./LodgingSectionStatusBanner";
 
 function ymd(d: Date) { return d.toISOString().slice(0, 10); }
 function daysInMonth(year: number, month: number) {
