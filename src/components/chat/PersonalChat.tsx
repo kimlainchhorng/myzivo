@@ -756,10 +756,10 @@ export default function PersonalChat({ recipientId, recipientName, recipientAvat
     const upload = async () => {
       try {
         const path = `${user.id}/${Date.now()}.webm`;
-        const { error } = await supabase.storage
+        const { error: uploadError } = await supabase.storage
           .from("chat-media-files")
           .upload(path, blob, { contentType: "audio/webm" });
-        if (error) throw error;
+        if (uploadError) throw uploadError;
         const { data: urlData } = supabase.storage.from("chat-media-files").getPublicUrl(path);
         if (cancelled) return;
         const insertData: DirectMessageInsert = {
@@ -770,11 +770,11 @@ export default function PersonalChat({ recipientId, recipientName, recipientAvat
           voice_url: urlData.publicUrl,
           file_payload: { duration_ms: durationMs } as unknown as FileBubbleData,
         };
-        const { data, error } = await dbFrom("direct_messages")
+        const { data, error: insertError } = await dbFrom("direct_messages")
           .insert(insertData)
           .select("id,sender_id,receiver_id,message,image_url,video_url,voice_url,message_type,delivered_at,reply_to_id,location_lat,location_lng,location_label,is_pinned,expires_at,created_at,is_read,locked_price_cents,edited_at,file_payload,gift_payload")
           .single();
-        if (error) throw error;
+        if (insertError) throw insertError;
         setMessages((prev) => prev.map((m) => m.id === optimisticId ? (data as Message) : m));
         void sendChatPush("voice", "");
       } catch (e) {
