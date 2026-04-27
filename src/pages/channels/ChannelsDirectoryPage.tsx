@@ -30,13 +30,14 @@ export default function ChannelsDirectoryPage() {
   }, [q]);
 
   return (
-    <div className="mx-auto max-w-2xl p-4">
-      <div className="mb-4 flex items-center justify-between">
-        <h1 className="text-2xl font-bold">Channels</h1>
+    <div className="min-h-screen bg-background">
+      <header className="sticky top-0 z-10 bg-background/85 backdrop-blur-xl border-b border-border/40 pt-safe px-3 py-3 flex items-center gap-2">
+        <h1 className="text-base font-semibold flex-1">Channels</h1>
         <Button asChild size="sm" className="gap-1">
           <Link to="/channels/new"><Plus className="h-4 w-4" /> New</Link>
         </Button>
-      </div>
+      </header>
+      <div className="mx-auto max-w-2xl p-4">
       <div className="relative mb-4">
         <Search className="pointer-events-none absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
         <Input
