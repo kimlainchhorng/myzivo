@@ -42,15 +42,14 @@ export function PWAInstallBanner() {
     const handler = (e: Event) => {
       e.preventDefault();
       setDeferredPrompt(e as BeforeInstallPromptEvent);
+      // Only show once we actually have an install prompt to offer.
+      // Add a small delay so it doesn't compete with first paint / LCP.
+      setTimeout(() => setShow(true), 8000);
     };
     window.addEventListener("beforeinstallprompt", handler);
 
-    // Show after 30s of browsing
-    const timer = setTimeout(() => setShow(true), 30000);
-
     return () => {
       window.removeEventListener("beforeinstallprompt", handler);
-      clearTimeout(timer);
     };
   }, [isMobile, location.pathname]);
 
@@ -72,6 +71,8 @@ export function PWAInstallBanner() {
 
   // Only show in mobile browsers, never in native Capacitor apps or standalone PWA
   if (!isMobile || Capacitor.isNativePlatform() || window.matchMedia("(display-mode: standalone)").matches) return null;
+  // Require a real install prompt — avoids a confusing banner that can't install on iOS Safari
+  if (!deferredPrompt) return null;
   // Never render on auth routes
   const authRoutes = ["/login", "/signup", "/verify-email", "/verify-otp", "/verify-new-device", "/forgot-password", "/reset-password", "/setup"];
   if (authRoutes.some((r) => location.pathname.startsWith(r))) return null;
