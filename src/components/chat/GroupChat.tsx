@@ -21,6 +21,7 @@ import { toast } from "sonner";
 import VoiceMessagePlayer from "./VoiceMessagePlayer";
 import HoldToRecordMic from "./HoldToRecordMic";
 import { useVoiceRecorder } from "@/hooks/useVoiceRecorder";
+import { uploadVoiceWithProgress, retryWithBackoff, UploadAbortedError } from "@/lib/voiceUpload";
 import GroupMembersSheet from "./GroupMembersSheet";
 import GroupInviteSheet from "./GroupInviteSheet";
 import GroupCallLauncher from "./call/GroupCallLauncher";
@@ -46,6 +47,9 @@ interface GroupMessage {
   created_at: string;
   file_payload?: { duration_ms?: number; client_send_id?: string } | null;
   _local_voice_url?: string;
+  _upload_status?: "uploading" | "sent" | "failed";
+  _upload_progress?: number;
+  _upload_error?: string;
 }
 
 interface Member {
@@ -109,6 +113,15 @@ export default function GroupChat({ groupId, groupName, groupAvatar, onClose }: 
   const [groupCall, setGroupCall] = useState<"audio" | "video" | null>(null);
   const voice = useVoiceRecorder();
   const voiceUploadInFlightRef = useRef(false);
+  const voiceJobsRef = useRef<Map<string, {
+    controller: AbortController;
+    blob: Blob;
+    durationMs: number;
+    localUrl: string;
+    optimisticId: string;
+    publicUrl?: string;
+    storagePath?: string;
+  }>>(new Map());
 
   const scrollToBottom = useCallback(() => {
     setTimeout(() => scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight, behavior: "smooth" }), 50);
