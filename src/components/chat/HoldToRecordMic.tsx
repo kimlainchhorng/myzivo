@@ -51,6 +51,20 @@ export default function HoldToRecordMic({ voice, className }: Props) {
   const [dragY, setDragY] = useState(0);
   const [locked, setLocked] = useState(false);
   const [paused, setPaused] = useState(false);
+
+  // Smooth springed motion values for the overlay visuals (decouples render
+  // from the raw pointer values so the slide hint glides instead of stuttering).
+  const dragXMV = useMotionValue(0);
+  const dragYMV = useMotionValue(0);
+  const SPRING = { stiffness: 320, damping: 28, mass: 0.4 };
+  const dragXSpring = useSpring(dragXMV, SPRING);
+  const dragYSpring = useSpring(dragYMV, SPRING);
+  const slideHintX = useTransform(dragXSpring, (v) => v * 0.45);
+  const slideHintOpacity = useTransform(dragXSpring, (v) => 1 - Math.min(1, Math.abs(v) / CANCEL_THRESHOLD) * 0.6);
+  const lockChipY = useTransform(dragYSpring, (v) => Math.max(-LOCK_THRESHOLD * 0.7, v * 0.7));
+  const lockChipOpacity = useTransform(dragYSpring, (v) => 0.85 + Math.min(1, Math.abs(v) / LOCK_THRESHOLD) * 0.15);
+  const cancelGlowWidth = useTransform(dragXSpring, (v) => `${Math.min(1, Math.abs(v) / CANCEL_THRESHOLD) * 100}%`);
+
   const startPos = useRef({ x: 0, y: 0 });
   const startTime = useRef(0);
   const guardTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -64,10 +78,12 @@ export default function HoldToRecordMic({ voice, className }: Props) {
     if (!voice.isRecording) {
       setDragX(0);
       setDragY(0);
+      dragXMV.set(0);
+      dragYMV.set(0);
       setLocked(false);
       setPaused(false);
     }
-  }, [voice.isRecording]);
+  }, [voice.isRecording, dragXMV, dragYMV]);
 
   const clearGuard = () => {
     if (guardTimer.current) {
