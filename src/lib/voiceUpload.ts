@@ -150,13 +150,13 @@ export async function uploadVoiceWithProgress(opts: UploadVoiceOpts): Promise<Up
         onProgress?.(1);
         resolve({ publicUrl: data.publicUrl, path });
       } else {
-        reject(new UploadHttpError(xhr.status, xhr.responseText || `HTTP ${xhr.status}`));
+        reject(new UploadHttpError(xhr.status, xhr.responseText || `HTTP ${xhr.status}`, url));
       }
     };
     xhr.onerror = () => {
       signal?.removeEventListener("abort", onAbort);
       // Network-level failure — retriable
-      const err = new UploadHttpError(0, "Network error");
+      const err = new UploadHttpError(0, "Network error", url);
       err.retriable = true;
       reject(err);
     };
