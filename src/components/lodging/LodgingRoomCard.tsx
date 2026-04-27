@@ -51,7 +51,9 @@ function OrnamentDivider() {
 }
 
 export function LodgingRoomCard({
-  name, type, beds, maxGuests, baseRateCents, amenities = [], breakfastIncluded, imageUrl,
+  name, type, beds, maxGuests, baseRateCents,
+  weekendRateCents, weeklyDiscountPct = 0, monthlyDiscountPct = 0,
+  amenities = [], breakfastIncluded, imageUrl,
   description, addonsCount = 0, photos, coverIndex, sizeSqm, addons, cancellationPolicy,
   checkInTime, checkOutTime, onReserve,
 }: Props) {
