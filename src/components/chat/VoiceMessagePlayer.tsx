@@ -296,8 +296,76 @@ export default function VoiceMessagePlayer({
     longPressTimer.current = null;
   }, []);
 
+  // Bubble-level long-press → opens iOS-style action sheet (replaces the
+  // native iOS text-selection loupe that would otherwise hijack the gesture).
+  const [sheetOpen, setSheetOpen] = useState(false);
+  const bubbleLongPressTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const bubbleLongPressFired = useRef(false);
+  const bubbleStartPos = useRef<{ x: number; y: number } | null>(null);
+  const cancelBubbleLongPress = useCallback(() => {
+    if (bubbleLongPressTimer.current) {
+      clearTimeout(bubbleLongPressTimer.current);
+      bubbleLongPressTimer.current = null;
+    }
+    bubbleStartPos.current = null;
+  }, []);
+  const onBubblePointerDown = useCallback((e: React.PointerEvent) => {
+    // Ignore right-click / mouse secondary; let onContextMenu handle desktop.
+    if (e.pointerType === "mouse" && e.button !== 0) return;
+    bubbleLongPressFired.current = false;
+    bubbleStartPos.current = { x: e.clientX, y: e.clientY };
+    bubbleLongPressTimer.current = setTimeout(() => {
+      bubbleLongPressFired.current = true;
+      try { (navigator as any).vibrate?.(10); } catch { /* noop */ }
+      setSheetOpen(true);
+    }, 500);
+  }, []);
+  const onBubblePointerMove = useCallback((e: React.PointerEvent) => {
+    if (!bubbleStartPos.current) return;
+    const dx = e.clientX - bubbleStartPos.current.x;
+    const dy = e.clientY - bubbleStartPos.current.y;
+    if (dx * dx + dy * dy > 100) cancelBubbleLongPress();
+  }, [cancelBubbleLongPress]);
+  const onBubbleContextMenu = useCallback((e: React.MouseEvent) => {
+    // Suppress iOS "Copy / Look Up" callout AND desktop right-click menu;
+    // open our action sheet instead.
+    e.preventDefault();
+    setSheetOpen(true);
+  }, []);
+  const toggleDebugFromSheet = useCallback(() => {
+    const next = !isVoiceDebugEnabled();
+    setVoiceDebugEnabled(next);
+    toast(next ? "Voice debug enabled" : "Voice debug disabled");
+  }, []);
+
   return (
-    <div className={`relative min-w-[200px] max-w-[260px] ${debugOn || showAnonKeyWarning ? "flex flex-col gap-1.5" : ""} ${isFailed ? "ring-1 ring-destructive/60 rounded-xl -mx-1 px-1 py-0.5" : ""}`}>
+    <div
+      className={`relative min-w-[200px] max-w-[260px] ${debugOn || showAnonKeyWarning ? "flex flex-col gap-1.5" : ""} ${isFailed ? "ring-1 ring-destructive/60 rounded-xl -mx-1 px-1 py-0.5" : ""}`}
+      style={{
+        WebkitUserSelect: "none",
+        userSelect: "none",
+        WebkitTouchCallout: "none",
+      } as React.CSSProperties}
+      onPointerDown={onBubblePointerDown}
+      onPointerMove={onBubblePointerMove}
+      onPointerUp={cancelBubbleLongPress}
+      onPointerCancel={cancelBubbleLongPress}
+      onPointerLeave={cancelBubbleLongPress}
+      onContextMenu={onBubbleContextMenu}
+    >
+      <VoiceBubbleActionSheet
+        open={sheetOpen}
+        onOpenChange={setSheetOpen}
+        audioUrl={url}
+        canReply={!!onReply && !isFailed && !isUploading}
+        canResend={!!onRetry && isFailed}
+        isFailedOrUploading={isFailed || isUploading}
+        debugEnabled={debugFlag}
+        onReply={onReply}
+        onResend={onRetry}
+        onDiscard={onDiscard}
+        onToggleDebug={toggleDebugFromSheet}
+      />
       <div className="flex items-center gap-2.5">
       <audio ref={audioRef} src={url} preload="metadata" />
 
