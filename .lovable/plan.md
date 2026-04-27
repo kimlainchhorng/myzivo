@@ -1,39 +1,67 @@
-## What you're seeing in the video
+## What's wrong (from your screenshot + audit)
 
-In Telegram, when you scroll **down** the chat list, the "Stories" row (My Story, Telegram, BB Q Nich, Sky movie…) smoothly **collapses up and hides** behind the header, leaving only the search bar + filters visible. When you scroll **up** (or pull to top), the Stories row **slides back down** into view.
+You opened `/chat/search` and the iOS status bar **(9:33 / signal / battery)** is overlapping the search input — the green border in your screenshot is exactly where the safe-area padding is missing. I audited all 18 chat pages and found the same issue on multiple pages, plus several pages with broken or missing back buttons.
 
-Right now in ZIVO, the `<ChatStories />` strip stays in the normal document flow above the search bar, so it just scrolls away with the rest of the page and doesn't reappear until you scroll all the way back to the top. That's why it feels "stuck"/non-native compared to Telegram.
+### Audit results — chat pages
 
-## What I'll change
+| Page | Header sticky? | Safe-area top? | Back button? | Issue |
+|---|---|---|---|---|
+| `ChatSearchAllPage.tsx` | yes | **NO** | yes | **Status bar overlaps search (your screenshot)** |
+| `BroadcastListsPage.tsx` | yes | **NO** | yes | Status bar overlaps header |
+| `CustomFoldersPage.tsx` | yes | **NO** | yes | Status bar overlaps header |
+| `FindContactsPage.tsx` | yes | **NO** | yes | Status bar overlaps header |
+| `settings/ChatPrivacyHubPage.tsx` | yes | **NO** | yes | Status bar overlaps header |
+| `settings/StorageManagerPage.tsx` | yes | **NO** | yes | Status bar overlaps header |
+| `JoinGroupPage.tsx` | — | no | **NO BACK** | No way back; only "Back to chats" if error |
+| `GroupCallEntryPage.tsx` "Missing room" branch | — | no | **NO BACK** | Dead-end error screen |
+| All other chat pages | — | OK | OK | Already correct |
 
-Make the Stories strip in `src/pages/ChatHubPage.tsx` behave exactly like Telegram:
+### Back-button reliability problem
 
-1. **Collapse on scroll down** — once the user scrolls past ~20px, animate `<ChatStories />` to `height: 0` + `opacity: 0` (slide up).
-2. **Expand on scroll up** — the moment scroll direction reverses (any upward delta > 4px), slide it back to full height + opacity 1.
-3. **Always expanded at top** — when `scrollTop <= 4`, force expanded state (so pull-to-refresh still shows stories cleanly).
-4. **Smooth motion** — use a single `framer-motion` `motion.div` wrapper with `animate={{ height, opacity }}` and a 220ms `easeOut` transition, matching the existing v2026 chat motion language.
-5. **Search bar + filter chips stay put** — they remain in normal flow directly under the header, so collapsing Stories pulls the search bar up under the header just like Telegram.
+Pages that do have a back button use `navigate(-1)` directly. That breaks in 2 cases you described:
+1. **"Some turn back not work"** — when the user opened the page via deep link / refresh / push notification, there is no history entry, so `navigate(-1)` does nothing or pops out of the app.
+2. **"Some turn back is not back where is the first"** — in some flows we `navigate(...)` instead of `replace:true`, so going back lands on an intermediate page (e.g., search → result → back goes to search instead of chat list).
 
-## Technical details
+The codebase already has a `useSmartBack(fallback)` hook in `src/lib/smartBack.ts` built for exactly this — it goes back when in-app history exists, otherwise navigates to a sensible fallback route. It's just not used in chat pages.
 
-- Add a `useScrollDirection` effect inside `ChatHubPage` that listens to `window` scroll (the page is the scroll container — `PullToRefresh` wraps `min-h-screen`, confirmed at line 2089).
-- State: `const [storiesCollapsed, setStoriesCollapsed] = useState(false);` driven by `lastY` ref + direction delta.
-- Wrap line 1219 `<Suspense><ChatStories /></Suspense>` in:
-  ```tsx
-  <motion.div
-    animate={{ height: storiesCollapsed ? 0 : "auto", opacity: storiesCollapsed ? 0 : 1 }}
-    transition={{ duration: 0.22, ease: "easeOut" }}
-    style={{ overflow: "hidden" }}
-  >
-    <Suspense fallback={null}><ChatStories /></Suspense>
-  </motion.div>
-  ```
-- Only enable the behavior when `!embedded` (same guard as today).
-- No change to `ChatStories.tsx` itself — its compact 54px Telegram-style sizing stays.
-- No change to search bar, filters, or chat rows.
+## What I'll fix
+
+### 1. Safe-area top padding on every chat page header
+Apply the existing `pt-safe` utility class (defined in `src/index.css`) to every sticky/fixed header in the 6 affected files. This guarantees the header always clears the iOS notch / status bar:
+
+```tsx
+<header className="sticky top-0 z-10 ... pt-safe px-3 pb-3">
+```
+
+### 2. Add back buttons where missing
+- **`JoinGroupPage.tsx`** — add a top header with a back chevron using `useSmartBack("/chat")`.
+- **`GroupCallEntryPage.tsx`** — add a back chevron to the "Missing room name" error screen.
+
+### 3. Replace fragile `navigate(-1)` with `useSmartBack`
+Swap every `nav(-1)` / `navigate(-1)` back-chevron click in the chat sub-pages to use `useSmartBack("/chat")` (or a more specific fallback like `/chat/contacts` for sub-settings). Files touched:
+- `ChatSearchAllPage.tsx`
+- `BroadcastListsPage.tsx`
+- `CustomFoldersPage.tsx`
+- `FindContactsPage.tsx`
+- `ContactRequestsPage.tsx`
+- `ContactsPage.tsx`
+- `NearbyChatPage.tsx`
+- `NewBroadcastPage.tsx`
+- `SecretChatPage.tsx`
+- `settings/ChatPrivacyHubPage.tsx`
+- `settings/StorageManagerPage.tsx`
+- `settings/ActiveSessionsPage.tsx`
+- `settings/LoginAlertsPage.tsx`
+- `settings/PasscodeSetupPage.tsx`
+- `settings/PrivacySecurityPage.tsx`
+- `settings/TwoStepSetupPage.tsx`
+
+This guarantees:
+- If the user navigated to the page from inside the app → back goes to the previous in-app screen.
+- If the user landed via deep link / refresh / notification → back goes to `/chat` (or the fallback) instead of dead-ending.
 
 ## Out of scope
 
-- No header/title collapse (Telegram's "Chats" title stays — yours will too).
-- No change to the order of elements (Stories still sits above search).
-- No change to PullToRefresh behavior.
+- No visual redesign — only padding + back-button fixes.
+- No changes to the in-chat (`PersonalChat` / `GroupChat`) overlays — those already handle close correctly.
+- No route changes.
