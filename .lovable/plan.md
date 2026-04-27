@@ -1,85 +1,48 @@
-## Why send feels slow today
+I found the main likely cause of what you’re seeing: voice messages are added as an optimistic local bubble first, then the Supabase realtime INSERT can add/replace another voice row. The current replacement logic matches only by sender/message/type, which is too loose for multiple short voice messages and can leave duplicates or replace the wrong bubble. Also, voice sending still waits for upload before the real database message exists.
 
-I traced the actual send paths in `PersonalChat.tsx` (and the same shape in `GroupChat.tsx`). Text is already optimistic + fire-and-forget, but **every other message type is blocking the UI on the network**, which is what you’re feeling as “slow”.
+Plan to fix it:
 
-Concretely:
+1. Add stable client-side send IDs
+- Generate a unique `client_send_id` for every outgoing chat message, especially voice.
+- Store it in the message payload/metadata so realtime can identify the exact optimistic bubble.
+- Use this ID to replace the local bubble instead of adding a second one.
 
-1. **Image / Video / File / GIF send** (lines 808–870 area):
-   - `setUploadingMedia(true)` → user sees nothing in the chat.
-   - `await supabase.storage.upload(...)` (1–4s on mobile).
-   - `await getPublicUrl(...)` then `await handleSend({...})` which inserts.
-   - Only after all that does the bubble appear. So for any photo/video/file, the user waits the full upload before seeing their own message. That is the #1 reason it feels slow.
+2. Make voice send feel instant
+- On mic release, create the outgoing voice bubble immediately in the chat UI.
+- Show one bubble only, with a small spinner/check state while it uploads.
+- Finalize the MediaRecorder blob and upload in the background.
+- When upload succeeds, update that same bubble with the remote URL and confirmed database row.
 
-2. **Voice send**:
-   - Optimistic bubble is already shown — good — but the bubble appears **after** `MediaRecorder.onstop` fires (the `useEffect` only runs when `voice.audioBlob` is set). On many phones `onstop` takes 150–500ms after release. So between “I let go” and “I see my bubble”, there’s a visible gap.
-   - Upload still happens before insert, which is fine, but voice notes are tiny so the real felt latency is the recorder finalize delay above.
+3. Fix duplicate prevention for fast repeated voice notes
+- Track voice sends in a pending map instead of one `voiceUploadInFlightRef` boolean.
+- Allow back-to-back voice messages without blocking or mixing them.
+- Dedupe realtime INSERT events by `client_send_id`, local temp ID, and recent timestamp fallback.
 
-3. **Voice optimistic UI also fires the message effect / scroll only once and then waits ~1–2s for the realtime echo** — that part is fine, but the `chat-media-files` bucket upload uses default `cacheControl` and no `duplex`/streaming hints, which on slow networks adds noticeable time.
+4. Speed up server/database delivery path
+- Insert a lightweight database row as early as possible with status like `uploading` and the client send ID, then update it after upload if the schema supports it.
+- If the current schema does not support message status/client IDs, add the needed nullable columns with a migration:
+  - `direct_messages.client_send_id`
+  - `group_messages.client_send_id`
+  - optional upload/send status field for UI state
+- Add indexes on `(sender_id, client_send_id)` / `(group_id, sender_id, client_send_id)` for fast realtime replacement.
 
-4. **Text path is healthy.** No changes needed there.
+5. Apply the same fix to group chat
+- Update `GroupChat.tsx` voice send logic with the same exact-client-ID dedupe.
+- Keep image/media optimistic behavior but make realtime replacement more reliable.
 
-5. **Receiver side**: receiver only sees the message after the DB insert completes. So speeding up the sender insert (already fire-and-forget) also speeds up the receiver. No extra work needed beyond #1–#3.
+6. Clean up UI states
+- Remove the heavy opacity effect that makes messages look slow or faded.
+- Keep a small sending indicator only on pending messages.
+- Make timestamps/status update smoothly without creating another bubble.
 
----
+Files to update after approval:
+- `src/hooks/useVoiceRecorder.ts`
+- `src/components/chat/HoldToRecordMic.tsx`
+- `src/components/chat/PersonalChat.tsx`
+- `src/components/chat/GroupChat.tsx`
+- Possibly a Supabase migration for `direct_messages` and `group_messages` client-send IDs/status columns.
 
-## Plan
-
-### 1. Make image / video / file / GIF sends optimistic (biggest win)
-
-In `PersonalChat.tsx` and `GroupChat.tsx`, change `handleImageSelect`, `handleVideoSelect`, the file/document send path, and the GIF send path:
-
-- Immediately push an optimistic message bubble using a local `URL.createObjectURL(file)` (for images/videos) or a placeholder file payload (for documents).
-- Show a small inline spinner / progress on the optimistic bubble (reuse the `Loader2` pattern already used for voice).
-- Run upload + insert in the background.
-- On success: swap the optimistic bubble’s `image_url` / `video_url` / `file_payload.url` with the real public URL. Realtime echo replaces it cleanly.
-- On failure: mark the bubble with an error state + retry button, instead of silently disappearing.
-- Defer `URL.revokeObjectURL` by ~30s so the local preview keeps working until the remote URL is ready (same pattern already used for voice).
-
-### 2. Reduce voice “release → bubble” gap
-
-In `HoldToRecordMic.tsx` + `PersonalChat.tsx` / `GroupChat.tsx`:
-
-- On release, immediately render a placeholder voice bubble (`message_type: "voice"`, `voice_url: null`, `is_uploading: true`) before `MediaRecorder.onstop` resolves. Currently we wait for `voice.audioBlob` to appear in the effect — that’s the gap.
-- When `useVoiceRecorder.stop()` resolves with the blob, attach the local object URL to the existing placeholder instead of creating a new one.
-- This removes the 150–500ms “dead air” after release on mobile.
-
-### 3. Speed up the actual upload
-
-In the voice + media upload calls in `PersonalChat.tsx` and `GroupChat.tsx`:
-
-- Pass `cacheControl: "3600"` and keep `upsert: true` so Supabase Storage doesn’t do a HEAD/exists check round-trip.
-- Use the existing `uploadWithProgress` helper (`src/utils/uploadWithProgress.ts`) for image/video/file so we can show real upload progress on the optimistic bubble. Voice can stay on the SDK call (tiny payload).
-- Use the recorder’s actual MIME (already done for voice) for image/video too — pass `file.type` (already done) and avoid re-encoding.
-
-### 4. Background push notification
-
-Already `void sendChatPush(...)` — confirmed non-blocking. No change.
-
-### 5. Apply the same changes consistently to `GroupChat.tsx`
-
-`GroupChat.tsx` mirrors `PersonalChat.tsx` for media/voice. Apply the same optimistic + background-upload pattern to its `group_messages` insert path.
-
-### 6. Sanity / type check
-
-Run `tsc --noEmit` after the edits.
-
----
-
-## Files to modify
-
-- `src/components/chat/PersonalChat.tsx` — image/video/file/GIF optimistic flow + voice placeholder timing.
-- `src/components/chat/GroupChat.tsx` — same changes for group sends.
-- `src/components/chat/HoldToRecordMic.tsx` — emit a “recording stopped, blob pending” signal on release so the chat can place the placeholder bubble before `onstop` resolves.
-- `src/hooks/useVoiceRecorder.ts` — expose an `onReleaseStart` callback or a `stopping` flag so chats can show the bubble immediately.
-
-## Expected result
-
-- Text send: unchanged (already instant).
-- Voice send: bubble appears the instant your finger lifts; audio becomes playable ~150–400ms later; remote sync within ~1s.
-- Photo / video / file send: bubble appears instantly with thumbnail + spinner; replaces with confirmed message when upload finishes; recipient receives as soon as upload+insert completes (same as today, but sender no longer feels the wait).
-
-```text
-Before: pick file -> wait upload -> wait insert -> bubble appears
-After:  pick file -> bubble appears instantly with thumbnail + spinner
-                  \-> upload + insert in background -> bubble confirms
-```
+Expected result:
+- You record one voice note and see exactly one voice bubble.
+- No second duplicate bubble appears after realtime/server confirmation.
+- Voice, image, and text sends feel faster because the UI updates instantly and server work happens in the background.
