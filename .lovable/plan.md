@@ -1,70 +1,92 @@
-## Hotels & Resorts — Phase 4 (Final Completion Pass)
+## Hotels & Resorts — Phase 5 (Operational Polish)
 
-Phases 1–3 shipped: 8 new tables, 6 stub tabs converted to editors (Dining, Experiences, Wellness, Transport, Policies, Reviews), and 3 new tabs (Promotions, Channel Manager, Payouts). This phase finishes the remaining items from the original plan.
+Phase 4 finished iCal sync, Guest Inbox, and Hotel Staff. Phase 5 closes out the original "Operational polish" list so day-to-day hotel runners get fast, focused tools on the seven heaviest tabs.
 
 ---
 
-### 1. iCal sync (Channel Manager backend)
+### 1. Reservations — power-user filters & exports
 
-Two edge functions to make the Channel Manager actually move data:
+- Quick-filter chip row above the table: **All / Today's arrivals / In-house / Departing today / Unpaid / VIP / Cancelled**.
+- "Export CSV" button → downloads the current filtered set (number, guest, room, dates, status, total, balance).
+- New row action **Send confirmation** → opens a prefilled mailto with reservation details (no new edge function needed).
+- Search box (guest name / number / phone).
 
-- **`lodging-ical-import`** — Fetches external iCal feeds from `lodging_channel_connections.ical_import_url`, parses VEVENTs, and writes blocked dates into `room_availability` (status = `blocked`, source = channel name). Updates `last_sync_at` and `status`. Triggered manually from the UI ("Sync now" button) and on a daily cron.
-- **`lodging-ical-export`** — Public endpoint `/functions/v1/lodging-ical-export?token=...` that serves a valid `.ics` feed of all confirmed reservations + manual blocks for the room matching `ical_export_token`. No auth (token is the secret).
+### 2. Calendar — visual upgrades
 
-Wire the Channel Manager UI's "Sync now" button to invoke the import function and surface success/error toasts.
+- Color legend strip at the top (Confirmed / Pending / Checked-in / Blocked / OTA-imported).
+- Reservation bars get a right-edge drag handle to extend stay (updates `check_out` + `nights`).
+- "Block date range" dialog (room → start → end → reason) writing into `lodge_room_blocks` per day.
+- OTA-imported blocks (from `lodging_room_blocks`) shown with channel-colored badges so owners can tell where a block came from.
 
-### 2. Guest Inbox / Messaging (`lodge-inbox`)
+### 3. Front Desk — speed shortcuts
 
-New tab under OPERATIONS. One thread per reservation, scoped to the property:
+- Sticky "Walk-in booking" button → opens the existing new-reservation dialog pre-filled with today's date and a generated number.
+- Per-row inline approve/decline for late-checkout requests (writes to `lodge_reservation_change_requests`).
+- Key-card status pill per checked-in reservation (Issued / Returned) with one-tap toggle stored in reservation `notes` (no schema change).
 
-- New table `lodging_messages` (store_id, reservation_id, guest_id, sender_role, body, attachments jsonb, read_at).
-- Inbox UI: left list of reservations with unread badge + last-message preview; right pane is the thread (guest bubbles vs. staff bubbles, send box, quick replies for "Pre-arrival info", "Wi-Fi", "Late checkout").
-- Templates: pre-arrival, in-stay check, post-stay thank-you (manual send for now; auto-send is out of scope).
+### 4. Housekeeping — staff-aware
 
-### 3. Lodging-aware Staff / Employees (`lodge-staff`)
+- "Assign to" dropdown sourced from the new **Hotel Staff** tab, filtered to `lodging_role = housekeeping`. Persists to `lodge_housekeeping.assignee_id`.
+- Priority flag toggle (high / normal) stored in `notes` JSON tail (no migration needed).
+- Photo upload on completion using the existing `lodging-uploads` bucket; URL stored in `notes`.
 
-The current `employees` tab is generic and shows zeros for hotels. Add a hospitality-shaped wrapper that reuses `store_employees`:
+### 5. Property Profile — guest essentials
 
-- New section component `LodgingStaffSection.tsx` that lists employees with hotel role chips: **Front Desk**, **Housekeeping**, **Maintenance**, **F&B**, **Spa**, **Concierge**, **Manager**.
-- Quick-add dialog with role + shift (Morning / Afternoon / Night) + phone.
-- Workload column: # of housekeeping tasks assigned today (Housekeeping role) / # of check-ins handled (Front Desk).
-- Wires the Housekeeping tab's "assign to" dropdown to the same staff list (already noted in plan polish).
+Add a new "Guest essentials" card with:
+- Wi-Fi SSID + password (with "show on guest screens" toggle).
+- Local emergency contacts (police, medical, fire — each name + phone).
+- Languages spoken at front desk (multi-select chips, reusing existing `languages` column).
+- Accepted ID types (Passport / National ID / Driver's license — checkboxes).
 
-Stored on existing `store_employees` table with a `lodging_role` and `shift` column added via migration — no new table needed.
+Stored in `lodge_property_profile.contact` JSONB (already exists, just extend the shape).
 
-### 4. Operational polish
+### 6. Overview — accurate "Next best action"
 
-- **Overview**: rewrite "Next best action" to point at the new editors (Dining, Promotions, Channel Manager) when those are empty.
-- **Calendar**: drag handle on reservation bars to extend stay (updates `check_out`); colored legend (Confirmed / Pending / Blocked / OTA); range block-out dialog.
-- **Reservations**: quick-filter chips (Today arrivals / In-house / Departing / Unpaid / VIP); "Export CSV" button; "Send confirmation" action on row.
-- **Front Desk**: walk-in booking shortcut (opens new-reservation dialog pre-set to today); late-checkout request approval inline.
-- **Housekeeping**: assign dropdown sourced from new Staff tab; priority flag toggle; photo upload field on task completion (uses existing storage).
-- **Property Profile**: add Wi-Fi SSID + password (guest-visible flag), local emergency contacts (police/medical), languages spoken, accepted ID types.
-- **Setup Checklist & Completeness Meter**: include the new sections (Promotions optional, Channel Manager optional, Staff required for >5 rooms) so progress % reflects reality.
+The current NBA points at read-only-style targets. Rewrite the priority chain to point at the new editors:
 
-### 5. Backend changes
+1. No rooms → **Rooms & Rates**
+2. Rooms but no rates → **Rate Plans**
+3. No meal plans → **Dining & Meal Plans**
+4. No staff (≥5 rooms) → **Hotel Staff**
+5. No channel connections → **Channel Manager**
+6. No promotions → **Promotions & Discounts**
+7. Reviews waiting on reply → **Reviews**
 
-Single migration:
+### 7. Setup checklist & completion meter
 
-- `lodging_messages` table + RLS (store owner / admin read/write; guest can read their own thread via `guest_id`).
-- `store_employees` add columns `lodging_role text`, `shift text`.
-- `room_availability` add columns `source text` (manual / booking_com / airbnb / expedia / agoda) and `external_uid text` for iCal dedupe.
+`src/lib/lodging/lodgingCompletion.ts` should include the new sections so progress % reflects reality:
 
-### 6. Out of scope (still)
+- Promotions: optional (not required, but counts toward "polish" tier).
+- Channel Manager: optional.
+- Hotel Staff: required for properties with ≥5 rooms.
+- Guest essentials (Wi-Fi + emergency): required.
 
-- Real-time PMS (Opera/Cloudbeds) — iCal only.
+### 8. Backend changes
+
+No new tables. One small migration only:
+
+- `lodge_housekeeping`: ensure `assignee_id` indexes exist (already a column).
+- No schema changes for Property Profile (extends existing `contact` JSONB).
+
+Everything else is UI + write logic against existing tables.
+
+### 9. Out of scope (still)
+
+- Real-time PMS integrations (Opera/Cloudbeds).
 - Auto-scheduled review/messaging emails — manual triggers only.
-- Group/multi-property dashboard.
+- Multi-property group dashboard.
+- Native restaurant/spa POS billing.
 
 ---
 
 ### Build order
 
-1. Migration: `lodging_messages`, `store_employees` columns, `room_availability` columns.
-2. Edge functions `lodging-ical-import` and `lodging-ical-export`; wire "Sync now" in Channel Manager.
-3. Guest Inbox section + tab registration.
-4. Lodging Staff section + tab registration; feed Housekeeping assign dropdown.
-5. Polish pass: Overview NBA, Calendar drag/legend, Reservations filters/export, Front Desk walk-in, Housekeeping assign/photo, Property Profile Wi-Fi/emergency.
-6. Update setup checklist & completeness meter.
+1. Reservations: filters + CSV + confirmation action + search.
+2. Calendar: legend + drag-extend + block-range dialog + OTA badges.
+3. Front Desk: walk-in shortcut + late-checkout approval + key-card pill.
+4. Housekeeping: staff-driven assign + priority + photo upload.
+5. Property Profile: Guest essentials card.
+6. Overview: rewrite NBA priority chain.
+7. Setup checklist & completion meter: include new sections.
 
-Approve to ship this batch.
+Approve to ship Phase 5.
