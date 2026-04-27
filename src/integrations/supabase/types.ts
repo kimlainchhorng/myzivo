@@ -48701,6 +48701,69 @@ export type Database = {
           },
         ]
       }
+      store_documents: {
+        Row: {
+          category: string
+          created_at: string
+          employee_id: string | null
+          expires_at: string | null
+          file_path: string
+          file_type: string
+          id: string
+          name: string
+          size_bytes: number
+          status: string
+          store_id: string
+          updated_at: string
+          uploaded_by: string | null
+        }
+        Insert: {
+          category?: string
+          created_at?: string
+          employee_id?: string | null
+          expires_at?: string | null
+          file_path: string
+          file_type?: string
+          id?: string
+          name: string
+          size_bytes?: number
+          status?: string
+          store_id: string
+          updated_at?: string
+          uploaded_by?: string | null
+        }
+        Update: {
+          category?: string
+          created_at?: string
+          employee_id?: string | null
+          expires_at?: string | null
+          file_path?: string
+          file_type?: string
+          id?: string
+          name?: string
+          size_bytes?: number
+          status?: string
+          store_id?: string
+          updated_at?: string
+          uploaded_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "store_documents_employee_id_fkey"
+            columns: ["employee_id"]
+            isOneToOne: false
+            referencedRelation: "store_employees"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "store_documents_store_id_fkey"
+            columns: ["store_id"]
+            isOneToOne: false
+            referencedRelation: "store_profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       store_employee_rules: {
         Row: {
           applies_to: string
@@ -49342,6 +49405,133 @@ export type Database = {
           },
           {
             foreignKeyName: "store_time_entries_store_id_fkey"
+            columns: ["store_id"]
+            isOneToOne: false
+            referencedRelation: "store_profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      store_training_assignments: {
+        Row: {
+          assigned_at: string
+          completed_at: string | null
+          employee_id: string
+          id: string
+          program_id: string
+          progress_pct: number
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          assigned_at?: string
+          completed_at?: string | null
+          employee_id: string
+          id?: string
+          program_id: string
+          progress_pct?: number
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          assigned_at?: string
+          completed_at?: string | null
+          employee_id?: string
+          id?: string
+          program_id?: string
+          progress_pct?: number
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "store_training_assignments_employee_id_fkey"
+            columns: ["employee_id"]
+            isOneToOne: false
+            referencedRelation: "store_employees"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "store_training_assignments_program_id_fkey"
+            columns: ["program_id"]
+            isOneToOne: false
+            referencedRelation: "store_training_programs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      store_training_modules: {
+        Row: {
+          created_at: string
+          duration_minutes: number
+          id: string
+          program_id: string
+          sort_order: number
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          duration_minutes?: number
+          id?: string
+          program_id: string
+          sort_order?: number
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          duration_minutes?: number
+          id?: string
+          program_id?: string
+          sort_order?: number
+          title?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "store_training_modules_program_id_fkey"
+            columns: ["program_id"]
+            isOneToOne: false
+            referencedRelation: "store_training_programs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      store_training_programs: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          description: string | null
+          id: string
+          name: string
+          store_id: string
+          type: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          id?: string
+          name: string
+          store_id: string
+          type?: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          id?: string
+          name?: string
+          store_id?: string
+          type?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "store_training_programs_store_id_fkey"
             columns: ["store_id"]
             isOneToOne: false
             referencedRelation: "store_profiles"
