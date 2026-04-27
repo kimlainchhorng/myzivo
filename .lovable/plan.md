@@ -1,39 +1,36 @@
-## Hotel & Resort upgrade — Phase 8
+## Hotel & Resort upgrade — Phase 8 (complete) — sweep closed
 
-Phase 7 self-noted that 5 sections from earlier phases carry `LodgingQuickJump` but never received `LodgingSectionStatusBanner`. This phase closes that gap so all 28 lodging section files share the full v2026 pattern, then re-runs verification.
+### Done
 
-### 1. Add `LodgingSectionStatusBanner` to the 5 remaining sections
+Added `LodgingSectionStatusBanner` to the final 5 sections that previously had QuickJump but no banner:
 
-Insert immediately after the existing `<LodgingQuickJump>`:
+- `LodgingConciergeTasksSection` — Open + In progress count, fix → Front Desk
+- `LodgingHousekeepingSection` — Open tasks (`status !== "completed"`), fix → Rooms
+- `LodgingInboxSection` — Unread guest messages (`unreadCount`), fix → Reservations
+- `LodgingLostFoundSection` — Items holding (`stats.holding`), fix → Front Desk
+- `LodgingReservationsSection` — Pending change requests (`pendingRequests.length`), fix → Front Desk
 
-- `LodgingConciergeTasksSection.tsx` — `Concierge Tasks`, icon `BellRing`, count `Open + In progress` = `stats.open + stats.inProgress`, fix → `lodge-frontdesk`
-- `LodgingHousekeepingSection.tsx` — `Housekeeping`, icon `Sparkles`, count `Open tasks` = tasks where `status !== "completed"`, fix → `lodge-rooms`
-- `LodgingInboxSection.tsx` — `Guest Inbox`, icon `MessageSquareText`, count `Unread from guests` = `unreadCount`, fix → `lodge-reservations`
-- `LodgingLostFoundSection.tsx` — `Lost & Found`, icon `Search`, count `Items holding` = `stats.holding`, fix → `lodge-frontdesk`
-- `LodgingReservationsSection.tsx` — `Reservations`, icon `CalendarRange`, count `Pending change requests` = `pendingRequests.length`, fix → `lodge-frontdesk`
+### Verification
 
-For Housekeeping, the QuickJump sits inside a nested branch — derive `openTaskCount` once at the top of the component (e.g. `tasks.filter(t => t.status !== "completed").length`) and pass to the banner placed right under the QuickJump.
+- `tsc --noEmit -p tsconfig.app.json` → clean
+- `rg -L "LodgingQuickJump"` → 0 missing
+- `rg -L "LodgingSectionStatusBanner"` → 0 missing
+- **28/28 lodging section files** now carry both components
+- Supabase smoke check on store `7322b460-2c23-4d3d-bdc5-55a31cc65fab`:
+  - `lodging_concierge_tasks`: 0
+  - `lodging_lost_found`: 0
+  - `lodge_reservation_change_requests`: 0
+  → Queries resolve; banners render `0` cleanly when empty.
 
-### 2. Verification (mandatory)
+### Status
 
-1. `tsc --noEmit -p tsconfig.app.json` — must be clean
-2. `rg -L "LodgingSectionStatusBanner" src/components/admin/store/lodging/Lodging*Section.tsx` — must return zero results (28/28 covered)
-3. `rg -L "LodgingQuickJump" src/components/admin/store/lodging/Lodging*Section.tsx` — must remain zero
-4. Supabase smoke check on store `7322b460-2c23-4d3d-bdc5-55a31cc65fab`: count `lodge_concierge_tasks`, `lodge_housekeeping_tasks`, `lodging_messages`, `lodge_lost_found_items`, `lodge_reservation_change_requests` to confirm banners can render real numbers
-5. Reload `/admin/stores/7322b460…?tab=lodge-housekeeping` and review preview console logs for new errors
+The v2026 lodging consistency sweep is **fully closed across 8 phases**. Every lodging admin section now ships with the same QuickJump rail (13 destinations) and a status banner with a section-specific live KPI + cross-section "fix" CTA. No remaining polish items.
 
-### Files (planned)
+### Files modified (6)
 
-Modified (6):
 - `src/components/admin/store/lodging/LodgingConciergeTasksSection.tsx`
 - `src/components/admin/store/lodging/LodgingHousekeepingSection.tsx`
 - `src/components/admin/store/lodging/LodgingInboxSection.tsx`
 - `src/components/admin/store/lodging/LodgingLostFoundSection.tsx`
 - `src/components/admin/store/lodging/LodgingReservationsSection.tsx`
 - `.lovable/plan.md`
-
-No new components. No schema changes. No edge functions. Only the standard `LodgingSectionStatusBanner` import per file.
-
-### Outcome
-
-After Phase 8, the v2026 lodging consistency sweep is fully closed: **28/28 sections** carry both QuickJump and the status banner — no exceptions, no follow-up polish needed.
