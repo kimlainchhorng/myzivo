@@ -1,14 +1,24 @@
-import { KeyRound, CalendarRange, Sparkles, BellRing, Inbox, Search } from "lucide-react";
+import {
+  KeyRound, CalendarRange, Sparkles, BellRing, Inbox, Search,
+  Hotel, CalendarDays, Users, BedDouble, Tags, BarChart3, Building2,
+} from "lucide-react";
 import { cn } from "@/lib/utils";
 
 const goTab = (tab: string) => window.dispatchEvent(new CustomEvent("lodge-set-tab", { detail: { tab } }));
 
 const CHIPS = [
+  { id: "lodge-overview", label: "Overview", icon: Hotel },
   { id: "lodge-frontdesk", label: "Front Desk", icon: KeyRound },
   { id: "lodge-reservations", label: "Reservations", icon: CalendarRange },
+  { id: "lodge-calendar", label: "Calendar", icon: CalendarDays },
   { id: "lodge-housekeeping", label: "Housekeeping", icon: Sparkles },
   { id: "lodge-inbox", label: "Inbox", icon: Inbox },
   { id: "lodge-concierge", label: "Concierge", icon: BellRing },
+  { id: "lodge-guests", label: "Guests", icon: Users },
+  { id: "lodge-rooms", label: "Rooms", icon: BedDouble },
+  { id: "lodge-rate-plans", label: "Rate Plans", icon: Tags },
+  { id: "lodge-reports", label: "Reports", icon: BarChart3 },
+  { id: "lodge-property", label: "Property", icon: Building2 },
   { id: "lodge-lostfound", label: "Lost & Found", icon: Search },
 ];
 

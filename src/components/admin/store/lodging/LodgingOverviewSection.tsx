@@ -2,6 +2,8 @@ import { Button } from "@/components/ui/button";
 import { BedDouble, CheckCircle2, Hotel, KeyRound, ListChecks, PackagePlus } from "lucide-react";
 import { AddonList, LoadingPanel, NextActions, OpsSnapshot, SectionShell, StatCard, useLodgingOpsData } from "./LodgingOperationsShared";
 import LodgingSetupChecklist from "./LodgingSetupChecklist";
+import LodgingQuickJump from "./LodgingQuickJump";
+import LodgingSectionStatusBanner from "./LodgingSectionStatusBanner";
 import RevenuePulseCard from "./RevenuePulseCard";
 import { useLodgeHousekeeping } from "@/hooks/lodging/useLodgeHousekeeping";
 import { getLodgingCompletion } from "@/lib/lodging/lodgingCompletion";
@@ -61,6 +63,8 @@ export default function LodgingOverviewSection({ storeId }: { storeId: string })
 
   return (
     <SectionShell title="Hotel Overview" subtitle="A quick operating snapshot for rooms, stays, add-ons, and guest-ready setup." icon={Hotel} actions={<div className="flex gap-2"><Button size="sm" variant="outline" onClick={() => window.location.assign("/admin/lodging/qa-checklist")}><ListChecks className="mr-1.5 h-4 w-4" /> QA Checklist</Button><Button size="sm" onClick={() => window.dispatchEvent(new CustomEvent("lodge-set-tab", { detail: { tab: "lodge-addons" } }))}><PackagePlus className="mr-1.5 h-4 w-4" /> Add-ons</Button></div>}>
+      <LodgingQuickJump active="lodge-overview" />
+      <LodgingSectionStatusBanner title="Hotel Overview" icon={Hotel} countLabel={`Rooms · Active stays`} countValue={`${rooms.length} · ${activeReservations}`} fixLabel="Open Reservations" fixTab="lodge-reservations" />
       {isLoading ? <LoadingPanel /> : <>
         <div className="rounded-lg border border-primary/20 bg-primary/8 p-4">
           <div className="flex items-start gap-3">

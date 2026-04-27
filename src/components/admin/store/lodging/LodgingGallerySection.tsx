@@ -6,6 +6,8 @@ import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useLodgeRooms } from "@/hooks/lodging/useLodgeRooms";
 import { LoadingPanel, NextActions, SectionShell, StatCard } from "./LodgingOperationsShared";
+import LodgingQuickJump from "./LodgingQuickJump";
+import LodgingSectionStatusBanner from "./LodgingSectionStatusBanner";
 import { cn } from "@/lib/utils";
 
 const goTab = (tab: string) => window.dispatchEvent(new CustomEvent("lodge-set-tab", { detail: { tab } }));
@@ -96,6 +98,8 @@ export default function LodgingGallerySection({ storeId }: { storeId: string }) 
       icon={Images}
       actions={<Button size="sm" onClick={() => goTab("lodge-property")} className="gap-1.5">Edit property photos <ArrowRight className="h-3.5 w-3.5" /></Button>}
     >
+      <LodgingQuickJump active="lodge-gallery" />
+      <LodgingSectionStatusBanner title="Photos & Gallery" icon={Images} countLabel="Uploaded photos" countValue={photos.length} fixLabel="Edit Property Profile" fixTab="lodge-property" />
       {isLoading ? <LoadingPanel /> : <>
         <div className="grid gap-3 sm:grid-cols-4">
           <StatCard label="Total photos" value={String(photos.length)} icon={Images} />
