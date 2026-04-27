@@ -21,7 +21,7 @@ import { toast } from "sonner";
 import VoiceMessagePlayer from "./VoiceMessagePlayer";
 import HoldToRecordMic from "./HoldToRecordMic";
 import { useVoiceRecorder } from "@/hooks/useVoiceRecorder";
-import { uploadVoiceWithProgress, retryWithBackoff, UploadAbortedError } from "@/lib/voiceUpload";
+import { uploadVoiceWithProgress, retryWithBackoff, UploadAbortedError, UploadHttpError, preflightVoiceBucket } from "@/lib/voiceUpload";
 import { vlog, vwarn } from "@/lib/voiceDebug";
 import GroupMembersSheet from "./GroupMembersSheet";
 import GroupInviteSheet from "./GroupInviteSheet";
@@ -51,6 +51,8 @@ interface GroupMessage {
   _upload_status?: "uploading" | "sent" | "failed";
   _upload_progress?: number;
   _upload_error?: string;
+  _upload_endpoint?: string;
+  _upload_status_code?: number;
 }
 
 interface Member {
@@ -309,6 +311,24 @@ export default function GroupChat({ groupId, groupName, groupAvatar, onClose }: 
         const contentType = blob.type || "audio/webm";
         const ext = contentType.includes("mp4") ? "m4a" : "webm";
         const path = `${user.id}/${Date.now()}-${clientSendId}.${ext}`;
+
+        const preflight = await preflightVoiceBucket({
+          bucket: "chat-media-files",
+          path,
+          signal: controller.signal,
+        });
+        if (!preflight.ok) {
+          vwarn("preflight:blocked", { clientSendId, status: preflight.status });
+          updateOpt({
+            _upload_status: "failed",
+            _upload_error: preflight.reason || `Preflight blocked (HTTP ${preflight.status})`,
+            _upload_endpoint: preflight.url,
+            _upload_status_code: preflight.status,
+          });
+          toast.error("Voice note blocked by storage permissions");
+          return;
+        }
+
         const result = await retryWithBackoff(
           (attempt) => {
             if (attempt > 0) vlog("upload:retry", { clientSendId, attempt });
@@ -372,9 +392,15 @@ export default function GroupChat({ groupId, groupName, groupAvatar, onClose }: 
       }
       vwarn("failed", { clientSendId, error: e });
       const message = e instanceof Error ? e.message : "Upload failed";
-      updateOpt({ _upload_status: "failed", _upload_error: message });
+      const httpErr = e instanceof UploadHttpError ? e : null;
+      updateOpt({
+        _upload_status: "failed",
+        _upload_error: message,
+        _upload_endpoint: httpErr?.url,
+        _upload_status_code: httpErr?.status,
+      });
       toast.error("Voice note failed to send", {
-        description: "Tap retry on the message to try again.",
+        description: "Tap Resend on the message to try again.",
       });
     }
   }, [user?.id, groupId]);
@@ -386,7 +412,14 @@ export default function GroupChat({ groupId, groupName, groupAvatar, onClose }: 
     setMessages((prev) => prev.map((m) => {
       const csid = m.file_payload?.client_send_id;
       if (csid !== clientSendId) return m;
-      return { ...m, _upload_status: "uploading", _upload_progress: 0, _upload_error: undefined };
+      return {
+        ...m,
+        _upload_status: "uploading",
+        _upload_progress: 0,
+        _upload_error: undefined,
+        _upload_endpoint: undefined,
+        _upload_status_code: undefined,
+      };
     }));
     void runVoiceJob(clientSendId, !!job.publicUrl);
   }, [runVoiceJob]);
@@ -441,11 +474,12 @@ export default function GroupChat({ groupId, groupName, groupAvatar, onClose }: 
     void runVoiceJob(clientSendId, false);
   }, [voice.audioBlob, voice.isRecording, voice, user?.id, groupId, replyTo?.id, scrollToBottom, runVoiceJob]);
 
+  // Abort in-flight uploads on unmount, but preserve cached blob URLs so any
+  // failed bubbles still showing can replay/resend until next clear.
   useEffect(() => {
     return () => {
       for (const [, job] of voiceJobsRef.current) {
         try { job.controller.abort(); } catch { /* noop */ }
-        try { URL.revokeObjectURL(job.localUrl); } catch { /* noop */ }
       }
       voiceJobsRef.current.clear();
     };
@@ -639,6 +673,8 @@ export default function GroupChat({ groupId, groupName, groupAvatar, onClose }: 
                             uploadStatus={msg._upload_status}
                             uploadProgress={msg._upload_progress}
                             uploadError={msg._upload_error}
+                            uploadEndpoint={msg._upload_endpoint}
+                            uploadStatusCode={msg._upload_status_code}
                             onRetry={csid && msg._upload_status === "failed" ? () => retryVoiceSend(csid) : undefined}
                             onDiscard={csid && (msg._upload_status === "uploading" || msg._upload_status === "failed") ? () => discardVoiceSend(csid) : undefined}
                           />

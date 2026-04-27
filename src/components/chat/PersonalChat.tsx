@@ -79,7 +79,7 @@ const MessageEffects = lazy(() => import("./MessageEffects"));
 import { toast } from "sonner";
 import { useChatPresence } from "@/hooks/useChatPresence";
 import { useVoiceRecorder } from "@/hooks/useVoiceRecorder";
-import { uploadVoiceWithProgress, retryWithBackoff, UploadAbortedError } from "@/lib/voiceUpload";
+import { uploadVoiceWithProgress, retryWithBackoff, UploadAbortedError, UploadHttpError, preflightVoiceBucket } from "@/lib/voiceUpload";
 import { vlog, vwarn } from "@/lib/voiceDebug";
 import { useChatDraft } from "@/hooks/useChatDraft";
 import VerifiedBadge from "@/components/VerifiedBadge";
@@ -142,6 +142,8 @@ interface Message {
   _upload_status?: "uploading" | "sent" | "failed";
   _upload_progress?: number;
   _upload_error?: string;
+  _upload_endpoint?: string;
+  _upload_status_code?: number;
 }
 
 interface CallEvent {
@@ -776,6 +778,26 @@ export default function PersonalChat({ recipientId, recipientName, recipientAvat
         const contentType = blob.type || "audio/webm";
         const ext = contentType.includes("mp4") ? "m4a" : "webm";
         const path = `${user.id}/${Date.now()}-${clientSendId}.${ext}`;
+
+        // Preflight: surface RLS / bucket issues immediately instead of
+        // burning all retry attempts on a guaranteed failure.
+        const preflight = await preflightVoiceBucket({
+          bucket: "chat-media-files",
+          path,
+          signal: controller.signal,
+        });
+        if (!preflight.ok) {
+          vwarn("preflight:blocked", { clientSendId, status: preflight.status });
+          updateOpt({
+            _upload_status: "failed",
+            _upload_error: preflight.reason || `Preflight blocked (HTTP ${preflight.status})`,
+            _upload_endpoint: preflight.url,
+            _upload_status_code: preflight.status,
+          });
+          toast.error("Voice note blocked by storage permissions");
+          return;
+        }
+
         const result = await retryWithBackoff(
           (attempt) => {
             if (attempt > 0) vlog("upload:retry", { clientSendId, attempt });
@@ -846,9 +868,15 @@ export default function PersonalChat({ recipientId, recipientName, recipientAvat
       }
       vwarn("failed", { clientSendId, error: e });
       const message = e instanceof Error ? e.message : "Upload failed";
-      updateOpt({ _upload_status: "failed", _upload_error: message });
+      const httpErr = e instanceof UploadHttpError ? e : null;
+      updateOpt({
+        _upload_status: "failed",
+        _upload_error: message,
+        _upload_endpoint: httpErr?.url,
+        _upload_status_code: httpErr?.status,
+      });
       toast.error("Voice note failed to send", {
-        description: "Tap retry on the message to try again.",
+        description: "Tap Resend on the message to try again.",
       });
     }
   }, [user?.id, recipientId, sendChatPush]);
@@ -861,7 +889,14 @@ export default function PersonalChat({ recipientId, recipientName, recipientAvat
     setMessages((prev) => prev.map((m) => {
       const csid = (m.file_payload as { client_send_id?: string } | null)?.client_send_id;
       if (csid !== clientSendId) return m;
-      return { ...m, _upload_status: "uploading", _upload_progress: 0, _upload_error: undefined };
+      return {
+        ...m,
+        _upload_status: "uploading",
+        _upload_progress: 0,
+        _upload_error: undefined,
+        _upload_endpoint: undefined,
+        _upload_status_code: undefined,
+      };
     }));
     void runVoiceJob(clientSendId, !!job.publicUrl);
   }, [runVoiceJob]);
@@ -931,12 +966,14 @@ export default function PersonalChat({ recipientId, recipientName, recipientAvat
     void runVoiceJob(clientSendId, false);
   }, [voice.audioBlob, voice.isRecording, voice, user?.id, recipientId, replyTo?.id, scrollToBottom, runVoiceJob]);
 
-  // Abort every pending voice job when the component unmounts.
+  // Abort every pending voice job when the component unmounts. We deliberately
+  // do NOT revoke local blob URLs here — failed jobs may still have visible
+  // bubbles in the message list (after a quick re-mount), and revoking would
+  // break the waveform/playback fallback for the cached audio.
   useEffect(() => {
     return () => {
       for (const [, job] of voiceJobsRef.current) {
         try { job.controller.abort(); } catch { /* noop */ }
-        try { URL.revokeObjectURL(job.localUrl); } catch { /* noop */ }
       }
       voiceJobsRef.current.clear();
     };
@@ -1689,6 +1726,8 @@ export default function PersonalChat({ recipientId, recipientName, recipientAvat
                                 uploadStatus={msg._upload_status}
                                 uploadProgress={msg._upload_progress}
                                 uploadError={msg._upload_error}
+                                uploadEndpoint={msg._upload_endpoint}
+                                uploadStatusCode={msg._upload_status_code}
                                 onRetry={csid && msg._upload_status === "failed" ? () => retryVoiceSend(csid) : undefined}
                                 onDiscard={csid && (msg._upload_status === "uploading" || msg._upload_status === "failed") ? () => discardVoiceSend(csid) : undefined}
                               />

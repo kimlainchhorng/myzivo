@@ -36,14 +36,80 @@ export class UploadAbortedError extends Error {
 export class UploadHttpError extends Error {
   status: number;
   retriable: boolean;
-  constructor(status: number, message: string) {
+  url?: string;
+  constructor(status: number, message: string, url?: string) {
     super(message);
     this.name = "UploadHttpError";
     this.status = status;
+    this.url = url;
     // 408 timeout, 429 rate limit, 5xx — safe to retry
     this.retriable = status === 408 || status === 429 || (status >= 500 && status < 600);
   }
 }
+
+/** Returns environment-level diagnostics for the voice upload pipeline. */
+export function getVoiceUploadDiagnostics(): {
+  hasAnonKey: boolean;
+  supabaseUrl: string;
+} {
+  return {
+    hasAnonKey: !!SUPABASE_ANON_KEY && SUPABASE_ANON_KEY.length > 20,
+    supabaseUrl: SUPABASE_URL || "",
+  };
+}
+
+export interface PreflightResult {
+  ok: boolean;
+  status: number;
+  url: string;
+  reason?: string;
+}
+
+/**
+ * Lightweight bucket/RLS preflight. Fires a single OPTIONS to the storage
+ * object endpoint with the user's auth headers. A 401/403 response means
+ * the bucket policy will reject the actual PUT — we surface that immediately
+ * instead of burning the full retry budget on a guaranteed failure.
+ *
+ * Note: this never throws. Network errors → { ok: true, status: 0 } (we let
+ * the actual upload attempt the request and produce the real error).
+ */
+export async function preflightVoiceBucket(opts: {
+  bucket: string;
+  path: string;
+  signal?: AbortSignal;
+}): Promise<PreflightResult> {
+  const url = `${SUPABASE_URL}/storage/v1/object/${opts.bucket}/${encodeURI(opts.path)}`;
+  try {
+    const { data: sessionData } = await supabase.auth.getSession();
+    const accessToken = sessionData.session?.access_token;
+    if (!accessToken) return { ok: false, status: 401, url, reason: "Not authenticated" };
+    const headers: Record<string, string> = {
+      Authorization: `Bearer ${accessToken}`,
+    };
+    if (SUPABASE_ANON_KEY) headers["apikey"] = SUPABASE_ANON_KEY;
+    const res = await fetch(url, {
+      method: "OPTIONS",
+      headers,
+      signal: opts.signal,
+    });
+    // Storage returns 200 (or 204) for OPTIONS regardless of object existence
+    // when the caller is allowed. 401/403 means the gateway / RLS will block.
+    if (res.status === 401 || res.status === 403) {
+      return {
+        ok: false,
+        status: res.status,
+        url,
+        reason: `Storage permissions blocked this request (HTTP ${res.status}). Check the chat-media-files bucket RLS policies.`,
+      };
+    }
+    return { ok: true, status: res.status, url };
+  } catch {
+    // CORS or network — don't block; let the real PUT surface the error.
+    return { ok: true, status: 0, url };
+  }
+}
+
 
 export async function uploadVoiceWithProgress(opts: UploadVoiceOpts): Promise<UploadVoiceResult> {
   const { blob, bucket, path, contentType, cacheControl = "3600", signal, onProgress } = opts;
@@ -84,13 +150,13 @@ export async function uploadVoiceWithProgress(opts: UploadVoiceOpts): Promise<Up
         onProgress?.(1);
         resolve({ publicUrl: data.publicUrl, path });
       } else {
-        reject(new UploadHttpError(xhr.status, xhr.responseText || `HTTP ${xhr.status}`));
+        reject(new UploadHttpError(xhr.status, xhr.responseText || `HTTP ${xhr.status}`, url));
       }
     };
     xhr.onerror = () => {
       signal?.removeEventListener("abort", onAbort);
       // Network-level failure — retriable
-      const err = new UploadHttpError(0, "Network error");
+      const err = new UploadHttpError(0, "Network error", url);
       err.retriable = true;
       reject(err);
     };
