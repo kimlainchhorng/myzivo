@@ -86,6 +86,7 @@ export default function VoiceMessagePlayer({
   uploadBody,
   onRetry,
   onDiscard,
+  onReply,
 }: VoiceMessagePlayerProps) {
   const isUploading = uploadStatus === "uploading";
   const isFailed = uploadStatus === "failed";
