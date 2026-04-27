@@ -1,59 +1,35 @@
-## Telegram-style voice messages
+## Make voice UI smooth like Telegram
 
-Compare current ZIVO voice UI vs Telegram screenshots and align.
+The previous Telegram pass got the layout right but playback and recording still look choppy. Three concrete sources of jank:
 
-### Differences identified
+### Issues
 
-**Player bubble (`VoiceMessagePlayer.tsx`):**
-
-| Aspect | Telegram | ZIVO now |
-|---|---|---|
-| Bar count | ~50 thin bars filling bubble width | 32 chunkier bars |
-| Bar style | Rounded thin (~2px), tight gap, even baseline gap | OK but spacing too wide, varying minHeights look noisy |
-| Idle animation | Static (no loop) | Each bar pulses on play (busy/distracting) |
-| Time format | Single `0:05` shown bottom-left | `0:00 / -0:05` dual time (cluttered) |
-| Speed pill | Compact `1x` chip on right of waveform | `1×` button below waveform |
-| Bubble bg | Solid green for `isMe`, white for other | Already matches via primary token |
-| Played-state dot | Telegram shows tiny "unread voice" dot before play | Missing |
-| Play icon | Filled play, large 40px circle | Already similar |
-
-**Recorder overlay (`HoldToRecordMic.tsx`):**
-
-| Aspect | Telegram | ZIVO now |
-|---|---|---|
-| Layout | Single rounded pill at very bottom: red dot + `0:01` left, `< Slide to cancel` center, mic on right with green ring growing as you slide | Card-style bar with extra lock pill floating high above |
-| Lock affordance | Small lock icon directly above mic, slides up smoothly | Floats far up (-top-24), feels detached |
-| Cancel link | "Cancel" plain text (when locked) | OK |
-| Time format | `0:01` mono digits, no leading space | OK |
+1. **Bars step on/off in chunks.** Telegram fills the *active* bar partially (left-to-right) so the boundary glides through the waveform. We use `i/barCount <= progress` which flips full bars in 1/48 jumps.
+2. **Re-rendering 48 bars 60×/sec is heavy.** Every progress tick re-computes color classes for every bar with `transition-colors duration-150`, causing flicker on the boundary.
+3. **`timeupdate` is not smooth.** Browsers fire `timeupdate` ~4-15×/sec. We need `requestAnimationFrame` interpolation between events for a continuous progress line.
+4. **Recording pill hint** translates with raw `dragX`, not springed → micro-stutter on touch.
 
 ### Changes
 
-**1. `src/components/chat/VoiceMessagePlayer.tsx`** — refine to match Telegram density:
-- Increase bar count 32 → 48
-- Reduce gap from 1.5px → 1px; use `min-w-[1.5px]` per bar
-- Remove per-bar pulse animation on play (keep only the "filled" color transition); waveform should look like Telegram's static bars filling left-to-right
-- Show only single time (`currentTime` while playing/seeked, `duration` otherwise) — drop the `/ -remaining` half
-- Move speed pill inline to right side of waveform row (replace `flex-col` layout): `[play] [waveform] [time + 1x pill stacked tightly]`
-- Add small "unheard" indicator dot for incoming, unplayed messages (only `!isMe && progress === 0 && !playing`)
-- Trim `min-w-[220px]` → `min-w-[200px]`, `max-w-[260px]` so bubble matches Telegram's compact look
+**`src/components/chat/VoiceMessagePlayer.tsx`**
+- Replace per-bar React state with **one progress ref + RAF loop** that updates a single CSS variable on the waveform container; bars are rendered once and don't re-render on progress.
+- Each bar gets `--p` (its position) and uses a CSS gradient mask: bar background is filled-color, with an overlay using `linear-gradient(to right, transparent var(--fill), unfilledColor var(--fill))` so the active bar shows a partial fill — boundary slides smoothly.
+- Drop `transition-colors` (no longer needed since fill is gradient-driven).
+- Keep `timeupdate` only to sync absolute time; RAF interpolates between events using `audio.currentTime` + `performance.now()` delta * playbackRate.
+- Memoize the waveform array (already deterministic).
 
-**2. `src/components/chat/HoldToRecordMic.tsx`** — make recorder overlay match Telegram pill:
-- Reduce overlay to a single rounded-full pill (not rounded-2xl card)
-- Move the lock indicator from `-top-24` to `-top-16` and shrink it to a tight rounded-full chip (just lock icon, no chevron stack)
-- Replace text `"Slide to cancel"` arrangement with: red blinking dot + mono time on far left, `‹ Slide to cancel` centered, growing green progress halo on the mic on far right
-- Add subtle background glow that grows with `dragRatio` instead of switching to destructive bg (Telegram keeps the bar neutral until release)
+**`src/components/chat/HoldToRecordMic.tsx`**
+- Replace `dragX * 0.45` raw translate on the slide-cancel hint with a **spring** (`framer-motion` `useSpring`) so it eases instead of tracking 1:1.
+- Add `will-change: transform` on the moving lock chip and slide hint so the browser promotes them to compositor layers.
+- Pin the bottom pill height to a fixed 44px so the layout doesn't reflow when "Release to cancel" replaces the hint.
 
-**3. Keep unchanged**
-- `VoiceNotePlayer.tsx` (different surface, used elsewhere)
-- Storage / upload pipeline
-- Bubble container colors (already use semantic tokens)
-
-### Verify
-
+**Verify**
 - `bunx tsc --noEmit`
-- Spot-check `/chat` on 428×703 viewport with both incoming and outgoing voice messages
-- Hold mic to confirm new pill layout
+- Open `/chat/personal/<id>` on 428×703, play a voice note — boundary should glide, no stepping
+- Hold mic, slide left — hint should drift smoothly with spring, not snap
 
 ### Expected result
 
-Voice bubbles look as dense and clean as Telegram's; recording overlay collapses to the familiar single pill with slide-to-cancel + lock above mic.
+- Playhead glides through bars instead of stepping bar-by-bar
+- No 48-element re-renders per frame
+- Recording overlay tracks the finger smoothly without jitter
