@@ -1,88 +1,82 @@
-## Hotel & Resort Admin — Next Upgrade (Phase 2)
+## Hotel & Resort Admin — Phase 3
 
-Building on Phase 1 (sidebar reorganization + Concierge/Lost & Found tables), this phase adds **revenue intelligence**, **cross-section flow**, and **polishes the new sections** so everything is real-data, connected, and in the right place.
+Phase 2 shipped Revenue Pulse, Quick-Jump nav, and Promotions overhaul. Phase 3 fixes a real bug, makes Gallery actually work, deepens cross-section flow, and adds verification.
 
 ---
 
-### 1. Revenue Pulse on Dashboard (real data)
+### 1. Fix Gallery — currently reads non-existent fields (real bug)
 
-Add a top-of-dashboard widget on `LodgingOverviewSection` showing live KPIs:
-- **Occupancy %** — last 7 / 30 days (from `useLodgeReports`)
-- **ADR** (Average Daily Rate)
-- **RevPAR** (Revenue per Available Room)
-- **Active stays today** + **arrivals today** + **departures today**
-- 4 mini stat tiles + sparkline-style bar for last 14 days occupancy
+`LodgingGallerySection` reads `profile.photos`, `profile.cover_photo_url`, `profile.hero_photo_url` — **none of these exist** on `lodge_property_profile`. Result: empty placeholder forever.
 
-All values computed client-side from existing `reservations` + `rooms` data — no mocks.
+The real photo sources in the database are:
+- `store_profiles.gallery_images` (jsonb) + `store_profiles.gallery_positions` — property-level gallery
+- `lodge_rooms.photos` (jsonb) + `lodge_rooms.cover_photo_index` — per-room
 
-### 2. Cross-Section Quick-Jump (workflow connectivity)
+**Rebuild Gallery as a real manager:**
+- Pull from both sources via existing `useOwnerStoreProfile` and `useLodgeRooms` hooks
+- 4 stat tiles: Total photos · Property gallery · Room photos · Cover set?
+- Tabbed grid: "All", "Property", "Per-room" (groups by room name)
+- Each tile shows source badge (Property / Room name) + "Open in Profile" / "Open in Room" deep-link
+- Empty state with concrete uploader CTAs (deep-link to property/room editors)
+- No new tables — pure UI fix
 
-Inject a shared `LodgingQuickJump` chip row at the top of the operational sections (Front Desk, Reservations, Housekeeping, Concierge, Lost & Found, Guest Inbox). Lets staff hop side-to-side without going back to the sidebar.
+### 2. Front Desk — make today's board actionable
 
-Chips: Front Desk · Reservations · Housekeeping · Concierge · Inbox — current section highlighted.
+The Front Desk currently shows static stat tiles. Add a **Today's Board** with three columns (Arrivals · In-house · Departures) listing real reservations from `useLodgeReservations`:
+- Each row: guest name, room, time, status badge
+- One-tap status change: Check in · Check out · Mark no-show
+- Click row → opens reservation detail
+- Empty columns explain "No arrivals scheduled today"
 
-### 3. Promotions Section Overhaul
+### 3. Inbox → Concierge bridge (workflow connectivity)
 
-Upgrade `LodgingPromotionsSection` from basic table to a real management UI:
-- 4 stat tiles: Active · Total Redemptions · Code-based · Expiring soon (next 14d)
-- **Filter chips**: All · Early Bird · Last Minute · LOS · Mobile · Member · Code
-- **Preset templates** in the editor: "Early Bird 15%", "Last Minute 10%", "Stay 3 Nights Save", "Member-only 20%" — one-click prefill
-- Link promo → `rate_plan_id` (optional) so it applies to specific rate plans
-- Better empty state with preset gallery
+In `LodgingInboxSection`, add a **"Create concierge task"** button on each guest message. Pre-fills:
+- guest_name from reservation
+- room_number from reservation
+- title = first 60 chars of message
+- description = full message body
 
-### 4. Concierge Tasks & Lost & Found Polish
+Uses existing `lodging_concierge_tasks` insert. Closes the loop between guest request → tracked action.
 
-- Add **Quick-Jump** chips at top
-- Add stat tiles (Open · In progress · Completed today · High priority)
-- Add filter chips by status
-- Wire "Create from Guest Inbox message" deep-link (passes guest name + room)
-- Lost & Found: add photo upload (uses existing `user-stories` bucket pattern), claim-by-date, owner contact
+### 4. Lost & Found — photo upload (proper)
 
-### 5. Photos & Gallery — make it real
+Replace the bare URL input with a real uploader using the existing `user-stories` bucket pattern (per memory). Adds preview + auto-fills `photo_url` after upload. RLS already permits owner uploads.
 
-Currently `LodgingGallerySection` redirects to property profile. Convert to actual gallery manager:
-- Grid of all property photos (cover, room photos, amenity photos) pulled from `lodging_property_profiles` + `lodge_rooms.photos`
-- Drag-reorder cover photo
-- Bulk caption / alt-text editor
-- "Set as cover" / "Hide" toggles
+### 5. Sidebar polish — live badge counts
 
-### 6. Sidebar refinements (move things to the right place)
+Add small numeric badges to sidebar items so staff see what needs attention without clicking:
+- Guest Inbox → unread guest message count
+- Concierge Tasks → open task count
+- Lost & Found → items with status `found` (unclaimed)
+- Front Desk → arrivals + departures today
 
-- Move **Hotel Staff** out of "Sales & Growth" into a new **TEAM** section right above Sales (more logical)
-- Move **Reports** to be the last item under TEAM/Insights group
-- Rename "Reviews & Guest Feedback" → "Guest Reviews" (shorter)
-- Add badge count on Guest Inbox (unread), Concierge (open tasks), Lost & Found (unclaimed)
+Counts pulled in `StoreOwnerLayout` via a single shared `useLodgingSidebarBadges(storeId)` hook (5-min stale time, lightweight head counts).
 
-### 7. Software & Apps icon — keep refined
+### 6. Verification (you asked: "verify too make sure is right")
 
-Already updated last turn. No changes needed; just confirm `LayoutDashboard / BellRing / Brush / Navigation / Hotel` mapping is preserved.
+After implementation:
+- Run `tsc --noEmit` to confirm no type errors
+- Run the existing **Lodging QA Checklist** (`/admin/lodging/qa-checklist`) and report results
+- Quick smoke check on the live preview at the current store: confirm Quick-Jump renders, Revenue Pulse loads, Gallery shows real photos (or correct empty state), Promotions presets work
+- Fix any issues uncovered before declaring Phase 3 done
 
 ---
 
 ### Technical notes
 
-**No new tables needed** — everything reuses existing schemas:
-- `lodging_promotions` already has `rate_plan_id` link capacity (add column if missing via migration)
-- `lodging_concierge_tasks` + `lodging_lost_found` from Phase 1
-- `useLodgeReports` already computes occupancy/ADR/RevPAR
+**No new tables.** All photo fields, message fields, and badge counts already exist.
 
 **Files to create**
-- `src/components/admin/store/lodging/LodgingQuickJump.tsx` — shared chip nav
-- `src/components/admin/store/lodging/RevenuePulseCard.tsx` — KPI widget
-- `src/components/admin/store/lodging/PromoPresets.ts` — preset templates
+- `src/hooks/lodging/useLodgingSidebarBadges.ts` — single batched count query
 
 **Files to modify**
-- `src/components/admin/store/lodging/LodgingOverviewSection.tsx` — mount RevenuePulseCard
-- `src/components/admin/store/lodging/LodgingPromotionsSection.tsx` — overhaul UI
-- `src/components/admin/store/lodging/LodgingConciergeTasksSection.tsx` — add QuickJump + stats + filters
-- `src/components/admin/store/lodging/LodgingLostFoundSection.tsx` — add QuickJump + stats + photo upload
-- `src/components/admin/store/lodging/LodgingGallerySection.tsx` — full gallery manager
-- `src/components/admin/store/lodging/LodgingFrontDeskSection.tsx` + `LodgingReservationsSection.tsx` + `LodgingHousekeepingSection.tsx` + `LodgingInboxSection.tsx` — mount QuickJump at top
-- `src/components/admin/StoreOwnerLayout.tsx` — sidebar regroup + badge counts
-- `supabase/migrations/...` — add `rate_plan_id uuid` to `lodging_promotions` if not present, add `photos jsonb` to `lodging_lost_found`
+- `src/components/admin/store/lodging/LodgingGallerySection.tsx` — real data sources
+- `src/components/admin/store/lodging/LodgingFrontDeskSection.tsx` — add Today's Board
+- `src/components/admin/store/lodging/LodgingInboxSection.tsx` — "Create concierge task" CTA
+- `src/components/admin/store/lodging/LodgingLostFoundSection.tsx` — photo uploader
+- `src/components/admin/StoreOwnerLayout.tsx` — render badge counts on lodging items
+- `src/pages/admin/AdminStoreEditPage.tsx` — pass `storeId` so layout can fetch badges
 
-**Real data, no mocks** — all KPI values, filters, and counts read from Supabase via existing hooks. RLS already enforced via `is_store_owner()`.
+All real data, no mocks. RLS unchanged (existing `is_store_owner()` already covers everything).
 
----
-
-Approve to proceed with implementation in order: (1) shared QuickJump → (2) Revenue Pulse → (3) Promotions overhaul → (4) Concierge/L&F polish → (5) Gallery → (6) Sidebar refinements.
+Approve to implement in order: (1) Gallery fix → (2) Front Desk board → (3) Inbox→Concierge bridge → (4) L&F upload → (5) Sidebar badges → (6) Verify.
