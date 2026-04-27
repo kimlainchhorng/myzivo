@@ -27,7 +27,7 @@ export default function LinkedDevicesPage() {
       <SEOHead title="Linked Devices · ZIVO" description="Manage devices signed in to your ZIVO account." />
 
       <header
-        className="sticky top-0 z-30 flex items-center gap-3 border-b border-border/40 bg-background/85 px-4 backdrop-blur-xl"
+        className="sticky top-0 z-30 flex items-center gap-3 border-b border-border/40 bg-background/85 px-4 backdrop-blur-xl safe-area-top"
         style={{ paddingTop: "calc(env(safe-area-inset-top, 0px) + 12px)", paddingBottom: 12 }}
       >
         <button
