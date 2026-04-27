@@ -195,7 +195,7 @@ const NavBar = forwardRef<HTMLDivElement>(function NavBar(_, ref) {
             }}
           />
           <div className="mx-auto px-2 sm:px-4 max-w-[1400px]">
-            <div className="flex items-center justify-between h-[72px]">
+            <div className="flex items-center gap-3 h-[60px]">
               {/* Logo — 3D float */}
               <motion.div
                 className="cursor-pointer shrink-0"
@@ -204,7 +204,7 @@ const NavBar = forwardRef<HTMLDivElement>(function NavBar(_, ref) {
                 whileTap={{ scale: 0.95 }}
                 style={{ transformStyle: "preserve-3d" }}
               >
-                <ZivoLogo size="md" />
+                <ZivoLogo size="sm" />
               </motion.div>
 
               {/* Center: Page title + nav pills */}
@@ -262,7 +262,7 @@ const NavBar = forwardRef<HTMLDivElement>(function NavBar(_, ref) {
               </nav>
 
               {/* Search Bar */}
-              <div className="hidden lg:flex flex-1 max-w-xs mx-4 relative">
+              <div className="hidden lg:flex flex-1 max-w-md ml-auto mr-3 relative">
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />
                 <input
                   placeholder="Search people..."
