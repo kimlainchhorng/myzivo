@@ -360,9 +360,7 @@ const AppHome = () => {
 
       {/* Scrollable content */}
       <div className="scroll-momentum relative z-10" style={{ paddingBottom: 'calc(56px + env(safe-area-inset-bottom, 0px) + 24px)' }}>
-        {/* 3D Ambient orbs inside scroll container */}
-        <div className="orb-3d-1 top-[-5%] right-[-10%] opacity-40 z-0 pointer-events-none" />
-        <div className="orb-3d-2 top-[40%] left-[-15%] opacity-25 z-0 pointer-events-none" />
+        {/* Ambient orbs removed on mobile — they triggered CLS and constant repaints. */}
         {/* ─── HEADER ─── */}
         <div className="bg-background relative">
           {/* Service Tabs — 3D Pill Chips
@@ -380,11 +378,9 @@ const AppHome = () => {
                   onClick={() => setActiveHomeTab(tab.id)}
                   aria-label={tab.label}
                   aria-pressed={isActive}
-                  whileTap={{ scale: 0.92, rotateX: 5 }}
-                  layout
-                  transition={{ type: "spring", stiffness: 500, damping: 30 }}
+                  whileTap={{ scale: 0.96 }}
                   className={cn(
-                    "relative flex-1 flex items-center justify-center gap-2 py-2.5 rounded-full text-sm font-semibold transition-all duration-200 touch-manipulation min-h-[44px] tab-3d",
+                    "relative flex-1 flex items-center justify-center gap-2 py-2.5 rounded-full text-sm font-semibold transition-all duration-200 touch-manipulation min-h-[44px]",
                     isActive
                       ? "text-white shadow-lg"
                       : "text-muted-foreground"
@@ -523,17 +519,12 @@ const AppHome = () => {
               </button>
             </div>
             <div className="grid grid-cols-4 gap-3 px-5 pt-3 pb-2 preserve-3d">
-              {suggestions.map((s, idx) => (
+              {suggestions.map((s) => (
                 <motion.button
                   key={s.label}
-                  whileTap={{ scale: 0.88, rotateX: 8 }}
-                  whileHover={{ y: -4, rotateX: -3 }}
+                  whileTap={{ scale: 0.94 }}
                   onClick={() => navigate(s.href)}
-                  initial={{ opacity: 0, y: 15, rotateX: -10 }}
-                  animate={{ opacity: 1, y: 0, rotateX: 0 }}
-                  transition={{ delay: idx * 0.08, type: "spring", stiffness: 200 }}
                   className="flex flex-col items-center gap-2 touch-manipulation relative group"
-                  style={{ transformStyle: "preserve-3d" }}
                 >
                   {/* Badge */}
                   {s.badge && (
