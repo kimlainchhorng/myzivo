@@ -75,7 +75,7 @@ type ProfileLookupRow = {
   avatar_url: string | null;
 };
 
-const dbFrom = (table: string) => supabase.from(table as any);
+const dbFrom = (table: string): any => (supabase as any).from(table);
 
 type ParsedStickerMessage = {
   id: string;

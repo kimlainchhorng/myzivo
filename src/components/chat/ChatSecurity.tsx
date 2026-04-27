@@ -41,7 +41,7 @@ type ChatSettingsRow = {
   retention_days: number | null;
 };
 
-const dbFrom = (table: string) => supabase.from(table as any);
+const dbFrom = (table: string): any => (supabase as any).from(table);
 
 export default function ChatSecurity({ open, onClose, chatPartnerId, chatPartnerName, onBlock }: ChatSecurityProps) {
   const { user } = useAuth();

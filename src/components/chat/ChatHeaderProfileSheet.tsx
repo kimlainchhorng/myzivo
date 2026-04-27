@@ -54,7 +54,7 @@ type StatRowProps = {
   count: number;
 };
 
-const dbFrom = (table: string) => supabase.from(table as any);
+const dbFrom = (table: string): any => (supabase as any).from(table);
 
 export default function ChatHeaderProfileSheet({
   open, onClose, partner, onOpenSearch, onCall, onClearHistory,

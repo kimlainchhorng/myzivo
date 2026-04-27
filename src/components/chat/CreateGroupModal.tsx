@@ -46,7 +46,7 @@ type GroupMemberInsert = {
   role?: string;
 };
 
-const dbFrom = (table: string) => supabase.from(table as any);
+const dbFrom = (table: string): any => (supabase as any).from(table);
 
 export default function CreateGroupModal({ open, onClose, onCreated }: CreateGroupModalProps) {
   const { user } = useAuth();
