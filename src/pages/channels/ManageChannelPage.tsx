@@ -184,6 +184,7 @@ export default function ManageChannelPage() {
           )}
         </TabsContent>
       </Tabs>
+      </div>
     </div>
   );
 }
