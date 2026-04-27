@@ -54,6 +54,7 @@ import { useChatFiles } from "@/hooks/useChatFiles";
 import type { StickerSendPayload } from "./StickerKeyboard";
 import { getWallpaperClass, getWallpaperStyle } from "./chatPersonalizationStyles";
 import CallEventBubble from "./CallEventBubble";
+import VoiceMessageBubble from "./VoiceMessageBubble";
 
 // Lazy-loaded panels (only downloaded when user opens them)
 const CallScreen = lazy(() => import("./CallScreen"));
