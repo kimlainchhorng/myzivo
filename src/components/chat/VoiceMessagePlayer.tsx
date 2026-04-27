@@ -469,6 +469,11 @@ export default function VoiceMessagePlayer({
           ⚠️ Missing Supabase anon key (VITE_SUPABASE_PUBLISHABLE_KEY) — uploads will always fail.
         </div>
       )}
+      {debugOn && uploadPhase && (
+        <div className="text-[10px] leading-snug text-destructive/80 max-w-[240px] font-mono">
+          phase: {uploadPhase}
+        </div>
+      )}
       {debugOn && uploadError && (
         <div className="text-[10px] leading-snug text-destructive/80 break-all max-w-[240px] font-mono">
           {uploadError}
@@ -476,12 +481,17 @@ export default function VoiceMessagePlayer({
       )}
       {debugOn && uploadEndpoint && (
         <div className="text-[10px] leading-snug text-destructive/70 break-all max-w-[240px] font-mono">
-          PUT {uploadEndpoint}
+          {uploadPhase === "insert" ? "POST (rest)" : "POST"} {uploadEndpoint}
         </div>
       )}
       {debugOn && typeof uploadStatusCode === "number" && (
         <div className="text-[10px] leading-snug text-destructive/70 max-w-[240px] font-mono">
           → HTTP {uploadStatusCode === 0 ? "0 (network)" : uploadStatusCode}
+        </div>
+      )}
+      {debugOn && uploadBody && (
+        <div className="text-[10px] leading-snug text-destructive/60 break-all max-w-[240px] font-mono whitespace-pre-wrap">
+          {uploadBody.slice(0, 240)}
         </div>
       )}
     </div>
