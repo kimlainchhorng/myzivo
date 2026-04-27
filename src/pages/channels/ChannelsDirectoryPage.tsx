@@ -76,6 +76,7 @@ export default function ChannelsDirectoryPage() {
           </div>
         )}
       </div>
+      </div>
     </div>
   );
 }
