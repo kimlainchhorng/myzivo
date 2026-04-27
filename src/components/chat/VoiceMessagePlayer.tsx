@@ -13,7 +13,13 @@
 import { useState, useRef, useEffect, useCallback, useMemo } from "react";
 import Play from "lucide-react/dist/esm/icons/play";
 import Pause from "lucide-react/dist/esm/icons/pause";
+import Loader2 from "lucide-react/dist/esm/icons/loader-2";
+import RefreshCw from "lucide-react/dist/esm/icons/refresh-cw";
+import Trash2 from "lucide-react/dist/esm/icons/trash-2";
+import AlertCircle from "lucide-react/dist/esm/icons/alert-circle";
 import { motion } from "framer-motion";
+
+export type VoiceUploadStatus = "uploading" | "sent" | "failed";
 
 interface VoiceMessagePlayerProps {
   url: string;
@@ -22,6 +28,16 @@ interface VoiceMessagePlayerProps {
   /** Known total duration in milliseconds — shown immediately, no waiting on metadata. */
   durationMs?: number;
   isMe: boolean;
+  /** Optional upload state for in-flight optimistic bubbles. */
+  uploadStatus?: VoiceUploadStatus;
+  /** Upload progress 0..1 — only used while `uploadStatus === "uploading"`. */
+  uploadProgress?: number;
+  /** Last error message — only used while `uploadStatus === "failed"`. */
+  uploadError?: string;
+  /** Retry handler — shown when failed. */
+  onRetry?: () => void;
+  /** Discard handler — shown when failed or uploading. */
+  onDiscard?: () => void;
 }
 
 const SPEED_OPTIONS = [1, 1.5, 2] as const;
@@ -40,7 +56,20 @@ function generateWaveform(url: string, count: number): number[] {
   });
 }
 
-export default function VoiceMessagePlayer({ url, duration, durationMs, isMe }: VoiceMessagePlayerProps) {
+export default function VoiceMessagePlayer({
+  url,
+  duration,
+  durationMs,
+  isMe,
+  uploadStatus,
+  uploadProgress = 0,
+  uploadError,
+  onRetry,
+  onDiscard,
+}: VoiceMessagePlayerProps) {
+  const isUploading = uploadStatus === "uploading";
+  const isFailed = uploadStatus === "failed";
+  const interactionDisabled = isUploading || isFailed;
   const audioRef = useRef<HTMLAudioElement>(null);
   const waveContainerRef = useRef<HTMLDivElement>(null);
   const timeLabelRef = useRef<HTMLSpanElement>(null);
@@ -132,6 +161,7 @@ export default function VoiceMessagePlayer({ url, duration, durationMs, isMe }: 
   }, [playing, writeProgress]);
 
   const toggle = useCallback(() => {
+    if (interactionDisabled) return;
     const audio = audioRef.current;
     if (!audio) return;
     if (playing) {
@@ -148,7 +178,7 @@ export default function VoiceMessagePlayer({ url, duration, durationMs, isMe }: 
         })
         .catch(() => {});
     }
-  }, [playing, speed]);
+  }, [playing, speed, interactionDisabled]);
 
   const cycleSpeed = useCallback(() => {
     const idx = SPEED_OPTIONS.indexOf(speed);
@@ -207,22 +237,32 @@ export default function VoiceMessagePlayer({ url, duration, durationMs, isMe }: 
     });
   }, [waveform, isMe]);
 
+  const progressPct = Math.max(0, Math.min(1, uploadProgress)) * 100;
+  const mutedTextClass = isMe ? "text-primary-foreground/70" : "text-muted-foreground";
+
   return (
-    <div className="flex items-center gap-2.5 min-w-[200px] max-w-[260px]">
+    <div className={`relative flex items-center gap-2.5 min-w-[200px] max-w-[260px] ${isFailed ? "ring-1 ring-destructive/60 rounded-xl -mx-1 px-1 py-0.5" : ""}`}>
       <audio ref={audioRef} src={url} preload="metadata" />
 
-      {/* Play/Pause button */}
+      {/* Play/Pause button (or spinner / alert when in upload state) */}
       <motion.button
         onClick={toggle}
-        whileTap={{ scale: 0.85 }}
-        className={`w-10 h-10 rounded-full flex items-center justify-center shrink-0 shadow-sm ${
-          isMe
-            ? "bg-primary-foreground/20 hover:bg-primary-foreground/30 text-primary-foreground"
-            : "bg-primary/15 hover:bg-primary/25 text-primary"
-        }`}
-        aria-label={playing ? "Pause" : "Play"}
+        whileTap={interactionDisabled ? undefined : { scale: 0.85 }}
+        disabled={interactionDisabled}
+        className={`w-10 h-10 rounded-full flex items-center justify-center shrink-0 shadow-sm transition-opacity ${
+          isFailed
+            ? "bg-destructive/15 text-destructive"
+            : isMe
+              ? "bg-primary-foreground/20 hover:bg-primary-foreground/30 text-primary-foreground"
+              : "bg-primary/15 hover:bg-primary/25 text-primary"
+        } ${interactionDisabled ? "cursor-not-allowed opacity-90" : ""}`}
+        aria-label={isUploading ? "Uploading voice note" : isFailed ? "Voice note failed to send" : playing ? "Pause" : "Play"}
       >
-        {playing ? (
+        {isUploading ? (
+          <Loader2 className="w-4 h-4 animate-spin" />
+        ) : isFailed ? (
+          <AlertCircle className="w-4 h-4" />
+        ) : playing ? (
           <Pause className="w-4 h-4" />
         ) : (
           <Play className="w-4 h-4 ml-0.5" />
@@ -230,61 +270,124 @@ export default function VoiceMessagePlayer({ url, duration, durationMs, isMe }: 
       </motion.button>
 
       <div className="flex-1 min-w-0 flex flex-col gap-1">
-        {/* Waveform bars — tap/drag to seek */}
-        <div
-          ref={waveContainerRef}
-          className="flex items-center gap-[1px] h-7 cursor-pointer touch-none"
-          style={{ ["--p" as any]: 0 }}
-          onPointerDown={(e) => {
-            (e.currentTarget as HTMLElement).setPointerCapture?.(e.pointerId);
-            const rect = e.currentTarget.getBoundingClientRect();
-            handleSeekToRatio((e.clientX - rect.left) / rect.width);
-          }}
-          onPointerMove={(e) => {
-            if (e.buttons !== 1 && e.pointerType !== "touch") return;
-            const rect = e.currentTarget.getBoundingClientRect();
-            handleSeekToRatio((e.clientX - rect.left) / rect.width);
-          }}
-        >
-          {bars}
+        {/* Waveform bars — tap/drag to seek (disabled while uploading/failed) */}
+        <div className="relative">
+          <div
+            ref={waveContainerRef}
+            className={`flex items-center gap-[1px] h-7 touch-none ${interactionDisabled ? "opacity-60 pointer-events-none" : "cursor-pointer"}`}
+            style={{ ["--p" as any]: 0 }}
+            onPointerDown={(e) => {
+              if (interactionDisabled) return;
+              (e.currentTarget as HTMLElement).setPointerCapture?.(e.pointerId);
+              const rect = e.currentTarget.getBoundingClientRect();
+              handleSeekToRatio((e.clientX - rect.left) / rect.width);
+            }}
+            onPointerMove={(e) => {
+              if (interactionDisabled) return;
+              if (e.buttons !== 1 && e.pointerType !== "touch") return;
+              const rect = e.currentTarget.getBoundingClientRect();
+              handleSeekToRatio((e.clientX - rect.left) / rect.width);
+            }}
+          >
+            {bars}
+          </div>
+
+          {/* Upload progress strip — sits at the bottom of the waveform */}
+          {isUploading && (
+            <div
+              className={`absolute left-0 right-0 -bottom-0.5 h-[2px] rounded-full overflow-hidden ${
+                isMe ? "bg-primary-foreground/20" : "bg-primary/15"
+              }`}
+              aria-label={`Uploading ${Math.round(progressPct)}%`}
+            >
+              <div
+                className={`h-full rounded-full transition-[width] duration-200 ease-out ${
+                  isMe ? "bg-primary-foreground" : "bg-primary"
+                }`}
+                style={{ width: `${progressPct}%` }}
+              />
+            </div>
+          )}
         </div>
 
-        {/* Time + Speed row */}
+        {/* Time + Speed / status row */}
         <div className="flex items-center justify-between gap-2">
-          <div className="flex items-center gap-1.5">
+          <div className="flex items-center gap-1.5 min-w-0">
             <span
               ref={timeLabelRef}
-              className={`text-[11px] font-medium tabular-nums leading-none ${
-                isMe ? "text-primary-foreground/70" : "text-muted-foreground"
-              }`}
+              className={`text-[11px] font-medium tabular-nums leading-none ${mutedTextClass}`}
             >
               {fallbackLabel}
             </span>
-            {showUnheardDot && (
+            {showUnheardDot && !interactionDisabled && (
               <span
                 className="w-1.5 h-1.5 rounded-full bg-primary inline-block"
                 aria-label="Unheard"
               />
             )}
+            {isUploading && (
+              <span className={`text-[10px] leading-none truncate ${mutedTextClass}`}>
+                Sending… {Math.round(progressPct)}%
+              </span>
+            )}
+            {isFailed && (
+              <span className="text-[10px] leading-none text-destructive truncate" title={uploadError}>
+                Failed to send
+              </span>
+            )}
           </div>
 
-          {/* Speed pill */}
-          <motion.button
-            whileTap={{ scale: 0.85 }}
-            onClick={cycleSpeed}
-            className={`text-[10px] font-bold px-1.5 py-[2px] rounded-full leading-none ${
-              speed !== 1
-                ? isMe
-                  ? "bg-primary-foreground/30 text-primary-foreground"
-                  : "bg-primary/20 text-primary"
-                : isMe
-                ? "bg-primary-foreground/15 text-primary-foreground/60"
-                : "bg-muted text-muted-foreground"
-            }`}
-            aria-label={`Playback speed ${speed}x`}
-          >
-            {speed}x
-          </motion.button>
+          {isFailed ? (
+            <div className="flex items-center gap-1 shrink-0">
+              {onRetry && (
+                <button
+                  type="button"
+                  onClick={onRetry}
+                  className="h-6 w-6 rounded-full bg-destructive/15 text-destructive flex items-center justify-center active:scale-90 transition-transform"
+                  aria-label="Retry sending voice note"
+                >
+                  <RefreshCw className="w-3 h-3" />
+                </button>
+              )}
+              {onDiscard && (
+                <button
+                  type="button"
+                  onClick={onDiscard}
+                  className={`h-6 w-6 rounded-full ${isMe ? "bg-primary-foreground/15 text-primary-foreground" : "bg-muted text-muted-foreground"} flex items-center justify-center active:scale-90 transition-transform`}
+                  aria-label="Discard voice note"
+                >
+                  <Trash2 className="w-3 h-3" />
+                </button>
+              )}
+            </div>
+          ) : isUploading && onDiscard ? (
+            <button
+              type="button"
+              onClick={onDiscard}
+              className={`h-6 w-6 rounded-full ${isMe ? "bg-primary-foreground/15 text-primary-foreground" : "bg-muted text-muted-foreground"} flex items-center justify-center active:scale-90 transition-transform shrink-0`}
+              aria-label="Cancel upload"
+            >
+              <Trash2 className="w-3 h-3" />
+            </button>
+          ) : (
+            /* Speed pill — only when not in upload state */
+            <motion.button
+              whileTap={{ scale: 0.85 }}
+              onClick={cycleSpeed}
+              className={`text-[10px] font-bold px-1.5 py-[2px] rounded-full leading-none ${
+                speed !== 1
+                  ? isMe
+                    ? "bg-primary-foreground/30 text-primary-foreground"
+                    : "bg-primary/20 text-primary"
+                  : isMe
+                  ? "bg-primary-foreground/15 text-primary-foreground/60"
+                  : "bg-muted text-muted-foreground"
+              }`}
+              aria-label={`Playback speed ${speed}x`}
+            >
+              {speed}x
+            </motion.button>
+          )}
         </div>
       </div>
     </div>

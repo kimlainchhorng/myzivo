@@ -79,6 +79,7 @@ const MessageEffects = lazy(() => import("./MessageEffects"));
 import { toast } from "sonner";
 import { useChatPresence } from "@/hooks/useChatPresence";
 import { useVoiceRecorder } from "@/hooks/useVoiceRecorder";
+import { uploadVoiceWithProgress, retryWithBackoff, UploadAbortedError } from "@/lib/voiceUpload";
 import { useChatDraft } from "@/hooks/useChatDraft";
 import VerifiedBadge from "@/components/VerifiedBadge";
 import { isBlueVerified } from "@/lib/verification";
@@ -136,6 +137,10 @@ interface Message {
     note?: string;
   } | null;
   _local_voice_url?: string;
+  // Transient client-only upload state for optimistic voice bubbles
+  _upload_status?: "uploading" | "sent" | "failed";
+  _upload_progress?: number;
+  _upload_error?: string;
 }
 
 interface CallEvent {
@@ -269,6 +274,16 @@ export default function PersonalChat({ recipientId, recipientName, recipientAvat
   const lockedImageInputRef = useRef<HTMLInputElement>(null);
   const voiceUploadInFlightRef = useRef(false);
   const pendingVoiceOptimisticIdRef = useRef<string | null>(null);
+  // Per-voice-message cancellable jobs keyed by client_send_id
+  const voiceJobsRef = useRef<Map<string, {
+    controller: AbortController;
+    blob: Blob;
+    durationMs: number;
+    localUrl: string;
+    optimisticId: string;
+    publicUrl?: string;
+    storagePath?: string;
+  }>>(new Map());
   const handleSendRef = useRef<((opts?: SendMessageOptions) => Promise<void>) | null>(null);
   const messageRefs = useRef<Map<string, HTMLDivElement>>(new Map());
   const timelineRef = useRef<HTMLDivElement>(null);
@@ -734,15 +749,128 @@ export default function PersonalChat({ recipientId, recipientName, recipientAvat
   };
   handleSendRef.current = handleSend;
 
-  // Voice recording complete → upload (per-blob guard so rapid notes don't block each other)
+  // ─── Voice send pipeline ──────────────────────────────────────────────
+  // Each send becomes a cancellable "job" tracked in voiceJobsRef so the
+  // user can discard mid-upload, the component can abort on unmount, and
+  // failed sends can be retried without re-recording.
   const handledVoiceBlobsRef = useRef<WeakSet<Blob>>(new WeakSet());
+
+  const runVoiceJob = useCallback(async (clientSendId: string, startFromInsert = false) => {
+    const job = voiceJobsRef.current.get(clientSendId);
+    if (!job || !user?.id) return;
+    const { controller, blob, durationMs, optimisticId } = job;
+
+    const updateOpt = (patch: Partial<Message>) => {
+      setMessages((prev) => prev.map((m) => (m.id === optimisticId ? { ...m, ...patch } : m)));
+    };
+
+    try {
+      let publicUrl = job.publicUrl;
+      let storagePath = job.storagePath;
+
+      if (!startFromInsert || !publicUrl) {
+        const contentType = blob.type || "audio/webm";
+        const ext = contentType.includes("mp4") ? "m4a" : "webm";
+        const path = `${user.id}/${Date.now()}-${clientSendId}.${ext}`;
+        const result = await retryWithBackoff(
+          () => uploadVoiceWithProgress({
+            blob,
+            bucket: "chat-media-files",
+            path,
+            contentType,
+            cacheControl: "3600",
+            signal: controller.signal,
+            onProgress: (ratio) => updateOpt({ _upload_progress: ratio }),
+          }),
+          { signal: controller.signal, attempts: 3, baseDelayMs: 600 },
+        );
+        publicUrl = result.publicUrl;
+        storagePath = result.path;
+        job.publicUrl = publicUrl;
+        job.storagePath = storagePath;
+      }
+
+      const insertData: DirectMessageInsert = {
+        sender_id: user.id,
+        receiver_id: recipientId,
+        message: "",
+        message_type: "voice",
+        voice_url: publicUrl!,
+        file_payload: { duration_ms: durationMs, client_send_id: clientSendId } as unknown as FileBubbleData,
+      };
+      await retryWithBackoff(
+        async () => {
+          const { error: insertError } = await dbFrom("direct_messages").insert(insertData);
+          if (insertError) throw insertError;
+        },
+        { signal: controller.signal, attempts: 3, baseDelayMs: 600 },
+      );
+
+      // Mark sent + swap to remote URL so playback survives realtime delay.
+      updateOpt({
+        voice_url: publicUrl!,
+        _upload_status: "sent",
+        _upload_progress: 1,
+        _upload_error: undefined,
+      });
+      void sendChatPush("voice", "");
+
+      // Cleanup: keep the local blob URL around briefly so any in-progress
+      // playback doesn't tear; revoke after a delay.
+      setTimeout(() => URL.revokeObjectURL(job.localUrl), 30000);
+      voiceJobsRef.current.delete(clientSendId);
+      if (pendingVoiceOptimisticIdRef.current === optimisticId) {
+        pendingVoiceOptimisticIdRef.current = null;
+      }
+    } catch (e) {
+      if (e instanceof UploadAbortedError || controller.signal.aborted) {
+        // Silently aborted (discarded or unmounted); cleanup handled elsewhere.
+        return;
+      }
+      console.warn("[voice] upload/send failed", e);
+      const message = e instanceof Error ? e.message : "Upload failed";
+      updateOpt({ _upload_status: "failed", _upload_error: message });
+      toast.error("Voice note failed to send", {
+        description: "Tap retry on the message to try again.",
+      });
+    }
+  }, [user?.id, recipientId, sendChatPush]);
+
+  const retryVoiceSend = useCallback((clientSendId: string) => {
+    const job = voiceJobsRef.current.get(clientSendId);
+    if (!job) return;
+    // Replace aborted controller with a fresh one
+    job.controller = new AbortController();
+    setMessages((prev) => prev.map((m) => {
+      const csid = (m.file_payload as { client_send_id?: string } | null)?.client_send_id;
+      if (csid !== clientSendId) return m;
+      return { ...m, _upload_status: "uploading", _upload_progress: 0, _upload_error: undefined };
+    }));
+    void runVoiceJob(clientSendId, !!job.publicUrl);
+  }, [runVoiceJob]);
+
+  const discardVoiceSend = useCallback((clientSendId: string) => {
+    const job = voiceJobsRef.current.get(clientSendId);
+    if (!job) return;
+    try { job.controller.abort(); } catch { /* noop */ }
+    setMessages((prev) => prev.filter((m) => {
+      const csid = (m.file_payload as { client_send_id?: string } | null)?.client_send_id;
+      return csid !== clientSendId;
+    }));
+    try { URL.revokeObjectURL(job.localUrl); } catch { /* noop */ }
+    // Best-effort: clean up the orphaned storage object if upload completed but insert failed.
+    if (job.storagePath) {
+      void supabase.storage.from("chat-media-files").remove([job.storagePath]).catch(() => {});
+    }
+    voiceJobsRef.current.delete(clientSendId);
+  }, []);
+
   useEffect(() => {
     if (!voice.audioBlob || voice.isRecording || !user?.id) return;
     const blob = voice.audioBlob;
     if (handledVoiceBlobsRef.current.has(blob)) return;
     handledVoiceBlobsRef.current.add(blob);
 
-    let cancelled = false;
     const durationMs = Math.max(0, Math.round(voice.durationMs || (voice.duration || 0) * 1000));
     const localUrl = URL.createObjectURL(blob);
     const clientSendId = `csid-${Date.now()}-${Math.random().toString(36).slice(2, 9)}`;
@@ -768,58 +896,35 @@ export default function PersonalChat({ recipientId, recipientName, recipientAvat
       expires_at: null,
       created_at: new Date().toISOString(),
       is_read: false,
+      _upload_status: "uploading",
+      _upload_progress: 0,
     };
+
+    voiceJobsRef.current.set(clientSendId, {
+      controller: new AbortController(),
+      blob,
+      durationMs,
+      localUrl,
+      optimisticId,
+    });
 
     setMessages((prev) => [...prev, optimisticVoice]);
     scrollToBottom(true);
-    // Free recorder state immediately so the next recording can start without waiting.
     voice.clearBlob();
+    void runVoiceJob(clientSendId, false);
+  }, [voice.audioBlob, voice.isRecording, voice, user?.id, recipientId, replyTo?.id, scrollToBottom, runVoiceJob]);
 
-    const upload = async () => {
-      try {
-        const contentType = blob.type || "audio/webm";
-        const ext = contentType.includes("mp4") ? "m4a" : "webm";
-        const path = `${user.id}/${Date.now()}-${clientSendId}.${ext}`;
-        const { error: uploadError } = await supabase.storage
-          .from("chat-media-files")
-          .upload(path, blob, { contentType, upsert: true, cacheControl: "3600" });
-        if (uploadError) throw uploadError;
-        const { data: urlData } = supabase.storage.from("chat-media-files").getPublicUrl(path);
-        if (cancelled) return;
-        const insertData: DirectMessageInsert = {
-          sender_id: user.id,
-          receiver_id: recipientId,
-          message: "",
-          message_type: "voice",
-          voice_url: urlData.publicUrl,
-          file_payload: { duration_ms: durationMs, client_send_id: clientSendId } as unknown as FileBubbleData,
-        };
-        // Fire-and-forget; realtime echo replaces the optimistic bubble via client_send_id.
-        const { error: insertError } = await dbFrom("direct_messages").insert(insertData);
-        if (insertError) throw insertError;
-        // Swap local URL with remote so the bubble keeps playing even if realtime is delayed.
-        setMessages((prev) => prev.map((m) => m.id === optimisticId
-          ? { ...m, voice_url: urlData.publicUrl }
-          : m));
-        void sendChatPush("voice", "");
-      } catch (e) {
-        if (!cancelled) {
-          console.warn("[voice] upload/send failed", e);
-          setMessages((prev) => prev.filter((m) => m.id !== optimisticId));
-          toast.error("Failed to send voice note");
-        }
-      } finally {
-        setTimeout(() => URL.revokeObjectURL(localUrl), 30000);
-        if (pendingVoiceOptimisticIdRef.current === optimisticId) pendingVoiceOptimisticIdRef.current = null;
-      }
-    };
-
-    void upload();
-
+  // Abort every pending voice job when the component unmounts.
+  useEffect(() => {
     return () => {
-      cancelled = true;
+      for (const [, job] of voiceJobsRef.current) {
+        try { job.controller.abort(); } catch { /* noop */ }
+        try { URL.revokeObjectURL(job.localUrl); } catch { /* noop */ }
+      }
+      voiceJobsRef.current.clear();
     };
-  }, [voice.audioBlob, voice.isRecording, voice, user?.id, recipientId, replyTo?.id, scrollToBottom, sendChatPush]);
+  }, []);
+
 
   // Optimistic media send: show the bubble instantly, upload + insert in background.
   const sendOptimisticMedia = (file: File, kind: "image" | "video") => {
@@ -1557,15 +1662,22 @@ export default function PersonalChat({ recipientId, recipientName, recipientAvat
                         <div className={`max-w-[80%] min-w-[220px] px-3 py-2.5 rounded-2xl shadow-sm ${
                           isMe ? "bg-primary text-primary-foreground rounded-br-md" : "bg-muted text-foreground rounded-bl-md"
                         }`}>
-                          <VoiceMessagePlayer
-                            url={msg.voice_url}
-                            isMe={isMe}
-                            durationMs={(msg.file_payload as { duration_ms?: number } | null)?.duration_ms}
-                          />
+                          {(() => {
+                            const csid = (msg.file_payload as { client_send_id?: string } | null)?.client_send_id;
+                            return (
+                              <VoiceMessagePlayer
+                                url={msg.voice_url}
+                                isMe={isMe}
+                                durationMs={(msg.file_payload as { duration_ms?: number } | null)?.duration_ms}
+                                uploadStatus={msg._upload_status}
+                                uploadProgress={msg._upload_progress}
+                                uploadError={msg._upload_error}
+                                onRetry={csid && msg._upload_status === "failed" ? () => retryVoiceSend(csid) : undefined}
+                                onDiscard={csid && (msg._upload_status === "uploading" || msg._upload_status === "failed") ? () => discardVoiceSend(csid) : undefined}
+                              />
+                            );
+                          })()}
                           <div className="flex items-center justify-end gap-1 mt-1">
-                            {msg.id.startsWith("opt-") && (
-                              <Loader2 className={`h-2.5 w-2.5 animate-spin ${isMe ? "text-primary-foreground/60" : "text-muted-foreground/60"}`} />
-                            )}
                             <span className={`text-[9px] ${isMe ? "text-primary-foreground/50" : "text-muted-foreground/70"}`}>
                               {formatMsgTime(msg.created_at)}
                             </span>
