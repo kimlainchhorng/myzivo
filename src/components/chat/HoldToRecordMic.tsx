@@ -69,6 +69,9 @@ export default function HoldToRecordMic({ voice, className }: Props) {
   const startTime = useRef(0);
   const guardTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const pendingStart = useRef(false);
+  const recordingStarted = useRef(false);
+  const recordingBeganAt = useRef(0);
+  const startPromise = useRef<Promise<void> | null>(null);
   const willCancel = dragX < -CANCEL_THRESHOLD;
   const willLock = dragY < -LOCK_THRESHOLD;
   const isRecording = voice.isRecording;
@@ -82,6 +85,9 @@ export default function HoldToRecordMic({ voice, className }: Props) {
       dragYMV.set(0);
       setLocked(false);
       setPaused(false);
+      recordingStarted.current = false;
+      recordingBeganAt.current = 0;
+      startPromise.current = null;
     }
   }, [voice.isRecording, dragXMV, dragYMV]);
 
@@ -98,11 +104,18 @@ export default function HoldToRecordMic({ voice, className }: Props) {
     startPos.current = { x: e.clientX, y: e.clientY };
     startTime.current = Date.now();
     pendingStart.current = true;
+    recordingStarted.current = false;
     clearGuard();
-    guardTimer.current = setTimeout(async () => {
+    guardTimer.current = setTimeout(() => {
       if (!pendingStart.current) return;
       haptic(15);
-      await voice.startRecording();
+      startPromise.current = voice.startRecording().then(() => {
+        recordingStarted.current = true;
+        recordingBeganAt.current = Date.now();
+      }).catch(() => {
+        recordingStarted.current = false;
+        recordingBeganAt.current = 0;
+      });
     }, HOLD_GUARD_MS);
   };
 
@@ -132,9 +145,10 @@ export default function HoldToRecordMic({ voice, className }: Props) {
     clearGuard();
     const wasPending = pendingStart.current;
     pendingStart.current = false;
+    if (startPromise.current) await startPromise.current;
 
     // If recording never actually started (released before guard fired)
-    if (wasPending && !isRecording) {
+    if (wasPending && !recordingStarted.current && !voice.isRecording) {
       toast("Hold to record", { duration: 1500 });
       return;
     }
@@ -144,7 +158,10 @@ export default function HoldToRecordMic({ voice, className }: Props) {
     // Measure actual recording duration (excludes the 120ms hold guard) and
     // re-evaluate cancel intent from the final dragX so a tiny jitter on
     // release can't accidentally throw the recording away.
-    const recordedMs = voice.elapsedMs ?? 0;
+    const recordedMs = Math.max(
+      voice.elapsedMs ?? 0,
+      recordingBeganAt.current ? Date.now() - recordingBeganAt.current : 0,
+    );
     const finalWillCancel = dragX < -CANCEL_THRESHOLD;
 
     if (finalWillCancel) {
