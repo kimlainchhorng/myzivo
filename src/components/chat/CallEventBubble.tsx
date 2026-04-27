@@ -93,7 +93,12 @@ export default function CallEventBubble({
   };
 
   return (
-    <div ref={bubbleRef} className="flex justify-end my-1.5 relative px-1">
+    <div
+      ref={bubbleRef}
+      className="chat-no-callout flex justify-end my-1.5 relative px-1"
+      onContextMenu={(e) => e.preventDefault()}
+      style={{ WebkitTouchCallout: "none" } as React.CSSProperties}
+    >
       <div
         onClick={handleClick}
         onPointerDown={handlePointerDown}

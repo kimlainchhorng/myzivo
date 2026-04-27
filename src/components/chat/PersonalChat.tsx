@@ -1689,7 +1689,9 @@ export default function PersonalChat({ recipientId, recipientName, recipientAvat
                   <div
                     key={msg.id}
                     ref={(el) => { if (el) messageRefs.current.set(msg.id, el); }}
-                    className={`transition-colors duration-500 rounded-xl ${isHighlighted ? "bg-primary/10" : ""}`}
+                    className={`chat-no-callout transition-colors duration-500 rounded-xl ${isHighlighted ? "bg-primary/10" : ""}`}
+                    onContextMenu={(e) => e.preventDefault()}
+                    style={{ WebkitTouchCallout: "none" } as React.CSSProperties}
                   >
                     {/* Reply quote */}
                     {repliedMsg && (

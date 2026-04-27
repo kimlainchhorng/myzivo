@@ -1020,6 +1020,7 @@ export default function StickerKeyboard({ open, onClose, onSendSticker, onStartV
                             onTouchMove={() => { if (longPressRef.current) clearTimeout(longPressRef.current); }}
                             onContextMenu={(e) => { e.preventDefault(); setPreviewSticker(sticker); }}
                             onClick={() => sendSticker(stickerPayload)}
+                            style={{ WebkitTouchCallout: "none", WebkitUserSelect: "none", userSelect: "none", WebkitTapHighlightColor: "transparent" } as React.CSSProperties}
                             className="group relative aspect-square overflow-visible rounded-2xl hover:bg-muted/30 transition-colors p-0"
                           >
                             <LiveIllustratedStickerArt sticker={{ ...sticker, animatedSrc: getAnimatedStickerUrl(sticker.id) }} index={idx} />
