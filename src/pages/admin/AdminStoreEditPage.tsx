@@ -91,6 +91,7 @@ import LodgingChannelManagerSection from "@/components/admin/store/lodging/Lodgi
 import LodgingPayoutsSection from "@/components/admin/store/lodging/LodgingPayoutsSection";
 import LodgingInboxSection from "@/components/admin/store/lodging/LodgingInboxSection";
 import LodgingStaffSection from "@/components/admin/store/lodging/LodgingStaffSection";
+import SoftwareDownloadsSection from "@/components/admin/store/SoftwareDownloadsSection";
 import { getLodgingCompletion } from "@/lib/lodging/lodgingCompletion";
 import { LODGING_TAB_IDS, resolveStoreTab, resolveStoreTabFromSearch } from "@/lib/admin/storeTabRouting";
 import { useLodgeRooms } from "@/hooks/lodging/useLodgeRooms";
@@ -2038,7 +2039,7 @@ export default function AdminStoreEditPage() {
   };
   const productsLabelTitle = isAutoRepair ? "Services" : isLodging ? "Rooms" : "Products";
   const paymentLabelTitle = form.category === "car-dealership" ? t("admin.store.booking_appointment") : isAutoRepair ? "Bookings" : isLodging ? "Payment & Payouts" : t("admin.store.payment");
-  const storeOwnerTitle = autoRepairTitles[activeTab] || lodgingTitles[activeTab] || employeeTitles[activeTab] || (activeTab === "orders" ? "Orders" : activeTab === "products" ? productsLabelTitle : activeTab === "payment" ? paymentLabelTitle : activeTab === "customers" ? "Customers" : activeTab === "marketing" ? "Marketing & Ads" : activeTab === "livestream" ? "Live Stream" : activeTab === "settings" ? "Settings" : `Edit: ${store?.name || "Store"}`);
+  const storeOwnerTitle = autoRepairTitles[activeTab] || lodgingTitles[activeTab] || employeeTitles[activeTab] || (activeTab === "orders" ? "Orders" : activeTab === "products" ? productsLabelTitle : activeTab === "payment" ? paymentLabelTitle : activeTab === "customers" ? "Customers" : activeTab === "marketing" ? "Marketing & Ads" : activeTab === "livestream" ? "Live Stream" : activeTab === "software" ? "Software & Apps" : activeTab === "settings" ? "Settings" : `Edit: ${store?.name || "Store"}`);
   // IMPORTANT: Do NOT define a component inside render — it creates a new component
   // type on every render, which forces React to unmount + remount the entire subtree
   // (including the Add Product dialog inputs) on every keystroke. Use a render helper instead.
@@ -3756,6 +3757,10 @@ export default function AdminStoreEditPage() {
               <TabsContent value="lodge-staff" data-testid="lodging-tab-lodge-staff"><LodgingStaffSection storeId={storeId!} /></TabsContent>
             </>
           )}
+
+          <TabsContent value="software" data-testid="store-tab-software">
+            <SoftwareDownloadsSection storeCategory={form.category} />
+          </TabsContent>
 
         </Tabs>
       </div>
