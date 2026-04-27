@@ -238,7 +238,7 @@ export default function FeedSidebar() {
           onClick={() => setShowChat(true)}
           className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-foreground hover:bg-muted/50 transition-colors group"
         >
-          <MessageCircle className="h-5 w-5 text-sky-500" />
+          <MessageCircle className="h-5 w-5 text-foreground" />
           <span>Chat</span>
         </button>
 
