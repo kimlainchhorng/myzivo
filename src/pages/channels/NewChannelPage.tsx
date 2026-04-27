@@ -117,6 +117,7 @@ export default function NewChannelPage() {
           Create channel
         </Button>
       </div>
+      </div>
     </div>
   );
 }
