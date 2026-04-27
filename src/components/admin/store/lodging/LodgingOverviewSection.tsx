@@ -96,7 +96,10 @@ export default function LodgingOverviewSection({ storeId }: { storeId: string })
             </div>
           </div>
         </div>
-        <RevenuePulseCard storeId={storeId} />
+        <div className="grid gap-3 lg:grid-cols-3">
+          <div className="lg:col-span-2"><RevenuePulseCard storeId={storeId} /></div>
+          <LodgingReviewsSummaryCard storeId={storeId} />
+        </div>
         <LodgingSetupChecklist items={setupItems} wizard />
         <OpsSnapshot rooms={rooms} addons={addons} reservations={reservations} />
         <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
