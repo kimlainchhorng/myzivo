@@ -249,6 +249,20 @@ export function LodgingRoomCard({
               ${(baseRateCents / 100).toFixed(2)}
               <span className="text-xs font-medium text-muted-foreground"> /night</span>
             </p>
+            {(weeklyDiscountPct > 0 || monthlyDiscountPct > 0) && (
+              <div className="flex flex-wrap gap-1 mt-1.5">
+                {weeklyDiscountPct > 0 && (
+                  <span className="text-[10px] px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-100 font-bold dark:bg-emerald-500/10 dark:text-emerald-300 dark:border-emerald-500/20">
+                    −{weeklyDiscountPct}% weekly
+                  </span>
+                )}
+                {monthlyDiscountPct > 0 && (
+                  <span className="text-[10px] px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-100 font-bold dark:bg-emerald-500/10 dark:text-emerald-300 dark:border-emerald-500/20">
+                    −{monthlyDiscountPct}% monthly
+                  </span>
+                )}
+              </div>
+            )}
           </div>
           <Button
             onClick={onReserve}
