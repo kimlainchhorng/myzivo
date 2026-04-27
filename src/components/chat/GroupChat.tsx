@@ -311,6 +311,24 @@ export default function GroupChat({ groupId, groupName, groupAvatar, onClose }: 
         const contentType = blob.type || "audio/webm";
         const ext = contentType.includes("mp4") ? "m4a" : "webm";
         const path = `${user.id}/${Date.now()}-${clientSendId}.${ext}`;
+
+        const preflight = await preflightVoiceBucket({
+          bucket: "chat-media-files",
+          path,
+          signal: controller.signal,
+        });
+        if (!preflight.ok) {
+          vwarn("preflight:blocked", { clientSendId, status: preflight.status });
+          updateOpt({
+            _upload_status: "failed",
+            _upload_error: preflight.reason || `Preflight blocked (HTTP ${preflight.status})`,
+            _upload_endpoint: preflight.url,
+            _upload_status_code: preflight.status,
+          });
+          toast.error("Voice note blocked by storage permissions");
+          return;
+        }
+
         const result = await retryWithBackoff(
           (attempt) => {
             if (attempt > 0) vlog("upload:retry", { clientSendId, attempt });
