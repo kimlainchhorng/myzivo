@@ -27740,6 +27740,7 @@ export type Database = {
           currencies_accepted: string[]
           deposit_percent: number | null
           deposit_required: boolean
+          description_sections: Json
           facilities: string[]
           hero_badges: string[]
           house_rules: Json
@@ -27750,6 +27751,8 @@ export type Database = {
           nearby: Json
           payment_methods: string[]
           pet_policy: Json
+          popular_amenities: string[]
+          property_highlights: Json
           store_id: string
           sustainability: string[]
           updated_at: string
@@ -27768,6 +27771,7 @@ export type Database = {
           currencies_accepted?: string[]
           deposit_percent?: number | null
           deposit_required?: boolean
+          description_sections?: Json
           facilities?: string[]
           hero_badges?: string[]
           house_rules?: Json
@@ -27778,6 +27782,8 @@ export type Database = {
           nearby?: Json
           payment_methods?: string[]
           pet_policy?: Json
+          popular_amenities?: string[]
+          property_highlights?: Json
           store_id: string
           sustainability?: string[]
           updated_at?: string
@@ -27796,6 +27802,7 @@ export type Database = {
           currencies_accepted?: string[]
           deposit_percent?: number | null
           deposit_required?: boolean
+          description_sections?: Json
           facilities?: string[]
           hero_badges?: string[]
           house_rules?: Json
@@ -27806,6 +27813,8 @@ export type Database = {
           nearby?: Json
           payment_methods?: string[]
           pet_policy?: Json
+          popular_amenities?: string[]
+          property_highlights?: Json
           store_id?: string
           sustainability?: string[]
           updated_at?: string
@@ -28354,6 +28363,7 @@ export type Database = {
         Row: {
           addons: Json
           amenities: string[] | null
+          badges: string[]
           base_rate_cents: number | null
           bed_config: Json
           beds: string | null
@@ -28365,6 +28375,7 @@ export type Database = {
           cover_photo_index: number
           created_at: string
           description: string | null
+          expandable_features: string[]
           fees: Json
           floor: string | null
           id: string
@@ -28391,6 +28402,7 @@ export type Database = {
         Insert: {
           addons?: Json
           amenities?: string[] | null
+          badges?: string[]
           base_rate_cents?: number | null
           bed_config?: Json
           beds?: string | null
@@ -28402,6 +28414,7 @@ export type Database = {
           cover_photo_index?: number
           created_at?: string
           description?: string | null
+          expandable_features?: string[]
           fees?: Json
           floor?: string | null
           id?: string
@@ -28428,6 +28441,7 @@ export type Database = {
         Update: {
           addons?: Json
           amenities?: string[] | null
+          badges?: string[]
           base_rate_cents?: number | null
           bed_config?: Json
           beds?: string | null
@@ -28439,6 +28453,7 @@ export type Database = {
           cover_photo_index?: number
           created_at?: string
           description?: string | null
+          expandable_features?: string[]
           fees?: Json
           floor?: string | null
           id?: string
@@ -28859,6 +28874,7 @@ export type Database = {
           ends_at: string | null
           id: string
           max_nights: number | null
+          member_only: boolean
           min_nights: number | null
           name: string
           promo_type: string
@@ -28879,6 +28895,7 @@ export type Database = {
           ends_at?: string | null
           id?: string
           max_nights?: number | null
+          member_only?: boolean
           min_nights?: number | null
           name: string
           promo_type?: string
@@ -28899,6 +28916,7 @@ export type Database = {
           ends_at?: string | null
           id?: string
           max_nights?: number | null
+          member_only?: boolean
           min_nights?: number | null
           name?: string
           promo_type?: string
