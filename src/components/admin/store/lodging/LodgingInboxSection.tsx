@@ -5,7 +5,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
-import { MessageSquareText, Send, Inbox, User } from "lucide-react";
+import { MessageSquareText, Send, Inbox, User, BellRing } from "lucide-react";
 import { LoadingPanel, SectionShell, StatCard } from "./LodgingOperationsShared";
 import LodgingQuickJump from "./LodgingQuickJump";
 import { useLodgeReservations } from "@/hooks/lodging/useLodgeReservations";
@@ -113,6 +113,32 @@ export default function LodgingInboxSection({ storeId }: { storeId: string }) {
     onError: (e: any) => toast.error(e?.message || "Send failed"),
   });
 
+  const createConciergeTask = useMutation({
+    mutationFn: async (msg: LodgingMessage) => {
+      const reservation: any = reservations.find((r: any) => r.id === msg.reservation_id);
+      const guestName = reservation?.guest_name || reservation?.guest?.full_name || "Guest";
+      const roomNumber = reservation?.room_number || reservation?.room?.name || null;
+      const title = msg.body.length > 60 ? `${msg.body.slice(0, 57)}…` : msg.body;
+      const { error } = await (supabase as any).from("lodging_concierge_tasks").insert({
+        store_id: storeId,
+        reservation_id: msg.reservation_id,
+        guest_name: guestName,
+        room_number: roomNumber,
+        request_type: "general",
+        title,
+        description: msg.body,
+        priority: "normal",
+        status: "open",
+        active: true,
+      });
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      toast.success("Concierge task created", { description: "Open in Concierge Tasks tab.", action: { label: "Open", onClick: () => window.dispatchEvent(new CustomEvent("lodge-set-tab", { detail: { tab: "lodge-concierge" } })) } });
+      qc.invalidateQueries({ queryKey: ["lodging-sidebar-badges", storeId] });
+    },
+    onError: (e: any) => toast.error(e?.message || "Could not create task"),
+  });
   const unreadCount = messages.filter((m) => m.sender_role === "guest" && !m.read_at).length;
 
   return (
@@ -173,9 +199,21 @@ export default function LodgingInboxSection({ storeId }: { storeId: string }) {
                   {activeMessages.length === 0 ? (
                     <p className="text-center text-xs text-muted-foreground py-8">No messages yet — send the first one below.</p>
                   ) : activeMessages.map((m) => (
-                    <div key={m.id} className={cn("max-w-[80%] rounded-2xl px-3 py-2 text-sm", m.sender_role === "staff" ? "ml-auto bg-primary text-primary-foreground" : "bg-muted text-foreground")}>
+                    <div key={m.id} className={cn("group max-w-[80%] rounded-2xl px-3 py-2 text-sm", m.sender_role === "staff" ? "ml-auto bg-primary text-primary-foreground" : "bg-muted text-foreground")}>
                       <p className="whitespace-pre-wrap break-words">{m.body}</p>
-                      <p className={cn("text-[10px] mt-1 opacity-70")}>{new Date(m.created_at).toLocaleString()}</p>
+                      <div className="mt-1 flex items-center justify-between gap-2">
+                        <p className="text-[10px] opacity-70">{new Date(m.created_at).toLocaleString()}</p>
+                        {m.sender_role === "guest" && (
+                          <button
+                            onClick={() => createConciergeTask.mutate(m)}
+                            disabled={createConciergeTask.isPending}
+                            className="rounded-full bg-foreground/10 px-2 py-0.5 text-[10px] font-semibold text-foreground/80 opacity-0 transition group-hover:opacity-100 hover:bg-primary hover:text-primary-foreground disabled:opacity-50"
+                            title="Create concierge task from this message"
+                          >
+                            <BellRing className="mr-1 inline h-2.5 w-2.5" /> Task
+                          </button>
+                        )}
+                      </div>
                     </div>
                   ))}
                 </div>
