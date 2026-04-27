@@ -2,6 +2,7 @@ import { Button } from "@/components/ui/button";
 import { BedDouble, CheckCircle2, Hotel, KeyRound, ListChecks, PackagePlus } from "lucide-react";
 import { AddonList, LoadingPanel, NextActions, OpsSnapshot, SectionShell, StatCard, useLodgingOpsData } from "./LodgingOperationsShared";
 import LodgingSetupChecklist from "./LodgingSetupChecklist";
+import RevenuePulseCard from "./RevenuePulseCard";
 import { useLodgeHousekeeping } from "@/hooks/lodging/useLodgeHousekeeping";
 import { getLodgingCompletion } from "@/lib/lodging/lodgingCompletion";
 import { useQuery } from "@tanstack/react-query";
@@ -91,6 +92,7 @@ export default function LodgingOverviewSection({ storeId }: { storeId: string })
             </div>
           </div>
         </div>
+        <RevenuePulseCard storeId={storeId} />
         <LodgingSetupChecklist items={setupItems} wizard />
         <OpsSnapshot rooms={rooms} addons={addons} reservations={reservations} />
         <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">

@@ -8,6 +8,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { LoadingPanel, NextActions, SectionShell, StatCard } from "./LodgingOperationsShared";
 import { CatalogTable, EditorDialog } from "./CatalogTable";
 import { useLodgingCatalog } from "@/hooks/lodging/useLodgingCatalog";
+import LodgingQuickJump from "./LodgingQuickJump";
 
 interface LostFoundItem {
   id: string;
@@ -45,6 +46,7 @@ export default function LodgingLostFoundSection({ storeId }: { storeId: string }
 
   return (
     <SectionShell title="Lost & Found" subtitle="Log items left behind, contact owners, and track claims, shipments, or disposal." icon={Search}>
+      <LodgingQuickJump active="lodge-lostfound" />
       {list.isLoading ? <LoadingPanel /> : <>
         <div className="grid gap-3 sm:grid-cols-4">
           <StatCard label="All items" value={String(stats.total)} icon={Search} />

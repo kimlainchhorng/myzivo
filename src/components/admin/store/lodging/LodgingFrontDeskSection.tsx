@@ -2,6 +2,7 @@
  * Lodging — Front Desk: today board (arrivals / in-house / departures).
  */
 import { useMemo } from "react";
+import LodgingQuickJump from "./LodgingQuickJump";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -85,6 +86,7 @@ export default function LodgingFrontDeskSection({ storeId }: { storeId: string }
         <CardTitle className="flex items-center gap-2"><KeyRound className="h-5 w-5" /> Front Desk — {today}</CardTitle>
       </CardHeader>
       <CardContent className="space-y-4">
+        <LodgingQuickJump active="lodge-frontdesk" />
         <LodgingSectionStatusBanner title="Front Desk is ready" icon={KeyRound} countLabel="active reservations" countValue={activeReservations} fixLabel="Review reservations" fixTab="lodge-reservations" />
          <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-5">
           {stats.map(({ label, value, icon: Icon }) => <div key={label} className="rounded-lg border border-border bg-card p-3"><div className="flex items-center justify-between gap-2"><p className="text-[10px] font-semibold uppercase tracking-[0.12em] text-muted-foreground">{label}</p><Icon className="h-4 w-4 text-primary" /></div><p className="mt-2 text-xl font-bold text-foreground">{value}</p></div>)}

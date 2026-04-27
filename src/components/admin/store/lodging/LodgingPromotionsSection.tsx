@@ -1,13 +1,15 @@
-import { useState } from "react";
-import { Tag, Percent } from "lucide-react";
+import { useMemo, useState } from "react";
+import { Tag, Percent, DollarSign, Calendar, Sparkles } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Switch } from "@/components/ui/switch";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
 import { LoadingPanel, NextActions, SectionShell, StatCard } from "./LodgingOperationsShared";
 import { CatalogTable, EditorDialog } from "./CatalogTable";
 import { useLodgingCatalog } from "@/hooks/lodging/useLodgingCatalog";
+import { PROMO_PRESETS } from "./PromoPresets";
 
 interface Promotion {
   id: string;
@@ -36,28 +38,96 @@ const RULE_TYPES = [
   { v: "mobile", label: "Mobile-only rate" },
   { v: "member", label: "Member-only rate" },
 ];
-const blank: Partial<Promotion> = { name: "Early Bird 15%", promo_type: "percent", discount_value: 15, rule_type: "early_bird", days_in_advance: 30, redemptions_used: 0, active: true };
+const FILTERS = [
+  { v: "all", label: "All" },
+  { v: "early_bird", label: "Early Bird" },
+  { v: "last_minute", label: "Last Minute" },
+  { v: "length_of_stay", label: "Length of Stay" },
+  { v: "mobile", label: "Mobile" },
+  { v: "member", label: "Member" },
+  { v: "code", label: "Code" },
+];
+const blank: Partial<Promotion> = { name: "New promotion", promo_type: "percent", discount_value: 10, rule_type: "general", redemptions_used: 0, active: true };
 
 export default function LodgingPromotionsSection({ storeId }: { storeId: string }) {
   const { list, upsert, remove, toggleActive } = useLodgingCatalog<Promotion>("lodging_promotions", storeId);
   const [editing, setEditing] = useState<Partial<Promotion> | null>(null);
+  const [filter, setFilter] = useState<string>("all");
   const rows = list.data || [];
-  const active = rows.filter((r) => r.active !== false);
+
+  const stats = useMemo(() => {
+    const active = rows.filter((r) => r.active !== false);
+    const now = Date.now();
+    const expiringSoon = rows.filter((r) => r.ends_at && new Date(r.ends_at).getTime() - now < 14 * 86400000 && new Date(r.ends_at).getTime() > now).length;
+    const totalRedemptions = rows.reduce((s, r) => s + (r.redemptions_used || 0), 0);
+    const codeBased = rows.filter((r) => r.code).length;
+    return { activeCount: active.length, totalRedemptions, codeBased, expiringSoon };
+  }, [rows]);
+
+  const filtered = useMemo(() => {
+    if (filter === "all") return rows;
+    if (filter === "code") return rows.filter((r) => Boolean(r.code));
+    return rows.filter((r) => r.rule_type === filter);
+  }, [rows, filter]);
 
   return (
     <SectionShell title="Promotions & Discounts" subtitle="Promo codes, early-bird, last-minute, length-of-stay, and member-only rates." icon={Tag}>
       {list.isLoading ? <LoadingPanel /> : <>
-        <div className="grid gap-3 sm:grid-cols-3">
-          <StatCard label="Active promos" value={String(active.length)} icon={Tag} />
-          <StatCard label="Total redemptions" value={String(rows.reduce((s, r) => s + (r.redemptions_used || 0), 0))} icon={Percent} />
-          <StatCard label="Code-based" value={String(rows.filter((r) => r.code).length)} icon={Tag} />
+        <div className="grid gap-3 sm:grid-cols-4">
+          <StatCard label="Active promos" value={String(stats.activeCount)} icon={Tag} />
+          <StatCard label="Total redemptions" value={String(stats.totalRedemptions)} icon={Percent} />
+          <StatCard label="Code-based" value={String(stats.codeBased)} icon={Tag} />
+          <StatCard label="Expiring 14d" value={String(stats.expiringSoon)} icon={Calendar} />
+        </div>
+
+        {/* Preset gallery */}
+        <div className="rounded-lg border border-border bg-card p-3">
+          <div className="mb-2 flex items-center gap-2">
+            <Sparkles className="h-3.5 w-3.5 text-primary" />
+            <p className="text-[11px] font-bold uppercase tracking-wider text-foreground">Quick presets</p>
+            <p className="text-[10px] text-muted-foreground">One-click templates — edit anything before saving.</p>
+          </div>
+          <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
+            {PROMO_PRESETS.map((p) => (
+              <button
+                key={p.key}
+                onClick={() => setEditing({ ...blank, ...p.values })}
+                className="rounded-md border border-border bg-background p-2 text-left transition hover:border-primary/40 hover:bg-primary/5"
+              >
+                <div className="flex items-center gap-1.5">
+                  <span className="text-base">{p.emoji}</span>
+                  <p className="text-[12px] font-bold text-foreground">{p.label}</p>
+                </div>
+                <p className="mt-0.5 line-clamp-1 text-[10px] text-muted-foreground">{p.description}</p>
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {/* Filter chips */}
+        <div className="-mx-1 flex flex-wrap gap-1.5 px-1">
+          {FILTERS.map((f) => (
+            <button
+              key={f.v}
+              onClick={() => setFilter(f.v)}
+              className={cn(
+                "rounded-full border px-2.5 py-1 text-[11px] font-semibold transition",
+                filter === f.v ? "border-primary/30 bg-primary/10 text-primary" : "border-border bg-card text-foreground/70 hover:border-primary/30",
+              )}
+            >
+              {f.label}
+            </button>
+          ))}
+          <Button size="sm" className="ml-auto h-7 text-[11px]" onClick={() => setEditing({ ...blank })}>
+            <Tag className="mr-1 h-3 w-3" /> New custom promo
+          </Button>
         </div>
 
         <CatalogTable
-          rows={rows}
+          rows={filtered}
           isLoading={list.isLoading}
-          emptyTitle="No promotions yet"
-          emptyBody="Create promo codes, early-bird discounts, last-minute deals, and length-of-stay savings."
+          emptyTitle={filter === "all" ? "No promotions yet" : "No promos in this filter"}
+          emptyBody={filter === "all" ? "Pick a preset above or create a custom promo to start driving direct bookings." : "Try a different filter or create a new promo."}
           addLabel="Add promotion"
           onAddClick={() => setEditing({ ...blank })}
           onEdit={(r) => setEditing(r)}
