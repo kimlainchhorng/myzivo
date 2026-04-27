@@ -153,7 +153,7 @@ export default function CallHistoryPage({ onClose, onCallUser }: CallHistoryPage
 
   const deleteVoicemail = async (id: string) => {
     setVoicemails((prev) => prev.filter((v) => v.id !== id));
-    await supabase.from("voicemails" as never).delete().eq("id", id);
+    await supabase.from("voicemails" as any).delete().eq("id", id);
     toast.success("Voicemail deleted");
   };
 
@@ -461,7 +461,7 @@ export default function CallHistoryPage({ onClose, onCallUser }: CallHistoryPage
                           audio.play();
                           audio.onended = () => setPlayingVm(null);
                           if (!vm.is_read) {
-                            supabase.from("voicemails" as never).update({ is_read: true }).eq("id", vm.id);
+                            supabase.from("voicemails" as any).update({ is_read: true }).eq("id", vm.id);
                             setVoicemails((prev) => prev.map((v) => v.id === vm.id ? { ...v, is_read: true } : v));
                           }
                         }

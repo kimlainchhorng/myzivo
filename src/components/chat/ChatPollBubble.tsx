@@ -45,7 +45,7 @@ export default function ChatPollBubble({ pollId, question, options, isAnonymous,
 
   const handleVote = async (index: number) => {
     if (!user || myVote) return;
-    await supabase.from("chat_poll_votes" as never).insert({
+    await supabase.from("chat_poll_votes" as any).insert({
       poll_id: pollId,
       user_id: user.id,
       option_index: index,

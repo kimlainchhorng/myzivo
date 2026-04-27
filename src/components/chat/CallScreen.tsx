@@ -68,7 +68,7 @@ type CallSignalRealtimePayload = {
   };
 };
 
-const dbFrom = (table: string) => supabase.from(table as never);
+const dbFrom = (table: string) => supabase.from(table as any);
 
 interface CallScreenProps {
   recipientName: string;

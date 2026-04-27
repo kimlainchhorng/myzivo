@@ -191,7 +191,7 @@ type RealtimeInsertPayload<T> = { new: T };
 type RealtimeUpdatePayload<T> = { new: T };
 type RealtimeDeletePayload = { old?: { id?: string } };
 
-const dbFrom = (table: string) => supabase.from(table as never);
+const dbFrom = (table: string) => supabase.from(table as any);
 
 const getErrorMessage = (err: unknown): string => {
   if (err instanceof Error) return err.message;
