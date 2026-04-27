@@ -20,7 +20,7 @@ export default function ChannelPage() {
   const canPost = isOwner || role === "admin" || role === "owner";
 
   return (
-    <div className="mx-auto max-w-2xl">
+    <div className="mx-auto max-w-2xl pt-safe">
       <ChannelHeader
         channel={channel}
         isSubscribed={isSubscribed}
