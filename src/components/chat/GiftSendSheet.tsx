@@ -39,7 +39,7 @@ export default function GiftSendSheet({ open, onClose, recipientId }: Props) {
         coins: selected.coins,
         note: note.trim() || null,
       };
-      const { error } = await supabase.from("direct_messages" as any).insert({
+      const { error } = await (supabase as any).from("direct_messages").insert({
         sender_id: user.id,
         receiver_id: recipientId,
         message: `🎁 ${selected.name} (${selected.coins} coins)`,
