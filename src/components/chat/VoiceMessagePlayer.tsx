@@ -161,6 +161,7 @@ export default function VoiceMessagePlayer({
   }, [playing, writeProgress]);
 
   const toggle = useCallback(() => {
+    if (interactionDisabled) return;
     const audio = audioRef.current;
     if (!audio) return;
     if (playing) {
@@ -177,7 +178,7 @@ export default function VoiceMessagePlayer({
         })
         .catch(() => {});
     }
-  }, [playing, speed]);
+  }, [playing, speed, interactionDisabled]);
 
   const cycleSpeed = useCallback(() => {
     const idx = SPEED_OPTIONS.indexOf(speed);
