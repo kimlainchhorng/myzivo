@@ -1620,15 +1620,22 @@ export default function FeedPage() {
       <div
         className="relative w-full h-full md:flex md:items-stretch md:justify-center md:gap-6 lg:flex-1 lg:min-h-0 lg:h-0 lg:px-6 xl:px-10"
       >
-        {/* Desktop LEFT rail — navigation + services */}
-        <aside className="hidden lg:flex lg:flex-col lg:w-[260px] xl:w-[300px] shrink-0 h-full overflow-y-auto py-6 pr-2 bg-background/40 backdrop-blur-sm border-r border-border/20 rounded-r-2xl">
-          <Suspense fallback={<div className="h-32" />}>
-            <FeedSidebar />
-          </Suspense>
-        </aside>
+        {/* Desktop LEFT rail — navigation + services.
+            Hidden on `/reels` so the TikTok-style hero can fill the viewport. */}
+        {!isReelsRoute && (
+          <aside className="hidden lg:flex lg:flex-col lg:w-[260px] xl:w-[300px] shrink-0 h-full overflow-y-auto py-6 pr-2 bg-background/40 backdrop-blur-sm border-r border-border/20 rounded-r-2xl">
+            <Suspense fallback={<div className="h-32" />}>
+              <FeedSidebar />
+            </Suspense>
+          </aside>
+        )}
 
-        {/* Phone-frame on tablet, full-width on desktop */}
-        <div className="w-full h-full md:mx-auto md:rounded-2xl md:overflow-hidden md:shadow-2xl md:border md:border-white/10 md:h-[calc(100%-2rem)] md:w-auto md:aspect-[9/16] md:max-w-[420px] lg:max-w-[460px] xl:max-w-[500px] lg:my-4">
+        {/* Phone-frame on tablet, full-width on desktop.
+            On `/reels` we widen the frame since the side rails are hidden. */}
+        <div className={cn(
+          "w-full h-full md:mx-auto md:rounded-2xl md:overflow-hidden md:shadow-2xl md:border md:border-white/10 md:h-[calc(100%-2rem)] md:w-auto md:aspect-[9/16] md:max-w-[420px] lg:my-4",
+          isReelsRoute ? "lg:max-w-[520px] xl:max-w-[560px]" : "lg:max-w-[460px] xl:max-w-[500px]",
+        )}>
           <div
             className="w-full h-full overflow-y-scroll snap-y snap-mandatory"
             style={{ scrollbarWidth: "none", WebkitOverflowScrolling: "touch" } as React.CSSProperties}
@@ -1657,35 +1664,40 @@ export default function FeedPage() {
           </div>
         </div>
 
-        {/* Desktop RIGHT rail — suggested people + trending */}
-        <aside className="hidden lg:flex lg:flex-col lg:w-[300px] xl:w-[340px] shrink-0 h-full overflow-y-auto py-6 px-3 bg-background/40 backdrop-blur-sm border-l border-border/20 rounded-l-2xl gap-4">
-          {ownerStore?.isLodging && lodgingCompletion && (
-            <div className="rounded-xl border border-primary/30 bg-card/70 p-3">
-              <div className="flex items-start justify-between gap-2"><div><h3 className="text-sm font-semibold text-foreground">Hotel / Resort Admin</h3><p className="mt-0.5 text-xs text-muted-foreground truncate">{ownerStore.name}</p></div><span className="rounded-full bg-primary/10 px-2 py-0.5 text-[10px] font-bold text-primary">{lodgingCompletion.percent}%</span></div>
-              <div className="mt-3 h-1.5 overflow-hidden rounded-full bg-muted"><div className="h-full rounded-full bg-primary" style={{ width: `${lodgingCompletion.percent}%` }} /></div>
-              <p className="mt-2 text-[11px] text-muted-foreground">Next: {lodgingCompletion.nextBestAction.actionLabel}</p>
-              <div className="mt-3 grid grid-cols-2 gap-2 text-xs"><button onClick={() => navigate(`/admin/stores/${ownerStore.id}?tab=lodge-overview`)} className="rounded-lg bg-primary px-2 py-2 font-semibold text-primary-foreground">Open Hotel Admin</button><button onClick={() => navigate("/admin/lodging/qa-checklist")} className="rounded-lg bg-muted px-2 py-2 font-semibold text-foreground">Run QA</button><button onClick={() => navigate("/admin/lodging/qa-checklist")} className="col-span-2 rounded-lg bg-muted px-2 py-2 font-semibold text-foreground">View QA Report</button></div>
+        {/* Desktop RIGHT rail — suggested people + trending.
+            Hidden on `/reels` so the TikTok-style hero can fill the viewport.
+            Hotel Admin / Run QA are operator tools — never shown on the
+            consumer reels page; on `/feed` they only render for lodging owners. */}
+        {!isReelsRoute && (
+          <aside className="hidden lg:flex lg:flex-col lg:w-[300px] xl:w-[340px] shrink-0 h-full overflow-y-auto py-6 px-3 bg-background/40 backdrop-blur-sm border-l border-border/20 rounded-l-2xl gap-4">
+            {ownerStore?.isLodging && lodgingCompletion && (
+              <div className="rounded-xl border border-primary/30 bg-card/70 p-3">
+                <div className="flex items-start justify-between gap-2"><div><h3 className="text-sm font-semibold text-foreground">Hotel / Resort Admin</h3><p className="mt-0.5 text-xs text-muted-foreground truncate">{ownerStore.name}</p></div><span className="rounded-full bg-primary/10 px-2 py-0.5 text-[10px] font-bold text-primary">{lodgingCompletion.percent}%</span></div>
+                <div className="mt-3 h-1.5 overflow-hidden rounded-full bg-muted"><div className="h-full rounded-full bg-primary" style={{ width: `${lodgingCompletion.percent}%` }} /></div>
+                <p className="mt-2 text-[11px] text-muted-foreground">Next: {lodgingCompletion.nextBestAction.actionLabel}</p>
+                <div className="mt-3 grid grid-cols-2 gap-2 text-xs"><button onClick={() => navigate(`/admin/stores/${ownerStore.id}?tab=lodge-overview`)} className="rounded-lg bg-primary px-2 py-2 font-semibold text-primary-foreground">Open Hotel Admin</button><button onClick={() => navigate("/admin/lodging/qa-checklist")} className="rounded-lg bg-muted px-2 py-2 font-semibold text-foreground">Run QA</button><button onClick={() => navigate("/admin/lodging/qa-checklist")} className="col-span-2 rounded-lg bg-muted px-2 py-2 font-semibold text-foreground">View QA Report</button></div>
+              </div>
+            )}
+            <div className="px-1">
+              <h3 className="text-sm font-semibold text-foreground mb-2">Suggested for you</h3>
+              <Suspense fallback={<div className="h-40" />}>
+                <SuggestedUsersCarousel variant="inline" />
+              </Suspense>
             </div>
-          )}
-          <div className="px-1">
-            <h3 className="text-sm font-semibold text-foreground mb-2">Suggested for you</h3>
-            <Suspense fallback={<div className="h-40" />}>
-              <SuggestedUsersCarousel variant="inline" />
-            </Suspense>
-          </div>
-          <div className="mt-2 rounded-xl border border-border/30 bg-card/40 p-3">
-            <h3 className="text-sm font-semibold text-foreground mb-2">Quick links</h3>
-            <div className="grid grid-cols-2 gap-2 text-xs">
-              <button onClick={() => navigate("/flights")} className="px-2 py-2 rounded-lg bg-muted/40 hover:bg-muted text-foreground text-left">✈️ Flights</button>
-              <button onClick={() => navigate("/hotels")} className="px-2 py-2 rounded-lg bg-muted/40 hover:bg-muted text-foreground text-left">🏨 Hotels</button>
-              <button onClick={() => navigate("/eats")} className="px-2 py-2 rounded-lg bg-muted/40 hover:bg-muted text-foreground text-left">🍔 Eats</button>
-              <button onClick={() => navigate("/rides")} className="px-2 py-2 rounded-lg bg-muted/40 hover:bg-muted text-foreground text-left">🚗 Rides</button>
-              <button onClick={() => navigate("/jobs")} className="px-2 py-2 rounded-lg bg-muted/40 hover:bg-muted text-foreground text-left">💼 Jobs</button>
-              <button onClick={() => navigate("/shop")} className="px-2 py-2 rounded-lg bg-muted/40 hover:bg-muted text-foreground text-left">🛒 Shop</button>
+            <div className="mt-2 rounded-xl border border-border/30 bg-card/40 p-3">
+              <h3 className="text-sm font-semibold text-foreground mb-2">Quick links</h3>
+              <div className="grid grid-cols-2 gap-2 text-xs">
+                <button onClick={() => navigate("/flights")} className="px-2 py-2 rounded-lg bg-muted/40 hover:bg-muted text-foreground text-left flex items-center gap-2"><Plane className="w-4 h-4 text-primary shrink-0" /> Flights</button>
+                <button onClick={() => navigate("/hotels")} className="px-2 py-2 rounded-lg bg-muted/40 hover:bg-muted text-foreground text-left flex items-center gap-2"><Building2 className="w-4 h-4 text-primary shrink-0" /> Hotels</button>
+                <button onClick={() => navigate("/eats")} className="px-2 py-2 rounded-lg bg-muted/40 hover:bg-muted text-foreground text-left flex items-center gap-2"><UtensilsCrossed className="w-4 h-4 text-primary shrink-0" /> Eats</button>
+                <button onClick={() => navigate("/rides")} className="px-2 py-2 rounded-lg bg-muted/40 hover:bg-muted text-foreground text-left flex items-center gap-2"><Car className="w-4 h-4 text-primary shrink-0" /> Rides</button>
+                <button onClick={() => navigate("/jobs")} className="px-2 py-2 rounded-lg bg-muted/40 hover:bg-muted text-foreground text-left flex items-center gap-2"><Briefcase className="w-4 h-4 text-primary shrink-0" /> Jobs</button>
+                <button onClick={() => navigate("/shop")} className="px-2 py-2 rounded-lg bg-muted/40 hover:bg-muted text-foreground text-left flex items-center gap-2"><ShoppingBag className="w-4 h-4 text-primary shrink-0" /> Shop</button>
+              </div>
             </div>
-          </div>
-          <p className="text-[11px] text-muted-foreground/70 mt-auto px-1 pt-4">© ZIVO LLC · hizivo.com</p>
-        </aside>
+            <p className="text-[11px] text-muted-foreground/70 mt-auto px-1 pt-4">© ZIVO LLC · hizivo.com</p>
+          </aside>
+        )}
 
         {/* Desktop up/down navigation buttons */}
         <div className="hidden md:flex flex-col gap-3 absolute right-8 top-1/2 -translate-y-1/2 z-50">
