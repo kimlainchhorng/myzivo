@@ -291,13 +291,12 @@
      NOTE: Use !important so these classes remain effective even when combined
      with Tailwind padding utilities like py-3/pt-4 (which would otherwise override). */
   .safe-area-top {
-    /* Default: use iOS safe-area env() when available.
-       NOTE: When Capacitor's StatusBar.overlaysWebView is false (our default),
-       the native iOS WebView already lays out BELOW the status bar, so we must
-       NOT add an additional 44px fallback or the gap doubles. We honor whatever
-       env(safe-area-inset-top) reports (typically 0 on Capacitor, real notch
-       value on PWA / browser) and add nothing extra. */
-    --_safe-top: env(safe-area-inset-top, 0px);
+    /* Use the shared sticky-header token so this utility always reserves a
+       safe minimum (≥ 48px) even when env(safe-area-inset-top) returns 0
+       (Lovable mobile preview, some Capacitor / PWA WebView contexts).
+       !important so Tailwind padding utilities (py-3, pt-4, p-3 …) declared
+       on the same element cannot override the top padding. */
+    --_safe-top: var(--zivo-safe-top-sticky);
     padding-top: var(--_safe-top) !important;
   }
 
@@ -383,13 +382,14 @@
      visual content goes full-bleed, but interactive containers wrapped in
      .pt-safe / .pb-safe must always clear the notch and home indicator —
      even in browser/PWA contexts where env(safe-area-inset-*) returns 0.
-     A 12px floor guarantees buttons never touch the screen edge. */
+     !important so Tailwind padding utilities (py-3, pt-4, p-3 …) declared on
+     the same element cannot override the safe top padding. */
   .pb-safe {
-    padding-bottom: max(env(safe-area-inset-bottom, 0px), 12px);
+    padding-bottom: max(env(safe-area-inset-bottom, 0px), 12px) !important;
   }
 
   .pt-safe {
-    padding-top: max(env(safe-area-inset-top, 0px), 47px);
+    padding-top: var(--zivo-safe-top-sticky) !important;
   }
 
   /* Mobile-native overscroll behavior */
