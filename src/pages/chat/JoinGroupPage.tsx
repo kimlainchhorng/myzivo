@@ -119,7 +119,9 @@ export default function JoinGroupPage() {
   const blocked = expired || usedUp || revoked;
 
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center p-6 text-center gap-4">
+    <div className="min-h-screen flex flex-col bg-background">
+      <BackHeader onBack={goBack} />
+      <div className="flex-1 flex flex-col items-center justify-center p-6 text-center gap-4">
       {preview?.group?.avatar_url ? (
         <img
           src={preview.group.avatar_url}
