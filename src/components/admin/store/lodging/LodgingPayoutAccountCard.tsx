@@ -259,7 +259,7 @@ function ManualMethodForm({
         aba_account_id: rail === "aba" ? form.aba_account_id : null,
         is_default: methods.length === 0,
       };
-      const { error } = await supabase.from("customer_payout_methods").insert(payload);
+      const { error } = await (supabase.from("customer_payout_methods") as any).insert(payload);
       if (error) throw error;
     },
     onSuccess: () => {
