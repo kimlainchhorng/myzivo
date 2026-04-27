@@ -1,57 +1,88 @@
-# Fix: Status bar still overlapping titles on more pages
+# Correct fix: make safe-area padding actually win everywhere
 
-## What's wrong
+## Real problem
 
-The screenshots show the iOS status bar (9:55, 9:56) overlapping titles on three pages:
+The screenshots still overlap because the previous fix did not always take effect.
 
-1. **Chat Folders** — header has `pt-safe` but the floor I set last pass (44px) is just shy of what's needed for iPhones with Dynamic Island (47–59px), so the title still touches the time.
-2. **Privacy & Notifications** — same `pt-safe` issue.
-3. **New channel** — has **no header at all**, no back button, no safe-area handling. The bare `<h1>New channel</h1>` sits at the very top of the page.
+Two CSS issues are happening:
 
-In addition, the entire `/channels/*` route family shares the same problem:
-- `ChannelsDirectoryPage` — bare `<h1>Channels</h1>` at top, no safe-area.
-- `ManageChannelPage` — bare `<h1>` and a custom "Back" link, no safe-area, inconsistent with the rest of the app.
-- `ChannelPage` — relies on `<ChannelHeader>` which also has no safe-area padding.
+1. **Tailwind padding overrides `pt-safe`**
+   Headers use classes like:
+   ```tsx
+   className="... pt-safe px-3 py-3 ..."
+   ```
+   Tailwind generates `.py-3` later than our custom `.pt-safe`, so `.py-3` can override the top padding. Result: the page still only gets `py-3` instead of the iPhone-safe top padding.
 
-## Fix
+2. **`safe-area-top` still uses only `env()`**
+   Some chat pages use `safe-area-top`, but that utility currently resolves to `0px` when `env(safe-area-inset-top)` is unavailable in the Lovable preview / some WebView contexts. Result: no safe spacing.
 
-### 1. Increase `pt-safe` floor to 47px
+External references for this class of issue confirm the same root causes: `viewport-fit=cover`, Capacitor `StatusBar.overlaysWebView`, and a reliable fallback padding are required. The project already has `viewport-fit=cover` and overlays enabled, so the missing piece is a CSS fallback that actually wins over Tailwind utilities.
 
-In `src/index.css`, bump the `pt-safe` floor from 44px to 47px (Apple's official Dynamic Island/notch reserve). This removes the last sliver of overlap on Chat Folders, Privacy & Notifications, and the 16+ other pages that already use `pt-safe`.
+## Changes
 
-```css
-.pt-safe {
-  padding-top: max(env(safe-area-inset-top, 0px), 47px);
-}
+### 1. Fix the CSS utilities globally
+
+Update `src/index.css`:
+
+- `pt-safe` becomes `!important` and uses the existing sticky token:
+  ```css
+  .pt-safe {
+    padding-top: var(--zivo-safe-top-sticky) !important;
+  }
+  ```
+
+- `safe-area-top` gets a real fallback on small/mobile screens instead of raw `env()`:
+  ```css
+  .safe-area-top {
+    --_safe-top: var(--zivo-safe-top-sticky);
+    padding-top: var(--_safe-top) !important;
+  }
+  ```
+
+- Update comments to match the behavior.
+
+This is the core fix: all existing headers that already have `pt-safe`/`safe-area-top` will finally move below the iPhone clock.
+
+### 2. Apply safe-area to the remaining chat headers
+
+Add `pt-safe` or equivalent safe padding to the remaining missing chat headers:
+
+- `src/pages/chat/ContactRequestsPage.tsx`
+- `src/pages/chat/NearbyChatPage.tsx`
+- `src/pages/chat/NewBroadcastPage.tsx`
+- `src/pages/chat/SecretChatPage.tsx`
+- `src/components/chat/ChatSecurity.tsx`
+- `src/components/chat/ChatSearch.tsx`
+- `src/components/chat/ChatNotificationSettings.tsx`
+- `src/components/chat/ChatMiniApps.tsx`
+- `src/components/chat/StickerKeyboard.tsx`
+
+For `SecretChatPage`, remove the inline `env(...) + 10px` style and use the global safe utility so it cannot collapse to 10px.
+
+### 3. Clean channel form spacing
+
+`NewChannelPage` is now using a header, but the form starts too close visually after the header. Keep the safe header and ensure the body spacing is normal (`p-4`) with no title duplicated.
+
+### 4. Verify
+
+Run:
+
+```bash
+bunx tsc --noEmit
 ```
 
-### 2. Add a proper safe-area header to all four channel pages
+## Expected result
 
-Apply the standard chat-page header pattern (sticky, blurred, back button, `pt-safe`) to:
+On iPhone/mobile preview, the page titles and back buttons will sit clearly below the status bar on:
 
-- **`NewChannelPage.tsx`** — replace the bare `<h1>` with a sticky header containing a back button (using `useSmartBack("/channels")`) and the title "New channel".
-- **`ChannelsDirectoryPage.tsx`** — convert the title row into a sticky `pt-safe` header with the title "Channels" and a `+` icon button (replacing the existing "New" button) for parity with Chat Folders.
-- **`ManageChannelPage.tsx`** — replace the inline "Back" link with the standard sticky header (back button + "Manage @handle" title).
-- **`ChannelPage.tsx`** — wrap `<ChannelHeader>` so the channel hero respects safe-area, OR add a thin top spacer of `pt-safe` above it.
+- Chat Folders
+- Privacy & Notifications
+- New channel
+- Contact Requests
+- Nearby
+- New Broadcast
+- Secret Chat
+- Chat Search / Security / Mini Apps / Notification Settings
+- Channel pages
 
-Each header follows the proven pattern already used by `CustomFoldersPage`:
-
-```tsx
-<header className="sticky top-0 z-10 bg-background/85 backdrop-blur-xl border-b border-border/40 pt-safe px-3 py-3 flex items-center gap-2">
-  <button onClick={goBack} className="p-1.5 rounded-full hover:bg-muted/60">
-    <ChevronLeft className="w-5 h-5" />
-  </button>
-  <h1 className="text-base font-semibold flex-1">…</h1>
-</header>
-```
-
-### 3. Verify
-
-- Run `bunx tsc --noEmit` to confirm no type regressions.
-- Visually re-check the three screenshots' pages — title should sit ~3–6px below the status bar, never under it.
-
-## Out of scope
-
-- No backend, routing, or data changes.
-- No restyling beyond adding the standard header pattern.
-- No changes to pages already verified in the previous pass.
+No more title text under the clock/battery area.
