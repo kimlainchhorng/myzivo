@@ -463,10 +463,7 @@ export default function StoresListPage() {
       </div>
 
       {/* Header */}
-      <div
-        className="sticky top-0 z-40 bg-background/95 backdrop-blur-xl border-b border-border/40"
-        style={{ paddingTop: "max(env(safe-area-inset-top, 0px), 8px)" }}
-      >
+      <div className="sticky top-0 z-40 bg-background/95 backdrop-blur-xl border-b border-border/40 pt-safe">
         <div className="px-4 pt-2 pb-3">
           <AnimatePresence mode="wait">
             {searchOpen ? (
