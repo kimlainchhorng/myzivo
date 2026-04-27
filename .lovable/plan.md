@@ -1,48 +1,38 @@
-# Fix "User" + blank avatars on Feed
+## Polish the `/flights` desktop hero
 
-## Root cause confirmed
+The current page has visual mismatches and readability issues. Fixes are scoped to two files.
 
-The previous fix added `display_name` to the profiles query in `FeedPage.tsx`:
+### Issues to fix
+1. **"Search Flights" button text is washed out** — sky/cloud gradient behind the label kills contrast.
+2. **Hotel-themed headlines** appear in a flights page ("Dream Destinations / Best prices guaranteed", "Travel Your Way") — recycled from a multi-vertical hero slider.
+3. **"Departure → Return" label** looks awkward and is redundant since each field has its own label.
+4. **Inputs feel flat / placeholders too light** — "From where?", "To where?", "Select date" are barely visible.
+5. **Card has an oversized cyan blur glow** that washes out the search form on light backgrounds.
+6. **Slide indicators (3 dashes)** under the headline are unlabeled and look accidental.
+7. **Trust strip dots/icons** alignment is loose.
 
-```ts
-.select("id, user_id, full_name, display_name, avatar_url, is_verified")
-```
+### Changes
 
-But `profiles.display_name` **does not exist** in the database. The columns available for naming are `full_name` and `username` (verified via `information_schema`).
+**`src/pages/FlightLanding.tsx`**
+- Replace the 3-slide rotating hero copy with flight-only headlines:
+  - "Search & Compare Flights" / "500+ airlines, one search"
+  - "Find Your Next Trip" / "Best fares, real-time pricing"
+  - "Fly Smarter with ZIVO" / "Trusted licensed partners"
+- Remove the slide indicator dots (or hide unless 2+ slides intentionally shown).
+- Reduce the outer card glow opacity from `opacity-40` to `opacity-20` and tighten blur.
+- Tighten trust strip spacing (`gap-4` instead of `gap-6`, smaller separator dots).
 
-Result: the entire profile fetch errors out silently, `profileMap` is empty, and every user post falls back to `author_name = "User"` and `author_avatar = null` — exactly what the screenshot shows.
+**`src/components/flight/FlightSearchFormPro.tsx`** (the actual form rendered on desktop)
+- Search button: replace cloudy gradient with solid `bg-primary` (or sky-600 → blue-700) + white bold text, add `shadow-md`, stronger hover state. Ensure `text-primary-foreground` not muted.
+- Replace "Departure → Return" group label with two clear field labels ("Departure date" / "Return date") that stay above each input individually.
+- Increase placeholder contrast: `placeholder:text-foreground/55` instead of muted/30.
+- Field backgrounds: `bg-muted/70` with `border-border` (not `border-border/30`) so fields read as inputs on light hero.
 
-The same bad column is also referenced in the mapping line:
+### Out of scope
+- Mobile hero (different component path)
+- Flight results page styling
+- Header/nav (already polished separately)
 
-```ts
-author_name: profile?.display_name || profile?.full_name || "User",
-```
-
-## Fixes
-
-### 1. Repair the profiles query (primary fix)
-
-In `src/pages/FeedPage.tsx` (`useQuery(["customer-feed"])`):
-
-- Replace `display_name` with `username` in the `.select(...)`.
-- Update the mapping fallback to: `profile?.full_name || profile?.username || "User"`.
-
-This restores names AND avatars for every user post in the feed (photo and video).
-
-### 2. Apply the same fix to the sound-overlay query
-
-Lines ~1054–1068 also use `profiles(display_name)` for `user_posts`. Switch to `profiles(full_name, username)` and update the fallback.
-
-### 3. Other issues visible in the screenshot (smaller polish)
-
-- **Duplicate "Search people…" bar**: there's one in the global header and another at the top of the feed body. Hide the in-feed one on desktop (lg+) since the header search already covers it.
-- **Feed not centered**: on desktop the post column is pushed to the right. Add `mx-auto` / proper grid sizing to the feed container so it sits centered between the sidebar and the right edge.
-- **"Starting live preview…" toast**: this is a Lovable preview environment toast, not part of the app. No action needed.
-
-## Files to change
-
-- `src/pages/FeedPage.tsx` — fix profiles select + mapping in 2 places, center feed column, hide duplicate search bar on desktop.
-
-## Verification
-
-After the fix, query `profiles` with the actual user_ids from `user_posts` to confirm rows return, then reload `/feed` — names and avatars should populate. No DB migration needed.
+### Files touched
+- `src/pages/FlightLanding.tsx`
+- `src/components/flight/FlightSearchFormPro.tsx`

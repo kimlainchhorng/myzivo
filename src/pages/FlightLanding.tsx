@@ -75,9 +75,9 @@ function ScrollReveal3D({ children, className, delay = 0 }: { children: React.Re
 
 /* ─── Cinematic hero backgrounds ─── */
 const heroSlides = [
-  { src: heroFlights, accent: "210 100% 55%", label: "Explore the Skies", sub: "500+ airlines worldwide" },
-  { src: heroHotels, accent: "38 90% 55%", label: "Dream Destinations", sub: "Best prices guaranteed" },
-  { src: heroCars, accent: "270 70% 55%", label: "Travel Your Way", sub: "Search. Compare. Save." },
+  { src: heroFlights, accent: "210 100% 55%", label: "Search & Compare Flights", sub: "500+ airlines, one search" },
+  { src: heroHotels, accent: "210 90% 55%", label: "Find Your Next Trip", sub: "Best fares, real-time pricing" },
+  { src: heroCars, accent: "210 80% 55%", label: "Fly Smarter with ZIVO", sub: "Trusted licensed partners" },
 ];
 
 /* ─── Fallback routes ─── */
@@ -419,19 +419,7 @@ function DesktopCinematicHero() {
               </AnimatePresence>
             </motion.div>
 
-            {/* Slide indicators */}
-            <div className="flex justify-center gap-2 mt-4">
-              {heroSlides.map((_, i) => (
-                <button
-                  key={i}
-                  onClick={() => setCurrentSlide(i)}
-                  className={cn(
-                    "h-1.5 rounded-full transition-all duration-500",
-                    i === currentSlide ? "w-8 bg-primary" : "w-3 bg-muted-foreground/30 hover:bg-muted-foreground/50"
-                  )}
-                />
-              ))}
-            </div>
+            {/* Slide indicators removed for a cleaner hero */}
           </motion.div>
 
           {/* ── Search Form — 3D floating card ── */}
@@ -442,13 +430,13 @@ function DesktopCinematicHero() {
             style={{ transformStyle: "preserve-3d", scale: formScale }}
             className="max-w-3xl mx-auto relative"
           >
-            {/* Outer glow */}
+            {/* Outer glow — subtle */}
             <motion.div
-              className="absolute -inset-2 rounded-3xl blur-xl opacity-40"
+              className="absolute -inset-1 rounded-3xl blur-lg opacity-20"
               animate={{
                 background: [
-                  `linear-gradient(135deg, hsl(${currentAccent} / 0.3), hsl(var(--primary) / 0.2))`,
-                  `linear-gradient(225deg, hsl(var(--primary) / 0.3), hsl(${currentAccent} / 0.2))`,
+                  `linear-gradient(135deg, hsl(${currentAccent} / 0.25), hsl(var(--primary) / 0.15))`,
+                  `linear-gradient(225deg, hsl(var(--primary) / 0.25), hsl(${currentAccent} / 0.15))`,
                 ],
               }}
               transition={{ duration: 3, repeat: Infinity, repeatType: "reverse" }}
@@ -468,7 +456,7 @@ function DesktopCinematicHero() {
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.4, duration: 0.5 }}
-            className="flex items-center justify-center gap-6 mt-6 text-[11px] text-muted-foreground"
+            className="flex items-center justify-center gap-4 mt-6 text-[11px] text-muted-foreground"
           >
             {[
               { icon: Sparkles, label: "500+ Airlines" },
@@ -479,10 +467,10 @@ function DesktopCinematicHero() {
               <motion.span
                 key={item.label}
                 className="flex items-center gap-1.5"
-                whileHover={{ scale: 1.08, y: -2 }}
+                whileHover={{ scale: 1.06, y: -1 }}
                 transition={{ type: "spring", stiffness: 400, damping: 20 }}
               >
-                {i > 0 && <span className="w-1 h-1 rounded-full bg-border mr-4" />}
+                {i > 0 && <span className="w-0.5 h-0.5 rounded-full bg-muted-foreground/40 mr-3" />}
                 <item.icon className="w-3.5 h-3.5 text-primary/60" /> {item.label}
               </motion.span>
             ))}
