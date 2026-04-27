@@ -108,6 +108,7 @@ export default function GroupChat({ groupId, groupName, groupAvatar, onClose }: 
   const [showInvites, setShowInvites] = useState(false);
   const [groupCall, setGroupCall] = useState<"audio" | "video" | null>(null);
   const voice = useVoiceRecorder();
+  const voiceUploadInFlightRef = useRef(false);
 
   const scrollToBottom = useCallback(() => {
     setTimeout(() => scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight, behavior: "smooth" }), 50);
