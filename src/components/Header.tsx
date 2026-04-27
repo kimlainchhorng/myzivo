@@ -110,7 +110,7 @@ const Header = () => {
                 className="cursor-pointer transition-transform duration-150 hover:scale-[1.02] active:scale-[0.98]" 
                 onClick={() => navigate("/")}
               >
-                <ZivoLogo size="md" />
+                <ZivoLogo size="sm" />
               </div>
               <BetaBadge variant="compact" className="hidden sm:flex" />
             </div>
