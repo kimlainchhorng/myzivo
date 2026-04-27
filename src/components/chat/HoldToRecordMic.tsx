@@ -164,23 +164,26 @@ export default function HoldToRecordMic({ voice, className }: Props) {
     );
     const finalWillCancel = dragX < -CANCEL_THRESHOLD;
 
-    if (finalWillCancel) {
-      await voice.cancelRecording();
-      haptic(20);
-    } else if (recordedMs < MIN_RECORD_MS) {
-      console.warn("[voice] discarded — too short", { recordedMs });
-      await voice.cancelRecording();
-      toast("Hold to record", { duration: 1500 });
-      haptic(10);
-    } else {
-      // Stop = send (PersonalChat's effect uploads when audioBlob lands)
-      haptic(8);
-      await voice.stopRecording();
-    }
+    // Reset gesture UI immediately so the user feels instant response,
+    // then let the recorder finalize the blob asynchronously in the background.
     setDragX(0);
     setDragY(0);
     dragXMV.set(0);
     dragYMV.set(0);
+
+    if (finalWillCancel) {
+      haptic(20);
+      void voice.cancelRecording();
+    } else if (recordedMs < MIN_RECORD_MS) {
+      console.warn("[voice] discarded — too short", { recordedMs });
+      haptic(10);
+      void voice.cancelRecording();
+      toast("Hold to record", { duration: 1500 });
+    } else {
+      // Stop = send (PersonalChat's effect uploads when audioBlob lands)
+      haptic(8);
+      void voice.stopRecording();
+    }
   };
 
   // Locked-mode actions
