@@ -253,30 +253,74 @@ export default function GroupChat({ groupId, groupName, groupAvatar, onClose }: 
     setSending(false);
   }, [groupId, input, replyTo, scrollToBottom, sending, user?.id]);
 
-  // Voice send
+  // Voice send — show local bubble immediately, then replace with uploaded row.
   useEffect(() => {
-    if (voice.audioBlob && !voice.isRecording) {
-      const blob = voice.audioBlob;
-      const upload = async () => {
-        try {
-          const ext = "webm";
-          const path = `${user?.id}/${Date.now()}.${ext}`;
-          const { error } = await supabase.storage
-            .from("chat-media-files")
-            .upload(path, blob, { contentType: "audio/webm" });
-          if (error) throw error;
-          const { data: urlData } = supabase.storage.from("chat-media-files").getPublicUrl(path);
-          await handleSend(undefined, urlData.publicUrl);
-        } catch (e) {
+    if (!voice.audioBlob || voice.isRecording || !user?.id || voiceUploadInFlightRef.current) return;
+    let cancelled = false;
+    voiceUploadInFlightRef.current = true;
+    const blob = voice.audioBlob;
+    const durationMs = Math.max(0, Math.round(voice.durationMs || (voice.duration || 0) * 1000));
+    const localUrl = URL.createObjectURL(blob);
+    const optimisticId = `opt-voice-${Date.now()}`;
+    const optimisticMsg: GroupMessage = {
+      id: optimisticId,
+      group_id: groupId,
+      sender_id: user.id,
+      message: "",
+      image_url: null,
+      voice_url: localUrl,
+      message_type: "voice",
+      reply_to_id: replyTo?.id || null,
+      created_at: new Date().toISOString(),
+      file_payload: { duration_ms: durationMs },
+      _local_voice_url: localUrl,
+    };
+    setMessages((prev) => [...prev, optimisticMsg]);
+    scrollToBottom();
+
+    const upload = async () => {
+      try {
+        const path = `${user.id}/${Date.now()}.webm`;
+        const { error: uploadError } = await supabase.storage
+          .from("chat-media-files")
+          .upload(path, blob, { contentType: "audio/webm" });
+        if (uploadError) throw uploadError;
+        const { data: urlData } = supabase.storage.from("chat-media-files").getPublicUrl(path);
+        if (cancelled) return;
+        const insertData: GroupMessageInsert = {
+          group_id: groupId,
+          sender_id: user.id,
+          message: "",
+          message_type: "voice",
+          voice_url: urlData.publicUrl,
+          reply_to_id: replyTo?.id || undefined,
+          file_payload: { duration_ms: durationMs },
+        };
+        const { data, error: insertError } = await dbFrom("group_messages")
+          .insert(insertData)
+          .select()
+          .single();
+        if (insertError) throw insertError;
+        setMessages((prev) => prev.map((m) => m.id === optimisticId ? (data as GroupMessage) : m));
+      } catch (e) {
+        if (!cancelled) {
           console.warn("[voice/group] upload/send failed", e);
+          setMessages((prev) => prev.filter((m) => m.id !== optimisticId));
           toast.error("Failed to send voice note");
-        } finally {
-          voice.clearBlob();
         }
-      };
-      upload();
-    }
-  }, [voice.audioBlob, voice.isRecording, handleSend, user?.id, voice]);
+      } finally {
+        URL.revokeObjectURL(localUrl);
+        if (!cancelled) voice.clearBlob();
+        voiceUploadInFlightRef.current = false;
+      }
+    };
+    void upload();
+
+    return () => {
+      cancelled = true;
+      URL.revokeObjectURL(localUrl);
+    };
+  }, [voice.audioBlob, voice.isRecording, voice, user?.id, groupId, replyTo?.id, scrollToBottom]);
 
   // Image upload
   const handleImageSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
