@@ -1053,7 +1053,7 @@ function SoundOverlay({
 
       const { data: userPosts } = await db
         .from("user_posts")
-        .select("id, media_urls, media_type, profiles(display_name)")
+        .select("id, media_urls, media_type, profiles(full_name, username)")
         .eq("audio_name", soundName)
         .order("created_at", { ascending: false })
         .limit(30);
@@ -1065,7 +1065,7 @@ function SoundOverlay({
         })),
         ...(userPosts || []).map((p: any) => ({
           id: p.id, media_urls: p.media_urls || [], media_type: p.media_type,
-          views: 0, author: p.profiles?.display_name || "User",
+          views: 0, author: p.profiles?.full_name || p.profiles?.username || "User",
         })),
       ];
     },
@@ -1388,7 +1388,7 @@ export default function FeedPage() {
           ? supabase.from("store_profiles").select("id, name, logo_url, slug, is_verified").in("id", storeIds)
           : Promise.resolve({ data: [] as any[] }),
         userIds.length
-          ? supabase.from("profiles").select("id, user_id, full_name, display_name, avatar_url, is_verified").or(`user_id.in.(${(userIds as string[]).join(",")}),id.in.(${(userIds as string[]).join(",")})`)
+          ? supabase.from("profiles").select("id, user_id, full_name, username, avatar_url, is_verified").or(`user_id.in.(${(userIds as string[]).join(",")}),id.in.(${(userIds as string[]).join(",")})`)
           : Promise.resolve({ data: [] as any[] }),
       ]);
 
@@ -1435,7 +1435,7 @@ export default function FeedPage() {
           audio_name: post.audio_name || null,
           source: "user",
           author_id: post.user_id,
-          author_name: profile?.display_name || profile?.full_name || "User",
+          author_name: profile?.full_name || profile?.username || "User",
           author_avatar: profile?.avatar_url || null,
           author_is_verified: !!profile?.is_verified,
         });
