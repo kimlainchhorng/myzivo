@@ -1,64 +1,24 @@
-# Add "Software & Apps" Sidebar Section (Hotel & Shop)
+# Fix mismatched icons on the Software & Apps page
 
-Add a new sidebar entry that lets store owners (both hotels and regular shops) **download companion software / mobile apps** to operate their business — e.g., POS app, Front-Desk app, Housekeeping app, Driver app, Printer drivers.
+The current cards use icons that don't visually match the app's purpose. Update them to clearer, more recognizable Lucide icons.
 
-## What the user gets
+## Icon swaps in `src/components/admin/store/SoftwareDownloadsSection.tsx`
 
-A new **Software & Apps** item in the sidebar (visible to both lodging and non-lodging stores). Clicking it opens a dedicated tab with a clean grid of downloadable apps:
+| App | Current icon | New icon | Why |
+|---|---|---|---|
+| ZIVO Manager | `Briefcase` (suitcase) | `LayoutDashboard` | Reads as a control panel, matches "manager dashboard" |
+| ZIVO Front Desk | `ConciergeBell` (tiny bell) | `BellRing` | Larger, clearer reception bell |
+| ZIVO Housekeeping | `BedDouble` (bed) | `Brush` | Bed = rooms; Brush = cleaning, the actual task |
+| ZIVO Driver | `Car` (small hatchback) | `Navigation` | Navigation arrow conveys driving/turn-by-turn |
+| ZIVO Property Suite | `Building2` (generic building) | `Hotel` | Purpose-built hotel building icon |
+| ZIVO POS | `ShoppingBag` | unchanged | Already correct |
+| ZIVO Kitchen Display | `ChefHat` | unchanged | Already correct |
+| Receipt Printer | `Printer` | unchanged | Already correct |
+| Inventory Scanner | `ScanBarcode` | unchanged | Already correct |
 
-- **For Hotels:** Front Desk app, Housekeeping app, Property Manager (desktop), Receipt Printer driver
-- **For Shops/Eats/Auto-Repair:** POS app, Kitchen Display, Inventory Scanner, Receipt Printer driver
-- **For everyone:** ZIVO Driver app, ZIVO Manager mobile app
+## Changes required
 
-Each card shows: app icon, name, short description, supported platforms (iOS / Android / Windows / macOS), version badge, and **Download** buttons (App Store, Google Play, .exe, .dmg). Coming-soon apps show a "Notify me" button instead.
+1. Update the `lucide-react` import block at the top of the file — replace `Briefcase, ConciergeBell, BedDouble, Car, Building2` with `LayoutDashboard, BellRing, Brush, Navigation, Hotel`.
+2. Update the five `icon:` fields in the `SOFTWARE_CATALOG` entries accordingly.
 
-## Files to change
-
-**1. `src/components/admin/StoreOwnerLayout.tsx`**
-- Add `Download` icon import.
-- Insert a new sidebar item near the bottom of `navItems`:
-  ```ts
-  { id: "software", label: "Software & Apps", icon: Download }
-  ```
-- Place it after `livestream` so it appears for both lodging and non-lodging stores.
-
-**2. `src/lib/admin/storeTabRouting.ts`**
-- Add `"software"` to `BASE_TAB_IDS` so the tab is recognized by the router and survives reload via `?tab=software`.
-
-**3. `src/components/admin/store/SoftwareDownloadsSection.tsx` (NEW)**
-- Self-contained section component, accepts `storeCategory` prop.
-- Defines a `SOFTWARE_CATALOG` array with entries:
-  ```ts
-  { id, name, description, audience: "hotel" | "shop" | "all",
-    platforms: ["ios"|"android"|"windows"|"macos"],
-    downloads: { ios?, android?, windows?, macos? },
-    icon, status: "available" | "coming-soon", version }
-  ```
-- Filters catalog by `storeCategory` (hotel-only apps hidden for shops, and vice-versa).
-- Renders responsive grid (`grid-cols-1 md:grid-cols-2 xl:grid-cols-3`), v2026 high-density compact cards using `.zivo-card-organic`, Lucide icons, emerald accents.
-- Platform badges + Download buttons that open external links via `window.open(url, "_blank", "noopener,noreferrer")` (use `urlSafety` allowlist for store URLs).
-
-**4. `src/pages/admin/AdminStoreEditPage.tsx`**
-- Add title entry: `activeTab === "software" ? "Software & Apps"` to `storeOwnerTitle`.
-- Add a new `<TabsContent value="software">` rendering `<SoftwareDownloadsSection storeCategory={form.category} />` near the other tab contents.
-
-## Initial catalog (placeholder links — owner can swap real URLs later)
-
-| App | Audience | Platforms |
-|---|---|---|
-| ZIVO Manager | all | iOS, Android |
-| ZIVO POS | shop | iOS, Android, Windows |
-| ZIVO Front Desk | hotel | iOS, iPad, Windows |
-| ZIVO Housekeeping | hotel | iOS, Android |
-| ZIVO Kitchen Display | shop (eats) | iPad, Android tablet |
-| ZIVO Driver | all | iOS, Android |
-| Receipt Printer Driver | all | Windows, macOS |
-| Inventory Scanner | shop | Android |
-
-Coming-soon entries get a disabled button + "Notify me" toast.
-
-## Notes
-
-- No backend changes needed — this is a static catalog page.
-- Follows existing sidebar conventions (Lucide icon, label string, id wired through `storeTabRouting`).
-- Honors the project's "no emojis, Lucide-only" icon standard and v2026 compact UI density.
+No other files change. Runtime behaviour, layout, and copy stay the same.
