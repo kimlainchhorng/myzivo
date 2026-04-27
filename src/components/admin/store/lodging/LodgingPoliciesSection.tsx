@@ -10,8 +10,6 @@ import { LoadingPanel, NextActions, SectionShell, StatCard, money, useLodgingOps
 import { CatalogTable, EditorDialog } from "./CatalogTable";
 import { useLodgingCatalog } from "@/hooks/lodging/useLodgingCatalog";
 import { useLodgePropertyProfile } from "@/hooks/lodging/useLodgePropertyProfile";
-import { supabase } from "@/integrations/supabase/client";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import LodgingQuickJump from "./LodgingQuickJump";
 import LodgingSectionStatusBanner from "./LodgingSectionStatusBanner";
