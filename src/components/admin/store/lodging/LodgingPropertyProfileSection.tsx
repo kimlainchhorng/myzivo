@@ -22,6 +22,8 @@ import {
   type NearbyDistance,
 } from "@/hooks/lodging/useLodgePropertyProfile";
 import PropertyCompletenessMeter, { computeCompleteness } from "./PropertyCompletenessMeter";
+import LodgingQuickJump from "./LodgingQuickJump";
+import LodgingSectionStatusBanner from "./LodgingSectionStatusBanner";
 import CheckInOutCard from "./property-profile/CheckInOutCard";
 import CancellationPolicyCard from "./property-profile/CancellationPolicyCard";
 import PetChildPolicyCard from "./property-profile/PetChildPolicyCard";
@@ -155,8 +157,12 @@ export default function LodgingPropertyProfileSection({ storeId }: { storeId: st
   // Search filter for chip groups (case-insensitive)
   const matches = (s: string) => !search || s.toLowerCase().includes(search.toLowerCase());
 
+  const completenessScore = computeCompleteness(form).score;
+
   return (
     <div className="space-y-3 pb-24">
+      <LodgingQuickJump active="lodge-property" />
+      <LodgingSectionStatusBanner title="Property Profile" icon={Hotel} countLabel="Completeness" countValue={`${completenessScore}%`} fixLabel="Open Gallery" fixTab="lodge-gallery" />
       {/* Sticky header */}
       <div className="sticky top-0 z-20 -mx-1 px-1 py-2 bg-background/95 backdrop-blur-sm border-b border-border">
         <div className="flex items-center gap-3 flex-wrap">
