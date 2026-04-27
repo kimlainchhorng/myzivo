@@ -33,20 +33,14 @@ function useOtaBlocks(roomId?: string) {
     queryFn: async () => {
       if (!roomId) return [] as OtaBlock[];
       const { data, error } = await supabase
-        .from("lodging_room_blocks" as any)
-        .select("start_date, end_date, source")
-        .eq("room_id", roomId);
+        .from("lodge_room_blocks" as any)
+        .select("block_date, source")
+        .eq("room_id", roomId)
+        .neq("source", "manual");
       if (error) return [] as OtaBlock[];
-      const out: OtaBlock[] = [];
-      for (const row of (data || []) as any[]) {
-        if (!row.start_date) continue;
-        const start = new Date(row.start_date);
-        const end = row.end_date ? new Date(row.end_date) : new Date(row.start_date);
-        for (let d = new Date(start); d <= end; d.setDate(d.getDate() + 1)) {
-          out.push({ block_date: ymd(d), source: row.source });
-        }
-      }
-      return out;
+      return ((data || []) as any[])
+        .filter(r => r.block_date)
+        .map(r => ({ block_date: r.block_date, source: r.source })) as OtaBlock[];
     },
     enabled: !!roomId,
   });

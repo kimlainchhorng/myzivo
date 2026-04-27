@@ -47,11 +47,20 @@ Deno.serve(async (req) => {
 
     // Pull blocks for this room (or property if room_id is null)
     let blocksQ = admin
-      .from("lodging_room_blocks")
-      .select("id, start_date, end_date, summary, source")
+      .from("lodge_room_blocks")
+      .select("id, block_date, summary, source, reason")
       .eq("store_id", conn.store_id);
     if (conn.room_id) blocksQ = blocksQ.eq("room_id", conn.room_id);
     const { data: blocks = [] } = await blocksQ;
+
+    // Also include confirmed reservations so external OTAs see real bookings
+    let resQ = admin
+      .from("lodge_reservations")
+      .select("id, room_id, check_in, check_out, status")
+      .eq("store_id", conn.store_id)
+      .in("status", ["confirmed", "checked_in", "checked_out"]);
+    if (conn.room_id) resQ = resQ.eq("room_id", conn.room_id);
+    const { data: reservations = [] } = await resQ;
 
     const now = new Date();
     const stamp = `${toICalDate(now)}T${pad(now.getUTCHours())}${pad(now.getUTCMinutes())}${pad(now.getUTCSeconds())}Z`;
@@ -64,14 +73,31 @@ Deno.serve(async (req) => {
       `X-WR-CALNAME:${conn.display_name || "Zivo Lodging Calendar"}`,
     ];
 
+    const addDay = (d: string) => {
+      const dt = new Date(d + "T00:00:00Z");
+      dt.setUTCDate(dt.getUTCDate() + 1);
+      return dt.toISOString().slice(0, 10);
+    };
+
     for (const b of blocks || []) {
       lines.push("BEGIN:VEVENT");
-      lines.push(`UID:${b.id}@zivo`);
+      lines.push(`UID:block-${b.id}@zivo`);
       lines.push(`DTSTAMP:${stamp}`);
-      lines.push(`DTSTART;VALUE=DATE:${plainDateToICal(b.start_date)}`);
-      lines.push(`DTEND;VALUE=DATE:${plainDateToICal(b.end_date)}`);
-      lines.push(`SUMMARY:${(b.summary || "Blocked").replace(/[\r\n]+/g, " ")}`);
-      lines.push(`DESCRIPTION:Source ${b.source}`);
+      lines.push(`DTSTART;VALUE=DATE:${plainDateToICal(b.block_date)}`);
+      lines.push(`DTEND;VALUE=DATE:${plainDateToICal(addDay(b.block_date))}`);
+      lines.push(`SUMMARY:${(b.summary || b.reason || "Blocked").replace(/[\r\n]+/g, " ")}`);
+      lines.push(`DESCRIPTION:Source ${b.source || "manual"}`);
+      lines.push("END:VEVENT");
+    }
+
+    for (const r of reservations || []) {
+      lines.push("BEGIN:VEVENT");
+      lines.push(`UID:res-${r.id}@zivo`);
+      lines.push(`DTSTAMP:${stamp}`);
+      lines.push(`DTSTART;VALUE=DATE:${plainDateToICal(r.check_in)}`);
+      lines.push(`DTEND;VALUE=DATE:${plainDateToICal(r.check_out)}`);
+      lines.push(`SUMMARY:Reservation`);
+      lines.push(`DESCRIPTION:Zivo reservation ${r.status}`);
       lines.push("END:VEVENT");
     }
 
