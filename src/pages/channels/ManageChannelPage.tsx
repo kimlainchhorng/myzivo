@@ -113,11 +113,14 @@ export default function ManageChannelPage() {
   }
 
   return (
-    <div className="mx-auto max-w-2xl p-4">
-      <Button asChild variant="ghost" size="sm" className="mb-3 gap-1">
-        <Link to={`/c/${channel.handle}`}><ArrowLeft className="h-4 w-4" /> Back</Link>
-      </Button>
-      <h1 className="mb-4 text-2xl font-bold">Manage @{channel.handle}</h1>
+    <div className="min-h-screen bg-background">
+      <header className="sticky top-0 z-10 bg-background/85 backdrop-blur-xl border-b border-border/40 pt-safe px-3 py-3 flex items-center gap-2">
+        <button onClick={goBack} className="p-1.5 rounded-full hover:bg-muted/60" aria-label="Back">
+          <ChevronLeft className="w-5 h-5" />
+        </button>
+        <h1 className="text-base font-semibold flex-1 truncate">Manage @{channel.handle}</h1>
+      </header>
+      <div className="mx-auto max-w-2xl p-4">
 
       <Tabs defaultValue="details">
         <TabsList>
