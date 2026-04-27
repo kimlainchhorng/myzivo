@@ -124,6 +124,7 @@ export default function LodgingReportsSection({ storeId }: { storeId: string }) 
         )}
       </CardContent>
     </Card>
+    </div>
   );
 }
 

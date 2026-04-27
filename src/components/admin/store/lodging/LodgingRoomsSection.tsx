@@ -837,6 +837,7 @@ export default function LodgingRoomsSection({ storeId }: { storeId: string }) {
         </DialogContent>
       </Dialog>
     </Card>
+    </div>
   );
 }
 
