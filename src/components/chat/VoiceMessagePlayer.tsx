@@ -296,47 +296,8 @@ export default function VoiceMessagePlayer({
     longPressTimer.current = null;
   }, []);
 
-  // Bubble-level long-press → opens iOS-style action sheet (replaces the
-  // native iOS text-selection loupe that would otherwise hijack the gesture).
-  const [sheetOpen, setSheetOpen] = useState(false);
-  const bubbleLongPressTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const bubbleLongPressFired = useRef(false);
-  const bubbleStartPos = useRef<{ x: number; y: number } | null>(null);
-  const cancelBubbleLongPress = useCallback(() => {
-    if (bubbleLongPressTimer.current) {
-      clearTimeout(bubbleLongPressTimer.current);
-      bubbleLongPressTimer.current = null;
-    }
-    bubbleStartPos.current = null;
-  }, []);
-  const onBubblePointerDown = useCallback((e: React.PointerEvent) => {
-    // Ignore right-click / mouse secondary; let onContextMenu handle desktop.
-    if (e.pointerType === "mouse" && e.button !== 0) return;
-    bubbleLongPressFired.current = false;
-    bubbleStartPos.current = { x: e.clientX, y: e.clientY };
-    bubbleLongPressTimer.current = setTimeout(() => {
-      bubbleLongPressFired.current = true;
-      try { (navigator as any).vibrate?.(10); } catch { /* noop */ }
-      setSheetOpen(true);
-    }, 500);
-  }, []);
-  const onBubblePointerMove = useCallback((e: React.PointerEvent) => {
-    if (!bubbleStartPos.current) return;
-    const dx = e.clientX - bubbleStartPos.current.x;
-    const dy = e.clientY - bubbleStartPos.current.y;
-    if (dx * dx + dy * dy > 100) cancelBubbleLongPress();
-  }, [cancelBubbleLongPress]);
-  const onBubbleContextMenu = useCallback((e: React.MouseEvent) => {
-    // Suppress iOS "Copy / Look Up" callout AND desktop right-click menu;
-    // open our action sheet instead.
-    e.preventDefault();
-    setSheetOpen(true);
-  }, []);
-  const toggleDebugFromSheet = useCallback(() => {
-    const next = !isVoiceDebugEnabled();
-    setVoiceDebugEnabled(next);
-    toast(next ? "Voice debug enabled" : "Voice debug disabled");
-  }, []);
+  // Long-press is now owned by the bubble wrapper in PersonalChat/GroupChat,
+  // which renders <VoiceBubbleLongPressMenu>. We only suppress iOS callout here.
 
   return (
     <div
@@ -347,30 +308,10 @@ export default function VoiceMessagePlayer({
         WebkitTouchCallout: "none",
         WebkitTapHighlightColor: "transparent",
       } as React.CSSProperties}
-      onPointerDown={onBubblePointerDown}
-      onPointerMove={onBubblePointerMove}
-      onPointerUp={cancelBubbleLongPress}
-      onPointerCancel={cancelBubbleLongPress}
-      onPointerLeave={cancelBubbleLongPress}
-      onContextMenu={onBubbleContextMenu}
-      onContextMenuCapture={onBubbleContextMenu}
+      onContextMenu={(e) => e.preventDefault()}
       onDragStartCapture={(e) => e.preventDefault()}
       onSelectCapture={(e) => e.preventDefault()}
     >
-
-      <VoiceBubbleActionSheet
-        open={sheetOpen}
-        onOpenChange={setSheetOpen}
-        audioUrl={url}
-        canReply={!!onReply && !isFailed && !isUploading}
-        canResend={!!onRetry && isFailed}
-        isFailedOrUploading={isFailed || isUploading}
-        debugEnabled={debugFlag}
-        onReply={onReply}
-        onResend={onRetry}
-        onDiscard={onDiscard}
-        onToggleDebug={toggleDebugFromSheet}
-      />
       <div className="flex items-center gap-2.5">
       <audio ref={audioRef} src={url} preload="metadata" />
 
