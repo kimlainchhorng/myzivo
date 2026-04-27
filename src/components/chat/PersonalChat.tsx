@@ -80,6 +80,7 @@ import { toast } from "sonner";
 import { useChatPresence } from "@/hooks/useChatPresence";
 import { useVoiceRecorder } from "@/hooks/useVoiceRecorder";
 import { uploadVoiceWithProgress, retryWithBackoff, UploadAbortedError } from "@/lib/voiceUpload";
+import { vlog, vwarn } from "@/lib/voiceDebug";
 import { useChatDraft } from "@/hooks/useChatDraft";
 import VerifiedBadge from "@/components/VerifiedBadge";
 import { isBlueVerified } from "@/lib/verification";
@@ -764,6 +765,9 @@ export default function PersonalChat({ recipientId, recipientName, recipientAvat
       setMessages((prev) => prev.map((m) => (m.id === optimisticId ? { ...m, ...patch } : m)));
     };
 
+    let lastProgressBucket = -1;
+    vlog("send:start", { clientSendId, sizeBytes: blob.size, durationMs, kind: "personal" });
+
     try {
       let publicUrl = job.publicUrl;
       let storagePath = job.storagePath;
@@ -773,21 +777,32 @@ export default function PersonalChat({ recipientId, recipientName, recipientAvat
         const ext = contentType.includes("mp4") ? "m4a" : "webm";
         const path = `${user.id}/${Date.now()}-${clientSendId}.${ext}`;
         const result = await retryWithBackoff(
-          () => uploadVoiceWithProgress({
-            blob,
-            bucket: "chat-media-files",
-            path,
-            contentType,
-            cacheControl: "3600",
-            signal: controller.signal,
-            onProgress: (ratio) => updateOpt({ _upload_progress: ratio }),
-          }),
+          (attempt) => {
+            if (attempt > 0) vlog("upload:retry", { clientSendId, attempt });
+            return uploadVoiceWithProgress({
+              blob,
+              bucket: "chat-media-files",
+              path,
+              contentType,
+              cacheControl: "3600",
+              signal: controller.signal,
+              onProgress: (ratio) => {
+                updateOpt({ _upload_progress: ratio });
+                const bucket = Math.floor(ratio * 4); // 0..4 → 0/25/50/75/100
+                if (bucket !== lastProgressBucket) {
+                  lastProgressBucket = bucket;
+                  vlog("upload:progress", { clientSendId, pct: bucket * 25 });
+                }
+              },
+            });
+          },
           { signal: controller.signal, attempts: 3, baseDelayMs: 600 },
         );
         publicUrl = result.publicUrl;
         storagePath = result.path;
         job.publicUrl = publicUrl;
         job.storagePath = storagePath;
+        vlog("upload:done", { clientSendId, publicUrl });
       }
 
       const insertData: DirectMessageInsert = {
@@ -799,12 +814,14 @@ export default function PersonalChat({ recipientId, recipientName, recipientAvat
         file_payload: { duration_ms: durationMs, client_send_id: clientSendId } as unknown as FileBubbleData,
       };
       await retryWithBackoff(
-        async () => {
+        async (attempt) => {
+          if (attempt > 0) vlog("insert:retry", { clientSendId, attempt });
           const { error: insertError } = await dbFrom("direct_messages").insert(insertData);
           if (insertError) throw insertError;
         },
         { signal: controller.signal, attempts: 3, baseDelayMs: 600 },
       );
+      vlog("insert:done", { clientSendId });
 
       // Mark sent + swap to remote URL so playback survives realtime delay.
       updateOpt({
@@ -824,10 +841,10 @@ export default function PersonalChat({ recipientId, recipientName, recipientAvat
       }
     } catch (e) {
       if (e instanceof UploadAbortedError || controller.signal.aborted) {
-        // Silently aborted (discarded or unmounted); cleanup handled elsewhere.
+        vlog("aborted", { clientSendId });
         return;
       }
-      console.warn("[voice] upload/send failed", e);
+      vwarn("failed", { clientSendId, error: e });
       const message = e instanceof Error ? e.message : "Upload failed";
       updateOpt({ _upload_status: "failed", _upload_error: message });
       toast.error("Voice note failed to send", {

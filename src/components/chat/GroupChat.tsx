@@ -22,6 +22,7 @@ import VoiceMessagePlayer from "./VoiceMessagePlayer";
 import HoldToRecordMic from "./HoldToRecordMic";
 import { useVoiceRecorder } from "@/hooks/useVoiceRecorder";
 import { uploadVoiceWithProgress, retryWithBackoff, UploadAbortedError } from "@/lib/voiceUpload";
+import { vlog, vwarn } from "@/lib/voiceDebug";
 import GroupMembersSheet from "./GroupMembersSheet";
 import GroupInviteSheet from "./GroupInviteSheet";
 import GroupCallLauncher from "./call/GroupCallLauncher";
@@ -297,6 +298,9 @@ export default function GroupChat({ groupId, groupName, groupAvatar, onClose }: 
       setMessages((prev) => prev.map((m) => (m.id === optimisticId ? { ...m, ...patch } : m)));
     };
 
+    let lastProgressBucket = -1;
+    vlog("send:start", { clientSendId, sizeBytes: blob.size, durationMs, kind: "group", groupId });
+
     try {
       let publicUrl = job.publicUrl;
       let storagePath = job.storagePath;
@@ -306,21 +310,32 @@ export default function GroupChat({ groupId, groupName, groupAvatar, onClose }: 
         const ext = contentType.includes("mp4") ? "m4a" : "webm";
         const path = `${user.id}/${Date.now()}-${clientSendId}.${ext}`;
         const result = await retryWithBackoff(
-          () => uploadVoiceWithProgress({
-            blob,
-            bucket: "chat-media-files",
-            path,
-            contentType,
-            cacheControl: "3600",
-            signal: controller.signal,
-            onProgress: (ratio) => updateOpt({ _upload_progress: ratio }),
-          }),
+          (attempt) => {
+            if (attempt > 0) vlog("upload:retry", { clientSendId, attempt });
+            return uploadVoiceWithProgress({
+              blob,
+              bucket: "chat-media-files",
+              path,
+              contentType,
+              cacheControl: "3600",
+              signal: controller.signal,
+              onProgress: (ratio) => {
+                updateOpt({ _upload_progress: ratio });
+                const bucket = Math.floor(ratio * 4);
+                if (bucket !== lastProgressBucket) {
+                  lastProgressBucket = bucket;
+                  vlog("upload:progress", { clientSendId, pct: bucket * 25 });
+                }
+              },
+            });
+          },
           { signal: controller.signal, attempts: 3, baseDelayMs: 600 },
         );
         publicUrl = result.publicUrl;
         storagePath = result.path;
         job.publicUrl = publicUrl;
         job.storagePath = storagePath;
+        vlog("upload:done", { clientSendId, publicUrl });
       }
 
       const insertData: GroupMessageInsert = {
@@ -333,12 +348,14 @@ export default function GroupChat({ groupId, groupName, groupAvatar, onClose }: 
         file_payload: { duration_ms: durationMs, client_send_id: clientSendId } as { duration_ms?: number },
       };
       await retryWithBackoff(
-        async () => {
+        async (attempt) => {
+          if (attempt > 0) vlog("insert:retry", { clientSendId, attempt });
           const { error: insertError } = await dbFrom("group_messages").insert(insertData);
           if (insertError) throw insertError;
         },
         { signal: controller.signal, attempts: 3, baseDelayMs: 600 },
       );
+      vlog("insert:done", { clientSendId });
 
       updateOpt({
         voice_url: publicUrl!,
@@ -349,8 +366,11 @@ export default function GroupChat({ groupId, groupName, groupAvatar, onClose }: 
       setTimeout(() => URL.revokeObjectURL(job.localUrl), 30000);
       voiceJobsRef.current.delete(clientSendId);
     } catch (e) {
-      if (e instanceof UploadAbortedError || controller.signal.aborted) return;
-      console.warn("[voice/group] upload/send failed", e);
+      if (e instanceof UploadAbortedError || controller.signal.aborted) {
+        vlog("aborted", { clientSendId });
+        return;
+      }
+      vwarn("failed", { clientSendId, error: e });
       const message = e instanceof Error ? e.message : "Upload failed";
       updateOpt({ _upload_status: "failed", _upload_error: message });
       toast.error("Voice note failed to send", {

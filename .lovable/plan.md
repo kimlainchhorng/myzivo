@@ -1,86 +1,54 @@
 ## Goal
 
-Make voice notes feel reliable: stop background work when discarded/unmounted, show upload progress + status in the bubble, auto-retry transient failures, and surface a clear error with a retry option when sending truly fails.
+Add a lightweight runtime debug mode that surfaces the full last upload/insert error reason in the failed voice bubble. Items 1–4 in the request are already implemented in the current code (cancellable jobs with abort-on-unmount/discard, in-bubble progress + percentage, Retry/Discard with exponential backoff, orphaned-storage cleanup + revoked object URLs), so this plan only covers the new debug-mode work.
 
 ## Changes
 
-### 1. Track each voice send as a cancellable job
+### 1. New `src/lib/voiceDebug.ts`
 
-In `PersonalChat.tsx` and `GroupChat.tsx`, add a `voiceJobsRef = useRef<Map<clientSendId, { controller: AbortController; cancel: () => void }>>()`.
+A tiny module that owns a single boolean flag persisted in `localStorage` under the key `zivo:voice-debug`. Exports:
 
-For every optimistic voice bubble:
-- Create an `AbortController` and store it in the map keyed by `client_send_id`.
-- Pass `controller.signal` into the storage upload and DB insert paths (Supabase JS supports `AbortSignal` on `.upload()` and on `.from().insert()` via `.abortSignal()`).
-- On unmount: iterate the map, call `controller.abort()` on each, and `URL.revokeObjectURL` for any local blob URLs.
-- On user-initiated discard (new "Cancel send" action on a failed/uploading bubble): call `controller.abort()`, remove the optimistic message from state, revoke the blob URL, delete the partially uploaded object from storage if upload had completed.
+- `isVoiceDebugEnabled(): boolean` — cached read.
+- `setVoiceDebugEnabled(on: boolean): void` — persists + updates cache.
+- `vlog(...args)` — `console.log` only when debug is on.
+- `vwarn(...args)` — always warns (failures should always log).
 
-### 2. Per-bubble upload status on the optimistic message
+Also installs `window.__zivoVoiceDebug(true | false)` so the flag can be flipped from the browser console without DevTools digging.
 
-Extend the local message shape (already has `_local_voice_url`) with transient fields (not persisted):
-- `_upload_status?: "uploading" | "sent" | "failed"`
-- `_upload_progress?: number` (0–1)
-- `_upload_error?: string`
+### 2. Wire debug logs into the voice send pipeline
 
-Set `_upload_status = "uploading"` when the optimistic bubble is created. Update progress as the upload runs. On Realtime confirmation (matched by `client_send_id`), drop these fields. On failure after retries, set `_upload_status = "failed"` with the error message.
+In `src/components/chat/PersonalChat.tsx` and `src/components/chat/GroupChat.tsx`, inside `runVoiceJob`:
 
-### 3. Upload progress wiring
+- `vlog("send:start", { clientSendId, sizeBytes, durationMs })` before upload.
+- `vlog("upload:progress", { clientSendId, ratio })` (throttled to log only on 25/50/75/100% to avoid console spam).
+- `vlog("upload:done", { clientSendId, publicUrl })` after upload.
+- `vlog("insert:done", { clientSendId })` after insert.
+- On retriable failure inside `retryWithBackoff`, log `vlog("retry", { attempt, error })`.
+- On terminal failure, `vwarn("failed", { clientSendId, step, error })` — replaces the current `console.warn`.
 
-Supabase Storage's `upload()` does not natively expose progress events, so switch the voice path to a small `XMLHttpRequest`-based PUT against the resolved storage REST endpoint (`/storage/v1/object/{bucket}/{path}`) using the user's session access token. This gives us real `xhr.upload.onprogress` (0–1) and supports `xhr.abort()` via the `AbortController`.
+### 3. Surface error reason in the failed bubble
 
-Update `voiceJobsRef` so `controller.abort()` triggers `xhr.abort()`. On progress, update the corresponding optimistic message's `_upload_progress`.
+Update `src/components/chat/VoiceMessagePlayer.tsx`:
 
-### 4. Render progress + error states in the voice bubble
+- Read `isVoiceDebugEnabled()` once per render.
+- When `uploadStatus === "failed"`:
+  - Default behavior (debug off): keep the current compact `Failed to send` label with the full error in the `title` tooltip (already implemented).
+  - Debug on: render an additional small line under the bubble row showing `uploadError` in `text-[10px] text-destructive/80 break-all max-w-[240px]`, so the user can read the full reason inline (e.g., `403 row-level security`, `Network error`, `payload too large`).
+- Also add a tiny "i" info icon button next to the Failed label that, when tapped, copies `uploadError` to clipboard and shows a toast — useful for sharing diagnostics even when debug mode is off.
 
-Update `VoiceNotePlayer.tsx` to accept optional props:
-- `uploadStatus?: "uploading" | "sent" | "failed"`
-- `uploadProgress?: number`
-- `onRetry?: () => void`
-- `onDiscard?: () => void`
+### 4. Settings entry point (optional, in-app toggle)
 
-Visuals:
-- `uploading`: thin progress bar overlay across the waveform (width = `uploadProgress * 100%`), small spinner next to the duration, play button disabled.
-- `failed`: red border tint, inline "Failed to send" text with two icon buttons — Retry (refresh icon) and Discard (trash icon).
-- `sent` / undefined: current behavior.
+Add a single switch in `src/components/chat/settings/` (or the nearest existing chat-settings sheet — to be confirmed during implementation): "Show voice send error details". Bound to `isVoiceDebugEnabled` / `setVoiceDebugEnabled`. This avoids requiring users to open the browser console.
 
-In `PersonalChat.tsx` and `GroupChat.tsx` message rendering, pass these new props from the in-memory message and wire `onRetry` / `onDiscard` to handlers that look up the job by `client_send_id`.
+## Files
 
-### 5. Automatic retry for upload + insert
-
-Wrap the upload step and the DB insert step in a small `retryWithBackoff(fn, { signal, attempts: 3, baseDelayMs: 600 })` helper:
-- Retries on network errors and 5xx / 429 responses.
-- Does NOT retry on auth errors (401/403), validation errors (400), or when the signal is aborted.
-- Backoff: 600ms, 1500ms, 3500ms with small jitter.
-
-Sequence per send:
-1. `retryWithBackoff(uploadXhr)` → public URL.
-2. `retryWithBackoff(dbInsert)` with the same `client_send_id`.
-3. On any abort: stop silently (no toast).
-4. On exhaustion: mark bubble `failed`, store `_upload_error`, show one toast with "Retry" action that re-runs the failed step.
-
-### 6. Manual retry / discard handlers
-
-Add `retryVoiceSend(clientSendId)` and `discardVoiceSend(clientSendId)` in both chat components:
-- Retry: re-creates an `AbortController`, resets `_upload_status` to `uploading` and `_upload_progress` to 0, restarts from the failed step (re-upload if no `voice_url` yet, else just re-insert).
-- Discard: aborts the current job, removes the bubble, revokes the blob URL, deletes the storage object if upload completed but insert failed.
-
-The originating `Blob` is kept on the optimistic message via a transient `_blob` ref-map (kept off the rendered message to avoid React diffs) so retry doesn't need to re-record.
-
-### 7. Unmount cleanup
-
-In a single `useEffect` cleanup in each chat component:
-- Abort every pending job in `voiceJobsRef`.
-- Revoke every tracked local blob URL immediately (we no longer need the 30s deferred revoke for jobs that the user explicitly leaves behind, but keep the deferred revoke for jobs that completed successfully so playback isn't interrupted mid-swap).
-
-## Files to modify
-
-- `src/components/chat/PersonalChat.tsx` — job map, abort wiring, progress state, retry/discard handlers, unmount cleanup, pass new props to `VoiceNotePlayer`.
-- `src/components/chat/GroupChat.tsx` — same changes mirrored.
-- `src/components/chat/VoiceNotePlayer.tsx` — new optional props, progress overlay, failed-state UI with Retry/Discard buttons.
-- `src/lib/voiceUpload.ts` (new) — `uploadVoiceWithProgress({ blob, path, accessToken, signal, onProgress })` using XHR, plus `retryWithBackoff` helper.
-
-No database migration is required — `client_send_id` already lives in `file_payload`, and the new status/progress fields are client-only transient UI state.
+- `src/lib/voiceDebug.ts` — new
+- `src/components/chat/VoiceMessagePlayer.tsx` — debug-aware error rendering + copy button
+- `src/components/chat/PersonalChat.tsx` — `vlog`/`vwarn` calls in `runVoiceJob`
+- `src/components/chat/GroupChat.tsx` — same, mirrored
+- One existing chat-settings component — add the toggle row (file picked during implementation based on what exists)
 
 ## Out of scope
 
-- No changes to `HoldToRecordMic.tsx` (its cancel gesture already calls `voice.cancelRecording()` before any optimistic bubble exists).
-- No persistence of failed messages across reloads (failed sends remain in-memory only; reload clears them, matching current behavior).
+- No new persisted error log table — failures live in memory and are dropped on reload (matches the current optimistic-bubble lifecycle).
+- No changes to the upload, retry, abort, or cleanup logic — those are already in place.

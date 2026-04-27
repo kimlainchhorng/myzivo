@@ -17,7 +17,10 @@ import Loader2 from "lucide-react/dist/esm/icons/loader-2";
 import RefreshCw from "lucide-react/dist/esm/icons/refresh-cw";
 import Trash2 from "lucide-react/dist/esm/icons/trash-2";
 import AlertCircle from "lucide-react/dist/esm/icons/alert-circle";
+import Info from "lucide-react/dist/esm/icons/info";
 import { motion } from "framer-motion";
+import { toast } from "sonner";
+import { isVoiceDebugEnabled, setVoiceDebugEnabled } from "@/lib/voiceDebug";
 
 export type VoiceUploadStatus = "uploading" | "sent" | "failed";
 
@@ -239,9 +242,39 @@ export default function VoiceMessagePlayer({
 
   const progressPct = Math.max(0, Math.min(1, uploadProgress)) * 100;
   const mutedTextClass = isMe ? "text-primary-foreground/70" : "text-muted-foreground";
+  // Snapshot debug flag once per render — flips on/off via window.__zivoVoiceDebug or long-press below.
+  const debugOn = isFailed && isVoiceDebugEnabled();
+
+  const copyError = useCallback(async () => {
+    if (!uploadError) return;
+    try {
+      await navigator.clipboard?.writeText(uploadError);
+      toast.success("Error copied to clipboard");
+    } catch {
+      toast.error("Couldn't copy error");
+    }
+  }, [uploadError]);
+
+  // Long-press the failed badge to toggle debug mode (no settings UI needed).
+  const longPressTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const onFailedLabelPointerDown = useCallback(() => {
+    if (!isFailed) return;
+    longPressTimer.current = setTimeout(() => {
+      const next = !isVoiceDebugEnabled();
+      setVoiceDebugEnabled(next);
+      toast(next ? "Voice debug enabled" : "Voice debug disabled", {
+        description: next ? "Failed bubbles will show full error reasons." : "Tap-and-hold the badge again to re-enable.",
+      });
+    }, 700);
+  }, [isFailed]);
+  const onFailedLabelPointerEnd = useCallback(() => {
+    if (longPressTimer.current) clearTimeout(longPressTimer.current);
+    longPressTimer.current = null;
+  }, []);
 
   return (
-    <div className={`relative flex items-center gap-2.5 min-w-[200px] max-w-[260px] ${isFailed ? "ring-1 ring-destructive/60 rounded-xl -mx-1 px-1 py-0.5" : ""}`}>
+    <div className={`relative min-w-[200px] max-w-[260px] ${debugOn ? "flex flex-col gap-1.5" : ""} ${isFailed ? "ring-1 ring-destructive/60 rounded-xl -mx-1 px-1 py-0.5" : ""}`}>
+      <div className="flex items-center gap-2.5">
       <audio ref={audioRef} src={url} preload="metadata" />
 
       {/* Play/Pause button (or spinner / alert when in upload state) */}
@@ -331,9 +364,27 @@ export default function VoiceMessagePlayer({
               </span>
             )}
             {isFailed && (
-              <span className="text-[10px] leading-none text-destructive truncate" title={uploadError}>
+              <span
+                className="text-[10px] leading-none text-destructive truncate cursor-help select-none"
+                title={uploadError}
+                onPointerDown={onFailedLabelPointerDown}
+                onPointerUp={onFailedLabelPointerEnd}
+                onPointerLeave={onFailedLabelPointerEnd}
+                onPointerCancel={onFailedLabelPointerEnd}
+              >
                 Failed to send
               </span>
+            )}
+            {isFailed && uploadError && (
+              <button
+                type="button"
+                onClick={copyError}
+                className="h-4 w-4 rounded-full text-destructive/80 hover:text-destructive flex items-center justify-center shrink-0"
+                aria-label="Copy error reason"
+                title="Copy error reason"
+              >
+                <Info className="w-3 h-3" />
+              </button>
             )}
           </div>
 
@@ -390,6 +441,12 @@ export default function VoiceMessagePlayer({
           )}
         </div>
       </div>
+      </div>{/* /inner flex row */}
+      {debugOn && uploadError && (
+        <div className="text-[10px] leading-snug text-destructive/80 break-all max-w-[240px] font-mono">
+          {uploadError}
+        </div>
+      )}
     </div>
   );
 }
