@@ -247,16 +247,9 @@ export default function GroupChat({ groupId, groupName, groupAvatar, onClose }: 
       if (voiceUrl) insertData.voice_url = voiceUrl;
       if (replyTo) insertData.reply_to_id = replyTo.id;
 
-      const { data, error } = await dbFrom("group_messages")
-        .insert(insertData)
-        .select()
-        .single();
-
+      // Fire-and-forget insert; realtime echo will replace the optimistic row.
+      const { error } = await dbFrom("group_messages").insert(insertData);
       if (error) throw error;
-      const inserted = data as GroupMessage | null;
-      if (inserted) {
-        setMessages((prev) => prev.map((m) => m.id === optimisticId ? inserted : m));
-      }
     } catch {
       setMessages((prev) => prev.filter((m) => m.id !== optimisticId));
       toast.error("Failed to send message");
