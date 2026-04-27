@@ -144,6 +144,8 @@ interface Message {
   _upload_error?: string;
   _upload_endpoint?: string;
   _upload_status_code?: number;
+  _upload_phase?: "preflight" | "upload" | "insert";
+  _upload_body?: string;
 }
 
 interface CallEvent {
@@ -793,6 +795,8 @@ export default function PersonalChat({ recipientId, recipientName, recipientAvat
             _upload_error: preflight.reason || `Preflight blocked (HTTP ${preflight.status})`,
             _upload_endpoint: preflight.url,
             _upload_status_code: preflight.status,
+            _upload_phase: "preflight",
+            _upload_body: preflight.body,
           });
           toast.error("Voice note blocked by storage permissions");
           return;
@@ -869,11 +873,17 @@ export default function PersonalChat({ recipientId, recipientName, recipientAvat
       vwarn("failed", { clientSendId, error: e });
       const message = e instanceof Error ? e.message : "Upload failed";
       const httpErr = e instanceof UploadHttpError ? e : null;
+      // Infer phase: if we already have a publicUrl on the job, the failure
+      // happened during the DB insert step.
+      const inferredPhase: "preflight" | "upload" | "insert" | undefined =
+        httpErr?.phase || (job.publicUrl ? "insert" : "upload");
       updateOpt({
         _upload_status: "failed",
         _upload_error: message,
         _upload_endpoint: httpErr?.url,
         _upload_status_code: httpErr?.status,
+        _upload_phase: inferredPhase,
+        _upload_body: httpErr?.body,
       });
       toast.error("Voice note failed to send", {
         description: "Tap Resend on the message to try again.",
@@ -896,6 +906,8 @@ export default function PersonalChat({ recipientId, recipientName, recipientAvat
         _upload_error: undefined,
         _upload_endpoint: undefined,
         _upload_status_code: undefined,
+        _upload_phase: undefined,
+        _upload_body: undefined,
       };
     }));
     void runVoiceJob(clientSendId, !!job.publicUrl);
@@ -1728,6 +1740,8 @@ export default function PersonalChat({ recipientId, recipientName, recipientAvat
                                 uploadError={msg._upload_error}
                                 uploadEndpoint={msg._upload_endpoint}
                                 uploadStatusCode={msg._upload_status_code}
+                                uploadPhase={msg._upload_phase}
+                                uploadBody={msg._upload_body}
                                 onRetry={csid && msg._upload_status === "failed" ? () => retryVoiceSend(csid) : undefined}
                                 onDiscard={csid && (msg._upload_status === "uploading" || msg._upload_status === "failed") ? () => discardVoiceSend(csid) : undefined}
                               />

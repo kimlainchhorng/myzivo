@@ -1,41 +1,53 @@
-I found two likely blockers in the current voice-note implementation:
+I re-checked the voice-message path end-to-end as far as read-only mode allows.
 
-1. The code uses direct XHR with `PUT` plus `x-upsert: true`, but the `chat-media-files` bucket only has INSERT and DELETE storage policies, not UPDATE. If the Storage API treats this as an upsert/update path or the object collides, RLS can reject it.
-2. The preflight uses `OPTIONS`, which only checks CORS/gateway behavior. It does not reliably prove Storage INSERT permissions, so the UI can still show a failed bubble without the real root cause.
+Findings:
+- Supabase storage is reachable and the `chat-media-files` bucket exists.
+- Storage policies allow authenticated users to upload into their own user-id folder and delete their own uploads.
+- Recent database data shows voice files successfully uploaded into `chat-media-files` and matching `direct_messages` voice rows were inserted, so the storage + direct-message insert path has worked at least recently.
+- The current preview session is not logged in, so I cannot perform a live voice-send test from the UI in this mode.
+- I found a few remaining issues that can make the feature look broken or hide the real reason:
+  - Failed-bubble debug text still labels the request as `PUT` even though uploads now use `POST`.
+  - The debug toggle can be enabled, but the failed bubble may not re-render immediately, so the details may not appear until another UI update.
+  - The failure phase/body are captured in parts of the upload layer but are not fully surfaced in the chat bubble state.
+  - The diagnostics depend on `import.meta.env` even though the Supabase client already has the correct hardcoded connected-project values, so the missing-key warning can be more fragile than necessary.
 
-Plan to fix it:
+Plan to make sure all works:
 
-1. Make the voice upload endpoint match Supabase Storage upload semantics
-   - Change voice upload XHR from `PUT` upsert to `POST` no-upsert for new unique paths.
-   - Remove the `x-upsert` header for voice sends.
-   - Keep the required `Authorization` and `apikey` headers.
-   - Generate one stable storage path per voice job and reuse it on retries so the UI can show the exact same target URL.
+1. Finalize voice upload diagnostics
+- Update the debug UI to display the real method: `POST`, not `PUT`.
+- Add explicit failed phase labels: `preflight`, `upload`, or `insert`.
+- Surface the raw server response body when debug mode is on, so RLS/storage errors are visible under the failed bubble.
+- Make debug mode reactive so long-pressing the failed label immediately shows/hides details.
 
-2. Replace weak OPTIONS preflight with a real write probe
-   - Add a small `preflightVoiceUploadWrite` helper that uploads a tiny probe object into the user’s own folder in `chat-media-files`, then deletes it immediately.
-   - If this fails, show a friendly debug reason like “Storage write blocked: RLS/bucket policy denied upload” with the exact request URL/status.
-   - Cache successful preflight briefly per chat session so every voice message does not waste an extra request.
+2. Make Supabase key/config checks robust
+- Change `src/lib/voiceUpload.ts` to use the same exported `SUPABASE_URL` and `SUPABASE_PUBLISHABLE_KEY` as the main Supabase client, instead of relying only on `import.meta.env`.
+- Keep the runtime anon-key warning, but make it validate the actual key the upload request uses.
 
-3. Preserve retry/resend without re-recording
-   - Keep the recorded audio Blob in `voiceJobsRef` for failed bubbles.
-   - Ensure “Resend” restarts the same job with a fresh `AbortController`, stable path, and reset progress.
-   - If the first upload succeeded but DB insert failed, retry should skip re-upload and retry only the insert.
+3. Harden the resend flow
+- Preserve the original audio blob for failed sends.
+- If storage upload succeeded but DB insert failed, resend should skip re-upload and retry only the insert.
+- If the user discards a failed bubble after successful upload, cleanup should delete the orphaned storage object.
+- Ensure retry resets progress/debug state and reuses the same `client_send_id` so the optimistic bubble gets replaced correctly by realtime.
 
-4. Improve cleanup and orphan prevention
-   - If DB insert fails after a successful upload, keep the object temporarily so “Resend” can reuse it.
-   - If the user taps Discard, delete the uploaded object if present and revoke the local object URL.
-   - On unmount, abort in-flight jobs and remove the optimistic bubble; failed/discarded jobs should not linger in state.
+4. Verify direct and group chat paths
+- Check both `PersonalChat.tsx` and `GroupChat.tsx` receive and render the same diagnostic fields.
+- Confirm both paths use the same bucket, method, preflight, retry, discard, and debug behavior.
+- Fix any type gaps so `file_payload.client_send_id`, duration, endpoint, status code, phase, and response body are consistently available.
 
-5. Surface the exact failure in the failed bubble
-   - Always store the last failing request phase: `preflight`, `upload`, `insert`, or `cleanup`.
-   - Show URL + status for Storage failures and Supabase/PostgREST error code/message for insert failures when debug mode is on.
-   - Update the copy/debug icon so tapping it copies the full diagnostic payload, not just the short message.
+5. Run verification after changes
+- Run a production build/type check to catch TypeScript or Vite issues.
+- Re-check Supabase policies for `chat-media-files`, `direct_messages`, and `group_messages`.
+- Use the preview in a logged-in state if available to send a short voice note, then confirm:
+  - preflight request completes,
+  - upload request uses `POST`,
+  - message row is inserted,
+  - failed bubbles show exact URL/status/phase/body when debug is on,
+  - Resend works without re-recording.
 
-6. Add the missing Storage UPDATE policy only if we keep any upsert path
-   - Preferred fix is no-upsert `POST`, so no DB migration should be needed.
-   - If testing still requires upsert behavior, add an authenticated `UPDATE` policy scoped to `chat-media-files` and the uploader’s own folder.
+If approved, I’ll apply these final fixes and run the verification pass.
 
-Validation after implementation:
-- Run TypeScript/build checks.
-- Test a normal voice send, a resend after forced failure, discard during upload, and discard after failed insert.
-- Confirm new `direct_messages` voice rows are inserted and no orphaned `chat-media-files` objects remain after discard.
+<lov-actions>
+<lov-link url="https://supabase.com/dashboard/project/slirphzzwcogdbkeicff/storage/buckets">Supabase Storage</lov-link>
+<lov-open-history>View History</lov-open-history>
+<lov-link url="https://docs.lovable.dev/tips-tricks/troubleshooting">Troubleshooting docs</lov-link>
+</lov-actions>

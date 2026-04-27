@@ -20,10 +20,11 @@ import AlertCircle from "lucide-react/dist/esm/icons/alert-circle";
 import Info from "lucide-react/dist/esm/icons/info";
 import { motion } from "framer-motion";
 import { toast } from "sonner";
-import { isVoiceDebugEnabled, setVoiceDebugEnabled } from "@/lib/voiceDebug";
+import { isVoiceDebugEnabled, setVoiceDebugEnabled, subscribeVoiceDebug } from "@/lib/voiceDebug";
 import { getVoiceUploadDiagnostics } from "@/lib/voiceUpload";
 
 export type VoiceUploadStatus = "uploading" | "sent" | "failed";
+export type VoiceUploadPhase = "preflight" | "upload" | "insert";
 
 interface VoiceMessagePlayerProps {
   url: string;
@@ -42,6 +43,10 @@ interface VoiceMessagePlayerProps {
   uploadEndpoint?: string;
   /** Last response status code (0 = network error) — shown in debug mode. */
   uploadStatusCode?: number;
+  /** Which phase failed — shown in debug mode. */
+  uploadPhase?: VoiceUploadPhase;
+  /** Raw response body from the failing request — shown in debug mode. */
+  uploadBody?: string;
   /** Retry handler — shown when failed. */
   onRetry?: () => void;
   /** Discard handler — shown when failed or uploading. */
@@ -74,6 +79,8 @@ export default function VoiceMessagePlayer({
   uploadError,
   uploadEndpoint,
   uploadStatusCode,
+  uploadPhase,
+  uploadBody,
   onRetry,
   onDiscard,
 }: VoiceMessagePlayerProps) {
@@ -249,8 +256,10 @@ export default function VoiceMessagePlayer({
 
   const progressPct = Math.max(0, Math.min(1, uploadProgress)) * 100;
   const mutedTextClass = isMe ? "text-primary-foreground/70" : "text-muted-foreground";
-  // Snapshot debug flag once per render — flips on/off via window.__zivoVoiceDebug or long-press below.
-  const debugOn = isFailed && isVoiceDebugEnabled();
+  // Reactive debug flag — re-renders when toggled via long-press or window hook.
+  const [debugFlag, setDebugFlag] = useState<boolean>(() => isVoiceDebugEnabled());
+  useEffect(() => subscribeVoiceDebug(setDebugFlag), []);
+  const debugOn = isFailed && debugFlag;
   // Config-level diagnostics — always shown on failed bubbles regardless of
   // debug flag, since a missing anon key means EVERY upload will fail.
   const diagnostics = useMemo(() => getVoiceUploadDiagnostics(), []);
@@ -460,6 +469,11 @@ export default function VoiceMessagePlayer({
           ⚠️ Missing Supabase anon key (VITE_SUPABASE_PUBLISHABLE_KEY) — uploads will always fail.
         </div>
       )}
+      {debugOn && uploadPhase && (
+        <div className="text-[10px] leading-snug text-destructive/80 max-w-[240px] font-mono">
+          phase: {uploadPhase}
+        </div>
+      )}
       {debugOn && uploadError && (
         <div className="text-[10px] leading-snug text-destructive/80 break-all max-w-[240px] font-mono">
           {uploadError}
@@ -467,12 +481,17 @@ export default function VoiceMessagePlayer({
       )}
       {debugOn && uploadEndpoint && (
         <div className="text-[10px] leading-snug text-destructive/70 break-all max-w-[240px] font-mono">
-          PUT {uploadEndpoint}
+          {uploadPhase === "insert" ? "POST (rest)" : "POST"} {uploadEndpoint}
         </div>
       )}
       {debugOn && typeof uploadStatusCode === "number" && (
         <div className="text-[10px] leading-snug text-destructive/70 max-w-[240px] font-mono">
           → HTTP {uploadStatusCode === 0 ? "0 (network)" : uploadStatusCode}
+        </div>
+      )}
+      {debugOn && uploadBody && (
+        <div className="text-[10px] leading-snug text-destructive/60 break-all max-w-[240px] font-mono whitespace-pre-wrap">
+          {uploadBody.slice(0, 240)}
         </div>
       )}
     </div>

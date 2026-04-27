@@ -17,7 +17,7 @@
  * Voice notes always use a unique path (timestamp + random id), so POST is
  * safe and matches the existing storage policy.
  */
-import { supabase } from "@/integrations/supabase/client";
+import { supabase, SUPABASE_URL as CLIENT_SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY as CLIENT_SUPABASE_KEY } from "@/integrations/supabase/client";
 
 export interface UploadVoiceOpts {
   blob: Blob;
@@ -34,8 +34,11 @@ export interface UploadVoiceResult {
   path: string;
 }
 
-const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL as string;
-const SUPABASE_ANON_KEY = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY as string;
+// Always prefer the values exported by the connected Supabase client (which are
+// hard-coded for the connected project) and fall back to env vars only if for
+// some reason they are missing. This avoids env-only fragility.
+const SUPABASE_URL = (CLIENT_SUPABASE_URL || (import.meta.env.VITE_SUPABASE_URL as string) || "").replace(/\/+$/, "");
+const SUPABASE_ANON_KEY = (CLIENT_SUPABASE_KEY || (import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY as string) || "");
 
 export class UploadAbortedError extends Error {
   constructor() {

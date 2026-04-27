@@ -14,6 +14,7 @@
 const KEY = "zivo:voice-debug";
 
 let cached: boolean | null = null;
+const listeners = new Set<(on: boolean) => void>();
 
 export function isVoiceDebugEnabled(): boolean {
   if (cached !== null) return cached;
@@ -33,6 +34,15 @@ export function setVoiceDebugEnabled(on: boolean): void {
   } catch { /* noop */ }
   // eslint-disable-next-line no-console
   console.log(`[voice-debug] ${on ? "enabled" : "disabled"}`);
+  for (const fn of listeners) {
+    try { fn(on); } catch { /* noop */ }
+  }
+}
+
+/** Subscribe to debug-flag changes. Returns an unsubscribe function. */
+export function subscribeVoiceDebug(fn: (on: boolean) => void): () => void {
+  listeners.add(fn);
+  return () => { listeners.delete(fn); };
 }
 
 export function vlog(...args: unknown[]): void {
