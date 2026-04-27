@@ -801,7 +801,6 @@ export default function PersonalChat({ recipientId, recipientName, recipientAvat
 
     return () => {
       cancelled = true;
-      URL.revokeObjectURL(localUrl);
     };
   }, [voice.audioBlob, voice.isRecording, voice, user?.id, recipientId, replyTo?.id, scrollToBottom, sendChatPush]);
 
