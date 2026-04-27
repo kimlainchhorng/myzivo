@@ -67,6 +67,9 @@ export interface LodgeRoom {
   min_stay?: number;
   max_stay?: number | null;
   no_arrival_weekdays?: number[]; // 0=Sun..6=Sat
+  // Booking-style storefront enhancements
+  badges?: string[];
+  expandable_features?: string[];
   created_at: string;
   updated_at: string;
 }
