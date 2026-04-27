@@ -171,8 +171,8 @@ export default function LodgingPoliciesSection({ storeId }: { storeId: string })
               <span className="text-sm">Parties / events allowed</span>
             </label>
           </div>
-          <Button size="sm" onClick={() => updateProfile.mutate(policyDraft as any)} disabled={updateProfile.isPending}>
-            <Save className="mr-1.5 h-4 w-4" /> {updateProfile.isPending ? "Saving…" : "Save policies"}
+          <Button size="sm" onClick={handleSavePolicies} disabled={profileQ.upsert.isPending}>
+            <Save className="mr-1.5 h-4 w-4" /> {profileQ.upsert.isPending ? "Saving…" : "Save policies"}
           </Button>
         </div>
 
