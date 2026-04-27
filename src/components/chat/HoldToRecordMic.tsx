@@ -26,7 +26,7 @@ import type { useVoiceRecorder } from "@/hooks/useVoiceRecorder";
 const CANCEL_THRESHOLD = 90;   // px slide-left to cancel
 const LOCK_THRESHOLD = 90;     // px slide-up to lock
 const HOLD_GUARD_MS = 120;     // ignore < this as accidental tap
-const MIN_RECORD_MS = 500;     // discard < this as too-short
+const MIN_RECORD_MS = 300;     // discard < this as too-short (measured from actual recording start)
 
 type Voice = ReturnType<typeof useVoiceRecorder>;
 
@@ -130,7 +130,6 @@ export default function HoldToRecordMic({ voice, className }: Props) {
 
   const onPointerUp = async () => {
     clearGuard();
-    const heldMs = Date.now() - startTime.current;
     const wasPending = pendingStart.current;
     pendingStart.current = false;
 
@@ -142,11 +141,19 @@ export default function HoldToRecordMic({ voice, className }: Props) {
 
     if (locked) return; // locked mode — release does nothing
 
-    if (willCancel || heldMs < MIN_RECORD_MS) {
+    // Measure actual recording duration (excludes the 120ms hold guard) and
+    // re-evaluate cancel intent from the final dragX so a tiny jitter on
+    // release can't accidentally throw the recording away.
+    const recordedMs = voice.elapsedMs ?? 0;
+    const finalWillCancel = dragX < -CANCEL_THRESHOLD;
+
+    if (finalWillCancel) {
       await voice.cancelRecording();
-      if (heldMs < MIN_RECORD_MS && !willCancel) {
-        toast("Hold to record", { duration: 1500 });
-      }
+      haptic(20);
+    } else if (recordedMs < MIN_RECORD_MS) {
+      console.warn("[voice] discarded — too short", { recordedMs });
+      await voice.cancelRecording();
+      toast("Hold to record", { duration: 1500 });
       haptic(10);
     } else {
       // Stop = send (PersonalChat's effect uploads when audioBlob lands)
