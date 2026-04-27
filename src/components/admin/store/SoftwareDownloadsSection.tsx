@@ -4,8 +4,8 @@
  */
 import {
   Download, Apple, Smartphone, Monitor, Laptop, Bell,
-  Hotel, Store, Truck, Printer, ScanBarcode, ChefHat,
-  KeyRound, Sparkles, LayoutGrid, type LucideIcon,
+  Building2, ShoppingBag, Car, Printer, ScanBarcode, ChefHat,
+  ConciergeBell, BedDouble, Briefcase, Server, type LucideIcon,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
