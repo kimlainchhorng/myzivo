@@ -53,7 +53,7 @@ export default function ChatStories() {
     refetchInterval: 60000,
     queryFn: async () => {
       const { data } = await supabase
-        .from("stories" as never)
+        .from("stories" as any)
         .select("id, user_id, media_url, media_type, text_overlay, audio_url, created_at, expires_at, view_count")
         .gt("expires_at", new Date().toISOString())
         .order("created_at", { ascending: true });

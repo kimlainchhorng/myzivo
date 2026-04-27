@@ -57,7 +57,7 @@ type RealtimePayload<T> = {
   new: T;
 };
 
-const dbFrom = (table: string) => supabase.from(table as never);
+const dbFrom = (table: string): any => (supabase as any).from(table);
 
 export default function IncomingCallListener() {
   const { user } = useAuth();

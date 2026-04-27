@@ -80,7 +80,7 @@ type GroupMessageInsert = {
   reply_to_id?: string;
 };
 
-const dbFrom = (table: string) => supabase.from(table as never);
+const dbFrom = (table: string): any => (supabase as any).from(table);
 
 function formatTime(dateStr: string) {
   const d = new Date(dateStr);

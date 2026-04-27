@@ -90,13 +90,13 @@ export default function CallHistoryPage({ onClose, onCallUser }: CallHistoryPage
       setLoading(true);
       const [callsRes, vmRes] = await Promise.all([
         supabase
-          .from("call_history" as never)
+          .from("call_history" as any)
           .select("*")
           .or(`caller_id.eq.${user.id},callee_id.eq.${user.id}`)
           .order("created_at", { ascending: false })
           .limit(50),
         supabase
-          .from("voicemails" as never)
+          .from("voicemails" as any)
           .select("*")
           .eq("recipient_id", user.id)
           .order("created_at", { ascending: false })
@@ -153,7 +153,7 @@ export default function CallHistoryPage({ onClose, onCallUser }: CallHistoryPage
 
   const deleteVoicemail = async (id: string) => {
     setVoicemails((prev) => prev.filter((v) => v.id !== id));
-    await supabase.from("voicemails" as never).delete().eq("id", id);
+    await (supabase as any).from("voicemails").delete().eq("id", id);
     toast.success("Voicemail deleted");
   };
 
@@ -461,7 +461,7 @@ export default function CallHistoryPage({ onClose, onCallUser }: CallHistoryPage
                           audio.play();
                           audio.onended = () => setPlayingVm(null);
                           if (!vm.is_read) {
-                            supabase.from("voicemails" as never).update({ is_read: true }).eq("id", vm.id);
+                            (supabase as any).from("voicemails").update({ is_read: true }).eq("id", vm.id);
                             setVoicemails((prev) => prev.map((v) => v.id === vm.id ? { ...v, is_read: true } : v));
                           }
                         }

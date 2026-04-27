@@ -78,7 +78,7 @@ export default function ChatPersonalization({ open, onClose, chatPartnerId, chat
     if (!open || !user?.id) return;
     const load = async () => {
       const { data, error } = await supabase
-        .from("chat_settings" as never)
+        .from("chat_settings" as any)
         .select("wallpaper, theme_color, font_size, custom_wallpapers")
         .eq("user_id", user.id)
         .eq("chat_partner_id", chatPartnerId)
@@ -166,7 +166,7 @@ export default function ChatPersonalization({ open, onClose, chatPartnerId, chat
       : customPhotos;
 
     const { error } = await supabase
-      .from("chat_settings" as never)
+      .from("chat_settings" as any)
       .upsert({
         user_id: user.id,
         chat_partner_id: chatPartnerId,

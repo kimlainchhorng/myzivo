@@ -27,7 +27,7 @@ type ChatFolderRow = {
   sort_order: number;
 };
 
-const dbFrom = (table: string) => supabase.from(table as never);
+const dbFrom = (table: string): any => (supabase as any).from(table);
 
 export default function CustomFoldersPage() {
   const nav = useNavigate();

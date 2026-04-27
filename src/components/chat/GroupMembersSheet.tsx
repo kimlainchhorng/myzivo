@@ -55,7 +55,7 @@ export default function GroupMembersSheet({ open, onOpenChange, groupId, onLeft 
     (async () => {
       const ids = members.map((m) => m.user_id);
       const { data } = await supabase
-        .from("profiles" as never)
+        .from("profiles" as any)
         .select("user_id, display_name, username, avatar_url")
         .in("user_id", ids);
       const map: Record<string, ProfileLite> = {};

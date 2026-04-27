@@ -76,7 +76,7 @@ type RecipientProfileRow = {
   country: string | null;
 };
 
-const dbFrom = (table: string) => supabase.from(table as never);
+const dbFrom = (table: string): any => (supabase as any).from(table);
 
 interface ChatContactInfoProps {
   recipientId: string;

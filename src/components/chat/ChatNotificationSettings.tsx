@@ -65,7 +65,7 @@ export default function ChatNotificationSettings({ open, onClose, chatPartnerId,
     if (!open || !user?.id) return;
     const load = async () => {
       const { data } = await supabase
-        .from("chat_settings" as never)
+        .from("chat_settings" as any)
         .select("*")
         .eq("user_id", user.id)
         .eq("chat_partner_id", chatPartnerId)
@@ -85,7 +85,7 @@ export default function ChatNotificationSettings({ open, onClose, chatPartnerId,
   const save = async (updates: ChatSettingsUpdate) => {
     if (!user?.id) return;
     const { error } = await supabase
-      .from("chat_settings" as never)
+      .from("chat_settings" as any)
       .upsert({
         user_id: user.id,
         chat_partner_id: chatPartnerId,

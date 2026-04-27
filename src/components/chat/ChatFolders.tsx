@@ -38,7 +38,7 @@ export default function ChatFolders({ activeFolder, onSelectFolder }: ChatFolder
     queryFn: async () => {
       if (!user) return [];
       const { data } = await supabase
-        .from("chat_folders" as never)
+        .from("chat_folders" as any)
         .select("*")
         .eq("user_id", user.id)
         .order("sort_order", { ascending: true });
@@ -49,7 +49,7 @@ export default function ChatFolders({ activeFolder, onSelectFolder }: ChatFolder
 
   const createFolder = async () => {
     if (!user || !newName.trim()) return;
-    await supabase.from("chat_folders" as never).insert({
+    await (supabase as any).from("chat_folders").insert({
       user_id: user.id,
       name: newName.trim(),
       icon: newIcon,
@@ -61,7 +61,7 @@ export default function ChatFolders({ activeFolder, onSelectFolder }: ChatFolder
   };
 
   const deleteFolder = async (id: string) => {
-    await supabase.from("chat_folders" as never).delete().eq("id", id);
+    await (supabase as any).from("chat_folders").delete().eq("id", id);
     queryClient.invalidateQueries({ queryKey: ["chat-folders"] });
     if (activeFolder === id) onSelectFolder(null);
     toast.success("Folder deleted");

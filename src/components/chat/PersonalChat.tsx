@@ -191,7 +191,7 @@ type RealtimeInsertPayload<T> = { new: T };
 type RealtimeUpdatePayload<T> = { new: T };
 type RealtimeDeletePayload = { old?: { id?: string } };
 
-const dbFrom = (table: string) => supabase.from(table as never);
+const dbFrom = (table: string): any => (supabase as any).from(table);
 
 const getErrorMessage = (err: unknown): string => {
   if (err instanceof Error) return err.message;
@@ -531,15 +531,14 @@ export default function PersonalChat({ recipientId, recipientName, recipientAvat
       }
 
       if (hasUnread) {
-        bgTasks.push(dbFrom("direct_messages")
+        bgTasks.push(Promise.resolve(dbFrom("direct_messages")
           .update({ is_read: true, delivered_at: new Date().toISOString() })
           .eq("receiver_id", user.id)
           .eq("sender_id", recipientId)
           .eq("is_read", false)
-          .then(({ error }: { error: unknown }) => {
-            if (error) console.error("[Chat] mark-read failed:", error);
-          })
-        );
+        ).then(({ error }: { error: unknown }) => {
+          if (error) console.error("[Chat] mark-read failed:", error);
+        }));
       }
 
       void Promise.all(bgTasks);

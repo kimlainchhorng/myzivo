@@ -52,7 +52,7 @@ export default function ForwardPickerSheet({ open, onOpenChange, onConfirm }: Pr
     if (!open || !user) return;
     (async () => {
       const { data } = await supabase
-        .from("user_contacts" as never)
+        .from("user_contacts" as any)
         .select(`
           id, contact_user_id, custom_name,
           profiles:contact_user_id (display_name, username, avatar_url)

@@ -33,7 +33,7 @@ export default function ChatPollBubble({ pollId, question, options, isAnonymous,
     queryKey: ["chat-poll-votes", pollId],
     queryFn: async () => {
       const { data } = await supabase
-        .from("chat_poll_votes" as never)
+        .from("chat_poll_votes" as any)
         .select("option_index, user_id")
         .eq("poll_id", pollId);
       return (data ?? []) as ChatPollVoteRow[];
@@ -45,7 +45,7 @@ export default function ChatPollBubble({ pollId, question, options, isAnonymous,
 
   const handleVote = async (index: number) => {
     if (!user || myVote) return;
-    await supabase.from("chat_poll_votes" as never).insert({
+    await (supabase as any).from("chat_poll_votes").insert({
       poll_id: pollId,
       user_id: user.id,
       option_index: index,

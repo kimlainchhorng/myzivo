@@ -47,7 +47,7 @@ type BlockedRow = {
 
 type RowIcon = React.ComponentType<{ className?: string }>;
 
-const dbFrom = (table: string) => supabase.from(table as never);
+const dbFrom = (table: string): any => (supabase as any).from(table);
 
 const DEFAULTS: Prefs = {
   notifPreviews: true,

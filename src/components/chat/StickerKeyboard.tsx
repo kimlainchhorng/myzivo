@@ -714,7 +714,7 @@ export default function StickerKeyboard({ open, onClose, onSendSticker, onStartV
 
     const loadPacks = async () => {
       const { data } = await supabase
-        .from("chat_sticker_packs" as never)
+        .from("chat_sticker_packs" as any)
         .select("id, name, emoji_prefix, stickers")
         .order("created_at", { ascending: true });
       if (!data) { setRemotePacks([]); return; }

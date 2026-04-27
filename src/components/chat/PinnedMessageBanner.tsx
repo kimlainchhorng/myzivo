@@ -34,7 +34,7 @@ export default function PinnedMessageBanner({ conversationId, onJumpTo, onUnpin,
     let mounted = true;
     const load = async () => {
       const { data } = await supabase
-        .from("pinned_messages" as never)
+        .from("pinned_messages" as any)
         .select("message_id, direct_messages:message_id (id, message)")
         .eq("conversation_id", conversationId)
         .order("pinned_at", { ascending: false })

@@ -80,7 +80,7 @@ type SplitRow = {
   creator_id: string;
 };
 
-const dbFrom = (table: string) => supabase.from(table as never);
+const dbFrom = (table: string): any => (supabase as any).from(table);
 
 export default function ChatMiniApps({ open, onClose, chatPartnerId, chatPartnerName }: ChatMiniAppsProps) {
   const { user } = useAuth();
