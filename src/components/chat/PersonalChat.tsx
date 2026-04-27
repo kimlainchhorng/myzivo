@@ -720,23 +720,29 @@ export default function PersonalChat({ recipientId, recipientName, recipientAvat
     if (!voice.audioBlob || voice.isRecording || !user?.id || voiceUploadInFlightRef.current) return;
     let cancelled = false;
     voiceUploadInFlightRef.current = true;
+    const blob = voice.audioBlob;
+    const durationMs = Math.max(0, Math.round((voice.duration || 0) * 1000));
 
     const upload = async () => {
-      const path = `${user.id}/${Date.now()}.webm`;
-      const { error } = await supabase.storage
-        .from("chat-media-files")
-        .upload(path, voice.audioBlob, { contentType: "audio/webm" });
-      if (error) {
+      try {
+        const path = `${user.id}/${Date.now()}.webm`;
+        const { error } = await supabase.storage
+          .from("chat-media-files")
+          .upload(path, blob, { contentType: "audio/webm" });
+        if (error) throw error;
+        const { data: urlData } = supabase.storage.from("chat-media-files").getPublicUrl(path);
+        if (cancelled) return;
+        await handleSendRef.current?.({
+          voiceUrl: urlData.publicUrl,
+          filePayload: { duration_ms: durationMs } as unknown as FileBubbleData,
+        });
+      } catch (e) {
         if (!cancelled) {
-          toast.error("Failed to upload voice note");
-          voice.clearBlob();
+          console.warn("[voice] upload/send failed", e);
+          toast.error("Failed to send voice note");
         }
-        return;
-      }
-      const { data: urlData } = supabase.storage.from("chat-media-files").getPublicUrl(path);
-      if (!cancelled) {
-        await handleSendRef.current?.({ voiceUrl: urlData.publicUrl });
-        voice.clearBlob();
+      } finally {
+        if (!cancelled) voice.clearBlob();
       }
     };
 
