@@ -563,18 +563,34 @@ export default function PersonalChat({ recipientId, recipientName, recipientAvat
           setMessages((prev) => {
             // Already have the real row → ignore
             if (prev.some((m) => m.id === msg.id)) return prev;
-            // Replace any optimistic placeholder from this sender with same content
-            const optIdx = prev.findIndex((m) =>
-              m.id.startsWith("opt-") &&
-              m.sender_id === msg.sender_id &&
-              m.receiver_id === msg.receiver_id &&
-              (m.message || "") === (msg.message || "") &&
-              (m.message_type || "text") === (msg.message_type || "text")
-            );
-            if (optIdx >= 0) {
-              const next = [...prev];
-              next[optIdx] = msg;
-              return next;
+            // Prefer exact match on client_send_id embedded in file_payload
+            const incomingCsid = (msg.file_payload as { client_send_id?: string } | null)?.client_send_id;
+            if (incomingCsid) {
+              const csidIdx = prev.findIndex((m) => {
+                const mc = (m.file_payload as { client_send_id?: string } | null)?.client_send_id;
+                return mc && mc === incomingCsid;
+              });
+              if (csidIdx >= 0) {
+                const next = [...prev];
+                // Preserve local blob URL until it's safely revoked; swap in remote
+                next[csidIdx] = { ...msg, _local_voice_url: prev[csidIdx]._local_voice_url };
+                return next;
+              }
+            }
+            // Fallback: replace optimistic placeholder for non-voice (text/sticker) only
+            if ((msg.message_type || "text") !== "voice") {
+              const optIdx = prev.findIndex((m) =>
+                m.id.startsWith("opt-") &&
+                m.sender_id === msg.sender_id &&
+                m.receiver_id === msg.receiver_id &&
+                (m.message || "") === (msg.message || "") &&
+                (m.message_type || "text") === (msg.message_type || "text")
+              );
+              if (optIdx >= 0) {
+                const next = [...prev];
+                next[optIdx] = msg;
+                return next;
+              }
             }
             return [...prev, msg];
           });
