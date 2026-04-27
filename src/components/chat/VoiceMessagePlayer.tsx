@@ -251,6 +251,10 @@ export default function VoiceMessagePlayer({
   const mutedTextClass = isMe ? "text-primary-foreground/70" : "text-muted-foreground";
   // Snapshot debug flag once per render — flips on/off via window.__zivoVoiceDebug or long-press below.
   const debugOn = isFailed && isVoiceDebugEnabled();
+  // Config-level diagnostics — always shown on failed bubbles regardless of
+  // debug flag, since a missing anon key means EVERY upload will fail.
+  const diagnostics = useMemo(() => getVoiceUploadDiagnostics(), []);
+  const showAnonKeyWarning = isFailed && !diagnostics.hasAnonKey;
 
   const copyError = useCallback(async () => {
     if (!uploadError) return;
@@ -401,10 +405,12 @@ export default function VoiceMessagePlayer({
                 <button
                   type="button"
                   onClick={onRetry}
-                  className="h-6 w-6 rounded-full bg-destructive/15 text-destructive flex items-center justify-center active:scale-90 transition-transform"
-                  aria-label="Retry sending voice note"
+                  className="h-6 px-2 rounded-full bg-destructive/15 text-destructive text-[10px] font-semibold flex items-center gap-1 active:scale-90 transition-transform"
+                  aria-label="Resend voice note"
+                  title="Resend voice"
                 >
                   <RefreshCw className="w-3 h-3" />
+                  Resend
                 </button>
               )}
               {onDiscard && (
@@ -449,9 +455,24 @@ export default function VoiceMessagePlayer({
         </div>
       </div>
       </div>{/* /inner flex row */}
+      {showAnonKeyWarning && (
+        <div className="text-[10px] leading-snug text-destructive font-semibold break-all max-w-[240px]">
+          ⚠️ Missing Supabase anon key (VITE_SUPABASE_PUBLISHABLE_KEY) — uploads will always fail.
+        </div>
+      )}
       {debugOn && uploadError && (
         <div className="text-[10px] leading-snug text-destructive/80 break-all max-w-[240px] font-mono">
           {uploadError}
+        </div>
+      )}
+      {debugOn && uploadEndpoint && (
+        <div className="text-[10px] leading-snug text-destructive/70 break-all max-w-[240px] font-mono">
+          PUT {uploadEndpoint}
+        </div>
+      )}
+      {debugOn && typeof uploadStatusCode === "number" && (
+        <div className="text-[10px] leading-snug text-destructive/70 max-w-[240px] font-mono">
+          → HTTP {uploadStatusCode === 0 ? "0 (network)" : uploadStatusCode}
         </div>
       )}
     </div>
