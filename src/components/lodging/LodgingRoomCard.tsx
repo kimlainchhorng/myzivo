@@ -18,6 +18,9 @@ interface Props {
   beds?: string | null;
   maxGuests: number;
   baseRateCents: number;
+  weekendRateCents?: number;
+  weeklyDiscountPct?: number;
+  monthlyDiscountPct?: number;
   amenities?: string[];
   breakfastIncluded?: boolean;
   imageUrl?: string;
