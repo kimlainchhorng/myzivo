@@ -6,6 +6,7 @@ import LodgingQuickJump from "./LodgingQuickJump";
 import LodgingSectionStatusBanner from "./LodgingSectionStatusBanner";
 import RevenuePulseCard from "./RevenuePulseCard";
 import LodgingReviewsSummaryCard from "./LodgingReviewsSummaryCard";
+import StorefrontPreviewCard from "./StorefrontPreviewCard";
 import { useLodgeHousekeeping } from "@/hooks/lodging/useLodgeHousekeeping";
 import { getLodgingCompletion } from "@/lib/lodging/lodgingCompletion";
 import { useQuery } from "@tanstack/react-query";
@@ -101,6 +102,7 @@ export default function LodgingOverviewSection({ storeId }: { storeId: string })
           <div className="lg:col-span-2"><RevenuePulseCard storeId={storeId} /></div>
           <LodgingReviewsSummaryCard storeId={storeId} />
         </div>
+        <StorefrontPreviewCard profile={profile} />
         <LodgingSetupChecklist items={setupItems} wizard />
         <OpsSnapshot rooms={rooms} addons={addons} reservations={reservations} />
         <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
