@@ -118,66 +118,8 @@ export default function LodgingPayoutsSection({ storeId }: { storeId: string }) 
           <StatCard label="Paid bookings" value={String(stats.paidCount)} icon={CheckCircle2} />
         </div>
 
-        {/* Payout account (Stripe Connect) */}
-        <div className="rounded-lg border border-border bg-card p-4">
-          <div className="mb-3 flex items-center justify-between gap-2">
-            <div className="flex items-center gap-2">
-              <ShieldCheck className="h-4 w-4 text-primary" />
-              <p className="text-sm font-semibold">Payout account</p>
-            </div>
-            {connectLoading ? (
-              <Badge variant="outline" className="gap-1"><Loader2 className="h-3 w-3 animate-spin" />Checking…</Badge>
-            ) : payoutsEnabled ? (
-              <Badge className="bg-emerald-500/15 text-emerald-700 border-emerald-500/30 gap-1"><CheckCircle2 className="h-3 w-3" />Payouts enabled</Badge>
-            ) : connect?.connected ? (
-              <Badge variant="secondary" className="gap-1"><AlertCircle className="h-3 w-3" />Action needed</Badge>
-            ) : (
-              <Badge variant="outline" className="gap-1"><AlertCircle className="h-3 w-3" />Not connected</Badge>
-            )}
-          </div>
-
-          {connectLoading ? (
-            <p className="text-xs text-muted-foreground">Loading Stripe status…</p>
-          ) : !connect?.connected ? (
-            <>
-              <p className="text-xs text-muted-foreground">
-                Connect a Stripe account to receive direct deposits. Stripe handles bank verification, tax forms (W-9 / W-8) and identity checks.
-              </p>
-              <Button size="sm" className="mt-3" onClick={startOnboarding} disabled={onboard.isPending}>
-                {onboard.isPending ? <Loader2 className="h-3.5 w-3.5 animate-spin mr-2" /> : <ArrowRight className="h-3.5 w-3.5 mr-2" />}
-                Set up payouts
-              </Button>
-            </>
-          ) : (
-            <>
-              <div className="flex flex-wrap gap-2">
-                <Badge variant={connect.details_submitted ? "default" : "secondary"} className="gap-1">
-                  {connect.details_submitted ? <CheckCircle2 className="h-3 w-3" /> : <AlertCircle className="h-3 w-3" />}
-                  Details {connect.details_submitted ? "submitted" : "pending"}
-                </Badge>
-                <Badge variant={connect.payouts_enabled ? "default" : "secondary"} className="gap-1">
-                  {connect.payouts_enabled ? <CheckCircle2 className="h-3 w-3" /> : <AlertCircle className="h-3 w-3" />}
-                  Payouts {connect.payouts_enabled ? "enabled" : "disabled"}
-                </Badge>
-                <Badge variant={connect.charges_enabled ? "default" : "secondary"} className="gap-1">
-                  {connect.charges_enabled ? <CheckCircle2 className="h-3 w-3" /> : <AlertCircle className="h-3 w-3" />}
-                  Charges {connect.charges_enabled ? "enabled" : "disabled"}
-                </Badge>
-              </div>
-              {!payoutsEnabled && (
-                <Button size="sm" variant="outline" className="mt-3" onClick={startOnboarding} disabled={onboard.isPending}>
-                  {onboard.isPending ? <Loader2 className="h-3.5 w-3.5 animate-spin mr-2" /> : null}
-                  Continue onboarding
-                </Button>
-              )}
-              {connect.requirements && connect.requirements.length > 0 && (
-                <p className="mt-2 text-[11px] text-muted-foreground">
-                  Outstanding: {connect.requirements.slice(0, 3).join(", ")}{connect.requirements.length > 3 ? "…" : ""}
-                </p>
-              )}
-            </>
-          )}
-        </div>
+        {/* Multi-rail payout account (Stripe / ABA / Bank wire / PayPal) */}
+        <LodgingPayoutAccountCard storeId={storeId} storeCountry={(reservations[0] as any)?.country || "US"} />
 
         {/* Monthly revenue */}
         <div className="rounded-lg border border-border bg-card p-4">
