@@ -30,7 +30,9 @@ export type LodgingCatalogTable =
   | "lodging_promotions"
   | "lodging_taxes_fees"
   | "lodging_channel_connections"
-  | "lodging_reviews";
+  | "lodging_reviews"
+  | "lodging_concierge_tasks"
+  | "lodging_lost_found";
 
 export interface LodgingCatalogRow {
   id: string;
