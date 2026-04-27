@@ -104,3 +104,24 @@ All hooks: React Query with optimistic updates and toast feedback.
 - Token sweep across remaining admin files (Phase 13)
 
 Approve and I'll build it.
+
+---
+
+## Phase 12 — DONE (2026-04-27)
+
+Training & Documents now persist to Supabase.
+
+**Migration:** `store_training_programs`, `store_training_modules`, `store_training_assignments`, `store_documents` tables + private `store-documents` storage bucket. All RLS-gated by `is_lodge_store_manager(store_id, auth.uid())`.
+
+**New hooks:**
+- `useStoreTrainingPrograms` (list + upsert + remove + seedDefaults)
+- `useStoreTrainingAssignments` (list + assign + unassign + updateProgress)
+- `useStoreDocuments` (list + upload to bucket + remove + getSignedUrl)
+
+**Rewritten:**
+- `StoreTrainingSection.tsx` — real CRUD, Programs/Assignments/Certifications tabs, "Seed default programs" empty state, semantic color tokens
+- `StoreDocumentsSection.tsx` — real file uploads (PDF/image/DOC, 50MB max), signed-URL viewing, expiry tracking, semantic tokens
+
+**Verified:** `tsc --noEmit` clean, RLS scoped per store, files isolated by path prefix.
+
+**Next candidates:** split `LodgingPropertyProfileSection`, sweep remaining hardcoded colors across `src/components/admin/store/**`, optional realtime subscriptions for multi-manager edits.
