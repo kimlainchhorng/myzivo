@@ -1493,15 +1493,20 @@ export default function PersonalChat({ recipientId, recipientName, recipientAvat
                       <div className={`flex ${isMe ? "justify-end" : "justify-start"}`}>
                         <div className={`max-w-[80%] min-w-[220px] px-3 py-2.5 rounded-2xl shadow-sm ${
                           isMe ? "bg-primary text-primary-foreground rounded-br-md" : "bg-muted text-foreground rounded-bl-md"
-                        } ${msg.id.startsWith("opt-") ? "opacity-60" : ""}`}>
+                        }`}>
                           <VoiceMessagePlayer
                             url={msg.voice_url}
                             isMe={isMe}
                             durationMs={(msg.file_payload as { duration_ms?: number } | null)?.duration_ms}
                           />
-                          <span className={`text-[9px] block text-right mt-1 ${isMe ? "text-primary-foreground/50" : "text-muted-foreground/70"}`}>
-                            {formatMsgTime(msg.created_at)}
-                          </span>
+                          <div className="flex items-center justify-end gap-1 mt-1">
+                            {msg.id.startsWith("opt-") && (
+                              <Loader2 className={`h-2.5 w-2.5 animate-spin ${isMe ? "text-primary-foreground/60" : "text-muted-foreground/60"}`} />
+                            )}
+                            <span className={`text-[9px] ${isMe ? "text-primary-foreground/50" : "text-muted-foreground/70"}`}>
+                              {formatMsgTime(msg.created_at)}
+                            </span>
+                          </div>
                         </div>
                       </div>
                     ) : msg.message_type === "file" && msg.file_payload ? (
