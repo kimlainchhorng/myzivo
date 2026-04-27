@@ -11,7 +11,7 @@
  * effects (which watch `voice.audioBlob`) keep working unchanged.
  */
 import { useEffect, useRef, useState } from "react";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion, AnimatePresence, useMotionValue, useSpring, useTransform } from "framer-motion";
 import Mic from "lucide-react/dist/esm/icons/mic";
 import Trash2 from "lucide-react/dist/esm/icons/trash-2";
 import Send from "lucide-react/dist/esm/icons/send";
