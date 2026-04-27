@@ -17,7 +17,10 @@ import { motion } from "framer-motion";
 
 interface VoiceMessagePlayerProps {
   url: string;
+  /** Pre-formatted duration string (legacy). Prefer `durationMs`. */
   duration?: string;
+  /** Known total duration in milliseconds — shown immediately, no waiting on metadata. */
+  durationMs?: number;
   isMe: boolean;
 }
 
@@ -37,15 +40,16 @@ function generateWaveform(url: string, count: number): number[] {
   });
 }
 
-export default function VoiceMessagePlayer({ url, duration, isMe }: VoiceMessagePlayerProps) {
+export default function VoiceMessagePlayer({ url, duration, durationMs, isMe }: VoiceMessagePlayerProps) {
   const audioRef = useRef<HTMLAudioElement>(null);
   const waveContainerRef = useRef<HTMLDivElement>(null);
   const timeLabelRef = useRef<HTMLSpanElement>(null);
   const rafRef = useRef<number | null>(null);
   const lastSyncRef = useRef({ at: 0, time: 0 });
 
+  const knownTotalSec = durationMs && durationMs > 0 ? durationMs / 1000 : 0;
   const [playing, setPlaying] = useState(false);
-  const [totalDuration, setTotalDuration] = useState(0);
+  const [totalDuration, setTotalDuration] = useState(knownTotalSec);
   const [speed, setSpeed] = useState<(typeof SPEED_OPTIONS)[number]>(1);
   const [hasPlayed, setHasPlayed] = useState(false);
 
@@ -59,13 +63,14 @@ export default function VoiceMessagePlayer({ url, duration, isMe }: VoiceMessage
     }
     if (timeLabelRef.current) {
       const audio = audioRef.current;
-      const total = audio?.duration && isFinite(audio.duration) ? audio.duration : 0;
+      const audioTotal = audio?.duration && isFinite(audio.duration) ? audio.duration : 0;
+      const total = audioTotal > 0 ? audioTotal : knownTotalSec;
       const cur = clamped * total;
       const m = Math.floor(cur / 60);
       const s = Math.floor(cur % 60);
       timeLabelRef.current.textContent = `${m}:${s.toString().padStart(2, "0")}`;
     }
-  }, []);
+  }, [knownTotalSec]);
 
   // RAF loop: interpolate between timeupdate events for buttery smoothness.
   useEffect(() => {
@@ -164,9 +169,10 @@ export default function VoiceMessagePlayer({ url, duration, isMe }: VoiceMessage
     writeProgress(clamped);
   }, [writeProgress]);
 
-  // Initial label fallback (before audio metadata loads, while paused).
-  const fallbackLabel = duration || (totalDuration > 0
-    ? `${Math.floor(totalDuration / 60)}:${String(Math.floor(totalDuration % 60)).padStart(2, "0")}`
+  // Initial label fallback. Prefer known duration so we never show 0:00.
+  const effectiveTotal = totalDuration > 0 ? totalDuration : knownTotalSec;
+  const fallbackLabel = duration || (effectiveTotal > 0
+    ? `${Math.floor(effectiveTotal / 60)}:${String(Math.floor(effectiveTotal % 60)).padStart(2, "0")}`
     : "0:00");
 
   // Telegram shows a tiny dot for unheard incoming voice notes
