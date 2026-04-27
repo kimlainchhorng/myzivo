@@ -118,22 +118,8 @@ export default function CreateGroupModal({ open, onClose, onCreated }: CreateGro
     });
   };
 
-  const handleCreate = async () => {
-    if (!user?.id || selected.size < 1 || !groupName.trim()) return;
-    setCreating(true);
-
-    // Helper: turn any unknown error (PostgrestError, Error, plain object) into
-    // a readable message so the toast/console always show the real cause.
-    const readErr = (e: unknown): string => {
-      if (!e) return "";
-      if (typeof e === "string") return e;
-      const x = e as { message?: string; details?: string; hint?: string; code?: string };
-      const parts = [x.message, x.details, x.hint, x.code ? `(${x.code})` : ""].filter(Boolean);
-      return parts.join(" — ") || JSON.stringify(e);
-    };
-
   // Tracks whether an in-flight creation should still update the UI / commit.
-  // Set to false by the auth-change listener if the user signs out mid-flight.
+  // Set to true by the auth-change listener if the user signs out mid-flight.
   const cancelledRef = useRef(false);
   const creatingRef = useRef(false);
 
@@ -141,8 +127,9 @@ export default function CreateGroupModal({ open, onClose, onCreated }: CreateGro
   useEffect(() => {
     const { data: sub } = supabase.auth.onAuthStateChange((event, session) => {
       if (!creatingRef.current) return;
-      if (event === "SIGNED_OUT" || event === "TOKEN_REFRESHED" && !session) {
+      if (event === "SIGNED_OUT") {
         cancelledRef.current = true;
+        return;
       }
       if (!session?.user?.id) {
         cancelledRef.current = true;
@@ -162,7 +149,6 @@ export default function CreateGroupModal({ open, onClose, onCreated }: CreateGro
       if (trimmedName.length > MAX_GROUP_NAME)
         return `Group name must be ${MAX_GROUP_NAME} characters or fewer`;
       if (selected.size < 1) return "Add at least one friend to the group";
-      // Selected IDs must be valid UUIDs and known friends.
       const friendIdSet = new Set(friends.map((f) => f.id));
       for (const id of selected) {
         if (!UUID_RE.test(id) || !friendIdSet.has(id)) {
@@ -185,8 +171,6 @@ export default function CreateGroupModal({ open, onClose, onCreated }: CreateGro
       );
       return;
     }
-    // Required columns are baked into our payloads below; this is a sanity
-    // check that fails loudly if someone changes them without updating here.
     const missingGroupCols = REQUIRED_GROUP_COLS.filter(
       (c) => !["name", "created_by"].includes(c)
     );
@@ -198,8 +182,7 @@ export default function CreateGroupModal({ open, onClose, onCreated }: CreateGro
       return;
     }
 
-    // Helper: turn any unknown error (PostgrestError, Error, plain object) into
-    // a structured object + readable summary.
+    // Helper: structured error parser for Supabase / generic errors.
     const readErr = (
       e: unknown
     ): { summary: string; details: GroupErrorDetails } => {
@@ -229,7 +212,7 @@ export default function CreateGroupModal({ open, onClose, onCreated }: CreateGro
       const msg = (x.message || "").toLowerCase();
       return (
         code === "PGRST301" ||
-        code === "42501" || // insufficient privilege
+        code === "42501" ||
         code.startsWith("PGRST3") ||
         msg.includes("row-level security") ||
         msg.includes("jwt") ||
@@ -238,7 +221,6 @@ export default function CreateGroupModal({ open, onClose, onCreated }: CreateGro
       );
     };
 
-    // The actual insert sequence — wrapped so we can retry once on auth/RLS.
     const performCreate = async (): Promise<{
       groupId: string;
       groupName: string;
@@ -251,7 +233,6 @@ export default function CreateGroupModal({ open, onClose, onCreated }: CreateGro
       }
       const uid = authData.user.id;
 
-      // Create the group
       const { data, error: gErr } = await dbFrom("chat_groups")
         .insert({ name: trimmedName, created_by: uid })
         .select()
@@ -262,7 +243,6 @@ export default function CreateGroupModal({ open, onClose, onCreated }: CreateGro
         throw gErr || new Error("Group row was not created");
       }
 
-      // Insert creator as owner
       const creatorInsert: GroupMemberInsert = {
         group_id: group.id,
         user_id: uid,
@@ -280,7 +260,6 @@ export default function CreateGroupModal({ open, onClose, onCreated }: CreateGro
         throw cErr;
       }
 
-      // Insert other members
       const otherInserts = Array.from(selected)
         .filter((u) => u !== uid)
         .map((u) => ({ group_id: group.id, user_id: u }));
@@ -315,7 +294,6 @@ export default function CreateGroupModal({ open, onClose, onCreated }: CreateGro
           return;
         }
         if (isAuthOrRlsError(firstErr)) {
-          // Re-check session and retry once
           const { data: refreshed } = await supabase.auth.getUser();
           if (!refreshed?.user?.id) {
             toast.error("Please sign in again to create a group");
