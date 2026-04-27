@@ -1065,7 +1065,7 @@ function SoundOverlay({
         })),
         ...(userPosts || []).map((p: any) => ({
           id: p.id, media_urls: p.media_urls || [], media_type: p.media_type,
-          views: 0, author: p.profiles?.display_name || "User",
+          views: 0, author: p.profiles?.full_name || p.profiles?.username || "User",
         })),
       ];
     },
