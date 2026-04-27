@@ -33,7 +33,7 @@ export default function ChatPollBubble({ pollId, question, options, isAnonymous,
     queryKey: ["chat-poll-votes", pollId],
     queryFn: async () => {
       const { data } = await supabase
-        .from("chat_poll_votes" as never)
+        .from("chat_poll_votes" as any)
         .select("option_index, user_id")
         .eq("poll_id", pollId);
       return (data ?? []) as ChatPollVoteRow[];

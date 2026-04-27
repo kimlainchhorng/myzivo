@@ -41,7 +41,7 @@ export default function NewBroadcastPage() {
     (async () => {
       // Pull recent chat partners as the contact pool.
       const { data } = await supabase
-        .from("direct_messages" as never)
+        .from("direct_messages" as any)
         .select("sender_id,receiver_id")
         .or(`sender_id.eq.${user.id},receiver_id.eq.${user.id}`)
         .order("created_at", { ascending: false })

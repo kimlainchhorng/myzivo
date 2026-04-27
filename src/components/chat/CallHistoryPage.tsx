@@ -90,13 +90,13 @@ export default function CallHistoryPage({ onClose, onCallUser }: CallHistoryPage
       setLoading(true);
       const [callsRes, vmRes] = await Promise.all([
         supabase
-          .from("call_history" as never)
+          .from("call_history" as any)
           .select("*")
           .or(`caller_id.eq.${user.id},callee_id.eq.${user.id}`)
           .order("created_at", { ascending: false })
           .limit(50),
         supabase
-          .from("voicemails" as never)
+          .from("voicemails" as any)
           .select("*")
           .eq("recipient_id", user.id)
           .order("created_at", { ascending: false })

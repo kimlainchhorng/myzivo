@@ -38,7 +38,7 @@ export default function ChatFolders({ activeFolder, onSelectFolder }: ChatFolder
     queryFn: async () => {
       if (!user) return [];
       const { data } = await supabase
-        .from("chat_folders" as never)
+        .from("chat_folders" as any)
         .select("*")
         .eq("user_id", user.id)
         .order("sort_order", { ascending: true });

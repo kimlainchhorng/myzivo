@@ -42,7 +42,7 @@ export default function JoinGroupPage() {
     }
     (async () => {
       const { data, error } = await supabase
-        .from("chat_group_invites" as never)
+        .from("chat_group_invites" as any)
         .select("group_id, expires_at, revoked_at, max_uses, use_count, group:chat_groups(name, avatar_url)")
         .eq("code", code)
         .maybeSingle();
