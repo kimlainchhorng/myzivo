@@ -15,6 +15,10 @@ interface Match {
   avatar_url: string | null;
 }
 
+interface ContactMatchResponse {
+  matches?: Match[];
+}
+
 export default function FindContactsPage() {
   const navigate = useNavigate();
   const [raw, setRaw] = useState("");
@@ -47,15 +51,16 @@ export default function FindContactsPage() {
         body: { hashes },
       });
       if (error) throw error;
-      const results = (data as any)?.matches ?? [];
+      const results = (data as ContactMatchResponse | null)?.matches ?? [];
       setMatches(results);
       toast.success(
         results.length
           ? `${results.length} of your contact${phones.length > 1 ? "s are" : " is"} on ZIVO`
           : `Scanned ${phones.length} contact${phones.length > 1 ? "s" : ""} — no matches yet`
       );
-    } catch (e: any) {
-      toast.error(e?.message ?? "Couldn't match contacts");
+    } catch (e: unknown) {
+      const message = e instanceof Error ? e.message : "Couldn't match contacts";
+      toast.error(message);
     } finally {
       setScanning(false);
     }

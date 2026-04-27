@@ -21,6 +21,13 @@ interface ChatBackupExportProps {
   recipientName: string;
 }
 
+interface DirectMessageExportRow {
+  message: string | null;
+  sender_id: string;
+  created_at: string;
+  message_type: string | null;
+}
+
 export default function ChatBackupExport({ open, onClose, recipientId, recipientName }: ChatBackupExportProps) {
   const { user } = useAuth();
   const [exporting, setExporting] = useState(false);
@@ -30,22 +37,22 @@ export default function ChatBackupExport({ open, onClose, recipientId, recipient
     if (!user) return;
     setExporting(true);
     try {
-      const { data, error } = await (supabase as any)
-        .from("direct_messages")
+      const { data, error } = await supabase
+        .from("direct_messages" as never)
         .select("message, sender_id, created_at, message_type")
         .or(`and(sender_id.eq.${user.id},receiver_id.eq.${recipientId}),and(sender_id.eq.${recipientId},receiver_id.eq.${user.id})`)
         .order("created_at", { ascending: true })
         .limit(5000);
 
       if (error) throw error;
-      const messages = data || [];
+      const messages = (data ?? []) as DirectMessageExportRow[];
 
       let content: string;
       let mimeType: string;
       let extension: string;
 
       if (fmt === "json") {
-        content = JSON.stringify(messages.map((m: any) => ({
+        content = JSON.stringify(messages.map((m) => ({
           from: m.sender_id === user.id ? "You" : recipientName,
           message: m.message || `[${m.message_type}]`,
           time: m.created_at,
@@ -53,7 +60,7 @@ export default function ChatBackupExport({ open, onClose, recipientId, recipient
         mimeType = "application/json";
         extension = "json";
       } else {
-        content = messages.map((m: any) => {
+        content = messages.map((m) => {
           const from = m.sender_id === user.id ? "You" : recipientName;
           const time = format(new Date(m.created_at), "MMM d, yyyy h:mm a");
           return `[${time}] ${from}: ${m.message || `[${m.message_type}]`}`;
@@ -73,7 +80,7 @@ export default function ChatBackupExport({ open, onClose, recipientId, recipient
       setDone(true);
       toast.success("Chat exported successfully!");
       setTimeout(() => { setDone(false); onClose(); }, 1500);
-    } catch (err) {
+    } catch {
       toast.error("Export failed");
     } finally {
       setExporting(false);

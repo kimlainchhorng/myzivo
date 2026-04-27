@@ -20,6 +20,22 @@ interface ChatNotificationSettingsProps {
   chatPartnerName: string;
 }
 
+interface ChatNotificationSettingsRow {
+  is_muted: boolean | null;
+  mute_until: string | null;
+  notification_tone: string | null;
+  dnd_start: string | null;
+  dnd_end: string | null;
+}
+
+type ChatSettingsUpdate = {
+  is_muted?: boolean;
+  mute_until?: string | null;
+  notification_tone?: string;
+  dnd_start?: string | null;
+  dnd_end?: string | null;
+};
+
 const NOTIFICATION_TONES = [
   { id: "default", label: "Default", emoji: "🔔" },
   { id: "chime", label: "Chime", emoji: "🎵" },
@@ -43,35 +59,33 @@ export default function ChatNotificationSettings({ open, onClose, chatPartnerId,
   const [tone, setTone] = useState("default");
   const [dndStart, setDndStart] = useState("");
   const [dndEnd, setDndEnd] = useState("");
-  const [loading, setLoading] = useState(true);
   const [showMuteOptions, setShowMuteOptions] = useState(false);
 
   useEffect(() => {
     if (!open || !user?.id) return;
     const load = async () => {
-      setLoading(true);
-      const { data } = await (supabase as any)
-        .from("chat_settings")
+      const { data } = await supabase
+        .from("chat_settings" as never)
         .select("*")
         .eq("user_id", user.id)
         .eq("chat_partner_id", chatPartnerId)
         .maybeSingle();
       if (data) {
-        setIsMuted(data.is_muted || false);
-        setMuteUntil(data.mute_until);
-        setTone(data.notification_tone || "default");
-        setDndStart(data.dnd_start || "");
-        setDndEnd(data.dnd_end || "");
+        const settings = data as ChatNotificationSettingsRow;
+        setIsMuted(settings.is_muted || false);
+        setMuteUntil(settings.mute_until);
+        setTone(settings.notification_tone || "default");
+        setDndStart(settings.dnd_start || "");
+        setDndEnd(settings.dnd_end || "");
       }
-      setLoading(false);
     };
     load();
   }, [open, user?.id, chatPartnerId]);
 
-  const save = async (updates: Record<string, any>) => {
+  const save = async (updates: ChatSettingsUpdate) => {
     if (!user?.id) return;
-    const { error } = await (supabase as any)
-      .from("chat_settings")
+    const { error } = await supabase
+      .from("chat_settings" as never)
       .upsert({
         user_id: user.id,
         chat_partner_id: chatPartnerId,

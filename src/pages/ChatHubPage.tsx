@@ -3,6 +3,8 @@
  * Personal, Shop, Support, Ride + Group chats
  * 2026-style design with premium UI
  */
+/* eslint-disable @typescript-eslint/no-explicit-any */
+/* eslint-disable no-empty */
 import { useState, useEffect, useMemo, lazy, Suspense } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import MessageCircleIcon from "lucide-react/dist/esm/icons/message-circle";
@@ -19,6 +21,8 @@ import Users from "lucide-react/dist/esm/icons/users";
 import Plus from "lucide-react/dist/esm/icons/plus";
 import UserPlus from "lucide-react/dist/esm/icons/user-plus";
 import Settings from "lucide-react/dist/esm/icons/settings";
+import CheckSquare from "lucide-react/dist/esm/icons/check-square";
+import Square from "lucide-react/dist/esm/icons/square";
 
 import Check from "lucide-react/dist/esm/icons/check";
 import CheckCheck from "lucide-react/dist/esm/icons/check-check";
@@ -74,7 +78,7 @@ const getIllustratedPacks = () => {
 };
 
 type ChatCategory = "personal" | "shop" | "support" | "ride";
-type ChatFolder = "all" | "unread" | "personal" | "groups" | "shop" | "support" | "ride";
+type BuiltInChatFolder = "all" | "unread" | "personal" | "groups" | "shop" | "support" | "ride";
 
 interface CategoryTab {
   id: ChatCategory;
@@ -86,9 +90,15 @@ interface CategoryTab {
 }
 
 interface FolderTab {
-  id: ChatFolder;
+  id: string;
   label: string;
   category: ChatCategory; // which underlying data source to fetch
+}
+
+interface BulkSelectableChat {
+  id: string;
+  unread?: number;
+  isGroup?: boolean;
 }
 
 const categories: CategoryTab[] = [
@@ -98,7 +108,7 @@ const categories: CategoryTab[] = [
   { id: "ride", label: "Ride", icon: Car, emptyTitle: "No ride chats", emptyDesc: "Messages from your drivers will show here", emptyIcon: "🚗" },
 ];
 
-const folders: FolderTab[] = [
+const builtInFolders: FolderTab[] = [
   { id: "all", label: "All", category: "personal" },
   { id: "unread", label: "Unread", category: "personal" },
   { id: "personal", label: "Personal", category: "personal" },
@@ -167,20 +177,39 @@ function getMessagePreviewIcon(message: string) {
   return null;
 }
 
+function detectPreviewType(message: string): { hasMedia: boolean; hasLink: boolean; hasFile: boolean } {
+  const lower = String(message || "").toLowerCase();
+  const hasLink = /https?:\/\//i.test(lower);
+  const hasMedia =
+    lower.includes("[image]") ||
+    lower.includes("📷") ||
+    lower.includes("[video]") ||
+    lower.includes("🎥") ||
+    lower.includes("sticker") ||
+    /\.(png|jpe?g|webp|gif|avif|mp4|webm|mov)(\?|#|$)/i.test(lower);
+  const hasFile =
+    lower.includes("[file]") ||
+    lower.includes("attachment") ||
+    lower.includes("document") ||
+    /\.(pdf|docx?|xlsx?|pptx?|zip|rar|txt)(\?|#|$)/i.test(lower);
+  return { hasMedia, hasLink, hasFile };
+}
+
 export default function ChatHubPage({ embedded = false }: { embedded?: boolean } = {}) {
-  const [folder, setFolderState] = useState<ChatFolder>(() => {
+  const [folder, setFolderState] = useState<string>(() => {
     try {
-      const saved = localStorage.getItem(FOLDER_STORAGE_KEY) as ChatFolder | null;
-      if (saved && folders.some((f) => f.id === saved)) return saved;
+      const saved = localStorage.getItem(FOLDER_STORAGE_KEY);
+      if (saved) return saved;
     } catch {}
     return "all";
   });
-  const setFolder = (f: ChatFolder) => {
+  const setFolder = (f: string) => {
     setFolderState(f);
     try { localStorage.setItem(FOLDER_STORAGE_KEY, f); } catch {}
   };
-  const active: ChatCategory = folders.find((f) => f.id === folder)!.category;
-  const setActive = (c: ChatCategory) => setFolder(c as ChatFolder);
+  const builtInActiveFolder = builtInFolders.find((f) => f.id === folder);
+  const active: ChatCategory = builtInActiveFolder?.category || "personal";
+  const setActive = (c: ChatCategory) => setFolder(c);
   const [search, setSearch] = useState("");
   const [searchFilter, setSearchFilter] = useState<"chats" | "media" | "links" | "files">("chats");
   const [showArchived, setShowArchived] = useState(false);
@@ -413,7 +442,7 @@ export default function ChatHubPage({ embedded = false }: { embedded?: boolean }
           grouped.set(key, {
             id: key,
             name: `Ride #${key.slice(0, 6).toUpperCase()}`,
-            lastMessage: msg.message,
+            lastMessage: msg.message || "",
             lastTime: msg.created_at,
             unread: (!msg.is_read && msg.sender_id !== user!.id) ? 1 : 0,
           });
@@ -552,8 +581,67 @@ export default function ChatHubPage({ embedded = false }: { embedded?: boolean }
     },
   });
 
+  // User-defined folder tabs and conversation membership
+  const { data: customFolders = [] } = useQuery({
+    queryKey: ["chat-folders", user?.id],
+    enabled: !!user?.id && active === "personal",
+    queryFn: async () => {
+      const { data } = await (supabase as any)
+        .from("chat_folders")
+        .select("id, name, icon, sort_order")
+        .eq("user_id", user!.id)
+        .order("sort_order", { ascending: true });
+      return (data || []) as { id: string; name: string; icon: string | null; sort_order: number | null }[];
+    },
+  });
+
+  const customFolderIds = useMemo(() => customFolders.map((f) => f.id), [customFolders]);
+
+  const { data: customFolderMembers = [] } = useQuery({
+    queryKey: ["chat-folder-members", user?.id, customFolderIds.join(",")],
+    enabled: !!user?.id && customFolderIds.length > 0 && active === "personal",
+    queryFn: async () => {
+      const { data } = await (supabase as any)
+        .from("chat_folder_members")
+        .select("folder_id, conversation_id")
+        .in("folder_id", customFolderIds);
+      return (data || []) as { folder_id: string; conversation_id: string }[];
+    },
+  });
+
+  const customFolderMemberMap = useMemo(() => {
+    const map = new Map<string, Set<string>>();
+    for (const row of customFolderMembers) {
+      if (!map.has(row.folder_id)) map.set(row.folder_id, new Set());
+      map.get(row.folder_id)!.add(row.conversation_id);
+    }
+    return map;
+  }, [customFolderMembers]);
+
+  const folderTabs = useMemo<FolderTab[]>(() => {
+    const customTabs = customFolders.map((f) => ({
+      id: `custom:${f.id}`,
+      label: `${f.icon || "📁"} ${f.name}`,
+      category: "personal" as ChatCategory,
+    }));
+    return [...builtInFolders, ...customTabs];
+  }, [customFolders]);
+
+  // Row actions sheet state — declared before actionsFolderMembership useMemo
+  const [actionsTarget, setActionsTarget] = useState<ChatRowActionsTarget | null>(null);
+
+  const actionsFolderMembership = useMemo(() => {
+    if (!actionsTarget) return new Set<string>();
+    const set = new Set<string>();
+    for (const folderDef of customFolders) {
+      const members = customFolderMemberMap.get(folderDef.id);
+      if (members?.has(actionsTarget.id)) set.add(folderDef.id);
+    }
+    return set;
+  }, [actionsTarget, customFolders, customFolderMemberMap]);
+
   const currentCategory = categories.find((c) => c.id === active)!;
-  const { isPinned, isMuted, isArchived, togglePin, toggleMute, toggleArchive } = useChatPrefs(user?.id);
+  const { prefs, isPinned, isMuted, isArchived, togglePin, toggleMute, toggleArchive, setPrefs } = useChatPrefs(user?.id);
 
   // Live presence dots for visible personal partners
   const personalPartnerIds = useMemo(
@@ -565,9 +653,11 @@ export default function ChatHubPage({ embedded = false }: { embedded?: boolean }
   // Live "typing…" preview from other users
   const typingFrom = useTypingBus(user?.id);
 
-  // Row actions sheet state
-  const [actionsTarget, setActionsTarget] = useState<ChatRowActionsTarget | null>(null);
   const [showAddContact, setShowAddContact] = useState(false);
+  const [selectionMode, setSelectionMode] = useState(false);
+  const [selectedChatIds, setSelectedChatIds] = useState<Set<string>>(new Set());
+  const [bulkFolderAction, setBulkFolderAction] = useState<"add" | "remove" | null>(null);
+  const [showBulkDeleteConfirm, setShowBulkDeleteConfirm] = useState(false);
 
   // Saved Messages — Telegram's self-chat
   const { data: savedMessagesPreview } = useQuery({
@@ -610,6 +700,11 @@ export default function ChatHubPage({ embedded = false }: { embedded?: boolean }
 
   // Apply folder-level filtering on top of category data
   const folderFiltered = (rawChatList as any[]).filter((c) => {
+    if (folder.startsWith("custom:")) {
+      const customFolderId = folder.slice("custom:".length);
+      const members = customFolderMemberMap.get(customFolderId);
+      return members?.has(c.id) === true;
+    }
     if (folder === "unread") return (c.unread || 0) > 0;
     if (folder === "personal") return !(c as any).isGroup;
     if (folder === "groups") return !!(c as any).isGroup;
@@ -621,7 +716,7 @@ export default function ChatHubPage({ embedded = false }: { embedded?: boolean }
   const visibleList = folderFiltered.filter((c: any) => !isArchived(c.id));
 
   // Per-folder unread badges (for the pill bar)
-  const folderUnreadMap: Record<ChatFolder, number> = {
+  const builtInFolderUnreadMap: Record<BuiltInChatFolder, number> = {
     all: personalUnread,
     unread: personalUnread,
     personal: personalChats.filter((c: any) => !c.isGroup).reduce((s: number, c: any) => s + (c.unread || 0), 0),
@@ -629,6 +724,27 @@ export default function ChatHubPage({ embedded = false }: { embedded?: boolean }
     shop: shopUnread,
     support: supportUnread,
     ride: rideUnread,
+  };
+
+  const customFolderUnreadMap = useMemo(() => {
+    const map: Record<string, number> = {};
+    const personalPool = [...personalChats, ...groupChats] as any[];
+    for (const folderDef of customFolders) {
+      const members = customFolderMemberMap.get(folderDef.id);
+      if (!members) {
+        map[`custom:${folderDef.id}`] = 0;
+        continue;
+      }
+      map[`custom:${folderDef.id}`] = personalPool
+        .filter((chat) => members.has(chat.id))
+        .reduce((sum, chat) => sum + (chat.unread || 0), 0);
+    }
+    return map;
+  }, [customFolders, customFolderMemberMap, groupChats, personalChats]);
+
+  const folderUnreadMap: Record<string, number> = {
+    ...builtInFolderUnreadMap,
+    ...customFolderUnreadMap,
   };
 
   // Pinned-first sort
@@ -643,8 +759,19 @@ export default function ChatHubPage({ embedded = false }: { embedded?: boolean }
   const sortedVisible = sortByPin(visibleList);
   const archivedUnread = archivedList.reduce((s: number, c: any) => s + (c.unread || 0), 0);
 
-  const filtered = search
-    ? sortedVisible.filter((c: any) => c.name?.toLowerCase().includes(search.toLowerCase()))
+  const normalizedSearch = search.trim().toLowerCase();
+  const filtered = normalizedSearch
+    ? sortedVisible.filter((c: any) => {
+        const preview = parseRichMessagePreview(c.lastMessage || "");
+        const searchable = `${String(c.name || "")} ${String(preview || "")}`.toLowerCase();
+        if (!searchable.includes(normalizedSearch)) return false;
+
+        const type = detectPreviewType(preview);
+        if (searchFilter === "media") return type.hasMedia;
+        if (searchFilter === "links") return type.hasLink;
+        if (searchFilter === "files") return type.hasFile;
+        return true;
+      })
     : sortedVisible;
 
   const [profileResults, setProfileResults] = useState<any[]>([]);
@@ -685,9 +812,20 @@ export default function ChatHubPage({ embedded = false }: { embedded?: boolean }
     return () => { alive = false; clearTimeout(timeout); };
   }, [search, active, user]);
 
-  const displayList = active === "personal" && search.trim().length >= 2
+  const displayList = active === "personal" && searchFilter === "chats" && search.trim().length >= 2
     ? profileResults
     : filtered;
+
+  const bulkSelectableList = useMemo<BulkSelectableChat[]>(
+    () => displayList as BulkSelectableChat[],
+    [displayList],
+  );
+
+  const selectedSummary = useMemo(() => {
+    const selected = bulkSelectableList.filter((chat) => selectedChatIds.has(chat.id));
+    const unread = selected.reduce((sum, chat) => sum + (chat.unread || 0), 0);
+    return { count: selected.length, unread };
+  }, [bulkSelectableList, selectedChatIds]);
 
   const hasOverlayChatOpen = Boolean(openShopChat || openPersonalChat || openGroupChat);
   const showListShell = !embedded || !hasOverlayChatOpen;
@@ -724,6 +862,246 @@ export default function ChatHubPage({ embedded = false }: { embedded?: boolean }
     ]);
   }, [queryClient]);
 
+  const toggleSelectedChat = useCallback((chatId: string) => {
+    setSelectedChatIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(chatId)) next.delete(chatId);
+      else next.add(chatId);
+      return next;
+    });
+  }, []);
+
+  const clearSelectionMode = useCallback(() => {
+    setSelectionMode(false);
+    setSelectedChatIds(new Set());
+    setBulkFolderAction(null);
+    setShowBulkDeleteConfirm(false);
+  }, []);
+
+  const selectAllVisible = useCallback(() => {
+    setSelectedChatIds(new Set(bulkSelectableList.map((chat) => chat.id)));
+  }, [bulkSelectableList]);
+
+  const selectUnreadVisible = useCallback(() => {
+    setSelectedChatIds(new Set(bulkSelectableList.filter((chat) => (chat.unread || 0) > 0).map((chat) => chat.id)));
+  }, [bulkSelectableList]);
+
+  const handleBulkMarkRead = useCallback(async () => {
+    if (!user?.id || selectedChatIds.size === 0) return;
+    const senderIds = Array.from(selectedChatIds);
+    const { error } = await supabase
+      .from("direct_messages")
+      .update({ is_read: true })
+      .eq("receiver_id", user.id)
+      .eq("is_read", false)
+      .in("sender_id", senderIds);
+    if (error) {
+      toast.error("Failed to mark selected chats as read");
+      return;
+    }
+    toast.success("Selected chats marked as read");
+    await queryClient.invalidateQueries({ queryKey: ["chat-hub-personal", user.id] });
+    clearSelectionMode();
+  }, [clearSelectionMode, queryClient, selectedChatIds, user?.id]);
+
+  const handleBulkAddToFolder = useCallback(async (folderId: string) => {
+    if (!user?.id || selectedChatIds.size === 0) return;
+    const selected = Array.from(selectedChatIds);
+    const { data: existingRows } = await (supabase as any)
+      .from("chat_folder_members")
+      .select("conversation_id")
+      .eq("folder_id", folderId)
+      .in("conversation_id", selected);
+
+    const existingIds = new Set<string>((existingRows || []).map((r: { conversation_id: string }) => r.conversation_id));
+    const payload = selected
+      .filter((id) => !existingIds.has(id))
+      .map((conversation_id) => ({ folder_id: folderId, conversation_id }));
+
+    if (payload.length === 0) {
+      toast.info("All selected chats are already in this folder");
+      return;
+    }
+
+    const { error } = await (supabase as any)
+      .from("chat_folder_members")
+      .insert(payload);
+    if (error) {
+      toast.error("Failed to add selected chats to folder");
+      return;
+    }
+    toast.success(`Added ${payload.length} chat${payload.length === 1 ? "" : "s"} to folder`);
+    await queryClient.invalidateQueries({ queryKey: ["chat-folder-members", user?.id] });
+    clearSelectionMode();
+  }, [clearSelectionMode, queryClient, selectedChatIds, user?.id]);
+
+  const handleBulkRemoveFromFolder = useCallback(async (folderId: string) => {
+    if (!user?.id || selectedChatIds.size === 0) return;
+    const selected = Array.from(selectedChatIds);
+    const { error } = await (supabase as any)
+      .from("chat_folder_members")
+      .delete()
+      .eq("folder_id", folderId)
+      .in("conversation_id", selected);
+    if (error) {
+      toast.error("Failed to remove selected chats from folder");
+      return;
+    }
+    toast.success("Removed selected chats from folder");
+    await queryClient.invalidateQueries({ queryKey: ["chat-folder-members", user?.id] });
+    clearSelectionMode();
+  }, [clearSelectionMode, queryClient, selectedChatIds, user?.id]);
+
+  const handleBulkSetArchive = useCallback((archived: boolean) => {
+    if (selectedChatIds.size === 0) return;
+    const previousPrefs = prefs;
+    const nextArchived = { ...(prefs.archived || {}) };
+    for (const id of selectedChatIds) {
+      if (archived) nextArchived[id] = true;
+      else delete nextArchived[id];
+    }
+    setPrefs({ ...prefs, archived: nextArchived });
+    toast.success(archived ? "Selected chats archived" : "Selected chats unarchived", {
+      action: {
+        label: "Undo",
+        onClick: () => setPrefs(previousPrefs),
+      },
+    });
+  }, [prefs, selectedChatIds, setPrefs]);
+
+  const handleBulkSetMuted = useCallback((muted: boolean) => {
+    if (selectedChatIds.size === 0) return;
+    const previousPrefs = prefs;
+    const nextMuted = { ...(prefs.muted || {}) };
+    for (const id of selectedChatIds) {
+      if (muted) nextMuted[id] = true;
+      else delete nextMuted[id];
+    }
+    setPrefs({ ...prefs, muted: nextMuted });
+    toast.success(muted ? "Selected chats muted" : "Selected chats unmuted", {
+      action: {
+        label: "Undo",
+        onClick: () => setPrefs(previousPrefs),
+      },
+    });
+  }, [prefs, selectedChatIds, setPrefs]);
+
+  const handleBulkSetPinned = useCallback((pinned: boolean) => {
+    if (selectedChatIds.size === 0) return;
+    const previousPrefs = prefs;
+    const nextPinned = { ...(prefs.pinned || {}) };
+    for (const id of selectedChatIds) {
+      if (pinned) nextPinned[id] = true;
+      else delete nextPinned[id];
+    }
+    setPrefs({ ...prefs, pinned: nextPinned });
+    toast.success(pinned ? "Selected chats pinned" : "Selected chats unpinned", {
+      action: {
+        label: "Undo",
+        onClick: () => setPrefs(previousPrefs),
+      },
+    });
+  }, [prefs, selectedChatIds, setPrefs]);
+
+  const handleBulkDeleteSelected = useCallback(async () => {
+    if (!user?.id || selectedChatIds.size === 0) return;
+    const selectedMeta = bulkSelectableList.filter((chat) => selectedChatIds.has(chat.id));
+    const personalIds = selectedMeta.filter((chat) => !chat.isGroup).map((chat) => chat.id);
+    const groupIds = selectedMeta.filter((chat) => !!chat.isGroup).map((chat) => chat.id);
+
+    try {
+      await Promise.all(
+        [
+          ...personalIds.map((chatId: string) =>
+            supabase
+              .from("direct_messages")
+              .delete()
+              .or(`and(sender_id.eq.${user.id},receiver_id.eq.${chatId}),and(sender_id.eq.${chatId},receiver_id.eq.${user.id})`)
+          ),
+          ...(groupIds.length
+            ? [
+                (supabase as any)
+                  .from("chat_group_members")
+                  .delete()
+                  .eq("user_id", user.id)
+                  .in("group_id", groupIds),
+              ]
+            : []),
+          (supabase as any)
+            .from("chat_folder_members")
+            .delete()
+            .in("conversation_id", Array.from(selectedChatIds)),
+        ]
+      );
+
+      // Remove deleted/left conversations from local pin/mute/archive maps.
+      const nextPinned = { ...(prefs.pinned || {}) };
+      const nextMuted = { ...(prefs.muted || {}) };
+      const nextArchived = { ...(prefs.archived || {}) };
+      for (const id of selectedChatIds) {
+        delete nextPinned[id];
+        delete nextMuted[id];
+        delete nextArchived[id];
+      }
+      setPrefs({ ...prefs, pinned: nextPinned, muted: nextMuted, archived: nextArchived });
+
+      const personalCount = personalIds.length;
+      const leftGroups = groupIds.length;
+      const parts = [];
+      if (personalCount > 0) parts.push(`Deleted ${personalCount} personal chat${personalCount === 1 ? "" : "s"}`);
+      if (leftGroups > 0) parts.push(`left ${leftGroups} group chat${leftGroups === 1 ? "" : "s"}`);
+      toast.success(parts.length ? `${parts.join(" and ")}.` : "Selected chats removed.");
+
+      await queryClient.invalidateQueries({ queryKey: ["chat-hub-personal", user.id] });
+      await queryClient.invalidateQueries({ queryKey: ["chat-hub-groups", user.id] });
+      await queryClient.invalidateQueries({ queryKey: ["chat-folder-members", user.id] });
+      clearSelectionMode();
+    } catch {
+      toast.error("Failed to delete selected chats");
+    }
+  }, [bulkSelectableList, clearSelectionMode, prefs, queryClient, selectedChatIds, setPrefs, user?.id]);
+
+  const handleAddChatToFolder = useCallback(async (folderId: string, conversationId: string) => {
+    const { error } = await (supabase as any)
+      .from("chat_folder_members")
+      .insert({ folder_id: folderId, conversation_id: conversationId });
+    if (error) {
+      toast.error("Failed to add chat to folder");
+      return;
+    }
+    toast.success("Added to folder");
+    await queryClient.invalidateQueries({ queryKey: ["chat-folder-members", user?.id] });
+  }, [queryClient, user?.id]);
+
+  const handleRemoveChatFromFolder = useCallback(async (folderId: string, conversationId: string) => {
+    const { error } = await (supabase as any)
+      .from("chat_folder_members")
+      .delete()
+      .eq("folder_id", folderId)
+      .eq("conversation_id", conversationId);
+    if (error) {
+      toast.error("Failed to remove chat from folder");
+      return;
+    }
+    toast.success("Removed from folder");
+    await queryClient.invalidateQueries({ queryKey: ["chat-folder-members", user?.id] });
+  }, [queryClient, user?.id]);
+
+  const handleMarkAllPersonalRead = useCallback(async () => {
+    if (!user?.id) return;
+    const { error } = await supabase
+      .from("direct_messages")
+      .update({ is_read: true })
+      .eq("receiver_id", user.id)
+      .eq("is_read", false);
+    if (error) {
+      toast.error("Failed to mark all as read");
+      return;
+    }
+    toast.success("All chats marked as read");
+    await queryClient.invalidateQueries({ queryKey: ["chat-hub-personal", user.id] });
+  }, [queryClient, user?.id]);
+
   if (!user) {
     return (
       <div className="flex flex-col items-center justify-center min-h-[60vh] px-6 text-center">
@@ -755,17 +1133,50 @@ export default function ChatHubPage({ embedded = false }: { embedded?: boolean }
             {!embedded ? (
               <div className="px-5 pt-2 pb-3 flex items-center justify-between">
                 <div className="flex items-center gap-3">
-                  <button
-                    onClick={() => navigate('/')}
-                    className="w-9 h-9 flex items-center justify-center rounded-full hover:bg-muted active:scale-90 transition-all"
-                  >
-                    <ArrowLeft className="w-5 h-5 text-foreground" />
-                  </button>
+                  {selectionMode ? (
+                    <button
+                      onClick={clearSelectionMode}
+                      className="w-9 h-9 flex items-center justify-center rounded-full hover:bg-muted active:scale-90 transition-all"
+                      aria-label="Exit selection"
+                      title="Exit selection"
+                    >
+                      <X className="w-5 h-5 text-foreground" />
+                    </button>
+                  ) : (
+                    <button
+                      onClick={() => navigate('/')}
+                      className="w-9 h-9 flex items-center justify-center rounded-full hover:bg-muted active:scale-90 transition-all"
+                    >
+                      <ArrowLeft className="w-5 h-5 text-foreground" />
+                    </button>
+                  )}
                   <div>
-                    <h1 className="text-xl font-bold text-foreground">Chat</h1>
+                    <h1 className="text-xl font-bold text-foreground">
+                      {selectionMode ? `${selectedChatIds.size} selected` : "Chat"}
+                    </h1>
                   </div>
                 </div>
                 <div className="flex items-center gap-1">
+                  {active === "personal" && !selectionMode && !search && (
+                    <button
+                      onClick={() => setSelectionMode(true)}
+                      className="relative w-9 h-9 flex items-center justify-center rounded-full hover:bg-muted active:scale-90 transition-all"
+                      aria-label="Select chats"
+                      title="Select chats"
+                    >
+                      <CheckSquare className="w-5 h-5 text-muted-foreground" />
+                    </button>
+                  )}
+                  {active === "personal" && (
+                    <button
+                      onClick={() => void handleMarkAllPersonalRead()}
+                      className="relative w-9 h-9 flex items-center justify-center rounded-full hover:bg-muted active:scale-90 transition-all"
+                      aria-label="Mark all as read"
+                      title="Mark all as read"
+                    >
+                      <CheckCheck className="w-5 h-5 text-muted-foreground" />
+                    </button>
+                  )}
                   {active === "personal" && (
                     <button
                       onClick={() => navigate('/chat/contacts')}
@@ -835,7 +1246,7 @@ export default function ChatHubPage({ embedded = false }: { embedded?: boolean }
                 <div className="flex gap-1.5 mt-2 overflow-x-auto scrollbar-hide">
                   {(["chats", "media", "links", "files"] as const).map((f) => {
                     const isActiveFilter = searchFilter === f;
-                    const enabled = f === "chats";
+                    const enabled = true;
                     return (
                       <button
                         key={f}
@@ -850,7 +1261,7 @@ export default function ChatHubPage({ embedded = false }: { embedded?: boolean }
                               : "bg-muted/30 text-muted-foreground/50 cursor-not-allowed"
                         )}
                       >
-                        {f}{!enabled && " · soon"}
+                        {f}
                       </button>
                     );
                   })}
@@ -870,9 +1281,9 @@ export default function ChatHubPage({ embedded = false }: { embedded?: boolean }
                 <Settings className="w-3 h-3" />
                 Edit
               </button>
-              {folders.map((f) => {
+              {folderTabs.map((f) => {
                 const isActiveFolder = folder === f.id;
-                const unread = folderUnreadMap[f.id];
+                const unread = folderUnreadMap[f.id] || 0;
                 return (
                   <button
                     key={f.id}
@@ -948,7 +1359,7 @@ export default function ChatHubPage({ embedded = false }: { embedded?: boolean }
                     </p>
                     <p className="text-sm text-muted-foreground max-w-[260px] leading-relaxed mb-5">
                       {active === "personal" && search.trim().length >= 2
-                        ? `No results for \"${search}\"`
+                        ? `No results for "${search}"`
                         : currentCategory.emptyDesc}
                     </p>
                     {active === "support" && (
@@ -1084,7 +1495,7 @@ export default function ChatHubPage({ embedded = false }: { embedded?: boolean }
                             transition={{ delay: Math.min(idx, 8) * 0.02, type: "spring", stiffness: 300, damping: 28 }}
                           >
                             <SwipeableRow
-                              disabled={!isPersonalChat}
+                              disabled={!isPersonalChat || selectionMode}
                               leftActions={isPersonalChat ? [
                                 {
                                   key: "pin",
@@ -1128,6 +1539,10 @@ export default function ChatHubPage({ embedded = false }: { embedded?: boolean }
                                   chat.unread > 0 && !muted && "border-primary/20 bg-primary/[0.02] shadow-primary/5"
                                 )}
                                 onClick={() => {
+                                  if (selectionMode && active === "personal") {
+                                    toggleSelectedChat(chat.id);
+                                    return;
+                                  }
                                   if (sharePayload && active === "personal" && !(chat as any).isGroup) {
                                     handleShareToContact(chat.id, chat.name, chat.avatar);
                                     return;
@@ -1146,6 +1561,15 @@ export default function ChatHubPage({ embedded = false }: { embedded?: boolean }
                                 }}
                               >
                                 <div className="relative flex-shrink-0">
+                                  {selectionMode && isPersonalChat && (
+                                    <span className="absolute -left-7 top-1/2 -translate-y-1/2">
+                                      {selectedChatIds.has(chat.id) ? (
+                                        <CheckSquare className="w-4 h-4 text-primary" />
+                                      ) : (
+                                        <Square className="w-4 h-4 text-muted-foreground" />
+                                      )}
+                                    </span>
+                                  )}
                                   <div className={cn(
                                     "flex items-center justify-center overflow-hidden ring-2 ring-border/30",
                                     embedded ? "h-[44px] w-[44px] rounded-xl" : "w-[50px] h-[50px] rounded-2xl",
@@ -1193,7 +1617,7 @@ export default function ChatHubPage({ embedded = false }: { embedded?: boolean }
                                       )}>
                                         {formatChatTime(chat.lastTime)}
                                       </span>
-                                      {isPersonalChat && !chat.isGroup && (
+                                      {isPersonalChat && !chat.isGroup && !selectionMode && (
                                         <span
                                           role="button"
                                           aria-label="Chat options"
@@ -1252,7 +1676,7 @@ export default function ChatHubPage({ embedded = false }: { embedded?: boolean }
                                             </span>
                                           );
                                         }
-                                        const preview = parseRichMessagePreview(chat.lastMessage);
+                                        const preview = parseRichMessagePreview(chat.lastMessage || "");
                                         const youPrefix = active === "personal" && (chat as any).isSentByMe && !(chat as any).isGroup;
                                         return (
                                           <>
@@ -1331,6 +1755,129 @@ export default function ChatHubPage({ embedded = false }: { embedded?: boolean }
                         ))}
                       </div>
                     )}
+
+                    {selectionMode && active === "personal" && (
+                      <div className="sticky bottom-[calc(var(--zivo-safe-bottom,0px)+5.3rem)] z-30 px-1 pt-2">
+                        <div className="rounded-2xl border border-border/40 bg-card/95 backdrop-blur-xl shadow-lg p-2">
+                          <div className="mb-2 px-1 text-[11px] text-muted-foreground">
+                            {selectedSummary.count} selected{selectedSummary.unread > 0 ? ` · ${selectedSummary.unread} unread` : ""}
+                          </div>
+                          <div className="flex items-center gap-2 mb-2">
+                            <button
+                              onClick={() => void selectAllVisible()}
+                              className="flex-1 h-8 rounded-lg bg-muted text-foreground text-[11px] font-semibold"
+                            >
+                              Select All Visible
+                            </button>
+                            <button
+                              onClick={() => void selectUnreadVisible()}
+                              className="flex-1 h-8 rounded-lg bg-muted text-foreground text-[11px] font-semibold"
+                            >
+                              Select Unread
+                            </button>
+                          </div>
+                          <div className="grid grid-cols-3 gap-2">
+                            <button
+                              onClick={() => setBulkFolderAction((prev) => prev === "add" ? null : "add")}
+                              disabled={selectedChatIds.size === 0 || customFolders.length === 0}
+                              className="flex-1 h-10 rounded-xl bg-primary/10 text-primary text-xs font-semibold disabled:opacity-40"
+                            >
+                              Move To Folder
+                            </button>
+                            <button
+                              onClick={() => setBulkFolderAction((prev) => prev === "remove" ? null : "remove")}
+                              disabled={selectedChatIds.size === 0 || customFolders.length === 0}
+                              className="flex-1 h-10 rounded-xl bg-amber-500/10 text-amber-600 text-xs font-semibold disabled:opacity-40"
+                            >
+                              Remove Folder
+                            </button>
+                            <button
+                              onClick={() => void handleBulkMarkRead()}
+                              disabled={selectedChatIds.size === 0}
+                              className="flex-1 h-10 rounded-xl bg-muted text-foreground text-xs font-semibold disabled:opacity-40"
+                            >
+                              Mark Read
+                            </button>
+                            <button
+                              onClick={() => handleBulkSetPinned(true)}
+                              disabled={selectedChatIds.size === 0}
+                              className="flex-1 h-10 rounded-xl bg-violet-500/10 text-violet-600 text-xs font-semibold disabled:opacity-40"
+                            >
+                              Pin
+                            </button>
+                            <button
+                              onClick={() => handleBulkSetPinned(false)}
+                              disabled={selectedChatIds.size === 0}
+                              className="flex-1 h-10 rounded-xl bg-violet-500/10 text-violet-600 text-xs font-semibold disabled:opacity-40"
+                            >
+                              Unpin
+                            </button>
+                            <button
+                              onClick={() => handleBulkSetMuted(true)}
+                              disabled={selectedChatIds.size === 0}
+                              className="flex-1 h-10 rounded-xl bg-orange-500/10 text-orange-600 text-xs font-semibold disabled:opacity-40"
+                            >
+                              Mute
+                            </button>
+                            <button
+                              onClick={() => handleBulkSetMuted(false)}
+                              disabled={selectedChatIds.size === 0}
+                              className="flex-1 h-10 rounded-xl bg-orange-500/10 text-orange-600 text-xs font-semibold disabled:opacity-40"
+                            >
+                              Unmute
+                            </button>
+                            <button
+                              onClick={() => handleBulkSetArchive(true)}
+                              disabled={selectedChatIds.size === 0}
+                              className="flex-1 h-10 rounded-xl bg-emerald-500/10 text-emerald-600 text-xs font-semibold disabled:opacity-40"
+                            >
+                              Archive
+                            </button>
+                            <button
+                              onClick={() => handleBulkSetArchive(false)}
+                              disabled={selectedChatIds.size === 0}
+                              className="flex-1 h-10 rounded-xl bg-sky-500/10 text-sky-600 text-xs font-semibold disabled:opacity-40"
+                            >
+                              Unarchive
+                            </button>
+                            <button
+                              onClick={() => setShowBulkDeleteConfirm(true)}
+                              disabled={selectedChatIds.size === 0}
+                              className="flex-1 h-10 rounded-xl bg-destructive/10 text-destructive text-xs font-semibold disabled:opacity-40"
+                            >
+                              Delete
+                            </button>
+                          </div>
+                          <div className="mt-2">
+                            <button
+                              onClick={clearSelectionMode}
+                              className="w-full h-10 px-3 rounded-xl bg-muted text-muted-foreground text-xs font-semibold"
+                            >
+                              Done
+                            </button>
+                          </div>
+                          {bulkFolderAction && customFolders.length > 0 && (
+                            <div className="mt-2 grid grid-cols-1 gap-1 max-h-44 overflow-y-auto">
+                              {customFolders.map((folderDef) => (
+                                <button
+                                  key={folderDef.id}
+                                  onClick={() => {
+                                    if (bulkFolderAction === "add") {
+                                      void handleBulkAddToFolder(folderDef.id);
+                                    } else {
+                                      void handleBulkRemoveFromFolder(folderDef.id);
+                                    }
+                                  }}
+                                  className="w-full text-left px-3 py-2 rounded-xl hover:bg-muted/60 active:scale-[0.99] transition-all text-sm"
+                                >
+                                  {folderDef.icon || "📁"} {folderDef.name}
+                                </button>
+                              ))}
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    )}
                   </div>
                 )}
               </motion.div>
@@ -1357,6 +1904,8 @@ export default function ChatHubPage({ embedded = false }: { embedded?: boolean }
 
       <ChatRowActionsSheet
         target={actionsTarget}
+        customFolders={customFolders}
+        folderMembership={actionsFolderMembership}
         onClose={() => setActionsTarget(null)}
         onTogglePin={() => actionsTarget && (togglePin(actionsTarget.id), toast.success(actionsTarget.isPinned ? "Unpinned" : "Pinned to top"))}
         onToggleMute={() => actionsTarget && (toggleMute(actionsTarget.id), toast.success(actionsTarget.isMuted ? "Unmuted" : "Muted"))}
@@ -1376,9 +1925,57 @@ export default function ChatHubPage({ embedded = false }: { embedded?: boolean }
           toast.success("History cleared");
         }}
         onDelete={() => actionsTarget && setDeleteConfirm({ id: actionsTarget.id, name: actionsTarget.name, category: "personal" })}
+        onAddToFolder={(folderId) => { if (actionsTarget) void handleAddChatToFolder(folderId, actionsTarget.id); }}
+        onRemoveFromFolder={(folderId) => { if (actionsTarget) void handleRemoveChatFromFolder(folderId, actionsTarget.id); }}
       />
 
       <AnimatePresence>
+        {showBulkDeleteConfirm && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-[9998] flex items-center justify-center px-6"
+            onClick={() => setShowBulkDeleteConfirm(false)}
+          >
+            <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" />
+            <motion.div
+              initial={{ scale: 0.9, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.9, opacity: 0 }}
+              className="relative bg-background rounded-2xl p-6 w-full max-w-sm shadow-2xl"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div className="flex items-center gap-3 mb-4">
+                <div className="w-11 h-11 rounded-full bg-destructive/10 flex items-center justify-center">
+                  <Trash2 className="w-5 h-5 text-destructive" />
+                </div>
+                <div>
+                  <h3 className="text-base font-bold text-foreground">Remove selected chats</h3>
+                  <p className="text-xs text-muted-foreground">Personal chats are deleted, groups are left</p>
+                </div>
+              </div>
+              <p className="text-sm text-muted-foreground mb-5">
+                Remove <strong className="text-foreground">{selectedChatIds.size}</strong> selected conversation{selectedChatIds.size === 1 ? "" : "s"}?
+              </p>
+              <div className="flex gap-3">
+                <button
+                  onClick={() => setShowBulkDeleteConfirm(false)}
+                  className="flex-1 h-11 rounded-xl bg-muted text-sm font-semibold text-foreground active:scale-[0.97] transition-transform"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={() => { setShowBulkDeleteConfirm(false); void handleBulkDeleteSelected(); }}
+                  className="flex-1 h-11 rounded-xl bg-destructive text-destructive-foreground text-sm font-bold active:scale-[0.97] transition-transform"
+                >
+                  Remove
+                </button>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+
         {deleteConfirm && (
           <motion.div
             initial={{ opacity: 0 }}

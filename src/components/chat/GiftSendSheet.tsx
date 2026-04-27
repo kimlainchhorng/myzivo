@@ -39,7 +39,7 @@ export default function GiftSendSheet({ open, onClose, recipientId }: Props) {
         coins: selected.coins,
         note: note.trim() || null,
       };
-      const { error } = await (supabase as any).from("direct_messages").insert({
+      const { error } = await supabase.from("direct_messages" as never).insert({
         sender_id: user.id,
         receiver_id: recipientId,
         message: `🎁 ${selected.name} (${selected.coins} coins)`,
@@ -51,8 +51,9 @@ export default function GiftSendSheet({ open, onClose, recipientId }: Props) {
       setSelected(null);
       setNote("");
       onClose();
-    } catch (e: any) {
-      toast.error(e.message || "Could not send gift");
+    } catch (e: unknown) {
+      const message = e instanceof Error ? e.message : "Could not send gift";
+      toast.error(message);
     } finally {
       setSending(false);
     }

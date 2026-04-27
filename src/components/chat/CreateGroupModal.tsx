@@ -24,6 +24,30 @@ interface Friend {
   avatar: string | null;
 }
 
+type FriendshipRow = {
+  user_id: string;
+  friend_id: string;
+};
+
+type ProfileRow = {
+  user_id: string;
+  full_name: string | null;
+  avatar_url: string | null;
+};
+
+type GroupRow = {
+  id: string;
+  name: string;
+};
+
+type GroupMemberInsert = {
+  group_id: string;
+  user_id: string;
+  role?: string;
+};
+
+const dbFrom = (table: string) => supabase.from(table as never);
+
 export default function CreateGroupModal({ open, onClose, onCreated }: CreateGroupModalProps) {
   const { user } = useAuth();
   const [friends, setFriends] = useState<Friend[]>([]);
@@ -43,9 +67,11 @@ export default function CreateGroupModal({ open, onClose, onCreated }: CreateGro
         .or(`user_id.eq.${user.id},friend_id.eq.${user.id}`)
         .eq("status", "accepted");
 
-      if (!friendships?.length) { setFriends([]); setLoading(false); return; }
+      const friendshipRows = (friendships || []) as FriendshipRow[];
 
-      const friendIds = friendships.map((f: any) =>
+      if (!friendshipRows.length) { setFriends([]); setLoading(false); return; }
+
+      const friendIds = friendshipRows.map((f) =>
         f.user_id === user.id ? f.friend_id : f.user_id
       );
 
@@ -55,10 +81,10 @@ export default function CreateGroupModal({ open, onClose, onCreated }: CreateGro
         .in("user_id", friendIds);
 
       setFriends(
-        (profiles || []).map((p: any) => ({
+        ((profiles || []) as ProfileRow[]).map((p) => ({
           id: p.user_id,
           name: p.full_name || "User",
-          avatar: p.avatar_url,
+          avatar: p.avatar_url || null,
         }))
       );
       setLoading(false);
@@ -81,20 +107,19 @@ export default function CreateGroupModal({ open, onClose, onCreated }: CreateGro
 
     try {
       // Create the group
-      const { data: group, error: gErr } = await (supabase as any)
-        .from("chat_groups")
+      const { data, error: gErr } = await dbFrom("chat_groups")
         .insert({ name: groupName.trim(), created_by: user.id })
         .select()
         .single();
+      const group = data as GroupRow | null;
 
-      if (gErr) throw gErr;
+      if (gErr || !group?.id) throw gErr || new Error("Group creation failed");
 
       // Step 1: insert the creator as the first member (with owner role if column exists).
       // RLS "Group members or creator can add members" passes because the actor created the group.
-      const creatorInsert: any = { group_id: group.id, user_id: user.id };
+      const creatorInsert: GroupMemberInsert = { group_id: group.id, user_id: user.id };
       try { creatorInsert.role = "owner"; } catch { /* role column optional */ }
-      const { error: cErr } = await (supabase as any)
-        .from("chat_group_members")
+      const { error: cErr } = await dbFrom("chat_group_members")
         .insert(creatorInsert);
       if (cErr && !/duplicate|unique/i.test(cErr.message || "")) throw cErr;
 
@@ -105,8 +130,7 @@ export default function CreateGroupModal({ open, onClose, onCreated }: CreateGro
         .map((uid) => ({ group_id: group.id, user_id: uid }));
 
       if (otherInserts.length) {
-        const { error: mErr } = await (supabase as any)
-          .from("chat_group_members")
+        const { error: mErr } = await dbFrom("chat_group_members")
           .insert(otherInserts);
         if (mErr) throw mErr;
       }
@@ -116,9 +140,10 @@ export default function CreateGroupModal({ open, onClose, onCreated }: CreateGro
       onClose();
       setSelected(new Set());
       setGroupName("");
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error("[CreateGroup] failed", err);
-      toast.error(err?.message ? `Failed to create group: ${err.message}` : "Failed to create group");
+      const message = err instanceof Error ? err.message : "";
+      toast.error(message ? `Failed to create group: ${message}` : "Failed to create group");
     }
     setCreating(false);
   };

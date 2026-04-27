@@ -28,6 +28,17 @@ interface MediaItem {
   sender_id: string;
 }
 
+interface DirectMessageMediaRow {
+  id: string;
+  image_url: string | null;
+  video_url: string | null;
+  voice_url: string | null;
+  message_type: string | null;
+  message: string | null;
+  created_at: string;
+  sender_id: string;
+}
+
 export default function ChatMediaGallery({ open, onClose, recipientId, recipientName }: ChatMediaGalleryProps) {
   const { user } = useAuth();
   const [tab, setTab] = useState<MediaTab>("photos");
@@ -40,16 +51,17 @@ export default function ChatMediaGallery({ open, onClose, recipientId, recipient
     if (!open || !user?.id) return;
     const load = async () => {
       setLoading(true);
-      const { data } = await (supabase as any)
-        .from("direct_messages")
+      const { data } = await supabase
+        .from("direct_messages" as never)
         .select("id, image_url, video_url, voice_url, message_type, message, created_at, sender_id")
         .or(`and(sender_id.eq.${user.id},receiver_id.eq.${recipientId}),and(sender_id.eq.${recipientId},receiver_id.eq.${user.id})`)
         .order("created_at", { ascending: false })
         .limit(500);
 
       if (data) {
+        const rows = data as DirectMessageMediaRow[];
         const media: MediaItem[] = [];
-        for (const msg of data) {
+        for (const msg of rows) {
           if (msg.image_url) media.push({ id: msg.id, url: msg.image_url, type: "photos", message: msg.message, created_at: msg.created_at, sender_id: msg.sender_id });
           if (msg.video_url) media.push({ id: msg.id, url: msg.video_url, type: "videos", message: msg.message, created_at: msg.created_at, sender_id: msg.sender_id });
           if (msg.voice_url) media.push({ id: msg.id, url: msg.voice_url, type: "voice", message: msg.message, created_at: msg.created_at, sender_id: msg.sender_id });

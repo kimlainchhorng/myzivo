@@ -73,7 +73,7 @@ export default function ChatGiftPanel({ open, onClose, recipientId, recipientNam
   const handleSend = async () => {
     if (!selected || sending || insufficient) return;
     // Trigger local animation immediately (recipient gets via realtime)
-    try { enqueue?.({ icon: selected.icon, name: selected.name, coins: selected.coins } as any); } catch { /* noop */ }
+    try { enqueue?.({ name: selected.name, coins: selected.coins }); } catch { /* noop */ }
     const res = await sendGift(recipientId, selected, { combo, note: note.trim() || undefined });
     if (res.ok) {
       setCombo(1); setNote("");
@@ -210,7 +210,7 @@ export default function ChatGiftPanel({ open, onClose, recipientId, recipientNam
       <Suspense fallback={null}>
         {activeGift && (
           <GiftAnimationOverlay
-            activeGift={activeGift as any}
+            activeGift={activeGift}
             comboCount={comboCount}
             onComplete={onComplete}
           />

@@ -18,6 +18,24 @@ interface Contact {
   avatar_url?: string | null;
 }
 
+interface ContactProfileRow {
+  display_name: string | null;
+  username: string | null;
+  avatar_url: string | null;
+}
+
+interface UserContactRow {
+  id: string;
+  contact_user_id: string;
+  custom_name: string | null;
+  profiles: ContactProfileRow | ContactProfileRow[] | null;
+}
+
+function extractContactProfile(value: UserContactRow["profiles"]): ContactProfileRow | null {
+  if (!value) return null;
+  return Array.isArray(value) ? (value[0] ?? null) : value;
+}
+
 interface Props {
   open: boolean;
   onOpenChange: (open: boolean) => void;
@@ -33,21 +51,26 @@ export default function ForwardPickerSheet({ open, onOpenChange, onConfirm }: Pr
   useEffect(() => {
     if (!open || !user) return;
     (async () => {
-      const { data } = await (supabase as any)
-        .from("user_contacts")
+      const { data } = await supabase
+        .from("user_contacts" as never)
         .select(`
           id, contact_user_id, custom_name,
           profiles:contact_user_id (display_name, username, avatar_url)
         `)
         .eq("user_id", user.id);
+
+      const rows = (data ?? []) as UserContactRow[];
       setContacts(
-        (data || []).map((c: any) => ({
+        rows.map((c) => {
+          const profile = extractContactProfile(c.profiles);
+          return {
           id: c.id,
           contact_user_id: c.contact_user_id,
-          display_name: c.custom_name || c.profiles?.display_name,
-          username: c.profiles?.username,
-          avatar_url: c.profiles?.avatar_url,
-        })),
+          display_name: c.custom_name || profile?.display_name,
+          username: profile?.username,
+          avatar_url: profile?.avatar_url,
+        };
+        }),
       );
     })();
   }, [open, user]);
@@ -60,7 +83,8 @@ export default function ForwardPickerSheet({ open, onOpenChange, onConfirm }: Pr
   const toggle = (id: string) => {
     setSelected((prev) => {
       const next = new Set(prev);
-      next.has(id) ? next.delete(id) : next.add(id);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
       return next;
     });
   };

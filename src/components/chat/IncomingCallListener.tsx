@@ -33,6 +33,32 @@ interface IncomingCallPushDetail {
   caller_avatar?: string;
 }
 
+type ProfileRow = {
+  full_name: string | null;
+  avatar_url: string | null;
+};
+
+type CallSignalStatus = "ringing" | "answered" | "declined" | "missed" | "ended";
+
+type CallSignalRow = {
+  id: string;
+  caller_id: string;
+  callee_id: string;
+  call_type: "voice" | "video";
+  status: CallSignalStatus;
+  created_at?: string;
+};
+
+type CallStatusRow = {
+  status: CallSignalStatus;
+};
+
+type RealtimePayload<T> = {
+  new: T;
+};
+
+const dbFrom = (table: string) => supabase.from(table as never);
+
 export default function IncomingCallListener() {
   const { user } = useAuth();
   const [incoming, setIncoming] = useState<IncomingCall | null>(null);
@@ -47,12 +73,12 @@ export default function IncomingCallListener() {
   const [portalRoot, setPortalRoot] = useState<HTMLElement | null>(null);
 
   const mapIncomingCall = useCallback(async (call: { id: string; caller_id: string; call_type: "voice" | "video" }) => {
-    const { data: profile } = await (supabase as any)
-      .from("profiles")
+    const { data } = await dbFrom("profiles")
       .select("full_name, avatar_url")
       .or(`id.eq.${call.caller_id},user_id.eq.${call.caller_id}`)
       .limit(1)
       .maybeSingle();
+    const profile = data as ProfileRow | null;
 
     return {
       id: call.id,
@@ -66,18 +92,18 @@ export default function IncomingCallListener() {
   const hydratePendingIncomingCall = useCallback(async (preferredCallId?: string) => {
     if (!user?.id || incoming || answeredCall) return;
 
-    let pendingCall: { id: string; caller_id: string; call_type: "voice" | "video" } | null = null;
+    let pendingCall: Pick<CallSignalRow, "id" | "caller_id" | "call_type"> | null = null;
 
     if (preferredCallId) {
-      const { data } = await (supabase as any)
-        .from("call_signals")
+      const { data } = await dbFrom("call_signals")
         .select("id, caller_id, call_type, status")
         .eq("id", preferredCallId)
         .eq("callee_id", user.id)
         .maybeSingle();
+      const preferredCall = data as Pick<CallSignalRow, "id" | "caller_id" | "call_type" | "status"> | null;
 
-      if (data?.status === "ringing") {
-        pendingCall = data;
+      if (preferredCall?.status === "ringing") {
+        pendingCall = preferredCall;
       }
     }
 
@@ -87,15 +113,13 @@ export default function IncomingCallListener() {
 
       // Cleanup stale local ringing records first so hydration cannot pick
       // an outdated call ID when a newer call is ringing.
-      await (supabase as any)
-        .from("call_signals")
+      await dbFrom("call_signals")
         .update({ status: "missed", ended_at: nowIso })
         .eq("callee_id", user.id)
         .eq("status", "ringing")
         .lt("created_at", freshWindowStart);
 
-      const { data } = await (supabase as any)
-        .from("call_signals")
+      const { data } = await dbFrom("call_signals")
         .select("id, caller_id, call_type, created_at")
         .eq("callee_id", user.id)
         .eq("status", "ringing")
@@ -103,8 +127,9 @@ export default function IncomingCallListener() {
         .order("created_at", { ascending: false })
         .limit(1)
         .maybeSingle();
+      const recentCall = data as Pick<CallSignalRow, "id" | "caller_id" | "call_type"> | null;
 
-      pendingCall = data || null;
+      pendingCall = recentCall || null;
     }
 
     if (!pendingCall?.id) return;
@@ -149,7 +174,7 @@ export default function IncomingCallListener() {
   useEffect(() => {
     if (!user?.id) return;
 
-    const onSignal = async (payload: any) => {
+    const onSignal = async (payload: RealtimePayload<CallSignalRow>) => {
       const call = payload.new;
       if (!call || call.status !== "ringing") return;
 
@@ -160,7 +185,7 @@ export default function IncomingCallListener() {
           return;
         }
 
-        await (supabase as any).from("call_signals")
+        await dbFrom("call_signals")
           .update({ status: "declined", ended_at: new Date().toISOString() })
           .eq("id", call.id)
           .eq("status", "ringing");
@@ -270,7 +295,7 @@ export default function IncomingCallListener() {
     if (!incoming) return;
     const stopRing = playIncomingRingtone();
     return () => { stopRing(); };
-  }, [incoming?.id]);
+  }, [incoming]);
 
   useEffect(() => {
     if (typeof document === "undefined") return;
@@ -304,7 +329,7 @@ export default function IncomingCallListener() {
       }
       document.title = originalTitleRef.current;
     };
-  }, [incoming?.call_type, incoming?.caller_name, incoming?.id]);
+  }, [incoming]);
 
   useEffect(() => {
     if (!incoming || Capacitor.isNativePlatform() || typeof navigator === "undefined" || !("vibrate" in navigator)) return;
@@ -318,7 +343,7 @@ export default function IncomingCallListener() {
       window.clearInterval(intervalId);
       navigator.vibrate?.(0);
     };
-  }, [incoming?.id]);
+  }, [incoming]);
 
   useEffect(() => {
     if (!incoming || !Capacitor.isNativePlatform()) return;
@@ -328,7 +353,7 @@ export default function IncomingCallListener() {
     }, 1800);
 
     return () => window.clearInterval(intervalId);
-  }, [incoming?.id]);
+  }, [incoming]);
 
   useEffect(() => {
     if (!incoming) return;
@@ -336,7 +361,7 @@ export default function IncomingCallListener() {
     // Auto-mark unanswered calls as missed after 45 seconds.
     const timeout = window.setTimeout(() => {
       (async () => {
-        await (supabase as any).from("call_signals")
+        await dbFrom("call_signals")
           .update({ status: "missed", ended_at: new Date().toISOString() })
           .eq("id", incoming.id)
           .eq("status", "ringing");
@@ -357,7 +382,7 @@ export default function IncomingCallListener() {
         schema: "public",
         table: "call_signals",
         filter: `id=eq.${incoming.id}`,
-      }, (payload: any) => {
+      }, (payload: RealtimePayload<CallStatusRow>) => {
         const data = payload.new;
         if (data.status === "ended" || data.status === "declined") {
           setIncoming(null);
@@ -366,7 +391,7 @@ export default function IncomingCallListener() {
       .subscribe();
 
     return () => { supabase.removeChannel(channel); };
-  }, [incoming?.id]);
+  }, [incoming]);
 
   const handleAccept = useCallback(async () => {
     if (!incoming || isAccepting) return;
@@ -378,7 +403,7 @@ export default function IncomingCallListener() {
       // Continue anyway. Audio unlock failure should not block call accept.
     }
 
-    const { error: updateError } = await (supabase as any).from("call_signals")
+    const { error: updateError } = await dbFrom("call_signals")
       .update({ status: "answered" })
       .eq("id", incoming.id)
       .eq("callee_id", user?.id)
@@ -393,12 +418,12 @@ export default function IncomingCallListener() {
 
     let confirmedStatus: string | null = null;
     for (let attempt = 0; attempt < 6; attempt += 1) {
-      const { data: statusCheck } = await (supabase as any)
-        .from("call_signals")
+      const { data } = await dbFrom("call_signals")
         .select("status")
         .eq("id", incoming.id)
         .eq("callee_id", user?.id)
         .maybeSingle();
+      const statusCheck = data as CallStatusRow | null;
 
       const nextStatus = statusCheck?.status ?? null;
       if (nextStatus === "answered") {
@@ -436,7 +461,7 @@ export default function IncomingCallListener() {
 
   const handleDecline = useCallback(async () => {
     if (!incoming) return;
-    await (supabase as any).from("call_signals")
+    await dbFrom("call_signals")
       .update({ status: "declined", ended_at: new Date().toISOString() })
       .eq("id", incoming.id);
     setIncoming(null);

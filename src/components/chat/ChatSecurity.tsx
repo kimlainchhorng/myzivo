@@ -33,6 +33,16 @@ const RETENTION_OPTIONS = [
   { days: 90, label: "90 days" },
 ];
 
+type BlockedUserRow = {
+  id: string;
+};
+
+type ChatSettingsRow = {
+  retention_days: number | null;
+};
+
+const dbFrom = (table: string) => supabase.from(table as never);
+
 export default function ChatSecurity({ open, onClose, chatPartnerId, chatPartnerName, onBlock }: ChatSecurityProps) {
   const { user } = useAuth();
   const [isBlocked, setIsBlocked] = useState(false);
@@ -47,21 +57,21 @@ export default function ChatSecurity({ open, onClose, chatPartnerId, chatPartner
     if (!open || !user?.id) return;
     const load = async () => {
       // Check if blocked
-      const { data: blockData } = await (supabase as any)
-        .from("blocked_users")
+      const { data: blockDataRaw } = await dbFrom("blocked_users")
         .select("id")
         .eq("blocker_id", user.id)
         .eq("blocked_id", chatPartnerId)
         .maybeSingle();
+      const blockData = blockDataRaw as BlockedUserRow | null;
       setIsBlocked(!!blockData);
 
       // Load retention setting
-      const { data: settings } = await (supabase as any)
-        .from("chat_settings")
+      const { data: settingsRaw } = await dbFrom("chat_settings")
         .select("retention_days")
         .eq("user_id", user.id)
         .eq("chat_partner_id", chatPartnerId)
         .maybeSingle();
+      const settings = settingsRaw as ChatSettingsRow | null;
       if (settings) setRetentionDays(settings.retention_days || 0);
     };
     load();
@@ -70,11 +80,11 @@ export default function ChatSecurity({ open, onClose, chatPartnerId, chatPartner
   const handleBlock = async () => {
     if (!user?.id) return;
     if (isBlocked) {
-      await (supabase as any).from("blocked_users").delete().eq("blocker_id", user.id).eq("blocked_id", chatPartnerId);
+      await dbFrom("blocked_users").delete().eq("blocker_id", user.id).eq("blocked_id", chatPartnerId);
       setIsBlocked(false);
       toast.success(`${chatPartnerName} unblocked`);
     } else {
-      await (supabase as any).from("blocked_users").insert({ blocker_id: user.id, blocked_id: chatPartnerId });
+      await dbFrom("blocked_users").insert({ blocker_id: user.id, blocked_id: chatPartnerId });
       setIsBlocked(true);
       toast.success(`${chatPartnerName} blocked`);
       onBlock?.();
@@ -84,7 +94,7 @@ export default function ChatSecurity({ open, onClose, chatPartnerId, chatPartner
 
   const handleReport = async () => {
     if (!reportReason) { toast.error("Select a reason"); return; }
-    await (supabase as any).from("user_reports").insert({
+    await dbFrom("user_reports").insert({
       reporter_id: user!.id,
       reported_id: chatPartnerId,
       reason: reportReason,
@@ -98,8 +108,7 @@ export default function ChatSecurity({ open, onClose, chatPartnerId, chatPartner
 
   const handleRetention = async (days: number) => {
     setRetentionDays(days);
-    await (supabase as any)
-      .from("chat_settings")
+    await dbFrom("chat_settings")
       .upsert({
         user_id: user!.id,
         chat_partner_id: chatPartnerId,
@@ -110,8 +119,7 @@ export default function ChatSecurity({ open, onClose, chatPartnerId, chatPartner
   };
 
   const handleClearChat = async () => {
-    await (supabase as any)
-      .from("direct_messages")
+    await dbFrom("direct_messages")
       .delete()
       .eq("sender_id", user!.id)
       .eq("receiver_id", chatPartnerId);

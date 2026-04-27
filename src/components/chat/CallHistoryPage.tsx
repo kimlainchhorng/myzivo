@@ -39,6 +39,12 @@ interface VoicemailRecord {
   created_at: string;
 }
 
+interface ProfileRow {
+  id: string;
+  full_name: string | null;
+  avatar_url: string | null;
+}
+
 function formatCallTime(dateStr: string) {
   const d = new Date(dateStr);
   if (isToday(d)) return format(d, "h:mm a");
@@ -83,14 +89,14 @@ export default function CallHistoryPage({ onClose, onCallUser }: CallHistoryPage
     const load = async () => {
       setLoading(true);
       const [callsRes, vmRes] = await Promise.all([
-        (supabase as any)
-          .from("call_history")
+        supabase
+          .from("call_history" as never)
           .select("*")
           .or(`caller_id.eq.${user.id},callee_id.eq.${user.id}`)
           .order("created_at", { ascending: false })
           .limit(50),
-        (supabase as any)
-          .from("voicemails")
+        supabase
+          .from("voicemails" as never)
           .select("*")
           .eq("recipient_id", user.id)
           .order("created_at", { ascending: false })
@@ -116,7 +122,7 @@ export default function CallHistoryPage({ onClose, onCallUser }: CallHistoryPage
           .in("id", Array.from(userIds));
         if (profilesData) {
           const map: Record<string, ProfileInfo> = {};
-          profilesData.forEach((p) => {
+          (profilesData as ProfileRow[]).forEach((p) => {
             map[p.id] = { full_name: p.full_name, avatar_url: p.avatar_url };
           });
           setProfiles(map);
@@ -147,7 +153,7 @@ export default function CallHistoryPage({ onClose, onCallUser }: CallHistoryPage
 
   const deleteVoicemail = async (id: string) => {
     setVoicemails((prev) => prev.filter((v) => v.id !== id));
-    await (supabase as any).from("voicemails").delete().eq("id", id);
+    await supabase.from("voicemails" as never).delete().eq("id", id);
     toast.success("Voicemail deleted");
   };
 
@@ -455,7 +461,7 @@ export default function CallHistoryPage({ onClose, onCallUser }: CallHistoryPage
                           audio.play();
                           audio.onended = () => setPlayingVm(null);
                           if (!vm.is_read) {
-                            (supabase as any).from("voicemails").update({ is_read: true }).eq("id", vm.id);
+                            supabase.from("voicemails" as never).update({ is_read: true }).eq("id", vm.id);
                             setVoicemails((prev) => prev.map((v) => v.id === vm.id ? { ...v, is_read: true } : v));
                           }
                         }

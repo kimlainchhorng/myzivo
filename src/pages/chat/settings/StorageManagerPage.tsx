@@ -25,6 +25,15 @@ interface StoragePrefs {
   maxVideoMB: number;
 }
 
+type StorageEstimate = {
+  usage?: number;
+};
+
+type SectionProps = {
+  title: string;
+  children: React.ReactNode;
+};
+
 const DEFAULTS: StoragePrefs = {
   autoPhotosWifi: true,
   autoPhotosCellular: true,
@@ -39,10 +48,17 @@ function loadPrefs(uid?: string): StoragePrefs {
   try {
     const raw = localStorage.getItem(`zivo:chat-storage:${uid || "anon"}`);
     return raw ? { ...DEFAULTS, ...JSON.parse(raw) } : { ...DEFAULTS };
-  } catch { return { ...DEFAULTS }; }
+  } catch {
+    // Fallback to defaults if localStorage data is unavailable/corrupted.
+    return { ...DEFAULTS };
+  }
 }
 function savePrefs(uid: string | undefined, p: StoragePrefs) {
-  try { localStorage.setItem(`zivo:chat-storage:${uid || "anon"}`, JSON.stringify(p)); } catch {}
+  try {
+    localStorage.setItem(`zivo:chat-storage:${uid || "anon"}`, JSON.stringify(p));
+  } catch {
+    // Ignore write failures (private mode or quota limits).
+  }
 }
 
 export default function StorageManagerPage() {
@@ -55,10 +71,12 @@ export default function StorageManagerPage() {
   useEffect(() => { setPrefs(loadPrefs(user?.id)); }, [user?.id]);
 
   useEffect(() => {
-    if (typeof navigator === "undefined" || !(navigator as any).storage?.estimate) return;
-    (navigator as any).storage.estimate().then((est: any) => {
+    if (typeof navigator === "undefined" || !navigator.storage?.estimate) return;
+    navigator.storage.estimate().then((est) => {
       if (est?.usage) setUsageMB(Math.round(est.usage / (1024 * 1024)));
-    }).catch(() => {});
+    }).catch(() => {
+      // Ignore storage estimate failures on unsupported browsers.
+    });
   }, []);
 
   const update = <K extends keyof StoragePrefs>(k: K, v: StoragePrefs[K]) => {
@@ -75,14 +93,14 @@ export default function StorageManagerPage() {
         await Promise.all(keys.map((k) => caches.delete(k)));
       }
       toast.success("Cache cleared");
-      const est = await (navigator as any).storage?.estimate?.();
+      const est = await navigator.storage?.estimate?.() as StorageEstimate | undefined;
       if (est?.usage) setUsageMB(Math.round(est.usage / (1024 * 1024)));
     } catch {
       toast.error("Could not clear cache");
     } finally { setClearing(false); }
   };
 
-  const Section = ({ title, children }: any) => (
+  const Section = ({ title, children }: SectionProps) => (
     <section className="mt-4">
       <h2 className="px-4 py-2 text-[11px] uppercase tracking-wider text-muted-foreground">{title}</h2>
       <div className="bg-card/60 rounded-xl mx-3 divide-y divide-border/30">{children}</div>
@@ -92,7 +110,7 @@ export default function StorageManagerPage() {
   const Toggle = ({ label, k }: { label: string; k: keyof StoragePrefs }) => (
     <div className="flex items-center justify-between px-4 py-3">
       <span className="text-sm font-medium">{label}</span>
-      <Switch checked={prefs[k] as boolean} onCheckedChange={(v) => update(k, v as any)} />
+      <Switch checked={prefs[k] as boolean} onCheckedChange={(v) => update(k, v as StoragePrefs[keyof StoragePrefs])} />
     </div>
   );
 

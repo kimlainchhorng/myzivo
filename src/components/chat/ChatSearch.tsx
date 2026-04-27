@@ -37,7 +37,7 @@ export default function ChatSearch({ messages, onClose, onScrollToMessage, curre
     if (matches.length > 0) {
       onScrollToMessage(matches[0].id);
     }
-  }, [query, messages]);
+  }, [query, messages, onScrollToMessage]);
 
   const navigate = (dir: 1 | -1) => {
     if (results.length === 0) return;

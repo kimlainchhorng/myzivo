@@ -15,6 +15,7 @@ import Eye from "lucide-react/dist/esm/icons/eye";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
+import { getWallpaperClass, getThemeColorClass } from "./chatPersonalizationStyles";
 
 interface ChatPersonalizationProps {
   open: boolean;
@@ -22,6 +23,13 @@ interface ChatPersonalizationProps {
   chatPartnerId: string;
   chatPartnerName: string;
   onApply: (settings: { wallpaper: string; themeColor: string; fontSize: string }) => void;
+}
+
+interface ChatSettingsRow {
+  wallpaper: string | null;
+  theme_color: string | null;
+  font_size: string | null;
+  custom_wallpapers: unknown;
 }
 
 const WALLPAPERS = [
@@ -69,8 +77,8 @@ export default function ChatPersonalization({ open, onClose, chatPartnerId, chat
   useEffect(() => {
     if (!open || !user?.id) return;
     const load = async () => {
-      const { data, error } = await (supabase as any)
-        .from("chat_settings")
+      const { data, error } = await supabase
+        .from("chat_settings" as never)
         .select("wallpaper, theme_color, font_size, custom_wallpapers")
         .eq("user_id", user.id)
         .eq("chat_partner_id", chatPartnerId)
@@ -86,15 +94,19 @@ export default function ChatPersonalization({ open, onClose, chatPartnerId, chat
         return;
       }
 
-      const savedWallpaper = data.wallpaper || "default";
-      const savedCustomPhotos = Array.isArray(data.custom_wallpapers) ? data.custom_wallpapers : [];
+      const settings = data as ChatSettingsRow;
+
+      const savedWallpaper = settings.wallpaper || "default";
+      const savedCustomPhotos = Array.isArray(settings.custom_wallpapers)
+        ? (settings.custom_wallpapers.filter((v): v is string => typeof v === "string"))
+        : [];
       const activeCustomPhoto = savedWallpaper.startsWith("custom:")
         ? savedWallpaper.replace("custom:", "")
         : null;
 
       setWallpaper(savedWallpaper);
-      setThemeColor(data.theme_color || "default");
-      setFontSize(data.font_size || "medium");
+      setThemeColor(settings.theme_color || "default");
+      setFontSize(settings.font_size || "medium");
       setCustomPhotos(
         activeCustomPhoto && !savedCustomPhotos.includes(activeCustomPhoto)
           ? [...savedCustomPhotos, activeCustomPhoto]
@@ -128,8 +140,9 @@ export default function ChatPersonalization({ open, onClose, chatPartnerId, chat
       setCustomPhotos(updated);
       setWallpaper(`custom:${newUrl}`);
       toast.success("Wallpaper added!");
-    } catch (err: any) {
-      toast.error("Upload failed: " + (err.message || "Unknown error"));
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : "Unknown error";
+      toast.error("Upload failed: " + message);
     } finally {
       setUploading(false);
       if (fileInputRef.current) fileInputRef.current.value = "";
@@ -152,8 +165,8 @@ export default function ChatPersonalization({ open, onClose, chatPartnerId, chat
       ? [...customPhotos, activeCustomPhoto]
       : customPhotos;
 
-    const { error } = await (supabase as any)
-      .from("chat_settings")
+    const { error } = await supabase
+      .from("chat_settings" as never)
       .upsert({
         user_id: user.id,
         chat_partner_id: chatPartnerId,
@@ -178,7 +191,6 @@ export default function ChatPersonalization({ open, onClose, chatPartnerId, chat
   if (!open) return null;
 
   const selectedFontSize = FONT_SIZES.find(f => f.id === fontSize)?.size || "text-sm";
-  const selectedThemeColor = THEME_COLORS.find(c => c.id === themeColor);
 
   return (
     <AnimatePresence>
@@ -451,49 +463,4 @@ export default function ChatPersonalization({ open, onClose, chatPartnerId, chat
       </motion.div>
     </AnimatePresence>
   );
-}
-
-/** Get wallpaper CSS class from ID */
-export function getWallpaperClass(id: string): string {
-  if (id.startsWith("custom:")) return "";
-  const map: Record<string, string> = {
-    default: "",
-    bubbles: "bg-gradient-to-br from-primary/5 to-accent/10",
-    sunset: "bg-gradient-to-b from-orange-100/30 to-pink-100/30 dark:from-orange-950/20 dark:to-pink-950/20",
-    ocean: "bg-gradient-to-b from-blue-100/30 to-cyan-100/30 dark:from-blue-950/20 dark:to-cyan-950/20",
-    forest: "bg-gradient-to-b from-green-100/30 to-emerald-100/30 dark:from-green-950/20 dark:to-emerald-950/20",
-    midnight: "bg-gradient-to-b from-slate-200/30 to-indigo-100/30 dark:from-slate-900/40 dark:to-indigo-950/30",
-    lavender: "bg-gradient-to-b from-purple-100/30 to-violet-100/30 dark:from-purple-950/20 dark:to-violet-950/20",
-    cherry: "bg-gradient-to-b from-rose-100/30 to-red-100/30 dark:from-rose-950/20 dark:to-red-950/20",
-    gold: "bg-gradient-to-b from-amber-100/30 to-yellow-100/30 dark:from-amber-950/20 dark:to-yellow-950/20",
-    slate: "bg-gradient-to-b from-gray-200/30 to-slate-300/30 dark:from-gray-800/30 dark:to-slate-900/30",
-  };
-  return map[id] || "";
-}
-
-/** Get wallpaper style for custom photo wallpapers */
-export function getWallpaperStyle(id: string): React.CSSProperties | undefined {
-  if (!id.startsWith("custom:")) return undefined;
-  return {
-    backgroundImage: `url(${id.replace("custom:", "")})`,
-    backgroundSize: "cover",
-    backgroundPosition: "center",
-  };
-}
-
-/** Get theme color class for bubble */
-function getThemeColorClass(id: string): string {
-  const map: Record<string, string> = {
-    default: "bg-primary",
-    rose: "bg-rose-500",
-    orange: "bg-orange-500",
-    emerald: "bg-emerald-500",
-    blue: "bg-blue-500",
-    purple: "bg-purple-500",
-    amber: "bg-amber-500",
-    cyan: "bg-cyan-500",
-    pink: "bg-pink-400",
-    indigo: "bg-indigo-500",
-  };
-  return map[id] || "bg-primary";
 }

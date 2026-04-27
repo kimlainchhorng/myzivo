@@ -28,7 +28,7 @@ export default function VoiceNotePlayer({ audioUrl, durationMs = 0, waveform = [
     let mounted = true;
     (async () => {
       if (isSignedPath) {
-        const { data } = await (supabase as any).storage.from("voice-notes").createSignedUrl(audioUrl, 3600);
+        const { data } = await supabase.storage.from("voice-notes").createSignedUrl(audioUrl, 3600);
         if (mounted) setSrc(data?.signedUrl ?? null);
       } else {
         setSrc(audioUrl);

@@ -52,6 +52,36 @@ interface Member {
   avatar: string | null;
 }
 
+type GroupMemberRow = {
+  user_id: string;
+};
+
+type ProfileRow = {
+  user_id: string;
+  full_name: string | null;
+  avatar_url: string | null;
+};
+
+type GroupMessageDeletePayload = {
+  old?: { id?: string };
+};
+
+type GroupMessageInsertPayload = {
+  new: GroupMessage;
+};
+
+type GroupMessageInsert = {
+  group_id: string;
+  sender_id: string;
+  message: string;
+  message_type: string;
+  image_url?: string;
+  voice_url?: string;
+  reply_to_id?: string;
+};
+
+const dbFrom = (table: string) => supabase.from(table as never);
+
 function formatTime(dateStr: string) {
   const d = new Date(dateStr);
   if (isToday(d)) return format(d, "h:mm a");
@@ -84,23 +114,23 @@ export default function GroupChat({ groupId, groupName, groupAvatar, onClose }: 
   useEffect(() => {
     if (!user?.id) return;
     const loadMembers = async () => {
-      const { data: memberData } = await (supabase as any)
-        .from("chat_group_members")
+      const { data } = await dbFrom("chat_group_members")
         .select("user_id")
         .eq("group_id", groupId);
+      const memberData = (data || []) as GroupMemberRow[];
 
-      if (memberData) {
-        const userIds = memberData.map((m: any) => m.user_id);
+      if (memberData.length > 0) {
+        const userIds = memberData.map((m) => m.user_id);
         const { data: profiles } = await supabase
           .from("profiles")
           .select("user_id, full_name, avatar_url")
           .in("user_id", userIds);
 
         setMembers(
-          (profiles || []).map((p: any) => ({
+          ((profiles || []) as ProfileRow[]).map((p) => ({
             user_id: p.user_id,
             name: p.full_name || "User",
-            avatar: p.avatar_url,
+            avatar: p.avatar_url || null,
           }))
         );
       }
@@ -113,13 +143,12 @@ export default function GroupChat({ groupId, groupName, groupAvatar, onClose }: 
     if (!user?.id) return;
     const load = async () => {
       setLoading(true);
-      const { data } = await (supabase as any)
-        .from("group_messages")
+      const { data } = await dbFrom("group_messages")
         .select("*")
         .eq("group_id", groupId)
         .order("created_at", { ascending: true })
         .limit(100);
-      setMessages(data || []);
+      setMessages((data || []) as GroupMessage[]);
       setLoading(false);
       scrollToBottom();
     };
@@ -136,7 +165,7 @@ export default function GroupChat({ groupId, groupName, groupAvatar, onClose }: 
         schema: "public",
         table: "group_messages",
         filter: `group_id=eq.${groupId}`,
-      }, (payload: any) => {
+      }, (payload: GroupMessageInsertPayload) => {
         const msg = payload.new as GroupMessage;
         setMessages((prev) => {
           if (prev.some((m) => m.id === msg.id)) return prev;
@@ -148,7 +177,7 @@ export default function GroupChat({ groupId, groupName, groupAvatar, onClose }: 
         event: "DELETE",
         schema: "public",
         table: "group_messages",
-      }, (payload: any) => {
+      }, (payload: GroupMessageDeletePayload) => {
         if (payload.old?.id) {
           setMessages((prev) => prev.filter((m) => m.id !== payload.old.id));
         }
@@ -167,7 +196,7 @@ export default function GroupChat({ groupId, groupName, groupAvatar, onClose }: 
     return members.find((m) => m.user_id === senderId)?.avatar || null;
   };
 
-  const handleSend = async (imageUrl?: string, voiceUrl?: string) => {
+  const handleSend = useCallback(async (imageUrl?: string, voiceUrl?: string) => {
     const text = input.trim();
     if (!text && !imageUrl && !voiceUrl) return;
     if (!user?.id || sending) return;
@@ -193,7 +222,7 @@ export default function GroupChat({ groupId, groupName, groupAvatar, onClose }: 
     scrollToBottom();
 
     try {
-      const insertData: any = {
+      const insertData: GroupMessageInsert = {
         group_id: groupId,
         sender_id: user.id,
         message: text || "",
@@ -203,20 +232,22 @@ export default function GroupChat({ groupId, groupName, groupAvatar, onClose }: 
       if (voiceUrl) insertData.voice_url = voiceUrl;
       if (replyTo) insertData.reply_to_id = replyTo.id;
 
-      const { data, error } = await (supabase as any)
-        .from("group_messages")
+      const { data, error } = await dbFrom("group_messages")
         .insert(insertData)
         .select()
         .single();
 
       if (error) throw error;
-      setMessages((prev) => prev.map((m) => m.id === optimisticId ? data : m));
+      const inserted = data as GroupMessage | null;
+      if (inserted) {
+        setMessages((prev) => prev.map((m) => m.id === optimisticId ? inserted : m));
+      }
     } catch {
       setMessages((prev) => prev.filter((m) => m.id !== optimisticId));
       toast.error("Failed to send message");
     }
     setSending(false);
-  };
+  }, [groupId, input, replyTo, scrollToBottom, sending, user?.id]);
 
   // Voice send
   useEffect(() => {
@@ -239,7 +270,7 @@ export default function GroupChat({ groupId, groupName, groupAvatar, onClose }: 
       };
       upload();
     }
-  }, [voice.audioBlob, voice.isRecording]);
+  }, [voice.audioBlob, voice.isRecording, handleSend, user?.id, voice]);
 
   // Image upload
   const handleImageSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {

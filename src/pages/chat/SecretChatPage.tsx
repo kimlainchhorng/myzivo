@@ -41,6 +41,7 @@ export default function SecretChatPage() {
   const { user } = useAuth();
   const [draft, setDraft] = useState("");
   const [sasOpen, setSasOpen] = useState(false);
+  const [showJumpToBottom, setShowJumpToBottom] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
 
   const {
@@ -97,6 +98,13 @@ export default function SecretChatPage() {
   useEffect(() => {
     scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight, behavior: "smooth" });
   }, [messages.length]);
+
+  const handleTimelineScroll = () => {
+    const el = scrollRef.current;
+    if (!el) return;
+    const distance = el.scrollHeight - el.scrollTop - el.clientHeight;
+    setShowJumpToBottom(distance > 320);
+  };
 
   const ttlLabel = useMemo(() => {
     if (!ttlSeconds) return null;
@@ -172,7 +180,7 @@ export default function SecretChatPage() {
       </header>
 
       {/* Messages */}
-      <div ref={scrollRef} className="flex-1 overflow-y-auto px-3 py-4">
+      <div ref={scrollRef} onScroll={handleTimelineScroll} className="flex-1 overflow-y-auto px-3 py-4">
         {loading && (
           <div className="grid h-full place-items-center text-sm text-muted-foreground">
             Setting up encryption…
@@ -244,6 +252,18 @@ export default function SecretChatPage() {
       </div>
 
       {/* Composer */}
+      {showJumpToBottom && (
+        <div className="pointer-events-none fixed right-4 bottom-24 z-20">
+          <button
+            type="button"
+            onClick={() => scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight, behavior: "smooth" })}
+            className="pointer-events-auto rounded-full bg-indigo-500 px-3 py-2 text-xs font-semibold text-white shadow-lg shadow-indigo-500/25"
+          >
+            Jump to latest
+          </button>
+        </div>
+      )}
+
       <form
         onSubmit={(e) => {
           e.preventDefault();

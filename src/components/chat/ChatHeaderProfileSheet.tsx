@@ -32,6 +32,30 @@ interface Props {
   onClearHistory?: () => void;
 }
 
+type ProfileMetaRow = {
+  bio: string | null;
+  last_seen_at: string | null;
+};
+
+type CountResult = {
+  count: number | null;
+};
+
+type QuickBtnProps = {
+  icon: React.ComponentType<{ className?: string }>;
+  label: string;
+  onClick: () => void;
+  active?: boolean;
+};
+
+type StatRowProps = {
+  icon: React.ComponentType<{ className?: string }>;
+  label: string;
+  count: number;
+};
+
+const dbFrom = (table: string) => supabase.from(table as never);
+
 export default function ChatHeaderProfileSheet({
   open, onClose, partner, onOpenSearch, onCall, onClearHistory,
 }: Props) {
@@ -48,30 +72,32 @@ export default function ChatHeaderProfileSheet({
     if (!open || !partner.id || !user?.id) return;
     let alive = true;
     (async () => {
-      const { data: prof } = await (supabase as any)
-        .from("profiles")
+      const { data } = await dbFrom("profiles")
         .select("bio, last_seen_at")
         .eq("user_id", partner.id)
         .maybeSingle();
+      const prof = data as ProfileMetaRow | null;
       if (alive && prof) {
         setBio(prof.bio || null);
         setLastSeen(prof.last_seen_at || null);
       }
-      const between = `and(or(sender_id.eq.${user.id},receiver_id.eq.${user.id}),or(sender_id.eq.${partner.id},receiver_id.eq.${partner.id}))`;
-      const [{ count: media }, { count: files }, { count: links }] = await Promise.all([
-        (supabase as any).from("direct_messages").select("id", { count: "exact", head: true })
+      const [mediaRes, filesRes, linksRes] = await Promise.all([
+        dbFrom("direct_messages").select("id", { count: "exact", head: true })
           .or(`sender_id.eq.${user.id},receiver_id.eq.${user.id}`)
           .or(`sender_id.eq.${partner.id},receiver_id.eq.${partner.id}`)
           .or("image_url.not.is.null,video_url.not.is.null"),
-        (supabase as any).from("direct_messages").select("id", { count: "exact", head: true })
+        dbFrom("direct_messages").select("id", { count: "exact", head: true })
           .or(`sender_id.eq.${user.id},receiver_id.eq.${user.id}`)
           .or(`sender_id.eq.${partner.id},receiver_id.eq.${partner.id}`)
           .eq("message_type", "file"),
-        (supabase as any).from("direct_messages").select("id", { count: "exact", head: true })
+        dbFrom("direct_messages").select("id", { count: "exact", head: true })
           .or(`sender_id.eq.${user.id},receiver_id.eq.${user.id}`)
           .or(`sender_id.eq.${partner.id},receiver_id.eq.${partner.id}`)
           .ilike("message", "%http%"),
       ]);
+      const media = (mediaRes as CountResult).count || 0;
+      const files = (filesRes as CountResult).count || 0;
+      const links = (linksRes as CountResult).count || 0;
       if (alive) setCounts({ media: media || 0, files: files || 0, links: links || 0 });
     })();
     return () => { alive = false; };
@@ -79,14 +105,13 @@ export default function ChatHeaderProfileSheet({
 
   const block = async () => {
     if (!user?.id) return;
-    const { error } = await (supabase as any)
-      .from("blocked_users")
+    const { error } = await dbFrom("blocked_users")
       .insert({ blocker_id: user.id, blocked_id: partner.id });
     if (error) toast.error("Could not block");
     else { toast.success("User blocked"); onClose(); }
   };
 
-  const QuickBtn = ({ icon: Icon, label, onClick, active }: any) => (
+  const QuickBtn = ({ icon: Icon, label, onClick, active }: QuickBtnProps) => (
     <button
       onClick={onClick}
       className="flex-1 flex flex-col items-center gap-1.5 py-3 rounded-xl bg-muted/50 hover:bg-muted active:scale-95 transition-all"
@@ -96,7 +121,7 @@ export default function ChatHeaderProfileSheet({
     </button>
   );
 
-  const StatRow = ({ icon: Icon, label, count }: any) => (
+  const StatRow = ({ icon: Icon, label, count }: StatRowProps) => (
     <div className="flex items-center justify-between px-4 py-3">
       <div className="flex items-center gap-3">
         <div className="w-9 h-9 rounded-full bg-muted/60 flex items-center justify-center">

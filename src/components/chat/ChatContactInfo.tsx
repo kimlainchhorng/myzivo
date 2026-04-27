@@ -42,6 +42,42 @@ import Copy from "lucide-react/dist/esm/icons/copy";
 import ExternalLink from "lucide-react/dist/esm/icons/external-link";
 import { toast } from "sonner";
 
+type SharedMediaRow = {
+  id: string;
+  image_url: string | null;
+  video_url: string | null;
+  message_type: string | null;
+  created_at: string;
+};
+
+type FollowingRow = {
+  following_id: string;
+};
+
+type MutualProfileRow = {
+  user_id: string;
+  full_name: string | null;
+  avatar_url: string | null;
+};
+
+type MutualFriend = {
+  id: string;
+  name: string;
+  avatar: string | null;
+};
+
+type RecipientProfileRow = {
+  user_id: string;
+  full_name: string | null;
+  avatar_url: string | null;
+  bio: string | null;
+  email: string | null;
+  city: string | null;
+  country: string | null;
+};
+
+const dbFrom = (table: string) => supabase.from(table as never);
+
 interface ChatContactInfoProps {
   recipientId: string;
   recipientName: string;
@@ -93,15 +129,14 @@ export default function ChatContactInfo({
     queryKey: ["chat-shared-media", user?.id, recipientId],
     enabled: !!user,
     queryFn: async () => {
-      const { data } = await (supabase as any)
-        .from("direct_messages")
+      const { data } = await dbFrom("direct_messages")
         .select("id, image_url, video_url, message_type, created_at")
         .or(`and(sender_id.eq.${user!.id},receiver_id.eq.${recipientId}),and(sender_id.eq.${recipientId},receiver_id.eq.${user!.id})`)
         .or("message_type.eq.image,message_type.eq.video,image_url.neq.")
         .not("image_url", "is", null)
         .order("created_at", { ascending: false })
         .limit(6);
-      return (data || []).filter((m: any) => m.image_url || m.video_url);
+      return ((data || []) as SharedMediaRow[]).filter((m) => m.image_url || m.video_url);
     },
   });
 
@@ -112,21 +147,21 @@ export default function ChatContactInfo({
     queryFn: async () => {
       // Get my followers/following
       const [{ data: myFollowing }, { data: theirFollowing }] = await Promise.all([
-        (supabase as any)
-          .from("user_followers")
+        dbFrom("user_followers")
           .select("following_id")
           .eq("follower_id", user!.id),
-        (supabase as any)
-          .from("user_followers")
+        dbFrom("user_followers")
           .select("following_id")
           .eq("follower_id", recipientId),
       ]);
 
       if (!myFollowing?.length || !theirFollowing?.length) return [];
 
-      const mySet = new Set((myFollowing as any[]).map((f: any) => f.following_id));
-      const mutualIds = (theirFollowing as any[])
-        .map((f: any) => f.following_id)
+      const myRows = (myFollowing || []) as FollowingRow[];
+      const theirRows = (theirFollowing || []) as FollowingRow[];
+      const mySet = new Set(myRows.map((f) => f.following_id));
+      const mutualIds = theirRows
+        .map((f) => f.following_id)
         .filter((id: string) => mySet.has(id) && id !== user!.id && id !== recipientId);
 
       if (mutualIds.length === 0) return [];
@@ -136,10 +171,10 @@ export default function ChatContactInfo({
         .select("user_id, full_name, avatar_url")
         .in("user_id", mutualIds.slice(0, 8));
 
-      return (profiles || []).map((p: any) => ({
+      return ((profiles || []) as MutualProfileRow[]).map((p): MutualFriend => ({
         id: p.user_id,
         name: p.full_name || "User",
-        avatar: p.avatar_url,
+        avatar: p.avatar_url || null,
       }));
     },
   });
@@ -148,12 +183,11 @@ export default function ChatContactInfo({
   const { data: recipientProfile } = useQuery({
     queryKey: ["recipient-profile", recipientId],
     queryFn: async () => {
-      const { data } = await (supabase as any)
-        .from("profiles")
+      const { data } = await dbFrom("profiles")
         .select("user_id, full_name, avatar_url, bio, email, city, country")
         .eq("user_id", recipientId)
         .maybeSingle();
-      return data as any;
+      return (data || null) as RecipientProfileRow | null;
     },
   });
 
@@ -320,7 +354,7 @@ export default function ChatContactInfo({
             <Section title="Shared Media">
               <div className="px-4 pb-3">
                 <div className="grid grid-cols-3 gap-1.5 rounded-xl overflow-hidden">
-                  {sharedMedia.slice(0, 6).map((media: any) => (
+                  {sharedMedia.slice(0, 6).map((media) => (
                     <button
                       key={media.id}
                       onClick={onOpenMediaGallery}
@@ -357,7 +391,7 @@ export default function ChatContactInfo({
             <Section title={`${mutualFriends.length} Mutual Friend${mutualFriends.length > 1 ? "s" : ""}`}>
               <div className="px-4 pb-3">
                 <div className="flex flex-wrap gap-2">
-                  {mutualFriends.slice(0, 6).map((friend: any) => (
+                  {mutualFriends.slice(0, 6).map((friend) => (
                     <button
                       key={friend.id}
                       onClick={() => { onClose(); navigate(`/user/${friend.id}`); }}

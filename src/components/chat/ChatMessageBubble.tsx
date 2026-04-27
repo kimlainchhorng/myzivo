@@ -3,7 +3,7 @@
  * Features: long-press actions (reply/delete/copy/forward/pin), swipe-to-reply, emoji reactions, image/video display
  * Design: Glassmorphic iMessage aesthetic with gradient bubbles, tail shapes, and depth effects
  */
-import { useState, useEffect, useRef, useCallback, useMemo, memo, lazy, Suspense } from "react";
+import { useState, useEffect, useRef, useCallback, useMemo, memo, lazy, Suspense, type ComponentType, type SVGProps } from "react";
 import { motion, AnimatePresence, PanInfo } from "framer-motion";
 import Trash2 from "lucide-react/dist/esm/icons/trash-2";
 import Reply from "lucide-react/dist/esm/icons/reply";
@@ -44,6 +44,38 @@ import { getStickerMotionSpec } from "./stickerMotion";
 // Lazy-load TransparentStickerVideo — heavy chroma-key/WebGL component
 const TransparentStickerVideo = lazy(() => import("./TransparentStickerVideo").then(m => ({ default: m.TransparentStickerVideo })));
 const REACTION_EMOJIS = ["❤️", "😂", "👍", "😮", "😢", "🔥", "🎉", "😍"];
+
+type IconLike = ComponentType<SVGProps<SVGSVGElement>>;
+
+type TranslationResponse = {
+  translated_text?: string;
+  translation?: string;
+  text?: string;
+  source_language?: string;
+};
+
+type MessageReactionRow = {
+  emoji: string;
+  user_id: string;
+};
+
+type StoreProfileRow = {
+  name: string | null;
+};
+
+type UserPostRow = {
+  media_url: string | null;
+  media_type: string | null;
+  caption: string | null;
+  user_id: string | null;
+};
+
+type ProfileLookupRow = {
+  full_name: string | null;
+  avatar_url: string | null;
+};
+
+const dbFrom = (table: string) => supabase.from(table as never);
 
 type ParsedStickerMessage = {
   id: string;
@@ -225,9 +257,10 @@ const ChatMessageBubble = memo(function ChatMessageBubble({
         body: { text: message, target_language: target },
       });
       if (error) throw error;
-      const translated = (data as any)?.translated_text || (data as any)?.translation || (data as any)?.text;
+      const translationData = (data || {}) as TranslationResponse;
+      const translated = translationData.translated_text || translationData.translation || translationData.text;
       if (translated) {
-        setTranslation({ text: translated, sourceLang: (data as any)?.source_language });
+        setTranslation({ text: translated, sourceLang: translationData.source_language });
       } else {
         toast.error("Could not translate");
         setShowTranslation(false);
@@ -256,7 +289,7 @@ const ChatMessageBubble = memo(function ChatMessageBubble({
     setShowStickerBurst(true);
     const timer = setTimeout(() => setShowStickerBurst(false), 420);
     return () => clearTimeout(timer);
-  }, [id, parsedSticker?.animatedSrc, parsedSticker?.id]);
+  }, [id, parsedSticker]);
 
   // Check if already unlocked
   useEffect(() => {
@@ -267,7 +300,9 @@ const ChatMessageBubble = memo(function ChatMessageBubble({
           body: { message_id: id },
         });
         if (data?.unlocked) setIsLocked(false);
-      } catch {}
+      } catch {
+        // Ignore unlock probe failures; user can still manually unlock.
+      }
     };
     checkUnlock();
   }, [id, isLockedType, isMe]);
@@ -299,7 +334,9 @@ const ChatMessageBubble = memo(function ChatMessageBubble({
             } else {
               toast.info("Payment processing — media will unlock shortly");
             }
-          } catch {}
+          } catch {
+            // Ignore transient verification errors after checkout close.
+          }
           setUnlockLoading(false);
         };
         await Browser.addListener("browserFinished", () => {
@@ -321,18 +358,18 @@ const ChatMessageBubble = memo(function ChatMessageBubble({
   useEffect(() => {
     if (!id || id.startsWith("opt-") || initialReactions) return;
     const load = async () => {
-      const { data } = await (supabase as any)
-        .from("message_reactions")
+      const { data } = await dbFrom("message_reactions")
         .select("emoji, user_id")
         .eq("message_id", id);
-      if (data) {
-        const grouped = data.reduce((acc: Record<string, { count: number; hasMyReaction: boolean }>, r: any) => {
+      const reactionRows = (data || []) as MessageReactionRow[];
+      if (reactionRows.length > 0) {
+        const grouped = reactionRows.reduce((acc: Record<string, { count: number; hasMyReaction: boolean }>, r) => {
           if (!acc[r.emoji]) acc[r.emoji] = { count: 0, hasMyReaction: false };
           acc[r.emoji].count++;
           if (r.user_id === user?.id) acc[r.emoji].hasMyReaction = true;
           return acc;
         }, {} as Record<string, { count: number; hasMyReaction: boolean }>);
-        setReactions(Object.entries(grouped).map(([emoji, v]) => ({ emoji, count: (v as any).count, hasMyReaction: (v as any).hasMyReaction })));
+        setReactions(Object.entries(grouped).map(([emoji, v]) => ({ emoji, count: v.count, hasMyReaction: v.hasMyReaction })));
       }
     };
     load();
@@ -342,14 +379,14 @@ const ChatMessageBubble = memo(function ChatMessageBubble({
     if (!user?.id || id.startsWith("opt-")) return;
     const existing = reactions.find((r) => r.emoji === emoji && r.hasMyReaction);
     if (existing) {
-      await (supabase as any).from("message_reactions").delete()
+      await dbFrom("message_reactions").delete()
         .eq("message_id", id).eq("user_id", user.id).eq("emoji", emoji);
       setReactions((prev) =>
         prev.map((r) => r.emoji === emoji ? { ...r, count: r.count - 1, hasMyReaction: false } : r)
             .filter((r) => r.count > 0)
       );
     } else {
-      await (supabase as any).from("message_reactions").insert({
+      await dbFrom("message_reactions").insert({
         message_id: id, user_id: user.id, emoji,
       });
       setReactions((prev) => {
@@ -387,7 +424,7 @@ const ChatMessageBubble = memo(function ChatMessageBubble({
     if (longPressTimer.current) { clearTimeout(longPressTimer.current); longPressTimer.current = null; }
   }, []);
 
-  const handleDragEnd = useCallback((_: any, info: PanInfo) => {
+  const handleDragEnd = useCallback((_: MouseEvent | TouchEvent | PointerEvent, info: PanInfo) => {
     if ((!isMe && info.offset.x > 60) || (isMe && info.offset.x < -60)) {
       onReply(id, message, isMe);
       if (navigator.vibrate) navigator.vibrate(20);
@@ -1024,7 +1061,7 @@ function ReelVideoPlayer({ videoUrl, onClose }: { videoUrl: string; onClose: () 
 
 
 function ActionBtn({ icon: Icon, label, onClick, destructive, active }: {
-  icon: any; label: string; onClick: () => void; destructive?: boolean; active?: boolean;
+  icon: IconLike; label: string; onClick: () => void; destructive?: boolean; active?: boolean;
 }) {
   return (
     <button
@@ -1044,7 +1081,7 @@ function ActionBtn({ icon: Icon, label, onClick, destructive, active }: {
 }
 
 function MsgMenuItem({ icon: Icon, label, onClick, destructive, active, chevron }: {
-  icon: any; label: string; onClick: () => void; destructive?: boolean; active?: boolean; chevron?: boolean;
+  icon: IconLike; label: string; onClick: () => void; destructive?: boolean; active?: boolean; chevron?: boolean;
 }) {
   return (
     <button
@@ -1095,8 +1132,8 @@ function parseLegacyMusicShare(messageText?: string | null): LegacyMusicShareMet
     .map((line) => line.trim())
     .filter(Boolean);
 
-  const headerLine = lines.find((line) => /[🎵🎶]/.test(line) || /[—-]/.test(line)) ?? lines[0];
-  const headerMatch = headerLine?.match(/^(?:[🎵🎶]\s*)?(.+?)\s+[—-]\s+(.+)$/);
+  const headerLine = lines.find((line) => /[\u{1F3B5}\u{1F3B6}]/u.test(line) || /[—-]/u.test(line)) ?? lines[0];
+  const headerMatch = headerLine?.match(/^(?:[\u{1F3B5}\u{1F3B6}]\s*)?(.+?)\s+[—-]\s+(.+)$/u);
   if (!headerMatch) return null;
 
   const title = headerMatch[1].trim();
@@ -1176,7 +1213,8 @@ function LinkPreviewCard({ url, isMe, hasText, messageText }: { url: string; isM
                 .select("name, logo_url")
                 .eq("id", storePost.store_id)
                 .maybeSingle();
-              if (store) storeName = (store as any).name || "Store";
+              const storeProfile = store as StoreProfileRow | null;
+              if (storeProfile?.name) storeName = storeProfile.name;
             }
             setPreview({
               mediaUrl: mediaUrls[0] as string || null,
@@ -1188,11 +1226,11 @@ function LinkPreviewCard({ url, isMe, hasText, messageText }: { url: string; isM
           }
 
           // Try user_posts
-          const { data: userPost } = await (supabase as any)
-            .from("user_posts")
+          const { data: userPostData } = await dbFrom("user_posts")
             .select("media_url, media_type, caption, user_id")
             .eq("id", postId)
             .maybeSingle();
+          const userPost = userPostData as UserPostRow | null;
 
           if (userPost && alive) {
             let authorName = "Someone";
@@ -1203,9 +1241,10 @@ function LinkPreviewCard({ url, isMe, hasText, messageText }: { url: string; isM
                 .select("full_name, avatar_url")
                 .eq("user_id", userPost.user_id)
                 .maybeSingle();
-              if (profile) {
-                authorName = (profile as any).full_name || "Someone";
-                authorAvatar = (profile as any).avatar_url || null;
+                const authorProfile = profile as ProfileLookupRow | null;
+                if (authorProfile) {
+                  authorName = authorProfile.full_name || "Someone";
+                  authorAvatar = authorProfile.avatar_url || null;
               }
             }
             setPreview({

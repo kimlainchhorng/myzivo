@@ -12,6 +12,13 @@ import { useContacts } from "@/hooks/useContacts";
 import { toast } from "sonner";
 import { useNavigate } from "react-router-dom";
 
+interface ContactSearchResult {
+  user_id: string;
+  full_name: string | null;
+  username: string | null;
+  avatar_url: string | null;
+}
+
 export default function AddContactSheet({
   open,
   onOpenChange,
@@ -23,7 +30,7 @@ export default function AddContactSheet({
   const navigate = useNavigate();
   const [value, setValue] = useState("");
   const [searching, setSearching] = useState(false);
-  const [result, setResult] = useState<any>(null);
+  const [result, setResult] = useState<ContactSearchResult | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [adding, setAdding] = useState(false);
 

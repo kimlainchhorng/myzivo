@@ -103,7 +103,7 @@ export function ChatMediaUploader({ recipientId, onMediaSent, renderTrigger }: C
       setProgress(100);
       const { data: urlData } = supabase.storage.from("chat-media-files").getPublicUrl(path);
 
-      await (supabase as any).from("chat_media").insert({
+      await supabase.from("chat_media" as never).insert({
         sender_id: user.id,
         chat_partner_id: recipientId,
         file_url: urlData.publicUrl,

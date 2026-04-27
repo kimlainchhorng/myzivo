@@ -6,6 +6,7 @@ import { useState, useRef, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Phone, PhoneMissed, Video, ArrowUpRight, ArrowDownLeft, Trash2, Info, ChevronRight } from "lucide-react";
 import { format, isToday, isYesterday } from "date-fns";
+import type { ComponentType, SVGProps } from "react";
 
 interface CallEventBubbleProps {
   id?: string;
@@ -193,7 +194,11 @@ export default function CallEventBubble({
 }
 
 function MenuItem({ icon: Icon, label, onClick, destructive, chevron }: {
-  icon: any; label: string; onClick: () => void; destructive?: boolean; chevron?: boolean;
+  icon: ComponentType<SVGProps<SVGSVGElement>>;
+  label: string;
+  onClick: () => void;
+  destructive?: boolean;
+  chevron?: boolean;
 }) {
   return (
     <button

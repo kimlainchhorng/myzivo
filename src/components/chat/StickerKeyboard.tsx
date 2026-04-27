@@ -56,6 +56,26 @@ interface StickerPack {
   stickers: string[];
 }
 
+interface StickerPackRow {
+  id: string;
+  name: string;
+  emoji_prefix: string | null;
+  stickers: unknown;
+}
+
+function parseStickerList(value: unknown): string[] {
+  if (Array.isArray(value)) return value.filter((item): item is string => typeof item === "string");
+  if (typeof value === "string") {
+    try {
+      const parsed = JSON.parse(value);
+      return Array.isArray(parsed) ? parsed.filter((item): item is string => typeof item === "string") : [];
+    } catch {
+      return [];
+    }
+  }
+  return [];
+}
+
 type TabKey = "stickers" | "gifs" | "avatar" | "music" | "store" | "memes" | "future";
 
 /* ═══════════════ Storage Keys ═══════════════ */
@@ -693,12 +713,16 @@ export default function StickerKeyboard({ open, onClose, onSendSticker, onStartV
     setFavoriteStickers(readJsonArray("zivo_fav_stickers"));
 
     const loadPacks = async () => {
-      const { data } = await (supabase as any).from("chat_sticker_packs").select("id, name, emoji_prefix, stickers").order("created_at", { ascending: true });
+      const { data } = await supabase
+        .from("chat_sticker_packs" as never)
+        .select("id, name, emoji_prefix, stickers")
+        .order("created_at", { ascending: true });
       if (!data) { setRemotePacks([]); return; }
+      const rows = data as StickerPackRow[];
       setRemotePacks(
-        data.map((p: any) => ({
+        rows.map((p) => ({
           id: p.id, name: p.name, emoji_prefix: p.emoji_prefix || "✨",
-          stickers: Array.isArray(p.stickers) ? p.stickers : typeof p.stickers === "string" ? JSON.parse(p.stickers) : [],
+          stickers: parseStickerList(p.stickers),
         })).filter((p: StickerPack) => p.stickers.length > 0)
       );
     };
@@ -1032,7 +1056,7 @@ export default function StickerKeyboard({ open, onClose, onSendSticker, onStartV
             <div className="p-3 space-y-3">
               <div className="flex gap-2 overflow-x-auto scrollbar-none pb-1">
                 {(["All", ...GIF_CATEGORIES] as const).map((cat) => (
-                  <button key={cat} onClick={() => setGifCategory(cat as any)}
+                  <button key={cat} onClick={() => setGifCategory(cat)}
                     className={`px-3 py-1.5 rounded-full text-xs font-semibold whitespace-nowrap transition-colors ${
                       gifCategory === cat ? "bg-primary text-primary-foreground" : "bg-muted/40 text-muted-foreground"
                     }`}>{cat}</button>

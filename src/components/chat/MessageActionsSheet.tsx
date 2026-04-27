@@ -13,6 +13,7 @@ import Smile from "lucide-react/dist/esm/icons/smile";
 import Languages from "lucide-react/dist/esm/icons/languages";
 import Trash2 from "lucide-react/dist/esm/icons/trash-2";
 import type { DirectMessage } from "@/hooks/useMessageActions";
+import type { ComponentType, SVGProps } from "react";
 
 interface Props {
   open: boolean;
@@ -37,7 +38,12 @@ export default function MessageActionsSheet({
   const ageHours = (Date.now() - new Date(message.created_at).getTime()) / 36e5;
   const canEdit = isOwn && ageHours < 48 && !!message.message;
 
-  const Item = ({ icon: Icon, label, onClick, danger = false }: any) => (
+  const Item = ({ icon: Icon, label, onClick, danger = false }: {
+    icon: ComponentType<SVGProps<SVGSVGElement>>;
+    label: string;
+    onClick: () => void;
+    danger?: boolean;
+  }) => (
     <Button
       variant="ghost"
       onClick={() => { onClick(); onOpenChange(false); }}

@@ -12,13 +12,26 @@ import Search from "lucide-react/dist/esm/icons/search";
 import Check from "lucide-react/dist/esm/icons/check";
 import { toast } from "sonner";
 
+interface DirectMessagePeerRow {
+  sender_id: string;
+  receiver_id: string;
+}
+
+interface BroadcastContactRow {
+  id: string;
+  user_id: string | null;
+  full_name: string | null;
+  username: string | null;
+  avatar_url: string | null;
+}
+
 export default function NewBroadcastPage() {
   const nav = useNavigate();
   const { user } = useAuth();
   const { createList } = useBroadcastLists();
   const [name, setName] = useState("");
   const [q, setQ] = useState("");
-  const [contacts, setContacts] = useState<any[]>([]);
+  const [contacts, setContacts] = useState<BroadcastContactRow[]>([]);
   const [picked, setPicked] = useState<Set<string>>(new Set());
   const [creating, setCreating] = useState(false);
 
@@ -27,23 +40,25 @@ export default function NewBroadcastPage() {
     let alive = true;
     (async () => {
       // Pull recent chat partners as the contact pool.
-      const { data } = await (supabase as any)
-        .from("direct_messages")
+      const { data } = await supabase
+        .from("direct_messages" as never)
         .select("sender_id,receiver_id")
         .or(`sender_id.eq.${user.id},receiver_id.eq.${user.id}`)
         .order("created_at", { ascending: false })
         .limit(200);
+
+      const directMessages = (data ?? []) as DirectMessagePeerRow[];
       const ids = new Set<string>();
-      (data || []).forEach((r: any) => {
+      directMessages.forEach((r) => {
         if (r.sender_id !== user.id) ids.add(r.sender_id);
         if (r.receiver_id !== user.id) ids.add(r.receiver_id);
       });
       if (ids.size === 0) { if (alive) setContacts([]); return; }
-      const { data: profs } = await (supabase as any)
+      const { data: profs } = await supabase
         .from("profiles")
         .select("id,user_id,full_name,username,avatar_url")
         .in("user_id", Array.from(ids));
-      if (alive) setContacts(profs || []);
+      if (alive) setContacts((profs ?? []) as BroadcastContactRow[]);
     })();
     return () => { alive = false; };
   }, [user?.id]);
@@ -57,7 +72,8 @@ export default function NewBroadcastPage() {
 
   const toggle = (id: string) => {
     const next = new Set(picked);
-    next.has(id) ? next.delete(id) : next.add(id);
+    if (next.has(id)) next.delete(id);
+    else next.add(id);
     setPicked(next);
   };
 

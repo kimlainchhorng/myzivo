@@ -14,6 +14,21 @@ import ChatNotificationToast from "./ChatNotificationToast";
 const SOUND_URL = "/sounds/chat-notification.wav";
 const NOTIFICATION_COOLDOWN_MS = 2000; // Don't spam sounds
 
+type ChatOpenedDetail = {
+  recipientId?: string;
+};
+
+type DirectMessageRow = {
+  sender_id: string;
+  message_type: string | null;
+  message: string | null;
+  content?: string | null;
+};
+
+type RealtimePayload<T> = {
+  new: T;
+};
+
 export default function ChatNotificationListener() {
   const { user } = useAuth();
   const navigate = useNavigate();
@@ -32,17 +47,18 @@ export default function ChatNotificationListener() {
 
   // Track which chat is currently open via a custom event
   useEffect(() => {
-    const handleChatOpen = (e: CustomEvent) => {
-      activeChatRef.current = e.detail?.recipientId || null;
+    const handleChatOpen = (event: Event) => {
+      const customEvent = event as CustomEvent<ChatOpenedDetail>;
+      activeChatRef.current = customEvent.detail?.recipientId || null;
     };
     const handleChatClose = () => {
       activeChatRef.current = null;
     };
-    window.addEventListener("chat-opened" as any, handleChatOpen);
-    window.addEventListener("chat-closed" as any, handleChatClose);
+    window.addEventListener("chat-opened", handleChatOpen as EventListener);
+    window.addEventListener("chat-closed", handleChatClose as EventListener);
     return () => {
-      window.removeEventListener("chat-opened" as any, handleChatOpen);
-      window.removeEventListener("chat-closed" as any, handleChatClose);
+      window.removeEventListener("chat-opened", handleChatOpen as EventListener);
+      window.removeEventListener("chat-closed", handleChatClose as EventListener);
     };
   }, []);
 
@@ -83,7 +99,9 @@ export default function ChatNotificationListener() {
         };
         // Auto-close after 5s
         setTimeout(() => notif.close(), 5000);
-      } catch {}
+      } catch {
+        // Notification API can throw on unsupported/blocked environments.
+      }
     }
   }, []);
 
@@ -101,7 +119,7 @@ export default function ChatNotificationListener() {
           table: "direct_messages",
           filter: `receiver_id=eq.${user.id}`,
         },
-        async (payload: any) => {
+        async (payload: RealtimePayload<DirectMessageRow>) => {
           const msg = payload.new;
           if (!msg || msg.sender_id === user.id) return;
 
@@ -124,10 +142,12 @@ export default function ChatNotificationListener() {
               senderName = profile.full_name || "Someone";
               senderAvatar = profile.avatar_url || null;
             }
-          } catch {}
+          } catch {
+            // Missing profile should not block notification delivery.
+          }
 
           // Determine message preview
-          let preview = msg.content || "";
+          let preview = msg.message || msg.content || "";
           if (msg.message_type === "image" || msg.message_type === "locked_image") preview = "📷 Photo";
           else if (msg.message_type === "video" || msg.message_type === "locked_video") preview = "🎥 Video";
           else if (msg.message_type === "voice") preview = "🎤 Voice message";

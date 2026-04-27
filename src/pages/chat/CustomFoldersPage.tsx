@@ -19,6 +19,16 @@ import X from "lucide-react/dist/esm/icons/x";
 
 const ICONS = ["📁", "⭐", "💼", "🏠", "❤️", "🎮", "📚", "🎵", "✈️", "🛒", "👨‍👩‍👧", "🤖"];
 
+type ChatFolderRow = {
+  id: string;
+  user_id: string;
+  name: string;
+  icon: string;
+  sort_order: number;
+};
+
+const dbFrom = (table: string) => supabase.from(table as never);
+
 export default function CustomFoldersPage() {
   const nav = useNavigate();
   const { user } = useAuth();
@@ -30,12 +40,11 @@ export default function CustomFoldersPage() {
     queryKey: ["chat-folders", user?.id],
     enabled: !!user?.id,
     queryFn: async () => {
-      const { data } = await (supabase as any)
-        .from("chat_folders")
+      const { data } = await dbFrom("chat_folders")
         .select("*")
         .eq("user_id", user!.id)
         .order("sort_order", { ascending: true });
-      return data || [];
+      return (data || []) as ChatFolderRow[];
     },
   });
 
@@ -44,16 +53,14 @@ export default function CustomFoldersPage() {
   const save = async () => {
     if (!user?.id || !editing?.name.trim()) return;
     if (editing.id) {
-      const { error } = await (supabase as any)
-        .from("chat_folders")
+      const { error } = await dbFrom("chat_folders")
         .update({ name: editing.name.trim(), icon: editing.icon })
         .eq("id", editing.id);
       if (error) return toast.error("Could not save folder");
       toast.success("Folder updated");
     } else {
       const sort_order = folders.length;
-      const { error } = await (supabase as any)
-        .from("chat_folders")
+      const { error } = await dbFrom("chat_folders")
         .insert({ user_id: user.id, name: editing.name.trim(), icon: editing.icon, sort_order });
       if (error) return toast.error("Could not create folder");
       toast.success("Folder created");
@@ -63,7 +70,7 @@ export default function CustomFoldersPage() {
   };
 
   const remove = async (id: string) => {
-    const { error } = await (supabase as any).from("chat_folders").delete().eq("id", id);
+    const { error } = await dbFrom("chat_folders").delete().eq("id", id);
     if (error) return toast.error("Could not delete");
     toast.success("Folder deleted");
     refresh();
@@ -74,8 +81,8 @@ export default function CustomFoldersPage() {
     if (target < 0 || target >= folders.length) return;
     const a = folders[idx];
     const b = folders[target];
-    await (supabase as any).from("chat_folders").update({ sort_order: b.sort_order }).eq("id", a.id);
-    await (supabase as any).from("chat_folders").update({ sort_order: a.sort_order }).eq("id", b.id);
+    await dbFrom("chat_folders").update({ sort_order: b.sort_order }).eq("id", a.id);
+    await dbFrom("chat_folders").update({ sort_order: a.sort_order }).eq("id", b.id);
     refresh();
   };
 
@@ -104,7 +111,7 @@ export default function CustomFoldersPage() {
           <div className="px-4 py-8 text-center text-sm text-muted-foreground">
             No folders yet. Tap + to create one.
           </div>
-        ) : folders.map((f: any, idx: number) => (
+        ) : folders.map((f, idx) => (
           <div key={f.id} className="flex items-center gap-3 px-4 py-3">
             <span className="text-xl">{f.icon}</span>
             <div className="flex-1 min-w-0">

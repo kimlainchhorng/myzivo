@@ -4,8 +4,7 @@
  */
 import { useEffect, useRef, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-
-export type EffectType = "confetti" | "fireworks" | "lasers" | "hearts" | "celebration" | null;
+import type { EffectType } from "./messageEffectUtils";
 
 interface MessageEffectsProps {
   effect: EffectType;
@@ -232,14 +231,4 @@ export default function MessageEffects({ effect, onComplete }: MessageEffectsPro
       )}
     </AnimatePresence>
   );
-}
-
-/** Detect effect keywords from message text */
-export function detectMessageEffect(text: string): EffectType {
-  const lower = text.toLowerCase();
-  if (lower.includes("🎉") || lower.includes("congrat") || lower.includes("celebrate")) return "celebration";
-  if (lower.includes("🎆") || lower.includes("firework") || lower.includes("boom")) return "fireworks";
-  if (lower.includes("❤️") || lower.includes("love you") || lower.includes("i love")) return "hearts";
-  if (lower.includes("🎊") || lower.includes("party") || lower.includes("woohoo")) return "confetti";
-  return null;
 }

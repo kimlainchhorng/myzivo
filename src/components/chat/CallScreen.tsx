@@ -30,6 +30,46 @@ import AudioVisualizer from "./AudioVisualizer";
 import { toast } from "sonner";
 import { useNavigate } from "react-router-dom";
 
+type CallSignalStatus = "ringing" | "answered" | "declined" | "missed" | "ended";
+
+type CallerProfileRow = {
+  full_name: string | null;
+  avatar_url: string | null;
+};
+
+type CallSignalRow = {
+  id: string;
+  caller_id: string;
+  callee_id: string;
+  status: CallSignalStatus;
+  created_at: string;
+  started_at: string | null;
+};
+
+type CallSignalStatusRow = {
+  status: CallSignalStatus;
+};
+
+type CallSignalIdRow = {
+  id: string;
+};
+
+type CallHistorySignalRow = {
+  call_signal_id: string | null;
+};
+
+type CallHistoryIdRow = {
+  id: string;
+};
+
+type CallSignalRealtimePayload = {
+  new: {
+    status: CallSignalStatus;
+  };
+};
+
+const dbFrom = (table: string) => supabase.from(table as never);
+
 interface CallScreenProps {
   recipientName: string;
   recipientAvatar?: string | null;
@@ -95,11 +135,11 @@ export default function CallScreen({
     let callerAvatar = "";
 
     try {
-      const { data: profile } = await (supabase as any)
-        .from("profiles")
+      const { data } = await dbFrom("profiles")
         .select("full_name, avatar_url")
         .eq("id", user.id)
         .maybeSingle();
+      const profile = data as CallerProfileRow | null;
 
       if (profile?.full_name) callerName = profile.full_name;
       if (profile?.avatar_url) callerAvatar = profile.avatar_url;
@@ -175,15 +215,16 @@ export default function CallScreen({
             : "missed";
 
     if (user?.id && callId) {
-      (supabase as any).from("call_history").insert({
+      dbFrom("call_history").insert({
         caller_id: role === "caller" ? user.id : recipientId,
         callee_id: role === "caller" ? recipientId : user.id,
         call_type: callType,
         status: resolvedStatus,
         duration_seconds: duration,
         call_signal_id: callId,
-      }).then(({ data }: any) => {
-        if (data?.[0]?.id) setCallHistoryId(data[0].id);
+      }).select("id").maybeSingle().then(({ data }) => {
+        const callHistory = data as CallHistoryIdRow | null;
+        if (callHistory?.id) setCallHistoryId(callHistory.id);
       });
     }
 
@@ -193,7 +234,7 @@ export default function CallScreen({
         ? `Missed ${callLabel} call (declined)`
         : `Missed ${callLabel} call (no answer)`;
 
-      void (supabase as any).from("direct_messages").insert({
+      void dbFrom("direct_messages").insert({
         sender_id: user.id,
         receiver_id: recipientId,
         message,
@@ -280,8 +321,7 @@ export default function CallScreen({
 
       // Always create a fresh outgoing call ID. Before doing so, close any
       // stale open rows for this same caller/callee pair.
-      const { data: openPairCalls } = await (supabase as any)
-        .from("call_signals")
+      const { data: openPairCallsRaw } = await dbFrom("call_signals")
         .select("id, status")
         .eq("caller_id", user.id)
         .eq("callee_id", recipientId)
@@ -290,26 +330,25 @@ export default function CallScreen({
         .gte("created_at", stalePairWindow)
         .order("created_at", { ascending: false })
         .limit(10);
+      const openPairCalls = (openPairCallsRaw || []) as Pick<CallSignalRow, "id" | "status">[];
 
       const staleRingingPairIds = (openPairCalls || [])
-        .filter((row: any) => row.status === "ringing")
-        .map((row: any) => row.id);
+        .filter((row) => row.status === "ringing")
+        .map((row) => row.id);
 
       const staleAnsweredPairIds = (openPairCalls || [])
-        .filter((row: any) => row.status === "answered")
-        .map((row: any) => row.id);
+        .filter((row) => row.status === "answered")
+        .map((row) => row.id);
 
       if (staleRingingPairIds.length) {
-        await (supabase as any)
-          .from("call_signals")
+        await dbFrom("call_signals")
           .update({ status: "missed", ended_at: nowIso })
           .in("id", staleRingingPairIds)
           .eq("status", "ringing");
       }
 
       if (staleAnsweredPairIds.length) {
-        await (supabase as any)
-          .from("call_signals")
+        await dbFrom("call_signals")
           .update({ status: "ended", ended_at: nowIso })
           .in("id", staleAnsweredPairIds)
           .eq("status", "answered");
@@ -321,8 +360,7 @@ export default function CallScreen({
       const answeredWithoutStartStaleMs = 90 * 1000;
       const answeredStaleMs = 3 * 60 * 60 * 1000;
 
-      const { data: possibleActiveCalls } = await (supabase as any)
-        .from("call_signals")
+      const { data: possibleActiveCallsRaw } = await dbFrom("call_signals")
         .select("id, caller_id, callee_id, status, created_at, started_at")
         .or(`caller_id.eq.${recipientId},callee_id.eq.${recipientId}`)
         .in("status", ["ringing", "answered"])
@@ -330,16 +368,17 @@ export default function CallScreen({
         .gte("created_at", minCreatedAt)
         .order("created_at", { ascending: false })
         .limit(10);
+      const possibleActiveCalls = (possibleActiveCallsRaw || []) as CallSignalRow[];
 
-      const candidateIds = (possibleActiveCalls || []).map((row: any) => row.id).filter(Boolean);
+      const candidateIds = possibleActiveCalls.map((row) => row.id).filter(Boolean);
       const historicalSignalIds = new Set<string>();
 
       if (candidateIds.length) {
-        const { data: existingHistoryRows } = await (supabase as any)
-          .from("call_history")
+        const { data: existingHistoryRowsRaw } = await dbFrom("call_history")
           .select("call_signal_id")
           .in("call_signal_id", candidateIds)
           .limit(50);
+        const existingHistoryRows = (existingHistoryRowsRaw || []) as CallHistorySignalRow[];
 
         for (const row of existingHistoryRows || []) {
           if (row?.call_signal_id) {
@@ -351,7 +390,7 @@ export default function CallScreen({
       const staleMissedIds: string[] = [];
       const staleEndedIds: string[] = [];
 
-      const activeForRecipient = (possibleActiveCalls || []).find((row: any) => {
+      const activeForRecipient = possibleActiveCalls.find((row) => {
         const otherPartyId = row.caller_id === recipientId ? row.callee_id : row.caller_id;
 
         // Ignore rows that are only between current user and this recipient;
@@ -385,16 +424,14 @@ export default function CallScreen({
       });
 
       if (staleMissedIds.length) {
-        await (supabase as any)
-          .from("call_signals")
+        await dbFrom("call_signals")
           .update({ status: "missed", ended_at: new Date().toISOString() })
           .in("id", staleMissedIds)
           .eq("status", "ringing");
       }
 
       if (staleEndedIds.length) {
-        await (supabase as any)
-          .from("call_signals")
+        await dbFrom("call_signals")
           .update({ status: "ended", ended_at: new Date().toISOString() })
           .in("id", staleEndedIds)
           .eq("status", "answered");
@@ -402,7 +439,7 @@ export default function CallScreen({
 
       if (activeForRecipient?.id) {
         toast.info("User is busy", { description: "They are currently in another call." });
-        await (supabase as any).from("call_history").insert({
+        await dbFrom("call_history").insert({
           caller_id: user.id,
           callee_id: recipientId,
           call_type: callType,
@@ -410,7 +447,7 @@ export default function CallScreen({
           duration_seconds: 0,
         });
 
-        await (supabase as any).from("direct_messages").insert({
+        await dbFrom("direct_messages").insert({
           sender_id: user.id,
           receiver_id: recipientId,
           message: `${callType === "video" ? "Video" : "Voice"} call attempt (busy)`,
@@ -421,11 +458,12 @@ export default function CallScreen({
         return;
       }
 
-      const { data, error } = await (supabase as any).from("call_signals").insert({
+      const { data, error } = await dbFrom("call_signals").insert({
         caller_id: user.id,
         callee_id: recipientId,
         call_type: callType,
       }).select("id").single();
+      const newCall = data as CallSignalIdRow | null;
 
       if (error) {
         console.error("[Call] Failed to create call signal:", error);
@@ -434,27 +472,27 @@ export default function CallScreen({
         return;
       }
 
-      if (data?.id) {
-        setCallId(data.id);
+      if (newCall?.id) {
+        setCallId(newCall.id);
         reminderPushSentRef.current = false;
-        await sendIncomingCallPush(data.id);
+        await sendIncomingCallPush(newCall.id);
       }
     };
     void create();
-  }, [user?.id, recipientId, callType, existingCallId, callId, onEnd, sendIncomingCallPush]);
+  }, [user?.id, recipientId, callType, existingCallId, callId, onEnd, sendIncomingCallPush, handleCallFailure]);
 
   useEffect(() => {
     if (role !== "caller" || !callId || callState !== "ringing" || remoteAccepted || reminderPushSentRef.current) return;
 
     const reminderTimer = window.setTimeout(() => {
       (async () => {
-        const { data } = await (supabase as any)
-          .from("call_signals")
+          const { data } = await dbFrom("call_signals")
           .select("status")
           .eq("id", callId)
           .maybeSingle();
+          const row = data as CallSignalStatusRow | null;
 
-        if (data?.status !== "ringing") return;
+          if (row?.status !== "ringing") return;
         reminderPushSentRef.current = true;
         await sendIncomingCallPush(callId, "reminder");
       })();
@@ -485,22 +523,23 @@ export default function CallScreen({
 
     const timeout = window.setTimeout(() => {
       (async () => {
-        const { data: liveCall } = await (supabase as any)
-          .from("call_signals")
+          const { data } = await dbFrom("call_signals")
           .select("status")
           .eq("id", callId)
           .maybeSingle();
+          const liveCall = data as CallSignalStatusRow | null;
 
         // Guard race: if callee already accepted around timeout boundary,
         // do not force a no-answer hangup.
         if (liveCall?.status !== "ringing") return;
 
-        const { data: markedMissed } = await (supabase as any).from("call_signals")
+          const { data: markedMissedRaw } = await dbFrom("call_signals")
           .update({ status: "missed", ended_at: new Date().toISOString() })
           .eq("id", callId)
           .eq("status", "ringing")
           .select("id")
           .maybeSingle();
+          const markedMissed = markedMissedRaw as CallSignalIdRow | null;
 
         if (!markedMissed?.id) return;
 
@@ -520,7 +559,7 @@ export default function CallScreen({
       .on("postgres_changes", {
         event: "UPDATE", schema: "public", table: "call_signals",
         filter: `id=eq.${callId}`,
-      }, (payload: any) => {
+      }, (payload: CallSignalRealtimePayload) => {
         if (payload.new.status === "answered") {
           setRemoteAccepted(true);
           return;
@@ -551,13 +590,13 @@ export default function CallScreen({
 
     const intervalId = window.setInterval(() => {
       (async () => {
-        const { data } = await (supabase as any)
-          .from("call_signals")
+          const { data } = await dbFrom("call_signals")
           .select("status")
           .eq("id", callId)
           .maybeSingle();
+          const row = data as CallSignalStatusRow | null;
 
-        const status = data?.status;
+          const status = row?.status;
         if (status === "answered") {
           setRemoteAccepted(true);
           return;
@@ -646,7 +685,8 @@ export default function CallScreen({
     const videoTrack = stream.getVideoTracks()[0];
     if (!videoTrack) return;
     const constraints = videoTrack.getConstraints();
-    const currentFacing = (constraints as any).facingMode;
+    const currentFacingRaw = constraints.facingMode;
+    const currentFacing = Array.isArray(currentFacingRaw) ? currentFacingRaw[0] : currentFacingRaw;
     const newFacing = currentFacing === "environment" ? "user" : "environment";
     try {
       const newStream = await navigator.mediaDevices.getUserMedia({
@@ -655,7 +695,7 @@ export default function CallScreen({
       });
       const newTrack = newStream.getVideoTracks()[0];
       if (peerConnection?.current) {
-        const sender = peerConnection.current.getSenders().find((s: any) => s.track?.kind === "video");
+        const sender = peerConnection.current.getSenders().find((s) => s.track?.kind === "video");
         if (sender) await sender.replaceTrack(newTrack);
       }
       stream.removeTrack(videoTrack);

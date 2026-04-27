@@ -22,6 +22,24 @@ import { optimizeAvatar } from "@/utils/optimizeAvatar";
 
 const CreateStorySheet = lazy(() => import("@/components/profile/CreateStorySheet"));
 
+interface StoryRow {
+  id: string;
+  user_id: string;
+  media_url: string | null;
+  media_type: "image" | "video" | "text" | string;
+  text_overlay: string | null;
+  audio_url: string | null;
+  created_at: string;
+  expires_at: string;
+  view_count: number | null;
+}
+
+interface StoryProfileRow {
+  user_id: string;
+  full_name: string | null;
+  avatar_url: string | null;
+}
+
 export default function ChatStories() {
   const { user } = useAuth();
   const queryClient = useQueryClient();
@@ -35,23 +53,25 @@ export default function ChatStories() {
     refetchInterval: 60000,
     queryFn: async () => {
       const { data } = await supabase
-        .from("stories" as any)
+        .from("stories" as never)
         .select("id, user_id, media_url, media_type, text_overlay, audio_url, created_at, expires_at, view_count")
         .gt("expires_at", new Date().toISOString())
         .order("created_at", { ascending: true });
 
-      if (!data || data.length === 0) return [];
+      const stories = (data ?? []) as StoryRow[];
+      if (stories.length === 0) return [];
 
-      const userIds = [...new Set((data as any[]).map((s: any) => s.user_id))];
+      const userIds = [...new Set(stories.map((s) => s.user_id))];
       const { data: profiles } = await supabase
         .from("profiles")
         .select("user_id, full_name, avatar_url")
         .in("user_id", userIds);
 
-      const profileMap = new Map((profiles || []).map((p: any) => [p.user_id, p]));
+      const profileRows = (profiles ?? []) as StoryProfileRow[];
+      const profileMap = new Map(profileRows.map((p) => [p.user_id, p]));
 
       const groups = new Map<string, StoryGroup>();
-      for (const s of data as any[]) {
+      for (const s of stories) {
         if (!groups.has(s.user_id)) {
           const profile = profileMap.get(s.user_id);
           groups.set(s.user_id, {

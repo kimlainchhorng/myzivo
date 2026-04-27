@@ -13,34 +13,50 @@ interface Props {
   canUnpin?: boolean;
 }
 
+interface PinnedMessageRow {
+  id: string;
+  message: string | null;
+}
+
+interface PinnedMessageQueryRow {
+  direct_messages: PinnedMessageRow | PinnedMessageRow[] | null;
+}
+
+function extractPinnedMessage(value: PinnedMessageQueryRow["direct_messages"]): PinnedMessageRow | null {
+  if (!value) return null;
+  return Array.isArray(value) ? (value[0] ?? null) : value;
+}
+
 export default function PinnedMessageBanner({ conversationId, onJumpTo, onUnpin, canUnpin }: Props) {
   const [pinned, setPinned] = useState<{ id: string; message: string | null } | null>(null);
 
   useEffect(() => {
     let mounted = true;
     const load = async () => {
-      const { data } = await (supabase as any)
-        .from("pinned_messages")
+      const { data } = await supabase
+        .from("pinned_messages" as never)
         .select("message_id, direct_messages:message_id (id, message)")
         .eq("conversation_id", conversationId)
         .order("pinned_at", { ascending: false })
         .limit(1)
         .maybeSingle();
       if (!mounted) return;
-      if (data?.direct_messages) {
-        setPinned({ id: data.direct_messages.id, message: data.direct_messages.message });
+      const row = (data ?? null) as PinnedMessageQueryRow | null;
+      const pinnedMessage = row ? extractPinnedMessage(row.direct_messages) : null;
+      if (pinnedMessage) {
+        setPinned({ id: pinnedMessage.id, message: pinnedMessage.message });
       } else {
         setPinned(null);
       }
     };
     load();
-    const channel = (supabase as any)
+    const channel = supabase
       .channel(`pinned-${conversationId}`)
-      .on("postgres_changes", { event: "*", schema: "public", table: "pinned_messages", filter: `conversation_id=eq.${conversationId}` }, load)
+      .on("postgres_changes", { event: "*", schema: "public", table: "pinned_messages", filter: `conversation_id=eq.${conversationId}` }, () => { void load(); })
       .subscribe();
     return () => {
       mounted = false;
-      (supabase as any).removeChannel(channel);
+      supabase.removeChannel(channel);
     };
   }, [conversationId]);
 

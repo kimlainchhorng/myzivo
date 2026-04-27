@@ -1,7 +1,6 @@
 /**
  * ChatSearchAllPage — Unified global search across messages, people, media, links.
- * Pulls from `messages` (text), `profiles` (people), and the same table filtered
- * by attachment kind for media/links.
+ * Uses `direct_messages` so results map to the main chat workflow.
  */
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
@@ -16,15 +15,52 @@ import Users from "lucide-react/dist/esm/icons/users";
 import ImageIcon from "lucide-react/dist/esm/icons/image";
 import LinkIcon from "lucide-react/dist/esm/icons/link";
 import { cn } from "@/lib/utils";
+import type { ComponentType, SVGProps } from "react";
 
 type Tab = "messages" | "people" | "media" | "links";
 
-const TABS: { key: Tab; label: string; icon: any }[] = [
+type IconLike = ComponentType<SVGProps<SVGSVGElement>>;
+
+type DirectMessageSearchRow = {
+  id: string;
+  message: string;
+  sender_id: string;
+  receiver_id: string;
+  created_at: string;
+};
+
+type DirectMessageMediaRow = {
+  id: string;
+  image_url: string | null;
+  video_url: string | null;
+  sender_id: string;
+  receiver_id: string;
+  created_at: string;
+};
+
+type ProfileSearchRow = {
+  id: string;
+  user_id: string;
+  full_name: string | null;
+  username: string | null;
+  avatar_url: string | null;
+};
+
+const TABS: { key: Tab; label: string; icon: IconLike }[] = [
   { key: "messages", label: "Messages", icon: MessageSquare },
   { key: "people", label: "People", icon: Users },
   { key: "media", label: "Media", icon: ImageIcon },
   { key: "links", label: "Links", icon: LinkIcon },
 ];
+
+function extractFirstUrl(text: string): string {
+  const hit = String(text || "").match(/https?:\/\/\S+/i);
+  return hit?.[0] || "";
+}
+
+function makePartnerId(row: { sender_id: string; receiver_id: string }, userId: string): string {
+  return row.sender_id === userId ? row.receiver_id : row.sender_id;
+}
 
 export default function ChatSearchAllPage() {
   const nav = useNavigate();
@@ -33,10 +69,10 @@ export default function ChatSearchAllPage() {
   const [q, setQ] = useState("");
   const [debounced, setDebounced] = useState("");
   const [loading, setLoading] = useState(false);
-  const [messages, setMessages] = useState<any[]>([]);
-  const [people, setPeople] = useState<any[]>([]);
-  const [media, setMedia] = useState<any[]>([]);
-  const [links, setLinks] = useState<any[]>([]);
+  const [messages, setMessages] = useState<DirectMessageSearchRow[]>([]);
+  const [people, setPeople] = useState<ProfileSearchRow[]>([]);
+  const [media, setMedia] = useState<DirectMessageMediaRow[]>([]);
+  const [links, setLinks] = useState<DirectMessageSearchRow[]>([]);
 
   useEffect(() => {
     const t = setTimeout(() => setDebounced(q.trim()), 300);
@@ -54,39 +90,40 @@ export default function ChatSearchAllPage() {
       const term = `%${debounced}%`;
       try {
         if (tab === "messages") {
-          const { data } = await (supabase as any)
-            .from("messages")
-            .select("id, content, sender_id, recipient_id, created_at")
-            .or(`sender_id.eq.${user.id},recipient_id.eq.${user.id}`)
-            .ilike("content", term)
+          const { data } = await supabase
+            .from("direct_messages")
+            .select("id, message, sender_id, receiver_id, created_at")
+            .or(`sender_id.eq.${user.id},receiver_id.eq.${user.id}`)
+            .ilike("message", term)
             .order("created_at", { ascending: false })
             .limit(50);
-          if (alive) setMessages(data || []);
+          if (alive) setMessages((data || []) as DirectMessageSearchRow[]);
         } else if (tab === "people") {
-          const { data } = await (supabase as any)
+          const { data } = await supabase
             .from("profiles")
             .select("id, user_id, full_name, username, avatar_url")
             .or(`full_name.ilike.${term},username.ilike.${term}`)
+            .neq("user_id", user.id)
             .limit(40);
-          if (alive) setPeople(data || []);
+          if (alive) setPeople((data || []) as ProfileSearchRow[]);
         } else if (tab === "media") {
-          const { data } = await (supabase as any)
-            .from("messages")
-            .select("id, image_url, video_url, sender_id, recipient_id, created_at")
-            .or(`sender_id.eq.${user.id},recipient_id.eq.${user.id}`)
+          const { data } = await supabase
+            .from("direct_messages")
+            .select("id, image_url, video_url, sender_id, receiver_id, created_at")
+            .or(`sender_id.eq.${user.id},receiver_id.eq.${user.id}`)
             .or("image_url.not.is.null,video_url.not.is.null")
             .order("created_at", { ascending: false })
             .limit(60);
-          if (alive) setMedia((data || []).filter((m: any) => m.image_url || m.video_url));
+          if (alive) setMedia(((data || []) as DirectMessageMediaRow[]).filter((m) => m.image_url || m.video_url));
         } else if (tab === "links") {
-          const { data } = await (supabase as any)
-            .from("messages")
-            .select("id, content, sender_id, recipient_id, created_at")
-            .or(`sender_id.eq.${user.id},recipient_id.eq.${user.id}`)
-            .ilike("content", "%http%")
+          const { data } = await supabase
+            .from("direct_messages")
+            .select("id, message, sender_id, receiver_id, created_at")
+            .or(`sender_id.eq.${user.id},receiver_id.eq.${user.id}`)
+            .ilike("message", "%http%")
             .order("created_at", { ascending: false })
             .limit(60);
-          if (alive) setLinks((data || []).filter((m: any) => /https?:\/\//.test(m.content || "")));
+          if (alive) setLinks(((data || []) as DirectMessageSearchRow[]).filter((m) => /https?:\/\//.test(m.message || "")));
         }
       } finally { if (alive) setLoading(false); }
     })();
@@ -151,11 +188,11 @@ export default function ChatSearchAllPage() {
           messages.length === 0 ? <Empty label="No messages found" /> : (
             <ul className="space-y-1">
               {messages.map((m) => {
-                const partnerId = m.sender_id === user?.id ? m.recipient_id : m.sender_id;
+                const partnerId = makePartnerId(m, user!.id);
                 return (
                   <li key={m.id}>
                     <button onClick={() => goToChat(partnerId)} className="w-full text-left px-3 py-2.5 rounded-xl hover:bg-muted/40">
-                      <div className="text-sm line-clamp-2">{m.content}</div>
+                      <div className="text-sm line-clamp-2">{m.message}</div>
                       <div className="text-[11px] text-muted-foreground mt-1">{new Date(m.created_at).toLocaleString()}</div>
                     </button>
                   </li>
@@ -186,7 +223,7 @@ export default function ChatSearchAllPage() {
           media.length === 0 ? <Empty label="No media found" /> : (
             <div className="grid grid-cols-3 gap-1">
               {media.map((m) => {
-                const partnerId = m.sender_id === user?.id ? m.recipient_id : m.sender_id;
+                const partnerId = makePartnerId(m, user!.id);
                 const url = m.image_url || m.video_url;
                 return (
                   <button key={m.id} onClick={() => goToChat(partnerId)} className="aspect-square overflow-hidden rounded-lg bg-muted/40">
@@ -204,13 +241,13 @@ export default function ChatSearchAllPage() {
           links.length === 0 ? <Empty label="No links found" /> : (
             <ul className="space-y-1">
               {links.map((m) => {
-                const partnerId = m.sender_id === user?.id ? m.recipient_id : m.sender_id;
-                const url = (m.content || "").match(/https?:\/\/\S+/)?.[0] || "";
+                const partnerId = makePartnerId(m, user!.id);
+                const url = extractFirstUrl(m.message || "");
                 return (
                   <li key={m.id}>
                     <button onClick={() => goToChat(partnerId)} className="w-full text-left px-3 py-2.5 rounded-xl hover:bg-muted/40">
                       <div className="text-sm text-primary truncate">{url}</div>
-                      <div className="text-[11px] text-muted-foreground line-clamp-1 mt-0.5">{m.content}</div>
+                      <div className="text-[11px] text-muted-foreground line-clamp-1 mt-0.5">{m.message}</div>
                     </button>
                   </li>
                 );

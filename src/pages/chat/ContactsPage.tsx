@@ -4,7 +4,7 @@
  */
 import { useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { ArrowLeft, Search, UserPlus, Star, MoreVertical, MessageCircle, Trash2, AtSign, Phone, Inbox, MapPin } from "lucide-react";
+import { ArrowLeft, Search, UserPlus, Star, MoreVertical, MessageCircle, Trash2, AtSign, Phone, Inbox, MapPin, Lock } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -122,7 +122,15 @@ export default function ContactsPage() {
               return (
                 <li key={c.contact_user_id} className="flex items-center gap-3 px-3 py-2.5 hover:bg-muted/40">
                   <button
-                    onClick={() => navigate(`/chat/personal/${c.contact_user_id}`)}
+                    onClick={() => navigate("/chat", {
+                      state: {
+                        openChat: {
+                          recipientId: c.contact_user_id,
+                          recipientName: name,
+                          recipientAvatar: c.profile?.avatar_url || null,
+                        },
+                      },
+                    })}
                     className="flex items-center gap-3 flex-1 min-w-0 text-left"
                   >
                     <Avatar className="w-11 h-11">
@@ -147,8 +155,19 @@ export default function ContactsPage() {
                       </Button>
                     </DropdownMenuTrigger>
                     <DropdownMenuContent align="end">
-                      <DropdownMenuItem onClick={() => navigate(`/chat/personal/${c.contact_user_id}`)}>
+                      <DropdownMenuItem onClick={() => navigate("/chat", {
+                        state: {
+                          openChat: {
+                            recipientId: c.contact_user_id,
+                            recipientName: name,
+                            recipientAvatar: c.profile?.avatar_url || null,
+                          },
+                        },
+                      })}>
                         <MessageCircle className="w-4 h-4 mr-2" /> Message
+                      </DropdownMenuItem>
+                      <DropdownMenuItem onClick={() => navigate(`/chat/secret/${c.contact_user_id}`)}>
+                        <Lock className="w-4 h-4 mr-2" /> Secret chat
                       </DropdownMenuItem>
                       <DropdownMenuItem onClick={() => toggleFavorite(c.contact_user_id, !c.favorite)}>
                         <Star className="w-4 h-4 mr-2" /> {c.favorite ? "Remove favorite" : "Mark favorite"}

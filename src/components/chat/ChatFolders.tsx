@@ -18,6 +18,14 @@ interface ChatFoldersProps {
   onSelectFolder: (folderId: string | null) => void;
 }
 
+interface ChatFolderRow {
+  id: string;
+  user_id: string;
+  name: string;
+  icon: string;
+  sort_order: number | null;
+}
+
 export default function ChatFolders({ activeFolder, onSelectFolder }: ChatFoldersProps) {
   const { user } = useAuth();
   const queryClient = useQueryClient();
@@ -29,19 +37,19 @@ export default function ChatFolders({ activeFolder, onSelectFolder }: ChatFolder
     queryKey: ["chat-folders", user?.id],
     queryFn: async () => {
       if (!user) return [];
-      const { data } = await (supabase as any)
-        .from("chat_folders")
+      const { data } = await supabase
+        .from("chat_folders" as never)
         .select("*")
         .eq("user_id", user.id)
         .order("sort_order", { ascending: true });
-      return data || [];
+      return (data ?? []) as ChatFolderRow[];
     },
     enabled: !!user,
   });
 
   const createFolder = async () => {
     if (!user || !newName.trim()) return;
-    await (supabase as any).from("chat_folders").insert({
+    await supabase.from("chat_folders" as never).insert({
       user_id: user.id,
       name: newName.trim(),
       icon: newIcon,
@@ -53,7 +61,7 @@ export default function ChatFolders({ activeFolder, onSelectFolder }: ChatFolder
   };
 
   const deleteFolder = async (id: string) => {
-    await (supabase as any).from("chat_folders").delete().eq("id", id);
+    await supabase.from("chat_folders" as never).delete().eq("id", id);
     queryClient.invalidateQueries({ queryKey: ["chat-folders"] });
     if (activeFolder === id) onSelectFolder(null);
     toast.success("Folder deleted");
@@ -74,7 +82,7 @@ export default function ChatFolders({ activeFolder, onSelectFolder }: ChatFolder
         All
       </button>
 
-      {folders.map((f: any) => (
+      {folders.map((f) => (
         <button
           key={f.id}
           onClick={() => onSelectFolder(f.id)}

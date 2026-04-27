@@ -32,6 +32,23 @@ interface Prefs {
   whoCanMessage: Visibility;
 }
 
+type BlockedProfile = {
+  id: string;
+  full_name: string | null;
+  username: string | null;
+  avatar_url: string | null;
+};
+
+type BlockedRow = {
+  blocked_id: string;
+  created_at: string;
+  profiles: BlockedProfile | null;
+};
+
+type RowIcon = React.ComponentType<{ className?: string }>;
+
+const dbFrom = (table: string) => supabase.from(table as never);
+
 const DEFAULTS: Prefs = {
   notifPreviews: true,
   notifSound: true,
@@ -45,10 +62,17 @@ function loadPrefs(uid?: string): Prefs {
   try {
     const raw = localStorage.getItem(`zivo:chat-privacy:${uid || "anon"}`);
     return raw ? { ...DEFAULTS, ...JSON.parse(raw) } : { ...DEFAULTS };
-  } catch { return { ...DEFAULTS }; }
+  } catch {
+    // Fallback to defaults when localStorage is unavailable or corrupted.
+    return { ...DEFAULTS };
+  }
 }
 function savePrefs(uid: string | undefined, p: Prefs) {
-  try { localStorage.setItem(`zivo:chat-privacy:${uid || "anon"}`, JSON.stringify(p)); } catch {}
+  try {
+    localStorage.setItem(`zivo:chat-privacy:${uid || "anon"}`, JSON.stringify(p));
+  } catch {
+    // Ignore storage write errors in private mode/quota exceeded scenarios.
+  }
 }
 
 export default function ChatPrivacyHubPage() {
@@ -70,18 +94,16 @@ export default function ChatPrivacyHubPage() {
     queryKey: ["blocked-users", user?.id],
     enabled: !!user?.id,
     queryFn: async () => {
-      const { data } = await (supabase as any)
-        .from("blocked_users")
+      const { data } = await dbFrom("blocked_users")
         .select("blocked_id, created_at, profiles:blocked_id(id, full_name, username, avatar_url)")
         .eq("blocker_id", user!.id)
         .order("created_at", { ascending: false });
-      return data || [];
+      return (data || []) as BlockedRow[];
     },
   });
 
   const unblock = async (id: string) => {
-    const { error } = await (supabase as any)
-      .from("blocked_users")
+    const { error } = await dbFrom("blocked_users")
       .delete()
       .eq("blocker_id", user!.id)
       .eq("blocked_id", id);
@@ -90,7 +112,7 @@ export default function ChatPrivacyHubPage() {
     qc.invalidateQueries({ queryKey: ["blocked-users", user?.id] });
   };
 
-  const VisRow = ({ icon: Icon, label, k }: { icon: any; label: string; k: keyof Prefs }) => (
+  const VisRow = ({ icon: Icon, label, k }: { icon: RowIcon; label: string; k: keyof Prefs }) => (
     <div className="flex items-center justify-between py-3 px-4">
       <div className="flex items-center gap-3">
         <div className="w-9 h-9 rounded-full bg-muted/60 flex items-center justify-center">
@@ -110,7 +132,7 @@ export default function ChatPrivacyHubPage() {
     </div>
   );
 
-  const ToggleRow = ({ icon: Icon, label, k, sub }: { icon: any; label: string; k: keyof Prefs; sub?: string }) => (
+  const ToggleRow = ({ icon: Icon, label, k, sub }: { icon: RowIcon; label: string; k: keyof Prefs; sub?: string }) => (
     <div className="flex items-center justify-between py-3 px-4">
       <div className="flex items-center gap-3">
         <div className="w-9 h-9 rounded-full bg-muted/60 flex items-center justify-center">
@@ -121,7 +143,7 @@ export default function ChatPrivacyHubPage() {
           {sub && <div className="text-[11px] text-muted-foreground">{sub}</div>}
         </div>
       </div>
-      <Switch checked={prefs[k] as boolean} onCheckedChange={(v) => update(k, v as any)} />
+      <Switch checked={prefs[k] as boolean} onCheckedChange={(v) => update(k, v as Prefs[keyof Prefs])} />
     </div>
   );
 
@@ -197,7 +219,7 @@ export default function ChatPrivacyHubPage() {
               <span className="text-sm">No blocked users</span>
             </div>
           ) : (
-            blocked.map((b: any) => (
+            blocked.map((b) => (
               <div key={b.blocked_id} className="flex items-center gap-3 px-4 py-3">
                 <Avatar className="w-9 h-9">
                   <AvatarImage src={b.profiles?.avatar_url || ""} />

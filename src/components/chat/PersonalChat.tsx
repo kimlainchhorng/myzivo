@@ -1,3 +1,12 @@
+type SendMessageOptions = {
+  imageUrl?: string;
+  voiceUrl?: string;
+  videoUrl?: string;
+  locationLat?: number;
+  locationLng?: number;
+  locationLabel?: string;
+  filePayload?: FileBubbleData;
+};
 /**
  * PersonalChat — iMessage 2026-style 1-on-1 chat
  * Features: realtime messages, image/video/GIF sharing, emoji reactions, typing indicator, online status,
@@ -43,7 +52,7 @@ const CoinTransferBubble = lazy(() => import("./CoinTransferBubble"));
 const DocumentScanner = lazy(() => import("./DocumentScanner"));
 import { useChatFiles } from "@/hooks/useChatFiles";
 import type { StickerSendPayload } from "./StickerKeyboard";
-import { getWallpaperClass, getWallpaperStyle } from "./ChatPersonalization";
+import { getWallpaperClass, getWallpaperStyle } from "./chatPersonalizationStyles";
 import CallEventBubble from "./CallEventBubble";
 
 // Lazy-loaded panels (only downloaded when user opens them)
@@ -64,7 +73,8 @@ const ChatContactInfo = lazy(() => import("./ChatContactInfo"));
 const MessageScheduler = lazy(() => import("./MessageScheduler"));
 const PinnedMessagesPanel = lazy(() => import("./PinnedMessagesPanel"));
 const GroupCallLauncher = lazy(() => import("./call/GroupCallLauncher"));
-import { detectMessageEffect, type EffectType } from "./MessageEffects";
+import type { EffectType } from "./messageEffectUtils";
+import { detectMessageEffect } from "./messageEffectUtils";
 const MessageEffects = lazy(() => import("./MessageEffects"));
 import { toast } from "sonner";
 import { useChatPresence } from "@/hooks/useChatPresence";
@@ -120,7 +130,11 @@ interface Message {
   is_read: boolean;
   locked_price_cents?: number | null;
   edited_at?: string | null;
-  file_payload?: any | null;
+  file_payload?: FileBubbleData | null;
+  gift_payload?: {
+    amount?: number | string;
+    note?: string;
+  } | null;
 }
 
 interface CallEvent {
@@ -135,6 +149,58 @@ interface CallEvent {
 }
 
 type TimelineItem = Message | CallEvent;
+
+type ChatSettingsRow = {
+  wallpaper: string | null;
+  theme_color: string | null;
+  font_size: string | null;
+};
+
+type ProfileRow = {
+  full_name: string | null;
+  avatar_url: string | null;
+};
+
+type CallHistoryRow = Omit<CallEvent, "_isCallEvent">;
+
+type MessageReactionRow = {
+  message_id: string;
+  emoji: string;
+  user_id: string;
+};
+
+type DirectMessageInsert = {
+  sender_id: string;
+  receiver_id: string;
+  message: string;
+  message_type: string;
+  image_url?: string | null;
+  video_url?: string | null;
+  voice_url?: string | null;
+  file_payload?: FileBubbleData;
+  reply_to_id?: string;
+  location_lat?: number;
+  location_lng?: number | null;
+  location_label?: string;
+  expires_at?: string;
+  self_destruct_seconds?: number;
+  locked_price_cents?: number;
+};
+
+type RealtimeInsertPayload<T> = { new: T };
+type RealtimeUpdatePayload<T> = { new: T };
+type RealtimeDeletePayload = { old?: { id?: string } };
+
+const dbFrom = (table: string) => supabase.from(table as never);
+
+const getErrorMessage = (err: unknown): string => {
+  if (err instanceof Error) return err.message;
+  if (typeof err === "object" && err !== null && "message" in err) {
+    const maybeMessage = (err as { message?: unknown }).message;
+    return typeof maybeMessage === "string" ? maybeMessage : "";
+  }
+  return "";
+};
 
 function isCallEvent(item: TimelineItem): item is CallEvent {
   return "_isCallEvent" in item;
@@ -194,11 +260,14 @@ export default function PersonalChat({ recipientId, recipientName, recipientAvat
   const [dismissedMissedCallId, setDismissedMissedCallId] = useState<string | null>(null);
   const [activeEffect, setActiveEffect] = useState<EffectType>(null);
   const [visibleTimelineCount, setVisibleTimelineCount] = useState(INITIAL_VISIBLE_TIMELINE_ITEMS);
+  const [showJumpToLatest, setShowJumpToLatest] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const videoInputRef = useRef<HTMLInputElement>(null);
   const lockedImageInputRef = useRef<HTMLInputElement>(null);
+  const voiceUploadInFlightRef = useRef(false);
+  const handleSendRef = useRef<((opts?: SendMessageOptions) => Promise<void>) | null>(null);
   const messageRefs = useRef<Map<string, HTMLDivElement>>(new Map());
   const timelineRef = useRef<HTMLDivElement>(null);
   const expandingTimelineRef = useRef(false);
@@ -221,7 +290,7 @@ export default function PersonalChat({ recipientId, recipientName, recipientAvat
   // Sync draft to input on load
   useEffect(() => {
     if (draft && !input) setInput(draft);
-  }, [draft]);
+  }, [draft, input]);
 
   useEffect(() => {
     setVisibleTimelineCount(INITIAL_VISIBLE_TIMELINE_ITEMS);
@@ -233,17 +302,17 @@ export default function PersonalChat({ recipientId, recipientName, recipientAvat
   useEffect(() => {
     if (!user?.id || !recipientId) return;
     const loadStyle = async () => {
-      const { data } = await (supabase as any)
-        .from("chat_settings")
+      const { data } = await dbFrom("chat_settings")
         .select("wallpaper, theme_color, font_size")
         .eq("user_id", user.id)
         .eq("chat_partner_id", recipientId)
         .maybeSingle();
-      if (data) {
+      const style = data as ChatSettingsRow | null;
+      if (style) {
         setChatStyle({
-          wallpaper: data.wallpaper || "default",
-          themeColor: data.theme_color || "default",
-          fontSize: data.font_size || "medium",
+          wallpaper: style.wallpaper || "default",
+          themeColor: style.theme_color || "default",
+          fontSize: style.font_size || "medium",
         });
       }
     };
@@ -275,6 +344,7 @@ export default function PersonalChat({ recipientId, recipientName, recipientAvat
     if (!el) return;
     const distanceFromBottom = el.scrollHeight - el.scrollTop - el.clientHeight;
     isNearBottomRef.current = distanceFromBottom < 150;
+    setShowJumpToLatest(distanceFromBottom > 360);
 
     if (el.scrollTop < 120 && timelineLengthRef.current > visibleTimelineCount && !expandingTimelineRef.current) {
       expandingTimelineRef.current = true;
@@ -339,18 +409,18 @@ export default function PersonalChat({ recipientId, recipientName, recipientAvat
     if (!user?.id) return;
     (async () => {
       try {
-        const { data: profile } = await (supabase as any)
-          .from("profiles")
+        const { data } = await dbFrom("profiles")
           .select("full_name, avatar_url")
           .eq("user_id", user.id)
           .maybeSingle();
+        const profile = data as ProfileRow | null;
         senderProfileRef.current = {
           name: profile?.full_name || user.user_metadata?.full_name || user.user_metadata?.name || user.email?.split("@")[0] || "Someone",
           avatar: profile?.avatar_url || "",
         };
       } catch { /* ignore */ }
     })();
-  }, [user?.id]);
+  }, [user?.id, user?.email, user?.user_metadata?.full_name, user?.user_metadata?.name]);
 
   const sendChatPush = useCallback(async (messageType: string, messageText: string) => {
     if (!user?.id || !recipientId || recipientId === user.id) return;
@@ -412,25 +482,23 @@ export default function PersonalChat({ recipientId, recipientName, recipientAvat
     initialScrollDone.current = false;
     const load = async () => {
       setLoading(true);
-      const msgColumns = "id,sender_id,receiver_id,message,image_url,video_url,voice_url,message_type,delivered_at,reply_to_id,location_lat,location_lng,location_label,is_pinned,expires_at,created_at,is_read,locked_price_cents,edited_at";
+      const msgColumns = "id,sender_id,receiver_id,message,image_url,video_url,voice_url,message_type,delivered_at,reply_to_id,location_lat,location_lng,location_label,is_pinned,expires_at,created_at,is_read,locked_price_cents,edited_at,file_payload,gift_payload";
       const callColumns = "id,caller_id,callee_id,call_type,status,duration_seconds,created_at";
       const [msgRes, callRes] = await Promise.all([
-        (supabase as any)
-          .from("direct_messages")
+        dbFrom("direct_messages")
           .select(msgColumns)
           .or(`and(sender_id.eq.${user.id},receiver_id.eq.${recipientId}),and(sender_id.eq.${recipientId},receiver_id.eq.${user.id})`)
           .order("created_at", { ascending: false })
           .limit(100),
-        (supabase as any)
-          .from("call_history")
+        dbFrom("call_history")
           .select(callColumns)
           .or(`and(caller_id.eq.${user.id},callee_id.eq.${recipientId}),and(caller_id.eq.${recipientId},callee_id.eq.${user.id})`)
           .order("created_at", { ascending: true })
           .limit(50),
       ]);
-      const data = (msgRes.data || []).reverse();
+      const data = ((msgRes.data || []) as Message[]).reverse();
       setMessages(data);
-      setCallEvents((callRes.data || []).map((c: any) => ({ ...c, _isCallEvent: true as const })));
+      setCallEvents(((callRes.data || []) as CallHistoryRow[]).map((c) => ({ ...c, _isCallEvent: true as const })));
       setLoading(false);
 
       // Fire reactions + mark-read in parallel (non-blocking after UI shows)
@@ -441,10 +509,10 @@ export default function PersonalChat({ recipientId, recipientName, recipientAvat
 
       if (msgIds.length > 0) {
         bgTasks.push((async () => {
-          const { data: reactionsData } = await (supabase as any)
-            .from("message_reactions")
+          const { data } = await dbFrom("message_reactions")
             .select("message_id, emoji, user_id")
             .in("message_id", msgIds);
+          const reactionsData = (data || []) as MessageReactionRow[];
           if (reactionsData) {
             const grouped: Record<string, Record<string, { count: number; hasMyReaction: boolean }>> = {};
             for (const r of reactionsData) {
@@ -463,13 +531,12 @@ export default function PersonalChat({ recipientId, recipientName, recipientAvat
       }
 
       if (hasUnread) {
-        bgTasks.push((supabase as any)
-          .from("direct_messages")
+        bgTasks.push(dbFrom("direct_messages")
           .update({ is_read: true, delivered_at: new Date().toISOString() })
           .eq("receiver_id", user.id)
           .eq("sender_id", recipientId)
           .eq("is_read", false)
-          .then(({ error }: any) => {
+          .then(({ error }: { error: unknown }) => {
             if (error) console.error("[Chat] mark-read failed:", error);
           })
         );
@@ -486,7 +553,7 @@ export default function PersonalChat({ recipientId, recipientName, recipientAvat
     const channelName = `dm-${[user.id, recipientId].sort().join("-")}`;
     const channel = supabase
       .channel(channelName)
-      .on("postgres_changes", { event: "INSERT", schema: "public", table: "direct_messages" }, (payload: any) => {
+      .on("postgres_changes", { event: "INSERT", schema: "public", table: "direct_messages" }, (payload: RealtimeInsertPayload<Message>) => {
         const msg = payload.new as Message;
         if (
           (msg.sender_id === user.id && msg.receiver_id === recipientId) ||
@@ -512,15 +579,15 @@ export default function PersonalChat({ recipientId, recipientName, recipientAvat
           });
           scrollToBottom();
           if (msg.receiver_id === user.id) {
-            (supabase as any).from("direct_messages").update({ is_read: true, delivered_at: new Date().toISOString() }).eq("id", msg.id);
+            void dbFrom("direct_messages").update({ is_read: true, delivered_at: new Date().toISOString() }).eq("id", msg.id);
           }
         }
       })
-      .on("postgres_changes", { event: "UPDATE", schema: "public", table: "direct_messages" }, (payload: any) => {
+      .on("postgres_changes", { event: "UPDATE", schema: "public", table: "direct_messages" }, (payload: RealtimeUpdatePayload<Message>) => {
         const updated = payload.new as Message;
         setMessages((prev) => prev.map((m) => m.id === updated.id ? { ...m, ...updated } : m));
       })
-      .on("postgres_changes", { event: "DELETE", schema: "public", table: "direct_messages" }, (payload: any) => {
+      .on("postgres_changes", { event: "DELETE", schema: "public", table: "direct_messages" }, (payload: RealtimeDeletePayload) => {
         if (payload.old?.id) setMessages((prev) => prev.filter((m) => m.id !== payload.old.id));
       })
       .subscribe();
@@ -534,7 +601,7 @@ export default function PersonalChat({ recipientId, recipientName, recipientAvat
     const channelName = `call-history-${[user.id, recipientId].sort().join("-")}`;
     const channel = supabase
       .channel(channelName)
-      .on("postgres_changes", { event: "INSERT", schema: "public", table: "call_history" }, (payload: any) => {
+      .on("postgres_changes", { event: "INSERT", schema: "public", table: "call_history" }, (payload: RealtimeInsertPayload<CallHistoryRow>) => {
         const call = payload.new as Omit<CallEvent, "_isCallEvent">;
         if (
           (call.caller_id === user.id && call.callee_id === recipientId) ||
@@ -610,7 +677,7 @@ export default function PersonalChat({ recipientId, recipientName, recipientAvat
     if (effect) setActiveEffect(effect);
 
     try {
-      const insertData: any = {
+      const insertData: DirectMessageInsert = {
         sender_id: user.id,
         receiver_id: recipientId,
         message: text || "",
@@ -635,8 +702,7 @@ export default function PersonalChat({ recipientId, recipientName, recipientAvat
 
       // Fire-and-forget insert; realtime INSERT echo will replace the optimistic row.
       // Skipping `.select().single()` cuts ~100-300ms of perceived send latency.
-      const { error } = await (supabase as any)
-        .from("direct_messages")
+      const { error } = await dbFrom("direct_messages")
         .insert(insertData);
 
       if (error) throw error;
@@ -648,23 +714,41 @@ export default function PersonalChat({ recipientId, recipientName, recipientAvat
     setSending(false);
     inputRef.current?.focus();
   };
+  handleSendRef.current = handleSend;
 
   // Voice recording complete → upload
   useEffect(() => {
-    if (voice.audioBlob && !voice.isRecording) {
-      const upload = async () => {
-        const path = `${user?.id}/${Date.now()}.webm`;
-        const { error } = await supabase.storage
-          .from("chat-media-files")
-          .upload(path, voice.audioBlob!, { contentType: "audio/webm" });
-        if (error) { toast.error("Failed to upload voice note"); voice.clearBlob(); return; }
-        const { data: urlData } = supabase.storage.from("chat-media-files").getPublicUrl(path);
-        await handleSend({ voiceUrl: urlData.publicUrl });
+    if (!voice.audioBlob || voice.isRecording || !user?.id || voiceUploadInFlightRef.current) return;
+    let cancelled = false;
+    voiceUploadInFlightRef.current = true;
+
+    const upload = async () => {
+      const path = `${user.id}/${Date.now()}.webm`;
+      const { error } = await supabase.storage
+        .from("chat-media-files")
+        .upload(path, voice.audioBlob, { contentType: "audio/webm" });
+      if (error) {
+        if (!cancelled) {
+          toast.error("Failed to upload voice note");
+          voice.clearBlob();
+        }
+        return;
+      }
+      const { data: urlData } = supabase.storage.from("chat-media-files").getPublicUrl(path);
+      if (!cancelled) {
+        await handleSendRef.current?.({ voiceUrl: urlData.publicUrl });
         voice.clearBlob();
-      };
-      upload();
-    }
-  }, [voice.audioBlob, voice.isRecording]);
+      }
+    };
+
+    void upload().finally(() => {
+      voiceUploadInFlightRef.current = false;
+    });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [voice.audioBlob, voice.isRecording, voice, user?.id]);
 
   // Image upload
   const handleImageSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -749,8 +833,7 @@ export default function PersonalChat({ recipientId, recipientName, recipientAvat
       setMessages((prev) => [...prev, optimisticMsg]);
       scrollToBottom(true);
 
-      const { error: insertErr } = await (supabase as any)
-        .from("direct_messages")
+      const { error: insertErr } = await dbFrom("direct_messages")
         .insert({
           sender_id: user.id, receiver_id: recipientId,
           message: text || label,
@@ -794,7 +877,7 @@ export default function PersonalChat({ recipientId, recipientName, recipientAvat
   const handlePin = useCallback(async (id: string, pinned: boolean) => {
     setMessages((prev) => prev.map((m) => m.id === id ? { ...m, is_pinned: pinned } : m));
     try {
-      await (supabase as any).from("direct_messages").update({ is_pinned: pinned }).eq("id", id);
+      await dbFrom("direct_messages").update({ is_pinned: pinned }).eq("id", id);
       toast.success(pinned ? "Message pinned" : "Message unpinned");
     } catch { toast.error("Failed to update pin"); }
   }, []);
@@ -829,16 +912,16 @@ export default function PersonalChat({ recipientId, recipientName, recipientAvat
     setEditingId(null);
     setInput("");
     try {
-      const { error } = await (supabase as any)
-        .from("direct_messages")
+      const { error } = await dbFrom("direct_messages")
         .update({ message: newText, edited_at: nowIso, original_text: original.message })
         .eq("id", id)
         .eq("sender_id", user?.id);
       if (error) throw error;
       toast.success("Message edited");
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error(err);
-      toast.error(err?.message?.includes("48") ? "Edit window expired (48h)" : "Failed to edit");
+      const errorMessage = getErrorMessage(err);
+      toast.error(errorMessage.includes("48") ? "Edit window expired (48h)" : "Failed to edit");
       setMessages((prev) => prev.map((m) => m.id === id ? original : m));
     }
   }, [editingId, input, messages, user?.id]);
@@ -846,16 +929,15 @@ export default function PersonalChat({ recipientId, recipientName, recipientAvat
   const handleDelete = useCallback(async (id: string) => {
     setMessages((prev) => prev.filter((m) => m.id !== id));
     try {
-      const { error } = await (supabase as any).from("direct_messages").delete().eq("id", id).eq("sender_id", user?.id);
+      const { error } = await dbFrom("direct_messages").delete().eq("id", id).eq("sender_id", user?.id);
       if (error) throw error;
       toast.success("Message deleted");
     } catch {
       toast.error("Failed to delete");
-      const { data } = await (supabase as any)
-        .from("direct_messages").select("*")
+      const { data } = await dbFrom("direct_messages").select("*")
         .or(`and(sender_id.eq.${user?.id},receiver_id.eq.${recipientId}),and(sender_id.eq.${recipientId},receiver_id.eq.${user?.id})`)
         .order("created_at", { ascending: true }).limit(100);
-      setMessages(data || []);
+      setMessages((data || []) as Message[]);
     }
   }, [user?.id, recipientId]);
 
@@ -919,8 +1001,7 @@ export default function PersonalChat({ recipientId, recipientName, recipientAvat
     scrollToBottom();
 
     try {
-      const { error } = await (supabase as any)
-        .from("direct_messages")
+      const { error } = await dbFrom("direct_messages")
         .insert({
           sender_id: user.id,
           receiver_id: recipientId,
@@ -990,7 +1071,7 @@ export default function PersonalChat({ recipientId, recipientName, recipientAvat
 
   // Stabilize CallEventBubble callbacks
   const handleCallDelete = useCallback(async (callId: string) => {
-    await (supabase as any).from("call_events").delete().eq("id", callId);
+    await dbFrom("call_history").delete().eq("id", callId);
     setCallEvents(prev => prev.filter(c => c.id !== callId));
     toast.success("Call deleted");
   }, []);
@@ -999,7 +1080,7 @@ export default function PersonalChat({ recipientId, recipientName, recipientAvat
     setCallEvents(prev => {
       const ids = prev.map(c => c.id);
       if (ids.length > 0) {
-        (supabase as any).from("call_events").delete().in("id", ids).then(() => {
+          dbFrom("call_history").delete().in("id", ids).then(() => {
           toast.success(`${ids.length} call${ids.length > 1 ? "s" : ""} deleted`);
         });
       }
@@ -1336,12 +1417,12 @@ export default function PersonalChat({ recipientId, recipientName, recipientAvat
                     )}
 
                     {/* Coin transfer message */}
-                    {msg.message_type === "coin_transfer" && (msg as any).gift_payload ? (
+                    {msg.message_type === "coin_transfer" && msg.gift_payload ? (
                       <div className={`flex ${isMe ? "justify-end" : "justify-start"}`}>
                         <Suspense fallback={null}>
                           <CoinTransferBubble
-                            amount={Number(((msg as any).gift_payload?.amount) || 0)}
-                            note={(msg as any).gift_payload?.note}
+                            amount={Number(msg.gift_payload?.amount || 0)}
+                            note={msg.gift_payload?.note}
                             isOwn={isMe}
                           />
                         </Suspense>
@@ -1470,6 +1551,23 @@ export default function PersonalChat({ recipientId, recipientName, recipientAvat
       {/* Voice recording overlay is rendered inside HoldToRecordMic (Round 5) */}
 
       {/* Input area */}
+      <AnimatePresence>
+        {showJumpToLatest && (
+          <motion.button
+            initial={{ opacity: 0, y: 8 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: 8 }}
+            onClick={() => {
+              scrollToBottom(true);
+              setShowJumpToLatest(false);
+            }}
+            className="absolute right-4 bottom-[calc(env(safe-area-inset-bottom,0px)+5.25rem)] z-20 h-10 px-3 rounded-full bg-primary text-primary-foreground text-xs font-semibold shadow-lg shadow-primary/25"
+          >
+            Jump to latest
+          </motion.button>
+        )}
+      </AnimatePresence>
+
       <div className="bg-background/80 backdrop-blur-2xl border-t border-border/5 px-2.5 py-2 relative" style={{ paddingBottom: "max(env(safe-area-inset-bottom, 0px), 0.5rem)" }}>
           <div className="flex items-end gap-1.5">
             {/* Scrollable action group — keeps every utility button reachable on narrow viewports */}
@@ -1726,7 +1824,7 @@ export default function PersonalChat({ recipientId, recipientName, recipientAvat
             onSchedule={async (scheduledAt) => {
               if (!user?.id || !input.trim()) return;
               try {
-                await (supabase as any).from("scheduled_messages").insert({
+                await dbFrom("scheduled_messages").insert({
                   sender_id: user.id,
                   receiver_id: recipientId,
                   message: input.trim(),

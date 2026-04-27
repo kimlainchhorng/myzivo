@@ -19,6 +19,11 @@ interface ChatPollBubbleProps {
   creatorName: string;
 }
 
+interface ChatPollVoteRow {
+  option_index: number;
+  user_id: string;
+}
+
 export default function ChatPollBubble({ pollId, question, options, isAnonymous, creatorName }: ChatPollBubbleProps) {
   const { user } = useAuth();
   const queryClient = useQueryClient();
@@ -27,20 +32,20 @@ export default function ChatPollBubble({ pollId, question, options, isAnonymous,
   const { data: votes = [] } = useQuery({
     queryKey: ["chat-poll-votes", pollId],
     queryFn: async () => {
-      const { data } = await (supabase as any)
-        .from("chat_poll_votes")
+      const { data } = await supabase
+        .from("chat_poll_votes" as never)
         .select("option_index, user_id")
         .eq("poll_id", pollId);
-      return data || [];
+      return (data ?? []) as ChatPollVoteRow[];
     },
   });
 
-  const myVote = votes.find((v: any) => v.user_id === user?.id);
+  const myVote = votes.find((v) => v.user_id === user?.id);
   const totalVotes = votes.length;
 
   const handleVote = async (index: number) => {
     if (!user || myVote) return;
-    await (supabase as any).from("chat_poll_votes").insert({
+    await supabase.from("chat_poll_votes" as never).insert({
       poll_id: pollId,
       user_id: user.id,
       option_index: index,
@@ -58,7 +63,7 @@ export default function ChatPollBubble({ pollId, question, options, isAnonymous,
 
       <div className="space-y-1.5">
         {options.map((opt, i) => {
-          const voteCount = votes.filter((v: any) => v.option_index === i).length;
+          const voteCount = votes.filter((v) => v.option_index === i).length;
           const pct = totalVotes > 0 ? Math.round((voteCount / totalVotes) * 100) : 0;
           const isMyVote = myVote?.option_index === i;
 

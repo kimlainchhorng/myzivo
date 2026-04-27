@@ -55,6 +55,33 @@ interface SplitBill {
   creator_id: string;
 }
 
+type PollRow = {
+  id: string;
+  question: string;
+  options: string[];
+  votes: Record<string, string>;
+  is_closed: boolean;
+  creator_id: string;
+};
+
+type TodoRow = {
+  id: string;
+  title: string;
+  items: TodoItem[];
+  creator_id: string;
+};
+
+type SplitRow = {
+  id: string;
+  title: string;
+  total_amount: number;
+  splits: { userId: string; name: string; amount: number; paid: boolean }[];
+  status: string;
+  creator_id: string;
+};
+
+const dbFrom = (table: string) => supabase.from(table as never);
+
 export default function ChatMiniApps({ open, onClose, chatPartnerId, chatPartnerName }: ChatMiniAppsProps) {
   const { user } = useAuth();
   const [view, setView] = useState<MiniApp>("menu");
@@ -74,13 +101,13 @@ export default function ChatMiniApps({ open, onClose, chatPartnerId, chatPartner
     if (!open || !user?.id) return;
     const loadAll = async () => {
       const [pollsRes, todosRes, billsRes] = await Promise.all([
-        (supabase as any).from("chat_polls").select("*").or(`creator_id.eq.${user.id},chat_partner_id.eq.${user.id}`).eq("chat_partner_id", chatPartnerId).order("created_at", { ascending: false }),
-        (supabase as any).from("chat_todos").select("*").or(`creator_id.eq.${user.id},chat_partner_id.eq.${user.id}`).eq("chat_partner_id", chatPartnerId).order("created_at", { ascending: false }),
-        (supabase as any).from("chat_split_bills").select("*").or(`creator_id.eq.${user.id},chat_partner_id.eq.${user.id}`).eq("chat_partner_id", chatPartnerId).order("created_at", { ascending: false }),
+        dbFrom("chat_polls").select("*").or(`creator_id.eq.${user.id},chat_partner_id.eq.${user.id}`).eq("chat_partner_id", chatPartnerId).order("created_at", { ascending: false }),
+        dbFrom("chat_todos").select("*").or(`creator_id.eq.${user.id},chat_partner_id.eq.${user.id}`).eq("chat_partner_id", chatPartnerId).order("created_at", { ascending: false }),
+        dbFrom("chat_split_bills").select("*").or(`creator_id.eq.${user.id},chat_partner_id.eq.${user.id}`).eq("chat_partner_id", chatPartnerId).order("created_at", { ascending: false }),
       ]);
-      if (pollsRes.data) setPolls(pollsRes.data);
-      if (todosRes.data) setTodos(todosRes.data);
-      if (billsRes.data) setBills(billsRes.data);
+      if (pollsRes.data) setPolls(pollsRes.data as PollRow[]);
+      if (todosRes.data) setTodos(todosRes.data as TodoRow[]);
+      if (billsRes.data) setBills(billsRes.data as SplitRow[]);
     };
     loadAll();
   }, [open, user?.id, chatPartnerId]);
@@ -90,7 +117,7 @@ export default function ChatMiniApps({ open, onClose, chatPartnerId, chatPartner
       toast.error("Need a question and at least 2 options");
       return;
     }
-    const { error } = await (supabase as any).from("chat_polls").insert({
+    const { error } = await dbFrom("chat_polls").insert({
       creator_id: user!.id,
       chat_partner_id: chatPartnerId,
       question: newPollQ.trim(),
@@ -103,15 +130,15 @@ export default function ChatMiniApps({ open, onClose, chatPartnerId, chatPartner
     setNewPollOpts(["", ""]);
     setView("menu");
     // Reload
-    const { data } = await (supabase as any).from("chat_polls").select("*").eq("chat_partner_id", chatPartnerId).order("created_at", { ascending: false });
-    if (data) setPolls(data);
+    const { data } = await dbFrom("chat_polls").select("*").eq("chat_partner_id", chatPartnerId).order("created_at", { ascending: false });
+    if (data) setPolls(data as PollRow[]);
   };
 
   const votePoll = async (pollId: string, option: string) => {
     const poll = polls.find(p => p.id === pollId);
     if (!poll || poll.is_closed) return;
     const newVotes = { ...poll.votes, [user!.id]: option };
-    await (supabase as any).from("chat_polls").update({ votes: newVotes }).eq("id", pollId);
+    await dbFrom("chat_polls").update({ votes: newVotes }).eq("id", pollId);
     setPolls(prev => prev.map(p => p.id === pollId ? { ...p, votes: newVotes } : p));
   };
 
@@ -119,7 +146,7 @@ export default function ChatMiniApps({ open, onClose, chatPartnerId, chatPartner
     if (!newTodoTitle.trim()) { toast.error("Need a title"); return; }
     const items = newTodoItems.filter(i => i.trim()).map(text => ({ text: text.trim(), done: false }));
     if (items.length === 0) { toast.error("Add at least one item"); return; }
-    await (supabase as any).from("chat_todos").insert({
+    await dbFrom("chat_todos").insert({
       creator_id: user!.id,
       chat_partner_id: chatPartnerId,
       title: newTodoTitle.trim(),
@@ -129,8 +156,8 @@ export default function ChatMiniApps({ open, onClose, chatPartnerId, chatPartner
     setNewTodoTitle("");
     setNewTodoItems([""]);
     setView("menu");
-    const { data } = await (supabase as any).from("chat_todos").select("*").eq("chat_partner_id", chatPartnerId).order("created_at", { ascending: false });
-    if (data) setTodos(data);
+    const { data } = await dbFrom("chat_todos").select("*").eq("chat_partner_id", chatPartnerId).order("created_at", { ascending: false });
+    if (data) setTodos(data as TodoRow[]);
   };
 
   const toggleTodoItem = async (todoId: string, idx: number) => {
@@ -138,7 +165,7 @@ export default function ChatMiniApps({ open, onClose, chatPartnerId, chatPartner
     if (!todo) return;
     const newItems = [...todo.items];
     newItems[idx] = { ...newItems[idx], done: !newItems[idx].done };
-    await (supabase as any).from("chat_todos").update({ items: newItems, updated_at: new Date().toISOString() }).eq("id", todoId);
+    await dbFrom("chat_todos").update({ items: newItems, updated_at: new Date().toISOString() }).eq("id", todoId);
     setTodos(prev => prev.map(t => t.id === todoId ? { ...t, items: newItems } : t));
   };
 
@@ -147,7 +174,7 @@ export default function ChatMiniApps({ open, onClose, chatPartnerId, chatPartner
     const total = parseFloat(newBillAmount);
     if (isNaN(total) || total <= 0) { toast.error("Invalid amount"); return; }
     const half = Math.round(total * 100 / 2) / 100;
-    await (supabase as any).from("chat_split_bills").insert({
+    await dbFrom("chat_split_bills").insert({
       creator_id: user!.id,
       chat_partner_id: chatPartnerId,
       title: newBillTitle.trim(),
@@ -161,8 +188,8 @@ export default function ChatMiniApps({ open, onClose, chatPartnerId, chatPartner
     setNewBillTitle("");
     setNewBillAmount("");
     setView("menu");
-    const { data } = await (supabase as any).from("chat_split_bills").select("*").eq("chat_partner_id", chatPartnerId).order("created_at", { ascending: false });
-    if (data) setBills(data);
+    const { data } = await dbFrom("chat_split_bills").select("*").eq("chat_partner_id", chatPartnerId).order("created_at", { ascending: false });
+    if (data) setBills(data as SplitRow[]);
   };
 
   if (!open) return null;
@@ -401,7 +428,7 @@ export default function ChatMiniApps({ open, onClose, chatPartnerId, chatPartner
                       <h4 className="text-sm font-bold text-foreground">{bill.title}</h4>
                       <span className="text-sm font-bold text-primary">${Number(bill.total_amount).toFixed(2)}</span>
                     </div>
-                    {(bill.splits as any[]).map((split, i) => (
+                    {bill.splits.map((split, i) => (
                       <div key={i} className="flex items-center justify-between py-1.5 border-b border-border/10 last:border-0">
                         <div className="flex items-center gap-2">
                           <div className={`w-2 h-2 rounded-full ${split.paid ? "bg-emerald-500" : "bg-amber-500"}`} />
