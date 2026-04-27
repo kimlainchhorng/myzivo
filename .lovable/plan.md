@@ -1,22 +1,37 @@
-## Hotel & Resort upgrade — Phase 5 (complete)
+## Hotel & Resort upgrade — Phase 6
 
-Brought 8 remaining lodging sections up to v2026 standard with `LodgingQuickJump` + `LodgingSectionStatusBanner`. TypeScript clean.
+Phase 5 closed 8 of the lodging sections. This phase finishes the consistency sweep across the remaining 10 sections and runs verification.
 
-### Files modified
-- `LodgingChannelManagerSection.tsx` — quick-jump `lodge-channels`, banner counts active connections
-- `LodgingWellnessSection.tsx` — quick-jump `lodge-wellness`, banner counts active services
-- `LodgingDiningSection.tsx` — quick-jump `lodge-dining`, banner counts active meal plans
-- `LodgingExperiencesSection.tsx` — quick-jump `lodge-experiences`, banner counts active experiences
-- `LodgingTransportSection.tsx` — quick-jump `lodge-transport`, banner counts active routes
-- `LodgingStaffSection.tsx` — quick-jump `lodge-staff`, banner counts active staff
-- `LodgingAmenitiesSection.tsx` — quick-jump `lodge-amenities`, banner shows selected/total
-- `LodgingPromotionsSection.tsx` — quick-jump `lodge-promotions`, banner counts active promos
+### 1. Cross-section consistency sweep — final 10 sections
 
-### Deferred from plan
-- **Live promotions redemption aggregate** — `lodge_reservations` has no `promotion_code` column. Adding it requires a schema migration and reservation-write changes; existing `redemptions_used` counter retained as-is. Will revisit when promo redemption write-back is wired into the booking flow.
-- **Per-section bespoke empty states (`LodgingNeedsSetupEmptyState`)** — every section already uses `CatalogTable`'s built-in empty UI with primary "Add" CTA. Replacing with `LodgingNeedsSetupEmptyState` would duplicate functionality.
+Add `<LodgingQuickJump active="…">` and `<LodgingSectionStatusBanner>` to the top of each:
 
-### Verification
-- `tsc --noEmit -p tsconfig.app.json` → clean (0 errors)
-- DB spot-check: all Phase 4 columns/tables present (`lodging_concierge_tasks.source_message_id`, walk-in `lodge_reservations`, `lodging_lost_found.photo_url`, `lodging_promotions.active`)
-- Real-time sidebar badges + Phase 4 features remain wired
+- `LodgingAddOnsSection.tsx` — quick-jump `lodge-addons`, banner counts active add-ons, fix → Rate Plans
+- `LodgingCalendarSection.tsx` — quick-jump `lodge-calendar`, banner counts blocked dates / rooms, fix → Reservations
+- `LodgingGuestRequestsSection.tsx` — quick-jump `lodge-guest-requests`, banner counts open requests, fix → Concierge
+- `LodgingGuestsSection.tsx` — quick-jump `lodge-guests`, banner counts in-house guests, fix → Front Desk
+- `LodgingMaintenanceSection.tsx` — quick-jump `lodge-maintenance`, banner counts open tickets, fix → Housekeeping
+- `LodgingPoliciesSection.tsx` — quick-jump `lodge-policies`, banner counts taxes & fees configured, fix → Amenities
+- `LodgingRatePlansSection.tsx` — quick-jump `lodge-rate-plans`, banner counts active rate plans, fix → Rooms
+- `LodgingReportsSection.tsx` — quick-jump `lodge-reports`, banner shows current period, fix → Reservations
+- `LodgingReviewsSection.tsx` — quick-jump `lodge-reviews`, banner shows total reviews + avg rating, fix → Property Profile
+- `LodgingRoomsSection.tsx` — quick-jump `lodge-rooms`, banner counts active rooms, fix → Rate Plans
+
+For sections without `SectionShell` (Calendar, Guests, Maintenance, Reports, Rooms), insert at the top of the returned wrapper div (same pattern used for Amenities in Phase 5).
+
+### 2. Verification (mandatory)
+
+Run in order, report inline:
+
+1. `tsc --noEmit -p tsconfig.app.json` — must be clean
+2. Spot-check each updated section file with `rg` to confirm both `LodgingQuickJump` and `LodgingSectionStatusBanner` appear
+3. `supabase--read_query` smoke check on the 4 source tables for store `7322b460-2c23-4d3d-bdc5-55a31cc65fab` to confirm queries resolve
+4. Review preview console logs for any new errors
+
+### Files (planned)
+
+Modified (11):
+- 10 lodging section files listed above
+- `.lovable/plan.md`
+
+No new components. No schema changes. No import-map churn beyond the 2 added imports per file.
