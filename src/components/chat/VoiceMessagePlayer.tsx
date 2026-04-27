@@ -256,8 +256,10 @@ export default function VoiceMessagePlayer({
 
   const progressPct = Math.max(0, Math.min(1, uploadProgress)) * 100;
   const mutedTextClass = isMe ? "text-primary-foreground/70" : "text-muted-foreground";
-  // Snapshot debug flag once per render — flips on/off via window.__zivoVoiceDebug or long-press below.
-  const debugOn = isFailed && isVoiceDebugEnabled();
+  // Reactive debug flag — re-renders when toggled via long-press or window hook.
+  const [debugFlag, setDebugFlag] = useState<boolean>(() => isVoiceDebugEnabled());
+  useEffect(() => subscribeVoiceDebug(setDebugFlag), []);
+  const debugOn = isFailed && debugFlag;
   // Config-level diagnostics — always shown on failed bubbles regardless of
   // debug flag, since a missing anon key means EVERY upload will fail.
   const diagnostics = useMemo(() => getVoiceUploadDiagnostics(), []);
