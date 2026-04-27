@@ -45,6 +45,7 @@ export default function JoinGroupPage() {
   const { code } = useParams<{ code: string }>();
   const { user, isLoading: authLoading } = useAuth();
   const navigate = useNavigate();
+  const goBack = useSmartBack("/chat");
   const [preview, setPreview] = useState<InvitePreview | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [joining, setJoining] = useState(false);
