@@ -379,5 +379,6 @@ export default function LodgingMaintenanceSection({ storeId }: { storeId: string
         </DialogContent>
       </Dialog>
     </Card>
+    </div>
   );
 }

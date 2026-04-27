@@ -101,5 +101,6 @@ export default function LodgingGuestsSection({ storeId }: { storeId: string }) {
         </DialogContent>
       </Dialog>
     </Card>
+    </div>
   );
 }
