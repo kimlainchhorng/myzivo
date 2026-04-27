@@ -9,6 +9,8 @@ import { Label } from "@/components/ui/label";
 import { BarChart3, CreditCard, Download, PackagePlus } from "lucide-react";
 import { useLodgeReports } from "@/hooks/lodging/useLodgeReports";
 import LodgingNeedsSetupEmptyState from "./LodgingNeedsSetupEmptyState";
+import LodgingQuickJump from "./LodgingQuickJump";
+import LodgingSectionStatusBanner from "./LodgingSectionStatusBanner";
 
 function ymd(d: Date) { return d.toISOString().slice(0, 10); }
 

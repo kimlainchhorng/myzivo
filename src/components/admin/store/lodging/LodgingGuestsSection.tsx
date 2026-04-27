@@ -14,6 +14,8 @@ import { Users, Plus, Search, Star, Pencil, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import { useLodgeGuests, type LodgeGuest } from "@/hooks/lodging/useLodgeGuests";
 import LodgingNeedsSetupEmptyState from "./LodgingNeedsSetupEmptyState";
+import LodgingQuickJump from "./LodgingQuickJump";
+import LodgingSectionStatusBanner from "./LodgingSectionStatusBanner";
 
 export default function LodgingGuestsSection({ storeId }: { storeId: string }) {
   const { data: guests = [], isLoading, upsert, remove } = useLodgeGuests(storeId);

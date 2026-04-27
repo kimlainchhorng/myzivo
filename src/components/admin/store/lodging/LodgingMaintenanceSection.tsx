@@ -16,6 +16,8 @@ import {
 } from "@/hooks/lodging/useLodgeMaintenance";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
+import LodgingQuickJump from "./LodgingQuickJump";
+import LodgingSectionStatusBanner from "./LodgingSectionStatusBanner";
 
 const STATUS_LABEL: Record<MaintenanceStatus, string> = {
   open: "Open", in_progress: "In Progress", blocked: "Blocked", done: "Done",

@@ -25,6 +25,8 @@ import { toast } from "sonner";
 import { useLodgeRooms, type LodgeRoom, type LodgeAddon, type RoomFees, type ChildPolicy } from "@/hooks/lodging/useLodgeRooms";
 import { LodgingRoomPhotoUploader } from "@/components/lodging/LodgingRoomPhotoUploader";
 import { BedConfigBuilder, bedConfigSummary, bedConfigSleeps } from "@/components/lodging/BedConfigBuilder";
+import LodgingQuickJump from "./LodgingQuickJump";
+import LodgingSectionStatusBanner from "./LodgingSectionStatusBanner";
 
 const VIEW_OPTIONS = ["", "Sea view", "Garden view", "Pool view", "Mountain view", "City view", "Courtyard view", "River view"];
 const WEEKDAYS = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
