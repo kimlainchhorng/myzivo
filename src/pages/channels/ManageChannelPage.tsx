@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { useParams, Link } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useChannel } from "@/hooks/useChannel";
+import { useSmartBack } from "@/lib/smartBack";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -10,11 +11,12 @@ import { Switch } from "@/components/ui/switch";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ChannelMemberRow, type MemberRow } from "@/components/channels/ChannelMemberRow";
 import { toast } from "sonner";
-import { ArrowLeft } from "lucide-react";
+import { ChevronLeft } from "lucide-react";
 
 export default function ManageChannelPage() {
   const { handle } = useParams<{ handle: string }>();
   const { channel, userId, refresh, loading } = useChannel(handle);
+  const goBack = useSmartBack(handle ? `/c/${handle}` : "/channels");
   const [members, setMembers] = useState<MemberRow[]>([]);
   const [scheduled, setScheduled] = useState<any[]>([]);
   const [name, setName] = useState("");
