@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { useParams, Link } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useChannel } from "@/hooks/useChannel";
+import { useSmartBack } from "@/lib/smartBack";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -10,11 +11,12 @@ import { Switch } from "@/components/ui/switch";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ChannelMemberRow, type MemberRow } from "@/components/channels/ChannelMemberRow";
 import { toast } from "sonner";
-import { ArrowLeft } from "lucide-react";
+import { ChevronLeft } from "lucide-react";
 
 export default function ManageChannelPage() {
   const { handle } = useParams<{ handle: string }>();
   const { channel, userId, refresh, loading } = useChannel(handle);
+  const goBack = useSmartBack(handle ? `/c/${handle}` : "/channels");
   const [members, setMembers] = useState<MemberRow[]>([]);
   const [scheduled, setScheduled] = useState<any[]>([]);
   const [name, setName] = useState("");
@@ -111,11 +113,14 @@ export default function ManageChannelPage() {
   }
 
   return (
-    <div className="mx-auto max-w-2xl p-4">
-      <Button asChild variant="ghost" size="sm" className="mb-3 gap-1">
-        <Link to={`/c/${channel.handle}`}><ArrowLeft className="h-4 w-4" /> Back</Link>
-      </Button>
-      <h1 className="mb-4 text-2xl font-bold">Manage @{channel.handle}</h1>
+    <div className="min-h-screen bg-background">
+      <header className="sticky top-0 z-10 bg-background/85 backdrop-blur-xl border-b border-border/40 pt-safe px-3 py-3 flex items-center gap-2">
+        <button onClick={goBack} className="p-1.5 rounded-full hover:bg-muted/60" aria-label="Back">
+          <ChevronLeft className="w-5 h-5" />
+        </button>
+        <h1 className="text-base font-semibold flex-1 truncate">Manage @{channel.handle}</h1>
+      </header>
+      <div className="mx-auto max-w-2xl p-4">
 
       <Tabs defaultValue="details">
         <TabsList>
@@ -179,6 +184,7 @@ export default function ManageChannelPage() {
           )}
         </TabsContent>
       </Tabs>
+      </div>
     </div>
   );
 }

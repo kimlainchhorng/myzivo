@@ -389,7 +389,7 @@
   }
 
   .pt-safe {
-    padding-top: max(env(safe-area-inset-top, 0px), 44px);
+    padding-top: max(env(safe-area-inset-top, 0px), 47px);
   }
 
   /* Mobile-native overscroll behavior */
