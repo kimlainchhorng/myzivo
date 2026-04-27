@@ -80,7 +80,7 @@ type GroupMessageInsert = {
   image_url?: string;
   voice_url?: string;
   reply_to_id?: string;
-  file_payload?: { duration_ms?: number } | null;
+  file_payload?: { duration_ms?: number; client_send_id?: string } | null;
 };
 
 const dbFrom = (table: string): any => (supabase as any).from(table);
