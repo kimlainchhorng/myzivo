@@ -155,6 +155,8 @@ export default function HoldToRecordMic({ voice, className }: Props) {
     }
     setDragX(0);
     setDragY(0);
+    dragXMV.set(0);
+    dragYMV.set(0);
   };
 
   // Locked-mode actions
