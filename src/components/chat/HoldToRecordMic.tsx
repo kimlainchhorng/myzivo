@@ -16,7 +16,7 @@ import Mic from "lucide-react/dist/esm/icons/mic";
 import Trash2 from "lucide-react/dist/esm/icons/trash-2";
 import Send from "lucide-react/dist/esm/icons/send";
 import Lock from "lucide-react/dist/esm/icons/lock";
-import ChevronUp from "lucide-react/dist/esm/icons/chevron-up";
+
 import ChevronLeft from "lucide-react/dist/esm/icons/chevron-left";
 import Pause from "lucide-react/dist/esm/icons/pause";
 import Play from "lucide-react/dist/esm/icons/play";
