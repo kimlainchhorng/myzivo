@@ -17,7 +17,10 @@ import Loader2 from "lucide-react/dist/esm/icons/loader-2";
 import RefreshCw from "lucide-react/dist/esm/icons/refresh-cw";
 import Trash2 from "lucide-react/dist/esm/icons/trash-2";
 import AlertCircle from "lucide-react/dist/esm/icons/alert-circle";
+import Info from "lucide-react/dist/esm/icons/info";
 import { motion } from "framer-motion";
+import { toast } from "sonner";
+import { isVoiceDebugEnabled, setVoiceDebugEnabled } from "@/lib/voiceDebug";
 
 export type VoiceUploadStatus = "uploading" | "sent" | "failed";
 
