@@ -111,8 +111,13 @@ export default function HoldToRecordMic({ voice, className }: Props) {
     const dx = Math.min(0, e.clientX - startPos.current.x);
     const dy = Math.min(0, e.clientY - startPos.current.y);
     // rubber-band easing past thresholds
-    setDragX(dx < -CANCEL_THRESHOLD ? -CANCEL_THRESHOLD + (dx + CANCEL_THRESHOLD) * 0.35 : dx);
-    setDragY(dy < -LOCK_THRESHOLD ? -LOCK_THRESHOLD + (dy + LOCK_THRESHOLD) * 0.35 : dy);
+    const easedX = dx < -CANCEL_THRESHOLD ? -CANCEL_THRESHOLD + (dx + CANCEL_THRESHOLD) * 0.35 : dx;
+    const easedY = dy < -LOCK_THRESHOLD ? -LOCK_THRESHOLD + (dy + LOCK_THRESHOLD) * 0.35 : dy;
+    setDragX(easedX);
+    setDragY(easedY);
+    // Push to springed motion values for the overlay (decoupled from React render).
+    dragXMV.set(easedX);
+    dragYMV.set(easedY);
 
     if (isRecording) {
       if (dx < -CANCEL_THRESHOLD && dragX >= -CANCEL_THRESHOLD) haptic(20);
