@@ -144,7 +144,7 @@ export function useVoiceRecorder() {
     const rec = recorder.current;
     if (rec && rec.state === "recording") {
       try { rec.pause(); } catch { /* noop */ }
-      if (timer.current) { clearInterval(timer.current); timer.current = null; }
+      if (rafId.current !== null) { cancelAnimationFrame(rafId.current); rafId.current = null; }
     }
   }, []);
 
@@ -154,7 +154,11 @@ export function useVoiceRecorder() {
       try { rec.resume(); } catch { /* noop */ }
       const baseElapsed = elapsedMs;
       const resumedAt = Date.now();
-      timer.current = setInterval(() => setElapsedMs(baseElapsed + (Date.now() - resumedAt)), 100);
+      const tick = () => {
+        setElapsedMs(baseElapsed + (Date.now() - resumedAt));
+        rafId.current = requestAnimationFrame(tick);
+      };
+      rafId.current = requestAnimationFrame(tick);
     }
   }, [elapsedMs]);
 
