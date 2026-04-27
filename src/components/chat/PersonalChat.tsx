@@ -628,9 +628,10 @@ export default function PersonalChat({ recipientId, recipientName, recipientAvat
     if (!text && !imageUrl && !voiceUrl && !videoUrl && !filePayload && locationLat == null) return;
     if (!user?.id || sending) return;
 
-    const msgType = filePayload
+    const msgType = voiceUrl
+      ? "voice"
+      : filePayload
       ? "file"
-      : voiceUrl ? "voice"
       : videoUrl ? "video"
       : imageUrl ? "image"
       : locationLat != null ? "location"
