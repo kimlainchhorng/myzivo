@@ -2,6 +2,7 @@
  * Lodging — Housekeeping board (per-room status).
  */
 import { useEffect, useMemo, useState } from "react";
+import LodgingQuickJump from "./LodgingQuickJump";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";

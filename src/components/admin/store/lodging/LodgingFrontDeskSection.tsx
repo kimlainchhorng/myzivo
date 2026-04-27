@@ -2,6 +2,7 @@
  * Lodging — Front Desk: today board (arrivals / in-house / departures).
  */
 import { useMemo } from "react";
+import LodgingQuickJump from "./LodgingQuickJump";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";

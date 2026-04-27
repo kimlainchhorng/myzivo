@@ -3,6 +3,7 @@
  * Tapping a row opens the full reservation details page.
  */
 import { useMemo, useState } from "react";
+import LodgingQuickJump from "./LodgingQuickJump";
 import { useLocation, useNavigate, useSearchParams } from "react-router-dom";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
