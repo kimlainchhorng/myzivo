@@ -36,7 +36,7 @@ Deno.serve(async (req) => {
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
     if (!LOVABLE_API_KEY) throw new Error("LOVABLE_API_KEY is not configured");
 
-    const { image_url, image_base64 } = await req.json();
+    const { image_url, image_base64, mime_type } = await req.json();
     if (!image_url && !image_base64) {
       return new Response(JSON.stringify({ error: "image_url or image_base64 required" }), {
         status: 400,
@@ -44,7 +44,8 @@ Deno.serve(async (req) => {
       });
     }
 
-    const imagePayload = image_url ? image_url : `data:image/jpeg;base64,${image_base64}`;
+    const safeMime = (typeof mime_type === "string" && mime_type.startsWith("image/")) ? mime_type : "image/jpeg";
+    const imagePayload = image_url ? image_url : `data:${safeMime};base64,${image_base64}`;
 
     const aiResp = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",
