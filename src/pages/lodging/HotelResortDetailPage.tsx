@@ -79,6 +79,29 @@ const formatPrice = (cents: number) => {
   return `$${(cents / 100).toFixed(0)}`;
 };
 
+// Format a phone number nicely. KH local numbers (7–9 digits, no leading +)
+// get +855 prefix and grouped as +855 XX XXX XXX.
+const formatPhone = (raw?: string | null) => {
+  if (!raw) return "";
+  const trimmed = raw.trim();
+  if (trimmed.startsWith("+")) {
+    const digits = trimmed.replace(/[^\d]/g, "");
+    if (digits.length >= 10) {
+      const cc = digits.slice(0, digits.length - 9);
+      return `+${cc} ${digits.slice(-9, -6)} ${digits.slice(-6, -3)} ${digits.slice(-3)}`;
+    }
+    return trimmed;
+  }
+  const local = trimmed.replace(/[^\d]/g, "").replace(/^0+/, "");
+  if (local.length >= 7 && local.length <= 9) {
+    const a = local.slice(0, local.length - 6);
+    const b = local.slice(local.length - 6, local.length - 3);
+    const c = local.slice(local.length - 3);
+    return `+855 ${a} ${b} ${c}`;
+  }
+  return trimmed;
+};
+
 const amenityIconFor = (label: string) => {
   const key = label.toLowerCase().trim();
   return AMENITY_ICON_MAP[key] || CheckCircle2;
