@@ -14,7 +14,7 @@
 // Used by FinanceExpensesSection when the primary ar-receipts upload fails
 // with a transient storage/DB error such as 08P01.
 
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
+import { createClient } from "npm:@supabase/supabase-js@2";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -86,11 +86,11 @@ Deno.serve(async (req) => {
     });
     const admin = createClient(SUPABASE_URL, SERVICE_ROLE);
 
-    const { data: userData, error: userErr } = await userClient.auth.getUser();
-    if (userErr || !userData?.user) {
-      return jsonResponse({ error: "Invalid or expired session", details: userErr?.message }, 401);
+    const { data: claimsData, error: claimsErr } = await userClient.auth.getClaims(accessToken);
+    if (claimsErr || !claimsData?.claims?.sub) {
+      return jsonResponse({ error: "Invalid or expired session", details: claimsErr?.message }, 401);
     }
-    const userId = userData.user.id;
+    const userId = claimsData.claims.sub;
 
     let payload: Record<string, unknown> = {};
     try {
