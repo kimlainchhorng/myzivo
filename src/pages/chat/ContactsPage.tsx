@@ -121,6 +121,8 @@ export default function ContactsPage() {
         </div>
       </div>
 
+      {!q.trim() && <SuggestedContactsRow />}
+
       <div className="px-2 pb-24">
         {loading ? (
           <div className="text-center text-muted-foreground py-12 text-sm">Loading…</div>
