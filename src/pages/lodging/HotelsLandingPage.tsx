@@ -121,22 +121,85 @@ export default function HotelsLandingPage() {
   const all = listQuery.data || [];
   const storeIds = useMemo(() => all.map((s) => s.id), [all]);
 
-  // Min rates per store
+  // Min rates per store (with stay-length discount info)
+  type RateInfo = {
+    base: number;
+    weeklyPct: number;
+    monthlyPct: number;
+  };
   const ratesQuery = useQuery({
     queryKey: ["lodge-min-rates", storeIds],
     enabled: storeIds.length > 0,
-    queryFn: async (): Promise<Record<string, number>> => {
+    queryFn: async (): Promise<Record<string, RateInfo>> => {
       const { data, error } = await (supabase as any)
         .from("lodge_rooms")
-        .select("store_id, base_rate_cents, is_active")
+        .select("store_id, base_rate_cents, weekly_discount_pct, monthly_discount_pct, is_active")
         .in("store_id", storeIds)
         .eq("is_active", true);
       if (error) throw error;
-      const map: Record<string, number> = {};
-      for (const r of (data || []) as Array<{ store_id: string; base_rate_cents: number }>) {
+      const map: Record<string, RateInfo> = {};
+      for (const r of (data || []) as Array<{
+        store_id: string;
+        base_rate_cents: number;
+        weekly_discount_pct: number | null;
+        monthly_discount_pct: number | null;
+      }>) {
         if (!r.base_rate_cents || r.base_rate_cents <= 0) continue;
-        if (map[r.store_id] === undefined || r.base_rate_cents < map[r.store_id]) {
-          map[r.store_id] = r.base_rate_cents;
+        const existing = map[r.store_id];
+        if (!existing || r.base_rate_cents < existing.base) {
+          map[r.store_id] = {
+            base: r.base_rate_cents,
+            weeklyPct: Number(r.weekly_discount_pct) || 0,
+            monthlyPct: Number(r.monthly_discount_pct) || 0,
+          };
+        }
+      }
+      return map;
+    },
+  });
+
+  // Active public promotions per store (largest discount wins)
+  type PromoInfo = {
+    type: "percent" | "fixed";
+    value: number;
+    name: string;
+    minNights: number;
+    maxNights: number | null;
+  };
+  const promotionsQuery = useQuery({
+    queryKey: ["lodge-promotions", storeIds],
+    enabled: storeIds.length > 0,
+    queryFn: async (): Promise<Record<string, PromoInfo>> => {
+      const nowIso = new Date().toISOString();
+      const { data, error } = await (supabase as any)
+        .from("lodging_promotions")
+        .select("store_id, promo_type, discount_value, name, min_nights, max_nights, starts_at, ends_at, active, member_only")
+        .in("store_id", storeIds)
+        .eq("active", true)
+        .eq("member_only", false);
+      if (error) {
+        // Silently ignore — fall back to base rates
+        return {};
+      }
+      const map: Record<string, PromoInfo> = {};
+      for (const r of (data || []) as Array<any>) {
+        if (r.starts_at && r.starts_at > nowIso) continue;
+        if (r.ends_at && r.ends_at < nowIso) continue;
+        const type = r.promo_type === "fixed" ? "fixed" : "percent";
+        const value = Number(r.discount_value) || 0;
+        if (value <= 0) continue;
+        const candidate: PromoInfo = {
+          type,
+          value,
+          name: r.name || "",
+          minNights: Number(r.min_nights) || 1,
+          maxNights: r.max_nights ? Number(r.max_nights) : null,
+        };
+        const existing = map[r.store_id];
+        // Prefer larger percentage; fixed treated roughly as value cents-equivalent
+        const score = (p: PromoInfo) => (p.type === "percent" ? p.value : p.value);
+        if (!existing || score(candidate) > score(existing)) {
+          map[r.store_id] = candidate;
         }
       }
       return map;
@@ -169,6 +232,7 @@ export default function HotelsLandingPage() {
   });
 
   const minRates = ratesQuery.data || {};
+  const promotions = promotionsQuery.data || {};
   const amenitiesMap = amenitiesQuery.data || {};
   const nights = Math.max(1, differenceInCalendarDays(checkOut, checkIn));
 
@@ -565,7 +629,8 @@ export default function HotelsLandingPage() {
                   key={store.id}
                   store={store}
                   index={idx}
-                  minRateCents={minRates[store.id]}
+                  rateInfo={minRates[store.id]}
+                  promo={promotions[store.id]}
                   amenities={amenitiesMap[store.id] || []}
                   nights={nights}
                   onOpen={() => navigate(`/hotel/${store.id}`)}
@@ -627,17 +692,32 @@ const AMENITY_ICONS: Array<{ key: string; icon: typeof Wifi; label: string }> = 
   { key: "pet", icon: Dog, label: "Pets" },
 ];
 
+type RateInfoProp = {
+  base: number;
+  weeklyPct: number;
+  monthlyPct: number;
+};
+type PromoInfoProp = {
+  type: "percent" | "fixed";
+  value: number;
+  name: string;
+  minNights: number;
+  maxNights: number | null;
+};
+
 function PropertyCard({
   store,
   index,
-  minRateCents,
+  rateInfo,
+  promo,
   amenities,
   nights,
   onOpen,
 }: {
   store: DirectoryStore;
   index: number;
-  minRateCents?: number;
+  rateInfo?: RateInfoProp;
+  promo?: PromoInfoProp;
   amenities: string[];
   nights: number;
   onOpen: () => void;
@@ -650,7 +730,42 @@ function PropertyCard({
       : haystack.includes(a.key),
   ).slice(0, 4);
 
-  const totalCents = typeof minRateCents === "number" ? minRateCents * nights : null;
+  // Pricing + discount calculation
+  const baseCents = rateInfo?.base;
+  let discountedCents: number | null = null;
+  let pctOff = 0;
+  let promoLabel = "";
+
+  if (typeof baseCents === "number") {
+    const promoApplies =
+      promo &&
+      nights >= promo.minNights &&
+      (!promo.maxNights || nights <= promo.maxNights);
+
+    if (promoApplies && promo) {
+      if (promo.type === "percent") {
+        discountedCents = Math.round(baseCents * (1 - promo.value / 100));
+        pctOff = Math.round(promo.value);
+      } else {
+        const off = Math.round(promo.value * 100);
+        discountedCents = Math.max(0, baseCents - off);
+        pctOff = Math.round((1 - discountedCents / baseCents) * 100);
+      }
+      promoLabel = promo.name || `${pctOff}% OFF`;
+    } else if (rateInfo && nights >= 28 && rateInfo.monthlyPct > 0) {
+      pctOff = Math.round(rateInfo.monthlyPct);
+      discountedCents = Math.round(baseCents * (1 - pctOff / 100));
+      promoLabel = "Monthly deal";
+    } else if (rateInfo && nights >= 7 && rateInfo.weeklyPct > 0) {
+      pctOff = Math.round(rateInfo.weeklyPct);
+      discountedCents = Math.round(baseCents * (1 - pctOff / 100));
+      promoLabel = "Weekly deal";
+    }
+  }
+
+  const hasDiscount = discountedCents !== null && discountedCents < (baseCents ?? 0);
+  const effectiveCents = hasDiscount ? (discountedCents as number) : baseCents;
+  const totalCents = typeof effectiveCents === "number" ? effectiveCents * nights : null;
 
   return (
     <motion.button
@@ -679,6 +794,11 @@ function PropertyCard({
           {store.is_verified && (
             <Badge className="absolute top-1.5 left-1.5 bg-emerald-600 text-white text-[9px] px-1.5 py-0">
               Verified
+            </Badge>
+          )}
+          {hasDiscount && pctOff > 0 && (
+            <Badge className="absolute bottom-1.5 left-1.5 bg-red-600 text-white text-[9px] px-1.5 py-0">
+              -{pctOff}%
             </Badge>
           )}
         </div>
@@ -718,16 +838,33 @@ function PropertyCard({
             <span className="text-[10px] font-medium text-muted-foreground capitalize truncate">
               {store.category?.replace(/_/g, " ") || "Hotel"}
             </span>
-            {typeof minRateCents === "number" ? (
+            {typeof effectiveCents === "number" ? (
               <div className="text-right">
                 <p className="text-[10px] text-muted-foreground leading-none">from</p>
-                <p className="text-[14px] font-extrabold text-foreground leading-tight">
-                  ${(minRateCents / 100).toFixed(0)}
-                  <span className="text-[10px] font-medium text-muted-foreground"> /night</span>
-                </p>
+                {hasDiscount && typeof baseCents === "number" ? (
+                  <>
+                    <p className="text-[10px] line-through text-muted-foreground leading-none">
+                      ${(baseCents / 100).toFixed(0)}
+                    </p>
+                    <p className="text-[14px] font-extrabold text-emerald-600 leading-tight">
+                      ${(effectiveCents / 100).toFixed(0)}
+                      <span className="text-[10px] font-medium text-emerald-600/80"> /night</span>
+                    </p>
+                  </>
+                ) : (
+                  <p className="text-[14px] font-extrabold text-foreground leading-tight">
+                    ${(effectiveCents / 100).toFixed(0)}
+                    <span className="text-[10px] font-medium text-muted-foreground"> /night</span>
+                  </p>
+                )}
                 {totalCents && nights > 1 && (
                   <p className="text-[9px] text-muted-foreground leading-none">
                     ${(totalCents / 100).toFixed(0)} for {nights}n
+                  </p>
+                )}
+                {hasDiscount && promoLabel && (
+                  <p className="text-[9px] font-semibold text-red-600 leading-none mt-0.5 truncate max-w-[110px] ml-auto">
+                    {promoLabel}
                   </p>
                 )}
               </div>
