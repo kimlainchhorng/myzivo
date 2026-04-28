@@ -457,42 +457,51 @@ export default function HotelResortDetailPage() {
         ) : activeRooms.length === 0 ? (
           <p className="text-xs text-muted-foreground">No rooms published yet.</p>
         ) : (
-          <div className="-mx-4 px-4 pr-6 flex gap-3 overflow-x-auto snap-x snap-mandatory pb-1 [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden md:mx-0 md:px-0 md:pr-0 md:overflow-visible md:grid md:grid-cols-2 lg:grid-cols-3 md:gap-3">
-            {activeRooms.slice(0, 8).map((room) => {
-              const photo = room.photos?.[room.cover_photo_index ?? 0] || room.photos?.[0];
-              const deal = applyPromo(room.base_rate_cents);
-              const hasDiscount = deal.pctOff > 0 && deal.discounted < room.base_rate_cents;
-              return (
-                <div
-                  key={room.id}
-                  className="snap-start shrink-0 w-60 md:w-auto rounded-xl border border-border bg-card overflow-hidden"
-                >
-                  <div className="h-28 bg-muted relative">
-                    {photo ? (
-                      <img src={photo} alt={room.name} className="w-full h-full object-cover" loading="lazy" />
-                    ) : (
-                      <div className="w-full h-full flex items-center justify-center">
-                        <Hotel className="w-6 h-6 text-muted-foreground" />
+          <div className="relative">
+            <div className="-mx-4 px-4 pr-10 flex gap-3 overflow-x-auto snap-x snap-mandatory pb-1 [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden md:mx-0 md:px-0 md:pr-0 md:overflow-visible md:grid md:grid-cols-2 lg:grid-cols-3 md:gap-3">
+              {activeRooms.slice(0, 8).map((room) => {
+                const photo = room.photos?.[room.cover_photo_index ?? 0] || room.photos?.[0];
+                const deal = applyPromo(room.base_rate_cents);
+                const hasDiscount = deal.pctOff > 0 && deal.discounted < room.base_rate_cents;
+                const isTopPick = room.id === topPickRoomId;
+                return (
+                  <div
+                    key={room.id}
+                    className="snap-start shrink-0 w-60 md:w-auto rounded-xl border border-border bg-card overflow-hidden"
+                  >
+                    <div className="h-28 bg-muted relative">
+                      {photo ? (
+                        <img src={photo} alt={room.name} className="w-full h-full object-cover" loading="lazy" />
+                      ) : (
+                        <div className="w-full h-full flex items-center justify-center">
+                          <Hotel className="w-6 h-6 text-muted-foreground" />
+                        </div>
+                      )}
+                      {room.breakfast_included && (
+                        <span className="absolute top-1.5 left-1.5 rounded-full bg-background/90 px-2 py-0.5 text-[9px] font-semibold text-primary">
+                          Breakfast
+                        </span>
+                      )}
+                      {hasDiscount && (
+                        <span className="absolute top-1.5 right-1.5 rounded-full bg-red-600 text-white px-1.5 py-0.5 text-[9px] font-bold">
+                          -{deal.pctOff}%
+                        </span>
+                      )}
+                    </div>
+                    <div className="p-2.5">
+                      <div className="flex items-center gap-1.5">
+                        <p className="text-xs font-bold text-foreground truncate flex-1">{room.name}</p>
+                        {isTopPick && (
+                          <span className="shrink-0 inline-flex items-center gap-0.5 rounded-full bg-amber-50 text-amber-700 border border-amber-200 px-1.5 py-0.5 text-[9px] font-bold dark:bg-amber-500/10 dark:text-amber-300 dark:border-amber-500/20">
+                            <Star className="w-2.5 h-2.5 fill-amber-500 text-amber-500" />
+                            Top pick
+                          </span>
+                        )}
                       </div>
-                    )}
-                    {room.breakfast_included && (
-                      <span className="absolute top-1.5 left-1.5 rounded-full bg-background/90 px-2 py-0.5 text-[9px] font-semibold text-primary">
-                        Breakfast
-                      </span>
-                    )}
-                    {hasDiscount && (
-                      <span className="absolute top-1.5 right-1.5 rounded-full bg-red-600 text-white px-1.5 py-0.5 text-[9px] font-bold">
-                        -{deal.pctOff}%
-                      </span>
-                    )}
-                  </div>
-                  <div className="p-2.5">
-                    <p className="text-xs font-bold text-foreground truncate">{room.name}</p>
-                    <p className="mt-0.5 text-[10px] text-muted-foreground truncate">
-                      {room.beds || room.room_type || "Room"} · {room.max_guests} guests
-                    </p>
-                    <div className="mt-1.5 flex items-end justify-between gap-2">
-                      <div className="min-w-0">
+                      <p className="mt-0.5 text-[10px] text-muted-foreground truncate">
+                        {room.beds || room.room_type || "Room"} · {room.max_guests} guests
+                      </p>
+                      <div className="mt-1.5">
                         {hasDiscount ? (
                           <>
                             <span className="text-sm font-bold text-emerald-600">
@@ -510,13 +519,23 @@ export default function HotelResortDetailPage() {
                           </span>
                         )}
                       </div>
-                      <Star className="w-3.5 h-3.5 text-amber-500 fill-amber-500 shrink-0" />
                     </div>
                   </div>
-                </div>
-              );
-            })}
+                );
+              })}
+            </div>
+            {/* Right-edge fade hint (mobile only) */}
+            <div className="md:hidden pointer-events-none absolute top-0 right-0 h-full w-10 bg-gradient-to-l from-background to-transparent" />
           </div>
+        )}
+        {activeRooms.length > 8 && (
+          <button
+            type="button"
+            onClick={() => setAllRoomsOpen(true)}
+            className="mt-3 inline-flex items-center gap-1 rounded-full border border-emerald-200 bg-emerald-50 text-emerald-700 px-3 py-1.5 text-[11px] font-semibold hover:bg-emerald-100 dark:bg-emerald-500/10 dark:text-emerald-300 dark:border-emerald-500/20"
+          >
+            See all {activeRooms.length} rooms <ExternalLink className="w-3 h-3" />
+          </button>
         )}
       </Section>
 
@@ -527,7 +546,7 @@ export default function HotelResortDetailPage() {
             {profile.languages.map((lang) => (
               <span
                 key={lang}
-                className="rounded-full bg-muted px-2.5 py-1 text-[11px] font-medium text-foreground"
+                className="rounded-full bg-emerald-50 text-emerald-700 border border-emerald-100 px-2.5 py-1 text-[11px] font-medium dark:bg-emerald-500/10 dark:text-emerald-300 dark:border-emerald-500/20"
               >
                 {lang}
               </span>
