@@ -7,7 +7,7 @@
 import { Navigate, useLocation } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { useUserProfile } from "@/hooks/useUserProfile";
-import { Loader2 } from "lucide-react";
+import Loader2 from "lucide-react/dist/esm/icons/loader-2";
 import { toast } from "sonner";
 import { useEffect, useRef } from "react";
 import { withRedirectParam } from "@/lib/authRedirect";
