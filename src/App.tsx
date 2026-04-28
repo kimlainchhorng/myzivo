@@ -92,6 +92,7 @@ const MyApplicationsPage = lazy(() => import("./pages/app/personal/MyApplication
 const EmployerDashboardPage = lazy(() => import("./pages/app/personal/EmployerDashboardPage"));
 const JobApplicantsPage = lazy(() => import("./pages/app/personal/JobApplicantsPage"));
 const PersonalEmployeesPage = lazy(() => import("./pages/app/personal/PersonalEmployeesPage"));
+const AcceptInvitePage = lazy(() => import("./pages/auth/AcceptInvitePage"));
 const PersonalSchedulePage = lazy(() => import("./pages/app/personal/PersonalSchedulePage"));
 const PersonalTimesheetPage = lazy(() => import("./pages/app/personal/PersonalTimesheetPage"));
 const PersonalPayStubsPage = lazy(() => import("./pages/app/personal/PersonalPayStubsPage"));
@@ -680,6 +681,7 @@ const App = () => (
                 <Route path="/personal-dashboard" element={<ProtectedRoute><PersonalDashboard /></ProtectedRoute>} />
                 <Route path="/personal/apply-job" element={<ProtectedRoute><ApplyJobHubPage /></ProtectedRoute>} />
                 <Route path="/personal/find-employee" element={<ProtectedRoute><FindEmployeePage /></ProtectedRoute>} />
+                <Route path="/auth/accept-invite" element={<AcceptInvitePage />} />
                 <Route path="/personal/companies/:id" element={<ProtectedRoute><CompanyDetailPage /></ProtectedRoute>} />
                 <Route path="/personal/jobs/:id" element={<ProtectedRoute><JobDetailPage /></ProtectedRoute>} />
                 <Route path="/personal/my-applications" element={<ProtectedRoute><MyApplicationsPage /></ProtectedRoute>} />
