@@ -133,10 +133,30 @@ export default function CustomFoldersPage() {
         Group chats into folders. Reorder to control how tabs appear in the chat hub.
       </p>
 
+      {folders.length === 0 && (
+        <div className="mx-3 mb-3 rounded-xl bg-primary/5 border border-primary/20 p-3">
+          <div className="text-xs font-semibold text-primary mb-2">Suggested folders</div>
+          <div className="flex flex-wrap gap-1.5">
+            {SUGGESTED_FOLDERS.map((p) => (
+              <button
+                key={p.name}
+                onClick={() => addSuggested(p)}
+                className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-full bg-background border border-border/60 text-xs font-medium hover:bg-muted/60"
+              >
+                <span>{p.icon}</span>
+                <span>{p.name}</span>
+                <Plus className="w-3 h-3 opacity-60" />
+              </button>
+            ))}
+          </div>
+          <p className="text-[11px] text-muted-foreground mt-2">Tap to instantly add. You can rename or delete later.</p>
+        </div>
+      )}
+
       <div className="bg-card/60 rounded-xl mx-3 divide-y divide-border/30">
         {folders.length === 0 ? (
           <div className="px-4 py-8 text-center text-sm text-muted-foreground">
-            No folders yet. Tap + to create one.
+            No folders yet. Tap a suggestion above or + to create one.
           </div>
         ) : folders.map((f, idx) => (
           <div key={f.id} className="flex items-center gap-3 px-4 py-3">
