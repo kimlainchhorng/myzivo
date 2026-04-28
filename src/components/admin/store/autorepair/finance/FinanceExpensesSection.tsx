@@ -305,6 +305,34 @@ export default function FinanceExpensesSection({ storeId }: Props) {
     },
   });
 
+  // Call ar-receipts-helper with an explicit bearer token so auth context is reliable.
+  const callHelper = async (body: Record<string, unknown>) => {
+    const { data: sess } = await supabase.auth.getSession();
+    const token = sess?.session?.access_token;
+    if (!token) throw new Error("Not signed in");
+    const url = `${supaUrl}/functions/v1/ar-receipts-helper`;
+    const res = await fetch(url, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+        apikey: (supabase as any)?.supabaseKey || "",
+      },
+      body: JSON.stringify(body),
+    });
+    let data: any = null;
+    try { data = await res.json(); } catch { /* ignore */ }
+    if (!res.ok) {
+      const msg = data?.error || `HTTP ${res.status}`;
+      const err = new Error(msg) as any;
+      err.status = res.status;
+      err.details = data?.details;
+      err.body = data;
+      throw err;
+    }
+    return data;
+  };
+
   const saveScannedExpenseViaHelper = async (source: ExpenseFormState) => {
     const totals = computeExpenseTotals(source);
     const payloadItems = source.items
@@ -321,30 +349,27 @@ export default function FinanceExpensesSection({ storeId }: Props) {
           line_total_cents: Math.round(quantity * unit_price_cents),
         };
       });
-    const { data, error } = await supabase.functions.invoke("ar-receipts-helper", {
-      body: {
-        action: "save_expense",
-        store_id: storeId,
-        expense: {
-          category: source.category,
-          vendor: source.vendor || null,
-          description: source.description || null,
-          amount_cents: totals.totalCents,
-          subtotal_cents: totals.subtotalCents,
-          tax_cents: totals.taxCents,
-          expense_date: source.expense_date,
-          invoice_time: to24h(source.hour, source.minute, source.ampm),
-          invoice_number: source.invoice_number || null,
-          payment_method: source.payment_method,
-          notes: source.notes || null,
-          receipt_url: source.receipt_url || null,
-        },
-        items: payloadItems,
+    const data = await callHelper({
+      action: "save_expense",
+      store_id: storeId,
+      expense: {
+        category: source.category,
+        vendor: source.vendor || null,
+        description: source.description || null,
+        amount_cents: totals.totalCents,
+        subtotal_cents: totals.subtotalCents,
+        tax_cents: totals.taxCents,
+        expense_date: source.expense_date,
+        invoice_time: to24h(source.hour, source.minute, source.ampm),
+        invoice_number: source.invoice_number || null,
+        payment_method: source.payment_method,
+        notes: source.notes || null,
+        receipt_url: source.receipt_url || null,
       },
+      items: payloadItems,
     });
-    if (error) throw error;
-    if (!(data as any)?.ok) throw new Error((data as any)?.error || "Could not save scanned invoice");
-    return data as any;
+    if (!data?.ok) throw new Error(data?.error || "Could not save scanned invoice");
+    return data;
   };
 
   // -------- Scan invoice flow --------
