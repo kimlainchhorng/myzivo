@@ -71,7 +71,7 @@ export default function ContactsPage() {
           </div>
         </button>
 
-        <div className="grid grid-cols-3 gap-2">
+        <div className="grid grid-cols-4 gap-2">
           <button
             onClick={() => navigate("/chat/find-contacts")}
             className="flex flex-col items-center gap-1.5 p-3 rounded-2xl border bg-card hover:bg-muted/50 active:scale-[0.98] transition"
@@ -80,6 +80,15 @@ export default function ContactsPage() {
               <Phone className="w-4 h-4" />
             </div>
             <span className="text-[11px] font-medium leading-tight text-center">Find by phone</span>
+          </button>
+          <button
+            onClick={() => navigate("/chat/find-contacts")}
+            className="flex flex-col items-center gap-1.5 p-3 rounded-2xl border bg-card hover:bg-muted/50 active:scale-[0.98] transition"
+          >
+            <div className="w-9 h-9 rounded-full bg-violet-500/15 text-violet-600 flex items-center justify-center">
+              <Smartphone className="w-4 h-4" />
+            </div>
+            <span className="text-[11px] font-medium leading-tight text-center">Sync phone</span>
           </button>
           <button
             onClick={() => navigate("/chat/contacts/requests")}
