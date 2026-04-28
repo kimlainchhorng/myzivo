@@ -528,6 +528,14 @@ export default function FinanceExpensesSection({ storeId }: Props) {
               ))}
             </ul>
           )}
+
+          {/* Receipt-upload diagnostics panel */}
+          <UploadDiagnosticsPanel
+            diag={diagnostics}
+            open={diagOpen}
+            onToggle={() => setDiagOpen((o) => !o)}
+            onClear={() => setDiagnostics(null)}
+          />
         </CardContent>
       </Card>
 
