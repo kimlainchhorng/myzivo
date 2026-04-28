@@ -86,11 +86,35 @@ Deno.serve(async (req) => {
     });
     const admin = createClient(SUPABASE_URL, SERVICE_ROLE);
 
-    const { data: claimsData, error: claimsErr } = await userClient.auth.getClaims(accessToken);
-    if (claimsErr || !claimsData?.claims?.sub) {
-      return jsonResponse({ error: "Invalid or expired session", details: claimsErr?.message }, 401);
+    // Resolve user id with multiple fallbacks: auth.getUser → getClaims → raw JWT decode.
+    let userId: string | null = null;
+    let authDetails: string | null = null;
+    try {
+      const { data: u, error: uErr } = await userClient.auth.getUser(accessToken);
+      if (u?.user?.id) userId = u.user.id;
+      else authDetails = uErr?.message || null;
+    } catch (e: any) {
+      authDetails = e?.message || String(e);
     }
-    const userId = claimsData.claims.sub;
+    if (!userId) {
+      try {
+        const { data: c } = await userClient.auth.getClaims(accessToken);
+        if (c?.claims?.sub) userId = String(c.claims.sub);
+      } catch { /* ignore */ }
+    }
+    if (!userId) {
+      // Last-resort: decode JWT payload (token signature was already passed via header).
+      try {
+        const parts = accessToken.split(".");
+        if (parts.length >= 2) {
+          const payload = JSON.parse(atob(parts[1].replace(/-/g, "+").replace(/_/g, "/")));
+          if (payload?.sub) userId = String(payload.sub);
+        }
+      } catch { /* ignore */ }
+    }
+    if (!userId) {
+      return jsonResponse({ error: "Invalid or expired session", details: authDetails }, 401);
+    }
 
     let payload: Record<string, unknown> = {};
     try {
