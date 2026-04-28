@@ -30,9 +30,18 @@ export default function FindContactsPage() {
   const [raw, setRaw] = useState("");
   const [scanning, setScanning] = useState(false);
   const [matches, setMatches] = useState<Match[] | null>(null);
-  const [adding, setAdding] = useState<string | null>(null);
   const [nativeReady, setNativeReady] = useState(false);
   const [syncing, setSyncing] = useState(false);
+  const [confirmTarget, setConfirmTarget] = useState<AddTarget | null>(null);
+  const [confirmOpen, setConfirmOpen] = useState(false);
+
+  const { contacts } = useContacts();
+  const { outgoing } = useContactRequests();
+  const contactIds = useMemo(() => new Set((contacts ?? []).map((c) => c.contact_user_id)), [contacts]);
+  const pendingIds = useMemo(
+    () => new Set((outgoing ?? []).filter((r) => r.status === "pending").map((r) => r.to_user_id)),
+    [outgoing]
+  );
 
   useEffect(() => {
     let alive = true;
