@@ -28,6 +28,41 @@ export default function FindContactsPage() {
   const [scanning, setScanning] = useState(false);
   const [matches, setMatches] = useState<Match[] | null>(null);
   const [adding, setAdding] = useState<string | null>(null);
+  const [nativeReady, setNativeReady] = useState(false);
+  const [syncing, setSyncing] = useState(false);
+
+  useEffect(() => {
+    let alive = true;
+    void isNativeAvailable().then((v) => { if (alive) setNativeReady(v); });
+    return () => { alive = false; };
+  }, []);
+
+  async function nativeSync() {
+    setSyncing(true);
+    try {
+      const r = await pickAndHashPhones();
+      if (!r.ok) {
+        if (r.reason === "denied") toast.error("Permission denied. Enable Contacts in Settings.");
+        else if (r.reason === "empty") toast.message("No phone numbers found in your contacts.");
+        else toast.error("Couldn't read contacts on this device.");
+        return;
+      }
+      const { data, error } = await supabase.functions.invoke("contact-match", { body: { hashes: r.hashes } });
+      if (error) throw error;
+      const results = (data as ContactMatchResponse | null)?.matches ?? [];
+      setMatches(results);
+      toast.success(
+        results.length
+          ? `${results.length} of your ${r.count} contacts are on ZIVO`
+          : `Scanned ${r.count} contacts — no matches yet`
+      );
+    } catch (e: unknown) {
+      const m = e instanceof Error ? e.message : "Sync failed";
+      toast.error(m);
+    } finally {
+      setSyncing(false);
+    }
+  }
 
   const parsePhones = (text: string): string[] => {
     // Extract candidate phone numbers; keep + and digits.
