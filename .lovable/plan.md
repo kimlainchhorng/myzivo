@@ -1,72 +1,101 @@
-## Root cause
+## Goal
 
-The Phase 1 security migration revoked `SELECT` on `public.profiles` from `anon`/`authenticated` and re-granted only a subset of columns. But several frontend hooks still query columns that were **not** re-granted (or use `select("*")`), and PostgREST denies the entire query the moment it touches a column you don't have `SELECT` on.
+Two connected upgrades to the Employees / Jobs ecosystem:
 
-That is why `/profile` shows an infinite spinner and "a lot more is broken" — anything depending on `useUserProfile` (the most-used profile hook in the app) silently fails.
+1. **Store Employees → Setup invites.** Today, adding an employee in `StoreEmployeesSection` (used by Koh Sdach Resort, all stores, and the Personal `/personal/employees` view) only saves a row to `store_employees`. There is no way for the owner to actually notify the new hire. Add **Send Email Invite** and **Send SMS Invite** buttons that trigger a real onboarding link so the employee can sign in / claim their role.
 
-## Specific breakages identified
+2. **Find Employees flow for shops.** The Find Company page (`/personal/find-employee`) currently only lists Open Jobs and Companies for job seekers. Partners that own a store also need to **find/recruit employees** and **post a job from their shop** in one tap. Add a third "Find Talent" tab + a clearer "Post a Job from your Shop" entry that connects shops directly to `EmployerDashboardPage`.
 
-1. **`src/hooks/useUserProfile.ts`** — `select("*")` on `profiles` → fails because PII columns (email, phone, etc.) are no longer readable.
-   - This is the hook used by Profile, Account, Settings, edit flows, and many more pages.
-2. **`src/hooks/useAffiliateAttribution.ts`** — selects `affiliate_code`, `affiliate_captured_at` → both columns were **omitted** from the GRANT list. Affiliate attribution silently broken.
-3. **PII-dependent admin/account pages** — anything that previously read `email`, `phone`, `date_of_birth`, KYC fields directly from the table now needs the RPC path.
+---
 
-The good news: all the *public* profile queries the feed/reels/chat already use safe column lists (`id, user_id, full_name, username, avatar_url, is_verified`, etc.) which **are** in the GRANT, so those keep working. The fix is targeted.
+## Part 1 — Employee invite buttons (Email + SMS)
 
-## Fix plan
+**Where:** `src/components/admin/store/StoreEmployeesSection.tsx` (employee card + detail dialog).
 
-### 1. Restore `useUserProfile` via the secure RPC (primary fix)
-Replace the `select("*")` query with a call to the `get_my_profile()` RPC that the migration already created. This RPC runs as `SECURITY DEFINER` and returns the full row only to the owner — exactly what we want, and it's the pattern already used in `AccountExportPage.tsx`.
+**UI**
+- On each employee card (and in the detail dialog), add two compact buttons next to the existing Edit / Remove icons:
+  - `Mail` → "Send Email Invite" (disabled if no email)
+  - `Phone` → "Send SMS Invite" (disabled if no phone)
+- Show a toast on success, with a "Resent" timestamp pill if invited within the last 24h.
+- Inside the Add/Edit dialog, add a "Send invite after saving" checkbox (Email + SMS toggles) so a brand-new employee gets the invite immediately.
 
-```ts
-// useUserProfile.ts
-const { data, error } = await supabase.rpc("get_my_profile").single();
-```
+**Email path (already 90% built)**
+- Reuse the existing `employee-invite` React Email template (already registered in `supabase/functions/_shared/transactional-email-templates/registry.ts`).
+- Call the existing `send-transactional-email` edge function with:
+  - `template: "employee-invite"`
+  - `to: employee.email`
+  - `props: { email, role, loginUrl: "https://hizivo.com/auth?invite=<token>&store=<storeId>" }`
+- The template already shows role + login button, so no template changes are required (minor: pass store name into preview).
 
-This single change unblocks `/profile`, `/account`, settings, and every screen that consumes `useUserProfile`.
+**SMS path (new tiny edge function: `send-employee-sms-invite`)**
+- Reuse Twilio creds already used by `send-otp-sms`.
+- Body: short branded message —
+  `"You're invited to join <Store Name> on ZIVO as <role>. Tap to set up: https://hizivo.com/auth?invite=<token>"`
+- Respects the existing 5 SMS/day rate limit per number (per OTP engine memory).
 
-### 2. Re-grant truly non-sensitive columns that the app legitimately needs
-Add a tiny follow-up migration that grants `SELECT` on the columns we omitted by mistake but that aren't actually PII:
+**Invite token storage**
+- New table `store_employee_invites` (id, store_employee_id, store_id, email, phone, channel, token, status, sent_at, accepted_at, expires_at default 7 days). RLS: only store owner can insert/select; public can SELECT row by token (for /auth claim).
+- On `/auth?invite=…`, after successful sign-in, call a new RPC `claim_employee_invite(token)` that links `auth.uid()` to `store_employees.user_id` and marks the invite accepted.
 
-- `affiliate_code`, `affiliate_captured_at` (already grants `affiliate_partner_name` — these belong with it)
-- Anything else flagged during step 3's audit
+**Result:** Owner taps "Send Email" / "Send SMS" → employee gets a branded message → signs in → their `store_employees` row gets `user_id` populated and they can clock in via `/personal-dashboard`.
 
-Sensitive columns stay revoked: `email`, `phone`, `date_of_birth`, KYC fields, password-related, `affiliate_code` only if you consider it sensitive (we'll keep it owner-only and read via a small dedicated RPC instead — safer).
+---
 
-Decision: read affiliate attribution via a new `get_my_affiliate_attribution()` RPC rather than re-granting, since affiliate codes can identify referral chains.
+## Part 2 — Find Employees + "Post from Shop" in the Find Company hub
 
-### 3. Audit pass for any other broken column reads
-Run a sweep across the codebase looking for `from("profiles").select(...)` calls that reference columns outside the GRANT list, and convert each to either:
-- A safe column subset (if it's a public query), or
-- The `get_my_profile()` RPC (if it's the owner reading themselves), or
-- A new narrow RPC (if it's a specific narrow PII need).
+**Where:** `src/pages/app/personal/FindEmployeePage.tsx` and `EmployerDashboardPage.tsx`.
 
-Known files to verify in this pass:
-- `useAffiliateAttribution.ts` → switch to RPC
-- Any admin-only PII reads (`AdminFlightPriceAlerts` already migrated; verify others)
-- Edge cases in chat/notifications hooks
+**Page rename + tabs**
+- Rename header from "Find Company" → "Careers" (covers both directions).
+- Tabs become 3:
+  - `Open Jobs` (existing)
+  - `Companies` (existing)
+  - `Find Talent` (new, partner-only — visible if the user owns a `career_companies` row OR a `stores` row)
 
-### 4. Add a regression guard
-Add a small dev-time console warning in `useUserProfile` so the next time a column-grant breaks profile loading, the error appears immediately in the console (already partially in place — keep it).
+**Find Talent tab**
+- Lists public talent profiles: query `profiles` joined with `user_skills` / `bio` (already on profile) for users who opted-in (`profiles.open_to_work = true`, new boolean column, default false).
+- Each card: avatar, name, headline, location, "Invite to Apply" button → opens a sheet to pick one of the partner's Open Jobs and sends a notification + email via `send-transactional-email` (new tiny `talent-invite` template — copy of employee-invite styling).
+- Add an "Open to Work" toggle in `PersonalSettingsPage` so seekers can opt in.
 
-## What stays the same
+**"Post a Job from your Shop" shortcut**
+- The existing top "Are you hiring?" card already points to `/personal/employer`. Improve it:
+  - If the user owns a `stores` row but no `career_companies` row, **auto-prefill** the company create form in `EmployerDashboardPage` from their store (name, location, logo, description) and show a one-tap "Use my shop info" button.
+  - Add a "Post from Shop" CTA inside `ShopEmployeesPage` itself ("Need more staff? Post a job") that deep-links into `/personal/employer` with `?from=store&storeId=…`.
 
-- The PII protection model (column-level GRANT + owner RPC) — this is the correct, secure pattern. We're not rolling back security.
-- `get_my_profile()`, `admin_get_profile()`, `get_cv_by_share_code()` RPCs all stay.
-- HTTP security headers, audit log, CSP report-only — untouched.
+---
 
-## What you'll see after the fix
+## Technical details
 
-- `/profile` loads instantly with full data (name, bio, social links, settings).
-- Affiliate attribution works again.
-- All public profile cards/feeds keep working (they already used safe columns).
-- Security posture is unchanged — PII still protected by column grants + owner-RPC pattern.
+**New / changed files**
+- `src/components/admin/store/StoreEmployeesSection.tsx` — invite buttons + dialog checkbox + invite-status pill.
+- `src/pages/app/personal/FindEmployeePage.tsx` — 3rd tab + partner gating.
+- `src/pages/app/personal/EmployerDashboardPage.tsx` — store-prefill + `?from=store` handling.
+- `src/pages/app/shop/ShopEmployeesPage.tsx` — "Post a Job from Shop" CTA.
+- `src/pages/app/personal/PersonalSettingsPage.tsx` — Open-to-Work toggle.
+- New page `src/pages/auth/AcceptInvitePage.tsx` (or hook into existing `/auth`) — handles `?invite=<token>` claim.
+- New edge function `supabase/functions/send-employee-sms-invite/index.ts` — Twilio send.
+- New edge function `supabase/functions/send-employee-email-invite/index.ts` (thin wrapper that creates token + calls `send-transactional-email`).
+- New transactional template `talent-invite.tsx` (registered in registry).
 
-## Files touched
+**Database migration**
+- `store_employee_invites` table with RLS (owner write, public read by token via security-definer RPC).
+- `claim_employee_invite(token text)` RPC — security definer, links current user.
+- Add `profiles.open_to_work boolean default false`.
 
-- `src/hooks/useUserProfile.ts` — switch to `get_my_profile()` RPC
-- `src/hooks/useAffiliateAttribution.ts` — switch to new narrow RPC
-- New migration — adds `get_my_affiliate_attribution()` RPC
-- Sweep of any other `profiles.select(...)` callers found during audit (small edits)
+**Reuses**
+- `send-transactional-email` function & infrastructure (already deployed, domain verified).
+- Twilio creds + 5/day rate limit pattern from `send-otp-sms`.
+- Existing `employee-invite` React Email template (no changes).
 
-Approve and I'll implement in this order: RPC migration → `useUserProfile` fix → `useAffiliateAttribution` fix → audit sweep.
+**Out of scope**
+- Push notifications for invites (covered by existing notification engine; will fire automatically once `auth.users` row exists).
+- Bulk CSV invite (can be a later iteration).
+
+---
+
+## What you'll see when done
+
+- On any employee card: two small icons (✉ / 📞). Tap → toast "Email sent to kim@…" or "SMS sent to +855…". Pill shows "Invited 2h ago".
+- New employee added with "Send invite" checked → invite fires automatically.
+- `/personal/find-employee` shows a third tab "Find Talent" if you're a partner; tapping a talent profile lets you invite them to one of your open jobs.
+- From `ShopEmployeesPage`, a green "Need more staff? Post a Job" banner deep-links to the Employer Hub with the company form pre-filled from your store.
