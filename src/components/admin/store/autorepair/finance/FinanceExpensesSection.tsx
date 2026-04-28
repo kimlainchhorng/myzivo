@@ -797,7 +797,7 @@ export default function FinanceExpensesSection({ storeId }: Props) {
 
           <DialogFooter>
             <Button variant="outline" onClick={() => setOpen(false)}>Cancel</Button>
-            <Button onClick={() => create.mutate()} disabled={create.isPending}>
+            <Button onClick={() => create.mutate(form)} disabled={create.isPending}>
               {create.isPending && <Loader2 className="w-4 h-4 mr-1 animate-spin" />}
               Save expense
             </Button>
