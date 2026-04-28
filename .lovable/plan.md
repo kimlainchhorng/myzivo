@@ -1,107 +1,56 @@
-# Next Iteration: Wire & Extend the Telegram-Style Chat Hub
+## Goal
 
-The previous turn shipped the **building blocks** (`useThreadSettings`, `GlobalChatSearch`, `MuteDurationSheet`, `UserBadge`, `usePrivacy`, `chat_thread_settings`, `user_privacy_settings`). They exist in code but are mostly **not wired** into the live chat surfaces yet. This iteration finishes the wiring and adds the next batch of Telegram-parity features.
+When you tap the "Hotel/Resort Admin" card on the Hotels Home tab, open a new **public Hotel & Resort detail page** for that property — like a hotel listing page (cover, name, location, rating, amenities, rooms, rates, contact). The existing operator buttons (Open Ops / Run QA / Operations Hub / View QA Report) stay as quick actions on the card for the owner, but the rest of the card surface becomes a tap-target that opens the public detail page.
 
----
+## What changes
 
-## Part A — Wire what already exists (no new tables)
+### 1. New public page: `src/pages/lodging/HotelResortDetailPage.tsx`
+Route: `/hotel/:storeId`
 
-### 1. Hook `ChatRowActionsSheet` to `useThreadSettings`
-Today the sheet shows Pin / Mute / Archive but each row passes local-only `isPinned/isMuted/isArchived` props. Move that source of truth to `useThreadSettings`:
-- In `ChatHubPage`, derive `isPinned/isMuted/isArchived` from `useThreadSettings.get(buildThreadId(kind, id))`.
-- `onTogglePin` → `pin()/unpin()`. `onToggleArchive` → `archive()/unarchive()`.
-- `onToggleMute` → open `MuteDurationSheet` (1 h / 8 h / 1 d / 1 w / Forever / Unmute) instead of immediate toggle.
-- Sort the chat list: pinned first (newest pin on top), then unpinned by `last_message_at`, archived bucket hidden behind an "Archived chats" header row.
+Sections (top → bottom):
+- Cover image (from `lodge_property_profile.cover_url` → fallback `stores.logo_url` → fallback gradient)
+- Property header: name, category badge ("Hotel" / "Resort"), star rating, address line, "Ready" badge if `setup_complete`
+- Quick stats row: rooms count, rate plans count, check-in/out times, languages
+- About / description (`lodge_property_profile.description`)
+- Amenities grid (icons from `lodge_property_profile.amenities`)
+- Rooms preview: horizontal scroll of `lodge_rooms` (photo, name, max guests, nightly price)
+- Rates / packages preview (top 3 active rate plans with "View all rates" link)
+- Location card with map preview (reuse existing map component if available, else static address)
+- Contact / Book actions: "Check Availability" (primary), "Call", "Message", "Share"
+- Owner-only footer band: if `ownerStore?.id === storeId`, show inline "Open Admin Dashboard" button → `/admin/stores/{id}?tab=lodge-overview`
 
-### 2. Add `UserBadge` to chat surfaces
-Render `<UserBadge profile={...} />` next to display names in:
-- `ChatHubPage` chat rows (verified + premium + online dot)
-- `PersonalChat` / `GroupChat` headers
-- `ChatHeaderProfileSheet`
-- `FindContactsPage`, `SuggestedContactsRow`, `ContactRequestsPage`
+Data fetching: reuse `useLodgePropertyProfile(storeId)` and `useLodgeRooms(storeId)`; add a small `useLodgeRatePlans(storeId)` hook if not already present (check existing hooks first; otherwise inline a simple Supabase query).
 
-### 3. Mount `GlobalChatSearch` properly
-Replace the inline `ChatSearch` overlay invocation on the hub search bar so tapping search opens the 4-tab overlay (Chats / Contacts / Channels / Messages). Keep the existing `ChatSearchAllPage` as a deep-link route.
+States: skeleton on load, NotFound card if store id is invalid or not a lodging store, share button uses Web Share API with branded fallback.
 
-### 4. Apply `usePrivacy` server-side effects
-`PrivacySecurityPage` already reads `usePrivacy`, but the values aren't enforced anywhere. Enforce on read:
-- Hide `last_seen` in `ChatContactInfo` / `PersonalChat` header when target's `last_seen = nobody` (or `contacts` and viewer not a contact).
-- Suppress read-receipt ticks in `ReadReceipt` when either party has `read_receipts = false`.
-- Block "Add to group" call paths when target's `group_invites = nobody`.
+### 2. Update Hotels Home card in `src/pages/app/AppHome.tsx` (around lines 480–501)
+- Add a richer preview before the buttons:
+  - Show **cover image banner** at the top of the card (h-28, rounded-t-2xl, gradient overlay), pulling `lodgingProfile.data?.cover_url || ownerStore.logo_url`
+  - Add a **stats strip** under the name: `{roomsCount} rooms · {ratePlansCount} rates · {pendingRequestsCount} requests` (use existing hooks; missing counts shown as "—")
+- Wrap the **non-button area** (cover + header + stats + progress) in a `<button>` / clickable `<div role="button">` that navigates to `/hotel/{ownerStore.id}`
+- Keep the 4 existing action buttons (Open Ops, Run QA, Operations Hub, View QA Report) as-is, with `e.stopPropagation()` so they don't trigger the card's tap
+- Add `aria-label="Open hotel detail page"` on the tap surface
 
----
-
-## Part B — New features (small, additive)
-
-### 5. Folder unread counters + swipe-to-archive
-- Compute unread totals per folder in `ChatFolders` using existing `dm_unread` index; show pill badge per tab.
-- Add a left-swipe → Archive, right-swipe → Pin gesture in `SwipeableRow` (already exists; just wire to thread settings).
-
-### 6. "Saved Messages" self-DM
-- Add a permanent pinned row at the top of the hub: avatar = bookmark icon, label = "Saved Messages", routes to `/chat/dm/<self.id>`.
-- In `PersonalChat`, when `peerId === user.id`, render a custom header ("Saved Messages — your private cloud") and skip presence/typing.
-
-### 7. Scheduled & silent send (UI only — engine exists)
-- Long-press the send button in `ChatComposer` to open `MessageScheduler` (already in repo) plus a new "Send without sound" option that sets `silent=true` on the outbound payload (push function already honors `silent`).
-
-### 8. Forward stats + "Forwarded from" label
-- When a message has `forwarded_from_user_id`, render a small italic header "Forwarded from <name>" in `ChatMessageBubble` with `<UserBadge>`.
-- Respect `privacy.forwards = nobody` (show "Hidden account" instead of name + disable tap-through).
-
-### 9. Quick reaction tray
-- Double-tap a bubble → instant ❤️ reaction (already partially wired); long-press still opens full `MessageReactionPicker`. Persist last-used emoji per user in `localStorage` for the "+" slot.
-
-### 10. Empty-state polish
-- `ContactsPage`: when zero contacts, big illustration + "Sync phone contacts" + "Find people nearby" + "Invite friends" CTAs.
-- `ContactRequestsPage`: split tabs Incoming / Sent / Declined with counts in tab labels.
-
----
-
-## Part C — Database (one small migration)
-
-Only one new column needed; everything else reuses existing tables.
-
-```sql
--- Allow per-message "silent" flag + scheduled send timestamp on direct_messages
-alter table public.direct_messages
-  add column if not exists silent boolean not null default false,
-  add column if not exists scheduled_for timestamptz;
-
-create index if not exists idx_direct_messages_scheduled
-  on public.direct_messages (scheduled_for)
-  where scheduled_for is not null;
+### 3. Wire route in `src/App.tsx`
+Add lazy import + route inside the customer-app routes section, alongside other `/hotel*` paths:
+```tsx
+const HotelResortDetailPage = lazy(() => import("./pages/lodging/HotelResortDetailPage"));
+// ...
+<Route path="/hotel/:storeId" element={<RouteErrorBoundary section="HotelDetail"><HotelResortDetailPage /></RouteErrorBoundary>} />
 ```
 
-A tiny edge-function cron (`flush-scheduled-messages`, every minute) flips `scheduled_for → null` and broadcasts via Realtime so the existing chat listener delivers them.
+This does **not** conflict with existing `/hotels/:city` (plural) or `/hotel-admin` routes.
 
----
+## Out of scope
+- No real booking flow yet — "Check Availability" opens a sheet that says "Booking opens soon" + share/contact actions (mirrors existing partner-handoff pattern). This can be wired to Hotelbeds/RateHawk later.
+- No changes to `/hotels/:city` SEO landing pages.
+- No schema changes — uses existing `lodge_property_profile`, `lodge_rooms`, `stores` tables.
 
-## File map
+## Files
 
-**New:**
-- `supabase/functions/flush-scheduled-messages/index.ts`
-- `src/components/chat/SavedMessagesRow.tsx`
-- `src/components/chat/ForwardedFromHeader.tsx`
+**Created**
+- `src/pages/lodging/HotelResortDetailPage.tsx`
 
-**Modified:**
-- `src/pages/ChatHubPage.tsx` — wire thread settings, mount `GlobalChatSearch`, add Saved Messages row, sort by pin/archive
-- `src/components/chat/ChatRowActionsSheet.tsx` — open `MuteDurationSheet`
-- `src/components/chat/ChatMessageBubble.tsx` — render `ForwardedFromHeader`, double-tap quick reaction
-- `src/components/chat/ChatComposer.tsx` — long-press send → schedule / silent
-- `src/components/chat/ReadReceipt.tsx`, `src/components/chat/ChatContactInfo.tsx` — honor `usePrivacy`
-- `src/components/chat/ChatFolders.tsx` — unread counters per folder
-- `src/components/chat/SwipeableRow.tsx` — gesture → pin/archive
-- `src/pages/chat/ContactsPage.tsx`, `src/pages/chat/ContactRequestsPage.tsx` — empty-state polish
-- Multiple headers/rows — drop in `<UserBadge>`
-
-**Migration:** adds `silent` + `scheduled_for` to `direct_messages` (+ index).
-
----
-
-## Out of scope this round
-- Secret chats end-to-end key exchange (already has placeholder page)
-- Bots / inline keyboards
-- Stories integration into chat (already separate system)
-- Voice-to-text transcription (separate pipeline)
-
-Approve and I'll wire it all up in one pass.
+**Edited**
+- `src/pages/app/AppHome.tsx` (Hotels card → richer preview + tap-to-open)
+- `src/App.tsx` (add `/hotel/:storeId` route)
