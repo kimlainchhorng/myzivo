@@ -15,6 +15,8 @@ export default defineConfig(({ mode }) => ({
   },
   optimizeDeps: {
     exclude: ["@ffmpeg/ffmpeg", "@ffmpeg/util", "@ffmpeg/core"],
+    // bump: 2026-04-28-rebundle
+    force: true,
   },
   build: {
     target: "es2020",
