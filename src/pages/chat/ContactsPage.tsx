@@ -264,11 +264,21 @@ export default function ContactsPage() {
           <button
             type="button"
             onClick={() => navigate("/chat/contacts/requests")}
-            aria-label="View incoming and sent contact requests"
-            className="flex flex-col items-center gap-1.5 p-3 rounded-2xl border bg-card hover:bg-muted/50 active:scale-[0.98] transition focus-visible:ring-2 focus-visible:ring-emerald-500 focus-visible:outline-none"
+            aria-label={incoming.length > 0
+              ? `View contact requests, ${incoming.length} pending`
+              : "View incoming and sent contact requests"}
+            className="relative flex flex-col items-center gap-1.5 p-3 rounded-2xl border bg-card hover:bg-muted/50 active:scale-[0.98] transition focus-visible:ring-2 focus-visible:ring-emerald-500 focus-visible:outline-none"
           >
-            <div className="w-9 h-9 rounded-full bg-amber-500/15 text-amber-600 flex items-center justify-center">
+            <div className="relative w-9 h-9 rounded-full bg-amber-500/15 text-amber-600 flex items-center justify-center">
               <Inbox className="w-4 h-4" />
+              {incoming.length > 0 && (
+                <span
+                  aria-hidden="true"
+                  className="absolute -top-1 -right-1 min-w-[18px] h-[18px] px-1 rounded-full bg-emerald-500 text-white text-[10px] font-semibold flex items-center justify-center ring-2 ring-background"
+                >
+                  {incoming.length > 99 ? "99+" : incoming.length}
+                </span>
+              )}
             </div>
             <span className="text-[11px] font-medium leading-tight text-center">Requests</span>
           </button>
