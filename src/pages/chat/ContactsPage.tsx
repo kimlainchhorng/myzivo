@@ -44,6 +44,12 @@ export default function ContactsPage() {
           <ArrowLeft className="w-5 h-5" />
         </button>
         <h1 className="text-xl font-bold flex-1">Contacts</h1>
+        <Button size="icon" variant="ghost" onClick={() => setInviteOpen(true)} aria-label="Invite friends">
+          <Share2 className="w-5 h-5" />
+        </Button>
+        <Button size="icon" variant="ghost" onClick={() => navigate("/chat/qr")} aria-label="QR code">
+          <QrCode className="w-5 h-5" />
+        </Button>
         <Button size="icon" variant="ghost" onClick={() => setAddOpen(true)} aria-label="Add contact">
           <UserPlus className="w-5 h-5" />
         </Button>
