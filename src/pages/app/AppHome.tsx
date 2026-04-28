@@ -477,25 +477,54 @@ const AppHome = () => {
                 <div className="mt-3 h-2 rounded-full bg-muted animate-pulse" />
               </div>
             ) : ownerStore?.isLodging ? (
-              <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="rounded-2xl border border-primary/20 bg-primary/8 p-4 shadow-sm">
-                <div className="flex items-start gap-3">
-                  <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-primary/12 text-primary"><Hotel className="h-5 w-5" /></div>
-                  <div className="min-w-0 flex-1">
-                    <div className="flex items-center gap-2"><p className="truncate text-sm font-bold text-foreground">Hotel / Resort Admin</p><Badge variant="secondary" className="shrink-0 text-[9px]">Ready</Badge></div>
-                    <p className="mt-0.5 truncate text-xs text-muted-foreground">{ownerStore.name}</p>
-                    <div className="mt-3 flex flex-wrap gap-1.5">
-                      {["Rooms", "Rates", "Guest Requests"].map((label) => <span key={label} className="rounded-full bg-background px-2 py-0.5 text-[10px] font-semibold text-primary ring-1 ring-primary/15">{label}</span>)}
+              <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="overflow-hidden rounded-2xl border border-primary/20 bg-primary/8 shadow-sm">
+                {/* Tappable preview area → public hotel detail page */}
+                <button
+                  type="button"
+                  onClick={() => navigate(`/hotel/${ownerStore.id}`)}
+                  aria-label={`Open ${ownerStore.name} hotel page`}
+                  className="block w-full text-left active:opacity-90 transition"
+                >
+                  <div className="relative h-24 w-full overflow-hidden bg-muted">
+                    {ownerStore.logo_url ? (
+                      <img
+                        src={ownerStore.logo_url}
+                        alt={`${ownerStore.name} cover`}
+                        className="absolute inset-0 w-full h-full object-cover"
+                        loading="lazy"
+                      />
+                    ) : (
+                      <div className="absolute inset-0 bg-gradient-to-br from-primary/40 via-primary/15 to-transparent" />
+                    )}
+                    <div className="absolute inset-0 bg-gradient-to-t from-card/95 via-card/30 to-transparent" />
+                    <div className="absolute bottom-2 left-3 right-3 flex items-center gap-2">
+                      <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-background/85 backdrop-blur text-primary"><Hotel className="h-4 w-4" /></div>
+                      <p className="truncate text-sm font-bold text-foreground drop-shadow-sm">{ownerStore.name}</p>
+                      <Badge variant="secondary" className="ml-auto shrink-0 text-[9px]">Tap to view</Badge>
                     </div>
-                    <div className="mt-3">
-                      <div className="mb-1 flex items-center justify-between text-[10px] font-semibold text-primary"><span>Setup progress</span><span>{lodgingProgress ? `${lodgingProgress.complete}/${lodgingProgress.total} ready` : "Loading"}</span></div>
-                      <Progress value={lodgingProgress?.percent || 0} className="h-1.5 bg-primary/15" />
-                    </div>
-                    <div className="mt-3 grid grid-cols-2 gap-2">
-                      <Button size="sm" className="h-9" onClick={() => navigate(`/admin/stores/${ownerStore.id}?tab=lodge-overview`)}>Open Ops <ArrowRight className="ml-1.5 h-3.5 w-3.5" /></Button>
-                      <Button size="sm" variant="outline" className="h-9" onClick={() => navigate("/admin/lodging/qa-checklist")}>Run QA</Button>
-                      <Button size="sm" variant="outline" className="h-9" onClick={() => navigate("/hotel-admin")}>Operations Hub</Button>
-                      <Button size="sm" variant="outline" className="h-9" onClick={() => navigate("/admin/lodging/qa-checklist")}>View QA Report</Button>
-                    </div>
+                  </div>
+                </button>
+
+                <div className="p-4 pt-3">
+                  <div className="flex items-center gap-2">
+                    <p className="text-sm font-bold text-foreground">Hotel / Resort Admin</p>
+                    <Badge variant="secondary" className="shrink-0 text-[9px]">Ready</Badge>
+                  </div>
+                  <p className="mt-0.5 text-[11px] text-muted-foreground">
+                    {(lodgingRooms.data?.length ?? 0)} rooms · Setup {lodgingProgress?.percent || 0}%
+                  </p>
+                  <div className="mt-2 flex flex-wrap gap-1.5">
+                    {["Rooms", "Rates", "Guest Requests"].map((label) => <span key={label} className="rounded-full bg-background px-2 py-0.5 text-[10px] font-semibold text-primary ring-1 ring-primary/15">{label}</span>)}
+                  </div>
+                  <div className="mt-3">
+                    <div className="mb-1 flex items-center justify-between text-[10px] font-semibold text-primary"><span>Setup progress</span><span>{lodgingProgress ? `${lodgingProgress.complete}/${lodgingProgress.total} ready` : "Loading"}</span></div>
+                    <Progress value={lodgingProgress?.percent || 0} className="h-1.5 bg-primary/15" />
+                  </div>
+                  <div className="mt-3 grid grid-cols-2 gap-2">
+                    <Button size="sm" className="h-9" onClick={(e) => { e.stopPropagation(); navigate(`/admin/stores/${ownerStore.id}?tab=lodge-overview`); }}>Open Ops <ArrowRight className="ml-1.5 h-3.5 w-3.5" /></Button>
+                    <Button size="sm" variant="outline" className="h-9" onClick={(e) => { e.stopPropagation(); navigate("/admin/lodging/qa-checklist"); }}>Run QA</Button>
+                    <Button size="sm" variant="outline" className="h-9" onClick={(e) => { e.stopPropagation(); navigate("/hotel-admin"); }}>Operations Hub</Button>
+                    <Button size="sm" variant="outline" className="h-9" onClick={(e) => { e.stopPropagation(); navigate("/admin/lodging/qa-checklist"); }}>View QA Report</Button>
                   </div>
                 </div>
               </motion.div>
