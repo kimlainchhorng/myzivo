@@ -1,0 +1,343 @@
+import { createHotContext as __vite__createHotContext } from "/@vite/client";import.meta.hot = __vite__createHotContext("/src/components/admin/store/lodging/LodgingAddOnsSection.tsx");import __vite__cjsImport0_react_jsxDevRuntime from "/node_modules/.vite/deps/react_jsx-dev-runtime.js?v=7fd9520c"; const _jsxDEV = __vite__cjsImport0_react_jsxDevRuntime["jsxDEV"]; const _Fragment = __vite__cjsImport0_react_jsxDevRuntime["Fragment"];
+var _s = $RefreshSig$();
+import __vite__cjsImport1_react from "/node_modules/.vite/deps/react.js?v=7fd9520c"; const useMemo = __vite__cjsImport1_react["useMemo"]; const useState = __vite__cjsImport1_react["useState"];
+import { Button } from "/src/components/ui/button.tsx";
+import { Badge } from "/src/components/ui/badge.tsx";
+import { Input } from "/src/components/ui/input.tsx";
+import { PackagePlus, Search } from "/node_modules/.vite/deps/lucide-react.js?v=7fd9520c";
+import { AddonList, EmptyPanel, LoadingPanel, NextActions, SectionShell, StatCard, addonCategories, money, useLodgingOpsData } from "/src/components/admin/store/lodging/LodgingOperationsShared.tsx";
+import { cn } from "/src/lib/utils.ts";
+import LodgingQuickJump from "/src/components/admin/store/lodging/LodgingQuickJump.tsx";
+import LodgingSectionStatusBanner from "/src/components/admin/store/lodging/LodgingSectionStatusBanner.tsx";
+const statusFilters = [
+    "All",
+    "Active",
+    "Hidden",
+    "Free",
+    "Paid"
+];
+const goRooms = ()=>window.dispatchEvent(new CustomEvent("lodge-set-tab", {
+        detail: {
+            tab: "lodge-rooms"
+        }
+    }));
+export default function LodgingAddOnsSection({ storeId }) {
+    _s();
+    const { rooms, addons, isLoading } = useLodgingOpsData(storeId);
+    const [category, setCategory] = useState("All");
+    const [status, setStatus] = useState("All");
+    const [query, setQuery] = useState("");
+    const active = addons.filter((a)=>a.active !== false && !a.disabled);
+    const filtered = useMemo(()=>addons.filter((addon)=>{
+            const hidden = addon.active === false || addon.disabled;
+            const matchesCategory = category === "All" || addon.category === category;
+            const matchesStatus = status === "All" || status === "Active" && !hidden || status === "Hidden" && hidden || status === "Free" && !hidden && !addon.price_cents || status === "Paid" && !hidden && addon.price_cents > 0;
+            const q = query.trim().toLowerCase();
+            const matchesQuery = !q || addon.name.toLowerCase().includes(q) || addon.roomName.toLowerCase().includes(q);
+            return matchesCategory && matchesStatus && matchesQuery;
+        }), [
+        addons,
+        category,
+        status,
+        query
+    ]);
+    return /*#__PURE__*/ _jsxDEV(SectionShell, {
+        title: "Add-ons & Packages",
+        subtitle: "Search, filter, and audit guest-visible extras saved inside room records.",
+        icon: PackagePlus,
+        actions: /*#__PURE__*/ _jsxDEV(Button, {
+            size: "sm",
+            onClick: goRooms,
+            children: "Manage room add-ons"
+        }, void 0, false, {
+            fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/lodging/LodgingAddOnsSection.tsx",
+            lineNumber: 30,
+            columnNumber: 159
+        }, this),
+        children: [
+            /*#__PURE__*/ _jsxDEV(LodgingQuickJump, {
+                active: "lodge-addons"
+            }, void 0, false, {
+                fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/lodging/LodgingAddOnsSection.tsx",
+                lineNumber: 31,
+                columnNumber: 7
+            }, this),
+            /*#__PURE__*/ _jsxDEV(LodgingSectionStatusBanner, {
+                title: "Add-ons & Packages",
+                icon: PackagePlus,
+                countLabel: "Active add-ons",
+                countValue: active.length,
+                fixLabel: "Open rate plans",
+                fixTab: "lodge-rate-plans"
+            }, void 0, false, {
+                fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/lodging/LodgingAddOnsSection.tsx",
+                lineNumber: 32,
+                columnNumber: 7
+            }, this),
+            isLoading ? /*#__PURE__*/ _jsxDEV(LoadingPanel, {}, void 0, false, {
+                fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/lodging/LodgingAddOnsSection.tsx",
+                lineNumber: 33,
+                columnNumber: 20
+            }, this) : /*#__PURE__*/ _jsxDEV(_Fragment, {
+                children: [
+                    /*#__PURE__*/ _jsxDEV("div", {
+                        className: "grid gap-3 sm:grid-cols-2 xl:grid-cols-4",
+                        children: [
+                            /*#__PURE__*/ _jsxDEV(StatCard, {
+                                label: "Active add-ons",
+                                value: String(active.length),
+                                icon: PackagePlus
+                            }, void 0, false, {
+                                fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/lodging/LodgingAddOnsSection.tsx",
+                                lineNumber: 35,
+                                columnNumber: 11
+                            }, this),
+                            /*#__PURE__*/ _jsxDEV(StatCard, {
+                                label: "Rooms using add-ons",
+                                value: String(new Set(addons.map((a)=>a.roomId)).size),
+                                icon: PackagePlus
+                            }, void 0, false, {
+                                fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/lodging/LodgingAddOnsSection.tsx",
+                                lineNumber: 36,
+                                columnNumber: 11
+                            }, this),
+                            /*#__PURE__*/ _jsxDEV(StatCard, {
+                                label: "Paid add-ons",
+                                value: String(active.filter((a)=>a.price_cents > 0).length),
+                                icon: PackagePlus
+                            }, void 0, false, {
+                                fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/lodging/LodgingAddOnsSection.tsx",
+                                lineNumber: 37,
+                                columnNumber: 11
+                            }, this),
+                            /*#__PURE__*/ _jsxDEV(StatCard, {
+                                label: "Free add-ons",
+                                value: String(active.filter((a)=>!a.price_cents).length),
+                                icon: PackagePlus
+                            }, void 0, false, {
+                                fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/lodging/LodgingAddOnsSection.tsx",
+                                lineNumber: 38,
+                                columnNumber: 11
+                            }, this)
+                        ]
+                    }, void 0, true, {
+                        fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/lodging/LodgingAddOnsSection.tsx",
+                        lineNumber: 34,
+                        columnNumber: 9
+                    }, this),
+                    /*#__PURE__*/ _jsxDEV("div", {
+                        className: "space-y-3 rounded-lg border border-border bg-muted/20 p-3",
+                        children: [
+                            /*#__PURE__*/ _jsxDEV("div", {
+                                className: "relative",
+                                children: [
+                                    /*#__PURE__*/ _jsxDEV(Search, {
+                                        className: "absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground"
+                                    }, void 0, false, {
+                                        fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/lodging/LodgingAddOnsSection.tsx",
+                                        lineNumber: 41,
+                                        columnNumber: 37
+                                    }, this),
+                                    /*#__PURE__*/ _jsxDEV(Input, {
+                                        value: query,
+                                        onChange: (e)=>setQuery(e.target.value),
+                                        placeholder: "Search add-on or room",
+                                        className: "pl-9"
+                                    }, void 0, false, {
+                                        fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/lodging/LodgingAddOnsSection.tsx",
+                                        lineNumber: 41,
+                                        columnNumber: 130
+                                    }, this)
+                                ]
+                            }, void 0, true, {
+                                fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/lodging/LodgingAddOnsSection.tsx",
+                                lineNumber: 41,
+                                columnNumber: 11
+                            }, this),
+                            /*#__PURE__*/ _jsxDEV(FilterRow, {
+                                values: [
+                                    "All",
+                                    ...addonCategories
+                                ],
+                                current: category,
+                                onChange: setCategory
+                            }, void 0, false, {
+                                fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/lodging/LodgingAddOnsSection.tsx",
+                                lineNumber: 42,
+                                columnNumber: 11
+                            }, this),
+                            /*#__PURE__*/ _jsxDEV(FilterRow, {
+                                values: statusFilters,
+                                current: status,
+                                onChange: setStatus
+                            }, void 0, false, {
+                                fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/lodging/LodgingAddOnsSection.tsx",
+                                lineNumber: 43,
+                                columnNumber: 11
+                            }, this)
+                        ]
+                    }, void 0, true, {
+                        fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/lodging/LodgingAddOnsSection.tsx",
+                        lineNumber: 40,
+                        columnNumber: 9
+                    }, this),
+                    addons.length === 0 ? /*#__PURE__*/ _jsxDEV(EmptyPanel, {
+                        title: "Guest service catalog is ready to fill",
+                        body: "Create breakfast, transfers, spa, tours, late check-out, celebration packages, and free perks from each room type.",
+                        actionLabel: "Add room add-ons",
+                        tab: "lodge-rooms"
+                    }, void 0, false, {
+                        fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/lodging/LodgingAddOnsSection.tsx",
+                        lineNumber: 45,
+                        columnNumber: 32
+                    }, this) : filtered.length === 0 ? /*#__PURE__*/ _jsxDEV(EmptyPanel, {
+                        title: "No add-ons match these filters",
+                        body: "Change the search, category, or status filter to review more room add-ons.",
+                        actionLabel: "Edit add-ons in Rooms",
+                        tab: "lodge-rooms"
+                    }, void 0, false, {
+                        fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/lodging/LodgingAddOnsSection.tsx",
+                        lineNumber: 45,
+                        columnNumber: 291
+                    }, this) : addonCategories.map((cat)=>{
+                        const items = filtered.filter((a)=>a.category === cat);
+                        if (!items.length) return null;
+                        return /*#__PURE__*/ _jsxDEV("div", {
+                            className: "space-y-2",
+                            children: [
+                                /*#__PURE__*/ _jsxDEV("div", {
+                                    className: "flex items-center justify-between",
+                                    children: [
+                                        /*#__PURE__*/ _jsxDEV("p", {
+                                            className: "text-sm font-semibold text-foreground",
+                                            children: cat
+                                        }, void 0, false, {
+                                            fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/lodging/LodgingAddOnsSection.tsx",
+                                            lineNumber: 48,
+                                            columnNumber: 106
+                                        }, this),
+                                        /*#__PURE__*/ _jsxDEV(Badge, {
+                                            variant: "outline",
+                                            children: items.length
+                                        }, void 0, false, {
+                                            fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/lodging/LodgingAddOnsSection.tsx",
+                                            lineNumber: 48,
+                                            columnNumber: 168
+                                        }, this)
+                                    ]
+                                }, void 0, true, {
+                                    fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/lodging/LodgingAddOnsSection.tsx",
+                                    lineNumber: 48,
+                                    columnNumber: 55
+                                }, this),
+                                /*#__PURE__*/ _jsxDEV(AddonList, {
+                                    addons: items,
+                                    emptyTitle: "",
+                                    emptyBody: ""
+                                }, void 0, false, {
+                                    fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/lodging/LodgingAddOnsSection.tsx",
+                                    lineNumber: 48,
+                                    columnNumber: 221
+                                }, this),
+                                /*#__PURE__*/ _jsxDEV(Button, {
+                                    size: "sm",
+                                    variant: "outline",
+                                    className: "h-8 text-xs",
+                                    onClick: goRooms,
+                                    children: "Edit in Rooms & Rates"
+                                }, void 0, false, {
+                                    fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/lodging/LodgingAddOnsSection.tsx",
+                                    lineNumber: 48,
+                                    columnNumber: 276
+                                }, this)
+                            ]
+                        }, cat, true, {
+                            fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/lodging/LodgingAddOnsSection.tsx",
+                            lineNumber: 48,
+                            columnNumber: 18
+                        }, this);
+                    }),
+                    /*#__PURE__*/ _jsxDEV(NextActions, {
+                        actions: [
+                            {
+                                label: "Open guest requests",
+                                tab: "lodge-guest-requests",
+                                hint: "Review service requests and add-on outcomes."
+                            },
+                            {
+                                label: "Edit room packages",
+                                tab: "lodge-rooms",
+                                hint: `Manage add-ons across ${rooms.length} room type${rooms.length === 1 ? "" : "s"}.`
+                            },
+                            {
+                                label: "Check reports",
+                                tab: "lodge-reports",
+                                hint: `Track extras like ${money(active.reduce((sum, a)=>sum + (a.price_cents || 0), 0))} catalog value.`
+                            }
+                        ]
+                    }, void 0, false, {
+                        fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/lodging/LodgingAddOnsSection.tsx",
+                        lineNumber: 50,
+                        columnNumber: 9
+                    }, this)
+                ]
+            }, void 0, true)
+        ]
+    }, void 0, true, {
+        fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/lodging/LodgingAddOnsSection.tsx",
+        lineNumber: 30,
+        columnNumber: 5
+    }, this);
+}
+_s(LodgingAddOnsSection, "uex1VstxyGBx67vBjIteHhtVDlI=", false, function() {
+    return [
+        useLodgingOpsData
+    ];
+});
+_c = LodgingAddOnsSection;
+function FilterRow({ values, current, onChange }) {
+    return /*#__PURE__*/ _jsxDEV("div", {
+        className: "flex gap-1.5 overflow-x-auto pb-1",
+        children: values.map((value)=>/*#__PURE__*/ _jsxDEV("button", {
+                onClick: ()=>onChange(value),
+                className: cn("shrink-0 rounded-full border px-3 py-1 text-xs font-medium", current === value ? "border-primary bg-primary text-primary-foreground" : "border-border bg-card text-muted-foreground"),
+                children: value
+            }, value, false, {
+                fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/lodging/LodgingAddOnsSection.tsx",
+                lineNumber: 57,
+                columnNumber: 84
+            }, this))
+    }, void 0, false, {
+        fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/lodging/LodgingAddOnsSection.tsx",
+        lineNumber: 57,
+        columnNumber: 10
+    }, this);
+}
+_c1 = FilterRow;
+var _c, _c1;
+$RefreshReg$(_c, "LodgingAddOnsSection");
+$RefreshReg$(_c1, "FilterRow");
+
+
+import * as RefreshRuntime from "/@react-refresh";
+const inWebWorker = typeof WorkerGlobalScope !== 'undefined' && self instanceof WorkerGlobalScope;
+if (import.meta.hot && !inWebWorker) {
+  if (!window.$RefreshReg$) {
+    throw new Error(
+      "@vitejs/plugin-react-swc can't detect preamble. Something is wrong."
+    );
+  }
+
+  RefreshRuntime.__hmr_import(import.meta.url).then((currentExports) => {
+    RefreshRuntime.registerExportsForReactRefresh("C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/lodging/LodgingAddOnsSection.tsx", currentExports);
+    import.meta.hot.accept((nextExports) => {
+      if (!nextExports) return;
+      const invalidateMessage = RefreshRuntime.validateRefreshBoundaryAndEnqueueUpdate("C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/lodging/LodgingAddOnsSection.tsx", currentExports, nextExports);
+      if (invalidateMessage) import.meta.hot.invalidate(invalidateMessage);
+    });
+  });
+}
+function $RefreshReg$(type, id) { return RefreshRuntime.register(type, "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/lodging/LodgingAddOnsSection.tsx" + ' ' + id) }
+function $RefreshSig$() { return RefreshRuntime.createSignatureFunctionForTransform(); }
+
+//# sourceMappingURL=data:application/json;base64,eyJ2ZXJzaW9uIjozLCJzb3VyY2VzIjpbIkxvZGdpbmdBZGRPbnNTZWN0aW9uLnRzeCJdLCJzb3VyY2VzQ29udGVudCI6WyJpbXBvcnQgeyB1c2VNZW1vLCB1c2VTdGF0ZSB9IGZyb20gXCJyZWFjdFwiO1xyXG5pbXBvcnQgeyBCdXR0b24gfSBmcm9tIFwiQC9jb21wb25lbnRzL3VpL2J1dHRvblwiO1xyXG5pbXBvcnQgeyBCYWRnZSB9IGZyb20gXCJAL2NvbXBvbmVudHMvdWkvYmFkZ2VcIjtcclxuaW1wb3J0IHsgSW5wdXQgfSBmcm9tIFwiQC9jb21wb25lbnRzL3VpL2lucHV0XCI7XHJcbmltcG9ydCB7IFBhY2thZ2VQbHVzLCBTZWFyY2ggfSBmcm9tIFwibHVjaWRlLXJlYWN0XCI7XHJcbmltcG9ydCB7IEFkZG9uTGlzdCwgRW1wdHlQYW5lbCwgTG9hZGluZ1BhbmVsLCBOZXh0QWN0aW9ucywgU2VjdGlvblNoZWxsLCBTdGF0Q2FyZCwgYWRkb25DYXRlZ29yaWVzLCBtb25leSwgdXNlTG9kZ2luZ09wc0RhdGEgfSBmcm9tIFwiLi9Mb2RnaW5nT3BlcmF0aW9uc1NoYXJlZFwiO1xyXG5pbXBvcnQgeyBjbiB9IGZyb20gXCJAL2xpYi91dGlsc1wiO1xyXG5pbXBvcnQgTG9kZ2luZ1F1aWNrSnVtcCBmcm9tIFwiLi9Mb2RnaW5nUXVpY2tKdW1wXCI7XHJcbmltcG9ydCBMb2RnaW5nU2VjdGlvblN0YXR1c0Jhbm5lciBmcm9tIFwiLi9Mb2RnaW5nU2VjdGlvblN0YXR1c0Jhbm5lclwiO1xyXG5cclxuY29uc3Qgc3RhdHVzRmlsdGVycyA9IFtcIkFsbFwiLCBcIkFjdGl2ZVwiLCBcIkhpZGRlblwiLCBcIkZyZWVcIiwgXCJQYWlkXCJdO1xyXG5jb25zdCBnb1Jvb21zID0gKCkgPT4gd2luZG93LmRpc3BhdGNoRXZlbnQobmV3IEN1c3RvbUV2ZW50KFwibG9kZ2Utc2V0LXRhYlwiLCB7IGRldGFpbDogeyB0YWI6IFwibG9kZ2Utcm9vbXNcIiB9IH0pKTtcclxuXHJcbmV4cG9ydCBkZWZhdWx0IGZ1bmN0aW9uIExvZGdpbmdBZGRPbnNTZWN0aW9uKHsgc3RvcmVJZCB9OiB7IHN0b3JlSWQ6IHN0cmluZyB9KSB7XHJcbiAgY29uc3QgeyByb29tcywgYWRkb25zLCBpc0xvYWRpbmcgfSA9IHVzZUxvZGdpbmdPcHNEYXRhKHN0b3JlSWQpO1xyXG4gIGNvbnN0IFtjYXRlZ29yeSwgc2V0Q2F0ZWdvcnldID0gdXNlU3RhdGUoXCJBbGxcIik7XHJcbiAgY29uc3QgW3N0YXR1cywgc2V0U3RhdHVzXSA9IHVzZVN0YXRlKFwiQWxsXCIpO1xyXG4gIGNvbnN0IFtxdWVyeSwgc2V0UXVlcnldID0gdXNlU3RhdGUoXCJcIik7XHJcbiAgY29uc3QgYWN0aXZlID0gYWRkb25zLmZpbHRlcigoYSkgPT4gYS5hY3RpdmUgIT09IGZhbHNlICYmICFhLmRpc2FibGVkKTtcclxuICBjb25zdCBmaWx0ZXJlZCA9IHVzZU1lbW8oKCkgPT4gYWRkb25zLmZpbHRlcigoYWRkb24pID0+IHtcclxuICAgIGNvbnN0IGhpZGRlbiA9IGFkZG9uLmFjdGl2ZSA9PT0gZmFsc2UgfHwgYWRkb24uZGlzYWJsZWQ7XHJcbiAgICBjb25zdCBtYXRjaGVzQ2F0ZWdvcnkgPSBjYXRlZ29yeSA9PT0gXCJBbGxcIiB8fCBhZGRvbi5jYXRlZ29yeSA9PT0gY2F0ZWdvcnk7XHJcbiAgICBjb25zdCBtYXRjaGVzU3RhdHVzID0gc3RhdHVzID09PSBcIkFsbFwiIHx8IChzdGF0dXMgPT09IFwiQWN0aXZlXCIgJiYgIWhpZGRlbikgfHwgKHN0YXR1cyA9PT0gXCJIaWRkZW5cIiAmJiBoaWRkZW4pIHx8IChzdGF0dXMgPT09IFwiRnJlZVwiICYmICFoaWRkZW4gJiYgIWFkZG9uLnByaWNlX2NlbnRzKSB8fCAoc3RhdHVzID09PSBcIlBhaWRcIiAmJiAhaGlkZGVuICYmIGFkZG9uLnByaWNlX2NlbnRzID4gMCk7XHJcbiAgICBjb25zdCBxID0gcXVlcnkudHJpbSgpLnRvTG93ZXJDYXNlKCk7XHJcbiAgICBjb25zdCBtYXRjaGVzUXVlcnkgPSAhcSB8fCBhZGRvbi5uYW1lLnRvTG93ZXJDYXNlKCkuaW5jbHVkZXMocSkgfHwgYWRkb24ucm9vbU5hbWUudG9Mb3dlckNhc2UoKS5pbmNsdWRlcyhxKTtcclxuICAgIHJldHVybiBtYXRjaGVzQ2F0ZWdvcnkgJiYgbWF0Y2hlc1N0YXR1cyAmJiBtYXRjaGVzUXVlcnk7XHJcbiAgfSksIFthZGRvbnMsIGNhdGVnb3J5LCBzdGF0dXMsIHF1ZXJ5XSk7XHJcblxyXG4gIHJldHVybiAoXHJcbiAgICA8U2VjdGlvblNoZWxsIHRpdGxlPVwiQWRkLW9ucyAmIFBhY2thZ2VzXCIgc3VidGl0bGU9XCJTZWFyY2gsIGZpbHRlciwgYW5kIGF1ZGl0IGd1ZXN0LXZpc2libGUgZXh0cmFzIHNhdmVkIGluc2lkZSByb29tIHJlY29yZHMuXCIgaWNvbj17UGFja2FnZVBsdXN9IGFjdGlvbnM9ezxCdXR0b24gc2l6ZT1cInNtXCIgb25DbGljaz17Z29Sb29tc30+TWFuYWdlIHJvb20gYWRkLW9uczwvQnV0dG9uPn0+XHJcbiAgICAgIDxMb2RnaW5nUXVpY2tKdW1wIGFjdGl2ZT1cImxvZGdlLWFkZG9uc1wiIC8+XHJcbiAgICAgIDxMb2RnaW5nU2VjdGlvblN0YXR1c0Jhbm5lciB0aXRsZT1cIkFkZC1vbnMgJiBQYWNrYWdlc1wiIGljb249e1BhY2thZ2VQbHVzfSBjb3VudExhYmVsPVwiQWN0aXZlIGFkZC1vbnNcIiBjb3VudFZhbHVlPXthY3RpdmUubGVuZ3RofSBmaXhMYWJlbD1cIk9wZW4gcmF0ZSBwbGFuc1wiIGZpeFRhYj1cImxvZGdlLXJhdGUtcGxhbnNcIiAvPlxyXG4gICAgICB7aXNMb2FkaW5nID8gPExvYWRpbmdQYW5lbCAvPiA6IDw+XHJcbiAgICAgICAgPGRpdiBjbGFzc05hbWU9XCJncmlkIGdhcC0zIHNtOmdyaWQtY29scy0yIHhsOmdyaWQtY29scy00XCI+XHJcbiAgICAgICAgICA8U3RhdENhcmQgbGFiZWw9XCJBY3RpdmUgYWRkLW9uc1wiIHZhbHVlPXtTdHJpbmcoYWN0aXZlLmxlbmd0aCl9IGljb249e1BhY2thZ2VQbHVzfSAvPlxyXG4gICAgICAgICAgPFN0YXRDYXJkIGxhYmVsPVwiUm9vbXMgdXNpbmcgYWRkLW9uc1wiIHZhbHVlPXtTdHJpbmcobmV3IFNldChhZGRvbnMubWFwKChhKSA9PiBhLnJvb21JZCkpLnNpemUpfSBpY29uPXtQYWNrYWdlUGx1c30gLz5cclxuICAgICAgICAgIDxTdGF0Q2FyZCBsYWJlbD1cIlBhaWQgYWRkLW9uc1wiIHZhbHVlPXtTdHJpbmcoYWN0aXZlLmZpbHRlcigoYSkgPT4gYS5wcmljZV9jZW50cyA+IDApLmxlbmd0aCl9IGljb249e1BhY2thZ2VQbHVzfSAvPlxyXG4gICAgICAgICAgPFN0YXRDYXJkIGxhYmVsPVwiRnJlZSBhZGQtb25zXCIgdmFsdWU9e1N0cmluZyhhY3RpdmUuZmlsdGVyKChhKSA9PiAhYS5wcmljZV9jZW50cykubGVuZ3RoKX0gaWNvbj17UGFja2FnZVBsdXN9IC8+XHJcbiAgICAgICAgPC9kaXY+XHJcbiAgICAgICAgPGRpdiBjbGFzc05hbWU9XCJzcGFjZS15LTMgcm91bmRlZC1sZyBib3JkZXIgYm9yZGVyLWJvcmRlciBiZy1tdXRlZC8yMCBwLTNcIj5cclxuICAgICAgICAgIDxkaXYgY2xhc3NOYW1lPVwicmVsYXRpdmVcIj48U2VhcmNoIGNsYXNzTmFtZT1cImFic29sdXRlIGxlZnQtMyB0b3AtMS8yIGgtNCB3LTQgLXRyYW5zbGF0ZS15LTEvMiB0ZXh0LW11dGVkLWZvcmVncm91bmRcIiAvPjxJbnB1dCB2YWx1ZT17cXVlcnl9IG9uQ2hhbmdlPXsoZSkgPT4gc2V0UXVlcnkoZS50YXJnZXQudmFsdWUpfSBwbGFjZWhvbGRlcj1cIlNlYXJjaCBhZGQtb24gb3Igcm9vbVwiIGNsYXNzTmFtZT1cInBsLTlcIiAvPjwvZGl2PlxyXG4gICAgICAgICAgPEZpbHRlclJvdyB2YWx1ZXM9e1tcIkFsbFwiLCAuLi5hZGRvbkNhdGVnb3JpZXNdfSBjdXJyZW50PXtjYXRlZ29yeX0gb25DaGFuZ2U9e3NldENhdGVnb3J5fSAvPlxyXG4gICAgICAgICAgPEZpbHRlclJvdyB2YWx1ZXM9e3N0YXR1c0ZpbHRlcnN9IGN1cnJlbnQ9e3N0YXR1c30gb25DaGFuZ2U9e3NldFN0YXR1c30gLz5cclxuICAgICAgICA8L2Rpdj5cclxuICAgICAgICB7YWRkb25zLmxlbmd0aCA9PT0gMCA/IDxFbXB0eVBhbmVsIHRpdGxlPVwiR3Vlc3Qgc2VydmljZSBjYXRhbG9nIGlzIHJlYWR5IHRvIGZpbGxcIiBib2R5PVwiQ3JlYXRlIGJyZWFrZmFzdCwgdHJhbnNmZXJzLCBzcGEsIHRvdXJzLCBsYXRlIGNoZWNrLW91dCwgY2VsZWJyYXRpb24gcGFja2FnZXMsIGFuZCBmcmVlIHBlcmtzIGZyb20gZWFjaCByb29tIHR5cGUuXCIgYWN0aW9uTGFiZWw9XCJBZGQgcm9vbSBhZGQtb25zXCIgdGFiPVwibG9kZ2Utcm9vbXNcIiAvPiA6IGZpbHRlcmVkLmxlbmd0aCA9PT0gMCA/IDxFbXB0eVBhbmVsIHRpdGxlPVwiTm8gYWRkLW9ucyBtYXRjaCB0aGVzZSBmaWx0ZXJzXCIgYm9keT1cIkNoYW5nZSB0aGUgc2VhcmNoLCBjYXRlZ29yeSwgb3Igc3RhdHVzIGZpbHRlciB0byByZXZpZXcgbW9yZSByb29tIGFkZC1vbnMuXCIgYWN0aW9uTGFiZWw9XCJFZGl0IGFkZC1vbnMgaW4gUm9vbXNcIiB0YWI9XCJsb2RnZS1yb29tc1wiIC8+IDogYWRkb25DYXRlZ29yaWVzLm1hcCgoY2F0KSA9PiB7XHJcbiAgICAgICAgICBjb25zdCBpdGVtcyA9IGZpbHRlcmVkLmZpbHRlcigoYSkgPT4gYS5jYXRlZ29yeSA9PT0gY2F0KTtcclxuICAgICAgICAgIGlmICghaXRlbXMubGVuZ3RoKSByZXR1cm4gbnVsbDtcclxuICAgICAgICAgIHJldHVybiA8ZGl2IGtleT17Y2F0fSBjbGFzc05hbWU9XCJzcGFjZS15LTJcIj48ZGl2IGNsYXNzTmFtZT1cImZsZXggaXRlbXMtY2VudGVyIGp1c3RpZnktYmV0d2VlblwiPjxwIGNsYXNzTmFtZT1cInRleHQtc20gZm9udC1zZW1pYm9sZCB0ZXh0LWZvcmVncm91bmRcIj57Y2F0fTwvcD48QmFkZ2UgdmFyaWFudD1cIm91dGxpbmVcIj57aXRlbXMubGVuZ3RofTwvQmFkZ2U+PC9kaXY+PEFkZG9uTGlzdCBhZGRvbnM9e2l0ZW1zfSBlbXB0eVRpdGxlPVwiXCIgZW1wdHlCb2R5PVwiXCIgLz48QnV0dG9uIHNpemU9XCJzbVwiIHZhcmlhbnQ9XCJvdXRsaW5lXCIgY2xhc3NOYW1lPVwiaC04IHRleHQteHNcIiBvbkNsaWNrPXtnb1Jvb21zfT5FZGl0IGluIFJvb21zICYgUmF0ZXM8L0J1dHRvbj48L2Rpdj47XHJcbiAgICAgICAgfSl9XHJcbiAgICAgICAgPE5leHRBY3Rpb25zIGFjdGlvbnM9e1t7IGxhYmVsOiBcIk9wZW4gZ3Vlc3QgcmVxdWVzdHNcIiwgdGFiOiBcImxvZGdlLWd1ZXN0LXJlcXVlc3RzXCIsIGhpbnQ6IFwiUmV2aWV3IHNlcnZpY2UgcmVxdWVzdHMgYW5kIGFkZC1vbiBvdXRjb21lcy5cIiB9LCB7IGxhYmVsOiBcIkVkaXQgcm9vbSBwYWNrYWdlc1wiLCB0YWI6IFwibG9kZ2Utcm9vbXNcIiwgaGludDogYE1hbmFnZSBhZGQtb25zIGFjcm9zcyAke3Jvb21zLmxlbmd0aH0gcm9vbSB0eXBlJHtyb29tcy5sZW5ndGggPT09IDEgPyBcIlwiIDogXCJzXCJ9LmAgfSwgeyBsYWJlbDogXCJDaGVjayByZXBvcnRzXCIsIHRhYjogXCJsb2RnZS1yZXBvcnRzXCIsIGhpbnQ6IGBUcmFjayBleHRyYXMgbGlrZSAke21vbmV5KGFjdGl2ZS5yZWR1Y2UoKHN1bSwgYSkgPT4gc3VtICsgKGEucHJpY2VfY2VudHMgfHwgMCksIDApKX0gY2F0YWxvZyB2YWx1ZS5gIH1dfSAvPlxyXG4gICAgICA8Lz59XHJcbiAgICA8L1NlY3Rpb25TaGVsbD5cclxuICApO1xyXG59XHJcblxyXG5mdW5jdGlvbiBGaWx0ZXJSb3coeyB2YWx1ZXMsIGN1cnJlbnQsIG9uQ2hhbmdlIH06IHsgdmFsdWVzOiBzdHJpbmdbXTsgY3VycmVudDogc3RyaW5nOyBvbkNoYW5nZTogKHZhbHVlOiBzdHJpbmcpID0+IHZvaWQgfSkge1xyXG4gIHJldHVybiA8ZGl2IGNsYXNzTmFtZT1cImZsZXggZ2FwLTEuNSBvdmVyZmxvdy14LWF1dG8gcGItMVwiPnt2YWx1ZXMubWFwKCh2YWx1ZSkgPT4gPGJ1dHRvbiBrZXk9e3ZhbHVlfSBvbkNsaWNrPXsoKSA9PiBvbkNoYW5nZSh2YWx1ZSl9IGNsYXNzTmFtZT17Y24oXCJzaHJpbmstMCByb3VuZGVkLWZ1bGwgYm9yZGVyIHB4LTMgcHktMSB0ZXh0LXhzIGZvbnQtbWVkaXVtXCIsIGN1cnJlbnQgPT09IHZhbHVlID8gXCJib3JkZXItcHJpbWFyeSBiZy1wcmltYXJ5IHRleHQtcHJpbWFyeS1mb3JlZ3JvdW5kXCIgOiBcImJvcmRlci1ib3JkZXIgYmctY2FyZCB0ZXh0LW11dGVkLWZvcmVncm91bmRcIil9Pnt2YWx1ZX08L2J1dHRvbj4pfTwvZGl2PjtcclxufVxyXG4iXSwibmFtZXMiOlsidXNlTWVtbyIsInVzZVN0YXRlIiwiQnV0dG9uIiwiQmFkZ2UiLCJJbnB1dCIsIlBhY2thZ2VQbHVzIiwiU2VhcmNoIiwiQWRkb25MaXN0IiwiRW1wdHlQYW5lbCIsIkxvYWRpbmdQYW5lbCIsIk5leHRBY3Rpb25zIiwiU2VjdGlvblNoZWxsIiwiU3RhdENhcmQiLCJhZGRvbkNhdGVnb3JpZXMiLCJtb25leSIsInVzZUxvZGdpbmdPcHNEYXRhIiwiY24iLCJMb2RnaW5nUXVpY2tKdW1wIiwiTG9kZ2luZ1NlY3Rpb25TdGF0dXNCYW5uZXIiLCJzdGF0dXNGaWx0ZXJzIiwiZ29Sb29tcyIsIndpbmRvdyIsImRpc3BhdGNoRXZlbnQiLCJDdXN0b21FdmVudCIsImRldGFpbCIsInRhYiIsIkxvZGdpbmdBZGRPbnNTZWN0aW9uIiwic3RvcmVJZCIsInJvb21zIiwiYWRkb25zIiwiaXNMb2FkaW5nIiwiY2F0ZWdvcnkiLCJzZXRDYXRlZ29yeSIsInN0YXR1cyIsInNldFN0YXR1cyIsInF1ZXJ5Iiwic2V0UXVlcnkiLCJhY3RpdmUiLCJmaWx0ZXIiLCJhIiwiZGlzYWJsZWQiLCJmaWx0ZXJlZCIsImFkZG9uIiwiaGlkZGVuIiwibWF0Y2hlc0NhdGVnb3J5IiwibWF0Y2hlc1N0YXR1cyIsInByaWNlX2NlbnRzIiwicSIsInRyaW0iLCJ0b0xvd2VyQ2FzZSIsIm1hdGNoZXNRdWVyeSIsIm5hbWUiLCJpbmNsdWRlcyIsInJvb21OYW1lIiwidGl0bGUiLCJzdWJ0aXRsZSIsImljb24iLCJhY3Rpb25zIiwic2l6ZSIsIm9uQ2xpY2siLCJjb3VudExhYmVsIiwiY291bnRWYWx1ZSIsImxlbmd0aCIsImZpeExhYmVsIiwiZml4VGFiIiwiZGl2IiwiY2xhc3NOYW1lIiwibGFiZWwiLCJ2YWx1ZSIsIlN0cmluZyIsIlNldCIsIm1hcCIsInJvb21JZCIsIm9uQ2hhbmdlIiwiZSIsInRhcmdldCIsInBsYWNlaG9sZGVyIiwiRmlsdGVyUm93IiwidmFsdWVzIiwiY3VycmVudCIsImJvZHkiLCJhY3Rpb25MYWJlbCIsImNhdCIsIml0ZW1zIiwicCIsInZhcmlhbnQiLCJlbXB0eVRpdGxlIiwiZW1wdHlCb2R5IiwiaGludCIsInJlZHVjZSIsInN1bSIsImJ1dHRvbiJdLCJtYXBwaW5ncyI6Ijs7QUFBQSxTQUFTQSxPQUFPLEVBQUVDLFFBQVEsUUFBUSxRQUFRO0FBQzFDLFNBQVNDLE1BQU0sUUFBUSx5QkFBeUI7QUFDaEQsU0FBU0MsS0FBSyxRQUFRLHdCQUF3QjtBQUM5QyxTQUFTQyxLQUFLLFFBQVEsd0JBQXdCO0FBQzlDLFNBQVNDLFdBQVcsRUFBRUMsTUFBTSxRQUFRLGVBQWU7QUFDbkQsU0FBU0MsU0FBUyxFQUFFQyxVQUFVLEVBQUVDLFlBQVksRUFBRUMsV0FBVyxFQUFFQyxZQUFZLEVBQUVDLFFBQVEsRUFBRUMsZUFBZSxFQUFFQyxLQUFLLEVBQUVDLGlCQUFpQixRQUFRLDRCQUE0QjtBQUNoSyxTQUFTQyxFQUFFLFFBQVEsY0FBYztBQUNqQyxPQUFPQyxzQkFBc0IscUJBQXFCO0FBQ2xELE9BQU9DLGdDQUFnQywrQkFBK0I7QUFFdEUsTUFBTUMsZ0JBQWdCO0lBQUM7SUFBTztJQUFV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

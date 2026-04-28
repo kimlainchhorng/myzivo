@@ -1,0 +1,1007 @@
+import { createHotContext as __vite__createHotContext } from "/@vite/client";import.meta.hot = __vite__createHotContext("/src/components/admin/store/lodging/LodgingReservationsSection.tsx");import __vite__cjsImport0_react_jsxDevRuntime from "/node_modules/.vite/deps/react_jsx-dev-runtime.js?v=7fd9520c"; const _jsxDEV = __vite__cjsImport0_react_jsxDevRuntime["jsxDEV"];
+var _s = $RefreshSig$();
+/**
+ * Lodging — Reservations list with status filter & quick actions.
+ * Tapping a row opens the full reservation details page.
+ */ import __vite__cjsImport1_react from "/node_modules/.vite/deps/react.js?v=7fd9520c"; const useMemo = __vite__cjsImport1_react["useMemo"]; const useState = __vite__cjsImport1_react["useState"];
+import LodgingQuickJump from "/src/components/admin/store/lodging/LodgingQuickJump.tsx";
+import LodgingSectionStatusBanner from "/src/components/admin/store/lodging/LodgingSectionStatusBanner.tsx";
+import { useLocation, useNavigate, useSearchParams } from "/node_modules/.vite/deps/react-router-dom.js?v=7fd9520c";
+import { Card, CardContent, CardHeader, CardTitle } from "/src/components/ui/card.tsx";
+import { Button } from "/src/components/ui/button.tsx";
+import { Badge } from "/src/components/ui/badge.tsx";
+import { Input } from "/src/components/ui/input.tsx";
+import { CalendarRange, Search, CheckCircle2, LogIn, LogOut, XCircle, ChevronRight, ShieldCheck, BedDouble, Mail, Phone, ExternalLink, ClipboardCheck, Clock, Download, Send } from "/node_modules/.vite/deps/lucide-react.js?v=7fd9520c";
+import { useLodgeReservations } from "/src/hooks/lodging/useLodgeReservations.ts";
+import { LodgingPaymentBadge } from "/src/components/lodging/LodgingPaymentBadge.tsx";
+import { toast } from "/node_modules/.vite/deps/sonner.js?v=7fd9520c";
+import ChangeRequestsInbox from "/src/components/lodging/host/ChangeRequestsInbox.tsx";
+import HostReservationOpsSummary from "/src/components/lodging/host/HostReservationOpsSummary.tsx";
+import { useStoreChangeRequestInbox } from "/src/hooks/lodging/useReservationChangeRequests.ts";
+import { useHostLodgingOpsToasts } from "/src/hooks/lodging/useHostLodgingOpsToasts.ts";
+import { reservationDateLabel, reservationMinutes, reservationTimeRangeLabel } from "/src/lib/lodging/reservationTime.ts";
+import LodgingNeedsSetupEmptyState from "/src/components/admin/store/lodging/LodgingNeedsSetupEmptyState.tsx";
+const CLOSED_STATUSES = new Set([
+    "cancelled",
+    "checked_out",
+    "no_show"
+]);
+const STATUSES = [
+    "active",
+    "all",
+    "hold",
+    "confirmed",
+    "checked_in",
+    "checked_out",
+    "cancelled",
+    "no_show"
+];
+const STATUS_LABEL = {
+    active: "Active",
+    all: "All",
+    hold: "Hold",
+    confirmed: "Confirmed",
+    checked_in: "Checked-In",
+    checked_out: "Checked-Out",
+    cancelled: "Cancelled",
+    no_show: "No-Show"
+};
+const STATUS_VARIANT = {
+    hold: "outline",
+    confirmed: "secondary",
+    checked_in: "default",
+    checked_out: "outline",
+    cancelled: "destructive",
+    no_show: "destructive"
+};
+const money = (cents)=>`$${((Number(cents) || 0) / 100).toFixed(2)}`;
+const TIME_LABEL = {
+    all: "Any time",
+    morning: "Morning",
+    afternoon: "Afternoon",
+    evening: "Evening"
+};
+export default function LodgingReservationsSection({ storeId }) {
+    _s();
+    const navigate = useNavigate();
+    const location = useLocation();
+    const [searchParams, setSearchParams] = useSearchParams();
+    const initialStatus = searchParams.get("tab") || "active";
+    const [status, setStatus] = useState(STATUSES.includes(initialStatus) ? initialStatus : "active");
+    const [q, setQ] = useState(searchParams.get("q") || "");
+    const [timeFilter, setTimeFilter] = useState(searchParams.get("time") || "all");
+    const [sortMode, setSortMode] = useState(searchParams.get("sort") || "date_desc");
+    const queryStatus = status === "active" ? "all" : status;
+    const { data: reservations = [], isLoading, setStatus: setResStatus } = useLodgeReservations(storeId, queryStatus);
+    const { data: pendingRequests = [] } = useStoreChangeRequestInbox(storeId);
+    useHostLodgingOpsToasts(storeId);
+    const filtered = useMemo(()=>{
+        const term = q.trim().toLowerCase();
+        let scoped = status === "active" ? reservations.filter((r)=>!CLOSED_STATUSES.has(r.status)) : reservations;
+        if (timeFilter !== "all") {
+            scoped = scoped.filter((r)=>{
+                const mins = reservationMinutes(r.check_in, r.room?.check_in_time, "check_in");
+                return timeFilter === "morning" ? mins < 12 * 60 : timeFilter === "afternoon" ? mins >= 12 * 60 && mins < 17 * 60 : mins >= 17 * 60;
+            });
+        }
+        if (term) scoped = scoped.filter((r)=>[
+                r.guest_name,
+                r.guest_phone,
+                r.guest_email,
+                r.number,
+                r.room_number,
+                r.payment_status,
+                r.status
+            ].some((v)=>String(v || "").toLowerCase().includes(term)));
+        return [
+            ...scoped
+        ].sort((a, b)=>{
+            if (sortMode === "date_asc") return new Date(a.check_in).getTime() - new Date(b.check_in).getTime();
+            if (sortMode === "checkin_asc") return reservationMinutes(a.check_in, a.room?.check_in_time, "check_in") - reservationMinutes(b.check_in, b.room?.check_in_time, "check_in");
+            if (sortMode === "checkout_asc") return reservationMinutes(a.check_out, a.room?.check_out_time, "check_out") - reservationMinutes(b.check_out, b.room?.check_out_time, "check_out");
+            return new Date(b.check_in).getTime() - new Date(a.check_in).getTime();
+        });
+    }, [
+        reservations,
+        q,
+        status,
+        timeFilter,
+        sortMode
+    ]);
+    const act = async (id, s, msg)=>{
+        try {
+            await setResStatus.mutateAsync({
+                id,
+                status: s
+            });
+            toast.success(msg);
+        } catch (e) {
+            toast.error(e.message || "Failed");
+        }
+    };
+    const openReservation = (id, workflow)=>{
+        const params = new URLSearchParams();
+        if (status !== "active") params.set("tab", status);
+        if (q.trim()) params.set("q", q.trim());
+        if (timeFilter !== "all") params.set("time", timeFilter);
+        if (sortMode !== "date_desc") params.set("sort", sortMode);
+        const returnTo = `${location.pathname}${params.toString() ? `?${params}` : ""}`;
+        navigate(`/admin/stores/${storeId}/lodging/reservations/${id}${workflow ? `?workflow=${workflow}` : ""}`, {
+            state: {
+                returnTo,
+                workflow
+            }
+        });
+    };
+    const syncParams = (nextStatus = status, nextQ = q, nextTime = timeFilter, nextSort = sortMode)=>{
+        const next = new URLSearchParams();
+        if (nextStatus !== "active") next.set("tab", nextStatus);
+        if (nextQ.trim()) next.set("q", nextQ.trim());
+        if (nextTime !== "all") next.set("time", nextTime);
+        if (nextSort !== "date_desc") next.set("sort", nextSort);
+        setSearchParams(next, {
+            replace: true
+        });
+    };
+    const updateFilter = (nextStatus, nextQ = q)=>{
+        setStatus(nextStatus);
+        syncParams(nextStatus, nextQ);
+    };
+    return /*#__PURE__*/ _jsxDEV("div", {
+        className: "space-y-4",
+        children: [
+            /*#__PURE__*/ _jsxDEV(LodgingQuickJump, {
+                active: "lodge-reservations"
+            }, void 0, false, {
+                fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/lodging/LodgingReservationsSection.tsx",
+                lineNumber: 107,
+                columnNumber: 7
+            }, this),
+            /*#__PURE__*/ _jsxDEV(LodgingSectionStatusBanner, {
+                title: "Reservations",
+                icon: CalendarRange,
+                countLabel: "Pending change requests",
+                countValue: pendingRequests.length,
+                fixLabel: "Open Front Desk",
+                fixTab: "lodge-frontdesk"
+            }, void 0, false, {
+                fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/lodging/LodgingReservationsSection.tsx",
+                lineNumber: 108,
+                columnNumber: 7
+            }, this),
+            /*#__PURE__*/ _jsxDEV(HostReservationOpsSummary, {
+                reservations: reservations,
+                requests: pendingRequests,
+                onFilter: (value)=>setQ(value)
+            }, void 0, false, {
+                fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/lodging/LodgingReservationsSection.tsx",
+                lineNumber: 109,
+                columnNumber: 7
+            }, this),
+            /*#__PURE__*/ _jsxDEV(ChangeRequestsInbox, {
+                storeId: storeId
+            }, void 0, false, {
+                fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/lodging/LodgingReservationsSection.tsx",
+                lineNumber: 110,
+                columnNumber: 7
+            }, this),
+            /*#__PURE__*/ _jsxDEV(Card, {
+                children: [
+                    /*#__PURE__*/ _jsxDEV(CardHeader, {
+                        className: "flex flex-row items-center justify-between gap-2",
+                        children: [
+                            /*#__PURE__*/ _jsxDEV(CardTitle, {
+                                className: "flex items-center gap-2",
+                                children: [
+                                    /*#__PURE__*/ _jsxDEV(CalendarRange, {
+                                        className: "h-5 w-5"
+                                    }, void 0, false, {
+                                        fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/lodging/LodgingReservationsSection.tsx",
+                                        lineNumber: 113,
+                                        columnNumber: 56
+                                    }, this),
+                                    " Reservations"
+                                ]
+                            }, void 0, true, {
+                                fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/lodging/LodgingReservationsSection.tsx",
+                                lineNumber: 113,
+                                columnNumber: 9
+                            }, this),
+                            /*#__PURE__*/ _jsxDEV(Button, {
+                                size: "sm",
+                                variant: "outline",
+                                className: "h-8 gap-1.5",
+                                disabled: filtered.length === 0,
+                                onClick: ()=>exportReservationsCsv(filtered),
+                                children: [
+                                    /*#__PURE__*/ _jsxDEV(Download, {
+                                        className: "h-3.5 w-3.5"
+                                    }, void 0, false, {
+                                        fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/lodging/LodgingReservationsSection.tsx",
+                                        lineNumber: 121,
+                                        columnNumber: 11
+                                    }, this),
+                                    " Export CSV"
+                                ]
+                            }, void 0, true, {
+                                fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/lodging/LodgingReservationsSection.tsx",
+                                lineNumber: 114,
+                                columnNumber: 9
+                            }, this)
+                        ]
+                    }, void 0, true, {
+                        fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/lodging/LodgingReservationsSection.tsx",
+                        lineNumber: 112,
+                        columnNumber: 7
+                    }, this),
+                    /*#__PURE__*/ _jsxDEV(CardContent, {
+                        className: "space-y-3",
+                        children: [
+                            /*#__PURE__*/ _jsxDEV("div", {
+                                className: "flex flex-wrap gap-2 items-center",
+                                children: STATUSES.map((s)=>/*#__PURE__*/ _jsxDEV("button", {
+                                        onClick: ()=>updateFilter(s),
+                                        className: `px-3 py-1.5 rounded-full text-xs font-semibold border transition ${status === s ? "bg-primary text-primary-foreground border-primary" : "bg-background border-border text-muted-foreground"}`,
+                                        children: STATUS_LABEL[s]
+                                    }, s, false, {
+                                        fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/lodging/LodgingReservationsSection.tsx",
+                                        lineNumber: 127,
+                                        columnNumber: 13
+                                    }, this))
+                            }, void 0, false, {
+                                fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/lodging/LodgingReservationsSection.tsx",
+                                lineNumber: 125,
+                                columnNumber: 9
+                            }, this),
+                            /*#__PURE__*/ _jsxDEV("div", {
+                                className: "relative",
+                                children: [
+                                    /*#__PURE__*/ _jsxDEV(Search, {
+                                        className: "absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground"
+                                    }, void 0, false, {
+                                        fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/lodging/LodgingReservationsSection.tsx",
+                                        lineNumber: 134,
+                                        columnNumber: 11
+                                    }, this),
+                                    /*#__PURE__*/ _jsxDEV(Input, {
+                                        value: q,
+                                        onChange: (e)=>{
+                                            setQ(e.target.value);
+                                            updateFilter(status, e.target.value);
+                                        },
+                                        placeholder: "Search guest, phone, email, room, ref, payment…",
+                                        className: "pl-9"
+                                    }, void 0, false, {
+                                        fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/lodging/LodgingReservationsSection.tsx",
+                                        lineNumber: 135,
+                                        columnNumber: 11
+                                    }, this)
+                                ]
+                            }, void 0, true, {
+                                fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/lodging/LodgingReservationsSection.tsx",
+                                lineNumber: 133,
+                                columnNumber: 9
+                            }, this),
+                            /*#__PURE__*/ _jsxDEV("div", {
+                                className: "flex flex-wrap items-center gap-2 rounded-lg border border-border bg-muted/20 p-2 text-xs",
+                                children: [
+                                    /*#__PURE__*/ _jsxDEV("span", {
+                                        className: "inline-flex items-center gap-1 font-semibold text-muted-foreground",
+                                        children: [
+                                            /*#__PURE__*/ _jsxDEV(Clock, {
+                                                className: "h-3.5 w-3.5"
+                                            }, void 0, false, {
+                                                fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/lodging/LodgingReservationsSection.tsx",
+                                                lineNumber: 138,
+                                                columnNumber: 96
+                                            }, this),
+                                            " Time"
+                                        ]
+                                    }, void 0, true, {
+                                        fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/lodging/LodgingReservationsSection.tsx",
+                                        lineNumber: 138,
+                                        columnNumber: 11
+                                    }, this),
+                                    [
+                                        "all",
+                                        "morning",
+                                        "afternoon",
+                                        "evening"
+                                    ].map((value)=>/*#__PURE__*/ _jsxDEV("button", {
+                                            onClick: ()=>{
+                                                setTimeFilter(value);
+                                                syncParams(status, q, value, sortMode);
+                                            },
+                                            className: `rounded-full border px-2.5 py-1 font-medium transition ${timeFilter === value ? "border-primary bg-primary text-primary-foreground" : "border-border bg-background text-muted-foreground"}`,
+                                            children: TIME_LABEL[value]
+                                        }, value, false, {
+                                            fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/lodging/LodgingReservationsSection.tsx",
+                                            lineNumber: 140,
+                                            columnNumber: 13
+                                        }, this)),
+                                    /*#__PURE__*/ _jsxDEV("select", {
+                                        value: sortMode,
+                                        onChange: (e)=>{
+                                            const next = e.target.value;
+                                            setSortMode(next);
+                                            syncParams(status, q, timeFilter, next);
+                                        },
+                                        className: "ml-auto h-8 rounded-md border border-border bg-background px-2 text-xs text-foreground",
+                                        children: [
+                                            /*#__PURE__*/ _jsxDEV("option", {
+                                                value: "date_desc",
+                                                children: "Newest check-in"
+                                            }, void 0, false, {
+                                                fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/lodging/LodgingReservationsSection.tsx",
+                                                lineNumber: 143,
+                                                columnNumber: 13
+                                            }, this),
+                                            /*#__PURE__*/ _jsxDEV("option", {
+                                                value: "date_asc",
+                                                children: "Oldest check-in"
+                                            }, void 0, false, {
+                                                fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/lodging/LodgingReservationsSection.tsx",
+                                                lineNumber: 144,
+                                                columnNumber: 13
+                                            }, this),
+                                            /*#__PURE__*/ _jsxDEV("option", {
+                                                value: "checkin_asc",
+                                                children: "Check-in time"
+                                            }, void 0, false, {
+                                                fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/lodging/LodgingReservationsSection.tsx",
+                                                lineNumber: 145,
+                                                columnNumber: 13
+                                            }, this),
+                                            /*#__PURE__*/ _jsxDEV("option", {
+                                                value: "checkout_asc",
+                                                children: "Check-out time"
+                                            }, void 0, false, {
+                                                fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/lodging/LodgingReservationsSection.tsx",
+                                                lineNumber: 146,
+                                                columnNumber: 13
+                                            }, this)
+                                        ]
+                                    }, void 0, true, {
+                                        fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/lodging/LodgingReservationsSection.tsx",
+                                        lineNumber: 142,
+                                        columnNumber: 11
+                                    }, this)
+                                ]
+                            }, void 0, true, {
+                                fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/lodging/LodgingReservationsSection.tsx",
+                                lineNumber: 137,
+                                columnNumber: 9
+                            }, this),
+                            isLoading ? /*#__PURE__*/ _jsxDEV("p", {
+                                className: "text-sm text-muted-foreground py-8 text-center",
+                                children: "Loading…"
+                            }, void 0, false, {
+                                fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/lodging/LodgingReservationsSection.tsx",
+                                lineNumber: 151,
+                                columnNumber: 11
+                            }, this) : filtered.length === 0 ? /*#__PURE__*/ _jsxDEV(LodgingNeedsSetupEmptyState, {
+                                icon: CalendarRange,
+                                title: q.trim() ? "No reservations match your search" : status === "active" ? "Reservation workspace is ready" : `No ${STATUS_LABEL[status].toLowerCase()} reservations`,
+                                description: "No live records yet. This section is installed for booking review, check-in workflow, payments, requests, and guest history.",
+                                primaryAction: {
+                                    label: "Open rooms",
+                                    tab: "lodge-rooms"
+                                },
+                                secondaryAction: {
+                                    label: "Open rate plans",
+                                    tab: "lodge-rate-plans"
+                                },
+                                nextBestAction: "Set rooms and rates, then create or import reservations."
+                            }, void 0, false, {
+                                fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/lodging/LodgingReservationsSection.tsx",
+                                lineNumber: 153,
+                                columnNumber: 11
+                            }, this) : /*#__PURE__*/ _jsxDEV("div", {
+                                className: "space-y-2",
+                                children: filtered.map((r)=>{
+                                    const displayName = r.guest_name?.trim() || `Guest · ${r.number || r.id.slice(0, 8)}`;
+                                    const balance = (r.total_cents || 0) - (r.paid_cents || 0);
+                                    const pendingRequest = pendingRequests.find((req)=>req.reservation_id === r.id);
+                                    const hasPendingRequest = !!pendingRequest;
+                                    const paymentNeedsReview = [
+                                        "failed",
+                                        "pending",
+                                        "processing"
+                                    ].includes(String(r.payment_status || ""));
+                                    const isClosed = CLOSED_STATUSES.has(r.status);
+                                    const needsReview = hasPendingRequest || balance > 0 || paymentNeedsReview || isClosed;
+                                    const reviewWorkflow = pendingRequest?.type === "addon" ? "addons" : hasPendingRequest ? "workflow" : paymentNeedsReview || balance > 0 ? "payment" : isClosed ? "audit" : "review";
+                                    return /*#__PURE__*/ _jsxDEV("div", {
+                                        className: "p-3 rounded-lg border bg-card transition hover:border-primary/40 focus-within:border-primary/40",
+                                        children: [
+                                            /*#__PURE__*/ _jsxDEV("button", {
+                                                type: "button",
+                                                onClick: ()=>openReservation(r.id),
+                                                className: "w-full text-left rounded-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2",
+                                                children: /*#__PURE__*/ _jsxDEV("div", {
+                                                    className: "flex items-start justify-between gap-2",
+                                                    children: [
+                                                        /*#__PURE__*/ _jsxDEV("div", {
+                                                            className: "min-w-0 flex-1",
+                                                            children: [
+                                                                /*#__PURE__*/ _jsxDEV("div", {
+                                                                    className: "flex items-center gap-2 flex-wrap",
+                                                                    children: [
+                                                                        /*#__PURE__*/ _jsxDEV("span", {
+                                                                            className: "font-semibold text-sm",
+                                                                            children: displayName
+                                                                        }, void 0, false, {
+                                                                            fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/lodging/LodgingReservationsSection.tsx",
+                                                                            lineNumber: 175,
+                                                                            columnNumber: 26
+                                                                        }, this),
+                                                                        /*#__PURE__*/ _jsxDEV(Badge, {
+                                                                            variant: STATUS_VARIANT[r.status] || "outline",
+                                                                            className: "text-[10px]",
+                                                                            children: STATUS_LABEL[r.status]
+                                                                        }, void 0, false, {
+                                                                            fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/lodging/LodgingReservationsSection.tsx",
+                                                                            lineNumber: 176,
+                                                                            columnNumber: 25
+                                                                        }, this),
+                                                                        /*#__PURE__*/ _jsxDEV("span", {
+                                                                            className: "text-[10px] text-muted-foreground font-mono",
+                                                                            children: r.number
+                                                                        }, void 0, false, {
+                                                                            fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/lodging/LodgingReservationsSection.tsx",
+                                                                            lineNumber: 177,
+                                                                            columnNumber: 25
+                                                                        }, this)
+                                                                    ]
+                                                                }, void 0, true, {
+                                                                    fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/lodging/LodgingReservationsSection.tsx",
+                                                                    lineNumber: 174,
+                                                                    columnNumber: 23
+                                                                }, this),
+                                                                /*#__PURE__*/ _jsxDEV("div", {
+                                                                    className: "mt-1 grid gap-1 text-xs text-muted-foreground sm:grid-cols-2",
+                                                                    children: [
+                                                                        /*#__PURE__*/ _jsxDEV("span", {
+                                                                            className: "inline-flex items-center gap-1.5",
+                                                                            children: [
+                                                                                /*#__PURE__*/ _jsxDEV(CalendarRange, {
+                                                                                    className: "h-3 w-3"
+                                                                                }, void 0, false, {
+                                                                                    fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/lodging/LodgingReservationsSection.tsx",
+                                                                                    lineNumber: 180,
+                                                                                    columnNumber: 76
+                                                                                }, this),
+                                                                                " ",
+                                                                                reservationDateLabel(r.check_in),
+                                                                                " → ",
+                                                                                reservationDateLabel(r.check_out),
+                                                                                " · ",
+                                                                                r.nights,
+                                                                                " night",
+                                                                                r.nights !== 1 ? "s" : ""
+                                                                            ]
+                                                                        }, void 0, true, {
+                                                                            fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/lodging/LodgingReservationsSection.tsx",
+                                                                            lineNumber: 180,
+                                                                            columnNumber: 25
+                                                                        }, this),
+                                                                        /*#__PURE__*/ _jsxDEV("span", {
+                                                                            className: "inline-flex items-center gap-1.5",
+                                                                            children: [
+                                                                                /*#__PURE__*/ _jsxDEV(Clock, {
+                                                                                    className: "h-3 w-3"
+                                                                                }, void 0, false, {
+                                                                                    fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/lodging/LodgingReservationsSection.tsx",
+                                                                                    lineNumber: 181,
+                                                                                    columnNumber: 76
+                                                                                }, this),
+                                                                                " ",
+                                                                                reservationTimeRangeLabel(r.check_in, r.check_out, r.room?.check_in_time, r.room?.check_out_time)
+                                                                            ]
+                                                                        }, void 0, true, {
+                                                                            fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/lodging/LodgingReservationsSection.tsx",
+                                                                            lineNumber: 181,
+                                                                            columnNumber: 25
+                                                                        }, this)
+                                                                    ]
+                                                                }, void 0, true, {
+                                                                    fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/lodging/LodgingReservationsSection.tsx",
+                                                                    lineNumber: 179,
+                                                                    columnNumber: 23
+                                                                }, this),
+                                                                /*#__PURE__*/ _jsxDEV("p", {
+                                                                    className: "text-[11px] text-muted-foreground mt-0.5",
+                                                                    children: [
+                                                                        r.adults,
+                                                                        " adult",
+                                                                        r.adults !== 1 ? "s" : "",
+                                                                        r.children ? ` · ${r.children} child${r.children > 1 ? "ren" : ""}` : ""
+                                                                    ]
+                                                                }, void 0, true, {
+                                                                    fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/lodging/LodgingReservationsSection.tsx",
+                                                                    lineNumber: 183,
+                                                                    columnNumber: 23
+                                                                }, this),
+                                                                /*#__PURE__*/ _jsxDEV("p", {
+                                                                    className: "text-[11px] text-muted-foreground mt-0.5 flex items-center gap-1.5 flex-wrap",
+                                                                    children: [
+                                                                        /*#__PURE__*/ _jsxDEV("span", {
+                                                                            className: "inline-flex items-center gap-1",
+                                                                            children: [
+                                                                                /*#__PURE__*/ _jsxDEV(BedDouble, {
+                                                                                    className: "h-3 w-3"
+                                                                                }, void 0, false, {
+                                                                                    fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/lodging/LodgingReservationsSection.tsx",
+                                                                                    lineNumber: 185,
+                                                                                    columnNumber: 74
+                                                                                }, this),
+                                                                                r.room_number ? `Unit ${r.room_number}` : "Room unassigned"
+                                                                            ]
+                                                                        }, void 0, true, {
+                                                                            fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/lodging/LodgingReservationsSection.tsx",
+                                                                            lineNumber: 185,
+                                                                            columnNumber: 25
+                                                                        }, this),
+                                                                        r.guest_phone && /*#__PURE__*/ _jsxDEV("span", {
+                                                                            className: "inline-flex items-center gap-1",
+                                                                            children: [
+                                                                                /*#__PURE__*/ _jsxDEV(Phone, {
+                                                                                    className: "h-3 w-3"
+                                                                                }, void 0, false, {
+                                                                                    fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/lodging/LodgingReservationsSection.tsx",
+                                                                                    lineNumber: 186,
+                                                                                    columnNumber: 92
+                                                                                }, this),
+                                                                                r.guest_phone
+                                                                            ]
+                                                                        }, void 0, true, {
+                                                                            fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/lodging/LodgingReservationsSection.tsx",
+                                                                            lineNumber: 186,
+                                                                            columnNumber: 43
+                                                                        }, this),
+                                                                        r.guest_email && /*#__PURE__*/ _jsxDEV("span", {
+                                                                            className: "inline-flex items-center gap-1",
+                                                                            children: [
+                                                                                /*#__PURE__*/ _jsxDEV(Mail, {
+                                                                                    className: "h-3 w-3"
+                                                                                }, void 0, false, {
+                                                                                    fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/lodging/LodgingReservationsSection.tsx",
+                                                                                    lineNumber: 187,
+                                                                                    columnNumber: 92
+                                                                                }, this),
+                                                                                r.guest_email
+                                                                            ]
+                                                                        }, void 0, true, {
+                                                                            fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/lodging/LodgingReservationsSection.tsx",
+                                                                            lineNumber: 187,
+                                                                            columnNumber: 43
+                                                                        }, this)
+                                                                    ]
+                                                                }, void 0, true, {
+                                                                    fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/lodging/LodgingReservationsSection.tsx",
+                                                                    lineNumber: 184,
+                                                                    columnNumber: 23
+                                                                }, this),
+                                                                /*#__PURE__*/ _jsxDEV("div", {
+                                                                    className: "flex items-center gap-1.5 mt-1 flex-wrap",
+                                                                    children: [
+                                                                        /*#__PURE__*/ _jsxDEV(LodgingPaymentBadge, {
+                                                                            status: r.payment_status,
+                                                                            reservationStatus: r.status,
+                                                                            amountCents: r.deposit_cents || r.total_cents
+                                                                        }, void 0, false, {
+                                                                            fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/lodging/LodgingReservationsSection.tsx",
+                                                                            lineNumber: 190,
+                                                                            columnNumber: 25
+                                                                        }, this),
+                                                                        balance > 0 && /*#__PURE__*/ _jsxDEV(Badge, {
+                                                                            variant: "destructive",
+                                                                            className: "text-[10px]",
+                                                                            children: [
+                                                                                "Balance ",
+                                                                                money(balance)
+                                                                            ]
+                                                                        }, void 0, true, {
+                                                                            fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/lodging/LodgingReservationsSection.tsx",
+                                                                            lineNumber: 191,
+                                                                            columnNumber: 41
+                                                                        }, this),
+                                                                        hasPendingRequest && /*#__PURE__*/ _jsxDEV(Badge, {
+                                                                            variant: "secondary",
+                                                                            className: "text-[10px]",
+                                                                            children: "Pending guest request"
+                                                                        }, void 0, false, {
+                                                                            fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/lodging/LodgingReservationsSection.tsx",
+                                                                            lineNumber: 192,
+                                                                            columnNumber: 47
+                                                                        }, this),
+                                                                        r.status === "cancelled" && String(r.payment_status).includes("refund") && /*#__PURE__*/ _jsxDEV(Badge, {
+                                                                            variant: "secondary",
+                                                                            className: "text-[10px]",
+                                                                            children: "Refund workflow"
+                                                                        }, void 0, false, {
+                                                                            fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/lodging/LodgingReservationsSection.tsx",
+                                                                            lineNumber: 193,
+                                                                            columnNumber: 101
+                                                                        }, this),
+                                                                        r.policy_consent && /*#__PURE__*/ _jsxDEV("span", {
+                                                                            className: "inline-flex items-center gap-0.5 text-[10px] font-semibold text-primary",
+                                                                            children: [
+                                                                                /*#__PURE__*/ _jsxDEV(ShieldCheck, {
+                                                                                    className: "h-2.5 w-2.5"
+                                                                                }, void 0, false, {
+                                                                                    fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/lodging/LodgingReservationsSection.tsx",
+                                                                                    lineNumber: 196,
+                                                                                    columnNumber: 29
+                                                                                }, this),
+                                                                                " Policies acknowledged"
+                                                                            ]
+                                                                        }, void 0, true, {
+                                                                            fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/lodging/LodgingReservationsSection.tsx",
+                                                                            lineNumber: 195,
+                                                                            columnNumber: 27
+                                                                        }, this)
+                                                                    ]
+                                                                }, void 0, true, {
+                                                                    fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/lodging/LodgingReservationsSection.tsx",
+                                                                    lineNumber: 189,
+                                                                    columnNumber: 23
+                                                                }, this)
+                                                            ]
+                                                        }, void 0, true, {
+                                                            fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/lodging/LodgingReservationsSection.tsx",
+                                                            lineNumber: 173,
+                                                            columnNumber: 21
+                                                        }, this),
+                                                        /*#__PURE__*/ _jsxDEV("div", {
+                                                            className: "text-right shrink-0 flex items-center gap-1",
+                                                            children: [
+                                                                /*#__PURE__*/ _jsxDEV("div", {
+                                                                    children: [
+                                                                        /*#__PURE__*/ _jsxDEV("p", {
+                                                                            className: "font-bold text-sm",
+                                                                            children: money(r.total_cents)
+                                                                        }, void 0, false, {
+                                                                            fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/lodging/LodgingReservationsSection.tsx",
+                                                                            lineNumber: 203,
+                                                                            columnNumber: 25
+                                                                        }, this),
+                                                                        /*#__PURE__*/ _jsxDEV("p", {
+                                                                            className: "text-[10px] text-muted-foreground capitalize",
+                                                                            children: [
+                                                                                "Paid ",
+                                                                                money(r.paid_cents || 0)
+                                                                            ]
+                                                                        }, void 0, true, {
+                                                                            fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/lodging/LodgingReservationsSection.tsx",
+                                                                            lineNumber: 204,
+                                                                            columnNumber: 25
+                                                                        }, this)
+                                                                    ]
+                                                                }, void 0, true, {
+                                                                    fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/lodging/LodgingReservationsSection.tsx",
+                                                                    lineNumber: 202,
+                                                                    columnNumber: 23
+                                                                }, this),
+                                                                /*#__PURE__*/ _jsxDEV(ChevronRight, {
+                                                                    className: "h-4 w-4 text-muted-foreground"
+                                                                }, void 0, false, {
+                                                                    fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/lodging/LodgingReservationsSection.tsx",
+                                                                    lineNumber: 206,
+                                                                    columnNumber: 23
+                                                                }, this)
+                                                            ]
+                                                        }, void 0, true, {
+                                                            fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/lodging/LodgingReservationsSection.tsx",
+                                                            lineNumber: 201,
+                                                            columnNumber: 21
+                                                        }, this)
+                                                    ]
+                                                }, void 0, true, {
+                                                    fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/lodging/LodgingReservationsSection.tsx",
+                                                    lineNumber: 172,
+                                                    columnNumber: 19
+                                                }, this)
+                                            }, void 0, false, {
+                                                fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/lodging/LodgingReservationsSection.tsx",
+                                                lineNumber: 167,
+                                                columnNumber: 17
+                                            }, this),
+                                            /*#__PURE__*/ _jsxDEV("div", {
+                                                className: "flex flex-wrap gap-1 mt-2",
+                                                children: [
+                                                    /*#__PURE__*/ _jsxDEV(Button, {
+                                                        size: "sm",
+                                                        variant: "outline",
+                                                        className: "h-7 text-xs gap-1",
+                                                        onClick: ()=>openReservation(r.id),
+                                                        children: [
+                                                            /*#__PURE__*/ _jsxDEV(ExternalLink, {
+                                                                className: "h-3 w-3"
+                                                            }, void 0, false, {
+                                                                fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/lodging/LodgingReservationsSection.tsx",
+                                                                lineNumber: 211,
+                                                                columnNumber: 123
+                                                            }, this),
+                                                            " Open"
+                                                        ]
+                                                    }, void 0, true, {
+                                                        fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/lodging/LodgingReservationsSection.tsx",
+                                                        lineNumber: 211,
+                                                        columnNumber: 19
+                                                    }, this),
+                                                    needsReview && /*#__PURE__*/ _jsxDEV(Button, {
+                                                        size: "sm",
+                                                        variant: "secondary",
+                                                        className: "h-7 text-xs gap-1",
+                                                        onClick: ()=>openReservation(r.id, reviewWorkflow),
+                                                        children: [
+                                                            /*#__PURE__*/ _jsxDEV(ClipboardCheck, {
+                                                                className: "h-3 w-3"
+                                                            }, void 0, false, {
+                                                                fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/lodging/LodgingReservationsSection.tsx",
+                                                                lineNumber: 212,
+                                                                columnNumber: 157
+                                                            }, this),
+                                                            " Review"
+                                                        ]
+                                                    }, void 0, true, {
+                                                        fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/lodging/LodgingReservationsSection.tsx",
+                                                        lineNumber: 212,
+                                                        columnNumber: 35
+                                                    }, this),
+                                                    r.guest_email && /*#__PURE__*/ _jsxDEV(Button, {
+                                                        size: "sm",
+                                                        variant: "outline",
+                                                        className: "h-7 text-xs gap-1",
+                                                        onClick: ()=>sendConfirmationEmail(r),
+                                                        children: [
+                                                            /*#__PURE__*/ _jsxDEV(Send, {
+                                                                className: "h-3 w-3"
+                                                            }, void 0, false, {
+                                                                fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/lodging/LodgingReservationsSection.tsx",
+                                                                lineNumber: 213,
+                                                                columnNumber: 144
+                                                            }, this),
+                                                            " Send confirmation"
+                                                        ]
+                                                    }, void 0, true, {
+                                                        fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/lodging/LodgingReservationsSection.tsx",
+                                                        lineNumber: 213,
+                                                        columnNumber: 37
+                                                    }, this),
+                                                    r.status === "hold" && /*#__PURE__*/ _jsxDEV(Button, {
+                                                        size: "sm",
+                                                        variant: "outline",
+                                                        className: "h-7 text-xs gap-1",
+                                                        onClick: ()=>act(r.id, "confirmed", "Confirmed"),
+                                                        children: [
+                                                            /*#__PURE__*/ _jsxDEV(CheckCircle2, {
+                                                                className: "h-3 w-3"
+                                                            }, void 0, false, {
+                                                                fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/lodging/LodgingReservationsSection.tsx",
+                                                                lineNumber: 214,
+                                                                columnNumber: 161
+                                                            }, this),
+                                                            " Confirm"
+                                                        ]
+                                                    }, void 0, true, {
+                                                        fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/lodging/LodgingReservationsSection.tsx",
+                                                        lineNumber: 214,
+                                                        columnNumber: 43
+                                                    }, this),
+                                                    (r.status === "confirmed" || r.status === "hold") && /*#__PURE__*/ _jsxDEV(Button, {
+                                                        size: "sm",
+                                                        variant: "outline",
+                                                        className: "h-7 text-xs gap-1",
+                                                        onClick: ()=>act(r.id, "checked_in", "Checked in"),
+                                                        children: [
+                                                            /*#__PURE__*/ _jsxDEV(LogIn, {
+                                                                className: "h-3 w-3"
+                                                            }, void 0, false, {
+                                                                fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/lodging/LodgingReservationsSection.tsx",
+                                                                lineNumber: 215,
+                                                                columnNumber: 193
+                                                            }, this),
+                                                            " Check-In"
+                                                        ]
+                                                    }, void 0, true, {
+                                                        fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/lodging/LodgingReservationsSection.tsx",
+                                                        lineNumber: 215,
+                                                        columnNumber: 73
+                                                    }, this),
+                                                    r.status === "checked_in" && /*#__PURE__*/ _jsxDEV(Button, {
+                                                        size: "sm",
+                                                        variant: "outline",
+                                                        className: "h-7 text-xs gap-1",
+                                                        onClick: ()=>act(r.id, "checked_out", "Checked out"),
+                                                        children: [
+                                                            /*#__PURE__*/ _jsxDEV(LogOut, {
+                                                                className: "h-3 w-3"
+                                                            }, void 0, false, {
+                                                                fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/lodging/LodgingReservationsSection.tsx",
+                                                                lineNumber: 216,
+                                                                columnNumber: 171
+                                                            }, this),
+                                                            " Check-Out"
+                                                        ]
+                                                    }, void 0, true, {
+                                                        fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/lodging/LodgingReservationsSection.tsx",
+                                                        lineNumber: 216,
+                                                        columnNumber: 49
+                                                    }, this),
+                                                    !CLOSED_STATUSES.has(r.status) && /*#__PURE__*/ _jsxDEV(Button, {
+                                                        size: "sm",
+                                                        variant: "ghost",
+                                                        className: "h-7 text-xs gap-1 text-destructive",
+                                                        onClick: ()=>openReservation(r.id, "cancel"),
+                                                        children: [
+                                                            /*#__PURE__*/ _jsxDEV(XCircle, {
+                                                                className: "h-3 w-3"
+                                                            }, void 0, false, {
+                                                                fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/lodging/LodgingReservationsSection.tsx",
+                                                                lineNumber: 217,
+                                                                columnNumber: 183
+                                                            }, this),
+                                                            " Cancel / No-show"
+                                                        ]
+                                                    }, void 0, true, {
+                                                        fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/lodging/LodgingReservationsSection.tsx",
+                                                        lineNumber: 217,
+                                                        columnNumber: 54
+                                                    }, this)
+                                                ]
+                                            }, void 0, true, {
+                                                fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/lodging/LodgingReservationsSection.tsx",
+                                                lineNumber: 210,
+                                                columnNumber: 17
+                                            }, this)
+                                        ]
+                                    }, r.id, true, {
+                                        fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/lodging/LodgingReservationsSection.tsx",
+                                        lineNumber: 166,
+                                        columnNumber: 15
+                                    }, this);
+                                })
+                            }, void 0, false, {
+                                fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/lodging/LodgingReservationsSection.tsx",
+                                lineNumber: 155,
+                                columnNumber: 11
+                            }, this)
+                        ]
+                    }, void 0, true, {
+                        fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/lodging/LodgingReservationsSection.tsx",
+                        lineNumber: 124,
+                        columnNumber: 7
+                    }, this)
+                ]
+            }, void 0, true, {
+                fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/lodging/LodgingReservationsSection.tsx",
+                lineNumber: 111,
+                columnNumber: 5
+            }, this)
+        ]
+    }, void 0, true, {
+        fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/lodging/LodgingReservationsSection.tsx",
+        lineNumber: 106,
+        columnNumber: 5
+    }, this);
+}
+_s(LodgingReservationsSection, "6hxQrT4cUv1fxUaTRnLug39w340=", false, function() {
+    return [
+        useNavigate,
+        useLocation,
+        useSearchParams,
+        useLodgeReservations,
+        useStoreChangeRequestInbox,
+        useHostLodgingOpsToasts
+    ];
+});
+_c = LodgingReservationsSection;
+function csvEscape(value) {
+    const s = value == null ? "" : String(value);
+    if (/[",\n]/.test(s)) return `"${s.replace(/"/g, '""')}"`;
+    return s;
+}
+function exportReservationsCsv(rows) {
+    const headers = [
+        "Number",
+        "Guest",
+        "Email",
+        "Phone",
+        "Room",
+        "Check-in",
+        "Check-out",
+        "Nights",
+        "Adults",
+        "Children",
+        "Status",
+        "Payment",
+        "Total",
+        "Paid",
+        "Balance"
+    ];
+    const lines = [
+        headers.join(",")
+    ];
+    for (const r of rows){
+        const total = Number(r.total_cents || 0) / 100;
+        const paid = Number(r.paid_cents || 0) / 100;
+        lines.push([
+            r.number,
+            r.guest_name,
+            r.guest_email,
+            r.guest_phone,
+            r.room_number,
+            r.check_in,
+            r.check_out,
+            r.nights,
+            r.adults,
+            r.children,
+            r.status,
+            r.payment_status,
+            total.toFixed(2),
+            paid.toFixed(2),
+            (total - paid).toFixed(2)
+        ].map(csvEscape).join(","));
+    }
+    const blob = new Blob([
+        lines.join("\n")
+    ], {
+        type: "text/csv;charset=utf-8"
+    });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `reservations-${new Date().toISOString().slice(0, 10)}.csv`;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    URL.revokeObjectURL(url);
+}
+function sendConfirmationEmail(r) {
+    const subject = `Booking confirmation · ${r.number || ""}`;
+    const body = [
+        `Hello ${r.guest_name || "guest"},`,
+        "",
+        "Thank you for your booking. Here are your reservation details:",
+        `Reservation: ${r.number || ""}`,
+        `Room: ${r.room_number || "—"}`,
+        `Check-in: ${r.check_in}`,
+        `Check-out: ${r.check_out}`,
+        `Nights: ${r.nights}`,
+        `Guests: ${r.adults} adult(s)${r.children ? ` · ${r.children} child(ren)` : ""}`,
+        `Total: $${(Number(r.total_cents || 0) / 100).toFixed(2)}`,
+        `Balance due: $${((Number(r.total_cents || 0) - Number(r.paid_cents || 0)) / 100).toFixed(2)}`,
+        "",
+        "We look forward to welcoming you."
+    ].join("\n");
+    const href = `mailto:${encodeURIComponent(r.guest_email)}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+    window.location.href = href;
+}
+var _c;
+$RefreshReg$(_c, "LodgingReservationsSection");
+
+
+import * as RefreshRuntime from "/@react-refresh";
+const inWebWorker = typeof WorkerGlobalScope !== 'undefined' && self instanceof WorkerGlobalScope;
+if (import.meta.hot && !inWebWorker) {
+  if (!window.$RefreshReg$) {
+    throw new Error(
+      "@vitejs/plugin-react-swc can't detect preamble. Something is wrong."
+    );
+  }
+
+  RefreshRuntime.__hmr_import(import.meta.url).then((currentExports) => {
+    RefreshRuntime.registerExportsForReactRefresh("C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/lodging/LodgingReservationsSection.tsx", currentExports);
+    import.meta.hot.accept((nextExports) => {
+      if (!nextExports) return;
+      const invalidateMessage = RefreshRuntime.validateRefreshBoundaryAndEnqueueUpdate("C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/lodging/LodgingReservationsSection.tsx", currentExports, nextExports);
+      if (invalidateMessage) import.meta.hot.invalidate(invalidateMessage);
+    });
+  });
+}
+function $RefreshReg$(type, id) { return RefreshRuntime.register(type, "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/lodging/LodgingReservationsSection.tsx" + ' ' + id) }
+function $RefreshSig$() { return RefreshRuntime.createSignatureFunctionForTransform(); }
+
+//# sourceMappingURL=data:application/json;base64,eyJ2ZXJzaW9uIjozLCJzb3VyY2VzIjpbIkxvZGdpbmdSZXNlcnZhdGlvbnNTZWN0aW9uLnRzeCJdLCJzb3VyY2VzQ29udGVudCI6WyIvKipcclxuICogTG9kZ2luZyDigJQgUmVzZXJ2YXRpb25zIGxpc3Qgd2l0aCBzdGF0dXMgZmlsdGVyICYgcXVpY2sgYWN0aW9ucy5cclxuICogVGFwcGluZyBhIHJvdyBvcGVucyB0aGUgZnVsbCByZXNlcnZhdGlvbiBkZXRhaWxzIHBhZ2UuXHJcbiAqL1xyXG5pbXBvcnQgeyB1c2VNZW1vLCB1c2VTdGF0ZSB9IGZyb20gXCJyZWFjdFwiO1xyXG5pbXBvcnQgTG9kZ2luZ1F1aWNrSnVtcCBmcm9tIFwiLi9Mb2RnaW5nUXVpY2tKdW1wXCI7XHJcbmltcG9ydCBMb2RnaW5nU2VjdGlvblN0YXR1c0Jhbm5lciBmcm9tIFwiLi9Mb2RnaW5nU2VjdGlvblN0YXR1c0Jhbm5lclwiO1xyXG5pbXBvcnQgeyB1c2VMb2NhdGlvbiwgdXNlTmF2aWdhdGUsIHVzZVNlYXJjaFBhcmFtcyB9IGZyb20gXCJyZWFjdC1yb3V0ZXItZG9tXCI7XHJcbmltcG9ydCB7IENhcmQsIENhcmRDb250ZW50LCBDYXJkSGVhZGVyLCBDYXJkVGl0bGUgfSBmcm9tIFwiQC9jb21wb25lbnRzL3VpL2NhcmRcIjtcclxuaW1wb3J0IHsgQnV0dG9uIH0gZnJvbSBcIkAvY29tcG9uZW50cy91aS9idXR0b25cIjtcclxuaW1wb3J0IHsgQmFkZ2UgfSBmcm9tIFwiQC9jb21wb25lbnRzL3VpL2JhZGdlXCI7XHJcbmltcG9ydCB7IElucHV0IH0gZnJvbSBcIkAvY29tcG9uZW50cy91aS9pbnB1dFwiO1xyXG5pbXBvcnQgeyBDYWxlbmRhclJhbmdlLCBTZWFyY2gsIENoZWNrQ2lyY2xlMiwgTG9nSW4sIExvZ091dCwgWENpcmNsZSwgQ2hldnJvblJpZ2h0LCBTaGllbGRDaGVjaywgQmVkRG91YmxlLCBNYWlsLCBQaG9uZSwgRXh0ZXJuYWxMaW5rLCBDbGlwYm9hcmRDaGVjaywgQ2xvY2ssIERvd25sb2FkLCBTZW5kIH0gZnJvbSBcImx1Y2lkZS1yZWFjdFwiO1xyXG5pbXBvcnQgeyB1c2VMb2RnZVJlc2VydmF0aW9ucywgdHlwZSBSZXNlcnZhdGlvblN0YXR1cyB9IGZyb20gXCJAL2hvb2tzL2xvZGdpbmcvdXNlTG9kZ2VSZXNlcnZhdGlvbnNcIjtcclxuaW1wb3J0IHsgTG9kZ2luZ1BheW1lbnRCYWRnZSB9IGZyb20gXCJAL2NvbXBvbmVudHMvbG9kZ2luZy9Mb2RnaW5nUGF5bWVudEJhZGdlXCI7XHJcbmltcG9ydCB7IHRvYXN0IH0gZnJvbSBcInNvbm5lclwiO1xyXG5pbXBvcnQgQ2hhbmdlUmVxdWVzdHNJbmJveCBmcm9tIFwiQC9jb21wb25lbnRzL2xvZGdpbmcvaG9zdC9DaGFuZ2VSZXF1ZXN0c0luYm94XCI7XHJcbmltcG9ydCBIb3N0UmVzZXJ2YXRpb25PcHNTdW1tYXJ5IGZyb20gXCJAL2NvbXBvbmVudHMvbG9kZ2luZy9ob3N0L0hvc3RSZXNlcnZhdGlvbk9wc1N1bW1hcnlcIjtcclxuaW1wb3J0IHsgdXNlU3RvcmVDaGFuZ2VSZXF1ZXN0SW5ib3ggfSBmcm9tIFwiQC9ob29rcy9sb2RnaW5nL3VzZVJlc2VydmF0aW9uQ2hhbmdlUmVxdWVzdHNcIjtcclxuaW1wb3J0IHsgdXNlSG9zdExvZGdpbmdPcHNUb2FzdHMgfSBmcm9tIFwiQC9ob29rcy9sb2RnaW5nL3VzZUhvc3RMb2RnaW5nT3BzVG9hc3RzXCI7XHJcbmltcG9ydCB7IHJlc2VydmF0aW9uRGF0ZUxhYmVsLCByZXNlcnZhdGlvbk1pbnV0ZXMsIHJlc2VydmF0aW9uVGltZVJhbmdlTGFiZWwgfSBmcm9tIFwiQC9saWIvbG9kZ2luZy9yZXNlcnZhdGlvblRpbWVcIjtcclxuaW1wb3J0IExvZGdpbmdOZWVkc1NldHVwRW1wdHlTdGF0ZSBmcm9tIFwiLi9Mb2RnaW5nTmVlZHNTZXR1cEVtcHR5U3RhdGVcIjtcclxuXHJcbnR5cGUgUmVzZXJ2YXRpb25GaWx0ZXIgPSBSZXNlcnZhdGlvblN0YXR1cyB8IFwiYWN0aXZlXCIgfCBcImFsbFwiO1xyXG5jb25zdCBDTE9TRURfU1RBVFVTRVMgPSBuZXcgU2V0PFJlc2VydmF0aW9uU3RhdHVzPihbXCJjYW5jZWxsZWRcIiwgXCJjaGVja2VkX291dFwiLCBcIm5vX3Nob3dcIl0pO1xyXG5jb25zdCBTVEFUVVNFUzogUmVzZXJ2YXRpb25GaWx0ZXJbXSA9IFtcImFjdGl2ZVwiLCBcImFsbFwiLCBcImhvbGRcIiwgXCJjb25maXJtZWRcIiwgXCJjaGVja2VkX2luXCIsIFwiY2hlY2tlZF9vdXRcIiwgXCJjYW5jZWxsZWRcIiwgXCJub19zaG93XCJdO1xyXG5jb25zdCBTVEFUVVNfTEFCRUw6IFJlY29yZDxzdHJpbmcsIHN0cmluZz4gPSB7XHJcbiAgYWN0aXZlOiBcIkFjdGl2ZVwiLCBhbGw6IFwiQWxsXCIsIGhvbGQ6IFwiSG9sZFwiLCBjb25maXJtZWQ6IFwiQ29uZmlybWVkXCIsIGNoZWNrZWRfaW46IFwiQ2hlY2tlZC1JblwiLFxyXG4gIGNoZWNrZWRfb3V0OiBcIkNoZWNrZWQtT3V0XCIsIGNhbmNlbGxlZDogXCJDYW5jZWxsZWRcIiwgbm9fc2hvdzogXCJOby1TaG93XCIsXHJcbn07XHJcbmNvbnN0IFNUQVRVU19WQVJJQU5UOiBSZWNvcmQ8c3RyaW5nLCBcImRlZmF1bHRcIiB8IFwic2Vjb25kYXJ5XCIgfCBcIm91dGxpbmVcIiB8IFwiZGVzdHJ1Y3RpdmVcIj4gPSB7XHJcbiAgaG9sZDogXCJvdXRsaW5lXCIsIGNvbmZpcm1lZDogXCJzZWNvbmRhcnlcIiwgY2hlY2tlZF9pbjogXCJkZWZhdWx0XCIsIGNoZWNrZWRfb3V0OiBcIm91dGxpbmVcIiwgY2FuY2VsbGVkOiBcImRlc3RydWN0aXZlXCIsIG5vX3Nob3c6IFwiZGVzdHJ1Y3RpdmVcIixcclxufTtcclxuXHJcbmNvbnN0IG1vbmV5ID0gKGNlbnRzPzogbnVtYmVyIHwgbnVsbCkgPT4gYCQkeygoTnVtYmVyKGNlbnRzKSB8fCAwKSAvIDEwMCkudG9GaXhlZCgyKX1gO1xyXG50eXBlIFRpbWVGaWx0ZXIgPSBcImFsbFwiIHwgXCJtb3JuaW5nXCIgfCBcImFmdGVybm9vblwiIHwgXCJldmVuaW5nXCI7XHJcbnR5cGUgU29ydE1vZGUgPSBcImRhdGVfZGVzY1wiIHwgXCJkYXRlX2FzY1wiIHwgXCJjaGVja2luX2FzY1wiIHwgXCJjaGVja291dF9hc2NcIjtcclxuY29uc3QgVElNRV9MQUJFTDogUmVjb3JkPFRpbWVGaWx0ZXIsIHN0cmluZz4gPSB7IGFsbDogXCJBbnkgdGltZVwiLCBtb3JuaW5nOiBcIk1vcm5pbmdcIiwgYWZ0ZXJub29uOiBcIkFmdGVybm9vblwiLCBldmVuaW5nOiBcIkV2ZW5pbmdcIiB9O1xyXG5cclxuZXhwb3J0IGRlZmF1bHQgZnVuY3Rpb24gTG9kZ2luZ1Jlc2VydmF0aW9uc1NlY3Rpb24oeyBzdG9yZUlkIH06IHsgc3RvcmVJZDogc3RyaW5nIH0pIHtcclxuICBjb25zdCBuYXZpZ2F0ZSA9IHVzZU5hdmlnYXRlKCk7XHJcbiAgY29uc3QgbG9jYXRpb24gPSB1c2VMb2NhdGlvbigpO1xyXG4gIGNvbnN0IFtzZWFyY2hQYXJhbXMsIHNldFNlYXJjaFBhcmFtc10gPSB1c2VTZWFyY2hQYXJhbXMoKTtcclxuICBjb25zdCBpbml0aWFsU3RhdHVzID0gKHNlYXJjaFBhcmFtcy5nZXQoXCJ0YWJcIikgfHwgXCJhY3RpdmVcIikgYXMgUmVzZXJ2YXRpb25GaWx0ZXI7XHJcbiAgY29uc3QgW3N0YXR1cywgc2V0U3RhdHVzXSA9IHVzZVN0YXRlPFJlc2VydmF0aW9uRmlsdGVyPihTVEFUVVNFUy5pbmNsdWRlcyhpbml0aWFsU3RhdHVzKSA/IGluaXRpYWxTdGF0dXMgOiBcImFjdGl2ZVwiKTtcclxuICBjb25zdCBbcSwgc2V0UV0gPSB1c2VTdGF0ZShzZWFyY2hQYXJhbXMuZ2V0KFwicVwiKSB8fCBcIlwiKTtcclxuICBjb25zdCBbdGltZUZpbHRlciwgc2V0VGltZUZpbHRlcl0gPSB1c2VTdGF0ZTxUaW1lRmlsdGVyPigoc2VhcmNoUGFyYW1zLmdldChcInRpbWVcIikgYXMgVGltZUZpbHRlcikgfHwgXCJhbGxcIik7XHJcbiAgY29uc3QgW3NvcnRNb2RlLCBzZXRTb3J0TW9kZV0gPSB1c2VTdGF0ZTxTb3J0TW9kZT4oKHNlYXJjaFBhcmFtcy5nZXQoXCJzb3J0XCIpIGFzIFNvcnRNb2RlKSB8fCBcImRhdGVfZGVzY1wiKTtcclxuICBjb25zdCBxdWVyeVN0YXR1cyA9IHN0YXR1cyA9PT0gXCJhY3RpdmVcIiA/IFwiYWxsXCIgOiBzdGF0dXM7XHJcbiAgY29uc3QgeyBkYXRhOiByZXNlcnZhdGlvbnMgPSBbXSwgaXNMb2FkaW5nLCBzZXRTdGF0dXM6IHNldFJlc1N0YXR1cyB9ID0gdXNlTG9kZ2VSZXNlcnZhdGlvbnMoc3RvcmVJZCwgcXVlcnlTdGF0dXMpO1xyXG4gIGNvbnN0IHsgZGF0YTogcGVuZGluZ1JlcXVlc3RzID0gW10gfSA9IHVzZVN0b3JlQ2hhbmdlUmVxdWVzdEluYm94KHN0b3JlSWQpO1xyXG4gIHVzZUhvc3RMb2RnaW5nT3BzVG9hc3RzKHN0b3JlSWQpO1xyXG5cclxuICBjb25zdCBmaWx0ZXJlZCA9IHVzZU1lbW8oKCkgPT4ge1xyXG4gICAgY29uc3QgdGVybSA9IHEudHJpbSgpLnRvTG93ZXJDYXNlKCk7XHJcbiAgICBsZXQgc2NvcGVkID0gc3RhdHVzID09PSBcImFjdGl2ZVwiID8gcmVzZXJ2YXRpb25zLmZpbHRlcihyID0+ICFDTE9TRURfU1RBVFVTRVMuaGFzKHIuc3RhdHVzKSkgOiByZXNlcnZhdGlvbnM7XHJcbiAgICBpZiAodGltZUZpbHRlciAhPT0gXCJhbGxcIikge1xyXG4gICAgICBzY29wZWQgPSBzY29wZWQuZmlsdGVyKChyKSA9PiB7XHJcbiAgICAgICAgY29uc3QgbWlucyA9IHJlc2VydmF0aW9uTWludXRlcyhyLmNoZWNrX2luLCByLnJvb20/LmNoZWNrX2luX3RpbWUsIFwiY2hlY2tfaW5cIik7XHJcbiAgICAgICAgcmV0dXJuIHRpbWVGaWx0ZXIgPT09IFwibW9ybmluZ1wiID8gbWlucyA8IDEyICogNjAgOiB0aW1lRmlsdGVyID09PSBcImFmdGVybm9vblwiID8gbWlucyA+PSAxMiAqIDYwICYmIG1pbnMgPCAxNyAqIDYwIDogbWlucyA+PSAxNyAqIDYwO1xyXG4gICAgICB9KTtcclxuICAgIH1cclxuICAgIGlmICh0ZXJtKSBzY29wZWQgPSBzY29wZWQuZmlsdGVyKHIgPT5cclxuICAgICAgW3IuZ3Vlc3RfbmFtZSwgci5ndWVzdF9waG9uZSwgci5ndWVzdF9lbWFpbCwgci5udW1iZXIsIHIucm9vbV9udW1iZXIsIHIucGF5bWVudF9zdGF0dXMsIHIuc3RhdHVzXS5zb21lKHYgPT4gU3RyaW5nKHYgfHwgXCJcIikudG9Mb3dlckNhc2UoKS5pbmNsdWRlcyh0ZXJtKSlcclxuICAgICk7XHJcbiAgICByZXR1cm4gWy4uLnNjb3BlZF0uc29ydCgoYSwgYikgPT4ge1xyXG4gICAgICBpZiAoc29ydE1vZGUgPT09IFwiZGF0ZV9hc2NcIikgcmV0dXJuIG5ldyBEYXRlKGEuY2hlY2tfaW4pLmdldFRpbWUoKSAtIG5ldyBEYXRlKGIuY2hlY2tfaW4pLmdldFRpbWUoKTtcclxuICAgICAgaWYgKHNvcnRNb2RlID09PSBcImNoZWNraW5fYXNjXCIpIHJldHVybiByZXNlcnZhdGlvbk1pbnV0ZXMoYS5jaGVja19pbiwgYS5yb29tPy5jaGVja19pbl90aW1lLCBcImNoZWNrX2luXCIpIC0gcmVzZXJ2YXRpb25NaW51dGVzKGIuY2hlY2tfaW4sIGIucm9vbT8uY2hlY2tfaW5fdGltZSwgXCJjaGVja19pblwiKTtcclxuICAgICAgaWYgKHNvcnRNb2RlID09PSBcImNoZWNrb3V0X2FzY1wiKSByZXR1cm4gcmVzZXJ2YXRpb25NaW51dGVzKGEuY2hlY2tfb3V0LCBhLnJvb20/LmNoZWNrX291dF90aW1lLCBcImNoZWNrX291dFwiKSAtIHJlc2VydmF0aW9uTWludXRlcyhiLmNoZWNrX291dCwgYi5yb29tPy5jaGVja19vdXRfdGltZSwgXCJjaGVja19vdXRcIik7XHJcbiAgICAgIHJldHVybiBuZXcgRGF0ZShiLmNoZWNrX2luKS5nZXRUaW1lKCkgLSBuZXcgRGF0ZShhLmNoZWNrX2luKS5nZXRUaW1lKCk7XHJcbiAgICB9KTtcclxuICB9LCBbcmVzZXJ2YXRpb25zLCBxLCBzdGF0dXMsIHRpbWVGaWx0ZXIsIHNvcnRNb2RlXSk7XHJcblxyXG4gIGNvbnN0IGFjdCA9IGFzeW5jIChpZDogc3RyaW5nLCBzOiBSZXNlcnZhdGlvblN0YXR1cywgbXNnOiBzdHJpbmcpID0+IHtcclxuICAgIHRyeSB7IGF3YWl0IHNldFJlc1N0YXR1cy5tdXRhdGVBc3luYyh7IGlkLCBzdGF0dXM6IHMgfSk7IHRvYXN0LnN1Y2Nlc3MobXNnKTsgfVxyXG4gICAgY2F0Y2ggKGU6IGFueSkgeyB0b2FzdC5lcnJvcihlLm1lc3NhZ2UgfHwgXCJGYWlsZWRcIik7IH1cclxuICB9O1xyXG5cclxuICBjb25zdCBvcGVuUmVzZXJ2YXRpb24gPSAoaWQ6IHN0cmluZywgd29ya2Zsb3c/OiBcImNhbmNlbFwiIHwgXCJyZXZpZXdcIiB8IFwiYWRkb25zXCIgfCBcInBheW1lbnRcIiB8IFwiYXVkaXRcIiB8IFwid29ya2Zsb3dcIikgPT4ge1xyXG4gICAgY29uc3QgcGFyYW1zID0gbmV3IFVSTFNlYXJjaFBhcmFtcygpO1xyXG4gICAgaWYgKHN0YXR1cyAhPT0gXCJhY3RpdmVcIikgcGFyYW1zLnNldChcInRhYlwiLCBzdGF0dXMpO1xyXG4gICAgaWYgKHEudHJpbSgpKSBwYXJhbXMuc2V0KFwicVwiLCBxLnRyaW0oKSk7XHJcbiAgICBpZiAodGltZUZpbHRlciAhPT0gXCJhbGxcIikgcGFyYW1zLnNldChcInRpbWVcIiwgdGltZUZpbHRlcik7XHJcbiAgICBpZiAoc29ydE1vZGUgIT09IFwiZGF0ZV9kZXNjXCIpIHBhcmFtcy5zZXQoXCJzb3J0XCIsIHNvcnRNb2RlKTtcclxuICAgIGNvbnN0IHJldHVyblRvID0gYCR7bG9jYXRpb24ucGF0aG5hbWV9JHtwYXJhbXMudG9TdHJpbmcoKSA/IGA/JHtwYXJhbXN9YCA6IFwiXCJ9YDtcclxuICAgIG5hdmlnYXRlKGAvYWRtaW4vc3RvcmVzLyR7c3RvcmVJZH0vbG9kZ2luZy9yZXNlcnZhdGlvbnMvJHtpZH0ke3dvcmtmbG93ID8gYD93b3JrZmxvdz0ke3dvcmtmbG93fWAgOiBcIlwifWAsIHtcclxuICAgICAgc3RhdGU6IHsgcmV0dXJuVG8sIHdvcmtmbG93IH0sXHJcbiAgICB9KTtcclxuICB9O1xyXG5cclxuICBjb25zdCBzeW5jUGFyYW1zID0gKG5leHRTdGF0dXMgPSBzdGF0dXMsIG5leHRRID0gcSwgbmV4dFRpbWUgPSB0aW1lRmlsdGVyLCBuZXh0U29ydCA9IHNvcnRNb2RlKSA9PiB7XHJcbiAgICBjb25zdCBuZXh0ID0gbmV3IFVSTFNlYXJjaFBhcmFtcygpO1xyXG4gICAgaWYgKG5leHRTdGF0dXMgIT09IFwiYWN0aXZlXCIpIG5leHQuc2V0KFwidGFiXCIsIG5leHRTdGF0dXMpO1xyXG4gICAgaWYgKG5leHRRLnRyaW0oKSkgbmV4dC5zZXQoXCJxXCIsIG5leHRRLnRyaW0oKSk7XHJcbiAgICBpZiAobmV4dFRpbWUgIT09IFwiYWxsXCIpIG5leHQuc2V0KFwidGltZVwiLCBuZXh0VGltZSk7XHJcbiAgICBpZiAobmV4dFNvcnQgIT09IFwiZGF0ZV9kZXNjXCIpIG5leHQuc2V0KFwic29ydFwiLCBuZXh0U29ydCk7XHJcbiAgICBzZXRTZWFyY2hQYXJhbXMobmV4dCwgeyByZXBsYWNlOiB0cnVlIH0pO1xyXG4gIH07XHJcblxyXG4gIGNvbnN0IHVwZGF0ZUZpbHRlciA9IChuZXh0U3RhdHVzOiBSZXNlcnZhdGlvbkZpbHRlciwgbmV4dFEgPSBxKSA9PiB7XHJcbiAgICBzZXRTdGF0dXMobmV4dFN0YXR1cyk7XHJcbiAgICBzeW5jUGFyYW1zKG5leHRTdGF0dXMsIG5leHRRKTtcclxuICB9O1xyXG5cclxuICByZXR1cm4gKFxyXG4gICAgPGRpdiBjbGFzc05hbWU9XCJzcGFjZS15LTRcIj5cclxuICAgICAgPExvZGdpbmdRdWlja0p1bXAgYWN0aXZlPVwibG9kZ2UtcmVzZXJ2YXRpb25zXCIgLz5cclxuICAgICAgPExvZGdpbmdTZWN0aW9uU3RhdHVzQmFubmVyIHRpdGxlPVwiUmVzZXJ2YXRpb25zXCIgaWNvbj17Q2FsZW5kYXJSYW5nZX0gY291bnRMYWJlbD1cIlBlbmRpbmcgY2hhbmdlIHJlcXVlc3RzXCIgY291bnRWYWx1ZT17cGVuZGluZ1JlcXVlc3RzLmxlbmd0aH0gZml4TGFiZWw9XCJPcGVuIEZyb250IERlc2tcIiBmaXhUYWI9XCJsb2RnZS1mcm9udGRlc2tcIiAvPlxyXG4gICAgICA8SG9zdFJlc2VydmF0aW9uT3BzU3VtbWFyeSByZXNlcnZhdGlvbnM9e3Jlc2VydmF0aW9uc30gcmVxdWVzdHM9e3BlbmRpbmdSZXF1ZXN0c30gb25GaWx0ZXI9eyh2YWx1ZSkgPT4gc2V0USh2YWx1ZSl9IC8+XHJcbiAgICAgIDxDaGFuZ2VSZXF1ZXN0c0luYm94IHN0b3JlSWQ9e3N0b3JlSWR9IC8+XHJcbiAgICA8Q2FyZD5cclxuICAgICAgPENhcmRIZWFkZXIgY2xhc3NOYW1lPVwiZmxleCBmbGV4LXJvdyBpdGVtcy1jZW50ZXIganVzdGlmeS1iZXR3ZWVuIGdhcC0yXCI+XHJcbiAgICAgICAgPENhcmRUaXRsZSBjbGFzc05hbWU9XCJmbGV4IGl0ZW1zLWNlbnRlciBnYXAtMlwiPjxDYWxlbmRhclJhbmdlIGNsYXNzTmFtZT1cImgtNSB3LTVcIiAvPiBSZXNlcnZhdGlvbnM8L0NhcmRUaXRsZT5cclxuICAgICAgICA8QnV0dG9uXHJcbiAgICAgICAgICBzaXplPVwic21cIlxyXG4gICAgICAgICAgdmFyaWFudD1cIm91dGxpbmVcIlxyXG4gICAgICAgICAgY2xhc3NOYW1lPVwiaC04IGdhcC0xLjVcIlxyXG4gICAgICAgICAgZGlzYWJsZWQ9e2ZpbHRlcmVkLmxlbmd0aCA9PT0gMH1cclxuICAgICAgICAgIG9uQ2xpY2s9eygpID0+IGV4cG9ydFJlc2VydmF0aW9uc0NzdihmaWx0ZXJlZCl9XHJcbiAgICAgICAgPlxyXG4gICAgICAgICAgPERvd25sb2FkIGNsYXNzTmFtZT1cImgtMy41IHctMy41XCIgLz4gRXhwb3J0IENTVlxyXG4gICAgICAgIDwvQnV0dG9uPlxyXG4gICAgICA8L0NhcmRIZWFkZXI+XHJcbiAgICAgIDxDYXJkQ29udGVudCBjbGFzc05hbWU9XCJzcGFjZS15LTNcIj5cclxuICAgICAgICA8ZGl2IGNsYXNzTmFtZT1cImZsZXggZmxleC13cmFwIGdhcC0yIGl0ZW1zLWNlbnRlclwiPlxyXG4gICAgICAgICAge1NUQVRVU0VTLm1hcChzID0+IChcclxuICAgICAgICAgICAgPGJ1dHRvbiBrZXk9e3N9IG9uQ2xpY2s9eygpID0+IHVwZGF0ZUZpbHRlcihzKX1cclxuICAgICAgICAgICAgICBjbGFzc05hbWU9e2BweC0zIHB5LTEuNSByb3VuZGVkLWZ1bGwgdGV4dC14cyBmb250LXNlbWlib2xkIGJvcmRlciB0cmFuc2l0aW9uICR7c3RhdHVzID09PSBzID8gXCJiZy1wcmltYXJ5IHRleHQtcHJpbWFyeS1mb3JlZ3JvdW5kIGJvcmRlci1wcmltYXJ5XCIgOiBcImJnLWJhY2tncm91bmQgYm9yZGVyLWJvcmRlciB0ZXh0LW11dGVkLWZvcmVncm91bmRcIn1gfT5cclxuICAgICAgICAgICAgICB7U1RBVFVTX0xBQkVMW3NdfVxyXG4gICAgICAgICAgICA8L2J1dHRvbj5cclxuICAgICAgICAgICkpfVxyXG4gICAgICAgIDwvZGl2PlxyXG4gICAgICAgIDxkaXYgY2xhc3NOYW1lPVwicmVsYXRpdmVcIj5cclxuICAgICAgICAgIDxTZWFyY2ggY2xhc3NOYW1lPVwiYWJzb2x1dGUgbGVmdC0zIHRvcC0xLzIgLXRyYW5zbGF0ZS15LTEvMiBoLTQgdy00IHRleHQtbXV0ZWQtZm9yZWdyb3VuZFwiIC8+XHJcbiAgICAgICAgICA8SW5wdXQgdmFsdWU9e3F9IG9uQ2hhbmdlPXtlID0+IHsgc2V0UShlLnRhcmdldC52YWx1ZSk7IHVwZGF0ZUZpbHRlcihzdGF0dXMsIGUudGFyZ2V0LnZhbHVlKTsgfX0gcGxhY2Vob2xkZXI9XCJTZWFyY2ggZ3Vlc3QsIHBob25lLCBlbWFpbCwgcm9vbSwgcmVmLCBwYXltZW504oCmXCIgY2xhc3NOYW1lPVwicGwtOVwiIC8+XHJcbiAgICAgICAgPC9kaXY+XHJcbiAgICAgICAgPGRpdiBjbGFzc05hbWU9XCJmbGV4IGZsZXgtd3JhcCBpdGVtcy1jZW50ZXIgZ2FwLTIgcm91bmRlZC1sZyBib3JkZXIgYm9yZGVyLWJvcmRlciBiZy1tdXRlZC8yMCBwLTIgdGV4dC14c1wiPlxyXG4gICAgICAgICAgPHNwYW4gY2xhc3NOYW1lPVwiaW5saW5lLWZsZXggaXRlbXMtY2VudGVyIGdhcC0xIGZvbnQtc2VtaWJvbGQgdGV4dC1tdXRlZC1mb3JlZ3JvdW5kXCI+PENsb2NrIGNsYXNzTmFtZT1cImgtMy41IHctMy41XCIgLz4gVGltZTwvc3Bhbj5cclxuICAgICAgICAgIHsoW1wiYWxsXCIsIFwibW9ybmluZ1wiLCBcImFmdGVybm9vblwiLCBcImV2ZW5pbmdcIl0gYXMgVGltZUZpbHRlcltdKS5tYXAoKHZhbHVlKSA9PiAoXHJcbiAgICAgICAgICAgIDxidXR0b24ga2V5PXt2YWx1ZX0gb25DbGljaz17KCkgPT4geyBzZXRUaW1lRmlsdGVyKHZhbHVlKTsgc3luY1BhcmFtcyhzdGF0dXMsIHEsIHZhbHVlLCBzb3J0TW9kZSk7IH19IGNsYXNzTmFtZT17YHJvdW5kZWQtZnVsbCBib3JkZXIgcHgtMi41IHB5LTEgZm9udC1tZWRpdW0gdHJhbnNpdGlvbiAke3RpbWVGaWx0ZXIgPT09IHZhbHVlID8gXCJib3JkZXItcHJpbWFyeSBiZy1wcmltYXJ5IHRleHQtcHJpbWFyeS1mb3JlZ3JvdW5kXCIgOiBcImJvcmRlci1ib3JkZXIgYmctYmFja2dyb3VuZCB0ZXh0LW11dGVkLWZvcmVncm91bmRcIn1gfT57VElNRV9MQUJFTFt2YWx1ZV19PC9idXR0b24+XHJcbiAgICAgICAgICApKX1cclxuICAgICAgICAgIDxzZWxlY3QgdmFsdWU9e3NvcnRNb2RlfSBvbkNoYW5nZT17KGUpID0+IHsgY29uc3QgbmV4dCA9IGUudGFyZ2V0LnZhbHVlIGFzIFNvcnRNb2RlOyBzZXRTb3J0TW9kZShuZXh0KTsgc3luY1BhcmFtcyhzdGF0dXMsIHEsIHRpbWVGaWx0ZXIsIG5leHQpOyB9fSBjbGFzc05hbWU9XCJtbC1hdXRvIGgtOCByb3VuZGVkLW1kIGJvcmRlciBib3JkZXItYm9yZGVyIGJnLWJhY2tncm91bmQgcHgtMiB0ZXh0LXhzIHRleHQtZm9yZWdyb3VuZFwiPlxyXG4gICAgICAgICAgICA8b3B0aW9uIHZhbHVlPVwiZGF0ZV9kZXNjXCI+TmV3ZXN0IGNoZWNrLWluPC9vcHRpb24+XHJcbiAgICAgICAgICAgIDxvcHRpb24gdmFsdWU9XCJkYXRlX2FzY1wiPk9sZGVzdCBjaGVjay1pbjwvb3B0aW9uPlxyXG4gICAgICAgICAgICA8b3B0aW9uIHZhbHVlPVwiY2hlY2tpbl9hc2NcIj5DaGVjay1pbiB0aW1lPC9vcHRpb24+XHJcbiAgICAgICAgICAgIDxvcHRpb24gdmFsdWU9XCJjaGVja291dF9hc2NcIj5DaGVjay1vdXQgdGltZTwvb3B0aW9uPlxyXG4gICAgICAgICAgPC9zZWxlY3Q+XHJcbiAgICAgICAgPC9kaXY+XHJcblxyXG4gICAgICAgIHtpc0xvYWRpbmcgPyAoXHJcbiAgICAgICAgICA8cCBjbGFzc05hbWU9XCJ0ZXh0LXNtIHRleHQtbXV0ZWQtZm9yZWdyb3VuZCBweS04IHRleHQtY2VudGVyXCI+TG9hZGluZ+KApjwvcD5cclxuICAgICAgICApIDogZmlsdGVyZWQubGVuZ3RoID09PSAwID8gKFxyXG4gICAgICAgICAgPExvZGdpbmdOZWVkc1NldHVwRW1wdHlTdGF0ZSBpY29uPXtDYWxlbmRhclJhbmdlfSB0aXRsZT17cS50cmltKCkgPyBcIk5vIHJlc2VydmF0aW9ucyBtYXRjaCB5b3VyIHNlYXJjaFwiIDogc3RhdHVzID09PSBcImFjdGl2ZVwiID8gXCJSZXNlcnZhdGlvbiB3b3Jrc3BhY2UgaXMgcmVhZHlcIiA6IGBObyAke1NUQVRVU19MQUJFTFtzdGF0dXNdLnRvTG93ZXJDYXNlKCl9IHJlc2VydmF0aW9uc2B9IGRlc2NyaXB0aW9uPVwiTm8gbGl2ZSByZWNvcmRzIHlldC4gVGhpcyBzZWN0aW9uIGlzIGluc3RhbGxlZCBmb3IgYm9va2luZyByZXZpZXcsIGNoZWNrLWluIHdvcmtmbG93LCBwYXltZW50cywgcmVxdWVzdHMsIGFuZCBndWVzdCBoaXN0b3J5LlwiIHByaW1hcnlBY3Rpb249e3sgbGFiZWw6IFwiT3BlbiByb29tc1wiLCB0YWI6IFwibG9kZ2Utcm9vbXNcIiB9fSBzZWNvbmRhcnlBY3Rpb249e3sgbGFiZWw6IFwiT3BlbiByYXRlIHBsYW5zXCIsIHRhYjogXCJsb2RnZS1yYXRlLXBsYW5zXCIgfX0gbmV4dEJlc3RBY3Rpb249XCJTZXQgcm9vbXMgYW5kIHJhdGVzLCB0aGVuIGNyZWF0ZSBvciBpbXBvcnQgcmVzZXJ2YXRpb25zLlwiIC8+XHJcbiAgICAgICAgKSA6IChcclxuICAgICAgICAgIDxkaXYgY2xhc3NOYW1lPVwic3BhY2UteS0yXCI+XHJcbiAgICAgICAgICAgIHtmaWx0ZXJlZC5tYXAociA9PiB7XHJcbiAgICAgICAgICAgICAgY29uc3QgZGlzcGxheU5hbWUgPSByLmd1ZXN0X25hbWU/LnRyaW0oKSB8fCBgR3Vlc3QgwrcgJHtyLm51bWJlciB8fCByLmlkLnNsaWNlKDAsIDgpfWA7XHJcbiAgICAgICAgICAgICAgY29uc3QgYmFsYW5jZSA9IChyLnRvdGFsX2NlbnRzIHx8IDApIC0gKHIucGFpZF9jZW50cyB8fCAwKTtcclxuICAgICAgICAgICAgICBjb25zdCBwZW5kaW5nUmVxdWVzdCA9IHBlbmRpbmdSZXF1ZXN0cy5maW5kKHJlcSA9PiByZXEucmVzZXJ2YXRpb25faWQgPT09IHIuaWQpO1xyXG4gICAgICAgICAgICAgIGNvbnN0IGhhc1BlbmRpbmdSZXF1ZXN0ID0gISFwZW5kaW5nUmVxdWVzdDtcclxuICAgICAgICAgICAgICBjb25zdCBwYXltZW50TmVlZHNSZXZpZXcgPSBbXCJmYWlsZWRcIiwgXCJwZW5kaW5nXCIsIFwicHJvY2Vzc2luZ1wiXS5pbmNsdWRlcyhTdHJpbmcoci5wYXltZW50X3N0YXR1cyB8fCBcIlwiKSk7XHJcbiAgICAgICAgICAgICAgY29uc3QgaXNDbG9zZWQgPSBDTE9TRURfU1RBVFVTRVMuaGFzKHIuc3RhdHVzKTtcclxuICAgICAgICAgICAgICBjb25zdCBuZWVkc1JldmlldyA9IGhhc1BlbmRpbmdSZXF1ZXN0IHx8IGJhbGFuY2UgPiAwIHx8IHBheW1lbnROZWVkc1JldmlldyB8fCBpc0Nsb3NlZDtcclxuICAgICAgICAgICAgICBjb25zdCByZXZpZXdXb3JrZmxvdyA9IHBlbmRpbmdSZXF1ZXN0Py50eXBlID09PSBcImFkZG9uXCIgPyBcImFkZG9uc1wiIDogaGFzUGVuZGluZ1JlcXVlc3QgPyBcIndvcmtmbG93XCIgOiBwYXltZW50TmVlZHNSZXZpZXcgfHwgYmFsYW5jZSA+IDAgPyBcInBheW1lbnRcIiA6IGlzQ2xvc2VkID8gXCJhdWRpdFwiIDogXCJyZXZpZXdcIjtcclxuICAgICAgICAgICAgICByZXR1cm4gKFxyXG4gICAgICAgICAgICAgIDxkaXYga2V5PXtyLmlkfSBjbGFzc05hbWU9XCJwLTMgcm91bmRlZC1sZyBib3JkZXIgYmctY2FyZCB0cmFuc2l0aW9uIGhvdmVyOmJvcmRlci1wcmltYXJ5LzQwIGZvY3VzLXdpdGhpbjpib3JkZXItcHJpbWFyeS80MFwiPlxyXG4gICAgICAgICAgICAgICAgPGJ1dHRvblxyXG4gICAgICAgICAgICAgICAgICB0eXBlPVwiYnV0dG9uXCJcclxuICAgICAgICAgICAgICAgICAgb25DbGljaz17KCkgPT4gb3BlblJlc2VydmF0aW9uKHIuaWQpfVxyXG4gICAgICAgICAgICAgICAgICBjbGFzc05hbWU9XCJ3LWZ1bGwgdGV4dC1sZWZ0IHJvdW5kZWQtbWQgZm9jdXMtdmlzaWJsZTpvdXRsaW5lLW5vbmUgZm9jdXMtdmlzaWJsZTpyaW5nLTIgZm9jdXMtdmlzaWJsZTpyaW5nLXJpbmcgZm9jdXMtdmlzaWJsZTpyaW5nLW9mZnNldC0yXCJcclxuICAgICAgICAgICAgICAgID5cclxuICAgICAgICAgICAgICAgICAgPGRpdiBjbGFzc05hbWU9XCJmbGV4IGl0ZW1zLXN0YXJ0IGp1c3RpZnktYmV0d2VlbiBnYXAtMlwiPlxyXG4gICAgICAgICAgICAgICAgICAgIDxkaXYgY2xhc3NOYW1lPVwibWluLXctMCBmbGV4LTFcIj5cclxuICAgICAgICAgICAgICAgICAgICAgIDxkaXYgY2xhc3NOYW1lPVwiZmxleCBpdGVtcy1jZW50ZXIgZ2FwLTIgZmxleC13cmFwXCI+XHJcbiAgICAgICAgICAgICAgICAgICAgICAgICA8c3BhbiBjbGFzc05hbWU9XCJmb250LXNlbWlib2xkIHRleHQtc21cIj57ZGlzcGxheU5hbWV9PC9zcGFuPlxyXG4gICAgICAgICAgICAgICAgICAgICAgICA8QmFkZ2UgdmFyaWFudD17U1RBVFVTX1ZBUklBTlRbci5zdGF0dXNdIHx8IFwib3V0bGluZVwifSBjbGFzc05hbWU9XCJ0ZXh0LVsxMHB4XVwiPntTVEFUVVNfTEFCRUxbci5zdGF0dXNdfTwvQmFkZ2U+XHJcbiAgICAgICAgICAgICAgICAgICAgICAgIDxzcGFuIGNsYXNzTmFtZT1cInRleHQtWzEwcHhdIHRleHQtbXV0ZWQtZm9yZWdyb3VuZCBmb250LW1vbm9cIj57ci5udW1iZXJ9PC9zcGFuPlxyXG4gICAgICAgICAgICAgICAgICAgICAgPC9kaXY+XHJcbiAgICAgICAgICAgICAgICAgICAgICA8ZGl2IGNsYXNzTmFtZT1cIm10LTEgZ3JpZCBnYXAtMSB0ZXh0LXhzIHRleHQtbXV0ZWQtZm9yZWdyb3VuZCBzbTpncmlkLWNvbHMtMlwiPlxyXG4gICAgICAgICAgICAgICAgICAgICAgICA8c3BhbiBjbGFzc05hbWU9XCJpbmxpbmUtZmxleCBpdGVtcy1jZW50ZXIgZ2FwLTEuNVwiPjxDYWxlbmRhclJhbmdlIGNsYXNzTmFtZT1cImgtMyB3LTNcIiAvPiB7cmVzZXJ2YXRpb25EYXRlTGFiZWwoci5jaGVja19pbil9IOKGkiB7cmVzZXJ2YXRpb25EYXRlTGFiZWwoci5jaGVja19vdXQpfSDCtyB7ci5uaWdodHN9IG5pZ2h0e3IubmlnaHRzICE9PSAxID8gXCJzXCIgOiBcIlwifTwvc3Bhbj5cclxuICAgICAgICAgICAgICAgICAgICAgICAgPHNwYW4gY2xhc3NOYW1lPVwiaW5saW5lLWZsZXggaXRlbXMtY2VudGVyIGdhcC0xLjVcIj48Q2xvY2sgY2xhc3NOYW1lPVwiaC0zIHctM1wiIC8+IHtyZXNlcnZhdGlvblRpbWVSYW5nZUxhYmVsKHIuY2hlY2tfaW4sIHIuY2hlY2tfb3V0LCByLnJvb20/LmNoZWNrX2luX3RpbWUsIHIucm9vbT8uY2hlY2tfb3V0X3RpbWUpfTwvc3Bhbj5cclxuICAgICAgICAgICAgICAgICAgICAgIDwvZGl2PlxyXG4gICAgICAgICAgICAgICAgICAgICAgPHAgY2xhc3NOYW1lPVwidGV4dC1bMTFweF0gdGV4dC1tdXRlZC1mb3JlZ3JvdW5kIG10LTAuNVwiPntyLmFkdWx0c30gYWR1bHR7ci5hZHVsdHMgIT09IDEgPyBcInNcIiA6IFwiXCJ9e3IuY2hpbGRyZW4gPyBgIMK3ICR7ci5jaGlsZHJlbn0gY2hpbGQke3IuY2hpbGRyZW4gPiAxID8gXCJyZW5cIiA6IFwiXCJ9YCA6IFwiXCJ9PC9wPlxyXG4gICAgICAgICAgICAgICAgICAgICAgPHAgY2xhc3NOYW1lPVwidGV4dC1bMTFweF0gdGV4dC1tdXRlZC1mb3JlZ3JvdW5kIG10LTAuNSBmbGV4IGl0ZW1zLWNlbnRlciBnYXAtMS41IGZsZXgtd3JhcFwiPlxyXG4gICAgICAgICAgICAgICAgICAgICAgICA8c3BhbiBjbGFzc05hbWU9XCJpbmxpbmUtZmxleCBpdGVtcy1jZW50ZXIgZ2FwLTFcIj48QmVkRG91YmxlIGNsYXNzTmFtZT1cImgtMyB3LTNcIiAvPntyLnJvb21fbnVtYmVyID8gYFVuaXQgJHtyLnJvb21fbnVtYmVyfWAgOiBcIlJvb20gdW5hc3NpZ25lZFwifTwvc3Bhbj5cclxuICAgICAgICAgICAgICAgICAgICAgICAge3IuZ3Vlc3RfcGhvbmUgJiYgPHNwYW4gY2xhc3NOYW1lPVwiaW5saW5lLWZsZXggaXRlbXMtY2VudGVyIGdhcC0xXCI+PFBob25lIGNsYXNzTmFtZT1cImgtMyB3LTNcIiAvPntyLmd1ZXN0X3Bob25lfTwvc3Bhbj59XHJcbiAgICAgICAgICAgICAgICAgICAgICAgIHtyLmd1ZXN0X2VtYWlsICYmIDxzcGFuIGNsYXNzTmFtZT1cImlubGluZS1mbGV4IGl0ZW1zLWNlbnRlciBnYXAtMVwiPjxNYWlsIGNsYXNzTmFtZT1cImgtMyB3LTNcIiAvPntyLmd1ZXN0X2VtYWlsfTwvc3Bhbj59XHJcbiAgICAgICAgICAgICAgICAgICAgICA8L3A+XHJcbiAgICAgICAgICAgICAgICAgICAgICA8ZGl2IGNsYXNzTmFtZT1cImZsZXggaXRlbXMtY2VudGVyIGdhcC0xLjUgbXQtMSBmbGV4LXdyYXBcIj5cclxuICAgICAgICAgICAgICAgICAgICAgICAgPExvZGdpbmdQYXltZW50QmFkZ2Ugc3RhdHVzPXsociBhcyBhbnkpLnBheW1lbnRfc3RhdHVzfSByZXNlcnZhdGlvblN0YXR1cz17ci5zdGF0dXN9IGFtb3VudENlbnRzPXsociBhcyBhbnkpLmRlcG9zaXRfY2VudHMgfHwgci50b3RhbF9jZW50c30gLz5cclxuICAgICAgICAgICAgICAgICAgICAgICAge2JhbGFuY2UgPiAwICYmIDxCYWRnZSB2YXJpYW50PVwiZGVzdHJ1Y3RpdmVcIiBjbGFzc05hbWU9XCJ0ZXh0LVsxMHB4XVwiPkJhbGFuY2Uge21vbmV5KGJhbGFuY2UpfTwvQmFkZ2U+fVxyXG4gICAgICAgICAgICAgICAgICAgICAgICB7aGFzUGVuZGluZ1JlcXVlc3QgJiYgPEJhZGdlIHZhcmlhbnQ9XCJzZWNvbmRhcnlcIiBjbGFzc05hbWU9XCJ0ZXh0LVsxMHB4XVwiPlBlbmRpbmcgZ3Vlc3QgcmVxdWVzdDwvQmFkZ2U+fVxyXG4gICAgICAgICAgICAgICAgICAgICAgICB7ci5zdGF0dXMgPT09IFwiY2FuY2VsbGVkXCIgJiYgU3RyaW5nKHIucGF5bWVudF9zdGF0dXMpLmluY2x1ZGVzKFwicmVmdW5kXCIpICYmIDxCYWRnZSB2YXJpYW50PVwic2Vjb25kYXJ5XCIgY2xhc3NOYW1lPVwidGV4dC1bMTBweF1cIj5SZWZ1bmQgd29ya2Zsb3c8L0JhZGdlPn1cclxuICAgICAgICAgICAgICAgICAgICAgICAgeyhyIGFzIGFueSkucG9saWN5X2NvbnNlbnQgJiYgKFxyXG4gICAgICAgICAgICAgICAgICAgICAgICAgIDxzcGFuIGNsYXNzTmFtZT1cImlubGluZS1mbGV4IGl0ZW1zLWNlbnRlciBnYXAtMC41IHRleHQtWzEwcHhdIGZvbnQtc2VtaWJvbGQgdGV4dC1wcmltYXJ5XCI+XHJcbiAgICAgICAgICAgICAgICAgICAgICAgICAgICA8U2hpZWxkQ2hlY2sgY2xhc3NOYW1lPVwiaC0yLjUgdy0yLjVcIiAvPiBQb2xpY2llcyBhY2tub3dsZWRnZWRcclxuICAgICAgICAgICAgICAgICAgICAgICAgICA8L3NwYW4+XHJcbiAgICAgICAgICAgICAgICAgICAgICAgICl9XHJcbiAgICAgICAgICAgICAgICAgICAgICA8L2Rpdj5cclxuICAgICAgICAgICAgICAgICAgICA8L2Rpdj5cclxuICAgICAgICAgICAgICAgICAgICA8ZGl2IGNsYXNzTmFtZT1cInRleHQtcmlnaHQgc2hyaW5rLTAgZmxleCBpdGVtcy1jZW50ZXIgZ2FwLTFcIj5cclxuICAgICAgICAgICAgICAgICAgICAgIDxkaXY+XHJcbiAgICAgICAgICAgICAgICAgICAgICAgIDxwIGNsYXNzTmFtZT1cImZvbnQtYm9sZCB0ZXh0LXNtXCI+e21vbmV5KHIudG90YWxfY2VudHMpfTwvcD5cclxuICAgICAgICAgICAgICAgICAgICAgICAgPHAgY2xhc3NOYW1lPVwidGV4dC1bMTBweF0gdGV4dC1tdXRlZC1mb3JlZ3JvdW5kIGNhcGl0YWxpemVcIj5QYWlkIHttb25leShyLnBhaWRfY2VudHMgfHwgMCl9PC9wPlxyXG4gICAgICAgICAgICAgICAgICAgICAgPC9kaXY+XHJcbiAgICAgICAgICAgICAgICAgICAgICA8Q2hldnJvblJpZ2h0IGNsYXNzTmFtZT1cImgtNCB3LTQgdGV4dC1tdXRlZC1mb3JlZ3JvdW5kXCIgLz5cclxuICAgICAgICAgICAgICAgICAgICA8L2Rpdj5cclxuICAgICAgICAgICAgICAgICAgPC9kaXY+XHJcbiAgICAgICAgICAgICAgICA8L2J1dHRvbj5cclxuICAgICAgICAgICAgICAgIDxkaXYgY2xhc3NOYW1lPVwiZmxleCBmbGV4LXdyYXAgZ2FwLTEgbXQtMlwiPlxyXG4gICAgICAgICAgICAgICAgICA8QnV0dG9uIHNpemU9XCJzbVwiIHZhcmlhbnQ9XCJvdXRsaW5lXCIgY2xhc3NOYW1lPVwiaC03IHRleHQteHMgZ2FwLTFcIiBvbkNsaWNrPXsoKSA9PiBvcGVuUmVzZXJ2YXRpb24oci5pZCl9PjxFeHRlcm5hbExpbmsgY2xhc3NOYW1lPVwiaC0zIHctM1wiIC8+IE9wZW48L0J1dHRvbj5cclxuICAgICAgICAgICAgICAgICAge25lZWRzUmV2aWV3ICYmIDxCdXR0b24gc2l6ZT1cInNtXCIgdmFyaWFudD1cInNlY29uZGFyeVwiIGNsYXNzTmFtZT1cImgtNyB0ZXh0LXhzIGdhcC0xXCIgb25DbGljaz17KCkgPT4gb3BlblJlc2VydmF0aW9uKHIuaWQsIHJldmlld1dvcmtmbG93KX0+PENsaXBib2FyZENoZWNrIGNsYXNzTmFtZT1cImgtMyB3LTNcIiAvPiBSZXZpZXc8L0J1dHRvbj59XHJcbiAgICAgICAgICAgICAgICAgIHtyLmd1ZXN0X2VtYWlsICYmIDxCdXR0b24gc2l6ZT1cInNtXCIgdmFyaWFudD1cIm91dGxpbmVcIiBjbGFzc05hbWU9XCJoLTcgdGV4dC14cyBnYXAtMVwiIG9uQ2xpY2s9eygpID0+IHNlbmRDb25maXJtYXRpb25FbWFpbChyKX0+PFNlbmQgY2xhc3NOYW1lPVwiaC0zIHctM1wiIC8+IFNlbmQgY29uZmlybWF0aW9uPC9CdXR0b24+fVxyXG4gICAgICAgICAgICAgICAgICB7ci5zdGF0dXMgPT09IFwiaG9sZFwiICYmIDxCdXR0b24gc2l6ZT1cInNtXCIgdmFyaWFudD1cIm91dGxpbmVcIiBjbGFzc05hbWU9XCJoLTcgdGV4dC14cyBnYXAtMVwiIG9uQ2xpY2s9eygpID0+IGFjdChyLmlkLCBcImNvbmZpcm1lZFwiLCBcIkNvbmZpcm1lZFwiKX0+PENoZWNrQ2lyY2xlMiBjbGFzc05hbWU9XCJoLTMgdy0zXCIgLz4gQ29uZmlybTwvQnV0dG9uPn1cclxuICAgICAgICAgICAgICAgICAgeyhyLnN0YXR1cyA9PT0gXCJjb25maXJtZWRcIiB8fCByLnN0YXR1cyA9PT0gXCJob2xkXCIpICYmIDxCdXR0b24gc2l6ZT1cInNtXCIgdmFyaWFudD1cIm91dGxpbmVcIiBjbGFzc05hbWU9XCJoLTcgdGV4dC14cyBnYXAtMVwiIG9uQ2xpY2s9eygpID0+IGFjdChyLmlkLCBcImNoZWNrZWRfaW5cIiwgXCJDaGVja2VkIGluXCIpfT48TG9nSW4gY2xhc3NOYW1lPVwiaC0zIHctM1wiIC8+IENoZWNrLUluPC9CdXR0b24+fVxyXG4gICAgICAgICAgICAgICAgICB7ci5zdGF0dXMgPT09IFwiY2hlY2tlZF9pblwiICYmIDxCdXR0b24gc2l6ZT1cInNtXCIgdmFyaWFudD1cIm91dGxpbmVcIiBjbGFzc05hbWU9XCJoLTcgdGV4dC14cyBnYXAtMVwiIG9uQ2xpY2s9eygpID0+IGFjdChyLmlkLCBcImNoZWNrZWRfb3V0XCIsIFwiQ2hlY2tlZCBvdXRcIil9PjxMb2dPdXQgY2xhc3NOYW1lPVwiaC0zIHctM1wiIC8+IENoZWNrLU91dDwvQnV0dG9uPn1cclxuICAgICAgICAgICAgICAgICAgeyFDTE9TRURfU1RBVFVTRVMuaGFzKHIuc3RhdHVzKSAmJiA8QnV0dG9uIHNpemU9XCJzbVwiIHZhcmlhbnQ9XCJnaG9zdFwiIGNsYXNzTmFtZT1cImgtNyB0ZXh0LXhzIGdhcC0xIHRleHQtZGVzdHJ1Y3RpdmVcIiBvbkNsaWNrPXsoKSA9PiBvcGVuUmVzZXJ2YXRpb24oci5pZCwgXCJjYW5jZWxcIil9PjxYQ2lyY2xlIGNsYXNzTmFtZT1cImgtMyB3LTNcIiAvPiBDYW5jZWwgLyBOby1zaG93PC9CdXR0b24+fVxyXG4gICAgICAgICAgICAgICAgPC9kaXY+XHJcbiAgICAgICAgICAgICAgPC9kaXY+XHJcbiAgICAgICAgICAgICk7fSl9XHJcbiAgICAgICAgICA8L2Rpdj5cclxuICAgICAgICApfVxyXG4gICAgICA8L0NhcmRDb250ZW50PlxyXG4gICAgPC9DYXJkPlxyXG4gICAgPC9kaXY+XHJcbiAgKTtcclxufVxyXG5cclxuZnVuY3Rpb24gY3N2RXNjYXBlKHZhbHVlOiB1bmtub3duKSB7XHJcbiAgY29uc3QgcyA9IHZhbHVlID09IG51bGwgPyBcIlwiIDogU3RyaW5nKHZhbHVlKTtcclxuICBpZiAoL1tcIixcXG5dLy50ZXN0KHMpKSByZXR1cm4gYFwiJHtzLnJlcGxhY2UoL1wiL2csICdcIlwiJyl9XCJgO1xyXG4gIHJldHVybiBzO1xyXG59XHJcblxyXG5mdW5jdGlvbiBleHBvcnRSZXNlcnZhdGlvbnNDc3Yocm93czogYW55W10pIHtcclxuICBjb25zdCBoZWFkZXJzID0gW1wiTnVtYmVyXCIsIFwiR3Vlc3RcIiwgXCJFbWFpbFwiLCBcIlBob25lXCIsIFwiUm9vbVwiLCBcIkNoZWNrLWluXCIsIFwiQ2hlY2stb3V0XCIsIFwiTmlnaHRzXCIsIFwiQWR1bHRzXCIsIFwiQ2hpbGRyZW5cIiwgXCJTdGF0dXNcIiwgXCJQYXltZW50XCIsIFwiVG90YWxcIiwgXCJQYWlkXCIsIFwiQmFsYW5jZVwiXTtcclxuICBjb25zdCBsaW5lcyA9IFtoZWFkZXJzLmpvaW4oXCIsXCIpXTtcclxuICBmb3IgKGNvbnN0IHIgb2Ygcm93cykge1xyXG4gICAgY29uc3QgdG90YWwgPSBOdW1iZXIoci50b3RhbF9jZW50cyB8fCAwKSAvIDEwMDtcclxuICAgIGNvbnN0IHBhaWQgPSBOdW1iZXIoci5wYWlkX2NlbnRzIHx8IDApIC8gMTAwO1xyXG4gICAgbGluZXMucHVzaChbXHJcbiAgICAgIHIubnVtYmVyLCByLmd1ZXN0X25hbWUsIHIuZ3Vlc3RfZW1haWwsIHIuZ3Vlc3RfcGhvbmUsIHIucm9vbV9udW1iZXIsXHJcbiAgICAgIHIuY2hlY2tfaW4sIHIuY2hlY2tfb3V0LCByLm5pZ2h0cywgci5hZHVsdHMsIHIuY2hpbGRyZW4sXHJcbiAgICAgIHIuc3RhdHVzLCByLnBheW1lbnRfc3RhdHVzLCB0b3RhbC50b0ZpeGVkKDIpLCBwYWlkLnRvRml4ZWQoMiksICh0b3RhbCAtIHBhaWQpLnRvRml4ZWQoMiksXHJcbiAgICBdLm1hcChjc3ZFc2NhcGUpLmpvaW4oXCIsXCIpKTtcclxuICB9XHJcbiAgY29uc3QgYmxvYiA9IG5ldyBCbG9iKFtsaW5lcy5qb2luKFwiXFxuXCIpXSwgeyB0eXBlOiBcInRleHQvY3N2O2NoYXJzZXQ9dXRmLThcIiB9KTtcclxuICBjb25zdCB1cmwgPSBVUkwuY3JlYXRlT2JqZWN0VVJMKGJsb2IpO1xyXG4gIGNvbnN0IGEgPSBkb2N1bWVudC5jcmVhdGVFbGVtZW50KFwiYVwiKTtcclxuICBhLmhyZWYgPSB1cmw7XHJcbiAgYS5kb3dubG9hZCA9IGByZXNlcnZhdGlvbnMtJHtuZXcgRGF0ZSgpLnRvSVNPU3RyaW5nKCkuc2xpY2UoMCwgMTApfS5jc3ZgO1xyXG4gIGRvY3VtZW50LmJvZHkuYXBwZW5kQ2hpbGQoYSk7IGEuY2xpY2soKTsgYS5yZW1vdmUoKTtcclxuICBVUkwucmV2b2tlT2JqZWN0VVJMKHVybCk7XHJcbn1cclxuXHJcbmZ1bmN0aW9uIHNlbmRDb25maXJtYXRpb25FbWFpbChyOiBhbnkpIHtcclxuICBjb25zdCBzdWJqZWN0ID0gYEJvb2tpbmcgY29uZmlybWF0aW9uIMK3ICR7ci5udW1iZXIgfHwgXCJcIn1gO1xyXG4gIGNvbnN0IGJvZHkgPSBbXHJcbiAgICBgSGVsbG8gJHtyLmd1ZXN0X25hbWUgfHwgXCJndWVzdFwifSxgLFxyXG4gICAgXCJcIixcclxuICAgIFwiVGhhbmsgeW91IGZvciB5b3VyIGJvb2tpbmcuIEhlcmUgYXJlIHlvdXIgcmVzZXJ2YXRpb24gZGV0YWlsczpcIixcclxuICAgIGBSZXNlcnZhdGlvbjogJHtyLm51bWJlciB8fCBcIlwifWAsXHJcbiAgICBgUm9vbTogJHtyLnJvb21fbnVtYmVyIHx8IFwi4oCUXCJ9YCxcclxuICAgIGBDaGVjay1pbjogJHtyLmNoZWNrX2lufWAsXHJcbiAgICBgQ2hlY2stb3V0OiAke3IuY2hlY2tfb3V0fWAsXHJcbiAgICBgTmlnaHRzOiAke3IubmlnaHRzfWAsXHJcbiAgICBgR3Vlc3RzOiAke3IuYWR1bHRzfSBhZHVsdChzKSR7ci5jaGlsZHJlbiA/IGAgwrcgJHtyLmNoaWxkcmVufSBjaGlsZChyZW4pYCA6IFwiXCJ9YCxcclxuICAgIGBUb3RhbDogJCR7KE51bWJlcihyLnRvdGFsX2NlbnRzIHx8IDApIC8gMTAwKS50b0ZpeGVkKDIpfWAsXHJcbiAgICBgQmFsYW5jZSBkdWU6ICQkeygoTnVtYmVyKHIudG90YWxfY2VudHMgfHwgMCkgLSBOdW1iZXIoci5wYWlkX2NlbnRzIHx8IDApKSAvIDEwMCkudG9GaXhlZCgyKX1gLFxyXG4gICAgXCJcIixcclxuICAgIFwiV2UgbG9vayBmb3J3YXJkIHRvIHdlbGNvbWluZyB5b3UuXCIsXHJcbiAgXS5qb2luKFwiXFxuXCIpO1xyXG4gIGNvbnN0IGhyZWYgPSBgbWFpbHRvOiR7ZW5jb2RlVVJJQ29tcG9uZW50KHIuZ3Vlc3RfZW1haWwpfT9zdWJqZWN0PSR7ZW5jb2RlVVJJQ29tcG9uZW50KHN1YmplY3QpfSZib2R5PSR7ZW5jb2RlVVJJQ29tcG9uZW50KGJvZHkpfWA7XHJcbiAgd2luZG93LmxvY2F0aW9uLmhyZWYgPSBocmVmO1xyXG59XHJcbiJdLCJuYW1lcyI6WyJ1c2VNZW1vIiwidXNlU3RhdGUiLCJMb2RnaW5nUXVpY2tKdW1wIiwiTG9kZ2luZ1NlY3Rpb25TdGF0dXNCYW5uZXIiLCJ1c2VMb2NhdGlvbiIsInVzZU5hdmlnYXRlIiwidXNlU2VhcmNoUGFyYW1zIiwiQ2FyZCIsIkNhcmRDb250ZW50IiwiQ2FyZEhlYWRlciIsIkNhcmRUaXRsZSIsIkJ1dHRvbiIsIkJhZGdlIiwiSW5wdXQiLCJDYWxlbmRhclJhbmdlIiwiU2VhcmNoIiwiQ2hlY2tDaXJjbGUyIiwiTG9nSW4iLCJMb2dPdXQiLCJYQ2lyY2xlIiwiQ2hldnJvblJpZ2h0IiwiU2hpZWxkQ2hlY2siLCJCZWREb3VibGUiLCJNYWlsIiwiUGhvbmUiLCJFeHRlcm5hbExpbmsiLCJDbGlwYm9hcmRDaGVjayIsIkNsb2NrIiwiRG93bmxvYWQiLCJTZW5kIiwidXNlTG9kZ2VSZXNlcnZhdGlvbnMiLCJMb2RnaW5nUGF5bWVudEJhZGdlIiwidG9hc3QiLCJDaGFuZ2VSZXF1ZXN0c0luYm94IiwiSG9zdFJlc2VydmF0aW9uT3BzU3VtbWFyeSIsInVzZVN0b3JlQ2hhbmdlUmVxdWVzdEluYm94IiwidXNlSG9zdExvZGdpbmdPcHNUb2FzdHMiLCJyZXNlcnZhdGlvbkRhdGVMYWJlbCIsInJlc2VydmF0aW9uTWludXRlcyIsInJlc2VydmF0aW9uVGltZVJhbmdlTGFiZWwiLCJMb2RnaW5nTmVlZHNTZXR1cEVtcHR5U3RhdGUiLCJDTE9TRURfU1RBVFVTRVMiLCJTZXQiLCJTVEFUVVNFUyIsIlNUQVRVU19MQUJFTCIsImFjdGl2ZSIsImFsbCIsImhvbGQiLCJjb25maXJtZWQiLCJjaGVja2VkX2luIiwiY2hlY2tlZF9vdXQiLCJjYW5jZWxsZWQiLCJub19zaG93IiwiU1RBVFVTX1ZBUklBTlQiLCJtb25leSIsImNlbnRzIiwiTnVtYmVyIiwidG9GaXhlZCIsIlRJTUVfTEFCRUwiLCJtb3JuaW5nIiwiYWZ0ZXJub29uIiwiZXZlbmluZyIsIkxvZGdpbmdSZXNlcnZhdGlvbnNTZWN0aW9uIiwic3RvcmVJZCIsIm5hdmlnYXRlIiwibG9jYXRpb24iLCJzZWFyY2hQYXJhbXMiLCJzZXRTZWFyY2hQYXJhbXMiLCJpbml0aWFsU3RhdHVzIiwiZ2V0Iiwic3RhdHVzIiwic2V0U3RhdHVzIiwiaW5jbHVkZXMiLCJxIiwic2V0USIsInRpbWVGaWx0ZXIiLCJzZXRUaW1lRmlsdGVyIiwic29ydE1vZGUiLCJzZXRTb3J0TW9kZSIsInF1ZXJ5U3RhdHVzIiwiZGF0YSIsInJlc2VydmF0aW9ucyIsImlzTG9hZGluZyIsInNldFJlc1N0YXR1cyIsInBlbmRpbmdSZXF1ZXN0cyIsImZpbHRlcmVkIiwidGVybSIsInRyaW0iLCJ0b0xvd2VyQ2FzZSIsInNjb3BlZCIsImZpbHRlciIsInIiLCJoYXMiLCJtaW5zIiwiY2hlY2tfaW4iLCJyb29tIiwiY2hlY2tfaW5fdGltZSIsImd1ZXN0X25hbWUiLCJndWVzdF9waG9uZSIsImd1ZXN0X2VtYWlsIiwibnVtYmVyIiwicm9vbV9udW1iZXIiLCJwYXltZW50X3N0YXR1cyIsInNvbWUiLCJ2IiwiU3RyaW5nIiwic29ydCIsImEiLCJiIiwiRGF0ZSIsImdldFRpbWUiLCJjaGVja19vdXQiLCJjaGVja19vdXRfdGltZSIsImFjdCIsImlkIiwicyIsIm1zZyIsIm11dGF0ZUFzeW5jIiwic3VjY2VzcyIsImUiLCJlcnJvciIsIm1lc3NhZ2UiLCJvcGVuUmVzZXJ2YXRpb24iLCJ3b3JrZmxvdyIsInBhcmFtcyIsIlVSTFNlYXJjaFBhcmFtcyIsInNldCIsInJldHVyblRvIiwicGF0aG5hbWUiLCJ0b1N0cmluZyIsInN0YXRlIiwic3luY1BhcmFtcyIsIm5leHRTdGF0dXMiLCJuZXh0USIsIm5leHRUaW1lIiwibmV4dFNvcnQiLCJuZXh0IiwicmVwbGFjZSIsInVwZGF0ZUZpbHRlciIsImRpdiIsImNsYXNzTmFtZSIsInRpdGxlIiwiaWNvbiIsImNvdW50TGFiZWwiLCJjb3VudFZhbHVlIiwibGVuZ3RoIiwiZml4TGFiZWwiLCJmaXhUYWIiLCJyZXF1ZXN0cyIsIm9uRmlsdGVyIiwidmFsdWUiLCJzaXplIiwidmFyaWFudCIsImRpc2FibGVkIiwib25DbGljayIsImV4cG9ydFJlc2VydmF0aW9uc0NzdiIsIm1hcCIsImJ1dHRvbiIsIm9uQ2hhbmdlIiwidGFyZ2V0IiwicGxhY2Vob2xkZXIiLCJzcGFuIiwic2VsZWN0Iiwib3B0aW9uIiwicCIsImRlc2NyaXB0aW9uIiwicHJpbWFyeUFjdGlvbiIsImxhYmVsIiwidGFiIiwic2Vjb25kYXJ5QWN0aW9uIiwibmV4dEJlc3RBY3Rpb24iLCJkaXNwbGF5TmFtZSIsInNsaWNlIiwiYmFsYW5jZSIsInRvdGFsX2NlbnRzIiwicGFpZF9jZW50cyIsInBlbmRpbmdSZXF1ZXN0IiwiZmluZCIsInJlcSIsInJlc2VydmF0aW9uX2lkIiwiaGFzUGVuZGluZ1JlcXVlc3QiLCJwYXltZW50TmVlZHNSZXZpZXciLCJpc0Nsb3NlZCIsIm5lZWRzUmV2aWV3IiwicmV2aWV3V29ya2Zsb3ciLCJ0eXBlIiwibmlnaHRzIiwiYWR1bHRzIiwiY2hpbGRyZW4iLCJyZXNlcnZhdGlvblN0YXR1cyIsImFtb3VudENlbnRzIiwiZGVwb3NpdF9jZW50cyIsInBvbGljeV9jb25zZW50Iiwic2VuZENvbmZpcm1hdGlvbkVtYWlsIiwiY3N2RXNjYXBlIiwidGVzdCIsInJvd3MiLCJoZWFkZXJzIiwibGluZXMiLCJqb2luIiwidG90YWwiLCJwYWlkIiwicHVzaCIsImJsb2IiLCJCbG9iIiwidXJsIiwiVVJMIiwiY3JlYXRlT2JqZWN0VVJMIiwiZG9jdW1lbnQiLCJjcmVhdGVFbGVtZW50IiwiaHJlZiIsImRvd25sb2FkIiwidG9JU09TdHJpbmciLCJib2R5IiwiYXBwZW5kQ2hpbGQiLCJjbGljayIsInJlbW92ZSIsInJldm9rZU9iamVjdFVSTCIsInN1YmplY3QiLCJlbmNvZGVVUklDb21wb25lbnQiLCJ3aW5kb3ciXSwibWFwcGluZ3MiOiI7O0FBQUE7OztDQUdDLEdBQ0QsU0FBU0EsT0FBTyxFQUFFQyxRQUFRLFFBQVEsUUFBUTtBQUMxQyxPQUFPQyxzQkFBc0IscUJBQXFCO0FBQ2xELE9BQU9DLGdDQUFnQywrQkFBK0I7QUFDdEUsU0FBU0MsV0FBVyxFQUFFQyxXQUFXLEVBQUVDLGVBQWUsUUFBUSxtQkFBbUI7QUFDN0UsU0FBU0MsSUFBSSxFQUFFQyxXQUFXLEVBQUVDLFVBQVUsRUFBRUMsU0FBUyxRQUFRLHVCQUF1QjtBQUNoRixTQUFTQyxNQUFNLFFBQVEseUJBQXlCO0FBQ2hELFNBQVNDLEtBQUssUUFBUSx3QkFBd0I7QUFDOUMsU0FBU0MsS0FBSyxRQUFRLHdCQUF3QjtBQUM5QyxTQUFTQyxhQUFhLEVBQUVDLE1BQU0sRUFBRUMsWUFBWSxFQUFFQyxLQUFLLEVBQUVDLE1BQU0sRUFBRUMsT0FBTyxFQUFFQyxZQUFZLEVBQUVDLFdBQVcsRUFBRUMsU0FBUyxFQUFFQyxJQUFJLEVBQUVDLEtBQUssRUFBRUMs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

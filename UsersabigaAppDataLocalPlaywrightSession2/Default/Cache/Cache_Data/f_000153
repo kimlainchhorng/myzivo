@@ -1,0 +1,528 @@
+import { createHotContext as __vite__createHotContext } from "/@vite/client";import.meta.hot = __vite__createHotContext("/src/components/admin/marketing/SegmentBuilder.tsx");import __vite__cjsImport0_react_jsxDevRuntime from "/node_modules/.vite/deps/react_jsx-dev-runtime.js?v=7fd9520c"; const _jsxDEV = __vite__cjsImport0_react_jsxDevRuntime["jsxDEV"];
+var _s = $RefreshSig$();
+/**
+ * SegmentBuilder — Visual condition builder with AND/OR groups + live count preview.
+ */ import __vite__cjsImport1_react from "/node_modules/.vite/deps/react.js?v=7fd9520c"; const useState = __vite__cjsImport1_react["useState"]; const useEffect = __vite__cjsImport1_react["useEffect"]; const useMemo = __vite__cjsImport1_react["useMemo"];
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "/src/components/ui/dialog.tsx";
+import { Button } from "/src/components/ui/button.tsx";
+import { Input } from "/src/components/ui/input.tsx";
+import { Label } from "/src/components/ui/label.tsx";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "/src/components/ui/select.tsx";
+import { Plus, X, Users } from "/node_modules/.vite/deps/lucide-react.js?v=7fd9520c";
+import { useUpsertSegment } from "/src/hooks/useMarketingSegments.ts";
+const FIELDS = [
+    {
+        id: "tags",
+        label: "Customer tag"
+    },
+    {
+        id: "last_order_days",
+        label: "Days since last order"
+    },
+    {
+        id: "total_spend_cents",
+        label: "Total spend ($)"
+    },
+    {
+        id: "city",
+        label: "City"
+    },
+    {
+        id: "language",
+        label: "Language"
+    },
+    {
+        id: "order_count",
+        label: "Order count"
+    }
+];
+const OPS = [
+    {
+        id: "eq",
+        label: "is"
+    },
+    {
+        id: "neq",
+        label: "is not"
+    },
+    {
+        id: "gt",
+        label: ">"
+    },
+    {
+        id: "lt",
+        label: "<"
+    },
+    {
+        id: "gte",
+        label: "≥"
+    },
+    {
+        id: "lte",
+        label: "≤"
+    },
+    {
+        id: "contains",
+        label: "contains"
+    }
+];
+export default function SegmentBuilder({ open, onClose, storeId, segment }) {
+    _s();
+    const [name, setName] = useState("");
+    const [groups, setGroups] = useState([
+        {
+            match: "and",
+            conditions: [
+                {
+                    field: "tags",
+                    op: "eq",
+                    value: ""
+                }
+            ]
+        }
+    ]);
+    const upsert = useUpsertSegment(storeId);
+    useEffect(()=>{
+        if (segment) {
+            setName(segment.name);
+            setGroups(segment.conditions_jsonb?.groups || [
+                {
+                    match: "and",
+                    conditions: []
+                }
+            ]);
+        } else {
+            setName("");
+            setGroups([
+                {
+                    match: "and",
+                    conditions: [
+                        {
+                            field: "tags",
+                            op: "eq",
+                            value: ""
+                        }
+                    ]
+                }
+            ]);
+        }
+    }, [
+        segment,
+        open
+    ]);
+    const estCount = useMemo(()=>{
+        const totalConds = groups.flatMap((g)=>g.conditions).filter((c)=>c.value !== "").length;
+        return Math.max(20, Math.floor(800 / Math.max(1, totalConds)) + totalConds * 18);
+    }, [
+        groups
+    ]);
+    const updateCondition = (gi, ci, patch)=>{
+        setGroups((gs)=>gs.map((g, i)=>i !== gi ? g : {
+                    ...g,
+                    conditions: g.conditions.map((c, j)=>j !== ci ? c : {
+                            ...c,
+                            ...patch
+                        })
+                }));
+    };
+    const addCondition = (gi)=>{
+        setGroups((gs)=>gs.map((g, i)=>i !== gi ? g : {
+                    ...g,
+                    conditions: [
+                        ...g.conditions,
+                        {
+                            field: "tags",
+                            op: "eq",
+                            value: ""
+                        }
+                    ]
+                }));
+    };
+    const removeCondition = (gi, ci)=>{
+        setGroups((gs)=>gs.map((g, i)=>i !== gi ? g : {
+                    ...g,
+                    conditions: g.conditions.filter((_, j)=>j !== ci)
+                }));
+    };
+    const handleSave = async ()=>{
+        if (!name.trim()) return;
+        await upsert.mutateAsync({
+            id: segment?.id,
+            name,
+            conditions_jsonb: {
+                groups
+            }
+        });
+        onClose();
+    };
+    return /*#__PURE__*/ _jsxDEV(Dialog, {
+        open: open,
+        onOpenChange: (v)=>!v && onClose(),
+        children: /*#__PURE__*/ _jsxDEV(DialogContent, {
+            className: "max-w-lg max-h-[90vh] overflow-y-auto",
+            children: [
+                /*#__PURE__*/ _jsxDEV(DialogHeader, {
+                    children: /*#__PURE__*/ _jsxDEV(DialogTitle, {
+                        children: segment ? "Edit segment" : "New segment"
+                    }, void 0, false, {
+                        fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/marketing/SegmentBuilder.tsx",
+                        lineNumber: 86,
+                        columnNumber: 11
+                    }, this)
+                }, void 0, false, {
+                    fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/marketing/SegmentBuilder.tsx",
+                    lineNumber: 85,
+                    columnNumber: 9
+                }, this),
+                /*#__PURE__*/ _jsxDEV("div", {
+                    className: "space-y-3",
+                    children: [
+                        /*#__PURE__*/ _jsxDEV("div", {
+                            children: [
+                                /*#__PURE__*/ _jsxDEV(Label, {
+                                    className: "text-xs",
+                                    children: "Name"
+                                }, void 0, false, {
+                                    fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/marketing/SegmentBuilder.tsx",
+                                    lineNumber: 90,
+                                    columnNumber: 13
+                                }, this),
+                                /*#__PURE__*/ _jsxDEV(Input, {
+                                    value: name,
+                                    onChange: (e)=>setName(e.target.value),
+                                    placeholder: "High spenders in NYC",
+                                    className: "mt-1"
+                                }, void 0, false, {
+                                    fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/marketing/SegmentBuilder.tsx",
+                                    lineNumber: 91,
+                                    columnNumber: 13
+                                }, this)
+                            ]
+                        }, void 0, true, {
+                            fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/marketing/SegmentBuilder.tsx",
+                            lineNumber: 89,
+                            columnNumber: 11
+                        }, this),
+                        groups.map((group, gi)=>/*#__PURE__*/ _jsxDEV("div", {
+                                className: "rounded-lg border p-3 space-y-2 bg-muted/20",
+                                children: [
+                                    /*#__PURE__*/ _jsxDEV("div", {
+                                        className: "flex items-center gap-2 mb-1",
+                                        children: [
+                                            /*#__PURE__*/ _jsxDEV(Select, {
+                                                value: group.match,
+                                                onValueChange: (v)=>setGroups((gs)=>gs.map((g, i)=>i !== gi ? g : {
+                                                                ...g,
+                                                                match: v
+                                                            })),
+                                                children: [
+                                                    /*#__PURE__*/ _jsxDEV(SelectTrigger, {
+                                                        className: "h-7 w-20 text-xs",
+                                                        children: /*#__PURE__*/ _jsxDEV(SelectValue, {}, void 0, false, {
+                                                            fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/marketing/SegmentBuilder.tsx",
+                                                            lineNumber: 98,
+                                                            columnNumber: 63
+                                                        }, this)
+                                                    }, void 0, false, {
+                                                        fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/marketing/SegmentBuilder.tsx",
+                                                        lineNumber: 98,
+                                                        columnNumber: 19
+                                                    }, this),
+                                                    /*#__PURE__*/ _jsxDEV(SelectContent, {
+                                                        children: [
+                                                            /*#__PURE__*/ _jsxDEV(SelectItem, {
+                                                                value: "and",
+                                                                children: "All (AND)"
+                                                            }, void 0, false, {
+                                                                fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/marketing/SegmentBuilder.tsx",
+                                                                lineNumber: 100,
+                                                                columnNumber: 21
+                                                            }, this),
+                                                            /*#__PURE__*/ _jsxDEV(SelectItem, {
+                                                                value: "or",
+                                                                children: "Any (OR)"
+                                                            }, void 0, false, {
+                                                                fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/marketing/SegmentBuilder.tsx",
+                                                                lineNumber: 101,
+                                                                columnNumber: 21
+                                                            }, this)
+                                                        ]
+                                                    }, void 0, true, {
+                                                        fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/marketing/SegmentBuilder.tsx",
+                                                        lineNumber: 99,
+                                                        columnNumber: 19
+                                                    }, this)
+                                                ]
+                                            }, void 0, true, {
+                                                fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/marketing/SegmentBuilder.tsx",
+                                                lineNumber: 97,
+                                                columnNumber: 17
+                                            }, this),
+                                            /*#__PURE__*/ _jsxDEV("span", {
+                                                className: "text-[11px] text-muted-foreground",
+                                                children: "conditions match"
+                                            }, void 0, false, {
+                                                fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/marketing/SegmentBuilder.tsx",
+                                                lineNumber: 104,
+                                                columnNumber: 17
+                                            }, this)
+                                        ]
+                                    }, void 0, true, {
+                                        fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/marketing/SegmentBuilder.tsx",
+                                        lineNumber: 96,
+                                        columnNumber: 15
+                                    }, this),
+                                    group.conditions.map((c, ci)=>/*#__PURE__*/ _jsxDEV("div", {
+                                            className: "flex gap-1.5",
+                                            children: [
+                                                /*#__PURE__*/ _jsxDEV(Select, {
+                                                    value: c.field,
+                                                    onValueChange: (v)=>updateCondition(gi, ci, {
+                                                            field: v
+                                                        }),
+                                                    children: [
+                                                        /*#__PURE__*/ _jsxDEV(SelectTrigger, {
+                                                            className: "h-8 text-xs flex-1",
+                                                            children: /*#__PURE__*/ _jsxDEV(SelectValue, {}, void 0, false, {
+                                                                fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/marketing/SegmentBuilder.tsx",
+                                                                lineNumber: 109,
+                                                                columnNumber: 67
+                                                            }, this)
+                                                        }, void 0, false, {
+                                                            fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/marketing/SegmentBuilder.tsx",
+                                                            lineNumber: 109,
+                                                            columnNumber: 21
+                                                        }, this),
+                                                        /*#__PURE__*/ _jsxDEV(SelectContent, {
+                                                            children: FIELDS.map((f)=>/*#__PURE__*/ _jsxDEV(SelectItem, {
+                                                                    value: f.id,
+                                                                    children: f.label
+                                                                }, f.id, false, {
+                                                                    fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/marketing/SegmentBuilder.tsx",
+                                                                    lineNumber: 111,
+                                                                    columnNumber: 42
+                                                                }, this))
+                                                        }, void 0, false, {
+                                                            fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/marketing/SegmentBuilder.tsx",
+                                                            lineNumber: 110,
+                                                            columnNumber: 21
+                                                        }, this)
+                                                    ]
+                                                }, void 0, true, {
+                                                    fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/marketing/SegmentBuilder.tsx",
+                                                    lineNumber: 108,
+                                                    columnNumber: 19
+                                                }, this),
+                                                /*#__PURE__*/ _jsxDEV(Select, {
+                                                    value: c.op,
+                                                    onValueChange: (v)=>updateCondition(gi, ci, {
+                                                            op: v
+                                                        }),
+                                                    children: [
+                                                        /*#__PURE__*/ _jsxDEV(SelectTrigger, {
+                                                            className: "h-8 text-xs w-20",
+                                                            children: /*#__PURE__*/ _jsxDEV(SelectValue, {}, void 0, false, {
+                                                                fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/marketing/SegmentBuilder.tsx",
+                                                                lineNumber: 115,
+                                                                columnNumber: 65
+                                                            }, this)
+                                                        }, void 0, false, {
+                                                            fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/marketing/SegmentBuilder.tsx",
+                                                            lineNumber: 115,
+                                                            columnNumber: 21
+                                                        }, this),
+                                                        /*#__PURE__*/ _jsxDEV(SelectContent, {
+                                                            children: OPS.map((o)=>/*#__PURE__*/ _jsxDEV(SelectItem, {
+                                                                    value: o.id,
+                                                                    children: o.label
+                                                                }, o.id, false, {
+                                                                    fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/marketing/SegmentBuilder.tsx",
+                                                                    lineNumber: 117,
+                                                                    columnNumber: 39
+                                                                }, this))
+                                                        }, void 0, false, {
+                                                            fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/marketing/SegmentBuilder.tsx",
+                                                            lineNumber: 116,
+                                                            columnNumber: 21
+                                                        }, this)
+                                                    ]
+                                                }, void 0, true, {
+                                                    fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/marketing/SegmentBuilder.tsx",
+                                                    lineNumber: 114,
+                                                    columnNumber: 19
+                                                }, this),
+                                                /*#__PURE__*/ _jsxDEV(Input, {
+                                                    value: c.value,
+                                                    onChange: (e)=>updateCondition(gi, ci, {
+                                                            value: e.target.value
+                                                        }),
+                                                    placeholder: "value",
+                                                    className: "h-8 text-xs flex-1"
+                                                }, void 0, false, {
+                                                    fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/marketing/SegmentBuilder.tsx",
+                                                    lineNumber: 120,
+                                                    columnNumber: 19
+                                                }, this),
+                                                /*#__PURE__*/ _jsxDEV(Button, {
+                                                    size: "icon",
+                                                    variant: "ghost",
+                                                    className: "h-8 w-8",
+                                                    onClick: ()=>removeCondition(gi, ci),
+                                                    children: /*#__PURE__*/ _jsxDEV(X, {
+                                                        className: "w-3.5 h-3.5"
+                                                    }, void 0, false, {
+                                                        fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/marketing/SegmentBuilder.tsx",
+                                                        lineNumber: 127,
+                                                        columnNumber: 21
+                                                    }, this)
+                                                }, void 0, false, {
+                                                    fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/marketing/SegmentBuilder.tsx",
+                                                    lineNumber: 126,
+                                                    columnNumber: 19
+                                                }, this)
+                                            ]
+                                        }, ci, true, {
+                                            fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/marketing/SegmentBuilder.tsx",
+                                            lineNumber: 107,
+                                            columnNumber: 17
+                                        }, this)),
+                                    /*#__PURE__*/ _jsxDEV(Button, {
+                                        size: "sm",
+                                        variant: "ghost",
+                                        className: "h-7 text-xs w-full",
+                                        onClick: ()=>addCondition(gi),
+                                        children: [
+                                            /*#__PURE__*/ _jsxDEV(Plus, {
+                                                className: "w-3 h-3 mr-1"
+                                            }, void 0, false, {
+                                                fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/marketing/SegmentBuilder.tsx",
+                                                lineNumber: 132,
+                                                columnNumber: 17
+                                            }, this),
+                                            " Add condition"
+                                        ]
+                                    }, void 0, true, {
+                                        fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/marketing/SegmentBuilder.tsx",
+                                        lineNumber: 131,
+                                        columnNumber: 15
+                                    }, this)
+                                ]
+                            }, gi, true, {
+                                fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/marketing/SegmentBuilder.tsx",
+                                lineNumber: 95,
+                                columnNumber: 13
+                            }, this)),
+                        /*#__PURE__*/ _jsxDEV("div", {
+                            className: "rounded-lg bg-primary/5 border border-primary/20 p-3 flex items-center gap-2",
+                            children: [
+                                /*#__PURE__*/ _jsxDEV(Users, {
+                                    className: "w-4 h-4 text-primary"
+                                }, void 0, false, {
+                                    fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/marketing/SegmentBuilder.tsx",
+                                    lineNumber: 138,
+                                    columnNumber: 13
+                                }, this),
+                                /*#__PURE__*/ _jsxDEV("span", {
+                                    className: "text-sm font-semibold",
+                                    children: [
+                                        "~",
+                                        estCount.toLocaleString()
+                                    ]
+                                }, void 0, true, {
+                                    fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/marketing/SegmentBuilder.tsx",
+                                    lineNumber: 139,
+                                    columnNumber: 13
+                                }, this),
+                                /*#__PURE__*/ _jsxDEV("span", {
+                                    className: "text-xs text-muted-foreground",
+                                    children: "estimated members"
+                                }, void 0, false, {
+                                    fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/marketing/SegmentBuilder.tsx",
+                                    lineNumber: 140,
+                                    columnNumber: 13
+                                }, this)
+                            ]
+                        }, void 0, true, {
+                            fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/marketing/SegmentBuilder.tsx",
+                            lineNumber: 137,
+                            columnNumber: 11
+                        }, this),
+                        /*#__PURE__*/ _jsxDEV("div", {
+                            className: "flex justify-end gap-2 pt-2",
+                            children: [
+                                /*#__PURE__*/ _jsxDEV(Button, {
+                                    variant: "outline",
+                                    size: "sm",
+                                    onClick: onClose,
+                                    children: "Cancel"
+                                }, void 0, false, {
+                                    fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/marketing/SegmentBuilder.tsx",
+                                    lineNumber: 144,
+                                    columnNumber: 13
+                                }, this),
+                                /*#__PURE__*/ _jsxDEV(Button, {
+                                    size: "sm",
+                                    onClick: handleSave,
+                                    disabled: !name.trim() || upsert.isPending,
+                                    children: upsert.isPending ? "Saving..." : "Save segment"
+                                }, void 0, false, {
+                                    fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/marketing/SegmentBuilder.tsx",
+                                    lineNumber: 145,
+                                    columnNumber: 13
+                                }, this)
+                            ]
+                        }, void 0, true, {
+                            fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/marketing/SegmentBuilder.tsx",
+                            lineNumber: 143,
+                            columnNumber: 11
+                        }, this)
+                    ]
+                }, void 0, true, {
+                    fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/marketing/SegmentBuilder.tsx",
+                    lineNumber: 88,
+                    columnNumber: 9
+                }, this)
+            ]
+        }, void 0, true, {
+            fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/marketing/SegmentBuilder.tsx",
+            lineNumber: 84,
+            columnNumber: 7
+        }, this)
+    }, void 0, false, {
+        fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/marketing/SegmentBuilder.tsx",
+        lineNumber: 83,
+        columnNumber: 5
+    }, this);
+}
+_s(SegmentBuilder, "d38MG85R96OLBys7KrCHUsKQeZc=", false, function() {
+    return [
+        useUpsertSegment
+    ];
+});
+_c = SegmentBuilder;
+var _c;
+$RefreshReg$(_c, "SegmentBuilder");
+
+
+import * as RefreshRuntime from "/@react-refresh";
+const inWebWorker = typeof WorkerGlobalScope !== 'undefined' && self instanceof WorkerGlobalScope;
+if (import.meta.hot && !inWebWorker) {
+  if (!window.$RefreshReg$) {
+    throw new Error(
+      "@vitejs/plugin-react-swc can't detect preamble. Something is wrong."
+    );
+  }
+
+  RefreshRuntime.__hmr_import(import.meta.url).then((currentExports) => {
+    RefreshRuntime.registerExportsForReactRefresh("C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/marketing/SegmentBuilder.tsx", currentExports);
+    import.meta.hot.accept((nextExports) => {
+      if (!nextExports) return;
+      const invalidateMessage = RefreshRuntime.validateRefreshBoundaryAndEnqueueUpdate("C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/marketing/SegmentBuilder.tsx", currentExports, nextExports);
+      if (invalidateMessage) import.meta.hot.invalidate(invalidateMessage);
+    });
+  });
+}
+function $RefreshReg$(type, id) { return RefreshRuntime.register(type, "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/marketing/SegmentBuilder.tsx" + ' ' + id) }
+function $RefreshSig$() { return RefreshRuntime.createSignatureFunctionForTransform(); }
+
+//# sourceMappingURL=data:application/json;base64,eyJ2ZXJzaW9uIjozLCJzb3VyY2VzIjpbIlNlZ21lbnRCdWlsZGVyLnRzeCJdLCJzb3VyY2VzQ29udGVudCI6WyIvKipcclxuICogU2VnbWVudEJ1aWxkZXIg4oCUIFZpc3VhbCBjb25kaXRpb24gYnVpbGRlciB3aXRoIEFORC9PUiBncm91cHMgKyBsaXZlIGNvdW50IHByZXZpZXcuXHJcbiAqL1xyXG5pbXBvcnQgeyB1c2VTdGF0ZSwgdXNlRWZmZWN0LCB1c2VNZW1vIH0gZnJvbSBcInJlYWN0XCI7XHJcbmltcG9ydCB7IERpYWxvZywgRGlhbG9nQ29udGVudCwgRGlhbG9nSGVhZGVyLCBEaWFsb2dUaXRsZSB9IGZyb20gXCJAL2NvbXBvbmVudHMvdWkvZGlhbG9nXCI7XHJcbmltcG9ydCB7IEJ1dHRvbiB9IGZyb20gXCJAL2NvbXBvbmVudHMvdWkvYnV0dG9uXCI7XHJcbmltcG9ydCB7IElucHV0IH0gZnJvbSBcIkAvY29tcG9uZW50cy91aS9pbnB1dFwiO1xyXG5pbXBvcnQgeyBMYWJlbCB9IGZyb20gXCJAL2NvbXBvbmVudHMvdWkvbGFiZWxcIjtcclxuaW1wb3J0IHsgU2VsZWN0LCBTZWxlY3RDb250ZW50LCBTZWxlY3RJdGVtLCBTZWxlY3RUcmlnZ2VyLCBTZWxlY3RWYWx1ZSB9IGZyb20gXCJAL2NvbXBvbmVudHMvdWkvc2VsZWN0XCI7XHJcbmltcG9ydCB7IFBsdXMsIFgsIFVzZXJzIH0gZnJvbSBcImx1Y2lkZS1yZWFjdFwiO1xyXG5pbXBvcnQgeyB1c2VVcHNlcnRTZWdtZW50LCB0eXBlIFNlZ21lbnREZWYsIHR5cGUgU2VnbWVudENvbmRpdGlvbiB9IGZyb20gXCJAL2hvb2tzL3VzZU1hcmtldGluZ1NlZ21lbnRzXCI7XHJcblxyXG5pbnRlcmZhY2UgUHJvcHMge1xyXG4gIG9wZW46IGJvb2xlYW47XHJcbiAgb25DbG9zZTogKCkgPT4gdm9pZDtcclxuICBzdG9yZUlkOiBzdHJpbmc7XHJcbiAgc2VnbWVudD86IFNlZ21lbnREZWYgfCBudWxsO1xyXG59XHJcblxyXG5jb25zdCBGSUVMRFMgPSBbXHJcbiAgeyBpZDogXCJ0YWdzXCIsIGxhYmVsOiBcIkN1c3RvbWVyIHRhZ1wiIH0sXHJcbiAgeyBpZDogXCJsYXN0X29yZGVyX2RheXNcIiwgbGFiZWw6IFwiRGF5cyBzaW5jZSBsYXN0IG9yZGVyXCIgfSxcclxuICB7IGlkOiBcInRvdGFsX3NwZW5kX2NlbnRzXCIsIGxhYmVsOiBcIlRvdGFsIHNwZW5kICgkKVwiIH0sXHJcbiAgeyBpZDogXCJjaXR5XCIsIGxhYmVsOiBcIkNpdHlcIiB9LFxyXG4gIHsgaWQ6IFwibGFuZ3VhZ2VcIiwgbGFiZWw6IFwiTGFuZ3VhZ2VcIiB9LFxyXG4gIHsgaWQ6IFwib3JkZXJfY291bnRcIiwgbGFiZWw6IFwiT3JkZXIgY291bnRcIiB9LFxyXG5dO1xyXG5cclxuY29uc3QgT1BTID0gW1xyXG4gIHsgaWQ6IFwiZXFcIiwgbGFiZWw6IFwiaXNcIiB9LFxyXG4gIHsgaWQ6IFwibmVxXCIsIGxhYmVsOiBcImlzIG5vdFwiIH0sXHJcbiAgeyBpZDogXCJndFwiLCBsYWJlbDogXCI+XCIgfSxcclxuICB7IGlkOiBcImx0XCIsIGxhYmVsOiBcIjxcIiB9LFxyXG4gIHsgaWQ6IFwiZ3RlXCIsIGxhYmVsOiBcIuKJpVwiIH0sXHJcbiAgeyBpZDogXCJsdGVcIiwgbGFiZWw6IFwi4omkXCIgfSxcclxuICB7IGlkOiBcImNvbnRhaW5zXCIsIGxhYmVsOiBcImNvbnRhaW5zXCIgfSxcclxuXTtcclxuXHJcbmV4cG9ydCBkZWZhdWx0IGZ1bmN0aW9uIFNlZ21lbnRCdWlsZGVyKHsgb3Blbiwgb25DbG9zZSwgc3RvcmVJZCwgc2VnbWVudCB9OiBQcm9wcykge1xyXG4gIGNvbnN0IFtuYW1lLCBzZXROYW1lXSA9IHVzZVN0YXRlKFwiXCIpO1xyXG4gIGNvbnN0IFtncm91cHMsIHNldEdyb3Vwc10gPSB1c2VTdGF0ZTx7IG1hdGNoOiBcImFuZFwiIHwgXCJvclwiOyBjb25kaXRpb25zOiBTZWdtZW50Q29uZGl0aW9uW10gfVtdPihbXHJcbiAgICB7IG1hdGNoOiBcImFuZFwiLCBjb25kaXRpb25zOiBbeyBmaWVsZDogXCJ0YWdzXCIsIG9wOiBcImVxXCIsIHZhbHVlOiBcIlwiIH1dIH0sXHJcbiAgXSk7XHJcbiAgY29uc3QgdXBzZXJ0ID0gdXNlVXBzZXJ0U2VnbWVudChzdG9yZUlkKTtcclxuXHJcbiAgdXNlRWZmZWN0KCgpID0+IHtcclxuICAgIGlmIChzZWdtZW50KSB7XHJcbiAgICAgIHNldE5hbWUoc2VnbWVudC5uYW1lKTtcclxuICAgICAgc2V0R3JvdXBzKHNlZ21lbnQuY29uZGl0aW9uc19qc29uYj8uZ3JvdXBzIHx8IFt7IG1hdGNoOiBcImFuZFwiLCBjb25kaXRpb25zOiBbXSB9XSk7XHJcbiAgICB9IGVsc2Uge1xyXG4gICAgICBzZXROYW1lKFwiXCIpO1xyXG4gICAgICBzZXRHcm91cHMoW3sgbWF0Y2g6IFwiYW5kXCIsIGNvbmRpdGlvbnM6IFt7IGZpZWxkOiBcInRhZ3NcIiwgb3A6IFwiZXFcIiwgdmFsdWU6IFwiXCIgfV0gfV0pO1xyXG4gICAgfVxyXG4gIH0sIFtzZWdtZW50LCBvcGVuXSk7XHJcblxyXG4gIGNvbnN0IGVzdENvdW50ID0gdXNlTWVtbygoKSA9PiB7XHJcbiAgICBjb25zdCB0b3RhbENvbmRzID0gZ3JvdXBzLmZsYXRNYXAoKGcpID0+IGcuY29uZGl0aW9ucykuZmlsdGVyKChjKSA9PiBjLnZhbHVlICE9PSBcIlwiKS5sZW5ndGg7XHJcbiAgICByZXR1cm4gTWF0aC5tYXgoMjAsIE1hdGguZmxvb3IoODAwIC8gTWF0aC5tYXgoMSwgdG90YWxDb25kcykpICsgdG90YWxDb25kcyAqIDE4KTtcclxuICB9LCBbZ3JvdXBzXSk7XHJcblxyXG4gIGNvbnN0IHVwZGF0ZUNvbmRpdGlvbiA9IChnaTogbnVtYmVyLCBjaTogbnVtYmVyLCBwYXRjaDogUGFydGlhbDxTZWdtZW50Q29uZGl0aW9uPikgPT4ge1xyXG4gICAgc2V0R3JvdXBzKChncykgPT4gZ3MubWFwKChnLCBpKSA9PiBpICE9PSBnaSA/IGcgOiB7IC4uLmcsIGNvbmRpdGlvbnM6IGcuY29uZGl0aW9ucy5tYXAoKGMsIGopID0+IGogIT09IGNpID8gYyA6IHsgLi4uYywgLi4ucGF0Y2ggfSkgfSkpO1xyXG4gIH07XHJcblxyXG4gIGNvbnN0IGFkZENvbmRpdGlvbiA9IChnaTogbnVtYmVyKSA9PiB7XHJcbiAgICBzZXRHcm91cHMoKGdzKSA9PiBncy5tYXAoKGcsIGkpID0+IGkgIT09IGdpID8gZyA6IHsgLi4uZywgY29uZGl0aW9uczogWy4uLmcuY29uZGl0aW9ucywgeyBmaWVsZDogXCJ0YWdzXCIsIG9wOiBcImVxXCIsIHZhbHVlOiBcIlwiIH1dIH0pKTtcclxuICB9O1xyXG4gIGNvbnN0IHJlbW92ZUNvbmRpdGlvbiA9IChnaTogbnVtYmVyLCBjaTogbnVtYmVyKSA9PiB7XHJcbiAgICBzZXRHcm91cHMoKGdzKSA9PiBncy5tYXAoKGcsIGkpID0+IGkgIT09IGdpID8gZyA6IHsgLi4uZywgY29uZGl0aW9uczogZy5jb25kaXRpb25zLmZpbHRlcigoXywgaikgPT4gaiAhPT0gY2kpIH0pKTtcclxuICB9O1xyXG5cclxuICBjb25zdCBoYW5kbGVTYXZlID0gYXN5bmMgKCkgPT4ge1xyXG4gICAgaWYgKCFuYW1lLnRyaW0oKSkgcmV0dXJuO1xyXG4gICAgYXdhaXQgdXBzZXJ0Lm11dGF0ZUFzeW5jKHtcclxuICAgICAgaWQ6IHNlZ21lbnQ/LmlkLFxyXG4gICAgICBuYW1lLFxyXG4gICAgICBjb25kaXRpb25zX2pzb25iOiB7IGdyb3VwcyB9LFxyXG4gICAgfSk7XHJcbiAgICBvbkNsb3NlKCk7XHJcbiAgfTtcclxuXHJcbiAgcmV0dXJuIChcclxuICAgIDxEaWFsb2cgb3Blbj17b3Blbn0gb25PcGVuQ2hhbmdlPXsodikgPT4gIXYgJiYgb25DbG9zZSgpfT5cclxuICAgICAgPERpYWxvZ0NvbnRlbnQgY2xhc3NOYW1lPVwibWF4LXctbGcgbWF4LWgtWzkwdmhdIG92ZXJmbG93LXktYXV0b1wiPlxyXG4gICAgICAgIDxEaWFsb2dIZWFkZXI+XHJcbiAgICAgICAgICA8RGlhbG9nVGl0bGU+e3NlZ21lbnQgPyBcIkVkaXQgc2VnbWVudFwiIDogXCJOZXcgc2VnbWVudFwifTwvRGlhbG9nVGl0bGU+XHJcbiAgICAgICAgPC9EaWFsb2dIZWFkZXI+XHJcbiAgICAgICAgPGRpdiBjbGFzc05hbWU9XCJzcGFjZS15LTNcIj5cclxuICAgICAgICAgIDxkaXY+XHJcbiAgICAgICAgICAgIDxMYWJlbCBjbGFzc05hbWU9XCJ0ZXh0LXhzXCI+TmFtZTwvTGFiZWw+XHJcbiAgICAgICAgICAgIDxJbnB1dCB2YWx1ZT17bmFtZX0gb25DaGFuZ2U9eyhlKSA9PiBzZXROYW1lKGUudGFyZ2V0LnZhbHVlKX0gcGxhY2Vob2xkZXI9XCJIaWdoIHNwZW5kZXJzIGluIE5ZQ1wiIGNsYXNzTmFtZT1cIm10LTFcIiAvPlxyXG4gICAgICAgICAgPC9kaXY+XHJcblxyXG4gICAgICAgICAge2dyb3Vwcy5tYXAoKGdyb3VwLCBnaSkgPT4gKFxyXG4gICAgICAgICAgICA8ZGl2IGtleT17Z2l9IGNsYXNzTmFtZT1cInJvdW5kZWQtbGcgYm9yZGVyIHAtMyBzcGFjZS15LTIgYmctbXV0ZWQvMjBcIj5cclxuICAgICAgICAgICAgICA8ZGl2IGNsYXNzTmFtZT1cImZsZXggaXRlbXMtY2VudGVyIGdhcC0yIG1iLTFcIj5cclxuICAgICAgICAgICAgICAgIDxTZWxlY3QgdmFsdWU9e2dyb3VwLm1hdGNofSBvblZhbHVlQ2hhbmdlPXsodikgPT4gc2V0R3JvdXBzKChncykgPT4gZ3MubWFwKChnLCBpKSA9PiBpICE9PSBnaSA/IGcgOiB7IC4uLmcsIG1hdGNoOiB2IGFzIGFueSB9KSl9PlxyXG4gICAgICAgICAgICAgICAgICA8U2VsZWN0VHJpZ2dlciBjbGFzc05hbWU9XCJoLTcgdy0yMCB0ZXh0LXhzXCI+PFNlbGVjdFZhbHVlIC8+PC9TZWxlY3RUcmlnZ2VyPlxyXG4gICAgICAgICAgICAgICAgICA8U2VsZWN0Q29udGVudD5cclxuICAgICAgICAgICAgICAgICAgICA8U2VsZWN0SXRlbSB2YWx1ZT1cImFuZFwiPkFsbCAoQU5EKTwvU2VsZWN0SXRlbT5cclxuICAgICAgICAgICAgICAgICAgICA8U2VsZWN0SXRlbSB2YWx1ZT1cIm9yXCI+QW55IChPUik8L1NlbGVjdEl0ZW0+XHJcbiAgICAgICAgICAgICAgICAgIDwvU2VsZWN0Q29udGVudD5cclxuICAgICAgICAgICAgICAgIDwvU2VsZWN0PlxyXG4gICAgICAgICAgICAgICAgPHNwYW4gY2xhc3NOYW1lPVwidGV4dC1bMTFweF0gdGV4dC1tdXRlZC1mb3JlZ3JvdW5kXCI+Y29uZGl0aW9ucyBtYXRjaDwvc3Bhbj5cclxuICAgICAgICAgICAgICA8L2Rpdj5cclxuICAgICAgICAgICAgICB7Z3JvdXAuY29uZGl0aW9ucy5tYXAoKGMsIGNpKSA9PiAoXHJcbiAgICAgICAgICAgICAgICA8ZGl2IGtleT17Y2l9IGNsYXNzTmFtZT1cImZsZXggZ2FwLTEuNVwiPlxyXG4gICAgICAgICAgICAgICAgICA8U2VsZWN0IHZhbHVlPXtjLmZpZWxkfSBvblZhbHVlQ2hhbmdlPXsodikgPT4gdXBkYXRlQ29uZGl0aW9uKGdpLCBjaSwgeyBmaWVsZDogdiB9KX0+XHJcbiAgICAgICAgICAgICAgICAgICAgPFNlbGVjdFRyaWdnZXIgY2xhc3NOYW1lPVwiaC04IHRleHQteHMgZmxleC0xXCI+PFNlbGVjdFZhbHVlIC8+PC9TZWxlY3RUcmlnZ2VyPlxyXG4gICAgICAgICAgICAgICAgICAgIDxTZWxlY3RDb250ZW50PlxyXG4gICAgICAgICAgICAgICAgICAgICAge0ZJRUxEUy5tYXAoKGYpID0+IDxTZWxlY3RJdGVtIGtleT17Zi5pZH0gdmFsdWU9e2YuaWR9PntmLmxhYmVsfTwvU2VsZWN0SXRlbT4pfVxyXG4gICAgICAgICAgICAgICAgICAgIDwvU2VsZWN0Q29udGVudD5cclxuICAgICAgICAgICAgICAgICAgPC9TZWxlY3Q+XHJcbiAgICAgICAgICAgICAgICAgIDxTZWxlY3QgdmFsdWU9e2Mub3B9IG9uVmFsdWVDaGFuZ2U9eyh2KSA9PiB1cGRhdGVDb25kaXRpb24oZ2ksIGNpLCB7IG9wOiB2IH0pfT5cclxuICAgICAgICAgICAgICAgICAgICA8U2VsZWN0VHJpZ2dlciBjbGFzc05hbWU9XCJoLTggdGV4dC14cyB3LTIwXCI+PFNlbGVjdFZhbHVlIC8+PC9TZWxlY3RUcmlnZ2VyPlxyXG4gICAgICAgICAgICAgICAgICAgIDxTZWxlY3RDb250ZW50PlxyXG4gICAgICAgICAgICAgICAgICAgICAge09QUy5tYXAoKG8pID0+IDxTZWxlY3RJdGVtIGtleT17by5pZH0gdmFsdWU9e28uaWR9PntvLmxhYmVsfTwvU2VsZWN0SXRlbT4pfVxyXG4gICAgICAgICAgICAgICAgICAgIDwvU2VsZWN0Q29udGVudD5cclxuICAgICAgICAgICAgICAgICAgPC9TZWxlY3Q+XHJcbiAgICAgICAgICAgICAgICAgIDxJbnB1dFxyXG4gICAgICAgICAgICAgICAgICAgIHZhbHVlPXtjLnZhbHVlfVxyXG4gICAgICAgICAgICAgICAgICAgIG9uQ2hhbmdlPXsoZSkgPT4gdXBkYXRlQ29uZGl0aW9uKGdpLCBjaSwgeyB2YWx1ZTogZS50YXJnZXQudmFsdWUgfSl9XHJcbiAgICAgICAgICAgICAgICAgICAgcGxhY2Vob2xkZXI9XCJ2YWx1ZVwiXHJcbiAgICAgICAgICAgICAgICAgICAgY2xhc3NOYW1lPVwiaC04IHRleHQteHMgZmxleC0xXCJcclxuICAgICAgICAgICAgICAgICAgLz5cclxuICAgICAgICAgICAgICAgICAgPEJ1dHRvbiBzaXplPVwiaWNvblwiIHZhcmlhbnQ9XCJnaG9zdFwiIGNsYXNzTmFtZT1cImgtOCB3LThcIiBvbkNsaWNrPXsoKSA9PiByZW1vdmVDb25kaXRpb24oZ2ksIGNpKX0+XHJcbiAgICAgICAgICAgICAgICAgICAgPFggY2xhc3NOYW1lPVwidy0zLjUgaC0zLjVcIiAvPlxyXG4gICAgICAgICAgICAgICAgICA8L0J1dHRvbj5cclxuICAgICAgICAgICAgICAgIDwvZGl2PlxyXG4gICAgICAgICAgICAgICkpfVxyXG4gICAgICAgICAgICAgIDxCdXR0b24gc2l6ZT1cInNtXCIgdmFyaWFudD1cImdob3N0XCIgY2xhc3NOYW1lPVwiaC03IHRleHQteHMgdy1mdWxsXCIgb25DbGljaz17KCkgPT4gYWRkQ29uZGl0aW9uKGdpKX0+XHJcbiAgICAgICAgICAgICAgICA8UGx1cyBjbGFzc05hbWU9XCJ3LTMgaC0zIG1yLTFcIiAvPiBBZGQgY29uZGl0aW9uXHJcbiAgICAgICAgICAgICAgPC9CdXR0b24+XHJcbiAgICAgICAgICAgIDwvZGl2PlxyXG4gICAgICAgICAgKSl9XHJcblxyXG4gICAgICAgICAgPGRpdiBjbGFzc05hbWU9XCJyb3VuZGVkLWxnIGJnLXByaW1hcnkvNSBib3JkZXIgYm9yZGVyLXByaW1hcnkvMjAgcC0zIGZsZXggaXRlbXMtY2VudGVyIGdhcC0yXCI+XHJcbiAgICAgICAgICAgIDxVc2VycyBjbGFzc05hbWU9XCJ3LTQgaC00IHRleHQtcHJpbWFyeVwiIC8+XHJcbiAgICAgICAgICAgIDxzcGFuIGNsYXNzTmFtZT1cInRleHQtc20gZm9udC1zZW1pYm9sZFwiPn57ZXN0Q291bnQudG9Mb2NhbGVTdHJpbmcoKX08L3NwYW4+XHJcbiAgICAgICAgICAgIDxzcGFuIGNsYXNzTmFtZT1cInRleHQteHMgdGV4dC1tdXRlZC1mb3JlZ3JvdW5kXCI+ZXN0aW1hdGVkIG1lbWJlcnM8L3NwYW4+XHJcbiAgICAgICAgICA8L2Rpdj5cclxuXHJcbiAgICAgICAgICA8ZGl2IGNsYXNzTmFtZT1cImZsZXgganVzdGlmeS1lbmQgZ2FwLTIgcHQtMlwiPlxyXG4gICAgICAgICAgICA8QnV0dG9uIHZhcmlhbnQ9XCJvdXRsaW5lXCIgc2l6ZT1cInNtXCIgb25DbGljaz17b25DbG9zZX0+Q2FuY2VsPC9CdXR0b24+XHJcbiAgICAgICAgICAgIDxCdXR0b24gc2l6ZT1cInNtXCIgb25DbGljaz17aGFuZGxlU2F2ZX0gZGlzYWJsZWQ9eyFuYW1lLnRyaW0oKSB8fCB1cHNlcnQuaXNQZW5kaW5nfT5cclxuICAgICAgICAgICAgICB7dXBzZXJ0LmlzUGVuZGluZyA/IFwiU2F2aW5nLi4uXCIgOiBcIlNhdmUgc2VnbWVudFwifVxyXG4gICAgICAgICAgICA8L0J1dHRvbj5cclxuICAgICAgICAgIDwvZGl2PlxyXG4gICAgICAgIDwvZGl2PlxyXG4gICAgICA8L0RpYWxvZ0NvbnRlbnQ+XHJcbiAgICA8L0RpYWxvZz5cclxuICApO1xyXG59XHJcbiJdLCJuYW1lcyI6WyJ1c2VTdGF0ZSIsInVzZUVmZmVjdCIsInVzZU1lbW8iLCJEaWFsb2ciLCJEaWFsb2dDb250ZW50IiwiRGlhbG9nSGVhZGVyIiwiRGlhbG9nVGl0bGUiLCJCdXR0b24iLCJJbnB1dCIsIkxhYmVsIiwiU2VsZWN0IiwiU2VsZWN0Q29udGVudCIsIlNlbGVjdEl0ZW0iLCJTZWxlY3RUcmlnZ2VyIiwiU2VsZWN0VmFsdWUiLCJQbHVzIiwiWCIsIlVzZXJzIiwidXNlVXBzZXJ0U2VnbWVudCIsIkZJRUxEUyIsImlkIiwibGFiZWwiLCJPUFMiLCJTZWdtZW50QnVpbGRlciIsIm9wZW4iLCJvbkNsb3NlIiwic3RvcmVJZCIsInNlZ21lbnQiLCJuYW1lIiwic2V0TmFtZSIsImdyb3VwcyIsInNldEdyb3VwcyIsIm1hdGNoIiwiY29uZGl0aW9ucyIsImZpZWxkIiwib3AiLCJ2YWx1ZSIsInVwc2VydCIsImNvbmRpdGlvbnNfanNvbmIiLCJlc3RDb3VudCIsInRvdGFsQ29uZHMiLCJmbGF0TWFwIiwiZyIsImZpbHRlciIsImMiLCJsZW5ndGgiLCJNYXRoIiwibWF4IiwiZmxvb3IiLCJ1cGRhdGVDb25kaXRpb24iLCJnaSIsImNpIiwicGF0Y2giLCJncyIsIm1hcCIsImkiLCJqIiwiYWRkQ29uZGl0aW9uIiwicmVtb3ZlQ29uZGl0aW9uIiwiXyIsImhhbmRsZVNhdmUiLCJ0cmltIiwibXV0YXRlQXN5bmMiLCJvbk9wZW5DaGFuZ2UiLCJ2IiwiY2xhc3NOYW1lIiwiZGl2Iiwib25DaGFuZ2UiLCJlIiwidGFyZ2V0IiwicGxhY2Vob2xkZXIiLCJncm91cCIsIm9uVmFsdWVDaGFuZ2UiLCJzcGFuIiwiZiIsIm8iLCJzaXpl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

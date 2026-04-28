@@ -1,0 +1,575 @@
+import { createHotContext as __vite__createHotContext } from "/@vite/client";import.meta.hot = __vite__createHotContext("/src/components/clock/QRScannerModal.tsx");import __vite__cjsImport0_react_jsxDevRuntime from "/node_modules/.vite/deps/react_jsx-dev-runtime.js?v=7fd9520c"; const _jsxDEV = __vite__cjsImport0_react_jsxDevRuntime["jsxDEV"];
+var _s = $RefreshSig$();
+/**
+ * QR Scanner Modal — uses device camera to scan QR codes for clock in/out.
+ * Runs BarcodeDetector when available, with jsQR as a frame-based fallback for mobile reliability.
+ */ import __vite__cjsImport1_react from "/node_modules/.vite/deps/react.js?v=7fd9520c"; const useState = __vite__cjsImport1_react["useState"]; const useRef = __vite__cjsImport1_react["useRef"]; const useEffect = __vite__cjsImport1_react["useEffect"]; const useCallback = __vite__cjsImport1_react["useCallback"];
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "/src/components/ui/dialog.tsx";
+import { Camera, X, CheckCircle2, XCircle, Loader2 } from "/node_modules/.vite/deps/lucide-react.js?v=7fd9520c";
+import { motion, AnimatePresence } from "/node_modules/.vite/deps/framer-motion.js?v=7fd9520c";
+import __vite__cjsImport5_jsqr from "/node_modules/.vite/deps/jsqr.js?v=7fd9520c"; const jsQR = __vite__cjsImport5_jsqr.__esModule ? __vite__cjsImport5_jsqr.default : __vite__cjsImport5_jsqr;
+export function QRScannerModal({ open, onClose, onScan, title = "Scan QR Code" }) {
+    _s();
+    const videoRef = useRef(null);
+    const canvasRef = useRef(null);
+    const streamRef = useRef(null);
+    const scanIntervalRef = useRef(null);
+    const barcodeDetectorRef = useRef(null);
+    const scanBusyRef = useRef(false);
+    const stateRef = useRef("scanning");
+    const [state, setState] = useState("scanning");
+    const [message, setMessage] = useState("");
+    const [actionType, setActionType] = useState("");
+    const setScannerState = useCallback((next)=>{
+        stateRef.current = next;
+        setState(next);
+    }, []);
+    const stopCamera = useCallback(()=>{
+        if (scanIntervalRef.current) {
+            clearInterval(scanIntervalRef.current);
+            scanIntervalRef.current = null;
+        }
+        barcodeDetectorRef.current = null;
+        scanBusyRef.current = false;
+        if (streamRef.current) {
+            streamRef.current.getTracks().forEach((track)=>track.stop());
+            streamRef.current = null;
+        }
+        if (videoRef.current) {
+            videoRef.current.pause();
+            videoRef.current.srcObject = null;
+        }
+    }, []);
+    const readCurrentFrame = useCallback(()=>{
+        const video = videoRef.current;
+        const canvas = canvasRef.current;
+        if (!video || !canvas) return null;
+        if (video.readyState < HTMLMediaElement.HAVE_CURRENT_DATA) return null;
+        if (!video.videoWidth || !video.videoHeight) return null;
+        const maxDimension = 960;
+        const scale = Math.min(1, maxDimension / Math.max(video.videoWidth, video.videoHeight));
+        const width = Math.max(1, Math.round(video.videoWidth * scale));
+        const height = Math.max(1, Math.round(video.videoHeight * scale));
+        canvas.width = width;
+        canvas.height = height;
+        const ctx = canvas.getContext("2d", {
+            willReadFrequently: true
+        });
+        if (!ctx) return null;
+        ctx.drawImage(video, 0, 0, width, height);
+        const imageData = ctx.getImageData(0, 0, width, height);
+        return {
+            canvas,
+            imageData
+        };
+    }, []);
+    const handleDetectedQR = useCallback(async (rawValue)=>{
+        const normalizedValue = rawValue.trim();
+        if (!normalizedValue || stateRef.current !== "scanning") return;
+        setScannerState("processing");
+        setMessage("Validating QR code...");
+        setActionType("");
+        try {
+            const token = normalizedValue.replace(/^ZIVO_CLOCK:/, "").replace(/^ZIVO:/, "");
+            console.info("[QRScanner] QR detected", {
+                length: token.length
+            });
+            const result = await onScan(token);
+            if (result.success) {
+                setScannerState("success");
+                setMessage(result.message);
+                setActionType(result.action || "");
+                return;
+            }
+            setScannerState("error");
+            setMessage(result.message);
+        } catch (error) {
+            console.error("[QRScanner] Failed to process detected QR", error);
+            setScannerState("error");
+            setMessage("Failed to process QR code");
+        }
+    }, [
+        onScan,
+        setScannerState
+    ]);
+    const scanFrame = useCallback(async ()=>{
+        if (stateRef.current !== "scanning") return;
+        const frame = readCurrentFrame();
+        if (!frame) return;
+        if (barcodeDetectorRef.current) {
+            try {
+                const barcodes = await barcodeDetectorRef.current.detect(frame.canvas);
+                const detectedValue = barcodes.find((barcode)=>barcode.rawValue)?.rawValue;
+                if (detectedValue) {
+                    console.info("[QRScanner] Detected via BarcodeDetector");
+                    await handleDetectedQR(detectedValue);
+                    return;
+                }
+            } catch (error) {
+                console.warn("[QRScanner] BarcodeDetector failed, falling back to jsQR", error);
+            }
+        }
+        const qrCode = jsQR(frame.imageData.data, frame.imageData.width, frame.imageData.height, {
+            inversionAttempts: "attemptBoth"
+        });
+        if (qrCode?.data) {
+            console.info("[QRScanner] Detected via jsQR");
+            await handleDetectedQR(qrCode.data);
+        }
+    }, [
+        handleDetectedQR,
+        readCurrentFrame
+    ]);
+    const startCamera = useCallback(async ()=>{
+        try {
+            stopCamera();
+            if (!navigator.mediaDevices?.getUserMedia) {
+                throw new Error("Camera API is not available on this device.");
+            }
+            const cameraOptions = [
+                {
+                    audio: false,
+                    video: {
+                        facingMode: {
+                            ideal: "environment"
+                        },
+                        width: {
+                            ideal: 1280
+                        },
+                        height: {
+                            ideal: 720
+                        }
+                    }
+                },
+                {
+                    audio: false,
+                    video: {
+                        facingMode: "environment",
+                        width: {
+                            ideal: 1280
+                        },
+                        height: {
+                            ideal: 720
+                        }
+                    }
+                },
+                {
+                    audio: false,
+                    video: true
+                }
+            ];
+            let stream = null;
+            let lastError = null;
+            for (const constraints of cameraOptions){
+                try {
+                    stream = await navigator.mediaDevices.getUserMedia(constraints);
+                    break;
+                } catch (error) {
+                    lastError = error;
+                }
+            }
+            if (!stream) {
+                throw lastError ?? new Error("Unable to access camera.");
+            }
+            streamRef.current = stream;
+            if (videoRef.current) {
+                videoRef.current.srcObject = stream;
+                videoRef.current.setAttribute("playsinline", "true");
+                await videoRef.current.play();
+            }
+            const BarcodeDetectorCtor = window.BarcodeDetector;
+            barcodeDetectorRef.current = null;
+            if (BarcodeDetectorCtor) {
+                try {
+                    const supportedFormats = typeof BarcodeDetectorCtor.getSupportedFormats === "function" ? await BarcodeDetectorCtor.getSupportedFormats() : [
+                        "qr_code"
+                    ];
+                    if (supportedFormats.includes("qr_code")) {
+                        barcodeDetectorRef.current = new BarcodeDetectorCtor({
+                            formats: [
+                                "qr_code"
+                            ]
+                        });
+                    }
+                } catch (error) {
+                    console.warn("[QRScanner] Could not initialize BarcodeDetector", error);
+                }
+            }
+            scanIntervalRef.current = window.setInterval(()=>{
+                if (scanBusyRef.current || stateRef.current !== "scanning") return;
+                scanBusyRef.current = true;
+                void scanFrame().finally(()=>{
+                    scanBusyRef.current = false;
+                });
+            }, 180);
+        } catch (error) {
+            console.error("[QRScanner] Camera access error", error);
+            setScannerState("error");
+            setMessage("Camera access denied. Please allow camera permissions and try again.");
+        }
+    }, [
+        scanFrame,
+        setScannerState,
+        stopCamera
+    ]);
+    const handleRetry = useCallback(()=>{
+        setMessage("");
+        setActionType("");
+        setScannerState("scanning");
+    }, [
+        setScannerState
+    ]);
+    useEffect(()=>{
+        if (open) {
+            handleRetry();
+            void startCamera();
+        } else {
+            stopCamera();
+        }
+        return stopCamera;
+    }, [
+        open,
+        handleRetry,
+        startCamera,
+        stopCamera
+    ]);
+    const handleClose = ()=>{
+        stopCamera();
+        onClose();
+    };
+    return /*#__PURE__*/ _jsxDEV(Dialog, {
+        open: open,
+        onOpenChange: (isOpen)=>!isOpen && handleClose(),
+        children: /*#__PURE__*/ _jsxDEV(DialogContent, {
+            className: "max-w-[360px] p-0 gap-0 rounded-2xl overflow-hidden bg-black",
+            children: [
+                /*#__PURE__*/ _jsxDEV(DialogHeader, {
+                    className: "px-4 py-3 bg-black/80 backdrop-blur-sm relative z-10",
+                    children: [
+                        /*#__PURE__*/ _jsxDEV(DialogTitle, {
+                            className: "text-white text-[14px] font-semibold flex items-center gap-2",
+                            children: [
+                                /*#__PURE__*/ _jsxDEV(Camera, {
+                                    className: "w-4 h-4"
+                                }, void 0, false, {
+                                    fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/clock/QRScannerModal.tsx",
+                                    lineNumber: 254,
+                                    columnNumber: 13
+                                }, this),
+                                title
+                            ]
+                        }, void 0, true, {
+                            fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/clock/QRScannerModal.tsx",
+                            lineNumber: 253,
+                            columnNumber: 11
+                        }, this),
+                        /*#__PURE__*/ _jsxDEV("button", {
+                            onClick: handleClose,
+                            className: "absolute right-3 top-3 w-7 h-7 rounded-full bg-white/10 flex items-center justify-center",
+                            children: /*#__PURE__*/ _jsxDEV(X, {
+                                className: "w-3.5 h-3.5 text-white"
+                            }, void 0, false, {
+                                fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/clock/QRScannerModal.tsx",
+                                lineNumber: 261,
+                                columnNumber: 13
+                            }, this)
+                        }, void 0, false, {
+                            fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/clock/QRScannerModal.tsx",
+                            lineNumber: 257,
+                            columnNumber: 11
+                        }, this)
+                    ]
+                }, void 0, true, {
+                    fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/clock/QRScannerModal.tsx",
+                    lineNumber: 252,
+                    columnNumber: 9
+                }, this),
+                /*#__PURE__*/ _jsxDEV("div", {
+                    className: "relative aspect-square bg-black",
+                    children: [
+                        /*#__PURE__*/ _jsxDEV("video", {
+                            ref: videoRef,
+                            className: "w-full h-full object-cover",
+                            playsInline: true,
+                            muted: true,
+                            autoPlay: true
+                        }, void 0, false, {
+                            fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/clock/QRScannerModal.tsx",
+                            lineNumber: 266,
+                            columnNumber: 11
+                        }, this),
+                        /*#__PURE__*/ _jsxDEV("canvas", {
+                            ref: canvasRef,
+                            className: "hidden"
+                        }, void 0, false, {
+                            fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/clock/QRScannerModal.tsx",
+                            lineNumber: 267,
+                            columnNumber: 11
+                        }, this),
+                        state === "scanning" && /*#__PURE__*/ _jsxDEV("div", {
+                            className: "absolute inset-0 flex items-center justify-center",
+                            children: /*#__PURE__*/ _jsxDEV("div", {
+                                className: "w-56 h-56 relative",
+                                children: [
+                                    /*#__PURE__*/ _jsxDEV("div", {
+                                        className: "absolute top-0 left-0 w-8 h-8 border-t-2 border-l-2 border-white/80 rounded-tl-lg"
+                                    }, void 0, false, {
+                                        fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/clock/QRScannerModal.tsx",
+                                        lineNumber: 272,
+                                        columnNumber: 17
+                                    }, this),
+                                    /*#__PURE__*/ _jsxDEV("div", {
+                                        className: "absolute top-0 right-0 w-8 h-8 border-t-2 border-r-2 border-white/80 rounded-tr-lg"
+                                    }, void 0, false, {
+                                        fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/clock/QRScannerModal.tsx",
+                                        lineNumber: 273,
+                                        columnNumber: 17
+                                    }, this),
+                                    /*#__PURE__*/ _jsxDEV("div", {
+                                        className: "absolute bottom-0 left-0 w-8 h-8 border-b-2 border-l-2 border-white/80 rounded-bl-lg"
+                                    }, void 0, false, {
+                                        fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/clock/QRScannerModal.tsx",
+                                        lineNumber: 274,
+                                        columnNumber: 17
+                                    }, this),
+                                    /*#__PURE__*/ _jsxDEV("div", {
+                                        className: "absolute bottom-0 right-0 w-8 h-8 border-b-2 border-r-2 border-white/80 rounded-br-lg"
+                                    }, void 0, false, {
+                                        fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/clock/QRScannerModal.tsx",
+                                        lineNumber: 275,
+                                        columnNumber: 17
+                                    }, this),
+                                    /*#__PURE__*/ _jsxDEV(motion.div, {
+                                        className: "absolute left-2 right-2 h-0.5 bg-primary shadow-[0_0_8px_rgba(34,197,94,0.6)]",
+                                        animate: {
+                                            top: [
+                                                "10%",
+                                                "90%",
+                                                "10%"
+                                            ]
+                                        },
+                                        transition: {
+                                            duration: 2.2,
+                                            repeat: Infinity,
+                                            ease: "easeInOut"
+                                        }
+                                    }, void 0, false, {
+                                        fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/clock/QRScannerModal.tsx",
+                                        lineNumber: 276,
+                                        columnNumber: 17
+                                    }, this)
+                                ]
+                            }, void 0, true, {
+                                fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/clock/QRScannerModal.tsx",
+                                lineNumber: 271,
+                                columnNumber: 15
+                            }, this)
+                        }, void 0, false, {
+                            fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/clock/QRScannerModal.tsx",
+                            lineNumber: 270,
+                            columnNumber: 13
+                        }, this),
+                        /*#__PURE__*/ _jsxDEV(AnimatePresence, {
+                            children: [
+                                state === "processing" && /*#__PURE__*/ _jsxDEV(motion.div, {
+                                    initial: {
+                                        opacity: 0
+                                    },
+                                    animate: {
+                                        opacity: 1
+                                    },
+                                    className: "absolute inset-0 bg-black/70 flex flex-col items-center justify-center",
+                                    children: [
+                                        /*#__PURE__*/ _jsxDEV(Loader2, {
+                                            className: "w-10 h-10 text-white animate-spin mb-3"
+                                        }, void 0, false, {
+                                            fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/clock/QRScannerModal.tsx",
+                                            lineNumber: 292,
+                                            columnNumber: 17
+                                        }, this),
+                                        /*#__PURE__*/ _jsxDEV("p", {
+                                            className: "text-white text-[13px] font-medium",
+                                            children: message
+                                        }, void 0, false, {
+                                            fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/clock/QRScannerModal.tsx",
+                                            lineNumber: 293,
+                                            columnNumber: 17
+                                        }, this)
+                                    ]
+                                }, void 0, true, {
+                                    fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/clock/QRScannerModal.tsx",
+                                    lineNumber: 287,
+                                    columnNumber: 15
+                                }, this),
+                                state === "success" && /*#__PURE__*/ _jsxDEV(motion.div, {
+                                    initial: {
+                                        opacity: 0,
+                                        scale: 0.9
+                                    },
+                                    animate: {
+                                        opacity: 1,
+                                        scale: 1
+                                    },
+                                    className: "absolute inset-0 bg-emerald-900/80 flex flex-col items-center justify-center",
+                                    children: [
+                                        /*#__PURE__*/ _jsxDEV(motion.div, {
+                                            initial: {
+                                                scale: 0
+                                            },
+                                            animate: {
+                                                scale: 1
+                                            },
+                                            transition: {
+                                                type: "spring",
+                                                delay: 0.1
+                                            },
+                                            children: /*#__PURE__*/ _jsxDEV(CheckCircle2, {
+                                                className: "w-14 h-14 text-emerald-400 mb-3"
+                                            }, void 0, false, {
+                                                fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/clock/QRScannerModal.tsx",
+                                                lineNumber: 304,
+                                                columnNumber: 19
+                                            }, this)
+                                        }, void 0, false, {
+                                            fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/clock/QRScannerModal.tsx",
+                                            lineNumber: 303,
+                                            columnNumber: 17
+                                        }, this),
+                                        /*#__PURE__*/ _jsxDEV("p", {
+                                            className: "text-white text-[15px] font-bold mb-1",
+                                            children: actionType === "clock_in" ? "Clocked In!" : actionType === "clock_out" ? "Clocked Out!" : "Success!"
+                                        }, void 0, false, {
+                                            fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/clock/QRScannerModal.tsx",
+                                            lineNumber: 306,
+                                            columnNumber: 17
+                                        }, this),
+                                        /*#__PURE__*/ _jsxDEV("p", {
+                                            className: "text-emerald-200 text-[12px] text-center px-6",
+                                            children: message
+                                        }, void 0, false, {
+                                            fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/clock/QRScannerModal.tsx",
+                                            lineNumber: 309,
+                                            columnNumber: 17
+                                        }, this)
+                                    ]
+                                }, void 0, true, {
+                                    fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/clock/QRScannerModal.tsx",
+                                    lineNumber: 298,
+                                    columnNumber: 15
+                                }, this),
+                                state === "error" && /*#__PURE__*/ _jsxDEV(motion.div, {
+                                    initial: {
+                                        opacity: 0,
+                                        scale: 0.9
+                                    },
+                                    animate: {
+                                        opacity: 1,
+                                        scale: 1
+                                    },
+                                    className: "absolute inset-0 bg-red-900/80 flex flex-col items-center justify-center",
+                                    children: [
+                                        /*#__PURE__*/ _jsxDEV(XCircle, {
+                                            className: "w-14 h-14 text-red-400 mb-3"
+                                        }, void 0, false, {
+                                            fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/clock/QRScannerModal.tsx",
+                                            lineNumber: 319,
+                                            columnNumber: 17
+                                        }, this),
+                                        /*#__PURE__*/ _jsxDEV("p", {
+                                            className: "text-white text-[15px] font-bold mb-1",
+                                            children: "Failed"
+                                        }, void 0, false, {
+                                            fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/clock/QRScannerModal.tsx",
+                                            lineNumber: 320,
+                                            columnNumber: 17
+                                        }, this),
+                                        /*#__PURE__*/ _jsxDEV("p", {
+                                            className: "text-red-200 text-[12px] text-center px-6",
+                                            children: message
+                                        }, void 0, false, {
+                                            fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/clock/QRScannerModal.tsx",
+                                            lineNumber: 321,
+                                            columnNumber: 17
+                                        }, this),
+                                        /*#__PURE__*/ _jsxDEV("button", {
+                                            onClick: handleRetry,
+                                            className: "mt-4 px-5 py-2 rounded-full bg-white/20 text-white text-[12px] font-semibold",
+                                            children: "Try Again"
+                                        }, void 0, false, {
+                                            fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/clock/QRScannerModal.tsx",
+                                            lineNumber: 322,
+                                            columnNumber: 17
+                                        }, this)
+                                    ]
+                                }, void 0, true, {
+                                    fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/clock/QRScannerModal.tsx",
+                                    lineNumber: 314,
+                                    columnNumber: 15
+                                }, this)
+                            ]
+                        }, void 0, true, {
+                            fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/clock/QRScannerModal.tsx",
+                            lineNumber: 285,
+                            columnNumber: 11
+                        }, this)
+                    ]
+                }, void 0, true, {
+                    fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/clock/QRScannerModal.tsx",
+                    lineNumber: 265,
+                    columnNumber: 9
+                }, this),
+                /*#__PURE__*/ _jsxDEV("div", {
+                    className: "px-4 py-3 bg-black/80 text-center",
+                    children: /*#__PURE__*/ _jsxDEV("p", {
+                        className: "text-white/60 text-[11px]",
+                        children: state === "scanning" ? "Hold the QR fully inside the frame" : ""
+                    }, void 0, false, {
+                        fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/clock/QRScannerModal.tsx",
+                        lineNumber: 334,
+                        columnNumber: 11
+                    }, this)
+                }, void 0, false, {
+                    fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/clock/QRScannerModal.tsx",
+                    lineNumber: 333,
+                    columnNumber: 9
+                }, this)
+            ]
+        }, void 0, true, {
+            fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/clock/QRScannerModal.tsx",
+            lineNumber: 251,
+            columnNumber: 7
+        }, this)
+    }, void 0, false, {
+        fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/clock/QRScannerModal.tsx",
+        lineNumber: 250,
+        columnNumber: 5
+    }, this);
+}
+_s(QRScannerModal, "h+WkdF8549lg8KfZQSM8spWRv2U=");
+_c = QRScannerModal;
+var _c;
+$RefreshReg$(_c, "QRScannerModal");
+
+
+import * as RefreshRuntime from "/@react-refresh";
+const inWebWorker = typeof WorkerGlobalScope !== 'undefined' && self instanceof WorkerGlobalScope;
+if (import.meta.hot && !inWebWorker) {
+  if (!window.$RefreshReg$) {
+    throw new Error(
+      "@vitejs/plugin-react-swc can't detect preamble. Something is wrong."
+    );
+  }
+
+  RefreshRuntime.__hmr_import(import.meta.url).then((currentExports) => {
+    RefreshRuntime.registerExportsForReactRefresh("C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/clock/QRScannerModal.tsx", currentExports);
+    import.meta.hot.accept((nextExports) => {
+      if (!nextExports) return;
+      const invalidateMessage = RefreshRuntime.validateRefreshBoundaryAndEnqueueUpdate("C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/clock/QRScannerModal.tsx", currentExports, nextExports);
+      if (invalidateMessage) import.meta.hot.invalidate(invalidateMessage);
+    });
+  });
+}
+function $RefreshReg$(type, id) { return RefreshRuntime.register(type, "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/clock/QRScannerModal.tsx" + ' ' + id) }
+function $RefreshSig$() { return RefreshRuntime.createSignatureFunctionForTransform(); }
+
+//# sourceMappingURL=data:application/json;base64,eyJ2ZXJzaW9uIjozLCJzb3VyY2VzIjpbIlFSU2Nhbm5lck1vZGFsLnRzeCJdLCJzb3VyY2VzQ29udGVudCI6WyIvKipcclxuICogUVIgU2Nhbm5lciBNb2RhbCDigJQgdXNlcyBkZXZpY2UgY2FtZXJhIHRvIHNjYW4gUVIgY29kZXMgZm9yIGNsb2NrIGluL291dC5cclxuICogUnVucyBCYXJjb2RlRGV0ZWN0b3Igd2hlbiBhdmFpbGFibGUsIHdpdGgganNRUiBhcyBhIGZyYW1lLWJhc2VkIGZhbGxiYWNrIGZvciBtb2JpbGUgcmVsaWFiaWxpdHkuXHJcbiAqL1xyXG5pbXBvcnQgeyB1c2VTdGF0ZSwgdXNlUmVmLCB1c2VFZmZlY3QsIHVzZUNhbGxiYWNrIH0gZnJvbSBcInJlYWN0XCI7XHJcbmltcG9ydCB7IERpYWxvZywgRGlhbG9nQ29udGVudCwgRGlhbG9nSGVhZGVyLCBEaWFsb2dUaXRsZSB9IGZyb20gXCJAL2NvbXBvbmVudHMvdWkvZGlhbG9nXCI7XHJcbmltcG9ydCB7IENhbWVyYSwgWCwgQ2hlY2tDaXJjbGUyLCBYQ2lyY2xlLCBMb2FkZXIyIH0gZnJvbSBcImx1Y2lkZS1yZWFjdFwiO1xyXG5pbXBvcnQgeyBtb3Rpb24sIEFuaW1hdGVQcmVzZW5jZSB9IGZyb20gXCJmcmFtZXItbW90aW9uXCI7XHJcbmltcG9ydCBqc1FSIGZyb20gXCJqc3FyXCI7XHJcblxyXG5pbnRlcmZhY2UgUVJTY2FubmVyTW9kYWxQcm9wcyB7XHJcbiAgb3BlbjogYm9vbGVhbjtcclxuICBvbkNsb3NlOiAoKSA9PiB2b2lkO1xyXG4gIG9uU2NhbjogKHRva2VuOiBzdHJpbmcpID0+IFByb21pc2U8eyBzdWNjZXNzOiBib29sZWFuOyBtZXNzYWdlOiBzdHJpbmc7IGFjdGlvbj86IHN0cmluZyB9PjtcclxuICB0aXRsZT86IHN0cmluZztcclxufVxyXG5cclxudHlwZSBTY2FuU3RhdGUgPSBcInNjYW5uaW5nXCIgfCBcInByb2Nlc3NpbmdcIiB8IFwic3VjY2Vzc1wiIHwgXCJlcnJvclwiO1xyXG5cclxuZXhwb3J0IGZ1bmN0aW9uIFFSU2Nhbm5lck1vZGFsKHsgb3Blbiwgb25DbG9zZSwgb25TY2FuLCB0aXRsZSA9IFwiU2NhbiBRUiBDb2RlXCIgfTogUVJTY2FubmVyTW9kYWxQcm9wcykge1xyXG4gIGNvbnN0IHZpZGVvUmVmID0gdXNlUmVmPEhUTUxWaWRlb0VsZW1lbnQ+KG51bGwpO1xyXG4gIGNvbnN0IGNhbnZhc1JlZiA9IHVzZVJlZjxIVE1MQ2FudmFzRWxlbWVudD4obnVsbCk7XHJcbiAgY29uc3Qgc3RyZWFtUmVmID0gdXNlUmVmPE1lZGlhU3RyZWFtIHwgbnVsbD4obnVsbCk7XHJcbiAgY29uc3Qgc2NhbkludGVydmFsUmVmID0gdXNlUmVmPG51bWJlciB8IG51bGw+KG51bGwpO1xyXG4gIGNvbnN0IGJhcmNvZGVEZXRlY3RvclJlZiA9IHVzZVJlZjxhbnk+KG51bGwpO1xyXG4gIGNvbnN0IHNjYW5CdXN5UmVmID0gdXNlUmVmKGZhbHNlKTtcclxuICBjb25zdCBzdGF0ZVJlZiA9IHVzZVJlZjxTY2FuU3RhdGU+KFwic2Nhbm5pbmdcIik7XHJcblxyXG4gIGNvbnN0IFtzdGF0ZSwgc2V0U3RhdGVdID0gdXNlU3RhdGU8U2NhblN0YXRlPihcInNjYW5uaW5nXCIpO1xyXG4gIGNvbnN0IFttZXNzYWdlLCBzZXRNZXNzYWdlXSA9IHVzZVN0YXRlKFwiXCIpO1xyXG4gIGNvbnN0IFthY3Rpb25UeXBlLCBzZXRBY3Rpb25UeXBlXSA9IHVzZVN0YXRlKFwiXCIpO1xyXG5cclxuICBjb25zdCBzZXRTY2FubmVyU3RhdGUgPSB1c2VDYWxsYmFjaygobmV4dDogU2NhblN0YXRlKSA9PiB7XHJcbiAgICBzdGF0ZVJlZi5jdXJyZW50ID0gbmV4dDtcclxuICAgIHNldFN0YXRlKG5leHQpO1xyXG4gIH0sIFtdKTtcclxuXHJcbiAgY29uc3Qgc3RvcENhbWVyYSA9IHVzZUNhbGxiYWNrKCgpID0+IHtcclxuICAgIGlmIChzY2FuSW50ZXJ2YWxSZWYuY3VycmVudCkge1xyXG4gICAgICBjbGVhckludGVydmFsKHNjYW5JbnRlcnZhbFJlZi5jdXJyZW50KTtcclxuICAgICAgc2NhbkludGVydmFsUmVmLmN1cnJlbnQgPSBudWxsO1xyXG4gICAgfVxyXG5cclxuICAgIGJhcmNvZGVEZXRlY3RvclJlZi5jdXJyZW50ID0gbnVsbDtcclxuICAgIHNjYW5CdXN5UmVmLmN1cnJlbnQgPSBmYWxzZTtcclxuXHJcbiAgICBpZiAoc3RyZWFtUmVmLmN1cnJlbnQpIHtcclxuICAgICAgc3RyZWFtUmVmLmN1cnJlbnQuZ2V0VHJhY2tzKCkuZm9yRWFjaCgodHJhY2spID0+IHRyYWNrLnN0b3AoKSk7XHJcbiAgICAgIHN0cmVhbVJlZi5jdXJyZW50ID0gbnVsbDtcclxuICAgIH1cclxuXHJcbiAgICBpZiAodmlkZW9SZWYuY3VycmVudCkge1xyXG4gICAgICB2aWRlb1JlZi5jdXJyZW50LnBhdXNlKCk7XHJcbiAgICAgIHZpZGVvUmVmLmN1cnJlbnQuc3JjT2JqZWN0ID0gbnVsbDtcclxuICAgIH1cclxuICB9LCBbXSk7XHJcblxyXG4gIGNvbnN0IHJlYWRDdXJyZW50RnJhbWUgPSB1c2VDYWxsYmFjaygoKSA9PiB7XHJcbiAgICBjb25zdCB2aWRlbyA9IHZpZGVvUmVmLmN1cnJlbnQ7XHJcbiAgICBjb25zdCBjYW52YXMgPSBjYW52YXNSZWYuY3VycmVudDtcclxuXHJcbiAgICBpZiAoIXZpZGVvIHx8ICFjYW52YXMpIHJldHVybiBudWxsO1xyXG4gICAgaWYgKHZpZGVvLnJlYWR5U3RhdGUgPCBIVE1MTWVkaWFFbGVtZW50LkhBVkVfQ1VSUkVOVF9EQVRBKSByZXR1cm4gbnVsbDtcclxuICAgIGlmICghdmlkZW8udmlkZW9XaWR0aCB8fCAhdmlkZW8udmlkZW9IZWlnaHQpIHJldHVybiBudWxsO1xyXG5cclxuICAgIGNvbnN0IG1heERpbWVuc2lvbiA9IDk2MDtcclxuICAgIGNvbnN0IHNjYWxlID0gTWF0aC5taW4oMSwgbWF4RGltZW5zaW9uIC8gTWF0aC5tYXgodmlkZW8udmlkZW9XaWR0aCwgdmlkZW8udmlkZW9IZWlnaHQpKTtcclxuICAgIGNvbnN0IHdpZHRoID0gTWF0aC5tYXgoMSwgTWF0aC5yb3VuZCh2aWRlby52aWRlb1dpZHRoICogc2NhbGUpKTtcclxuICAgIGNvbnN0IGhlaWdodCA9IE1hdGgubWF4KDEsIE1hdGgucm91bmQodmlkZW8udmlkZW9IZWlnaHQgKiBzY2FsZSkpO1xyXG5cclxuICAgIGNhbnZhcy53aWR0aCA9IHdpZHRoO1xyXG4gICAgY2FudmFzLmhlaWdodCA9IGhlaWdodDtcclxuXHJcbiAgICBjb25zdCBjdHggPSBjYW52YXMuZ2V0Q29udGV4dChcIjJkXCIsIHsgd2lsbFJlYWRGcmVxdWVudGx5OiB0cnVlIH0pO1xyXG4gICAgaWYgKCFjdHgpIHJldHVybiBudWxsO1xyXG5cclxuICAgIGN0eC5kcmF3SW1hZ2UodmlkZW8sIDAsIDAsIHdpZHRoLCBoZWlnaHQpO1xyXG4gICAgY29uc3QgaW1hZ2VEYXRhID0gY3R4LmdldEltYWdlRGF0YSgwLCAwLCB3aWR0aCwgaGVpZ2h0KTtcclxuXHJcbiAgICByZXR1cm4geyBjYW52YXMsIGltYWdlRGF0YSB9O1xyXG4gIH0sIFtdKTtcclxuXHJcbiAgY29uc3QgaGFuZGxlRGV0ZWN0ZWRRUiA9IHVzZUNhbGxiYWNrKGFzeW5jIChyYXdWYWx1ZTogc3RyaW5nKSA9PiB7XHJcbiAgICBjb25zdCBub3JtYWxpemVkVmFsdWUgPSByYXdWYWx1ZS50cmltKCk7XHJcbiAgICBpZiAoIW5vcm1hbGl6ZWRWYWx1ZSB8fCBzdGF0ZVJlZi5jdXJyZW50ICE9PSBcInNjYW5uaW5nXCIpIHJldHVybjtcclxuXHJcbiAgICBzZXRTY2FubmVyU3RhdGUoXCJwcm9jZXNzaW5nXCIpO1xyXG4gICAgc2V0TWVzc2FnZShcIlZhbGlkYXRpbmcgUVIgY29kZS4uLlwiKTtcclxuICAgIHNldEFjdGlvblR5cGUoXCJcIik7XHJcblxyXG4gICAgdHJ5IHtcclxuICAgICAgY29uc3QgdG9rZW4gPSBub3JtYWxpemVkVmFsdWUucmVwbGFjZSgvXlpJVk9fQ0xPQ0s6LywgXCJcIikucmVwbGFjZSgvXlpJVk86LywgXCJcIik7XHJcbiAgICAgIGNvbnNvbGUuaW5mbyhcIltRUlNjYW5uZXJdIFFSIGRldGVjdGVkXCIsIHsgbGVuZ3RoOiB0b2tlbi5sZW5ndGggfSk7XHJcblxyXG4gICAgICBjb25zdCByZXN1bHQgPSBhd2FpdCBvblNjYW4odG9rZW4pO1xyXG4gICAgICBpZiAocmVzdWx0LnN1Y2Nlc3MpIHtcclxuICAgICAgICBzZXRTY2FubmVyU3RhdGUoXCJzdWNjZXNzXCIpO1xyXG4gICAgICAgIHNldE1lc3NhZ2UocmVzdWx0Lm1lc3NhZ2UpO1xyXG4gICAgICAgIHNldEFjdGlvblR5cGUocmVzdWx0LmFjdGlvbiB8fCBcIlwiKTtcclxuICAgICAgICByZXR1cm47XHJcbiAgICAgIH1cclxuXHJcbiAgICAgIHNldFNjYW5uZXJTdGF0ZShcImVycm9yXCIpO1xyXG4gICAgICBzZXRNZXNzYWdlKHJlc3VsdC5tZXNzYWdlKTtcclxuICAgIH0gY2F0Y2ggKGVycm9yKSB7XHJcbiAgICAgIGNvbnNvbGUuZXJyb3IoXCJbUVJTY2FubmVyXSBGYWlsZWQgdG8gcHJvY2VzcyBkZXRlY3RlZCBRUlwiLCBlcnJvcik7XHJcbiAgICAgIHNldFNjYW5uZXJTdGF0ZShcImVycm9yXCIpO1xyXG4gICAgICBzZXRNZXNzYWdlKFwiRmFpbGVkIHRvIHByb2Nlc3MgUVIgY29kZVwiKTtcclxuICAgIH1cclxuICB9LCBbb25TY2FuLCBzZXRTY2FubmVyU3RhdGVdKTtcclxuXHJcbiAgY29uc3Qgc2NhbkZyYW1lID0gdXNlQ2FsbGJhY2soYXN5bmMgKCkgPT4ge1xyXG4gICAgaWYgKHN0YXRlUmVmLmN1cnJlbnQgIT09IFwic2Nhbm5pbmdcIikgcmV0dXJuO1xyXG5cclxuICAgIGNvbnN0IGZyYW1lID0gcmVhZEN1cnJlbnRGcmFtZSgpO1xyXG4gICAgaWYgKCFmcmFtZSkgcmV0dXJuO1xyXG5cclxuICAgIGlmIChiYXJjb2RlRGV0ZWN0b3JSZWYuY3VycmVudCkge1xyXG4gICAgICB0cnkge1xyXG4gICAgICAgIGNvbnN0IGJhcmNvZGVzID0gYXdhaXQgYmFyY29kZURldGVjdG9yUmVmLmN1cnJlbnQuZGV0ZWN0KGZyYW1lLmNhbnZhcyk7XHJcbiAgICAgICAgY29uc3QgZGV0ZWN0ZWRWYWx1ZSA9IGJhcmNvZGVzLmZpbmQoKGJhcmNvZGU6IGFueSkgPT4gYmFyY29kZS5yYXdWYWx1ZSk/LnJhd1ZhbHVlO1xyXG5cclxuICAgICAgICBpZiAoZGV0ZWN0ZWRWYWx1ZSkge1xyXG4gICAgICAgICAgY29uc29sZS5pbmZvKFwiW1FSU2Nhbm5lcl0gRGV0ZWN0ZWQgdmlhIEJhcmNvZGVEZXRlY3RvclwiKTtcclxuICAgICAgICAgIGF3YWl0IGhhbmRsZURldGVjdGVkUVIoZGV0ZWN0ZWRWYWx1ZSk7XHJcbiAgICAgICAgICByZXR1cm47XHJcbiAgICAgICAgfVxyXG4gICAgICB9IGNhdGNoIChlcnJvcikge1xyXG4gICAgICAgIGNvbnNvbGUud2FybihcIltRUlNjYW5uZXJdIEJhcmNvZGVEZXRlY3RvciBmYWlsZWQsIGZhbGxpbmcgYmFjayB0byBqc1FSXCIsIGVycm9yKTtcclxuICAgICAgfVxyXG4gICAgfVxyXG5cclxuICAgIGNvbnN0IHFyQ29kZSA9IGpzUVIoZnJhbWUuaW1hZ2VEYXRhLmRhdGEsIGZyYW1lLmltYWdlRGF0YS53aWR0aCwgZnJhbWUuaW1hZ2VEYXRhLmhlaWdodCwge1xyXG4gICAgICBpbnZlcnNpb25BdHRlbXB0czogXCJhdHRlbXB0Qm90aFwiLFxyXG4gICAgfSk7XHJcblxyXG4gICAgaWYgKHFyQ29kZT8uZGF0YSkge1xyXG4gICAgICBjb25zb2xlLmluZm8oXCJbUVJTY2FubmVyXSBEZXRlY3RlZCB2aWEganNRUlwiKTtcclxuICAgICAgYXdhaXQgaGFuZGxlRGV0ZWN0ZWRRUihxckNvZGUuZGF0YSk7XHJcbiAgICB9XHJcbiAgfSwgW2hhbmRsZURldGVjdGVkUVIsIHJlYWRDdXJyZW50RnJhbWVdKTtcclxuXHJcbiAgY29uc3Qgc3RhcnRDYW1lcmEgPSB1c2VDYWxsYmFjayhhc3luYyAoKSA9PiB7XHJcbiAgICB0cnkge1xyXG4gICAgICBzdG9wQ2FtZXJhKCk7XHJcblxyXG4gICAgICBpZiAoIW5hdmlnYXRvci5tZWRpYURldmljZXM/LmdldFVzZXJNZWRpYSkge1xyXG4gICAgICAgIHRocm93IG5ldyBFcnJvcihcIkNhbWVyYSBBUEkgaXMgbm90IGF2YWlsYWJsZSBvbiB0aGlzIGRldmljZS5cIik7XHJcbiAgICAgIH1cclxuXHJcbiAgICAgIGNvbnN0IGNhbWVyYU9wdGlvbnM6IE1lZGlhU3RyZWFtQ29uc3RyYWludHNbXSA9IFtcclxuICAgICAgICB7XHJcbiAgICAgICAgICBhdWRpbzogZmFsc2UsXHJcbiAgICAgICAgICB2aWRlbzoge1xyXG4gICAgICAgICAgICBmYWNpbmdNb2RlOiB7IGlkZWFsOiBcImVudmlyb25tZW50XCIgfSxcclxuICAgICAgICAgICAgd2lkdGg6IHsgaWRlYWw6IDEyODAgfSxcclxuICAgICAgICAgICAgaGVpZ2h0OiB7IGlkZWFsOiA3MjAgfSxcclxuICAgICAgICAgIH0sXHJcbiAgICAgICAgfSxcclxuICAgICAgICB7XHJcbiAgICAgICAgICBhdWRpbzogZmFsc2UsXHJcbiAgICAgICAgICB2aWRlbzoge1xyXG4gICAgICAgICAgICBmYWNpbmdNb2RlOiBcImVudmlyb25tZW50XCIsXHJcbiAgICAgICAgICAgIHdpZHRoOiB7IGlkZWFsOiAxMjgwIH0sXHJcbiAgICAgICAgICAgIGhlaWdodDogeyBpZGVhbDogNzIwIH0sXHJcbiAgICAgICAgICB9LFxyXG4gICAgICAgIH0sXHJcbiAgICAgICAgeyBhdWRpbzogZmFsc2UsIHZpZGVvOiB0cnVlIH0sXHJcbiAgICAgIF07XHJcblxyXG4gICAgICBsZXQgc3RyZWFtOiBNZWRpYVN0cmVhbSB8IG51bGwgPSBudWxsO1xyXG4gICAgICBsZXQgbGFzdEVycm9yOiB1bmtub3duID0gbnVsbDtcclxuXHJcbiAgICAgIGZvciAoY29uc3QgY29uc3RyYWludHMgb2YgY2FtZXJhT3B0aW9ucykge1xyXG4gICAgICAgIHRyeSB7XHJcbiAgICAgICAgICBzdHJlYW0gPSBhd2FpdCBuYXZpZ2F0b3IubWVkaWFEZXZpY2VzLmdldFVzZXJNZWRpYShjb25zdHJhaW50cyk7XHJcbiAgICAgICAgICBicmVhaztcclxuICAgICAgICB9IGNhdGNoIChlcnJvcikge1xyXG4gICAgICAgICAgbGFzdEVycm9yID0gZXJyb3I7XHJcbiAgICAgICAgfVxyXG4gICAgICB9XHJcblxyXG4gICAgICBpZiAoIXN0cmVhbSkge1xyXG4gICAgICAgIHRocm93IGxhc3RFcnJvciA/PyBuZXcgRXJyb3IoXCJVbmFibGUgdG8gYWNjZXNzIGNhbWVyYS5cIik7XHJcbiAgICAgIH1cclxuXHJcbiAgICAgIHN0cmVhbVJlZi5jdXJyZW50ID0gc3RyZWFtO1xyXG5cclxuICAgICAgaWYgKHZpZGVvUmVmLmN1cnJlbnQpIHtcclxuICAgICAgICB2aWRlb1JlZi5jdXJyZW50LnNyY09iamVjdCA9IHN0cmVhbTtcclxuICAgICAgICB2aWRlb1JlZi5jdXJyZW50LnNldEF0dHJpYnV0ZShcInBsYXlzaW5saW5lXCIsIFwidHJ1ZVwiKTtcclxuICAgICAgICBhd2FpdCB2aWRlb1JlZi5jdXJyZW50LnBsYXkoKTtcclxuICAgICAgfVxyXG5cclxuICAgICAgY29uc3QgQmFyY29kZURldGVjdG9yQ3RvciA9ICh3aW5kb3cgYXMgYW55KS5CYXJjb2RlRGV0ZWN0b3I7XHJcbiAgICAgIGJhcmNvZGVEZXRlY3RvclJlZi5jdXJyZW50ID0gbnVsbDtcclxuXHJcbiAgICAgIGlmIChCYXJjb2RlRGV0ZWN0b3JDdG9yKSB7XHJcbiAgICAgICAgdHJ5IHtcclxuICAgICAgICAgIGNvbnN0IHN1cHBvcnRlZEZvcm1hdHMgPSB0eXBlb2YgQmFyY29kZURldGVjdG9yQ3Rvci5nZXRTdXBwb3J0ZWRGb3JtYXRzID09PSBcImZ1bmN0aW9uXCJcclxuICAgICAgICAgICAgPyBhd2FpdCBCYXJjb2RlRGV0ZWN0b3JDdG9yLmdldFN1cHBvcnRlZEZvcm1hdHMoKVxyXG4gICAgICAgICAgICA6IFtcInFyX2NvZGVcIl07XHJcblxyXG4gICAgICAgICAgaWYgKHN1cHBvcnRlZEZvcm1hdHMuaW5jbHVkZXMoXCJxcl9jb2RlXCIpKSB7XHJcbiAgICAgICAgICAgIGJhcmNvZGVEZXRlY3RvclJlZi5jdXJyZW50ID0gbmV3IEJhcmNvZGVEZXRlY3RvckN0b3IoeyBmb3JtYXRzOiBbXCJxcl9jb2RlXCJdIH0pO1xyXG4gICAgICAgICAgfVxyXG4gICAgICAgIH0gY2F0Y2ggKGVycm9yKSB7XHJcbiAgICAgICAgICBjb25zb2xlLndhcm4oXCJbUVJTY2FubmVyXSBDb3VsZCBub3QgaW5pdGlhbGl6ZSBCYXJjb2RlRGV0ZWN0b3JcIiwgZXJyb3IpO1xyXG4gICAgICAgIH1cclxuICAgICAgfVxyXG5cclxuICAgICAgc2NhbkludGVydmFsUmVmLmN1cnJlbnQgPSB3aW5kb3cuc2V0SW50ZXJ2YWwoKCkgPT4ge1xyXG4gICAgICAgIGlmIChzY2FuQnVzeVJlZi5jdXJyZW50IHx8IHN0YXRlUmVmLmN1cnJlbnQgIT09IFwic2Nhbm5pbmdcIikgcmV0dXJuO1xyXG5cclxuICAgICAgICBzY2FuQnVzeVJlZi5jdXJyZW50ID0gdHJ1ZTtcclxuICAgICAgICB2b2lkIHNjYW5GcmFtZSgpLmZpbmFsbHkoKCkgPT4ge1xyXG4gICAgICAgICAgc2NhbkJ1c3lSZWYuY3VycmVudCA9IGZhbHNlO1xyXG4gICAgICAgIH0pO1xyXG4gICAgICB9LCAxODApO1xyXG4gICAgfSBjYXRjaCAoZXJyb3IpIHtcclxuICAgICAgY29uc29sZS5lcnJvcihcIltRUlNjYW5uZXJdIENhbWVyYSBhY2Nlc3MgZXJyb3JcIiwgZXJyb3IpO1xyXG4gICAgICBzZXRTY2FubmVyU3RhdGUoXCJlcnJvclwiKTtcclxuICAgICAgc2V0TWVzc2FnZShcIkNhbWVyYSBhY2Nlc3MgZGVuaWVkLiBQbGVhc2UgYWxsb3cgY2FtZXJhIHBlcm1pc3Npb25zIGFuZCB0cnkgYWdhaW4uXCIpO1xyXG4gICAgfVxyXG4gIH0sIFtzY2FuRnJhbWUsIHNldFNjYW5uZXJTdGF0ZSwgc3RvcENhbWVyYV0pO1xyXG5cclxuICBjb25zdCBoYW5kbGVSZXRyeSA9IHVzZUNhbGxiYWNrKCgpID0+IHtcclxuICAgIHNldE1lc3NhZ2UoXCJcIik7XHJcbiAgICBzZXRBY3Rpb25UeXBlKFwiXCIpO1xyXG4gICAgc2V0U2Nhbm5lclN0YXRlKFwic2Nhbm5pbmdcIik7XHJcbiAgfSwgW3NldFNjYW5uZXJTdGF0ZV0pO1xyXG5cclxuICB1c2VFZmZlY3QoKCkgPT4ge1xyXG4gICAgaWYgKG9wZW4pIHtcclxuICAgICAgaGFuZGxlUmV0cnkoKTtcclxuICAgICAgdm9pZCBzdGFydENhbWVyYSgpO1xyXG4gICAgfSBlbHNlIHtcclxuICAgICAgc3RvcENhbWVyYSgpO1xyXG4gICAgfVxyXG5cclxuICAgIHJldHVybiBzdG9wQ2FtZXJhO1xyXG4gIH0sIFtvcGVuLCBoYW5kbGVSZXRyeSwgc3RhcnRDYW1lcmEsIHN0b3BDYW1lcmFdKTtcclxuXHJcbiAgY29uc3QgaGFuZGxlQ2xvc2UgPSAoKSA9PiB7XHJcbiAgICBzdG9wQ2FtZXJhKCk7XHJcbiAgICBvbkNsb3NlKCk7XHJcbiAgfTtcclxuXHJcbiAgcmV0dXJuIChcclxuICAgIDxEaWFsb2cgb3Blbj17b3Blbn0gb25PcGVuQ2hhbmdlPXsoaXNPcGVuKSA9PiAhaXNPcGVuICYmIGhhbmRsZUNsb3NlKCl9PlxyXG4gICAgICA8RGlhbG9nQ29udGVudCBjbGFzc05hbWU9XCJtYXgtdy1bMzYwcHhdIHAtMCBnYXAtMCByb3VuZGVkLTJ4bCBvdmVyZmxvdy1oaWRkZW4gYmctYmxhY2tcIj5cclxuICAgICAgICA8RGlhbG9nSGVhZGVyIGNsYXNzTmFtZT1cInB4LTQgcHktMyBiZy1ibGFjay84MCBiYWNrZHJvcC1ibHVyLXNtIHJlbGF0aXZlIHotMTBcIj5cclxuICAgICAgICAgIDxEaWFsb2dUaXRsZSBjbGFzc05hbWU9XCJ0ZXh0LXdoaXRlIHRleHQtWzE0cHhdIGZvbnQtc2VtaWJvbGQgZmxleCBpdGVtcy1jZW50ZXIgZ2FwLTJcIj5cclxuICAgICAgICAgICAgPENhbWVyYSBjbGFzc05hbWU9XCJ3LTQgaC00XCIgLz5cclxuICAgICAgICAgICAge3RpdGxlfVxyXG4gICAgICAgICAgPC9EaWFsb2dUaXRsZT5cclxuICAgICAgICAgIDxidXR0b25cclxuICAgICAgICAgICAgb25DbGljaz17aGFuZGxlQ2xvc2V9XHJcbiAgICAgICAgICAgIGNsYXNzTmFtZT1cImFic29sdXRlIHJpZ2h0LTMgdG9wLTMgdy03IGgtNyByb3VuZGVkLWZ1bGwgYmctd2hpdGUvMTAgZmxleCBpdGVtcy1jZW50ZXIganVzdGlmeS1jZW50ZXJcIlxyXG4gICAgICAgICAgPlxyXG4gICAgICAgICAgICA8WCBjbGFzc05hbWU9XCJ3LTMuNSBoLTMuNSB0ZXh0LXdoaXRlXCIgLz5cclxuICAgICAgICAgIDwvYnV0dG9uPlxyXG4gICAgICAgIDwvRGlhbG9nSGVhZGVyPlxyXG5cclxuICAgICAgICA8ZGl2IGNsYXNzTmFtZT1cInJlbGF0aXZlIGFzcGVjdC1zcXVhcmUgYmctYmxhY2tcIj5cclxuICAgICAgICAgIDx2aWRlbyByZWY9e3ZpZGVvUmVmfSBjbGFzc05hbWU9XCJ3LWZ1bGwgaC1mdWxsIG9iamVjdC1jb3ZlclwiIHBsYXlzSW5saW5lIG11dGVkIGF1dG9QbGF5IC8+XHJcbiAgICAgICAgICA8Y2FudmFzIHJlZj17Y2FudmFzUmVmfSBjbGFzc05hbWU9XCJoaWRkZW5cIiAvPlxyXG5cclxuICAgICAgICAgIHtzdGF0ZSA9PT0gXCJzY2FubmluZ1wiICYmIChcclxuICAgICAgICAgICAgPGRpdiBjbGFzc05hbWU9XCJhYnNvbHV0ZSBpbnNldC0wIGZsZXggaXRlbXMtY2VudGVyIGp1c3RpZnktY2VudGVyXCI+XHJcbiAgICAgICAgICAgICAgPGRpdiBjbGFzc05hbWU9XCJ3LTU2IGgtNTYgcmVsYXRpdmVcIj5cclxuICAgICAgICAgICAgICAgIDxkaXYgY2xhc3NOYW1lPVwiYWJzb2x1dGUgdG9wLTAgbGVmdC0wIHctOCBoLTggYm9yZGVyLXQtMiBib3JkZXItbC0yIGJvcmRlci13aGl0ZS84MCByb3VuZGVkLXRsLWxnXCIgLz5cclxuICAgICAgICAgICAgICAgIDxkaXYgY2xhc3NOYW1lPVwiYWJzb2x1dGUgdG9wLTAgcmlnaHQtMCB3LTggaC04IGJvcmRlci10LTIgYm9yZGVyLXItMiBib3JkZXItd2hpdGUvODAgcm91bmRlZC10ci1sZ1wiIC8+XHJcbiAgICAgICAgICAgICAgICA8ZGl2IGNsYXNzTmFtZT1cImFic29sdXRlIGJvdHRvbS0wIGxlZnQtMCB3LTggaC04IGJvcmRlci1iLTIgYm9yZGVyLWwtMiBib3JkZXItd2hpdGUvODAgcm91bmRlZC1ibC1sZ1wiIC8+XHJcbiAgICAgICAgICAgICAgICA8ZGl2IGNsYXNzTmFtZT1cImFic29sdXRlIGJvdHRvbS0wIHJpZ2h0LTAgdy04IGgtOCBib3JkZXItYi0yIGJvcmRlci1yLTIgYm9yZGVyLXdoaXRlLzgwIHJvdW5kZWQtYnItbGdcIiAvPlxyXG4gICAgICAgICAgICAgICAgPG1vdGlvbi5kaXZcclxuICAgICAgICAgICAgICAgICAgY2xhc3NOYW1lPVwiYWJzb2x1dGUgbGVmdC0yIHJpZ2h0LTIgaC0wLjUgYmctcHJpbWFyeSBzaGFkb3ctWzBfMF84cHhfcmdiYSgzNCwxOTcsOTQsMC42KV1cIlxyXG4gICAgICAgICAgICAgICAgICBhbmltYXRlPXt7IHRvcDogW1wiMTAlXCIsIFwiOTAlXCIsIFwiMTAlXCJdIH19XHJcbiAgICAgICAgICAgICAgICAgIHRyYW5zaXRpb249e3sgZHVyYXRpb246IDIuMiwgcmVwZWF0OiBJbmZpbml0eSwgZWFzZTogXCJlYXNlSW5PdXRcIiB9fVxyXG4gICAgICAgICAgICAgICAgLz5cclxuICAgICAgICAgICAgICA8L2Rpdj5cclxuICAgICAgICAgICAgPC9kaXY+XHJcbiAgICAgICAgICApfVxyXG5cclxuICAgICAgICAgIDxBbmltYXRlUHJlc2VuY2U+XHJcbiAgICAgICAgICAgIHtzdGF0ZSA9PT0gXCJwcm9jZXNzaW5nXCIgJiYgKFxyXG4gICAgICAgICAgICAgIDxtb3Rpb24uZGl2XHJcbiAgICAgICAgICAgICAgICBpbml0aWFsPXt7IG9wYWNpdHk6IDAgfX1cclxuICAgICAgICAgICAgICAgIGFuaW1hdGU9e3sgb3BhY2l0eTogMSB9fVxyXG4gICAgICAgICAgICAgICAgY2xhc3NOYW1lPVwiYWJzb2x1dGUgaW5zZXQtMCBiZy1ibGFjay83MCBmbGV4IGZsZXgtY29sIGl0ZW1zLWNlbnRlciBqdXN0aWZ5LWNlbnRlclwiXHJcbiAgICAgICAgICAgICAgPlxyXG4gICAgICAgICAgICAgICAgPExvYWRlcjIgY2xhc3NOYW1lPVwidy0xMCBoLTEwIHRleHQtd2hpdGUgYW5pbWF0ZS1zcGluIG1iLTNcIiAvPlxyXG4gICAgICAgICAgICAgICAgPHAgY2xhc3NOYW1lPVwidGV4dC13aGl0ZSB0ZXh0LVsxM3B4XSBmb250LW1lZGl1bVwiPnttZXNzYWdlfTwvcD5cclxuICAgICAgICAgICAgICA8L21vdGlvbi5kaXY+XHJcbiAgICAgICAgICAgICl9XHJcblxyXG4gICAgICAgICAgICB7c3RhdGUgPT09IFwic3VjY2Vzc1wiICYmIChcclxuICAgICAgICAgICAgICA8bW90aW9uLmRpdlxyXG4gICAgICAgICAgICAgICAgaW5pdGlhbD17eyBvcGFjaXR5OiAwLCBzY2FsZTogMC45IH19XHJcbiAgICAgICAgICAgICAgICBhbmltYXRlPXt7IG9wYWNpdHk6IDEsIHNjYWxlOiAxIH19XHJcbiAgICAgICAgICAgICAgICBjbGFzc05hbWU9XCJhYnNvbHV0ZSBpbnNldC0wIGJnLWVtZXJhbGQtOTAwLzgwIGZsZXggZmxleC1jb2wgaXRlbXMtY2VudGVyIGp1c3RpZnktY2VudGVyXCJcclxuICAgICAgICAgICAgICA+XHJcbiAgICAgICAgICAgICAgICA8bW90aW9uLmRpdiBpbml0aWFsPXt7IHNjYWxlOiAwIH19IGFuaW1hdGU9e3sgc2NhbGU6IDEgfX0gdHJhbnNpdGlvbj17eyB0eXBlOiBcInNwcmluZ1wiLCBkZWxheTogMC4xIH19PlxyXG4gICAgICAgICAgICAgICAgICA8Q2hlY2tDaXJjbGUyIGNsYXNzTmFtZT1cInctMTQgaC0xNCB0ZXh0LWVtZXJhbGQtNDAwIG1iLTNcIiAvPlxyXG4gICAgICAgICAgICAgICAgPC9tb3Rpb24uZGl2PlxyXG4gICAgICAgICAgICAgICAgPHAgY2xhc3NOYW1lPVwidGV4dC13aGl0ZSB0ZXh0LVsxNXB4XSBmb250LWJvbGQgbWItMVwiPlxyXG4gICAgICAgICAgICAgICAgICB7YWN0aW9uVHlwZSA9PT0gXCJjbG9ja19pblwiID8gXCJDbG9ja2VkIEluIVwiIDogYWN0aW9uVHlwZSA9PT0gXCJjbG9ja19vdXRcIiA/IFwiQ2xvY2tlZCBPdXQhXCIgOiBcIlN1Y2Nlc3MhXCJ9XHJcbiAgICAgICAgICAgICAgICA8L3A+XHJcbiAgICAgICAgICAgICAgICA8cCBjbGFzc05hbWU9XCJ0ZXh0LWVtZXJhbGQtMjAwIHRleHQtWzEycHhdIHRleHQtY2VudGVyIHB4LTZcIj57bWVzc2FnZX08L3A+XHJcbiAgICAgICAgICAgICAgPC9tb3Rpb24uZGl2PlxyXG4gICAgICAgICAgICApfVxyXG5cclxuICAgICAgICAgICAge3N0YXRlID09PSBcImVycm9yXCIgJiYgKFxyXG4gICAgICAgICAgICAgIDxtb3Rpb24uZGl2XHJcbiAgICAgICAgICAgICAgICBpbml0aWFsPXt7IG9wYWNpdHk6IDAsIHNjYWxlOiAwLjkgfX1cclxuICAgICAgICAgICAgICAgIGFuaW1hdGU9e3sgb3BhY2l0eTogMSwgc2NhbGU6IDEgfX1cclxuICAgICAgICAgICAgICAgIGNsYXNzTmFtZT1cImFic29sdXRlIGluc2V0LTAgYmctcmVkLTkwMC84MCBmbGV4IGZsZXgtY29sIGl0ZW1zLWNlbnRlciBqdXN0aWZ5LWNlbnRlclwiXHJcbiAgICAgICAgICAgICAgPlxyXG4gICAgICAgICAgICAgICAgPFhDaXJjbGUgY2xhc3NOYW1lPVwidy0xNCBoLTE0IHRleHQtcmVkLTQwMCBtYi0zXCIgLz5cclxuICAgICAgICAgICAgICAgIDxwIGNsYXNzTmFtZT1cInRleHQtd2hpdGUgdGV4dC1bMTVweF0gZm9udC1ib2xkIG1iLTFcIj5GYWlsZWQ8L3A+XHJcbiAgICAgICAgICAgICAgICA8cCBjbGFzc05hbWU9XCJ0ZXh0LXJlZC0yMDAgdGV4dC1bMTJweF0gdGV4dC1jZW50ZXIgcHgtNlwiPnttZXNzYWdlfTwvcD5cclxuICAgICAgICAgICAgICAgIDxidXR0b25cclxuICAgICAgICAgICAgICAgICAgb25DbGljaz17aGFuZGxlUmV0cnl9XHJcbiAgICAgICAgICAgICAgICAgIGNsYXNzTmFtZT1cIm10LTQgcHgtNSBweS0yIHJvdW5kZWQtZnVsbCBiZy13aGl0ZS8yMCB0ZXh0LXdoaXRlIHRleHQtWzEycHhdIGZvbnQtc2VtaWJvbGRcIlxyXG4gICAgICAgICAgICAgICAgPlxyXG4gICAgICAgICAgICAgICAgICBUcnkgQWdhaW5cclxuICAgICAgICAgICAgICAgIDwvYnV0dG9uPlxyXG4gICAgICAgICAgICAgIDwvbW90aW9uLmRpdj5cclxuICAgICAgICAgICAgKX1cclxuICAgICAgICAgIDwvQW5pbWF0ZVByZXNlbmNlPlxyXG4gICAgICAgIDwvZGl2PlxyXG5cclxuICAgICAgICA8ZGl2IGNsYXNzTmFtZT1cInB4LTQgcHktMyBiZy1ibGFjay84MCB0ZXh0LWNlbnRlclwiPlxyXG4gICAgICAgICAgPHAgY2xhc3NOYW1lPVwidGV4dC13aGl0ZS82MCB0ZXh0LVsxMXB4XVwiPlxyXG4gICAgICAgICAgICB7c3RhdGUgPT09IFwic2Nhbm5pbmdcIiA/IFwiSG9sZCB0aGUgUVIgZnVsbHkgaW5zaWRlIHRoZSBmcmFtZVwiIDogXCJcIn1cclxuICAgICAgICAgIDwvcD5cclxuICAgICAgICA8L2Rpdj5cclxuICAgICAgPC9EaWFsb2dDb250ZW50PlxyXG4gICAgPC9EaWFsb2c+XHJcbiAgKTtcclxufVxyXG4iXSwibmFtZXMiOlsidXNlU3RhdGUiLCJ1c2VSZWYiLCJ1c2VFZmZlY3QiLCJ1c2VDYWxsYmFjayIsIkRpYWxvZyIsIkRpYWxvZ0NvbnRlbnQiLCJEaWFsb2dIZWFkZXIiLCJEaWFsb2dUaXRsZSIsIkNhbWVyYSIsIlgiLCJDaGVja0NpcmNsZTIiLCJYQ2lyY2xlIiwiTG9hZGVyMiIsIm1vdGlvbiIsIkFuaW1hdGVQcmVzZW5jZSIsImpzUVIiLCJRUlNjYW5uZXJNb2RhbCIsIm9wZW4iLCJvbkNsb3NlIiwib25TY2FuIiwidGl0bGUiLCJ2aWRlb1JlZiIsImNhbnZhc1JlZiIsInN0cmVhbVJlZiIsInNjYW5JbnRlcnZhbFJlZiIsImJhcmNvZGVEZXRlY3RvclJlZiIsInNjYW5CdXN5UmVmIiwic3RhdGVSZWYiLCJzdGF0ZSIsInNldFN0YXRlIiwibWVzc2FnZSIsInNldE1lc3NhZ2UiLCJhY3Rpb25UeXBlIiwic2V0QWN0aW9uVHlwZSIsInNldFNjYW5uZXJTdGF0ZSIsIm5leHQiLCJjdXJyZW50Iiwic3RvcENhbWVyYSIsImNsZWFySW50ZXJ2YWwiLCJnZXRUcmFja3MiLCJmb3JFYWNoIiwidHJhY2siLCJzdG9wIiwicGF1c2UiLCJzcmNPYmplY3QiLCJyZWFkQ3VycmVudEZyYW1lIiwidmlkZW8iLCJjYW52YXMiLCJyZWFkeVN0YXRlIiwiSFRNTE1lZGlhRWxlbWVudCIsIkhBVkVfQ1VSUkVOVF9EQVRBIiwidmlkZW9XaWR0aCIsInZpZGVvSGVpZ2h0IiwibWF4RGltZW5zaW9uIiwic2NhbGUiLCJNYXRoIiwibWluIiwibWF4Iiwid2lkdGgiLCJyb3VuZCIsImhlaWdodCIsImN0eCIsImdldENvbnRleHQiLCJ3aWxsUmVhZEZyZXF1ZW50bHkiLCJkcmF3SW1hZ2UiLCJpbWFnZURhdGEiLCJnZXRJbWFnZURhdGEiLCJoYW5kbGVEZXRlY3RlZFFSIiwicmF3VmFsdWUiLCJub3JtYWxpemVkVmFsdWUiLCJ0cmltIiwidG9rZW4iLCJyZXBsYWNlIiwiY29uc29sZSIsImluZm8iLCJsZW5ndGgiLCJyZXN1bHQiLCJzdWNjZXNzIiwiYWN0aW9uIiwiZXJyb3IiLCJzY2FuRnJhbWUiLCJmcmFtZSIsImJhcmNvZGVzIiwiZGV0ZWN0IiwiZGV0ZWN0ZWRWYWx1ZSIsImZpbmQiLCJiYXJjb2RlIiwid2FybiIsInFyQ29kZSIsImRhdGEiLCJpbnZlcnNpb25BdHRlbXB0cyIsInN0YXJ0Q2FtZXJhIiwibmF2aWdhdG9yIiwibWVkaWFEZXZpY2VzIiwiZ2V0VXNlck1lZGlhIiwiRXJyb3IiLCJjYW1lcmFPcHRpb25zIiwiYXVkaW8iLCJmYWNpbmdNb2RlIiwiaWRlYWwiLCJzdHJlYW0iLCJsYXN0RXJyb3IiLCJjb25zdHJhaW50cyIsInNldEF0dHJpYnV0ZSIsInBsYXkiLCJCYXJjb2RlRGV0ZWN0b3JDdG9yIiwid2luZG93IiwiQmFyY29kZURldGVjdG9yIiwic3VwcG9ydGVkRm9ybWF0cyIsImdldFN1cHBvcnRlZEZvcm1hdHMiLCJpbmNsdWRlcyIsImZvcm1hdHMiLCJzZXRJbnRlcnZhbCIsImZpbmFsbHkiLCJoYW5kbGVSZXRyeSIsImhhbmRsZUNsb3NlIiwib25PcGVuQ2hhbmdlIiwiaXNPcGVuIiwiY2xhc3NOYW1lIiwiYnV0dG9uIiwib25DbGljayIsImRpdiIsInJlZiIsInBsYXlzSW5saW5lIiwibXV0ZWQiLCJhdXRvUGxheSIsImFuaW1hdGUiLCJ0b3AiLCJ0cmFuc2l0aW9uIiwiZHVyYXRpb24iLCJyZXBlYXQiLCJJbmZpbml0eSIsImVhc2UiLCJpbml0aWFsIiwib3BhY2l0eSIsInAiLCJ0eXBlIiwiZGVsYXkiXSwibWFwcGluZ3MiOiI7O0FBQUE7OztDQUdDLEdBQ0QsU0FBU0EsUUFBUSxFQUFFQyxNQUFNLEVBQUVDLFNBQVMsRUFBRUMsV0FBVyxRQUFRLFFBQVE7QUFDakUsU0FBU0MsTUFBTSxFQUFFQyxhQUFhLEVBQUVDLFlBQVksRUFBRUMsV0FBVyxRQUFRLHlCQUF5QjtBQUMxRixTQUFTQyxNQUFNLEVBQUVDLENBQUMsRUFBRUMsWUFBWSxFQUFFQyxPQUFPLEVBQUVDLE9BQU8sUUFBUSxlQUFlO0FBQ3pFLFNBQVNDLE1BQU0sRUFBRUMsZUFBZSxRQUFRLGdCQUFnQjtBQUN4RCxPQUFPQyxVQUFVLE9BQU87QUFXeEIsT0FBTyxTQUFT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

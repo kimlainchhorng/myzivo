@@ -1,0 +1,192 @@
+import { createHotContext as __vite__createHotContext } from "/@vite/client";import.meta.hot = __vite__createHotContext("/src/components/admin/store/lodging/PropertyCompletenessMeter.tsx");import __vite__cjsImport0_react_jsxDevRuntime from "/node_modules/.vite/deps/react_jsx-dev-runtime.js?v=7fd9520c"; const _jsxDEV = __vite__cjsImport0_react_jsxDevRuntime["jsxDEV"]; const _Fragment = __vite__cjsImport0_react_jsxDevRuntime["Fragment"];
+/**
+ * PropertyCompletenessMeter - circular progress + sections-to-finish pill.
+ * Computes a weighted 0-100 score across 12 fields.
+ */ import { CheckCircle2 } from "/node_modules/.vite/deps/lucide-react.js?v=7fd9520c";
+const WEIGHTS = {
+    hero_badges: 10,
+    included_highlights: 10,
+    languages: 8,
+    facilities: 12,
+    meal_plans: 6,
+    house_rules: 12,
+    accessibility: 8,
+    sustainability: 6,
+    nearby: 10,
+    check_in_out: 8,
+    contact: 6,
+    policies: 4
+};
+export function computeCompleteness(form) {
+    let score = 0;
+    const missing = [];
+    const arr = (k)=>(form[k] || []).length > 0;
+    if (arr("hero_badges")) score += WEIGHTS.hero_badges;
+    else missing.push("Hero badges");
+    if (arr("included_highlights")) score += WEIGHTS.included_highlights;
+    else missing.push("Included highlights");
+    if (arr("languages")) score += WEIGHTS.languages;
+    else missing.push("Languages");
+    if (arr("facilities")) score += WEIGHTS.facilities;
+    else missing.push("Facilities");
+    if (arr("meal_plans")) score += WEIGHTS.meal_plans;
+    else missing.push("Meal plans");
+    const hr = form.house_rules || {};
+    if (Object.keys(hr).filter((k)=>hr[k] !== undefined && hr[k] !== "" && hr[k] !== null).length >= 2) score += WEIGHTS.house_rules;
+    else missing.push("House rules");
+    if (arr("accessibility")) score += WEIGHTS.accessibility;
+    else missing.push("Accessibility");
+    if (arr("sustainability")) score += WEIGHTS.sustainability;
+    else missing.push("Sustainability");
+    if (arr("nearby")) score += WEIGHTS.nearby;
+    else missing.push("Nearby");
+    if (form.check_in_from && form.check_out_until) score += WEIGHTS.check_in_out;
+    else missing.push("Check-in/out");
+    const c = form.contact || {};
+    if (c.phone || c.email || c.whatsapp) score += WEIGHTS.contact;
+    else missing.push("Contact");
+    if (form.cancellation_policy || form.pet_policy && form.pet_policy.allowed !== undefined || form.child_policy && form.child_policy.allowed !== undefined) score += WEIGHTS.policies;
+    else missing.push("Policies");
+    return {
+        score: Math.min(100, score),
+        missing
+    };
+}
+export default function PropertyCompletenessMeter({ form }) {
+    const { score, missing } = computeCompleteness(form);
+    const r = 22;
+    const c = 2 * Math.PI * r;
+    const dash = score / 100 * c;
+    const color = score >= 80 ? "hsl(var(--primary))" : score >= 50 ? "hsl(var(--accent-foreground))" : "hsl(var(--destructive))";
+    return /*#__PURE__*/ _jsxDEV("div", {
+        className: "flex items-center gap-2.5",
+        children: [
+            /*#__PURE__*/ _jsxDEV("div", {
+                className: "relative h-12 w-12 shrink-0",
+                children: [
+                    /*#__PURE__*/ _jsxDEV("svg", {
+                        viewBox: "0 0 56 56",
+                        className: "h-12 w-12 -rotate-90",
+                        children: [
+                            /*#__PURE__*/ _jsxDEV("circle", {
+                                cx: "28",
+                                cy: "28",
+                                r: r,
+                                fill: "none",
+                                stroke: "hsl(var(--muted))",
+                                strokeWidth: "5"
+                            }, void 0, false, {
+                                fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/lodging/PropertyCompletenessMeter.tsx",
+                                lineNumber: 63,
+                                columnNumber: 11
+                            }, this),
+                            /*#__PURE__*/ _jsxDEV("circle", {
+                                cx: "28",
+                                cy: "28",
+                                r: r,
+                                fill: "none",
+                                stroke: color,
+                                strokeWidth: "5",
+                                strokeLinecap: "round",
+                                strokeDasharray: `${dash} ${c}`,
+                                style: {
+                                    transition: "stroke-dasharray 400ms ease"
+                                }
+                            }, void 0, false, {
+                                fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/lodging/PropertyCompletenessMeter.tsx",
+                                lineNumber: 64,
+                                columnNumber: 11
+                            }, this)
+                        ]
+                    }, void 0, true, {
+                        fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/lodging/PropertyCompletenessMeter.tsx",
+                        lineNumber: 62,
+                        columnNumber: 9
+                    }, this),
+                    /*#__PURE__*/ _jsxDEV("div", {
+                        className: "absolute inset-0 flex items-center justify-center text-[11px] font-bold text-foreground",
+                        children: [
+                            score,
+                            "%"
+                        ]
+                    }, void 0, true, {
+                        fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/lodging/PropertyCompletenessMeter.tsx",
+                        lineNumber: 70,
+                        columnNumber: 9
+                    }, this)
+                ]
+            }, void 0, true, {
+                fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/lodging/PropertyCompletenessMeter.tsx",
+                lineNumber: 61,
+                columnNumber: 7
+            }, this),
+            /*#__PURE__*/ _jsxDEV("div", {
+                className: "min-w-0",
+                children: [
+                    /*#__PURE__*/ _jsxDEV("div", {
+                        className: "text-[11px] font-semibold text-foreground flex items-center gap-1",
+                        children: score === 100 ? /*#__PURE__*/ _jsxDEV(_Fragment, {
+                            children: [
+                                /*#__PURE__*/ _jsxDEV(CheckCircle2, {
+                                    className: "h-3 w-3 text-primary"
+                                }, void 0, false, {
+                                    fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/lodging/PropertyCompletenessMeter.tsx",
+                                    lineNumber: 76,
+                                    columnNumber: 30
+                                }, this),
+                                " Profile complete"
+                            ]
+                        }, void 0, true) : "Profile completeness"
+                    }, void 0, false, {
+                        fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/lodging/PropertyCompletenessMeter.tsx",
+                        lineNumber: 75,
+                        columnNumber: 9
+                    }, this),
+                    /*#__PURE__*/ _jsxDEV("div", {
+                        className: "text-[10px] text-muted-foreground line-clamp-1",
+                        children: missing.length === 0 ? "All sections filled" : `${missing.length} section${missing.length > 1 ? "s" : ""} to finish`
+                    }, void 0, false, {
+                        fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/lodging/PropertyCompletenessMeter.tsx",
+                        lineNumber: 78,
+                        columnNumber: 9
+                    }, this)
+                ]
+            }, void 0, true, {
+                fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/lodging/PropertyCompletenessMeter.tsx",
+                lineNumber: 74,
+                columnNumber: 7
+            }, this)
+        ]
+    }, void 0, true, {
+        fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/lodging/PropertyCompletenessMeter.tsx",
+        lineNumber: 60,
+        columnNumber: 5
+    }, this);
+}
+_c = PropertyCompletenessMeter;
+var _c;
+$RefreshReg$(_c, "PropertyCompletenessMeter");
+
+
+import * as RefreshRuntime from "/@react-refresh";
+const inWebWorker = typeof WorkerGlobalScope !== 'undefined' && self instanceof WorkerGlobalScope;
+if (import.meta.hot && !inWebWorker) {
+  if (!window.$RefreshReg$) {
+    throw new Error(
+      "@vitejs/plugin-react-swc can't detect preamble. Something is wrong."
+    );
+  }
+
+  RefreshRuntime.__hmr_import(import.meta.url).then((currentExports) => {
+    RefreshRuntime.registerExportsForReactRefresh("C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/lodging/PropertyCompletenessMeter.tsx", currentExports);
+    import.meta.hot.accept((nextExports) => {
+      if (!nextExports) return;
+      const invalidateMessage = RefreshRuntime.validateRefreshBoundaryAndEnqueueUpdate("C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/lodging/PropertyCompletenessMeter.tsx", currentExports, nextExports);
+      if (invalidateMessage) import.meta.hot.invalidate(invalidateMessage);
+    });
+  });
+}
+function $RefreshReg$(type, id) { return RefreshRuntime.register(type, "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/lodging/PropertyCompletenessMeter.tsx" + ' ' + id) }
+function $RefreshSig$() { return RefreshRuntime.createSignatureFunctionForTransform(); }
+
+//# sourceMappingURL=data:application/json;base64,eyJ2ZXJzaW9uIjozLCJzb3VyY2VzIjpbIlByb3BlcnR5Q29tcGxldGVuZXNzTWV0ZXIudHN4Il0sInNvdXJjZXNDb250ZW50IjpbIi8qKlxyXG4gKiBQcm9wZXJ0eUNvbXBsZXRlbmVzc01ldGVyIC0gY2lyY3VsYXIgcHJvZ3Jlc3MgKyBzZWN0aW9ucy10by1maW5pc2ggcGlsbC5cclxuICogQ29tcHV0ZXMgYSB3ZWlnaHRlZCAwLTEwMCBzY29yZSBhY3Jvc3MgMTIgZmllbGRzLlxyXG4gKi9cclxuaW1wb3J0IHsgQ2hlY2tDaXJjbGUyIH0gZnJvbSBcImx1Y2lkZS1yZWFjdFwiO1xyXG5pbXBvcnQgdHlwZSB7IExvZGdlUHJvcGVydHlQcm9maWxlIH0gZnJvbSBcIkAvaG9va3MvbG9kZ2luZy91c2VMb2RnZVByb3BlcnR5UHJvZmlsZVwiO1xyXG5cclxuaW50ZXJmYWNlIFByb3BzIHtcclxuICBmb3JtOiBQYXJ0aWFsPExvZGdlUHJvcGVydHlQcm9maWxlPjtcclxufVxyXG5cclxuY29uc3QgV0VJR0hUUyA9IHtcclxuICBoZXJvX2JhZGdlczogMTAsXHJcbiAgaW5jbHVkZWRfaGlnaGxpZ2h0czogMTAsXHJcbiAgbGFuZ3VhZ2VzOiA4LFxyXG4gIGZhY2lsaXRpZXM6IDEyLFxyXG4gIG1lYWxfcGxhbnM6IDYsXHJcbiAgaG91c2VfcnVsZXM6IDEyLFxyXG4gIGFjY2Vzc2liaWxpdHk6IDgsXHJcbiAgc3VzdGFpbmFiaWxpdHk6IDYsXHJcbiAgbmVhcmJ5OiAxMCxcclxuICBjaGVja19pbl9vdXQ6IDgsXHJcbiAgY29udGFjdDogNixcclxuICBwb2xpY2llczogNCxcclxufTtcclxuXHJcbmV4cG9ydCBmdW5jdGlvbiBjb21wdXRlQ29tcGxldGVuZXNzKGZvcm06IFBhcnRpYWw8TG9kZ2VQcm9wZXJ0eVByb2ZpbGU+KSB7XHJcbiAgbGV0IHNjb3JlID0gMDtcclxuICBjb25zdCBtaXNzaW5nOiBzdHJpbmdbXSA9IFtdO1xyXG4gIGNvbnN0IGFyciA9IChrOiBrZXlvZiBMb2RnZVByb3BlcnR5UHJvZmlsZSkgPT4gKChmb3JtW2tdIGFzIGFueVtdKSB8fCBbXSkubGVuZ3RoID4gMDtcclxuXHJcbiAgaWYgKGFycihcImhlcm9fYmFkZ2VzXCIpKSBzY29yZSArPSBXRUlHSFRTLmhlcm9fYmFkZ2VzOyBlbHNlIG1pc3NpbmcucHVzaChcIkhlcm8gYmFkZ2VzXCIpO1xyXG4gIGlmIChhcnIoXCJpbmNsdWRlZF9oaWdobGlnaHRzXCIpKSBzY29yZSArPSBXRUlHSFRTLmluY2x1ZGVkX2hpZ2hsaWdodHM7IGVsc2UgbWlzc2luZy5wdXNoKFwiSW5jbHVkZWQgaGlnaGxpZ2h0c1wiKTtcclxuICBpZiAoYXJyKFwibGFuZ3VhZ2VzXCIpKSBzY29yZSArPSBXRUlHSFRTLmxhbmd1YWdlczsgZWxzZSBtaXNzaW5nLnB1c2goXCJMYW5ndWFnZXNcIik7XHJcbiAgaWYgKGFycihcImZhY2lsaXRpZXNcIikpIHNjb3JlICs9IFdFSUdIVFMuZmFjaWxpdGllczsgZWxzZSBtaXNzaW5nLnB1c2goXCJGYWNpbGl0aWVzXCIpO1xyXG4gIGlmIChhcnIoXCJtZWFsX3BsYW5zXCIpKSBzY29yZSArPSBXRUlHSFRTLm1lYWxfcGxhbnM7IGVsc2UgbWlzc2luZy5wdXNoKFwiTWVhbCBwbGFuc1wiKTtcclxuICBjb25zdCBociA9IGZvcm0uaG91c2VfcnVsZXMgfHwge307XHJcbiAgaWYgKE9iamVjdC5rZXlzKGhyKS5maWx0ZXIoayA9PiAoaHIgYXMgYW55KVtrXSAhPT0gdW5kZWZpbmVkICYmIChociBhcyBhbnkpW2tdICE9PSBcIlwiICYmIChociBhcyBhbnkpW2tdICE9PSBudWxsKS5sZW5ndGggPj0gMilcclxuICAgIHNjb3JlICs9IFdFSUdIVFMuaG91c2VfcnVsZXM7IGVsc2UgbWlzc2luZy5wdXNoKFwiSG91c2UgcnVsZXNcIik7XHJcbiAgaWYgKGFycihcImFjY2Vzc2liaWxpdHlcIikpIHNjb3JlICs9IFdFSUdIVFMuYWNjZXNzaWJpbGl0eTsgZWxzZSBtaXNzaW5nLnB1c2goXCJBY2Nlc3NpYmlsaXR5XCIpO1xyXG4gIGlmIChhcnIoXCJzdXN0YWluYWJpbGl0eVwiKSkgc2NvcmUgKz0gV0VJR0hUUy5zdXN0YWluYWJpbGl0eTsgZWxzZSBtaXNzaW5nLnB1c2goXCJTdXN0YWluYWJpbGl0eVwiKTtcclxuICBpZiAoYXJyKFwibmVhcmJ5XCIpKSBzY29yZSArPSBXRUlHSFRTLm5lYXJieTsgZWxzZSBtaXNzaW5nLnB1c2goXCJOZWFyYnlcIik7XHJcbiAgaWYgKGZvcm0uY2hlY2tfaW5fZnJvbSAmJiBmb3JtLmNoZWNrX291dF91bnRpbCkgc2NvcmUgKz0gV0VJR0hUUy5jaGVja19pbl9vdXQ7IGVsc2UgbWlzc2luZy5wdXNoKFwiQ2hlY2staW4vb3V0XCIpO1xyXG4gIGNvbnN0IGMgPSBmb3JtLmNvbnRhY3QgfHwge307XHJcbiAgaWYgKGMucGhvbmUgfHwgYy5lbWFpbCB8fCBjLndoYXRzYXBwKSBzY29yZSArPSBXRUlHSFRTLmNvbnRhY3Q7IGVsc2UgbWlzc2luZy5wdXNoKFwiQ29udGFjdFwiKTtcclxuICBpZiAoZm9ybS5jYW5jZWxsYXRpb25fcG9saWN5IHx8IChmb3JtLnBldF9wb2xpY3kgJiYgZm9ybS5wZXRfcG9saWN5LmFsbG93ZWQgIT09IHVuZGVmaW5lZCkgfHwgKGZvcm0uY2hpbGRfcG9saWN5ICYmIGZvcm0uY2hpbGRfcG9saWN5LmFsbG93ZWQgIT09IHVuZGVmaW5lZCkpXHJcbiAgICBzY29yZSArPSBXRUlHSFRTLnBvbGljaWVzOyBlbHNlIG1pc3NpbmcucHVzaChcIlBvbGljaWVzXCIpO1xyXG5cclxuICByZXR1cm4geyBzY29yZTogTWF0aC5taW4oMTAwLCBzY29yZSksIG1pc3NpbmcgfTtcclxufVxyXG5cclxuZXhwb3J0IGRlZmF1bHQgZnVuY3Rpb24gUHJvcGVydHlDb21wbGV0ZW5lc3NNZXRlcih7IGZvcm0gfTogUHJvcHMpIHtcclxuICBjb25zdCB7IHNjb3JlLCBtaXNzaW5nIH0gPSBjb21wdXRlQ29tcGxldGVuZXNzKGZvcm0pO1xyXG4gIGNvbnN0IHIgPSAyMjtcclxuICBjb25zdCBjID0gMiAqIE1hdGguUEkgKiByO1xyXG4gIGNvbnN0IGRhc2ggPSAoc2NvcmUgLyAxMDApICogYztcclxuICBjb25zdCBjb2xvciA9IHNjb3JlID49IDgwID8gXCJoc2wodmFyKC0tcHJpbWFyeSkpXCIgOiBzY29yZSA+PSA1MCA/IFwiaHNsKHZhcigtLWFjY2VudC1mb3JlZ3JvdW5kKSlcIiA6IFwiaHNsKHZhcigtLWRlc3RydWN0aXZlKSlcIjtcclxuXHJcbiAgcmV0dXJuIChcclxuICAgIDxkaXYgY2xhc3NOYW1lPVwiZmxleCBpdGVtcy1jZW50ZXIgZ2FwLTIuNVwiPlxyXG4gICAgICA8ZGl2IGNsYXNzTmFtZT1cInJlbGF0aXZlIGgtMTIgdy0xMiBzaHJpbmstMFwiPlxyXG4gICAgICAgIDxzdmcgdmlld0JveD1cIjAgMCA1NiA1NlwiIGNsYXNzTmFtZT1cImgtMTIgdy0xMiAtcm90YXRlLTkwXCI+XHJcbiAgICAgICAgICA8Y2lyY2xlIGN4PVwiMjhcIiBjeT1cIjI4XCIgcj17cn0gZmlsbD1cIm5vbmVcIiBzdHJva2U9XCJoc2wodmFyKC0tbXV0ZWQpKVwiIHN0cm9rZVdpZHRoPVwiNVwiIC8+XHJcbiAgICAgICAgICA8Y2lyY2xlXHJcbiAgICAgICAgICAgIGN4PVwiMjhcIiBjeT1cIjI4XCIgcj17cn0gZmlsbD1cIm5vbmVcIiBzdHJva2U9e2NvbG9yfSBzdHJva2VXaWR0aD1cIjVcIlxyXG4gICAgICAgICAgICBzdHJva2VMaW5lY2FwPVwicm91bmRcIiBzdHJva2VEYXNoYXJyYXk9e2Ake2Rhc2h9ICR7Y31gfVxyXG4gICAgICAgICAgICBzdHlsZT17eyB0cmFuc2l0aW9uOiBcInN0cm9rZS1kYXNoYXJyYXkgNDAwbXMgZWFzZVwiIH19XHJcbiAgICAgICAgICAvPlxyXG4gICAgICAgIDwvc3ZnPlxyXG4gICAgICAgIDxkaXYgY2xhc3NOYW1lPVwiYWJzb2x1dGUgaW5zZXQtMCBmbGV4IGl0ZW1zLWNlbnRlciBqdXN0aWZ5LWNlbnRlciB0ZXh0LVsxMXB4XSBmb250LWJvbGQgdGV4dC1mb3JlZ3JvdW5kXCI+XHJcbiAgICAgICAgICB7c2NvcmV9JVxyXG4gICAgICAgIDwvZGl2PlxyXG4gICAgICA8L2Rpdj5cclxuICAgICAgPGRpdiBjbGFzc05hbWU9XCJtaW4tdy0wXCI+XHJcbiAgICAgICAgPGRpdiBjbGFzc05hbWU9XCJ0ZXh0LVsxMXB4XSBmb250LXNlbWlib2xkIHRleHQtZm9yZWdyb3VuZCBmbGV4IGl0ZW1zLWNlbnRlciBnYXAtMVwiPlxyXG4gICAgICAgICAge3Njb3JlID09PSAxMDAgPyA8PjxDaGVja0NpcmNsZTIgY2xhc3NOYW1lPVwiaC0zIHctMyB0ZXh0LXByaW1hcnlcIiAvPiBQcm9maWxlIGNvbXBsZXRlPC8+IDogXCJQcm9maWxlIGNvbXBsZXRlbmVzc1wifVxyXG4gICAgICAgIDwvZGl2PlxyXG4gICAgICAgIDxkaXYgY2xhc3NOYW1lPVwidGV4dC1bMTBweF0gdGV4dC1tdXRlZC1mb3JlZ3JvdW5kIGxpbmUtY2xhbXAtMVwiPlxyXG4gICAgICAgICAge21pc3NpbmcubGVuZ3RoID09PSAwID8gXCJBbGwgc2VjdGlvbnMgZmlsbGVkXCIgOiBgJHttaXNzaW5nLmxlbmd0aH0gc2VjdGlvbiR7bWlzc2luZy5sZW5ndGggPiAxID8gXCJzXCIgOiBcIlwifSB0byBmaW5pc2hgfVxyXG4gICAgICAgIDwvZGl2PlxyXG4gICAgICA8L2Rpdj5cclxuICAgIDwvZGl2PlxyXG4gICk7XHJcbn1cclxuIl0sIm5hbWVzIjpbIkNoZWNrQ2lyY2xlMiIsIldFSUdIVFMiLCJoZXJvX2JhZGdlcyIsImluY2x1ZGVkX2hpZ2hsaWdodHMiLCJsYW5ndWFnZXMiLCJmYWNpbGl0aWVzIiwibWVhbF9wbGFucyIsImhvdXNlX3J1bGVzIiwiYWNjZXNzaWJpbGl0eSIsInN1c3RhaW5hYmlsaXR5IiwibmVhcmJ5IiwiY2hlY2tfaW5fb3V0IiwiY29udGFjdCIsInBvbGljaWVzIiwiY29tcHV0ZUNvbXBsZXRlbmVzcyIsImZvcm0iLCJzY29yZSIsIm1pc3NpbmciLCJhcnIiLCJrIiwibGVuZ3RoIiwicHVzaCIsImhyIiwiT2JqZWN0Iiwia2V5cyIsImZpbHRlciIsInVuZGVmaW5lZCIsImNoZWNrX2luX2Zyb20iLCJjaGVja19vdXRfdW50aWwiLCJjIiwicGhvbmUiLCJlbWFpbCIsIndoYXRzYXBwIiwiY2FuY2VsbGF0aW9uX3BvbGljeSIsInBldF9wb2xpY3kiLCJhbGxvd2VkIiwiY2hpbGRfcG9saWN5IiwiTWF0aCIsIm1pbiIsIlByb3BlcnR5Q29tcGxldGVuZXNzTWV0ZXIiLCJyIiwiUEkiLCJkYXNoIiwiY29sb3IiLCJkaXYiLCJjbGFzc05hbWUiLCJzdmciLCJ2aWV3Qm94IiwiY2lyY2xlIiwiY3giLCJjeSIsImZpbGwiLCJzdHJva2UiLCJzdHJva2VXaWR0aCIsInN0cm9rZUxpbmVjYXAiLCJzdHJva2VEYXNoYXJyYXkiLCJzdHlsZSIsInRyYW5zaXRpb24iXSwibWFwcGluZ3MiOiI7QUFBQTs7O0NBR0MsR0FDRCxTQUFTQSxZQUFZLFFBQVEsZUFBZTtBQU81QyxNQUFNQyxVQUFVO0lBQ2RDLGFBQWE7SUFDYkMscUJBQXFCO0lBQ3JCQyxXQUFXO0lBQ1hDLFlBQVk7SUFDWkMsWUFBWTtJQUNaQyxhQUFhO0lBQ2JDLGVBQWU7SUFDZkMsZ0JBQWdCO0lBQ2hCQyxRQUFRO0lBQ1JDLGNBQWM7SUFDZEMsU0FBUztJQUNUQyxVQUFVO0FBQ1o7QUFFQSxPQUFPLFNBQVNDLG9CQUFvQkMsSUFBbUM7SUFDckUsSUFBSUMsUUFBUTtJQUNaLE1BQU1DLFVBQW9CLEVBQUU7SUFDNUIsTUFBTUMsTUFBTSxDQUFDQyxJQUFrQyxBQUFDLENBQUEsQUFBQ0osSUFBSSxDQUFDSSxFQUFFLElBQWMsRUFBRSxBQUFELEVBQUdDLE1BQU0sR0FBRztJQUVuRixJQUFJRixJQUFJLGdCQUFnQkYsU0FBU2YsUUFBUUMsV0FBVztTQUFPZSxRQUFRSSxJQUFJLENBQUM7SUFDeEUsSUFBSUgsSUFBSSx3QkFBd0JGLFNBQVNmLFFBQVFFLG1CQUFtQjtTQUFPYyxRQUFRSSxJQUFJLENBQUM7SUFDeEYsSUFBSUgsSUFBSSxjQUFjRixTQUFTZixRQUFRRyxTQUFTO1NBQU9hLFFBQVFJLElBQUksQ0FBQztJQUNwRSxJQUFJSCxJQUFJLGVBQWVGLFNBQVNmLFFBQVFJLFVBQVU7U0FBT1ksUUFBUUksSUFBSSxDQUFDO0lBQ3RFLElBQUlILElBQUksZUFBZUYsU0FBU2YsUUFBUUssVUFBVTtTQUFPVyxRQUFRSSxJQUFJLENBQUM7SUFDdEUsTUFBTUMsS0FBS1AsS0FBS1IsV0FBVyxJQUFJLENBQUM7SUFDaEMsSUFBSWdCLE9BQU9DLElBQUksQ0FBQ0YsSUFBSUcsTUFBTSxDQUFDTixDQUFBQSxJQUFLLEFBQUNHLEVBQVUsQ0FBQ0gsRUFBRSxLQUFLTyxhQUFhLEFBQUNKLEVBQVUsQ0FBQ0gsRUFBRSxLQUFLLE1BQU0sQUFBQ0csRUFBVSxDQUFDSCxFQUFFLEtBQUssTUFBTUMsTUFBTSxJQUFJLEdBQzFISixTQUFTZixRQUFRTSxXQUFXO1NBQU9VLFFBQVFJLElBQUksQ0FBQztJQUNsRCxJQUFJSCxJQUFJLGtCQUFrQkYsU0FBU2YsUUFBUU8sYUFBYTtTQUFPUyxRQUFRSSxJQUFJLENBQUM7SUFDNUUsSUFBSUgsSUFBSSxtQkFBbUJGLFNBQVNmLFFBQVFRLGNBQWM7U0FBT1EsUUFBUUksSUFBSSxDQUFDO0lBQzlFLElBQUlILElBQUksV0FBV0YsU0FBU2YsUUFBUVMsTUFBTTtTQUFPTyxRQUFRSSxJQUFJLENBQUM7SUFDOUQsSUFBSU4sS0FBS1ksYUFBYSxJQUFJWixLQUFLYSxlQUFlLEVBQUVaLFNBQVNmLFFBQVFVLFlBQVk7U0FBT00sUUFBUUksSUFBSSxDQUFDO0lBQ2pHLE1BQU1RLElBQUlkLEtBQUtILE9BQU8sSUFBSSxDQUFDO0lBQzNCLElBQUlpQixFQUFFQyxLQUFLLElBQUlELEVBQUVFLEtBQUssSUFBSUYsRUFBRUcsUUFBUSxFQUFFaEIsU0FBU2YsUUFBUVcsT0FBTztTQUFPSyxRQUFRSSxJQUFJLENBQUM7SUFDbEYsSUFBSU4sS0FBS2tCLG1CQUFtQixJQUFLbEIsS0FBS21CLFVBQVUsSUFBSW5CLEtBQUttQixVQUFVLENBQUNDLE9BQU8sS0FBS1QsYUFBZVgsS0FBS3FCLFlBQVksSUFBSXJCLEtBQUtxQixZQUFZLENBQUNELE9BQU8sS0FBS1QsV0FDaEpWLFNBQVNmLFFBQVFZLFFBQVE7U0FBT0ksUUFBUUksSUFBSSxDQUFDO0lBRS9DLE9BQU87UUFBRUwsT0FBT3FCLEtBQUtDLEdBQUcsQ0FBQyxLQUFLdEI7UUFBUUM7SUFBUTtBQUNoRDtBQUVBLGVBQWUsU0FBU3NCLDBCQUEwQixFQUFFeEIsSUFBSSxFQUFTO0lBQy9ELE1BQU0sRUFBRUMsS0FBSyxFQUFFQyxPQUFPLEVBQUUsR0FBR0gsb0JBQW9CQztJQUMvQyxNQUFNeUIsSUFBSTtJQUNWLE1BQU1YLElBQUksSUFBSVEsS0FBS0ksRUFBRSxHQUFHRDtJQUN4QixNQUFNRSxPQUFPLEFBQUMxQixRQUFRLE1BQU9hO0lBQzdCLE1BQU1jLFFBQVEzQixTQUFTLEtBQUssd0JBQXdCQSxTQUFTLEtBQUssa0NBQWtDO0lBRXBHLHFCQUNFLFFBQUM0QjtRQUFJQyxXQUFVOzswQkFDYixRQUFDRDtnQkFBSUMsV0FBVTs7a0NBQ2IsUUFBQ0M7d0JBQUlDLFNBQVE7d0JBQVlGLFdBQVU7OzBDQUNqQyxRQUFDRztnQ0FBT0MsSUFBRztnQ0FBS0MsSUFBRztnQ0FBS1YsR0FBR0E7Z0NBQUdXLE1BQUs7Z0NBQU9DLFFBQU87Z0NBQW9CQyxhQUFZOzs7Ozs7MENBQ2pGLFFBQUNMO2dDQUNDQyxJQUFHO2dDQUFLQyxJQUFHO2dDQUFLVixHQUFHQTtnQ0FBR1csTUFBSztnQ0FBT0MsUUFBUVQ7Z0NBQU9VLGFBQVk7Z0NBQzdEQyxlQUFjO2dDQUFRQyxpQkFBaUIsR0FBR2IsS0FBSyxDQUFDLEVBQUViLEdBQUc7Z0NBQ3JEMkIsT0FBTztvQ0FBRUMsWUFBWTtnQ0FBOEI7Ozs7Ozs7Ozs7OztrQ0FHdkQsUUFBQ2I7d0JBQUlDLFdBQVU7OzRCQUNaN0I7NEJBQU07Ozs7Ozs7Ozs7Ozs7MEJBR1gsUUFBQzRCO2dCQUFJQyxXQUFVOztrQ0FDYixRQUFDRDt3QkFBSUMsV0FBVTtrQ0FDWjdCLFVBQVUsb0JBQU07OzhDQUFFLFFBQUNoQjtvQ0FBYTZDLFdBQVU7Ozs7OztnQ0FBeUI7OzJDQUF1Qjs7Ozs7O2tDQUU3RixRQUFDRDt3QkFBSUMsV0FBVTtrQ0FDWjVCLFFBQVFHLE1BQU0sS0FBSyxJQUFJLHdCQUF3QixHQUFHSCxRQUFRRyxNQUFNLENBQUMsUUFBUSxFQUFFSCxRQUFRRyxNQUFNLEdBQUcsSUFBSSxNQUFNLEdBQUcsVUFBVSxDQUFDOzs7Ozs7Ozs7Ozs7Ozs7Ozs7QUFLL0g7S0FoQ3dCbUIifQ==

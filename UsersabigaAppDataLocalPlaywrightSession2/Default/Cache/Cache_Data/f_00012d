@@ -1,0 +1,383 @@
+import { createHotContext as __vite__createHotContext } from "/@vite/client";import.meta.hot = __vite__createHotContext("/src/components/admin/store/lodging/property-profile/PetChildPolicyCard.tsx");import __vite__cjsImport0_react_jsxDevRuntime from "/node_modules/.vite/deps/react_jsx-dev-runtime.js?v=7fd9520c"; const _jsxDEV = __vite__cjsImport0_react_jsxDevRuntime["jsxDEV"];
+/**
+ * PetChildPolicyCard - compact rows with allowed switch + reveal extras.
+ */ import { Card, CardContent, CardHeader, CardTitle } from "/src/components/ui/card.tsx";
+import { Switch } from "/src/components/ui/switch.tsx";
+import { Input } from "/src/components/ui/input.tsx";
+import { Label } from "/src/components/ui/label.tsx";
+import { Dog, Baby } from "/node_modules/.vite/deps/lucide-react.js?v=7fd9520c";
+export default function PetChildPolicyCard({ pet, child, onPet, onChild }) {
+    return /*#__PURE__*/ _jsxDEV(Card, {
+        children: [
+            /*#__PURE__*/ _jsxDEV(CardHeader, {
+                className: "py-3",
+                children: /*#__PURE__*/ _jsxDEV(CardTitle, {
+                    className: "text-[13px]",
+                    children: "Pet & children policies"
+                }, void 0, false, {
+                    fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/lodging/property-profile/PetChildPolicyCard.tsx",
+                    lineNumber: 22,
+                    columnNumber: 9
+                }, this)
+            }, void 0, false, {
+                fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/lodging/property-profile/PetChildPolicyCard.tsx",
+                lineNumber: 21,
+                columnNumber: 7
+            }, this),
+            /*#__PURE__*/ _jsxDEV(CardContent, {
+                className: "space-y-4 pt-0",
+                children: [
+                    /*#__PURE__*/ _jsxDEV("div", {
+                        className: "space-y-2 p-2.5 rounded-xl border border-border bg-muted/20",
+                        children: [
+                            /*#__PURE__*/ _jsxDEV("div", {
+                                className: "flex items-center justify-between",
+                                children: [
+                                    /*#__PURE__*/ _jsxDEV(Label, {
+                                        className: "text-[12px] font-semibold flex items-center gap-1.5",
+                                        children: [
+                                            /*#__PURE__*/ _jsxDEV(Dog, {
+                                                className: "h-3.5 w-3.5"
+                                            }, void 0, false, {
+                                                fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/lodging/property-profile/PetChildPolicyCard.tsx",
+                                                lineNumber: 28,
+                                                columnNumber: 84
+                                            }, this),
+                                            " Pets allowed"
+                                        ]
+                                    }, void 0, true, {
+                                        fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/lodging/property-profile/PetChildPolicyCard.tsx",
+                                        lineNumber: 28,
+                                        columnNumber: 13
+                                    }, this),
+                                    /*#__PURE__*/ _jsxDEV(Switch, {
+                                        checked: !!pet.allowed,
+                                        onCheckedChange: (v)=>onPet({
+                                                allowed: v
+                                            })
+                                    }, void 0, false, {
+                                        fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/lodging/property-profile/PetChildPolicyCard.tsx",
+                                        lineNumber: 29,
+                                        columnNumber: 13
+                                    }, this)
+                                ]
+                            }, void 0, true, {
+                                fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/lodging/property-profile/PetChildPolicyCard.tsx",
+                                lineNumber: 27,
+                                columnNumber: 11
+                            }, this),
+                            pet.allowed && /*#__PURE__*/ _jsxDEV("div", {
+                                className: "grid grid-cols-3 gap-2",
+                                children: [
+                                    /*#__PURE__*/ _jsxDEV("div", {
+                                        children: [
+                                            /*#__PURE__*/ _jsxDEV(Label, {
+                                                className: "text-[11px] text-muted-foreground",
+                                                children: "Fee (USD)"
+                                            }, void 0, false, {
+                                                fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/lodging/property-profile/PetChildPolicyCard.tsx",
+                                                lineNumber: 34,
+                                                columnNumber: 17
+                                            }, this),
+                                            /*#__PURE__*/ _jsxDEV(Input, {
+                                                type: "number",
+                                                step: "0.01",
+                                                className: "h-8",
+                                                value: pet.fee_cents == null ? "" : (pet.fee_cents / 100).toString(),
+                                                onChange: (e)=>onPet({
+                                                        fee_cents: e.target.value === "" ? undefined : Math.round(parseFloat(e.target.value) * 100)
+                                                    })
+                                            }, void 0, false, {
+                                                fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/lodging/property-profile/PetChildPolicyCard.tsx",
+                                                lineNumber: 35,
+                                                columnNumber: 17
+                                            }, this)
+                                        ]
+                                    }, void 0, true, {
+                                        fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/lodging/property-profile/PetChildPolicyCard.tsx",
+                                        lineNumber: 33,
+                                        columnNumber: 15
+                                    }, this),
+                                    /*#__PURE__*/ _jsxDEV("div", {
+                                        children: [
+                                            /*#__PURE__*/ _jsxDEV(Label, {
+                                                className: "text-[11px] text-muted-foreground",
+                                                children: "Max weight (kg)"
+                                            }, void 0, false, {
+                                                fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/lodging/property-profile/PetChildPolicyCard.tsx",
+                                                lineNumber: 42,
+                                                columnNumber: 17
+                                            }, this),
+                                            /*#__PURE__*/ _jsxDEV(Input, {
+                                                type: "number",
+                                                inputMode: "numeric",
+                                                className: "h-8",
+                                                value: pet.max_weight_kg ?? "",
+                                                onChange: (e)=>onPet({
+                                                        max_weight_kg: e.target.value === "" ? undefined : parseInt(e.target.value)
+                                                    })
+                                            }, void 0, false, {
+                                                fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/lodging/property-profile/PetChildPolicyCard.tsx",
+                                                lineNumber: 43,
+                                                columnNumber: 17
+                                            }, this)
+                                        ]
+                                    }, void 0, true, {
+                                        fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/lodging/property-profile/PetChildPolicyCard.tsx",
+                                        lineNumber: 41,
+                                        columnNumber: 15
+                                    }, this),
+                                    /*#__PURE__*/ _jsxDEV("div", {
+                                        children: [
+                                            /*#__PURE__*/ _jsxDEV(Label, {
+                                                className: "text-[11px] text-muted-foreground",
+                                                children: "Notes"
+                                            }, void 0, false, {
+                                                fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/lodging/property-profile/PetChildPolicyCard.tsx",
+                                                lineNumber: 50,
+                                                columnNumber: 17
+                                            }, this),
+                                            /*#__PURE__*/ _jsxDEV(Input, {
+                                                className: "h-8",
+                                                value: pet.notes || "",
+                                                onChange: (e)=>onPet({
+                                                        notes: e.target.value
+                                                    }),
+                                                placeholder: "e.g. dogs only"
+                                            }, void 0, false, {
+                                                fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/lodging/property-profile/PetChildPolicyCard.tsx",
+                                                lineNumber: 51,
+                                                columnNumber: 17
+                                            }, this)
+                                        ]
+                                    }, void 0, true, {
+                                        fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/lodging/property-profile/PetChildPolicyCard.tsx",
+                                        lineNumber: 49,
+                                        columnNumber: 15
+                                    }, this)
+                                ]
+                            }, void 0, true, {
+                                fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/lodging/property-profile/PetChildPolicyCard.tsx",
+                                lineNumber: 32,
+                                columnNumber: 13
+                            }, this)
+                        ]
+                    }, void 0, true, {
+                        fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/lodging/property-profile/PetChildPolicyCard.tsx",
+                        lineNumber: 26,
+                        columnNumber: 9
+                    }, this),
+                    /*#__PURE__*/ _jsxDEV("div", {
+                        className: "space-y-2 p-2.5 rounded-xl border border-border bg-muted/20",
+                        children: [
+                            /*#__PURE__*/ _jsxDEV("div", {
+                                className: "flex items-center justify-between",
+                                children: [
+                                    /*#__PURE__*/ _jsxDEV(Label, {
+                                        className: "text-[12px] font-semibold flex items-center gap-1.5",
+                                        children: [
+                                            /*#__PURE__*/ _jsxDEV(Baby, {
+                                                className: "h-3.5 w-3.5"
+                                            }, void 0, false, {
+                                                fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/lodging/property-profile/PetChildPolicyCard.tsx",
+                                                lineNumber: 60,
+                                                columnNumber: 84
+                                            }, this),
+                                            " Children welcome"
+                                        ]
+                                    }, void 0, true, {
+                                        fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/lodging/property-profile/PetChildPolicyCard.tsx",
+                                        lineNumber: 60,
+                                        columnNumber: 13
+                                    }, this),
+                                    /*#__PURE__*/ _jsxDEV(Switch, {
+                                        checked: !!child.allowed,
+                                        onCheckedChange: (v)=>onChild({
+                                                allowed: v
+                                            })
+                                    }, void 0, false, {
+                                        fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/lodging/property-profile/PetChildPolicyCard.tsx",
+                                        lineNumber: 61,
+                                        columnNumber: 13
+                                    }, this)
+                                ]
+                            }, void 0, true, {
+                                fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/lodging/property-profile/PetChildPolicyCard.tsx",
+                                lineNumber: 59,
+                                columnNumber: 11
+                            }, this),
+                            child.allowed && /*#__PURE__*/ _jsxDEV("div", {
+                                className: "grid grid-cols-2 md:grid-cols-4 gap-2",
+                                children: [
+                                    /*#__PURE__*/ _jsxDEV("div", {
+                                        children: [
+                                            /*#__PURE__*/ _jsxDEV(Label, {
+                                                className: "text-[11px] text-muted-foreground",
+                                                children: "Min age"
+                                            }, void 0, false, {
+                                                fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/lodging/property-profile/PetChildPolicyCard.tsx",
+                                                lineNumber: 66,
+                                                columnNumber: 17
+                                            }, this),
+                                            /*#__PURE__*/ _jsxDEV(Input, {
+                                                type: "number",
+                                                inputMode: "numeric",
+                                                className: "h-8",
+                                                value: child.min_age ?? "",
+                                                onChange: (e)=>onChild({
+                                                        min_age: e.target.value === "" ? undefined : parseInt(e.target.value)
+                                                    })
+                                            }, void 0, false, {
+                                                fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/lodging/property-profile/PetChildPolicyCard.tsx",
+                                                lineNumber: 67,
+                                                columnNumber: 17
+                                            }, this)
+                                        ]
+                                    }, void 0, true, {
+                                        fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/lodging/property-profile/PetChildPolicyCard.tsx",
+                                        lineNumber: 65,
+                                        columnNumber: 15
+                                    }, this),
+                                    /*#__PURE__*/ _jsxDEV("div", {
+                                        className: "flex flex-col",
+                                        children: [
+                                            /*#__PURE__*/ _jsxDEV(Label, {
+                                                className: "text-[11px] text-muted-foreground",
+                                                children: "Cot available"
+                                            }, void 0, false, {
+                                                fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/lodging/property-profile/PetChildPolicyCard.tsx",
+                                                lineNumber: 74,
+                                                columnNumber: 17
+                                            }, this),
+                                            /*#__PURE__*/ _jsxDEV("div", {
+                                                className: "h-8 flex items-center",
+                                                children: /*#__PURE__*/ _jsxDEV(Switch, {
+                                                    checked: !!child.cot_available,
+                                                    onCheckedChange: (v)=>onChild({
+                                                            cot_available: v
+                                                        })
+                                                }, void 0, false, {
+                                                    fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/lodging/property-profile/PetChildPolicyCard.tsx",
+                                                    lineNumber: 76,
+                                                    columnNumber: 19
+                                                }, this)
+                                            }, void 0, false, {
+                                                fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/lodging/property-profile/PetChildPolicyCard.tsx",
+                                                lineNumber: 75,
+                                                columnNumber: 17
+                                            }, this)
+                                        ]
+                                    }, void 0, true, {
+                                        fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/lodging/property-profile/PetChildPolicyCard.tsx",
+                                        lineNumber: 73,
+                                        columnNumber: 15
+                                    }, this),
+                                    /*#__PURE__*/ _jsxDEV("div", {
+                                        children: [
+                                            /*#__PURE__*/ _jsxDEV(Label, {
+                                                className: "text-[11px] text-muted-foreground",
+                                                children: "Extra bed (USD)"
+                                            }, void 0, false, {
+                                                fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/lodging/property-profile/PetChildPolicyCard.tsx",
+                                                lineNumber: 80,
+                                                columnNumber: 17
+                                            }, this),
+                                            /*#__PURE__*/ _jsxDEV(Input, {
+                                                type: "number",
+                                                step: "0.01",
+                                                className: "h-8",
+                                                value: child.extra_bed_fee_cents == null ? "" : (child.extra_bed_fee_cents / 100).toString(),
+                                                onChange: (e)=>onChild({
+                                                        extra_bed_fee_cents: e.target.value === "" ? undefined : Math.round(parseFloat(e.target.value) * 100)
+                                                    })
+                                            }, void 0, false, {
+                                                fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/lodging/property-profile/PetChildPolicyCard.tsx",
+                                                lineNumber: 81,
+                                                columnNumber: 17
+                                            }, this)
+                                        ]
+                                    }, void 0, true, {
+                                        fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/lodging/property-profile/PetChildPolicyCard.tsx",
+                                        lineNumber: 79,
+                                        columnNumber: 15
+                                    }, this),
+                                    /*#__PURE__*/ _jsxDEV("div", {
+                                        children: [
+                                            /*#__PURE__*/ _jsxDEV(Label, {
+                                                className: "text-[11px] text-muted-foreground",
+                                                children: "Notes"
+                                            }, void 0, false, {
+                                                fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/lodging/property-profile/PetChildPolicyCard.tsx",
+                                                lineNumber: 88,
+                                                columnNumber: 17
+                                            }, this),
+                                            /*#__PURE__*/ _jsxDEV(Input, {
+                                                className: "h-8",
+                                                value: child.notes || "",
+                                                onChange: (e)=>onChild({
+                                                        notes: e.target.value
+                                                    }),
+                                                placeholder: ""
+                                            }, void 0, false, {
+                                                fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/lodging/property-profile/PetChildPolicyCard.tsx",
+                                                lineNumber: 89,
+                                                columnNumber: 17
+                                            }, this)
+                                        ]
+                                    }, void 0, true, {
+                                        fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/lodging/property-profile/PetChildPolicyCard.tsx",
+                                        lineNumber: 87,
+                                        columnNumber: 15
+                                    }, this)
+                                ]
+                            }, void 0, true, {
+                                fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/lodging/property-profile/PetChildPolicyCard.tsx",
+                                lineNumber: 64,
+                                columnNumber: 13
+                            }, this)
+                        ]
+                    }, void 0, true, {
+                        fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/lodging/property-profile/PetChildPolicyCard.tsx",
+                        lineNumber: 58,
+                        columnNumber: 9
+                    }, this)
+                ]
+            }, void 0, true, {
+                fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/lodging/property-profile/PetChildPolicyCard.tsx",
+                lineNumber: 24,
+                columnNumber: 7
+            }, this)
+        ]
+    }, void 0, true, {
+        fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/lodging/property-profile/PetChildPolicyCard.tsx",
+        lineNumber: 20,
+        columnNumber: 5
+    }, this);
+}
+_c = PetChildPolicyCard;
+var _c;
+$RefreshReg$(_c, "PetChildPolicyCard");
+
+
+import * as RefreshRuntime from "/@react-refresh";
+const inWebWorker = typeof WorkerGlobalScope !== 'undefined' && self instanceof WorkerGlobalScope;
+if (import.meta.hot && !inWebWorker) {
+  if (!window.$RefreshReg$) {
+    throw new Error(
+      "@vitejs/plugin-react-swc can't detect preamble. Something is wrong."
+    );
+  }
+
+  RefreshRuntime.__hmr_import(import.meta.url).then((currentExports) => {
+    RefreshRuntime.registerExportsForReactRefresh("C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/lodging/property-profile/PetChildPolicyCard.tsx", currentExports);
+    import.meta.hot.accept((nextExports) => {
+      if (!nextExports) return;
+      const invalidateMessage = RefreshRuntime.validateRefreshBoundaryAndEnqueueUpdate("C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/lodging/property-profile/PetChildPolicyCard.tsx", currentExports, nextExports);
+      if (invalidateMessage) import.meta.hot.invalidate(invalidateMessage);
+    });
+  });
+}
+function $RefreshReg$(type, id) { return RefreshRuntime.register(type, "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/lodging/property-profile/PetChildPolicyCard.tsx" + ' ' + id) }
+function $RefreshSig$() { return RefreshRuntime.createSignatureFunctionForTransform(); }
+
+//# sourceMappingURL=data:application/json;base64,eyJ2ZXJzaW9uIjozLCJzb3VyY2VzIjpbIlBldENoaWxkUG9saWN5Q2FyZC50c3giXSwic291cmNlc0NvbnRlbnQiOlsiLyoqXHJcbiAqIFBldENoaWxkUG9saWN5Q2FyZCAtIGNvbXBhY3Qgcm93cyB3aXRoIGFsbG93ZWQgc3dpdGNoICsgcmV2ZWFsIGV4dHJhcy5cclxuICovXHJcbmltcG9ydCB7IENhcmQsIENhcmRDb250ZW50LCBDYXJkSGVhZGVyLCBDYXJkVGl0bGUgfSBmcm9tIFwiQC9jb21wb25lbnRzL3VpL2NhcmRcIjtcclxuaW1wb3J0IHsgU3dpdGNoIH0gZnJvbSBcIkAvY29tcG9uZW50cy91aS9zd2l0Y2hcIjtcclxuaW1wb3J0IHsgSW5wdXQgfSBmcm9tIFwiQC9jb21wb25lbnRzL3VpL2lucHV0XCI7XHJcbmltcG9ydCB7IExhYmVsIH0gZnJvbSBcIkAvY29tcG9uZW50cy91aS9sYWJlbFwiO1xyXG5pbXBvcnQgeyBEb2csIEJhYnkgfSBmcm9tIFwibHVjaWRlLXJlYWN0XCI7XHJcbmltcG9ydCB0eXBlIHsgUGV0UG9saWN5LCBDaGlsZFBvbGljeSB9IGZyb20gXCJAL2hvb2tzL2xvZGdpbmcvdXNlTG9kZ2VQcm9wZXJ0eVByb2ZpbGVcIjtcclxuXHJcbmludGVyZmFjZSBQcm9wcyB7XHJcbiAgcGV0OiBQZXRQb2xpY3k7XHJcbiAgY2hpbGQ6IENoaWxkUG9saWN5O1xyXG4gIG9uUGV0OiAocGF0Y2g6IFBhcnRpYWw8UGV0UG9saWN5PikgPT4gdm9pZDtcclxuICBvbkNoaWxkOiAocGF0Y2g6IFBhcnRpYWw8Q2hpbGRQb2xpY3k+KSA9PiB2b2lkO1xyXG59XHJcblxyXG5leHBvcnQgZGVmYXVsdCBmdW5jdGlvbiBQZXRDaGlsZFBvbGljeUNhcmQoeyBwZXQsIGNoaWxkLCBvblBldCwgb25DaGlsZCB9OiBQcm9wcykge1xyXG4gIHJldHVybiAoXHJcbiAgICA8Q2FyZD5cclxuICAgICAgPENhcmRIZWFkZXIgY2xhc3NOYW1lPVwicHktM1wiPlxyXG4gICAgICAgIDxDYXJkVGl0bGUgY2xhc3NOYW1lPVwidGV4dC1bMTNweF1cIj5QZXQgJiBjaGlsZHJlbiBwb2xpY2llczwvQ2FyZFRpdGxlPlxyXG4gICAgICA8L0NhcmRIZWFkZXI+XHJcbiAgICAgIDxDYXJkQ29udGVudCBjbGFzc05hbWU9XCJzcGFjZS15LTQgcHQtMFwiPlxyXG4gICAgICAgIHsvKiBQZXRzICovfVxyXG4gICAgICAgIDxkaXYgY2xhc3NOYW1lPVwic3BhY2UteS0yIHAtMi41IHJvdW5kZWQteGwgYm9yZGVyIGJvcmRlci1ib3JkZXIgYmctbXV0ZWQvMjBcIj5cclxuICAgICAgICAgIDxkaXYgY2xhc3NOYW1lPVwiZmxleCBpdGVtcy1jZW50ZXIganVzdGlmeS1iZXR3ZWVuXCI+XHJcbiAgICAgICAgICAgIDxMYWJlbCBjbGFzc05hbWU9XCJ0ZXh0LVsxMnB4XSBmb250LXNlbWlib2xkIGZsZXggaXRlbXMtY2VudGVyIGdhcC0xLjVcIj48RG9nIGNsYXNzTmFtZT1cImgtMy41IHctMy41XCIgLz4gUGV0cyBhbGxvd2VkPC9MYWJlbD5cclxuICAgICAgICAgICAgPFN3aXRjaCBjaGVja2VkPXshIXBldC5hbGxvd2VkfSBvbkNoZWNrZWRDaGFuZ2U9e3YgPT4gb25QZXQoeyBhbGxvd2VkOiB2IH0pfSAvPlxyXG4gICAgICAgICAgPC9kaXY+XHJcbiAgICAgICAgICB7cGV0LmFsbG93ZWQgJiYgKFxyXG4gICAgICAgICAgICA8ZGl2IGNsYXNzTmFtZT1cImdyaWQgZ3JpZC1jb2xzLTMgZ2FwLTJcIj5cclxuICAgICAgICAgICAgICA8ZGl2PlxyXG4gICAgICAgICAgICAgICAgPExhYmVsIGNsYXNzTmFtZT1cInRleHQtWzExcHhdIHRleHQtbXV0ZWQtZm9yZWdyb3VuZFwiPkZlZSAoVVNEKTwvTGFiZWw+XHJcbiAgICAgICAgICAgICAgICA8SW5wdXRcclxuICAgICAgICAgICAgICAgICAgdHlwZT1cIm51bWJlclwiIHN0ZXA9XCIwLjAxXCIgY2xhc3NOYW1lPVwiaC04XCJcclxuICAgICAgICAgICAgICAgICAgdmFsdWU9e3BldC5mZWVfY2VudHMgPT0gbnVsbCA/IFwiXCIgOiAocGV0LmZlZV9jZW50cyAvIDEwMCkudG9TdHJpbmcoKX1cclxuICAgICAgICAgICAgICAgICAgb25DaGFuZ2U9e2UgPT4gb25QZXQoeyBmZWVfY2VudHM6IGUudGFyZ2V0LnZhbHVlID09PSBcIlwiID8gdW5kZWZpbmVkIDogTWF0aC5yb3VuZChwYXJzZUZsb2F0KGUudGFyZ2V0LnZhbHVlKSAqIDEwMCkgfSl9XHJcbiAgICAgICAgICAgICAgICAvPlxyXG4gICAgICAgICAgICAgIDwvZGl2PlxyXG4gICAgICAgICAgICAgIDxkaXY+XHJcbiAgICAgICAgICAgICAgICA8TGFiZWwgY2xhc3NOYW1lPVwidGV4dC1bMTFweF0gdGV4dC1tdXRlZC1mb3JlZ3JvdW5kXCI+TWF4IHdlaWdodCAoa2cpPC9MYWJlbD5cclxuICAgICAgICAgICAgICAgIDxJbnB1dFxyXG4gICAgICAgICAgICAgICAgICB0eXBlPVwibnVtYmVyXCIgaW5wdXRNb2RlPVwibnVtZXJpY1wiIGNsYXNzTmFtZT1cImgtOFwiXHJcbiAgICAgICAgICAgICAgICAgIHZhbHVlPXtwZXQubWF4X3dlaWdodF9rZyA/PyBcIlwifVxyXG4gICAgICAgICAgICAgICAgICBvbkNoYW5nZT17ZSA9PiBvblBldCh7IG1heF93ZWlnaHRfa2c6IGUudGFyZ2V0LnZhbHVlID09PSBcIlwiID8gdW5kZWZpbmVkIDogcGFyc2VJbnQoZS50YXJnZXQudmFsdWUpIH0pfVxyXG4gICAgICAgICAgICAgICAgLz5cclxuICAgICAgICAgICAgICA8L2Rpdj5cclxuICAgICAgICAgICAgICA8ZGl2PlxyXG4gICAgICAgICAgICAgICAgPExhYmVsIGNsYXNzTmFtZT1cInRleHQtWzExcHhdIHRleHQtbXV0ZWQtZm9yZWdyb3VuZFwiPk5vdGVzPC9MYWJlbD5cclxuICAgICAgICAgICAgICAgIDxJbnB1dCBjbGFzc05hbWU9XCJoLThcIiB2YWx1ZT17cGV0Lm5vdGVzIHx8IFwiXCJ9IG9uQ2hhbmdlPXtlID0+IG9uUGV0KHsgbm90ZXM6IGUudGFyZ2V0LnZhbHVlIH0pfSBwbGFjZWhvbGRlcj1cImUuZy4gZG9ncyBvbmx5XCIgLz5cclxuICAgICAgICAgICAgICA8L2Rpdj5cclxuICAgICAgICAgICAgPC9kaXY+XHJcbiAgICAgICAgICApfVxyXG4gICAgICAgIDwvZGl2PlxyXG5cclxuICAgICAgICB7LyogQ2hpbGRyZW4gKi99XHJcbiAgICAgICAgPGRpdiBjbGFzc05hbWU9XCJzcGFjZS15LTIgcC0yLjUgcm91bmRlZC14bCBib3JkZXIgYm9yZGVyLWJvcmRlciBiZy1tdXRlZC8yMFwiPlxyXG4gICAgICAgICAgPGRpdiBjbGFzc05hbWU9XCJmbGV4IGl0ZW1zLWNlbnRlciBqdXN0aWZ5LWJldHdlZW5cIj5cclxuICAgICAgICAgICAgPExhYmVsIGNsYXNzTmFtZT1cInRleHQtWzEycHhdIGZvbnQtc2VtaWJvbGQgZmxleCBpdGVtcy1jZW50ZXIgZ2FwLTEuNVwiPjxCYWJ5IGNsYXNzTmFtZT1cImgtMy41IHctMy41XCIgLz4gQ2hpbGRyZW4gd2VsY29tZTwvTGFiZWw+XHJcbiAgICAgICAgICAgIDxTd2l0Y2ggY2hlY2tlZD17ISFjaGlsZC5hbGxvd2VkfSBvbkNoZWNrZWRDaGFuZ2U9e3YgPT4gb25DaGlsZCh7IGFsbG93ZWQ6IHYgfSl9IC8+XHJcbiAgICAgICAgICA8L2Rpdj5cclxuICAgICAgICAgIHtjaGlsZC5hbGxvd2VkICYmIChcclxuICAgICAgICAgICAgPGRpdiBjbGFzc05hbWU9XCJncmlkIGdyaWQtY29scy0yIG1kOmdyaWQtY29scy00IGdhcC0yXCI+XHJcbiAgICAgICAgICAgICAgPGRpdj5cclxuICAgICAgICAgICAgICAgIDxMYWJlbCBjbGFzc05hbWU9XCJ0ZXh0LVsxMXB4XSB0ZXh0LW11dGVkLWZvcmVncm91bmRcIj5NaW4gYWdlPC9MYWJlbD5cclxuICAgICAgICAgICAgICAgIDxJbnB1dFxyXG4gICAgICAgICAgICAgICAgICB0eXBlPVwibnVtYmVyXCIgaW5wdXRNb2RlPVwibnVtZXJpY1wiIGNsYXNzTmFtZT1cImgtOFwiXHJcbiAgICAgICAgICAgICAgICAgIHZhbHVlPXtjaGlsZC5taW5fYWdlID8/IFwiXCJ9XHJcbiAgICAgICAgICAgICAgICAgIG9uQ2hhbmdlPXtlID0+IG9uQ2hpbGQoeyBtaW5fYWdlOiBlLnRhcmdldC52YWx1ZSA9PT0gXCJcIiA/IHVuZGVmaW5lZCA6IHBhcnNlSW50KGUudGFyZ2V0LnZhbHVlKSB9KX1cclxuICAgICAgICAgICAgICAgIC8+XHJcbiAgICAgICAgICAgICAgPC9kaXY+XHJcbiAgICAgICAgICAgICAgPGRpdiBjbGFzc05hbWU9XCJmbGV4IGZsZXgtY29sXCI+XHJcbiAgICAgICAgICAgICAgICA8TGFiZWwgY2xhc3NOYW1lPVwidGV4dC1bMTFweF0gdGV4dC1tdXRlZC1mb3JlZ3JvdW5kXCI+Q290IGF2YWlsYWJsZTwvTGFiZWw+XHJcbiAgICAgICAgICAgICAgICA8ZGl2IGNsYXNzTmFtZT1cImgtOCBmbGV4IGl0ZW1zLWNlbnRlclwiPlxyXG4gICAgICAgICAgICAgICAgICA8U3dpdGNoIGNoZWNrZWQ9eyEhY2hpbGQuY290X2F2YWlsYWJsZX0gb25DaGVja2VkQ2hhbmdlPXt2ID0+IG9uQ2hpbGQoeyBjb3RfYXZhaWxhYmxlOiB2IH0pfSAvPlxyXG4gICAgICAgICAgICAgICAgPC9kaXY+XHJcbiAgICAgICAgICAgICAgPC9kaXY+XHJcbiAgICAgICAgICAgICAgPGRpdj5cclxuICAgICAgICAgICAgICAgIDxMYWJlbCBjbGFzc05hbWU9XCJ0ZXh0LVsxMXB4XSB0ZXh0LW11dGVkLWZvcmVncm91bmRcIj5FeHRyYSBiZWQgKFVTRCk8L0xhYmVsPlxyXG4gICAgICAgICAgICAgICAgPElucHV0XHJcbiAgICAgICAgICAgICAgICAgIHR5cGU9XCJudW1iZXJcIiBzdGVwPVwiMC4wMVwiIGNsYXNzTmFtZT1cImgtOFwiXHJcbiAgICAgICAgICAgICAgICAgIHZhbHVlPXtjaGlsZC5leHRyYV9iZWRfZmVlX2NlbnRzID09IG51bGwgPyBcIlwiIDogKGNoaWxkLmV4dHJhX2JlZF9mZWVfY2VudHMgLyAxMDApLnRvU3RyaW5nKCl9XHJcbiAgICAgICAgICAgICAgICAgIG9uQ2hhbmdlPXtlID0+IG9uQ2hpbGQoeyBleHRyYV9iZWRfZmVlX2NlbnRzOiBlLnRhcmdldC52YWx1ZSA9PT0gXCJcIiA/IHVuZGVmaW5lZCA6IE1hdGgucm91bmQocGFyc2VGbG9hdChlLnRhcmdldC52YWx1ZSkgKiAxMDApIH0pfVxyXG4gICAgICAgICAgICAgICAgLz5cclxuICAgICAgICAgICAgICA8L2Rpdj5cclxuICAgICAgICAgICAgICA8ZGl2PlxyXG4gICAgICAgICAgICAgICAgPExhYmVsIGNsYXNzTmFtZT1cInRleHQtWzExcHhdIHRleHQtbXV0ZWQtZm9yZWdyb3VuZFwiPk5vdGVzPC9MYWJlbD5cclxuICAgICAgICAgICAgICAgIDxJbnB1dCBjbGFzc05hbWU9XCJoLThcIiB2YWx1ZT17Y2hpbGQubm90ZXMgfHwgXCJcIn0gb25DaGFuZ2U9e2UgPT4gb25DaGlsZCh7IG5vdGVzOiBlLnRhcmdldC52YWx1ZSB9KX0gcGxhY2Vob2xkZXI9XCJcIiAvPlxyXG4gICAgICAgICAgICAgIDwvZGl2PlxyXG4gICAgICAgICAgICA8L2Rpdj5cclxuICAgICAgICAgICl9XHJcbiAgICAgICAgPC9kaXY+XHJcbiAgICAgIDwvQ2FyZENvbnRlbnQ+XHJcbiAgICA8L0NhcmQ+XHJcbiAgKTtcclxufVxyXG4iXSwibmFtZXMiOlsiQ2FyZCIsIkNhcmRDb250ZW50IiwiQ2FyZEhlYWRlciIsIkNhcmRUaXRsZSIsIlN3aXRjaCIsIklucHV0IiwiTGFiZWwiLCJEb2ciLCJCYWJ5IiwiUGV0Q2hpbGRQb2xpY3lDYXJkIiwicGV0IiwiY2hpbGQiLCJvblBldCIsIm9uQ2hpbGQiLCJjbGFzc05hbWUiLCJkaXYiLCJjaGVja2VkIiwiYWxsb3dlZCIsIm9uQ2hlY2tlZENoYW5nZSIsInYiLCJ0eXBlIiwic3RlcCIsInZhbHVlIiwiZmVlX2NlbnRzIiwidG9TdHJpbmciLCJvbkNoYW5nZSIsImUiLCJ0YXJnZXQiLCJ1bmRlZmluZWQiLCJNYXRoIiwicm91bmQiLCJwYXJzZUZsb2F0IiwiaW5wdXRNb2RlIiwibWF4X3dlaWdodF9rZyIsInBhcnNlSW50Iiwibm90ZXMiLCJwbGFjZWhvbGRlciIsIm1pbl9hZ2UiLCJjb3RfYXZhaWxhYmxlIiwiZXh0cmFfYmVkX2ZlZV9jZW50cyJdLCJtYXBwaW5ncyI6IjtBQUFBOztDQUVDLEdBQ0QsU0FBU0EsSUFBSSxFQUFFQyxXQUFXLEVBQUVDLFVBQVUsRUFBRUMsU0FBUyxRQUFRLHVCQUF1QjtBQUNoRixTQUFTQyxNQUFNLFFBQVEseUJBQXlCO0FBQ2hELFNBQVNDLEtBQUssUUFBUSx3QkFBd0I7QUFDOUMsU0FBU0MsS0FBSyxRQUFRLHdCQUF3QjtBQUM5QyxTQUFTQyxHQUFHLEVBQUVDLElBQUksUUFBUSxlQUFlO0FBVXpDLGVBQWUsU0FBU0MsbUJBQW1CLEVBQUVDLEdBQUcsRUFBRUMsS0FBSyxFQUFFQyxLQUFLLEVBQUVDLE9BQU8sRUFBUztJQUM5RSxxQkFDRSxRQUFDYjs7MEJBQ0MsUUFBQ0U7Z0JBQVdZLFdBQVU7MEJBQ3BCLGNBQUEsUUFBQ1g7b0JBQVVXLFdBQVU7OEJBQWM7Ozs7Ozs7Ozs7OzBCQUVyQyxRQUFDYjtnQkFBWWEsV0FBVTs7a0NBRXJCLFFBQUNDO3dCQUFJRCxXQUFVOzswQ0FDYixRQUFDQztnQ0FBSUQsV0FBVTs7a0RBQ2IsUUFBQ1I7d0NBQU1RLFdBQVU7OzBEQUFzRCxRQUFDUDtnREFBSU8sV0FBVTs7Ozs7OzRDQUFnQjs7Ozs7OztrREFDdEcsUUFBQ1Y7d0NBQU9ZLFNBQVMsQ0FBQyxDQUFDTixJQUFJTyxPQUFPO3dDQUFFQyxpQkFBaUJDLENBQUFBLElBQUtQLE1BQU07Z0RBQUVLLFNBQVNFOzRDQUFFOzs7Ozs7Ozs7Ozs7NEJBRTFFVCxJQUFJTyxPQUFPLGtCQUNWLFFBQUNGO2dDQUFJRCxXQUFVOztrREFDYixRQUFDQzs7MERBQ0MsUUFBQ1Q7Z0RBQU1RLFdBQVU7MERBQW9DOzs7Ozs7MERBQ3JE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
