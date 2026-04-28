@@ -55,6 +55,7 @@ const emptyForm = {
   pay_type: "hourly" as "hourly" | "monthly", monthly_salary: "",
   notes: "", department: "General", emergency_contact: "", address: "",
   start_date: format(new Date(), "yyyy-MM-dd"),
+  invite_email: true, invite_sms: false,
 };
 
 export default function StoreEmployeesSection({ storeId }: Props) {
