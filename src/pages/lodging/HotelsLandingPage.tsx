@@ -29,9 +29,9 @@ interface DirectoryStore {
   id: string;
   name: string;
   category: string | null;
-  city: string | null;
-  country: string | null;
+  address: string | null;
   logo_url: string | null;
+  banner_url: string | null;
   description: string | null;
   setup_complete: boolean | null;
 }
@@ -44,12 +44,12 @@ const FILTERS: Array<{ id: string; label: string; match: (cat: string) => boolea
 ];
 
 const POPULAR_DESTINATIONS: Array<{ id: string; label: string; city: string; img: string }> = [
-  { id: "pp", label: "Phnom Penh", city: "phnom penh", img: "https://images.unsplash.com/photo-1599540516405-9d7d4dbb7ddc?w=480&q=70" },
-  { id: "sr", label: "Siem Reap", city: "siem reap", img: "https://images.unsplash.com/photo-1583395145149-6f0c5e1d28a2?w=480&q=70" },
-  { id: "sv", label: "Sihanoukville", city: "sihanoukville", img: "https://images.unsplash.com/photo-1510414842594-a61c69b5ae57?w=480&q=70" },
-  { id: "kep", label: "Kep", city: "kep", img: "https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=480&q=70" },
-  { id: "kampot", label: "Kampot", city: "kampot", img: "https://images.unsplash.com/photo-1502920917128-1aa500764cbd?w=480&q=70" },
-  { id: "btb", label: "Battambang", city: "battambang", img: "https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?w=480&q=70" },
+  { id: "pp", label: "Phnom Penh", city: "phnom penh", img: "https://source.unsplash.com/240x160/?phnom-penh,city" },
+  { id: "sr", label: "Siem Reap", city: "siem reap", img: "https://source.unsplash.com/240x160/?siem-reap,angkor" },
+  { id: "sv", label: "Sihanoukville", city: "sihanoukville", img: "https://source.unsplash.com/240x160/?sihanoukville,beach" },
+  { id: "kep", label: "Kep", city: "kep", img: "https://source.unsplash.com/240x160/?kep,beach,cambodia" },
+  { id: "kampot", label: "Kampot", city: "kampot", img: "https://source.unsplash.com/240x160/?kampot,river,cambodia" },
+  { id: "btb", label: "Battambang", city: "battambang", img: "https://source.unsplash.com/240x160/?battambang,cambodia" },
 ];
 
 export default function HotelsLandingPage() {
@@ -65,8 +65,8 @@ export default function HotelsLandingPage() {
     queryKey: ["hotels-landing"],
     queryFn: async (): Promise<DirectoryStore[]> => {
       const { data, error } = await (supabase as any)
-        .from("stores")
-        .select("id, name, category, city, country, logo_url, description, setup_complete")
+        .from("store_profiles")
+        .select("id, name, category, address, logo_url, banner_url, description, setup_complete")
         .in("category", LODGING_STORE_CATEGORIES)
         .order("setup_complete", { ascending: false })
         .order("name", { ascending: true })
@@ -90,7 +90,7 @@ export default function HotelsLandingPage() {
       const cat = normalizeStoreCategory(store.category);
       if (!matcher(cat)) return false;
       if (!q) return true;
-      const haystack = [store.name, store.city, store.country, store.description]
+      const haystack = [store.name, store.address, store.description]
         .filter(Boolean)
         .join(" ")
         .toLowerCase();
@@ -221,9 +221,9 @@ export default function HotelsLandingPage() {
                 aria-label={`Open ${store.name}`}
               >
                 <div className="relative w-full h-28 bg-muted">
-                  {store.logo_url ? (
+                  {(store.banner_url || store.logo_url) ? (
                     <img
-                      src={store.logo_url}
+                      src={store.banner_url || store.logo_url || ""}
                       alt={store.name}
                       loading="lazy"
                       className="absolute inset-0 w-full h-full object-cover"
@@ -239,10 +239,10 @@ export default function HotelsLandingPage() {
                 </div>
                 <div className="p-2.5">
                   <p className="text-[13px] font-bold text-foreground truncate">{store.name}</p>
-                  {(store.city || store.country) && (
+                  {store.address && (
                     <p className="mt-0.5 text-[11px] text-muted-foreground truncate flex items-center gap-1">
                       <MapPin className="w-3 h-3 shrink-0" />
-                      {[store.city, store.country].filter(Boolean).join(", ")}
+                      <span className="truncate">{store.address}</span>
                     </p>
                   )}
                   <div className="mt-1.5 flex items-center gap-1">
@@ -329,7 +329,7 @@ function PropertyCard({
   index: number;
   onOpen: () => void;
 }) {
-  const location = [store.city, store.country].filter(Boolean).join(", ");
+  const location = store.address || "";
   return (
     <motion.button
       type="button"
@@ -342,9 +342,9 @@ function PropertyCard({
     >
       <div className="flex">
         <div className="relative w-32 shrink-0 bg-muted">
-          {store.logo_url ? (
+          {(store.banner_url || store.logo_url) ? (
             <img
-              src={store.logo_url}
+              src={store.banner_url || store.logo_url || ""}
               alt={`${store.name} cover`}
               className="absolute inset-0 w-full h-full object-cover"
               loading="lazy"

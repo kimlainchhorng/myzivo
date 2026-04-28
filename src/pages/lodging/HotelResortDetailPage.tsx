@@ -47,11 +47,11 @@ interface StoreRow {
   id: string;
   name: string;
   category: string | null;
-  city: string | null;
-  country: string | null;
+  address: string | null;
   logo_url: string | null;
+  banner_url: string | null;
   description: string | null;
-  website: string | null;
+  phone: string | null;
   setup_complete: boolean | null;
 }
 
@@ -96,8 +96,8 @@ export default function HotelResortDetailPage() {
     queryKey: ["hotel-detail-store", storeId],
     queryFn: async (): Promise<StoreRow | null> => {
       const { data, error } = await (supabase as any)
-        .from("stores")
-        .select("id, name, category, city, country, logo_url, description, website, setup_complete")
+        .from("store_profiles")
+        .select("id, name, category, address, logo_url, banner_url, description, phone, setup_complete")
         .eq("id", storeId)
         .maybeSingle();
       if (error) throw error;
@@ -114,8 +114,8 @@ export default function HotelResortDetailPage() {
   const rooms = roomsQuery.data || [];
   const activeRooms = useMemo(() => rooms.filter((r) => r.is_active !== false), [rooms]);
 
-  const cover = store?.logo_url || null;
-  const location = [store?.city, store?.country].filter(Boolean).join(", ");
+  const cover = store?.banner_url || store?.logo_url || null;
+  const location = store?.address || "";
   const amenities = useMemo(() => {
     const merged = [
       ...(profile?.popular_amenities || []),
@@ -389,16 +389,16 @@ export default function HotelResortDetailPage() {
       )}
 
       {/* Contact */}
-      {(profile?.contact?.phone || profile?.contact?.whatsapp || profile?.contact?.website || store?.website) && (
+      {(profile?.contact?.phone || profile?.contact?.whatsapp || profile?.contact?.website || store?.phone) && (
         <Section title="Contact">
           <div className="grid grid-cols-1 gap-2">
-            {profile?.contact?.phone && (
+            {(profile?.contact?.phone || store?.phone) && (
               <a
-                href={`tel:${profile.contact.phone}`}
+                href={`tel:${profile?.contact?.phone || store?.phone}`}
                 className="flex items-center gap-3 rounded-xl border border-border bg-card px-3 py-2.5 active:scale-[0.99]"
               >
                 <Phone className="w-4 h-4 text-primary" />
-                <span className="text-sm text-foreground">{profile.contact.phone}</span>
+                <span className="text-sm text-foreground">{profile?.contact?.phone || store?.phone}</span>
               </a>
             )}
             {profile?.contact?.whatsapp && (
@@ -412,16 +412,16 @@ export default function HotelResortDetailPage() {
                 <span className="text-sm text-foreground">WhatsApp</span>
               </a>
             )}
-            {(profile?.contact?.website || store?.website) && (
+            {profile?.contact?.website && (
               <a
-                href={profile?.contact?.website || store?.website || "#"}
+                href={profile.contact.website}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="flex items-center gap-3 rounded-xl border border-border bg-card px-3 py-2.5 active:scale-[0.99]"
               >
                 <Globe className="w-4 h-4 text-primary" />
                 <span className="text-sm text-foreground truncate">
-                  {profile?.contact?.website || store?.website}
+                  {profile.contact.website}
                 </span>
                 <ExternalLink className="w-3.5 h-3.5 text-muted-foreground ml-auto shrink-0" />
               </a>
