@@ -212,6 +212,16 @@ export default function HotelResortDetailPage() {
   const minDeal = useMemo(() => applyPromo(minPriceCents), [minPriceCents, promo]);
 
   const [bookingOpen, setBookingOpen] = useState(false);
+  const [allRoomsOpen, setAllRoomsOpen] = useState(false);
+
+  // Identify the cheapest active room for a deterministic "Top pick" badge
+  const topPickRoomId = useMemo(() => {
+    if (!activeRooms.length) return null;
+    const cheapest = activeRooms
+      .filter((r) => r.base_rate_cents > 0)
+      .sort((a, b) => a.base_rate_cents - b.base_rate_cents)[0];
+    return cheapest?.id || null;
+  }, [activeRooms]);
 
   useEffect(() => {
     window.scrollTo({ top: 0, behavior: "instant" as ScrollBehavior });
