@@ -14,6 +14,7 @@ import Loader2 from "lucide-react/dist/esm/icons/loader-2";
 import X from "lucide-react/dist/esm/icons/x";
 import { useSuggestedContacts, type Suggested } from "@/hooks/useSuggestedContacts";
 import { useContacts } from "@/hooks/useContacts";
+import { useContactRequests } from "@/hooks/useContactRequests";
 import { toast } from "sonner";
 
 type FailKind = "rate" | "network" | "duplicate" | "other";
@@ -34,8 +35,13 @@ export default function SuggestedContactsRow() {
   const navigate = useNavigate();
   const { items, loading, isStale, refresh } = useSuggestedContacts();
   const { add } = useContacts();
+  const { outgoing } = useContactRequests();
   const [adding, setAdding] = useState<string | null>(null);
   const [dismissed, setDismissed] = useState<Set<string>>(new Set());
+
+  const pendingIds = new Set(
+    (outgoing ?? []).filter((r) => r.status === "pending").map((r) => r.to_user_id)
+  );
 
   const visible = items.filter((i) => !dismissed.has(i.user_id));
   if (loading || visible.length === 0) return null;
@@ -46,6 +52,7 @@ export default function SuggestedContactsRow() {
     if (r.ok) {
       toast.success("Added to contacts");
       setAdding(null);
+      setDismissed((prev) => new Set(prev).add(id));
       void refresh(true);
       return;
     }
