@@ -211,6 +211,7 @@ export default function ContactsPage() {
 
       <AddContactSheet open={addOpen} onOpenChange={setAddOpen} />
       <UsernameClaimSheet open={usernameOpen} onOpenChange={setUsernameOpen} />
+      <InviteFriendsSheet open={inviteOpen} onOpenChange={setInviteOpen} />
     </div>
   );
 }
