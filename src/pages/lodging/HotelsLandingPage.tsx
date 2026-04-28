@@ -692,17 +692,32 @@ const AMENITY_ICONS: Array<{ key: string; icon: typeof Wifi; label: string }> = 
   { key: "pet", icon: Dog, label: "Pets" },
 ];
 
+type RateInfoProp = {
+  base: number;
+  weeklyPct: number;
+  monthlyPct: number;
+};
+type PromoInfoProp = {
+  type: "percent" | "fixed";
+  value: number;
+  name: string;
+  minNights: number;
+  maxNights: number | null;
+};
+
 function PropertyCard({
   store,
   index,
-  minRateCents,
+  rateInfo,
+  promo,
   amenities,
   nights,
   onOpen,
 }: {
   store: DirectoryStore;
   index: number;
-  minRateCents?: number;
+  rateInfo?: RateInfoProp;
+  promo?: PromoInfoProp;
   amenities: string[];
   nights: number;
   onOpen: () => void;
@@ -715,7 +730,42 @@ function PropertyCard({
       : haystack.includes(a.key),
   ).slice(0, 4);
 
-  const totalCents = typeof minRateCents === "number" ? minRateCents * nights : null;
+  // Pricing + discount calculation
+  const baseCents = rateInfo?.base;
+  let discountedCents: number | null = null;
+  let pctOff = 0;
+  let promoLabel = "";
+
+  if (typeof baseCents === "number") {
+    const promoApplies =
+      promo &&
+      nights >= promo.minNights &&
+      (!promo.maxNights || nights <= promo.maxNights);
+
+    if (promoApplies && promo) {
+      if (promo.type === "percent") {
+        discountedCents = Math.round(baseCents * (1 - promo.value / 100));
+        pctOff = Math.round(promo.value);
+      } else {
+        const off = Math.round(promo.value * 100);
+        discountedCents = Math.max(0, baseCents - off);
+        pctOff = Math.round((1 - discountedCents / baseCents) * 100);
+      }
+      promoLabel = promo.name || `${pctOff}% OFF`;
+    } else if (rateInfo && nights >= 28 && rateInfo.monthlyPct > 0) {
+      pctOff = Math.round(rateInfo.monthlyPct);
+      discountedCents = Math.round(baseCents * (1 - pctOff / 100));
+      promoLabel = "Monthly deal";
+    } else if (rateInfo && nights >= 7 && rateInfo.weeklyPct > 0) {
+      pctOff = Math.round(rateInfo.weeklyPct);
+      discountedCents = Math.round(baseCents * (1 - pctOff / 100));
+      promoLabel = "Weekly deal";
+    }
+  }
+
+  const hasDiscount = discountedCents !== null && discountedCents < (baseCents ?? 0);
+  const effectiveCents = hasDiscount ? (discountedCents as number) : baseCents;
+  const totalCents = typeof effectiveCents === "number" ? effectiveCents * nights : null;
 
   return (
     <motion.button
@@ -744,6 +794,11 @@ function PropertyCard({
           {store.is_verified && (
             <Badge className="absolute top-1.5 left-1.5 bg-emerald-600 text-white text-[9px] px-1.5 py-0">
               Verified
+            </Badge>
+          )}
+          {hasDiscount && pctOff > 0 && (
+            <Badge className="absolute bottom-1.5 left-1.5 bg-red-600 text-white text-[9px] px-1.5 py-0">
+              -{pctOff}%
             </Badge>
           )}
         </div>
@@ -783,16 +838,33 @@ function PropertyCard({
             <span className="text-[10px] font-medium text-muted-foreground capitalize truncate">
               {store.category?.replace(/_/g, " ") || "Hotel"}
             </span>
-            {typeof minRateCents === "number" ? (
+            {typeof effectiveCents === "number" ? (
               <div className="text-right">
                 <p className="text-[10px] text-muted-foreground leading-none">from</p>
-                <p className="text-[14px] font-extrabold text-foreground leading-tight">
-                  ${(minRateCents / 100).toFixed(0)}
-                  <span className="text-[10px] font-medium text-muted-foreground"> /night</span>
-                </p>
+                {hasDiscount && typeof baseCents === "number" ? (
+                  <>
+                    <p className="text-[10px] line-through text-muted-foreground leading-none">
+                      ${(baseCents / 100).toFixed(0)}
+                    </p>
+                    <p className="text-[14px] font-extrabold text-emerald-600 leading-tight">
+                      ${(effectiveCents / 100).toFixed(0)}
+                      <span className="text-[10px] font-medium text-emerald-600/80"> /night</span>
+                    </p>
+                  </>
+                ) : (
+                  <p className="text-[14px] font-extrabold text-foreground leading-tight">
+                    ${(effectiveCents / 100).toFixed(0)}
+                    <span className="text-[10px] font-medium text-muted-foreground"> /night</span>
+                  </p>
+                )}
                 {totalCents && nights > 1 && (
                   <p className="text-[9px] text-muted-foreground leading-none">
                     ${(totalCents / 100).toFixed(0)} for {nights}n
+                  </p>
+                )}
+                {hasDiscount && promoLabel && (
+                  <p className="text-[9px] font-semibold text-red-600 leading-none mt-0.5 truncate max-w-[110px] ml-auto">
+                    {promoLabel}
                   </p>
                 )}
               </div>
