@@ -70,7 +70,11 @@ export default function ContactsPage() {
     const favorites = contacts.filter((c) => c.favorite);
     const now = Date.now();
     const recents = contacts
-      .filter((c) => !c.favorite && now - new Date(c.created_at).getTime() < SEVEN_DAYS)
+      .filter((c) =>
+        !c.favorite &&
+        c.added_via !== "chat_history" &&
+        now - new Date(c.created_at).getTime() < SEVEN_DAYS
+      )
       .slice(0, 5);
     const recentIds = new Set(recents.map((r) => r.contact_user_id));
     const rest = contacts
@@ -87,9 +91,34 @@ export default function ContactsPage() {
     return { favorites, recents, byLetter: Array.from(byLetter.entries()) };
   }, [contacts, q]);
 
-  function syncPhone() {
-    // Native contacts plugin is opt-in. Either way, route to the matcher page —
-    // it will surface the native button when available.
+  async function syncPhone() {
+    // On native devices: read contacts directly, hash on-device, then jump to results.
+    if (nativeReady && !syncingNative) {
+      setSyncingNative(true);
+      try {
+        const r = await pickAndHashPhones();
+        if (!r.ok) {
+          if (r.reason === "denied") toast.error("Permission denied. Enable Contacts in Settings.");
+          else if (r.reason === "empty") toast.message("No phone numbers found in your contacts.");
+          else toast.error("Couldn't read contacts on this device.");
+          navigate("/chat/find-contacts");
+          return;
+        }
+        const { data } = await supabase.functions.invoke("contact-match", { body: { hashes: r.hashes } });
+        const results = (data as any)?.matches ?? [];
+        toast.success(
+          results.length
+            ? `${results.length} of your ${r.count} contacts are on ZIVO`
+            : `Scanned ${r.count} contacts — no matches yet`
+        );
+        navigate("/chat/find-contacts", { state: { matches: results } });
+      } catch {
+        navigate("/chat/find-contacts");
+      } finally {
+        setSyncingNative(false);
+      }
+      return;
+    }
     navigate("/chat/find-contacts");
   }
 
