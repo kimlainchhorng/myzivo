@@ -47253,6 +47253,72 @@ export type Database = {
         }
         Relationships: []
       }
+      social_reel_links: {
+        Row: {
+          checkout_path: string | null
+          created_at: string
+          created_by: string | null
+          id: string
+          link_type: string
+          map_label: string | null
+          map_lat: number | null
+          map_lng: number | null
+          post_id: string
+          post_source: string
+          store_id: string | null
+          store_product_id: string | null
+          truck_sale_id: string | null
+          updated_at: string
+        }
+        Insert: {
+          checkout_path?: string | null
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          link_type: string
+          map_label?: string | null
+          map_lat?: number | null
+          map_lng?: number | null
+          post_id: string
+          post_source: string
+          store_id?: string | null
+          store_product_id?: string | null
+          truck_sale_id?: string | null
+          updated_at?: string
+        }
+        Update: {
+          checkout_path?: string | null
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          link_type?: string
+          map_label?: string | null
+          map_lat?: number | null
+          map_lng?: number | null
+          post_id?: string
+          post_source?: string
+          store_id?: string | null
+          store_product_id?: string | null
+          truck_sale_id?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "social_reel_links_store_id_fkey"
+            columns: ["store_id"]
+            isOneToOne: false
+            referencedRelation: "store_profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "social_reel_links_store_product_id_fkey"
+            columns: ["store_product_id"]
+            isOneToOne: false
+            referencedRelation: "store_products"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       sos_alerts: {
         Row: {
           cancelled_at: string | null
