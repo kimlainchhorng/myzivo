@@ -42,9 +42,9 @@ type ChannelRow = {
 
 type MessageHit = {
   id: string;
-  body: string;
+  message: string;
   sender_id: string;
-  recipient_id: string;
+  receiver_id: string;
   created_at: string;
 };
 
