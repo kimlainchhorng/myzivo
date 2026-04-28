@@ -84,6 +84,102 @@ const blankForm = () => ({
   receipt_url: "" as string | null,
   items: [emptyItem()] as Item[],
 });
+type ExpenseFormState = ReturnType<typeof blankForm>;
+
+function computeExpenseTotals(source: ExpenseFormState) {
+  const subtotalCents = source.items.reduce((s, it) => {
+    const q = parseFloat(it.quantity) || 0;
+    const u = Math.round((parseFloat(it.unit_price) || 0) * 100);
+    return s + Math.round(q * u);
+  }, 0);
+  const taxCents = Math.round((parseFloat(source.tax) || 0) * 100);
+  return { subtotalCents, taxCents, totalCents: subtotalCents + taxCents };
+}
+
+function toMoneyCents(value: unknown): number | null {
+  if (value == null || value === "") return null;
+  if (typeof value === "number" && Number.isFinite(value)) return Math.round(value);
+  const cleaned = String(value).replace(/[^0-9.-]/g, "");
+  if (!cleaned) return null;
+  const parsed = Number(cleaned);
+  if (!Number.isFinite(parsed)) return null;
+  return String(value).includes(".") ? Math.round(parsed * 100) : Math.round(parsed);
+}
+
+function normalizePaymentMethod(value: unknown): string {
+  const raw = String(value || "").trim().toLowerCase();
+  if (raw.includes("cash")) return "cash";
+  if (raw.includes("card") || raw.includes("visa") || raw.includes("master") || raw.includes("amex")) return "card";
+  if (raw.includes("check") || raw.includes("cheque")) return "check";
+  if (raw.includes("aba")) return "aba";
+  return raw === "other" ? "other" : "card";
+}
+
+function parseScannedTime(value: unknown): { h: string; m: string; ap: "AM" | "PM" } {
+  const raw = String(value || "").trim();
+  const match = raw.match(/(\d{1,2})\s*:\s*(\d{2})(?::\d{2})?\s*(AM|PM)?/i);
+  if (!match) return { h: "12", m: "00", ap: "PM" };
+  let hour = parseInt(match[1], 10);
+  const minute = match[2];
+  const suffix = match[3]?.toUpperCase() as "AM" | "PM" | undefined;
+  if (suffix) return { h: String(((hour + 11) % 12) + 1), m: minute, ap: suffix };
+  const ap: "AM" | "PM" = hour >= 12 ? "PM" : "AM";
+  return { h: String(((hour + 11) % 12) + 1), m: minute, ap };
+}
+
+function buildScannedExpenseForm(inv: any, receiptRef: string | null): ExpenseFormState {
+  const invoiceTotal = toMoneyCents(inv?.total_cents);
+  const invoiceSubtotal = toMoneyCents(inv?.subtotal_cents);
+  const invoiceTax = toMoneyCents(inv?.tax_cents) ?? Math.max(0, (invoiceTotal ?? 0) - (invoiceSubtotal ?? invoiceTotal ?? 0));
+  const scannedItems = Array.isArray(inv?.items) ? inv.items : [];
+  let items: Item[] = scannedItems
+    .map((it: any) => {
+      const quantity = Number(it?.quantity) > 0 ? Number(it.quantity) : 1;
+      const lineTotal = toMoneyCents(it?.line_total_cents);
+      const unitFromLine = lineTotal != null && quantity > 0 ? Math.round(lineTotal / quantity) : null;
+      const unit = unitFromLine ?? toMoneyCents(it?.unit_price_cents) ?? 0;
+      return {
+        part_number: String(it?.part_number || it?.part || it?.sku || "").trim(),
+        name: String(it?.name || it?.description || "Scanned line item").trim(),
+        quantity: String(quantity),
+        unit_price: unit > 0 ? (unit / 100).toFixed(2) : "",
+      };
+    })
+    .filter((it) => it.name || it.unit_price);
+
+  const expectedSubtotal = invoiceSubtotal ?? (invoiceTotal != null ? Math.max(0, invoiceTotal - invoiceTax) : null);
+  const currentSubtotal = items.reduce((sum, it) => sum + Math.round((parseFloat(it.quantity) || 1) * Math.round((parseFloat(it.unit_price) || 0) * 100)), 0);
+  if (items.length === 1 && expectedSubtotal && Math.abs(currentSubtotal - expectedSubtotal) > 2) {
+    const q = parseFloat(items[0].quantity) || 1;
+    items = [{ ...items[0], unit_price: (Math.round(expectedSubtotal / q) / 100).toFixed(2) }];
+  }
+  if (!items.length && expectedSubtotal && expectedSubtotal > 0) {
+    items = [{ part_number: "", name: "Scanned invoice total", quantity: "1", unit_price: (expectedSubtotal / 100).toFixed(2) }];
+  }
+
+  const t = parseScannedTime(inv?.time);
+  return {
+    ...blankForm(),
+    category: "parts",
+    vendor: String(inv?.vendor || "").trim(),
+    invoice_number: String(inv?.invoice_number || "").trim(),
+    description: "",
+    expense_date: /^\d{4}-\d{2}-\d{2}$/.test(String(inv?.date || "")) ? inv.date : new Date().toISOString().slice(0, 10),
+    hour: t.h,
+    minute: t.m,
+    ampm: t.ap,
+    payment_method: normalizePaymentMethod(inv?.payment_method),
+    tax: invoiceTax > 0 ? (invoiceTax / 100).toFixed(2) : "0.00",
+    receipt_url: receiptRef,
+    items: items.length ? items : [emptyItem()],
+    notes: "",
+  };
+}
+
+function isAutoSaveReady(source: ExpenseFormState) {
+  const { totalCents } = computeExpenseTotals(source);
+  return totalCents > 0 && source.items.some((it) => it.name.trim() && (parseFloat(it.unit_price) || 0) > 0);
+}
 
 // Convert 12h hh:mm AM/PM -> 24h "HH:MM:SS"
 function to24h(h: string, m: string, ap: "AM" | "PM"): string | null {
