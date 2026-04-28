@@ -17,6 +17,7 @@ import ArrowLeft from "lucide-react/dist/esm/icons/arrow-left";
 import Trash2 from "lucide-react/dist/esm/icons/trash-2";
 import X from "lucide-react/dist/esm/icons/x";
 import Bell from "lucide-react/dist/esm/icons/bell";
+import { ChatBellPopover } from "@/components/notifications/ChatBellPopover";
 import Users from "lucide-react/dist/esm/icons/users";
 import Plus from "lucide-react/dist/esm/icons/plus";
 import UserPlus from "lucide-react/dist/esm/icons/user-plus";
