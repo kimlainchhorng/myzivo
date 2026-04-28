@@ -125,5 +125,35 @@ export function useSuggestedContacts() {
 
   useEffect(() => { void refresh(); }, [refresh]);
 
+  // Realtime invalidation: re-fetch when a new follower or DM appears.
+  useEffect(() => {
+    if (!user) return;
+    const ch = supabase
+      .channel(`suggested-${user.id}`)
+      .on(
+        "postgres_changes",
+        { event: "INSERT", schema: "public", table: "follows", filter: `following_id=eq.${user.id}` },
+        () => { void refresh(true); }
+      )
+      .on(
+        "postgres_changes",
+        { event: "INSERT", schema: "public", table: "direct_messages", filter: `receiver_id=eq.${user.id}` },
+        () => { void refresh(true); }
+      )
+      .subscribe();
+    return () => { supabase.removeChannel(ch); };
+  }, [user, refresh]);
+
+  // Clear caches on sign-out so the next signed-in user starts clean.
+  useEffect(() => {
+    if (user) return;
+    memCache.clear();
+    try {
+      Object.keys(sessionStorage)
+        .filter((k) => k.startsWith("zivo:suggested:"))
+        .forEach((k) => sessionStorage.removeItem(k));
+    } catch { /* ignore */ }
+  }, [user]);
+
   return { items, loading, isStale, refresh };
 }
