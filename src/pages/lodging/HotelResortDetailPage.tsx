@@ -84,6 +84,19 @@ const amenityIconFor = (label: string) => {
   return AMENITY_ICON_MAP[key] || CheckCircle2;
 };
 
+// Convert "free_toiletries" / "non-smoking_room" -> "Free Toiletries"
+const humanizeLabel = (raw: string) =>
+  (raw || "")
+    .replace(/[_-]+/g, " ")
+    .trim()
+    .replace(/\b\w/g, (c) => c.toUpperCase());
+
+interface PromoInfo {
+  type: "percent" | "fixed";
+  value: number;
+  name: string;
+}
+
 export default function HotelResortDetailPage() {
   const { storeId = "" } = useParams<{ storeId: string }>();
   const navigate = useNavigate();
@@ -124,10 +137,56 @@ export default function HotelResortDetailPage() {
     return Array.from(new Set(merged.map((a) => a?.toString().trim()).filter(Boolean))).slice(0, 12);
   }, [profile]);
 
+  // Active public promotion (largest wins)
+  const promotionQuery = useQuery({
+    queryKey: ["hotel-detail-promo", storeId],
+    enabled: !!storeId,
+    queryFn: async (): Promise<PromoInfo | null> => {
+      const nowIso = new Date().toISOString();
+      const { data, error } = await (supabase as any)
+        .from("lodging_promotions")
+        .select("promo_type, discount_value, name, starts_at, ends_at, active, member_only")
+        .eq("store_id", storeId)
+        .eq("active", true)
+        .eq("member_only", false);
+      if (error) return null;
+      let best: PromoInfo | null = null;
+      for (const r of (data || []) as Array<any>) {
+        if (r.starts_at && r.starts_at > nowIso) continue;
+        if (r.ends_at && r.ends_at < nowIso) continue;
+        const value = Number(r.discount_value) || 0;
+        if (value <= 0) continue;
+        const candidate: PromoInfo = {
+          type: r.promo_type === "fixed" ? "fixed" : "percent",
+          value,
+          name: r.name || "",
+        };
+        if (!best || candidate.value > best.value) best = candidate;
+      }
+      return best;
+    },
+  });
+  const promo = promotionQuery.data;
+
   const minPriceCents = useMemo(() => {
     const prices = activeRooms.map((r) => r.base_rate_cents).filter((p) => p > 0);
     return prices.length ? Math.min(...prices) : 0;
   }, [activeRooms]);
+
+  // Apply promo to a base price -> { discounted, pctOff }
+  const applyPromo = (baseCents: number) => {
+    if (!baseCents || !promo) return { discounted: baseCents, pctOff: 0 };
+    if (promo.type === "percent") {
+      const pct = Math.round(promo.value);
+      return { discounted: Math.round(baseCents * (1 - pct / 100)), pctOff: pct };
+    }
+    const off = Math.round(promo.value * 100);
+    const discounted = Math.max(0, baseCents - off);
+    const pctOff = Math.round((1 - discounted / baseCents) * 100);
+    return { discounted, pctOff };
+  };
+
+  const minDeal = useMemo(() => applyPromo(minPriceCents), [minPriceCents, promo]);
 
   const [bookingOpen, setBookingOpen] = useState(false);
 
@@ -245,7 +304,7 @@ export default function HotelResortDetailPage() {
               <div className="flex items-start gap-2">
                 <div className="min-w-0 flex-1">
                   <div className="flex items-center gap-2 flex-wrap">
-                    <h1 className="text-lg font-bold text-foreground truncate">{store?.name}</h1>
+                    <h1 className="text-lg font-bold text-foreground line-clamp-2 break-words">{store?.name}</h1>
                     <Badge variant="secondary" className="text-[10px] capitalize">
                       {store?.category?.replace(/_/g, " ") || "Hotel"}
                     </Badge>
@@ -265,10 +324,32 @@ export default function HotelResortDetailPage() {
                 {minPriceCents > 0 && (
                   <div className="text-right shrink-0">
                     <p className="text-[10px] text-muted-foreground">From</p>
-                    <p className="text-base font-bold text-primary leading-tight">
-                      {formatPrice(minPriceCents)}
-                      <span className="text-[10px] font-normal text-muted-foreground"> /night</span>
-                    </p>
+                    {minDeal.pctOff > 0 && minDeal.discounted < minPriceCents ? (
+                      <>
+                        <p className="text-base font-bold text-emerald-600 leading-tight">
+                          {formatPrice(minDeal.discounted)}
+                          <span className="text-[10px] font-normal text-muted-foreground"> /night</span>
+                        </p>
+                        <div className="mt-0.5 flex items-center justify-end gap-1.5">
+                          <span className="text-[10px] text-muted-foreground line-through">
+                            {formatPrice(minPriceCents)}
+                          </span>
+                          <span className="rounded-full bg-red-600 text-white text-[9px] font-semibold px-1.5 py-0.5">
+                            -{minDeal.pctOff}%
+                          </span>
+                        </div>
+                        {promo?.name && (
+                          <p className="mt-0.5 text-[9px] text-emerald-700 font-medium truncate max-w-[110px]">
+                            {promo.name}
+                          </p>
+                        )}
+                      </>
+                    ) : (
+                      <p className="text-base font-bold text-primary leading-tight">
+                        {formatPrice(minPriceCents)}
+                        <span className="text-[10px] font-normal text-muted-foreground"> /night</span>
+                      </p>
+                    )}
                   </div>
                 )}
               </div>
@@ -311,7 +392,7 @@ export default function HotelResortDetailPage() {
                   className="flex items-center gap-2 rounded-xl border border-border bg-card px-3 py-2"
                 >
                   <Icon className="w-4 h-4 text-primary" />
-                  <span className="text-xs font-medium text-foreground capitalize truncate">{label}</span>
+                  <span className="text-xs font-medium text-foreground truncate">{humanizeLabel(label)}</span>
                 </div>
               );
             })}
@@ -333,6 +414,8 @@ export default function HotelResortDetailPage() {
           <div className="-mx-4 px-4 flex gap-3 overflow-x-auto snap-x snap-mandatory pb-1 [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden">
             {activeRooms.slice(0, 8).map((room) => {
               const photo = room.photos?.[room.cover_photo_index ?? 0] || room.photos?.[0];
+              const deal = applyPromo(room.base_rate_cents);
+              const hasDiscount = deal.pctOff > 0 && deal.discounted < room.base_rate_cents;
               return (
                 <div
                   key={room.id}
@@ -351,18 +434,37 @@ export default function HotelResortDetailPage() {
                         Breakfast
                       </span>
                     )}
+                    {hasDiscount && (
+                      <span className="absolute top-1.5 right-1.5 rounded-full bg-red-600 text-white px-1.5 py-0.5 text-[9px] font-bold">
+                        -{deal.pctOff}%
+                      </span>
+                    )}
                   </div>
                   <div className="p-2.5">
                     <p className="text-xs font-bold text-foreground truncate">{room.name}</p>
                     <p className="mt-0.5 text-[10px] text-muted-foreground truncate">
                       {room.beds || room.room_type || "Room"} · {room.max_guests} guests
                     </p>
-                    <div className="mt-1.5 flex items-end justify-between">
-                      <span className="text-sm font-bold text-primary">
-                        {formatPrice(room.base_rate_cents)}
-                        <span className="text-[10px] font-normal text-muted-foreground"> /night</span>
-                      </span>
-                      <Star className="w-3.5 h-3.5 text-amber-500 fill-amber-500" />
+                    <div className="mt-1.5 flex items-end justify-between gap-2">
+                      <div className="min-w-0">
+                        {hasDiscount ? (
+                          <>
+                            <span className="text-sm font-bold text-emerald-600">
+                              {formatPrice(deal.discounted)}
+                              <span className="text-[10px] font-normal text-muted-foreground"> /night</span>
+                            </span>
+                            <div className="text-[10px] text-muted-foreground line-through leading-none">
+                              {formatPrice(room.base_rate_cents)}
+                            </div>
+                          </>
+                        ) : (
+                          <span className="text-sm font-bold text-primary">
+                            {formatPrice(room.base_rate_cents)}
+                            <span className="text-[10px] font-normal text-muted-foreground"> /night</span>
+                          </span>
+                        )}
+                      </div>
+                      <Star className="w-3.5 h-3.5 text-amber-500 fill-amber-500 shrink-0" />
                     </div>
                   </div>
                 </div>
