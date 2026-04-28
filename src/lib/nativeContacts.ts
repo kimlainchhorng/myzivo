@@ -13,10 +13,24 @@ import { hashPhoneE164 } from "@/lib/phoneHash";
 
 type Capacitor = { isNativePlatform: () => boolean; getPlatform: () => string };
 
+// Hide the bare specifier from Rollup's static analysis so the build doesn't
+// try to resolve this optional native-only plugin at bundle time.
+const CONTACTS_PKG = ["@capacitor-community", "contacts"].join("/");
+const dynImport = (s: string) => import(/* @vite-ignore */ /* webpackIgnore: true */ s);
+
 async function getCapacitor(): Promise<Capacitor | null> {
   try {
-    const mod: any = await import("@capacitor/core");
+    const mod: any = await dynImport("@capacitor/core");
     return mod?.Capacitor ?? null;
+  } catch {
+    return null;
+  }
+}
+
+async function loadContacts(): Promise<any | null> {
+  try {
+    const mod: any = await dynImport(CONTACTS_PKG);
+    return mod?.Contacts ?? null;
   } catch {
     return null;
   }
@@ -25,21 +39,13 @@ async function getCapacitor(): Promise<Capacitor | null> {
 export async function isNativeAvailable(): Promise<boolean> {
   const cap = await getCapacitor();
   if (!cap?.isNativePlatform()) return false;
-  try {
-    // @ts-ignore — optional peer dependency
-    await import(/* @vite-ignore */ "@capacitor-community/contacts");
-    return true;
-  } catch {
-    return false;
-  }
+  return (await loadContacts()) != null;
 }
 
 export async function requestPermission(): Promise<boolean> {
+  const Contacts = await loadContacts();
+  if (!Contacts?.requestPermissions) return false;
   try {
-    // @ts-ignore — optional peer dependency
-    const mod: any = await import(/* @vite-ignore */ "@capacitor-community/contacts");
-    const Contacts = mod?.Contacts;
-    if (!Contacts?.requestPermissions) return false;
     const res = await Contacts.requestPermissions();
     return res?.contacts === "granted";
   } catch {
@@ -70,9 +76,7 @@ export async function pickAndHashPhones(opts?: { defaultCountryCode?: string }):
   reason?: "no-plugin" | "denied" | "empty" | "error";
 }> {
   try {
-    // @ts-ignore — optional peer dependency
-    const mod: any = await import(/* @vite-ignore */ "@capacitor-community/contacts");
-    const Contacts = mod?.Contacts;
+    const Contacts = await loadContacts();
     if (!Contacts) return { ok: false, hashes: [], count: 0, reason: "no-plugin" };
 
     const granted = await requestPermission();
