@@ -1,6 +1,10 @@
 project_id = "slirphzzwcogdbkeicff"
 
 [functions]
+  [functions.scan-invoice]
+    verify_jwt = true
+  [functions.ar-receipts-helper]
+    verify_jwt = false
   [functions.stripe-ride-webhook]
     verify_jwt = false
   [functions.stripe-lodging-webhook]

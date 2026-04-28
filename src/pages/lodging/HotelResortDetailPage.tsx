@@ -79,10 +79,46 @@ const formatPrice = (cents: number) => {
   return `$${(cents / 100).toFixed(0)}`;
 };
 
+// Format a phone number nicely. KH local numbers (7–9 digits, no leading +)
+// get +855 prefix and grouped as +855 XX XXX XXX.
+const formatPhone = (raw?: string | null) => {
+  if (!raw) return "";
+  const trimmed = raw.trim();
+  if (trimmed.startsWith("+")) {
+    const digits = trimmed.replace(/[^\d]/g, "");
+    if (digits.length >= 10) {
+      const cc = digits.slice(0, digits.length - 9);
+      return `+${cc} ${digits.slice(-9, -6)} ${digits.slice(-6, -3)} ${digits.slice(-3)}`;
+    }
+    return trimmed;
+  }
+  const local = trimmed.replace(/[^\d]/g, "").replace(/^0+/, "");
+  if (local.length >= 7 && local.length <= 9) {
+    const a = local.slice(0, local.length - 6);
+    const b = local.slice(local.length - 6, local.length - 3);
+    const c = local.slice(local.length - 3);
+    return `+855 ${a} ${b} ${c}`;
+  }
+  return trimmed;
+};
+
 const amenityIconFor = (label: string) => {
   const key = label.toLowerCase().trim();
   return AMENITY_ICON_MAP[key] || CheckCircle2;
 };
+
+// Convert "free_toiletries" / "non-smoking_room" -> "Free Toiletries"
+const humanizeLabel = (raw: string) =>
+  (raw || "")
+    .replace(/[_-]+/g, " ")
+    .trim()
+    .replace(/\b\w/g, (c) => c.toUpperCase());
+
+interface PromoInfo {
+  type: "percent" | "fixed";
+  value: number;
+  name: string;
+}
 
 export default function HotelResortDetailPage() {
   const { storeId = "" } = useParams<{ storeId: string }>();
@@ -124,12 +160,68 @@ export default function HotelResortDetailPage() {
     return Array.from(new Set(merged.map((a) => a?.toString().trim()).filter(Boolean))).slice(0, 12);
   }, [profile]);
 
+  // Active public promotion (largest wins)
+  const promotionQuery = useQuery({
+    queryKey: ["hotel-detail-promo", storeId],
+    enabled: !!storeId,
+    queryFn: async (): Promise<PromoInfo | null> => {
+      const nowIso = new Date().toISOString();
+      const { data, error } = await (supabase as any)
+        .from("lodging_promotions")
+        .select("promo_type, discount_value, name, starts_at, ends_at, active, member_only")
+        .eq("store_id", storeId)
+        .eq("active", true)
+        .eq("member_only", false);
+      if (error) return null;
+      let best: PromoInfo | null = null;
+      for (const r of (data || []) as Array<any>) {
+        if (r.starts_at && r.starts_at > nowIso) continue;
+        if (r.ends_at && r.ends_at < nowIso) continue;
+        const value = Number(r.discount_value) || 0;
+        if (value <= 0) continue;
+        const candidate: PromoInfo = {
+          type: r.promo_type === "fixed" ? "fixed" : "percent",
+          value,
+          name: r.name || "",
+        };
+        if (!best || candidate.value > best.value) best = candidate;
+      }
+      return best;
+    },
+  });
+  const promo = promotionQuery.data;
+
   const minPriceCents = useMemo(() => {
     const prices = activeRooms.map((r) => r.base_rate_cents).filter((p) => p > 0);
     return prices.length ? Math.min(...prices) : 0;
   }, [activeRooms]);
 
+  // Apply promo to a base price -> { discounted, pctOff }
+  const applyPromo = (baseCents: number) => {
+    if (!baseCents || !promo) return { discounted: baseCents, pctOff: 0 };
+    if (promo.type === "percent") {
+      const pct = Math.round(promo.value);
+      return { discounted: Math.round(baseCents * (1 - pct / 100)), pctOff: pct };
+    }
+    const off = Math.round(promo.value * 100);
+    const discounted = Math.max(0, baseCents - off);
+    const pctOff = Math.round((1 - discounted / baseCents) * 100);
+    return { discounted, pctOff };
+  };
+
+  const minDeal = useMemo(() => applyPromo(minPriceCents), [minPriceCents, promo]);
+
   const [bookingOpen, setBookingOpen] = useState(false);
+  const [allRoomsOpen, setAllRoomsOpen] = useState(false);
+
+  // Identify the cheapest active room for a deterministic "Top pick" badge
+  const topPickRoomId = useMemo(() => {
+    if (!activeRooms.length) return null;
+    const cheapest = activeRooms
+      .filter((r) => r.base_rate_cents > 0)
+      .sort((a, b) => a.base_rate_cents - b.base_rate_cents)[0];
+    return cheapest?.id || null;
+  }, [activeRooms]);
 
   useEffect(() => {
     window.scrollTo({ top: 0, behavior: "instant" as ScrollBehavior });
@@ -180,7 +272,7 @@ export default function HotelResortDetailPage() {
   }
 
   return (
-    <div className="min-h-dvh bg-background pb-28">
+    <div className="min-h-dvh bg-background pb-32 md:pb-12">
       <Helmet>
         <title>{store?.name ? `${store.name} — ZIVO` : "Hotel & Resort — ZIVO"}</title>
         <meta
@@ -195,7 +287,7 @@ export default function HotelResortDetailPage() {
 
       {/* Hero / Cover */}
       <div className="relative">
-        <div className="relative h-56 md:h-80 w-full overflow-hidden bg-muted">
+        <div className="relative h-56 md:h-80 lg:h-[420px] w-full overflow-hidden bg-muted">
           {cover ? (
             <img
               src={cover}
@@ -206,7 +298,7 @@ export default function HotelResortDetailPage() {
           ) : (
             <div className="absolute inset-0 bg-gradient-to-br from-primary/30 via-primary/10 to-transparent" />
           )}
-          <div className="absolute inset-0 bg-gradient-to-t from-background via-background/30 to-transparent" />
+          <div className="absolute inset-0 bg-gradient-to-t from-background via-background/10 md:via-transparent to-transparent" />
         </div>
 
         {/* Top nav */}
@@ -223,13 +315,13 @@ export default function HotelResortDetailPage() {
             aria-label="Share"
             className="h-10 w-10 rounded-full bg-background/80 backdrop-blur flex items-center justify-center shadow-sm active:scale-95 transition"
           >
-            <Share2 className="w-4.5 h-4.5" />
+            <Share2 className="w-5 h-5" />
           </button>
         </div>
       </div>
 
       {/* Header card */}
-      <div className="px-4 -mt-12 relative z-10">
+      <div className="px-4 -mt-12 relative z-10 mx-auto w-full max-w-3xl lg:max-w-5xl">
         <motion.div
           initial={{ opacity: 0, y: 12 }}
           animate={{ opacity: 1, y: 0 }}
@@ -245,7 +337,7 @@ export default function HotelResortDetailPage() {
               <div className="flex items-start gap-2">
                 <div className="min-w-0 flex-1">
                   <div className="flex items-center gap-2 flex-wrap">
-                    <h1 className="text-lg font-bold text-foreground truncate">{store?.name}</h1>
+                    <h1 className="text-lg font-bold text-foreground line-clamp-2 break-words">{store?.name}</h1>
                     <Badge variant="secondary" className="text-[10px] capitalize">
                       {store?.category?.replace(/_/g, " ") || "Hotel"}
                     </Badge>
@@ -265,10 +357,32 @@ export default function HotelResortDetailPage() {
                 {minPriceCents > 0 && (
                   <div className="text-right shrink-0">
                     <p className="text-[10px] text-muted-foreground">From</p>
-                    <p className="text-base font-bold text-primary leading-tight">
-                      {formatPrice(minPriceCents)}
-                      <span className="text-[10px] font-normal text-muted-foreground"> /night</span>
-                    </p>
+                    {minDeal.pctOff > 0 && minDeal.discounted < minPriceCents ? (
+                      <>
+                        <p className="text-base font-bold text-emerald-600 leading-tight">
+                          {formatPrice(minDeal.discounted)}
+                          <span className="text-[10px] font-normal text-muted-foreground"> /night</span>
+                        </p>
+                        <div className="mt-0.5 flex items-center justify-end gap-1.5">
+                          <span className="text-[10px] text-muted-foreground line-through">
+                            {formatPrice(minPriceCents)}
+                          </span>
+                          <span className="rounded-full bg-red-600 text-white text-[9px] font-semibold px-1.5 py-0.5">
+                            -{minDeal.pctOff}%
+                          </span>
+                        </div>
+                        {promo?.name && (
+                          <p className="mt-0.5 text-[9px] text-emerald-700 font-medium truncate max-w-[110px] md:max-w-none">
+                            {promo.name}
+                          </p>
+                        )}
+                      </>
+                    ) : (
+                      <p className="text-base font-bold text-primary leading-tight">
+                        {formatPrice(minPriceCents)}
+                        <span className="text-[10px] font-normal text-muted-foreground"> /night</span>
+                      </p>
+                    )}
                   </div>
                 )}
               </div>
@@ -290,6 +404,28 @@ export default function HotelResortDetailPage() {
         </motion.div>
       </div>
 
+      {/* Body wrapper for tablet/desktop centering */}
+      <div className="mx-auto w-full max-w-3xl lg:max-w-5xl">
+
+      {/* Inline desktop CTA (replaces sticky bar on md+) */}
+      <div className="hidden md:flex items-stretch gap-2.5 px-4 mt-4">
+        <Button
+          variant="outline"
+          size="lg"
+          className="h-12 rounded-2xl flex-1 max-w-[200px] font-semibold border-border/70 hover:bg-muted/60"
+          onClick={handleShare}
+        >
+          <Share2 className="w-4 h-4 mr-2" /> Share
+        </Button>
+        <Button
+          size="lg"
+          className="h-12 rounded-2xl flex-1 font-semibold bg-gradient-to-r from-emerald-500 to-emerald-600 hover:from-emerald-600 hover:to-emerald-700 text-white shadow-md shadow-emerald-500/20"
+          onClick={() => setBookingOpen(true)}
+        >
+          <CalendarRange className="w-4 h-4 mr-2" /> Check Availability
+        </Button>
+      </div>
+
       {/* Description */}
       {!!store?.description && (
         <Section title="About">
@@ -302,7 +438,7 @@ export default function HotelResortDetailPage() {
       {/* Amenities */}
       {amenities.length > 0 && (
         <Section title="Amenities">
-          <div className="grid grid-cols-2 gap-2">
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2">
             {amenities.map((label) => {
               const Icon = amenityIconFor(label);
               return (
@@ -311,7 +447,7 @@ export default function HotelResortDetailPage() {
                   className="flex items-center gap-2 rounded-xl border border-border bg-card px-3 py-2"
                 >
                   <Icon className="w-4 h-4 text-primary" />
-                  <span className="text-xs font-medium text-foreground capitalize truncate">{label}</span>
+                  <span className="text-xs font-medium text-foreground truncate">{humanizeLabel(label)}</span>
                 </div>
               );
             })}
@@ -330,45 +466,85 @@ export default function HotelResortDetailPage() {
         ) : activeRooms.length === 0 ? (
           <p className="text-xs text-muted-foreground">No rooms published yet.</p>
         ) : (
-          <div className="-mx-4 px-4 flex gap-3 overflow-x-auto snap-x snap-mandatory pb-1 [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden">
-            {activeRooms.slice(0, 8).map((room) => {
-              const photo = room.photos?.[room.cover_photo_index ?? 0] || room.photos?.[0];
-              return (
-                <div
-                  key={room.id}
-                  className="snap-start shrink-0 w-56 rounded-xl border border-border bg-card overflow-hidden"
-                >
-                  <div className="h-28 bg-muted relative">
-                    {photo ? (
-                      <img src={photo} alt={room.name} className="w-full h-full object-cover" loading="lazy" />
-                    ) : (
-                      <div className="w-full h-full flex items-center justify-center">
-                        <Hotel className="w-6 h-6 text-muted-foreground" />
+          <div className="relative">
+            <div className="-mx-4 px-4 pr-10 flex gap-3 overflow-x-auto snap-x snap-mandatory pb-1 [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden md:mx-0 md:px-0 md:pr-0 md:overflow-visible md:grid md:grid-cols-2 lg:grid-cols-3 md:gap-3">
+              {activeRooms.slice(0, 8).map((room) => {
+                const photo = room.photos?.[room.cover_photo_index ?? 0] || room.photos?.[0];
+                const deal = applyPromo(room.base_rate_cents);
+                const hasDiscount = deal.pctOff > 0 && deal.discounted < room.base_rate_cents;
+                const isTopPick = room.id === topPickRoomId;
+                return (
+                  <div
+                    key={room.id}
+                    className="snap-start shrink-0 w-60 md:w-auto rounded-xl border border-border bg-card overflow-hidden"
+                  >
+                    <div className="h-28 bg-muted relative">
+                      {photo ? (
+                        <img src={photo} alt={room.name} className="w-full h-full object-cover" loading="lazy" />
+                      ) : (
+                        <div className="w-full h-full flex items-center justify-center">
+                          <Hotel className="w-6 h-6 text-muted-foreground" />
+                        </div>
+                      )}
+                      {room.breakfast_included && (
+                        <span className="absolute top-1.5 left-1.5 rounded-full bg-background/90 px-2 py-0.5 text-[9px] font-semibold text-primary">
+                          Breakfast
+                        </span>
+                      )}
+                      {hasDiscount && (
+                        <span className="absolute top-1.5 right-1.5 rounded-full bg-red-600 text-white px-1.5 py-0.5 text-[9px] font-bold">
+                          -{deal.pctOff}%
+                        </span>
+                      )}
+                    </div>
+                    <div className="p-2.5">
+                      <div className="flex items-center gap-1.5">
+                        <p className="text-xs font-bold text-foreground truncate flex-1">{room.name}</p>
+                        {isTopPick && (
+                          <span className="shrink-0 inline-flex items-center gap-0.5 rounded-full bg-amber-50 text-amber-700 border border-amber-200 px-1.5 py-0.5 text-[9px] font-bold dark:bg-amber-500/10 dark:text-amber-300 dark:border-amber-500/20">
+                            <Star className="w-2.5 h-2.5 fill-amber-500 text-amber-500" />
+                            Top pick
+                          </span>
+                        )}
                       </div>
-                    )}
-                    {room.breakfast_included && (
-                      <span className="absolute top-1.5 left-1.5 rounded-full bg-background/90 px-2 py-0.5 text-[9px] font-semibold text-primary">
-                        Breakfast
-                      </span>
-                    )}
-                  </div>
-                  <div className="p-2.5">
-                    <p className="text-xs font-bold text-foreground truncate">{room.name}</p>
-                    <p className="mt-0.5 text-[10px] text-muted-foreground truncate">
-                      {room.beds || room.room_type || "Room"} · {room.max_guests} guests
-                    </p>
-                    <div className="mt-1.5 flex items-end justify-between">
-                      <span className="text-sm font-bold text-primary">
-                        {formatPrice(room.base_rate_cents)}
-                        <span className="text-[10px] font-normal text-muted-foreground"> /night</span>
-                      </span>
-                      <Star className="w-3.5 h-3.5 text-amber-500 fill-amber-500" />
+                      <p className="mt-0.5 text-[10px] text-muted-foreground truncate">
+                        {room.beds || room.room_type || "Room"} · {room.max_guests} guests
+                      </p>
+                      <div className="mt-1.5">
+                        {hasDiscount ? (
+                          <>
+                            <span className="text-sm font-bold text-emerald-600">
+                              {formatPrice(deal.discounted)}
+                              <span className="text-[10px] font-normal text-muted-foreground"> /night</span>
+                            </span>
+                            <div className="text-[10px] text-muted-foreground line-through leading-none">
+                              {formatPrice(room.base_rate_cents)}
+                            </div>
+                          </>
+                        ) : (
+                          <span className="text-sm font-bold text-primary">
+                            {formatPrice(room.base_rate_cents)}
+                            <span className="text-[10px] font-normal text-muted-foreground"> /night</span>
+                          </span>
+                        )}
+                      </div>
                     </div>
                   </div>
-                </div>
-              );
-            })}
+                );
+              })}
+            </div>
+            {/* Right-edge fade hint (mobile only) */}
+            <div className="md:hidden pointer-events-none absolute top-0 right-0 h-full w-10 bg-gradient-to-l from-background to-transparent" />
           </div>
+        )}
+        {activeRooms.length > 8 && (
+          <button
+            type="button"
+            onClick={() => setAllRoomsOpen(true)}
+            className="mt-3 inline-flex items-center gap-1 rounded-full border border-emerald-200 bg-emerald-50 text-emerald-700 px-3 py-1.5 text-[11px] font-semibold hover:bg-emerald-100 dark:bg-emerald-500/10 dark:text-emerald-300 dark:border-emerald-500/20"
+          >
+            See all {activeRooms.length} rooms <ExternalLink className="w-3 h-3" />
+          </button>
         )}
       </Section>
 
@@ -379,7 +555,7 @@ export default function HotelResortDetailPage() {
             {profile.languages.map((lang) => (
               <span
                 key={lang}
-                className="rounded-full bg-muted px-2.5 py-1 text-[11px] font-medium text-foreground"
+                className="rounded-full bg-emerald-50 text-emerald-700 border border-emerald-100 px-2.5 py-1 text-[11px] font-medium dark:bg-emerald-500/10 dark:text-emerald-300 dark:border-emerald-500/20"
               >
                 {lang}
               </span>
@@ -398,7 +574,7 @@ export default function HotelResortDetailPage() {
                 className="flex items-center gap-3 rounded-xl border border-border bg-card px-3 py-2.5 active:scale-[0.99]"
               >
                 <Phone className="w-4 h-4 text-primary" />
-                <span className="text-sm text-foreground">{profile?.contact?.phone || store?.phone}</span>
+                <span className="text-sm text-foreground">{formatPhone(profile?.contact?.phone || store?.phone)}</span>
               </a>
             )}
             {profile?.contact?.whatsapp && (
@@ -432,7 +608,8 @@ export default function HotelResortDetailPage() {
 
       {/* Owner band */}
       {isOwner && (
-        <Section title="Owner tools">
+        <section className="px-4 mt-5 mb-4">
+          <h2 className="text-sm font-bold text-foreground mb-2">Owner tools</h2>
           <div className="rounded-2xl border border-primary/20 bg-primary/5 p-3 flex items-center gap-3">
             <div className="h-9 w-9 rounded-xl bg-primary/15 flex items-center justify-center text-primary">
               <Settings className="w-4 h-4" />
@@ -448,26 +625,29 @@ export default function HotelResortDetailPage() {
               Admin
             </Button>
           </div>
-        </Section>
+        </section>
       )}
 
-      {/* Sticky CTA */}
-      <div className="fixed bottom-0 left-0 right-0 z-30 bg-background/95 backdrop-blur border-t border-border px-4 py-3 pb-[max(env(safe-area-inset-bottom),12px)]">
-        <div className="mx-auto max-w-2xl flex items-center gap-2">
+      </div>
+      {/* /body wrapper */}
+
+      {/* Sticky CTA — mobile only */}
+      <div className="md:hidden fixed bottom-0 left-0 right-0 z-30 bg-background/95 backdrop-blur border-t border-border px-4 py-3 pb-[max(env(safe-area-inset-bottom),12px)]">
+        <div className="mx-auto max-w-2xl flex items-stretch gap-2">
           <Button
             variant="outline"
             size="lg"
-            className="flex-1"
+            className="h-12 rounded-2xl flex-1 font-semibold border-border/70"
             onClick={handleShare}
           >
-            <Share2 className="w-4 h-4 mr-1.5" /> Share
+            <Share2 className="w-4 h-4 mr-2" /> Share
           </Button>
           <Button
             size="lg"
-            className="flex-[2]"
+            className="h-12 rounded-2xl flex-[2] font-semibold bg-gradient-to-r from-emerald-500 to-emerald-600 hover:from-emerald-600 hover:to-emerald-700 text-white shadow-md shadow-emerald-500/20"
             onClick={() => setBookingOpen(true)}
           >
-            <CalendarRange className="w-4 h-4 mr-1.5" /> Check Availability
+            <CalendarRange className="w-4 h-4 mr-2" /> Check Availability
           </Button>
         </div>
       </div>
@@ -475,13 +655,13 @@ export default function HotelResortDetailPage() {
       {/* Booking sheet (lightweight inline modal) */}
       {bookingOpen && (
         <div
-          className="fixed inset-0 z-40 bg-black/40 flex items-end justify-center"
+          className="fixed inset-0 z-40 bg-black/40 flex items-end md:items-center justify-center"
           onClick={() => setBookingOpen(false)}
         >
           <motion.div
             initial={{ y: 60, opacity: 0 }}
             animate={{ y: 0, opacity: 1 }}
-            className="w-full max-w-md bg-card rounded-t-3xl p-5 pb-[max(env(safe-area-inset-bottom),20px)] shadow-2xl"
+            className="w-full max-w-md md:max-w-lg bg-card rounded-t-3xl md:rounded-3xl p-5 pb-[max(env(safe-area-inset-bottom),20px)] md:pb-5 shadow-2xl"
             onClick={(e) => e.stopPropagation()}
           >
             <div className="mx-auto h-1.5 w-10 rounded-full bg-muted mb-3" />
@@ -516,13 +696,97 @@ export default function HotelResortDetailPage() {
           </motion.div>
         </div>
       )}
+
+      {/* All rooms sheet */}
+      {allRoomsOpen && (
+        <div
+          className="fixed inset-0 z-40 bg-black/40 flex items-end md:items-center justify-center"
+          onClick={() => setAllRoomsOpen(false)}
+        >
+          <motion.div
+            initial={{ y: 60, opacity: 0 }}
+            animate={{ y: 0, opacity: 1 }}
+            className="w-full max-w-md md:max-w-2xl max-h-[85dvh] bg-card rounded-t-3xl md:rounded-3xl shadow-2xl flex flex-col"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="p-5 pb-3 border-b border-border">
+              <div className="mx-auto h-1.5 w-10 rounded-full bg-muted mb-3 md:hidden" />
+              <h3 className="text-base font-bold text-foreground">All rooms · {activeRooms.length}</h3>
+              <p className="text-[11px] text-muted-foreground mt-0.5">{store?.name}</p>
+            </div>
+            <div className="flex-1 overflow-y-auto p-4 grid grid-cols-1 md:grid-cols-2 gap-3 pb-[max(env(safe-area-inset-bottom),16px)]">
+              {activeRooms.map((room) => {
+                const photo = room.photos?.[room.cover_photo_index ?? 0] || room.photos?.[0];
+                const deal = applyPromo(room.base_rate_cents);
+                const hasDiscount = deal.pctOff > 0 && deal.discounted < room.base_rate_cents;
+                const isTopPick = room.id === topPickRoomId;
+                return (
+                  <div key={room.id} className="rounded-xl border border-border bg-card overflow-hidden">
+                    <div className="h-28 bg-muted relative">
+                      {photo ? (
+                        <img src={photo} alt={room.name} className="w-full h-full object-cover" loading="lazy" />
+                      ) : (
+                        <div className="w-full h-full flex items-center justify-center">
+                          <Hotel className="w-6 h-6 text-muted-foreground" />
+                        </div>
+                      )}
+                      {hasDiscount && (
+                        <span className="absolute top-1.5 right-1.5 rounded-full bg-red-600 text-white px-1.5 py-0.5 text-[9px] font-bold">
+                          -{deal.pctOff}%
+                        </span>
+                      )}
+                    </div>
+                    <div className="p-2.5">
+                      <div className="flex items-center gap-1.5">
+                        <p className="text-xs font-bold text-foreground truncate flex-1">{room.name}</p>
+                        {isTopPick && (
+                          <span className="shrink-0 inline-flex items-center gap-0.5 rounded-full bg-amber-50 text-amber-700 border border-amber-200 px-1.5 py-0.5 text-[9px] font-bold dark:bg-amber-500/10 dark:text-amber-300 dark:border-amber-500/20">
+                            <Star className="w-2.5 h-2.5 fill-amber-500 text-amber-500" />
+                            Top pick
+                          </span>
+                        )}
+                      </div>
+                      <p className="mt-0.5 text-[10px] text-muted-foreground truncate">
+                        {room.beds || room.room_type || "Room"} · {room.max_guests} guests
+                      </p>
+                      <div className="mt-1.5">
+                        {hasDiscount ? (
+                          <>
+                            <span className="text-sm font-bold text-emerald-600">
+                              {formatPrice(deal.discounted)}
+                              <span className="text-[10px] font-normal text-muted-foreground"> /night</span>
+                            </span>
+                            <div className="text-[10px] text-muted-foreground line-through leading-none">
+                              {formatPrice(room.base_rate_cents)}
+                            </div>
+                          </>
+                        ) : (
+                          <span className="text-sm font-bold text-primary">
+                            {formatPrice(room.base_rate_cents)}
+                            <span className="text-[10px] font-normal text-muted-foreground"> /night</span>
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+            <div className="p-3 border-t border-border">
+              <Button variant="ghost" className="w-full" onClick={() => setAllRoomsOpen(false)}>
+                Close
+              </Button>
+            </div>
+          </motion.div>
+        </div>
+      )}
     </div>
   );
 }
 
 function Section({ title, children }: { title: string; children: React.ReactNode }) {
   return (
-    <section className="px-4 mt-5">
+    <section className="px-4 mt-5 md:mt-7">
       <h2 className="text-sm font-bold text-foreground mb-2">{title}</h2>
       {children}
     </section>
@@ -531,9 +795,9 @@ function Section({ title, children }: { title: string; children: React.ReactNode
 
 function Stat({ label, value }: { label: string; value: string | number }) {
   return (
-    <div className="rounded-xl bg-muted/50 py-2">
-      <p className="text-sm font-bold text-foreground leading-none">{value}</p>
-      <p className="mt-0.5 text-[10px] text-muted-foreground">{label}</p>
+    <div className="rounded-xl bg-muted/50 py-2 md:py-2.5">
+      <p className="text-sm md:text-lg font-bold text-foreground leading-none">{value}</p>
+      <p className="mt-0.5 text-[10px] md:text-xs text-muted-foreground">{label}</p>
     </div>
   );
 }

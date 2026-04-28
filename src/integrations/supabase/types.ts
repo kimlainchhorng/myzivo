@@ -3923,6 +3923,60 @@ export type Database = {
         }
         Relationships: []
       }
+      ar_customer_vehicles: {
+        Row: {
+          color: string | null
+          created_at: string
+          id: string
+          make: string
+          mileage: number | null
+          model: string
+          notes: string | null
+          owner_email: string | null
+          owner_name: string
+          owner_phone: string | null
+          plate: string | null
+          store_id: string
+          updated_at: string
+          vin: string | null
+          year: number | null
+        }
+        Insert: {
+          color?: string | null
+          created_at?: string
+          id?: string
+          make: string
+          mileage?: number | null
+          model: string
+          notes?: string | null
+          owner_email?: string | null
+          owner_name: string
+          owner_phone?: string | null
+          plate?: string | null
+          store_id: string
+          updated_at?: string
+          vin?: string | null
+          year?: number | null
+        }
+        Update: {
+          color?: string | null
+          created_at?: string
+          id?: string
+          make?: string
+          mileage?: number | null
+          model?: string
+          notes?: string | null
+          owner_email?: string | null
+          owner_name?: string
+          owner_phone?: string | null
+          plate?: string | null
+          store_id?: string
+          updated_at?: string
+          vin?: string | null
+          year?: number | null
+        }
+        Relationships: []
+      }
       ar_estimates: {
         Row: {
           converted_workorder_id: string | null
@@ -3986,6 +4040,110 @@ export type Database = {
           updated_at?: string
           vehicle_id?: string | null
           vehicle_label?: string | null
+        }
+        Relationships: []
+      }
+      ar_expense_items: {
+        Row: {
+          created_at: string
+          expense_id: string
+          id: string
+          line_total_cents: number
+          name: string
+          part_number: string | null
+          position: number
+          quantity: number
+          unit_price_cents: number
+        }
+        Insert: {
+          created_at?: string
+          expense_id: string
+          id?: string
+          line_total_cents?: number
+          name: string
+          part_number?: string | null
+          position?: number
+          quantity?: number
+          unit_price_cents?: number
+        }
+        Update: {
+          created_at?: string
+          expense_id?: string
+          id?: string
+          line_total_cents?: number
+          name?: string
+          part_number?: string | null
+          position?: number
+          quantity?: number
+          unit_price_cents?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ar_expense_items_expense_id_fkey"
+            columns: ["expense_id"]
+            isOneToOne: false
+            referencedRelation: "ar_expenses"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      ar_expenses: {
+        Row: {
+          amount_cents: number
+          category: string
+          created_at: string
+          created_by: string | null
+          description: string | null
+          expense_date: string
+          id: string
+          invoice_number: string | null
+          invoice_time: string | null
+          notes: string | null
+          payment_method: string | null
+          receipt_url: string | null
+          store_id: string
+          subtotal_cents: number | null
+          tax_cents: number | null
+          updated_at: string
+          vendor: string | null
+        }
+        Insert: {
+          amount_cents?: number
+          category?: string
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          expense_date?: string
+          id?: string
+          invoice_number?: string | null
+          invoice_time?: string | null
+          notes?: string | null
+          payment_method?: string | null
+          receipt_url?: string | null
+          store_id: string
+          subtotal_cents?: number | null
+          tax_cents?: number | null
+          updated_at?: string
+          vendor?: string | null
+        }
+        Update: {
+          amount_cents?: number
+          category?: string
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          expense_date?: string
+          id?: string
+          invoice_number?: string | null
+          invoice_time?: string | null
+          notes?: string | null
+          payment_method?: string | null
+          receipt_url?: string | null
+          store_id?: string
+          subtotal_cents?: number | null
+          tax_cents?: number | null
+          updated_at?: string
+          vendor?: string | null
         }
         Relationships: []
       }
@@ -4074,6 +4232,280 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      ar_inspections: {
+        Row: {
+          checklist: Json
+          created_at: string
+          customer_vehicle_id: string | null
+          id: string
+          sent_at: string | null
+          share_token: string | null
+          status: string
+          store_id: string
+          summary: string | null
+          technician_id: string | null
+          technician_name: string | null
+          updated_at: string
+          vehicle_label: string | null
+        }
+        Insert: {
+          checklist?: Json
+          created_at?: string
+          customer_vehicle_id?: string | null
+          id?: string
+          sent_at?: string | null
+          share_token?: string | null
+          status?: string
+          store_id: string
+          summary?: string | null
+          technician_id?: string | null
+          technician_name?: string | null
+          updated_at?: string
+          vehicle_label?: string | null
+        }
+        Update: {
+          checklist?: Json
+          created_at?: string
+          customer_vehicle_id?: string | null
+          id?: string
+          sent_at?: string | null
+          share_token?: string | null
+          status?: string
+          store_id?: string
+          summary?: string | null
+          technician_id?: string | null
+          technician_name?: string | null
+          updated_at?: string
+          vehicle_label?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ar_inspections_customer_vehicle_id_fkey"
+            columns: ["customer_vehicle_id"]
+            isOneToOne: false
+            referencedRelation: "ar_customer_vehicles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      ar_invoice_payments: {
+        Row: {
+          amount_cents: number
+          created_at: string
+          created_by: string | null
+          id: string
+          invoice_id: string
+          method: string
+          notes: string | null
+          paid_at: string
+          reference: string | null
+          store_id: string
+        }
+        Insert: {
+          amount_cents: number
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          invoice_id: string
+          method?: string
+          notes?: string | null
+          paid_at?: string
+          reference?: string | null
+          store_id: string
+        }
+        Update: {
+          amount_cents?: number
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          invoice_id?: string
+          method?: string
+          notes?: string | null
+          paid_at?: string
+          reference?: string | null
+          store_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ar_invoice_payments_invoice_id_fkey"
+            columns: ["invoice_id"]
+            isOneToOne: false
+            referencedRelation: "ar_invoices"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      ar_invoices: {
+        Row: {
+          amount_paid_cents: number
+          created_at: string
+          created_by: string | null
+          customer_address: string | null
+          customer_email: string | null
+          customer_name: string | null
+          customer_phone: string | null
+          discount_cents: number
+          due_at: string | null
+          estimate_id: string | null
+          id: string
+          items: Json
+          notes: string | null
+          number: string
+          paid_at: string | null
+          sent_at: string | null
+          status: string
+          store_id: string
+          subtotal_cents: number
+          tax_cents: number
+          total_cents: number
+          updated_at: string
+          vehicle_label: string | null
+          vehicle_make: string | null
+          vehicle_model: string | null
+          vehicle_year: string | null
+          vin: string | null
+        }
+        Insert: {
+          amount_paid_cents?: number
+          created_at?: string
+          created_by?: string | null
+          customer_address?: string | null
+          customer_email?: string | null
+          customer_name?: string | null
+          customer_phone?: string | null
+          discount_cents?: number
+          due_at?: string | null
+          estimate_id?: string | null
+          id?: string
+          items?: Json
+          notes?: string | null
+          number: string
+          paid_at?: string | null
+          sent_at?: string | null
+          status?: string
+          store_id: string
+          subtotal_cents?: number
+          tax_cents?: number
+          total_cents?: number
+          updated_at?: string
+          vehicle_label?: string | null
+          vehicle_make?: string | null
+          vehicle_model?: string | null
+          vehicle_year?: string | null
+          vin?: string | null
+        }
+        Update: {
+          amount_paid_cents?: number
+          created_at?: string
+          created_by?: string | null
+          customer_address?: string | null
+          customer_email?: string | null
+          customer_name?: string | null
+          customer_phone?: string | null
+          discount_cents?: number
+          due_at?: string | null
+          estimate_id?: string | null
+          id?: string
+          items?: Json
+          notes?: string | null
+          number?: string
+          paid_at?: string | null
+          sent_at?: string | null
+          status?: string
+          store_id?: string
+          subtotal_cents?: number
+          tax_cents?: number
+          total_cents?: number
+          updated_at?: string
+          vehicle_label?: string | null
+          vehicle_make?: string | null
+          vehicle_model?: string | null
+          vehicle_year?: string | null
+          vin?: string | null
+        }
+        Relationships: []
+      }
+      ar_parts: {
+        Row: {
+          active: boolean
+          brand: string | null
+          category: string | null
+          created_at: string
+          id: string
+          image_url: string | null
+          name: string
+          price_cents: number
+          sku: string
+          stock: number
+          store_id: string
+          updated_at: string
+        }
+        Insert: {
+          active?: boolean
+          brand?: string | null
+          category?: string | null
+          created_at?: string
+          id?: string
+          image_url?: string | null
+          name: string
+          price_cents?: number
+          sku: string
+          stock?: number
+          store_id: string
+          updated_at?: string
+        }
+        Update: {
+          active?: boolean
+          brand?: string | null
+          category?: string | null
+          created_at?: string
+          id?: string
+          image_url?: string | null
+          name?: string
+          price_cents?: number
+          sku?: string
+          stock?: number
+          store_id?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      ar_payouts: {
+        Row: {
+          amount_cents: number
+          created_at: string
+          created_by: string | null
+          id: string
+          notes: string | null
+          payout_date: string
+          reference: string | null
+          source: string | null
+          store_id: string
+        }
+        Insert: {
+          amount_cents?: number
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          notes?: string | null
+          payout_date?: string
+          reference?: string | null
+          source?: string | null
+          store_id: string
+        }
+        Update: {
+          amount_cents?: number
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          notes?: string | null
+          payout_date?: string
+          reference?: string | null
+          source?: string | null
+          store_id?: string
+        }
+        Relationships: []
       }
       ar_recall_checks: {
         Row: {
@@ -4246,6 +4678,33 @@ export type Database = {
           speed_rating?: string | null
           store_id?: string
           updated_at?: string
+        }
+        Relationships: []
+      }
+      ar_vin_lookups: {
+        Row: {
+          created_at: string
+          decoded: Json
+          id: string
+          looked_up_by: string | null
+          store_id: string
+          vin: string
+        }
+        Insert: {
+          created_at?: string
+          decoded?: Json
+          id?: string
+          looked_up_by?: string | null
+          store_id: string
+          vin: string
+        }
+        Update: {
+          created_at?: string
+          decoded?: Json
+          id?: string
+          looked_up_by?: string | null
+          store_id?: string
+          vin?: string
         }
         Relationships: []
       }

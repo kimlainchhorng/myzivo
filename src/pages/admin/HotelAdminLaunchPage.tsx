@@ -3,6 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { BedDouble, CalendarRange, FileText, Hotel, KeyRound, ListChecks, Loader2, LogIn, MessageSquareText, PackagePlus, PlusCircle, ShieldCheck } from "lucide-react";
+import Tag from "lucide-react/dist/esm/icons/tag";
 import { useOwnerStoreProfile } from "@/hooks/useOwnerStoreProfile";
 import { useLodgingOpsData } from "@/components/admin/store/lodging/LodgingOperationsShared";
 import { getLodgingCompletion } from "@/lib/lodging/lodgingCompletion";
@@ -11,7 +12,7 @@ import { LODGING_TAB_IDS } from "@/lib/admin/storeTabRouting";
 
 const proofRows = ["20 hotel sections registered", "Deep-link refresh routing enabled", "Setup Wizard enabled", "QA checklist + PDF report enabled", "Empty-state audit enabled", "Unit and E2E coverage added"];
 const quickLinks = [
-  ["Rooms", "lodge-rooms", BedDouble], ["Rate Plans", "lodge-rate-plans", CalendarRange], ["Reservations", "lodge-reservations", CalendarRange], ["Front Desk", "lodge-frontdesk", KeyRound],
+  ["Rooms", "lodge-rooms", BedDouble], ["Rate Plans", "lodge-rate-plans", CalendarRange], ["Promotions & Discounts", "lodge-promos", Tag], ["Reservations", "lodge-reservations", CalendarRange], ["Front Desk", "lodge-frontdesk", KeyRound],
   ["Add-ons", "lodge-addons", PackagePlus], ["Guest Requests", "lodge-guest-requests", MessageSquareText], ["Reports", "lodge-reports", FileText], ["QA Checklist", "qa", ListChecks], ["Completion Verification", "verification", ShieldCheck],
 ] as const;
 const sectionDescriptions: Record<string, string> = {

@@ -213,7 +213,7 @@ export function LodgingRoomCard({
                       className="text-[10px] px-2 py-0.5 rounded-full bg-sky-50 text-sky-700 border border-sky-100 inline-flex items-center gap-1 font-medium dark:bg-sky-500/10 dark:text-sky-300 dark:border-sky-500/20"
                     >
                       <Icon className="h-2.5 w-2.5" />
-                      {a}
+                      {a.replace(/[_-]+/g, " ").replace(/\b\w/g, (c) => c.toUpperCase())}
                     </span>
                   );
                 })}

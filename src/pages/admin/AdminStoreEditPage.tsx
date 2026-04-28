@@ -66,6 +66,11 @@ import AutoRepairTiresSection from "@/components/admin/store/autorepair/AutoRepa
 import AutoRepairWarrantySection from "@/components/admin/store/autorepair/AutoRepairWarrantySection";
 import AutoRepairFleetSection from "@/components/admin/store/autorepair/AutoRepairFleetSection";
 import AutoRepairReportsSection from "@/components/admin/store/autorepair/AutoRepairReportsSection";
+import FinanceIncomeSection from "@/components/admin/store/autorepair/finance/FinanceIncomeSection";
+import FinanceExpensesSection from "@/components/admin/store/autorepair/finance/FinanceExpensesSection";
+import FinancePaymentsSection from "@/components/admin/store/autorepair/finance/FinancePaymentsSection";
+import FinanceProfitLossSection from "@/components/admin/store/autorepair/finance/FinanceProfitLossSection";
+import FinanceTaxPayoutsSection from "@/components/admin/store/autorepair/finance/FinanceTaxPayoutsSection";
 import LodgingRoomsSection from "@/components/admin/store/lodging/LodgingRoomsSection";
 import LodgingPropertyProfileSection from "@/components/admin/store/lodging/LodgingPropertyProfileSection";
 import LodgingReservationsSection from "@/components/admin/store/lodging/LodgingReservationsSection";
@@ -601,9 +606,11 @@ export default function AdminStoreEditPage() {
   }, [store]);
 
   useEffect(() => {
-    const isStoreLodging = isLodgingStoreCategory(store?.category);
+    const normalizedStoreCategory = (store?.category || "").toLowerCase().trim();
+    const isStoreLodging = isLodgingStoreCategory(normalizedStoreCategory);
+    const isStoreAutoRepair = normalizedStoreCategory === "auto-repair";
     const requestedTab = searchParams.get("tab");
-    const resolvedTab = resolveStoreTabFromSearch(searchParams, isStoreLodging);
+    const resolvedTab = resolveStoreTabFromSearch(searchParams, isStoreLodging, isStoreAutoRepair);
     if (requestedTab !== resolvedTab && (requestedTab || isStoreLodging)) {
       handleTabChange(resolvedTab);
       return;
@@ -2012,6 +2019,11 @@ export default function AdminStoreEditPage() {
     "ar-warranty": "Warranty & Comebacks",
     "ar-fleet": "Fleet Accounts",
     "ar-reports": "Reports & Analytics",
+    "ar-fin-income": "Finance — Income & Revenue",
+    "ar-fin-expenses": "Finance — Expenses & Bills",
+    "ar-fin-payments": "Finance — Payments Received",
+    "ar-fin-pnl": "Finance — Profit & Loss",
+    "ar-fin-tax": "Finance — Tax & Payouts",
   };
   const lodgingTitles: Record<string, string> = {
     "lodge-overview": "Hotel Overview",
@@ -3718,19 +3730,24 @@ export default function AdminStoreEditPage() {
 
           {form.category === "auto-repair" && (
             <>
-              <TabsContent value="ar-invoices"><AutoRepairInvoicesSection storeId={storeId!} /></TabsContent>
-              <TabsContent value="ar-autocheck"><AutoRepairAutoCheckSection storeId={storeId!} /></TabsContent>
-              <TabsContent value="ar-parts"><AutoRepairPartShopSection storeId={storeId!} /></TabsContent>
-              <TabsContent value="ar-inspections"><AutoRepairInspectionsSection storeId={storeId!} /></TabsContent>
-              <TabsContent value="ar-vehicles"><AutoRepairVehiclesSection storeId={storeId!} /></TabsContent>
-              <TabsContent value="ar-estimates"><AutoRepairEstimatesSection storeId={storeId!} /></TabsContent>
-              <TabsContent value="ar-workorders"><AutoRepairWorkOrdersSection storeId={storeId!} /></TabsContent>
-              <TabsContent value="ar-techs"><AutoRepairTechniciansSection storeId={storeId!} /></TabsContent>
-              <TabsContent value="ar-reminders"><AutoRepairRemindersSection storeId={storeId!} /></TabsContent>
-              <TabsContent value="ar-tires"><AutoRepairTiresSection storeId={storeId!} /></TabsContent>
-              <TabsContent value="ar-warranty"><AutoRepairWarrantySection storeId={storeId!} /></TabsContent>
-              <TabsContent value="ar-fleet"><AutoRepairFleetSection storeId={storeId!} /></TabsContent>
-              <TabsContent value="ar-reports"><AutoRepairReportsSection storeId={storeId!} /></TabsContent>
+              <TabsContent value="ar-invoices"><div><AutoRepairInvoicesSection storeId={storeId!} /></div></TabsContent>
+              <TabsContent value="ar-autocheck"><div><AutoRepairAutoCheckSection storeId={storeId!} /></div></TabsContent>
+              <TabsContent value="ar-parts"><div><AutoRepairPartShopSection storeId={storeId!} /></div></TabsContent>
+              <TabsContent value="ar-inspections"><div><AutoRepairInspectionsSection storeId={storeId!} /></div></TabsContent>
+              <TabsContent value="ar-vehicles"><div><AutoRepairVehiclesSection storeId={storeId!} /></div></TabsContent>
+              <TabsContent value="ar-estimates"><div><AutoRepairEstimatesSection storeId={storeId!} /></div></TabsContent>
+              <TabsContent value="ar-workorders"><div><AutoRepairWorkOrdersSection storeId={storeId!} /></div></TabsContent>
+              <TabsContent value="ar-techs"><div><AutoRepairTechniciansSection storeId={storeId!} /></div></TabsContent>
+              <TabsContent value="ar-reminders"><div><AutoRepairRemindersSection storeId={storeId!} /></div></TabsContent>
+              <TabsContent value="ar-tires"><div><AutoRepairTiresSection storeId={storeId!} /></div></TabsContent>
+              <TabsContent value="ar-warranty"><div><AutoRepairWarrantySection storeId={storeId!} /></div></TabsContent>
+              <TabsContent value="ar-fleet"><div><AutoRepairFleetSection storeId={storeId!} /></div></TabsContent>
+              <TabsContent value="ar-reports"><div><AutoRepairReportsSection storeId={storeId!} /></div></TabsContent>
+              <TabsContent value="ar-fin-income"><div><FinanceIncomeSection storeId={storeId!} /></div></TabsContent>
+              <TabsContent value="ar-fin-expenses"><div><FinanceExpensesSection storeId={storeId!} /></div></TabsContent>
+              <TabsContent value="ar-fin-payments"><div><FinancePaymentsSection storeId={storeId!} /></div></TabsContent>
+              <TabsContent value="ar-fin-pnl"><div><FinanceProfitLossSection storeId={storeId!} /></div></TabsContent>
+              <TabsContent value="ar-fin-tax"><div><FinanceTaxPayoutsSection storeId={storeId!} /></div></TabsContent>
             </>
           )}
 
