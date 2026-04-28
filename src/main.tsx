@@ -11,7 +11,8 @@ idle(() => {
   import("@/lib/security/errorReporting").then(m => m.setupGlobalErrorHandlers());
   
   import("@capacitor/core").then(({ Capacitor }) => {
-    const isNativeIOS = Capacitor.isNativePlatform() && Capacitor.getPlatform() === "ios";
+    if (!Capacitor.isNativePlatform()) return;
+    const isNativeIOS = Capacitor.getPlatform() === "ios";
     if (!isNativeIOS) return;
     
     import("@capacitor/status-bar").then(({ StatusBar, Style }) => {
