@@ -565,7 +565,7 @@ export default function HotelResortDetailPage() {
                 className="flex items-center gap-3 rounded-xl border border-border bg-card px-3 py-2.5 active:scale-[0.99]"
               >
                 <Phone className="w-4 h-4 text-primary" />
-                <span className="text-sm text-foreground">{profile?.contact?.phone || store?.phone}</span>
+                <span className="text-sm text-foreground">{formatPhone(profile?.contact?.phone || store?.phone)}</span>
               </a>
             )}
             {profile?.contact?.whatsapp && (
@@ -599,7 +599,8 @@ export default function HotelResortDetailPage() {
 
       {/* Owner band */}
       {isOwner && (
-        <Section title="Owner tools">
+        <section className="px-4 mt-5 mb-4">
+          <h2 className="text-sm font-bold text-foreground mb-2">Owner tools</h2>
           <div className="rounded-2xl border border-primary/20 bg-primary/5 p-3 flex items-center gap-3">
             <div className="h-9 w-9 rounded-xl bg-primary/15 flex items-center justify-center text-primary">
               <Settings className="w-4 h-4" />
@@ -615,7 +616,7 @@ export default function HotelResortDetailPage() {
               Admin
             </Button>
           </div>
-        </Section>
+        </section>
       )}
 
       </div>
