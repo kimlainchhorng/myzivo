@@ -4043,6 +4043,50 @@ export type Database = {
         }
         Relationships: []
       }
+      ar_expense_items: {
+        Row: {
+          created_at: string
+          expense_id: string
+          id: string
+          line_total_cents: number
+          name: string
+          part_number: string | null
+          position: number
+          quantity: number
+          unit_price_cents: number
+        }
+        Insert: {
+          created_at?: string
+          expense_id: string
+          id?: string
+          line_total_cents?: number
+          name: string
+          part_number?: string | null
+          position?: number
+          quantity?: number
+          unit_price_cents?: number
+        }
+        Update: {
+          created_at?: string
+          expense_id?: string
+          id?: string
+          line_total_cents?: number
+          name?: string
+          part_number?: string | null
+          position?: number
+          quantity?: number
+          unit_price_cents?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ar_expense_items_expense_id_fkey"
+            columns: ["expense_id"]
+            isOneToOne: false
+            referencedRelation: "ar_expenses"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       ar_expenses: {
         Row: {
           amount_cents: number
@@ -4052,10 +4096,14 @@ export type Database = {
           description: string | null
           expense_date: string
           id: string
+          invoice_number: string | null
+          invoice_time: string | null
           notes: string | null
           payment_method: string | null
           receipt_url: string | null
           store_id: string
+          subtotal_cents: number | null
+          tax_cents: number | null
           updated_at: string
           vendor: string | null
         }
@@ -4067,10 +4115,14 @@ export type Database = {
           description?: string | null
           expense_date?: string
           id?: string
+          invoice_number?: string | null
+          invoice_time?: string | null
           notes?: string | null
           payment_method?: string | null
           receipt_url?: string | null
           store_id: string
+          subtotal_cents?: number | null
+          tax_cents?: number | null
           updated_at?: string
           vendor?: string | null
         }
@@ -4082,10 +4134,14 @@ export type Database = {
           description?: string | null
           expense_date?: string
           id?: string
+          invoice_number?: string | null
+          invoice_time?: string | null
           notes?: string | null
           payment_method?: string | null
           receipt_url?: string | null
           store_id?: string
+          subtotal_cents?: number | null
+          tax_cents?: number | null
           updated_at?: string
           vendor?: string | null
         }
