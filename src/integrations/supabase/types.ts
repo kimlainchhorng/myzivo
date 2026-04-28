@@ -3923,6 +3923,60 @@ export type Database = {
         }
         Relationships: []
       }
+      ar_customer_vehicles: {
+        Row: {
+          color: string | null
+          created_at: string
+          id: string
+          make: string
+          mileage: number | null
+          model: string
+          notes: string | null
+          owner_email: string | null
+          owner_name: string
+          owner_phone: string | null
+          plate: string | null
+          store_id: string
+          updated_at: string
+          vin: string | null
+          year: number | null
+        }
+        Insert: {
+          color?: string | null
+          created_at?: string
+          id?: string
+          make: string
+          mileage?: number | null
+          model: string
+          notes?: string | null
+          owner_email?: string | null
+          owner_name: string
+          owner_phone?: string | null
+          plate?: string | null
+          store_id: string
+          updated_at?: string
+          vin?: string | null
+          year?: number | null
+        }
+        Update: {
+          color?: string | null
+          created_at?: string
+          id?: string
+          make?: string
+          mileage?: number | null
+          model?: string
+          notes?: string | null
+          owner_email?: string | null
+          owner_name?: string
+          owner_phone?: string | null
+          plate?: string | null
+          store_id?: string
+          updated_at?: string
+          vin?: string | null
+          year?: number | null
+        }
+        Relationships: []
+      }
       ar_estimates: {
         Row: {
           converted_workorder_id: string | null
@@ -4071,6 +4125,62 @@ export type Database = {
             columns: ["fleet_account_id"]
             isOneToOne: false
             referencedRelation: "ar_fleet_accounts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      ar_inspections: {
+        Row: {
+          checklist: Json
+          created_at: string
+          customer_vehicle_id: string | null
+          id: string
+          sent_at: string | null
+          share_token: string | null
+          status: string
+          store_id: string
+          summary: string | null
+          technician_id: string | null
+          technician_name: string | null
+          updated_at: string
+          vehicle_label: string | null
+        }
+        Insert: {
+          checklist?: Json
+          created_at?: string
+          customer_vehicle_id?: string | null
+          id?: string
+          sent_at?: string | null
+          share_token?: string | null
+          status?: string
+          store_id: string
+          summary?: string | null
+          technician_id?: string | null
+          technician_name?: string | null
+          updated_at?: string
+          vehicle_label?: string | null
+        }
+        Update: {
+          checklist?: Json
+          created_at?: string
+          customer_vehicle_id?: string | null
+          id?: string
+          sent_at?: string | null
+          share_token?: string | null
+          status?: string
+          store_id?: string
+          summary?: string | null
+          technician_id?: string | null
+          technician_name?: string | null
+          updated_at?: string
+          vehicle_label?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ar_inspections_customer_vehicle_id_fkey"
+            columns: ["customer_vehicle_id"]
+            isOneToOne: false
+            referencedRelation: "ar_customer_vehicles"
             referencedColumns: ["id"]
           },
         ]
@@ -57274,7 +57384,6 @@ export type Database = {
       vehicles: {
         Row: {
           approval_status: Database["public"]["Enums"]["approval_status"]
-          assigned_store_id: string | null
           capacity: number | null
           color: string | null
           created_at: string
@@ -57301,7 +57410,6 @@ export type Database = {
         }
         Insert: {
           approval_status?: Database["public"]["Enums"]["approval_status"]
-          assigned_store_id?: string | null
           capacity?: number | null
           color?: string | null
           created_at?: string
@@ -57328,7 +57436,6 @@ export type Database = {
         }
         Update: {
           approval_status?: Database["public"]["Enums"]["approval_status"]
-          assigned_store_id?: string | null
           capacity?: number | null
           color?: string | null
           created_at?: string
