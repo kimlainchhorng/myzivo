@@ -21,7 +21,8 @@ export default function AccountExportPage() {
     try {
       // Gather data
       const [{ data: profile }, { data: posts }, { data: messages }] = await Promise.all([
-        supabase.from("profiles").select("*").eq("id", user.id).single(),
+        // Use security-definer RPC so the owner can read their own PII columns.
+        supabase.rpc("get_my_profile").single(),
         (supabase as any).from("user_posts").select("*").eq("user_id", user.id),
         supabase.from("messages").select("*").or(`sender_id.eq.${user.id},receiver_id.eq.${user.id}`).limit(500),
       ]);
