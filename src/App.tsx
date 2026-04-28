@@ -567,12 +567,35 @@ const PartnerOnboardingDispatcher = () => {
   return params.get("type") ? <PartnerOnboarding /> : <PartnerWithZivo />;
 };
 
+function useAfterFirstPaint(timeout = 1600) {
+  const [ready, setReady] = useState(false);
+  useEffect(() => {
+    const schedule = window.requestIdleCallback || ((cb: () => void) => window.setTimeout(cb, timeout));
+    const cancel = window.cancelIdleCallback || window.clearTimeout;
+    const handle = schedule(() => setReady(true), { timeout } as IdleRequestOptions);
+    return () => cancel(handle as number);
+  }, [timeout]);
+  return ready;
+}
+
+function DeferredPageViewTracker() {
+  const ready = useAfterFirstPaint(2200);
+  return ready ? <PageViewTracker /> : null;
+}
+
+function DeferredGeoDetector() {
+  const ready = useAfterFirstPaint(3500);
+  return ready ? <GeoDetector /> : null;
+}
+
 function RouteAwareGlobalUI() {
   const location = useLocation();
+  const { user } = useAuth();
+  const ready = useAfterFirstPaint(2600);
   const blockedRoutes = ["/login", "/signup", "/setup", "/forgot-password", "/reset-password", "/verify-email", "/verify-otp", "/verify-new-device"];
   const hideGlobalUI = blockedRoutes.some((route) => location.pathname.startsWith(route));
 
-  if (hideGlobalUI) return null;
+  if (hideGlobalUI || !ready) return null;
 
   return (
     <Suspense fallback={null}>
@@ -582,9 +605,9 @@ function RouteAwareGlobalUI() {
       <InAppBrowserInterstitial />
       <SpatialCursor />
       <RuntimeSecurityGuard />
-      <IncomingCallListener />
-      <ChatNotificationListener />
-      <AppLockGate />
+      {user && <IncomingCallListener />}
+      {user && <ChatNotificationListener />}
+      {user && <AppLockGate />}
     </Suspense>
   );
 }
@@ -594,6 +617,21 @@ const VerificationRealtimeBridge = () => {
   useVerificationRealtime();
   return null;
 };
+
+function AuthBackgroundServices() {
+  const { user } = useAuth();
+  const ready = useAfterFirstPaint(2200);
+  if (!user || !ready) return null;
+  return (
+    <Suspense fallback={null}>
+      {import.meta.env.DEV && <StoryDebugPanel />}
+      <VerificationRealtimeBridge />
+      <PushNotificationsBootstrap />
+      <GeofenceBootstrap />
+      <DeletionReturnDialog />
+    </Suspense>
+  );
+}
 
 const App = () => (
   <ErrorBoundary>
