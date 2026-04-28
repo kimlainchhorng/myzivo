@@ -137,10 +137,56 @@ export default function HotelResortDetailPage() {
     return Array.from(new Set(merged.map((a) => a?.toString().trim()).filter(Boolean))).slice(0, 12);
   }, [profile]);
 
+  // Active public promotion (largest wins)
+  const promotionQuery = useQuery({
+    queryKey: ["hotel-detail-promo", storeId],
+    enabled: !!storeId,
+    queryFn: async (): Promise<PromoInfo | null> => {
+      const nowIso = new Date().toISOString();
+      const { data, error } = await (supabase as any)
+        .from("lodging_promotions")
+        .select("promo_type, discount_value, name, starts_at, ends_at, active, member_only")
+        .eq("store_id", storeId)
+        .eq("active", true)
+        .eq("member_only", false);
+      if (error) return null;
+      let best: PromoInfo | null = null;
+      for (const r of (data || []) as Array<any>) {
+        if (r.starts_at && r.starts_at > nowIso) continue;
+        if (r.ends_at && r.ends_at < nowIso) continue;
+        const value = Number(r.discount_value) || 0;
+        if (value <= 0) continue;
+        const candidate: PromoInfo = {
+          type: r.promo_type === "fixed" ? "fixed" : "percent",
+          value,
+          name: r.name || "",
+        };
+        if (!best || candidate.value > best.value) best = candidate;
+      }
+      return best;
+    },
+  });
+  const promo = promotionQuery.data;
+
   const minPriceCents = useMemo(() => {
     const prices = activeRooms.map((r) => r.base_rate_cents).filter((p) => p > 0);
     return prices.length ? Math.min(...prices) : 0;
   }, [activeRooms]);
+
+  // Apply promo to a base price -> { discounted, pctOff }
+  const applyPromo = (baseCents: number) => {
+    if (!baseCents || !promo) return { discounted: baseCents, pctOff: 0 };
+    if (promo.type === "percent") {
+      const pct = Math.round(promo.value);
+      return { discounted: Math.round(baseCents * (1 - pct / 100)), pctOff: pct };
+    }
+    const off = Math.round(promo.value * 100);
+    const discounted = Math.max(0, baseCents - off);
+    const pctOff = Math.round((1 - discounted / baseCents) * 100);
+    return { discounted, pctOff };
+  };
+
+  const minDeal = useMemo(() => applyPromo(minPriceCents), [minPriceCents, promo]);
 
   const [bookingOpen, setBookingOpen] = useState(false);
 
