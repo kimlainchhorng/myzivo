@@ -862,13 +862,15 @@ export default function AdminBookingsTab({ storeId }: { storeId: string }) {
                   </Button>
                 </PopoverTrigger>
                 <PopoverContent className="w-auto p-0" align="start">
-                  <Calendar
-                    mode="single"
-                    selected={rescheduleDialog.date}
-                    onSelect={d => setRescheduleDialog(r => ({ ...r, date: d }))}
-                    disabled={d => d < new Date()}
-                    className="p-3 pointer-events-auto"
-                  />
+                  <div>
+                    <Calendar
+                      mode="single"
+                      selected={rescheduleDialog.date}
+                      onSelect={d => setRescheduleDialog(r => ({ ...r, date: d }))}
+                      disabled={d => d < new Date()}
+                      className="p-3 pointer-events-auto"
+                    />
+                  </div>
                 </PopoverContent>
               </Popover>
             </div>
@@ -938,7 +940,9 @@ export default function AdminBookingsTab({ storeId }: { storeId: string }) {
                     </Button>
                   </PopoverTrigger>
                   <PopoverContent className="w-auto p-0" align="start">
-                    <Calendar mode="single" selected={newDialog.date} onSelect={d => setNewDialog(n => ({ ...n, date: d }))} className="p-3 pointer-events-auto" />
+                    <div>
+                      <Calendar mode="single" selected={newDialog.date} onSelect={d => setNewDialog(n => ({ ...n, date: d }))} className="p-3 pointer-events-auto" />
+                    </div>
                   </PopoverContent>
                 </Popover>
               </div>
