@@ -376,8 +376,8 @@ const AppHome = () => {
                 <motion.button
                   key={tab.id}
                   onClick={() => {
-                    if (isActive && tab.id === "hotels") {
-                      navigate("/hotels-list");
+                    if (tab.id === "hotels") {
+                      navigate("/hotels");
                       return;
                     }
                     setActiveHomeTab(tab.id);
@@ -449,7 +449,7 @@ const AppHome = () => {
                   rides: "/rides",
                   eats: "/eats",
                   flights: "/flights",
-                  hotels: "/hotels-list",
+                  hotels: "/hotels",
                 };
                 navigate(routes[activeHomeTab] || "/rides");
               }}
