@@ -1,4 +1,5 @@
-import { useParams } from "react-router-dom";
+import { useParams, useNavigate } from "react-router-dom";
+import { ChevronLeft } from "lucide-react";
 import { useChannel } from "@/hooks/useChannel";
 import { ChannelHeader } from "@/components/channels/ChannelHeader";
 import { ChannelPostCard } from "@/components/channels/ChannelPostCard";
