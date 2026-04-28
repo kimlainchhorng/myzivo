@@ -1,145 +1,23 @@
 import { useEffect, lazy, Suspense } from "react";
-import { useNavigate } from "react-router-dom";
+import { Navigate, useNavigate } from "react-router-dom";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "@/hooks/use-toast";
 import SetupRequiredRoute from "@/components/auth/SetupRequiredRoute";
-import Footer from "@/components/Footer";
-import { OGImageMeta } from "@/components/marketing";
-import { WinBackBanner } from "@/components/home/WinBackBanner";
-import LazySection from "@/components/shared/LazySection";
-import { OrganizationSchema, WebsiteSearchSchema } from "@/components/seo/StructuredData";
-import {
-  CardGridSkeleton,
-  RoutesSkeleton,
-  StepsSkeleton,
-  TestimonialsSkeleton,
-  BannerSkeleton,
-  LogosSkeleton,
-} from "@/components/shared/SectionSkeleton";
 import { lazyRetry } from "@/lib/lazyRetry";
-
-// Above-fold components (eager loaded for fast LCP)
-import NavBar from "@/components/home/NavBar";
-import HeroSection from "@/components/home/HeroSection";
-import HeroSearchCard from "@/components/home/HeroSearchCard";
-import ServicesShowcase from "@/components/home/ServicesShowcase";
-import StatsSection from "@/components/home/StatsSection";
-
-// Below-fold components (lazy loaded with retry for chunk resilience)
-const DestinationShowcase = lazy(() => lazyRetry(() => import("@/components/home/DestinationShowcase")));
-const PopularRoutesSection = lazy(() => lazyRetry(() => import("@/components/home/PopularRoutesSection")));
-const FeaturedCarsSection = lazy(() => lazyRetry(() => import("@/components/home/FeaturedCarsSection")));
-const FeaturedHotelsSection = lazy(() => lazyRetry(() => import("@/components/home/FeaturedHotelsSection")));
-const FeaturedEatsSection = lazy(() => lazyRetry(() => import("@/components/home/FeaturedEatsSection")));
-const HowItWorksSection = lazy(() => lazyRetry(() => import("@/components/home/HowItWorksSection")));
-const TestimonialsSection = lazy(() => lazyRetry(() => import("@/components/home/TestimonialsSection")));
-const PartnerLogosSection = lazy(() => lazyRetry(() => import("@/components/home/PartnerLogosSection")));
-const DownloadAppSection = lazy(() => lazyRetry(() => import("@/components/home/DownloadAppSection")));
-const NewsletterSection = lazy(() => lazyRetry(() => import("@/components/home/NewsletterSection")));
-const VideoAdsSection = lazy(() => lazyRetry(() => import("@/components/home/VideoAdsSection")));
-const ServiceFlowBanner = lazy(() => lazyRetry(() => import("@/components/home/ServiceFlowBanner")));
-
-// Mobile-native power sections — now on desktop too
-const AISmartDeals = lazy(() => lazyRetry(() => import("@/components/home/AISmartDeals")));
-const TrendingNearYou = lazy(() => lazyRetry(() => import("@/components/home/TrendingNearYou")));
-const LiveTripTracker = lazy(() => lazyRetry(() => import("@/components/home/widgets/LiveTripTracker")));
-const PriceAlertsWidget = lazy(() => lazyRetry(() => import("@/components/home/widgets/PriceAlertsWidget")));
-const DesktopHotDeals = lazy(() => lazyRetry(() => import("@/components/home/DesktopHotDeals")));
 
 // Mobile app home
 const AppHome = lazy(() => lazyRetry(() => import("@/pages/app/AppHome")));
-
-// Desktop version - Premium layout with mobile-app power features
-const DesktopHomePage = () => {
-  const { user } = useAuth();
-
-  return (
-    <div className="min-h-screen bg-background perspective-container">
-      <OGImageMeta pageType="homepage" />
-      <OrganizationSchema />
-      <WebsiteSearchSchema />
-      <NavBar />
-
-      <main id="main-content" className="pt-16">
-        {user && <WinBackBanner className="mx-auto max-w-5xl mt-4 mx-4 sm:mx-8" />}
-
-        {/* Above-fold: Eager loaded */}
-        <HeroSection />
-        <HeroSearchCard />
-        <ServicesShowcase />
-        <StatsSection />
-
-        {/* ─── MOBILE-APP POWER SECTIONS (lazy with rootMargin for just-in-time load) ─── */}
-        <LazySection rootMargin="400px">
-          <Suspense fallback={<div className="h-20" />}>
-            <div className="max-w-7xl mx-auto px-4 sm:px-8">
-              <LiveTripTracker />
-            </div>
-          </Suspense>
-        </LazySection>
-
-        <LazySection rootMargin="300px">
-          <Suspense fallback={<CardGridSkeleton />}>
-            <div className="max-w-7xl mx-auto px-4 sm:px-8 py-8">
-              <TrendingNearYou />
-            </div>
-          </Suspense>
-        </LazySection>
-
-        <LazySection rootMargin="300px">
-          <Suspense fallback={<CardGridSkeleton />}>
-            <div className="max-w-7xl mx-auto px-4 sm:px-8 py-8">
-              <AISmartDeals />
-            </div>
-          </Suspense>
-        </LazySection>
-
-        <LazySection rootMargin="300px">
-          <Suspense fallback={<CardGridSkeleton />}>
-            <div className="max-w-7xl mx-auto px-4 sm:px-8 py-8">
-              <DesktopHotDeals />
-            </div>
-          </Suspense>
-        </LazySection>
-
-        <LazySection rootMargin="300px">
-          <Suspense fallback={<div className="h-20" />}>
-            <div className="max-w-7xl mx-auto px-4 sm:px-8 py-8">
-              <PriceAlertsWidget />
-            </div>
-          </Suspense>
-        </LazySection>
-
-        {/* ─── EXISTING BELOW-FOLD SECTIONS — load just before viewport ─── */}
-        <LazySection rootMargin="300px"><Suspense fallback={<BannerSkeleton />}><VideoAdsSection /></Suspense></LazySection>
-        <LazySection rootMargin="300px"><Suspense fallback={<RoutesSkeleton />}><PopularRoutesSection /></Suspense></LazySection>
-        <LazySection rootMargin="300px"><Suspense fallback={<BannerSkeleton />}><ServiceFlowBanner /></Suspense></LazySection>
-        <LazySection rootMargin="300px"><Suspense fallback={<LogosSkeleton />}><PartnerLogosSection /></Suspense></LazySection>
-        <LazySection rootMargin="300px"><Suspense fallback={<CardGridSkeleton />}><DestinationShowcase /></Suspense></LazySection>
-        <LazySection rootMargin="300px"><Suspense fallback={<CardGridSkeleton />}><FeaturedCarsSection /></Suspense></LazySection>
-        <LazySection rootMargin="300px"><Suspense fallback={<CardGridSkeleton />}><FeaturedHotelsSection /></Suspense></LazySection>
-        <LazySection rootMargin="300px"><Suspense fallback={<CardGridSkeleton />}><FeaturedEatsSection /></Suspense></LazySection>
-        <LazySection rootMargin="300px"><Suspense fallback={<StepsSkeleton />}><HowItWorksSection /></Suspense></LazySection>
-        <LazySection rootMargin="300px"><Suspense fallback={<TestimonialsSkeleton />}><TestimonialsSection /></Suspense></LazySection>
-        <LazySection rootMargin="300px"><Suspense fallback={<BannerSkeleton />}><DownloadAppSection /></Suspense></LazySection>
-        <LazySection rootMargin="300px"><Suspense fallback={<BannerSkeleton />}><NewsletterSection /></Suspense></LazySection>
-      </main>
-
-      <Footer />
-    </div>
-  );
-};
 
 const Index = () => {
   const isMobile = useIsMobile();
   const { user } = useAuth();
   const navigate = useNavigate();
+  const params = new URLSearchParams(window.location.search);
+  const shareCode = params.get("p");
   
   useEffect(() => {
-    const params = new URLSearchParams(window.location.search);
     const hashParams = new URLSearchParams(window.location.hash.substring(1));
-    const shareCode = params.get("p");
     const error = params.get("error") || hashParams.get("error");
     const errorDesc = params.get("error_description") || hashParams.get("error_description");
 
@@ -161,14 +39,11 @@ const Index = () => {
       toast({ title: "Sign-up blocked", description: message, variant: "destructive" });
       window.history.replaceState({}, "", window.location.pathname);
     }
-  }, [navigate]);
+  }, [navigate, params, shareCode]);
 
-  useEffect(() => {
-    // Redirect desktop users to /feed immediately
-    if (!isMobile) {
-      navigate("/feed", { replace: true });
-    }
-  }, [isMobile, navigate]);
+  if (shareCode && /^[a-z0-9_-]{4,64}$/i.test(shareCode)) {
+    return <Navigate to={`/p/${shareCode}`} replace />;
+  }
 
   if (isMobile) {
     if (user) {
@@ -187,7 +62,7 @@ const Index = () => {
     );
   }
 
-  return null;
+  return <Navigate to="/feed" replace />;
 };
 
 export default Index;
