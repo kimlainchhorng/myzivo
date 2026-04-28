@@ -40,17 +40,43 @@ export default function ContactsPage() {
   return (
     <div className="min-h-[100dvh] bg-background">
       <header className="sticky top-0 z-20 bg-background/80 backdrop-blur border-b px-4 py-3 flex items-center gap-2 safe-area-top">
-        <button onClick={goBack} className="w-9 h-9 flex items-center justify-center rounded-full hover:bg-muted">
+        <button
+          onClick={goBack}
+          aria-label="Go back"
+          title="Back"
+          className="w-9 h-9 flex items-center justify-center rounded-full hover:bg-muted focus-visible:ring-2 focus-visible:ring-emerald-500 focus-visible:outline-none"
+        >
           <ArrowLeft className="w-5 h-5" />
         </button>
         <h1 className="text-xl font-bold flex-1">Contacts</h1>
-        <Button size="icon" variant="ghost" onClick={() => setInviteOpen(true)} aria-label="Invite friends">
+        <Button
+          size="icon"
+          variant="ghost"
+          onClick={() => setInviteOpen(true)}
+          aria-label="Invite friends"
+          title="Invite friends"
+          className="focus-visible:ring-2 focus-visible:ring-emerald-500"
+        >
           <Share2 className="w-5 h-5" />
         </Button>
-        <Button size="icon" variant="ghost" onClick={() => navigate("/chat/qr")} aria-label="QR code">
+        <Button
+          size="icon"
+          variant="ghost"
+          onClick={() => navigate("/chat/qr")}
+          aria-label="Open QR code"
+          title="QR code"
+          className="focus-visible:ring-2 focus-visible:ring-emerald-500"
+        >
           <QrCode className="w-5 h-5" />
         </Button>
-        <Button size="icon" variant="ghost" onClick={() => setAddOpen(true)} aria-label="Add contact">
+        <Button
+          size="icon"
+          variant="ghost"
+          onClick={() => setAddOpen(true)}
+          aria-label="Add contact"
+          title="Add contact"
+          className="focus-visible:ring-2 focus-visible:ring-emerald-500"
+        >
           <UserPlus className="w-5 h-5" />
         </Button>
       </header>
@@ -71,10 +97,12 @@ export default function ContactsPage() {
           </div>
         </button>
 
-        <div className="grid grid-cols-4 gap-2">
+        <nav aria-label="Contact quick actions" className="grid grid-cols-4 gap-2">
           <button
+            type="button"
             onClick={() => navigate("/chat/find-contacts")}
-            className="flex flex-col items-center gap-1.5 p-3 rounded-2xl border bg-card hover:bg-muted/50 active:scale-[0.98] transition"
+            aria-label="Find people by phone number"
+            className="flex flex-col items-center gap-1.5 p-3 rounded-2xl border bg-card hover:bg-muted/50 active:scale-[0.98] transition focus-visible:ring-2 focus-visible:ring-emerald-500 focus-visible:outline-none"
           >
             <div className="w-9 h-9 rounded-full bg-sky-500/15 text-sky-600 flex items-center justify-center">
               <Phone className="w-4 h-4" />
@@ -82,8 +110,10 @@ export default function ContactsPage() {
             <span className="text-[11px] font-medium leading-tight text-center">Find by phone</span>
           </button>
           <button
+            type="button"
             onClick={() => navigate("/chat/find-contacts")}
-            className="flex flex-col items-center gap-1.5 p-3 rounded-2xl border bg-card hover:bg-muted/50 active:scale-[0.98] transition"
+            aria-label="Sync contacts from your phone"
+            className="flex flex-col items-center gap-1.5 p-3 rounded-2xl border bg-card hover:bg-muted/50 active:scale-[0.98] transition focus-visible:ring-2 focus-visible:ring-emerald-500 focus-visible:outline-none"
           >
             <div className="w-9 h-9 rounded-full bg-violet-500/15 text-violet-600 flex items-center justify-center">
               <Smartphone className="w-4 h-4" />
@@ -91,8 +121,10 @@ export default function ContactsPage() {
             <span className="text-[11px] font-medium leading-tight text-center">Sync phone</span>
           </button>
           <button
+            type="button"
             onClick={() => navigate("/chat/contacts/requests")}
-            className="flex flex-col items-center gap-1.5 p-3 rounded-2xl border bg-card hover:bg-muted/50 active:scale-[0.98] transition"
+            aria-label="View incoming and sent contact requests"
+            className="flex flex-col items-center gap-1.5 p-3 rounded-2xl border bg-card hover:bg-muted/50 active:scale-[0.98] transition focus-visible:ring-2 focus-visible:ring-emerald-500 focus-visible:outline-none"
           >
             <div className="w-9 h-9 rounded-full bg-amber-500/15 text-amber-600 flex items-center justify-center">
               <Inbox className="w-4 h-4" />
@@ -100,15 +132,17 @@ export default function ContactsPage() {
             <span className="text-[11px] font-medium leading-tight text-center">Requests</span>
           </button>
           <button
+            type="button"
             onClick={() => navigate("/chat/nearby")}
-            className="flex flex-col items-center gap-1.5 p-3 rounded-2xl border bg-card hover:bg-muted/50 active:scale-[0.98] transition"
+            aria-label="Find people nearby"
+            className="flex flex-col items-center gap-1.5 p-3 rounded-2xl border bg-card hover:bg-muted/50 active:scale-[0.98] transition focus-visible:ring-2 focus-visible:ring-emerald-500 focus-visible:outline-none"
           >
             <div className="w-9 h-9 rounded-full bg-emerald-500/15 text-emerald-600 flex items-center justify-center">
               <MapPin className="w-4 h-4" />
             </div>
             <span className="text-[11px] font-medium leading-tight text-center">Nearby</span>
           </button>
-        </div>
+        </nav>
 
         <div className="relative">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />

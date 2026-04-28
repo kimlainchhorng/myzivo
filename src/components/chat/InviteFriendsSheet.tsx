@@ -1,15 +1,19 @@
 /**
  * InviteFriendsSheet — Share a personal invite link via SMS, email, native share or copy.
+ * Also supports sending a ZIVO contact request to an existing user by @username.
  * Falls back to mailto:/sms: when native share is unavailable.
  */
 import { useMemo, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Share2, MessageSquare, Mail, Copy, Check, Send } from "lucide-react";
+import { Share2, MessageSquare, Mail, Copy, Check, Send, AtSign, UserPlus, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import { useUsername } from "@/hooks/useUsername";
 import { useAuth } from "@/contexts/AuthContext";
+import { useContacts } from "@/hooks/useContacts";
+import { useContactRequests } from "@/hooks/useContactRequests";
 
 export default function InviteFriendsSheet({
   open,
@@ -18,11 +22,16 @@ export default function InviteFriendsSheet({
   open: boolean;
   onOpenChange: (v: boolean) => void;
 }) {
+  const navigate = useNavigate();
   const { username } = useUsername();
   const { user } = useAuth();
+  const { findByUsername } = useContacts();
+  const { send: sendRequest } = useContactRequests();
   const [copied, setCopied] = useState(false);
   const [phone, setPhone] = useState("");
   const [email, setEmail] = useState("");
+  const [handle, setHandle] = useState("");
+  const [sending, setSending] = useState(false);
 
   const inviteLink = useMemo(() => {
     const handle = username ? `@${username}` : (user?.id ? `u/${user.id.slice(0, 8)}` : "join");
@@ -68,6 +77,45 @@ export default function InviteFriendsSheet({
   function sendEmail() {
     const href = `mailto:${email.trim()}?subject=${encodeURIComponent("Join me on ZIVO")}&body=${encodeURIComponent(message)}`;
     window.location.href = href;
+  }
+
+  async function sendInviteRequest() {
+    const clean = handle.trim().replace(/^@/, "");
+    if (!clean) {
+      toast.error("Enter a @username");
+      return;
+    }
+    setSending(true);
+    try {
+      const { user: prof, error } = await findByUsername(clean);
+      if (error || !prof?.user_id) {
+        toast.error("No ZIVO user with that handle. Share your invite link instead.");
+        return;
+      }
+      if (user && prof.user_id === user.id) {
+        toast.error("That's you 🙂");
+        return;
+      }
+      const r = await sendRequest(prof.user_id, "Hi! Let's connect on ZIVO.");
+      if (!r.ok) {
+        const msg = (r.error || "").toLowerCase();
+        if (msg.includes("duplicate") || msg.includes("23505")) {
+          toast.success("You already have a pending request with that user.", {
+            action: { label: "View", onClick: () => navigate("/chat/contacts/requests?tab=out") },
+          });
+        } else {
+          toast.error(r.error || "Couldn't send request");
+        }
+        return;
+      }
+      toast.success("Request sent. Track it in Requests → Sent.", {
+        action: { label: "View", onClick: () => navigate("/chat/contacts/requests?tab=out") },
+      });
+      setHandle("");
+      onOpenChange(false);
+    } finally {
+      setSending(false);
+    }
   }
 
   return (
@@ -129,6 +177,33 @@ export default function InviteFriendsSheet({
                 <Send className="w-4 h-4" /> Email
               </Button>
             </div>
+          </div>
+
+          {/* Existing user — send contact request */}
+          <div className="space-y-2 pt-1 border-t">
+            <label className="text-xs font-medium text-muted-foreground flex items-center gap-1.5 pt-3">
+              <AtSign className="w-3.5 h-3.5" /> Invite an existing ZIVO user
+            </label>
+            <div className="flex gap-2">
+              <Input
+                value={handle}
+                onChange={(e) => setHandle(e.target.value)}
+                placeholder="@username"
+                aria-label="ZIVO username"
+                onKeyDown={(e) => { if (e.key === "Enter") void sendInviteRequest(); }}
+              />
+              <Button
+                onClick={() => void sendInviteRequest()}
+                disabled={sending}
+                className="gap-1 bg-emerald-500 hover:bg-emerald-600 text-white"
+              >
+                {sending ? <Loader2 className="w-4 h-4 animate-spin" /> : <UserPlus className="w-4 h-4" />}
+                Send request
+              </Button>
+            </div>
+            <p className="text-[11px] text-muted-foreground">
+              Sends a contact request — you'll see its status on the Requests tab.
+            </p>
           </div>
 
           <p className="text-[11px] text-muted-foreground text-center pt-1">

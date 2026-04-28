@@ -1,64 +1,77 @@
-## Contacts Page — Add-Ons
+# Contacts Page Enhancements
 
-Extend `src/pages/chat/ContactsPage.tsx` with four new capabilities. All actions live in the existing top header row or as new sections inside the page — no breaking changes to current layout.
+Five focused improvements to the Contacts experience without touching unrelated areas.
 
-### 1. Top header (next to Add)
-Add three icon buttons before the existing `UserPlus`:
-- **Share2 / Invite** → opens `InviteFriendsSheet`
-- **QrCode** → navigates to `/profile/qr` (existing `QRProfilePage`) with a "Scan" toggle
-- Existing `UserPlus` (add by username) stays
+## 1. Retry + clearer toasts when adding suggested contacts
 
-### 2. Invite via SMS / Email
-New component: `src/components/chat/InviteFriendsSheet.tsx`
-- Bottom sheet with personal invite link: `https://hizivo.com/i/{username}` (falls back to user id)
-- Three actions:
-  - **Copy link** (clipboard with triple-fallback per branded-link infra)
-  - **Send SMS** → opens `sms:?body=...` on mobile, otherwise calls existing `send-employee-sms-invite` edge function pattern via a new lightweight `send-invite-sms` function (Twilio gateway, reuses 5/day rate limit from OTP engine)
-  - **Send Email** → opens `mailto:?subject=...&body=...`; if user enters address, calls new `send-invite-email` edge function (Resend connector if available, otherwise mailto fallback only)
-- Native share via `navigator.share` when available
+File: `src/components/chat/SuggestedContactsRow.tsx`
 
-### 3. Sync phone contacts (native)
-New tile button "Sync phone" added as a 4th item in the quick-action grid (changes `grid-cols-3` → `grid-cols-2 gap-2` with 2 rows of 2, OR keep 3-col and wrap — will use **2x2 grid** for clarity).
+- Wrap `add()` in a small helper that classifies failures:
+  - Rate limit (Postgres `429`, error code `429`, or message includes "rate"/"too many") → toast: "You're going too fast. Try again in a moment." with a **Retry** action.
+  - Network/offline (`!navigator.onLine`, `TypeError: Failed to fetch`, `NetworkError`) → toast: "No connection. Check your network and try again." with **Retry** action.
+  - Duplicate (`23505`) → silently treat as success and refresh.
+  - Other → toast.error with the actual message + **Retry** action.
+- Use `sonner`'s `toast.error(msg, { action: { label: "Retry", onClick: () => onAdd(id) } })`.
+- Add a per-card retry counter (max 2 auto-retries on network errors with 800ms backoff) before surfacing the toast.
 
-Logic in new hook `src/hooks/useNativeContacts.ts`:
-- Detects Capacitor via `Capacitor.isNativePlatform()`
-- Uses `@capacitor-community/contacts` plugin (needs `bun add @capacitor-community/contacts`)
-- Requests permission, reads contacts, extracts E.164 phones
-- Hashes locally with existing `hashPhoneE164` from `src/lib/phoneHash.ts`
-- Calls existing `contact-match` edge function (already used by `FindContactsPage`)
-- Returns matches → user taps "Add" to call `useContacts.add()`
-- Web fallback: button routes to existing `/chat/find-contacts` paste flow
+## 2. Keyboard nav + ARIA on header & quick-action grid
 
-After adding the plugin user must run `npx cap sync` (we'll instruct them).
+File: `src/pages/chat/ContactsPage.tsx`
 
-### 4. QR code scan/share
-- The QR button in header navigates to existing `/profile/qr` (no new code needed for share)
-- For scanning: new route `/chat/scan-qr` using `src/components/chat/QrScanSheet.tsx` (already may exist — check; otherwise build with `@capacitor-mlkit/barcode-scanning` on native, `html5-qrcode` on web)
-- Scanned URLs of form `hizivo.com/u/{username}` auto-open `AddContactSheet` prefilled
+- Header buttons already use `aria-label`; add `title` for desktop tooltip and ensure `tabIndex` order: Back → Search input → Invite → QR → Add.
+- Wrap quick-action grid in `<nav aria-label="Contact quick actions">` and convert each tile from `<button>` to `<button type="button" aria-label="…">` with descriptive labels: "Find people by phone number", "Sync phone contacts", "View contact requests", "Find people nearby".
+- Add visible `focus-visible:ring-2 focus-visible:ring-emerald-500 focus-visible:outline-none` to header icon buttons and quick-action tiles.
+- Add `role="group"` + `aria-label="Suggested people"` to `SuggestedContactsRow` container.
 
-### 5. Suggested / People you may know
-New section between the search bar and contact list, only shown when `searchQuery` is empty:
-- Header: "People you may know"
-- Horizontal scroll of avatar cards (max 12)
-- Source: union of (a) mutual followers via `follows` table where target follows me & I don't follow back, (b) recent DM partners not yet in `user_contacts`
-- New hook `src/hooks/useSuggestedContacts.ts` returning `{ user_id, full_name, username, avatar_url, reason }`
-- Each card has small "Add" button → `useContacts.add(id, { via: "suggested" })`
+## 3. Clearer badge on each suggested profile + deep-link
 
-### Files to create
+File: `src/components/chat/SuggestedContactsRow.tsx`
+
+- Replace plain "Follows you" / "Recent chat" text with a small pill badge (emerald for follower, sky for chat) using `UserCheck` / `MessageCircle` Lucide icons.
+- Make the badge a clickable element:
+  - `reason === "follower"` → navigates to `/u/{username}` (or `/profile/{user_id}` fallback) with `?context=followers`.
+  - `reason === "chat"` → opens the existing chat via the same `navigate("/chat", { state: { openChat: {…} } })` pattern used in `ContactsPage`.
+- Stop click propagation so tapping the badge doesn't trigger the Add button. Add `aria-label="Open profile, follows you"` / `aria-label="Open recent chat with {name}"`.
+
+## 4. Cache + fewer round-trips for "People you may know"
+
+File: `src/hooks/useSuggestedContacts.ts`
+
+- Add an in-memory module-level cache keyed by `user.id` with a 5-minute TTL: `{ data, fetchedAt }`. On mount, return cached data immediately and revalidate in background (stale-while-revalidate).
+- Run the three independent reads in parallel with `Promise.all` instead of sequentially:
+  - `user_contacts` (excludes), `follows` (followers), `direct_messages` (recent partners).
+- Reduce `direct_messages` limit from 60 → 40 and select only `sender_id, receiver_id` (already done) plus add `head: false`.
+- Persist the most recent successful payload to `sessionStorage` under `zivo:suggested:{userId}` so tab revisits skip the network entirely until TTL expires.
+- Expose `isStale` so the row can show a tiny spinner only while revalidating.
+
+## 5. Invite via contact request + Requests-tab status
+
+Files:
 - `src/components/chat/InviteFriendsSheet.tsx`
-- `src/components/chat/SuggestedContactsRow.tsx`
-- `src/hooks/useNativeContacts.ts`
-- `src/hooks/useSuggestedContacts.ts`
-- `supabase/functions/send-invite-sms/index.ts` (Twilio gateway, rate-limited)
-- `supabase/functions/send-invite-email/index.ts` (Resend or generic SMTP)
+- `src/hooks/useContactRequests.ts` (already exists)
+- `src/pages/chat/ContactRequestsPage.tsx` (already shows Sent/Incoming tabs)
 
-### Files to modify
-- `src/pages/chat/ContactsPage.tsx` — header buttons, 2x2 quick-action grid (Find by phone, Sync phone, Requests, Nearby), suggested row, invite sheet wiring
-- `src/App.tsx` — add `/chat/scan-qr` route if scanner is added
-- `package.json` — add `@capacitor-community/contacts`
+Behavior:
+- Add a new section in `InviteFriendsSheet` titled "Invite an existing ZIVO user" with a `@username` input + **Send request** button.
+- On submit:
+  1. Resolve username via existing `useContacts().findByUsername`.
+  2. If found, call `useContactRequests().send(userId, "Hi! Let's connect on ZIVO.")`.
+  3. Toast success: "Request sent. Track it in Requests → Sent." with action **View** that navigates to `/chat/contacts/requests` with `?tab=out`.
+  4. If username not found → toast: "No ZIVO user with that handle. Share your invite link instead."
+- Update `ContactRequestsPage` to read `?tab=in|out` from `useSearchParams` and set the initial tab accordingly so the toast deep-link lands users on the Sent tab.
+- The existing Sent tab already shows pending/accepted/declined/cancelled status, so no schema changes needed.
 
-### Notes
-- Uses existing emerald tokens, lucide icons (Share2, QrCode, Smartphone, UserPlus2)
-- Invite SMS reuses Twilio connector (already linked per OTP engine memory)
-- All new endpoints require auth and respect existing rate-limit patterns
-- After approval, user should run `npx cap sync` for the contacts plugin to work on device
+## Technical notes
+
+- No database migrations needed — `contact_requests` and `user_contacts` already exist with realtime subscriptions.
+- All changes are client-side TS/TSX. No new dependencies.
+- Sonner toasts support `action` for the Retry/View buttons natively.
+- Cache uses module scope + `sessionStorage`; cleared automatically when the user signs out (the hook keys by `user.id` and resets to `[]` when null).
+
+## Files modified
+
+- `src/pages/chat/ContactsPage.tsx` — a11y + focus styling
+- `src/components/chat/SuggestedContactsRow.tsx` — retry logic, badges, deep-links, a11y
+- `src/hooks/useSuggestedContacts.ts` — parallel queries, in-memory + sessionStorage cache, SWR
+- `src/components/chat/InviteFriendsSheet.tsx` — new "Invite existing user" section that sends a contact request
+- `src/pages/chat/ContactRequestsPage.tsx` — honor `?tab=` query param for deep-linking

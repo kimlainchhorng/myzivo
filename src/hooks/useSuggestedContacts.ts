@@ -1,6 +1,8 @@
 /**
  * useSuggestedContacts — "People you may know"
  * Sources: people who follow me but I don't follow back, recent DM partners not in contacts.
+ * Uses stale-while-revalidate caching (memory + sessionStorage, 5 min TTL) and
+ * runs the three independent reads in parallel.
  */
 import { useCallback, useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
@@ -14,57 +16,66 @@ export type Suggested = {
   reason: "follower" | "chat";
 };
 
+const TTL_MS = 5 * 60 * 1000;
+const memCache = new Map<string, { data: Suggested[]; fetchedAt: number }>();
+
+function ssKey(uid: string) { return `zivo:suggested:${uid}`; }
+
+function readSession(uid: string): { data: Suggested[]; fetchedAt: number } | null {
+  try {
+    const raw = sessionStorage.getItem(ssKey(uid));
+    if (!raw) return null;
+    const parsed = JSON.parse(raw);
+    if (!parsed?.data || !parsed?.fetchedAt) return null;
+    return parsed;
+  } catch { return null; }
+}
+
+function writeSession(uid: string, payload: { data: Suggested[]; fetchedAt: number }) {
+  try { sessionStorage.setItem(ssKey(uid), JSON.stringify(payload)); } catch { /* quota */ }
+}
+
 export function useSuggestedContacts() {
   const { user } = useAuth();
   const [items, setItems] = useState<Suggested[]>([]);
   const [loading, setLoading] = useState(true);
+  const [isStale, setIsStale] = useState(false);
 
-  const refresh = useCallback(async () => {
-    if (!user) { setItems([]); setLoading(false); return; }
-    setLoading(true);
+  const fetchFresh = useCallback(async (uid: string): Promise<Suggested[]> => {
+    // Run the three independent reads in parallel
+    const [existingRes, followersRes, dmsRes] = await Promise.all([
+      supabase.from("user_contacts").select("contact_user_id").eq("owner_id", uid),
+      (supabase as any).from("follows").select("follower_id").eq("following_id", uid).limit(50),
+      (supabase as any)
+        .from("direct_messages")
+        .select("sender_id, receiver_id")
+        .or(`sender_id.eq.${uid},receiver_id.eq.${uid}`)
+        .order("created_at", { ascending: false })
+        .limit(40),
+    ]);
 
-    // Existing contacts (to exclude)
-    const { data: existing } = await supabase
-      .from("user_contacts")
-      .select("contact_user_id")
-      .eq("owner_id", user.id);
-    const skip = new Set<string>((existing ?? []).map((r: any) => r.contact_user_id));
-    skip.add(user.id);
-
-    // Followers
-    const { data: followers } = await (supabase as any)
-      .from("follows")
-      .select("follower_id")
-      .eq("following_id", user.id)
-      .limit(50);
-
-    // Recent DM partners
-    const { data: dms } = await (supabase as any)
-      .from("direct_messages")
-      .select("sender_id, receiver_id")
-      .or(`sender_id.eq.${user.id},receiver_id.eq.${user.id}`)
-      .order("created_at", { ascending: false })
-      .limit(60);
+    const skip = new Set<string>(((existingRes.data ?? []) as any[]).map((r) => r.contact_user_id));
+    skip.add(uid);
 
     const candidates = new Map<string, Suggested["reason"]>();
-    (followers ?? []).forEach((r: any) => {
+    ((followersRes.data ?? []) as any[]).forEach((r) => {
       if (r.follower_id && !skip.has(r.follower_id)) candidates.set(r.follower_id, "follower");
     });
-    (dms ?? []).forEach((m: any) => {
-      const other = m.sender_id === user.id ? m.receiver_id : m.sender_id;
+    ((dmsRes.data ?? []) as any[]).forEach((m) => {
+      const other = m.sender_id === uid ? m.receiver_id : m.sender_id;
       if (other && !skip.has(other) && !candidates.has(other)) candidates.set(other, "chat");
     });
 
     const ids = Array.from(candidates.keys()).slice(0, 12);
-    if (ids.length === 0) { setItems([]); setLoading(false); return; }
+    if (ids.length === 0) return [];
 
     const { data: profs } = await supabase
       .from("profiles")
       .select("user_id, full_name, avatar_url, username")
       .in("user_id", ids);
 
-    const byId = new Map((profs ?? []).map((p: any) => [p.user_id, p]));
-    const result: Suggested[] = ids
+    const byId = new Map(((profs ?? []) as any[]).map((p) => [p.user_id, p]));
+    return ids
       .map((id) => {
         const p: any = byId.get(id);
         if (!p) return null;
@@ -74,15 +85,45 @@ export function useSuggestedContacts() {
           username: p.username ?? null,
           avatar_url: p.avatar_url ?? null,
           reason: candidates.get(id)!,
-        };
+        } as Suggested;
       })
       .filter(Boolean) as Suggested[];
+  }, []);
 
-    setItems(result);
-    setLoading(false);
-  }, [user]);
+  const refresh = useCallback(async (force = false) => {
+    if (!user) { setItems([]); setLoading(false); setIsStale(false); return; }
+
+    // Hydrate from cache immediately (SWR)
+    const cached = memCache.get(user.id) ?? readSession(user.id);
+    const fresh = cached && Date.now() - cached.fetchedAt < TTL_MS;
+
+    if (cached) {
+      setItems(cached.data);
+      setLoading(false);
+      if (fresh && !force) {
+        setIsStale(false);
+        return;
+      }
+      setIsStale(true);
+    } else {
+      setLoading(true);
+    }
+
+    try {
+      const data = await fetchFresh(user.id);
+      const payload = { data, fetchedAt: Date.now() };
+      memCache.set(user.id, payload);
+      writeSession(user.id, payload);
+      setItems(data);
+    } catch {
+      // keep cached items on failure
+    } finally {
+      setLoading(false);
+      setIsStale(false);
+    }
+  }, [user, fetchFresh]);
 
   useEffect(() => { void refresh(); }, [refresh]);
 
-  return { items, loading, refresh };
+  return { items, loading, isStale, refresh };
 }
