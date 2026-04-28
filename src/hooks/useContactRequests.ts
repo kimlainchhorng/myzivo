@@ -1,5 +1,6 @@
 /**
  * useContactRequests — incoming/outgoing contact requests with realtime updates.
+ * Handles duplicate-key (23505) gracefully and resolves reciprocal requests on accept.
  */
 import { useCallback, useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
@@ -19,6 +20,8 @@ export type ContactRequest = {
     avatar_url: string | null;
   } | null;
 };
+
+export type SendResult = { ok: true; duplicate?: boolean } | { ok: false; error: string };
 
 export function useContactRequests() {
   const { user } = useAuth();
@@ -65,15 +68,24 @@ export function useContactRequests() {
     return () => { supabase.removeChannel(ch); };
   }, [user, refresh]);
 
-  const send = useCallback(async (toUserId: string, message?: string) => {
+  const send = useCallback(async (toUserId: string, message?: string): Promise<SendResult> => {
     if (!user) return { ok: false, error: "Not signed in" };
+    if (toUserId === user.id) return { ok: false, error: "You can't add yourself" };
     const { error } = await (supabase as any).from("contact_requests").insert({
       from_user_id: user.id,
       to_user_id: toUserId,
       message: message ?? null,
       status: "pending",
     });
-    if (error) return { ok: false, error: error.message };
+    if (error) {
+      const code = (error as any).code;
+      const msg = (error.message || "").toLowerCase();
+      if (code === "23505" || msg.includes("duplicate") || msg.includes("already exists")) {
+        await refresh();
+        return { ok: true, duplicate: true };
+      }
+      return { ok: false, error: error.message };
+    }
     await refresh();
     return { ok: true };
   }, [user, refresh]);
@@ -86,12 +98,19 @@ export function useContactRequests() {
       .update({ status: "accepted" })
       .eq("id", id);
     if (error) return;
-    // create reciprocal contact entries
     if (req) {
+      // Reciprocal contact entries
       await supabase.from("user_contacts").upsert([
         { owner_id: user.id, contact_user_id: req.from_user_id, added_via: "request" },
         { owner_id: req.from_user_id, contact_user_id: user.id, added_via: "request" },
       ]);
+      // Auto-resolve any matching outgoing request from me to the same user
+      await (supabase as any)
+        .from("contact_requests")
+        .update({ status: "accepted" })
+        .eq("from_user_id", user.id)
+        .eq("to_user_id", req.from_user_id)
+        .eq("status", "pending");
     }
     await refresh();
   }, [user, incoming, refresh]);
@@ -106,5 +125,12 @@ export function useContactRequests() {
     await refresh();
   }, [refresh]);
 
-  return { incoming, outgoing, loading, refresh, send, accept, decline, cancel };
+  const resend = useCallback(async (id: string): Promise<SendResult> => {
+    const r = outgoing.find((x) => x.id === id);
+    if (!r) return { ok: false, error: "Request not found" };
+    await (supabase as any).from("contact_requests").delete().eq("id", id);
+    return send(r.to_user_id, r.message ?? undefined);
+  }, [outgoing, send]);
+
+  return { incoming, outgoing, loading, refresh, send, accept, decline, cancel, resend };
 }
