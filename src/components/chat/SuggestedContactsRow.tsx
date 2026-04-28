@@ -116,6 +116,7 @@ export default function SuggestedContactsRow() {
         {visible.map((s) => {
           const name = s.full_name || (s.username ? `@${s.username}` : "ZIVO user");
           const isFollower = s.reason === "follower";
+          const isPending = pendingIds.has(s.user_id);
           const badgeLabel = isFollower ? "Follows you" : "Recent chat";
           const badgeAria = isFollower
             ? `Open profile, ${name} follows you`
@@ -153,19 +154,30 @@ export default function SuggestedContactsRow() {
                 {badgeLabel}
               </button>
 
-              <button
-                type="button"
-                onClick={() => void tryAdd(s.user_id)}
-                disabled={adding === s.user_id}
-                aria-label={`Add ${name} to contacts`}
-                className="w-full h-7 rounded-full bg-emerald-500 hover:bg-emerald-600 text-white text-[11px] font-semibold flex items-center justify-center gap-1 disabled:opacity-60 focus-visible:ring-2 focus-visible:ring-emerald-500 focus-visible:ring-offset-1 focus-visible:outline-none"
-              >
-                {adding === s.user_id ? (
-                  <Loader2 className="w-3 h-3 animate-spin" />
-                ) : (
-                  <><UserPlus className="w-3 h-3" /> Add</>
-                )}
-              </button>
+              {isPending ? (
+                <button
+                  type="button"
+                  onClick={() => navigate("/chat/contacts/requests?tab=out")}
+                  aria-label={`Request to ${name} pending — view sent requests`}
+                  className="w-full h-7 rounded-full bg-amber-500/15 text-amber-700 dark:text-amber-300 text-[11px] font-semibold flex items-center justify-center gap-1 hover:bg-amber-500/25 focus-visible:ring-2 focus-visible:ring-amber-500 focus-visible:outline-none"
+                >
+                  <Loader2 className="w-3 h-3" /> Pending
+                </button>
+              ) : (
+                <button
+                  type="button"
+                  onClick={() => void tryAdd(s.user_id)}
+                  disabled={adding === s.user_id}
+                  aria-label={`Add ${name} to contacts`}
+                  className="w-full h-7 rounded-full bg-emerald-500 hover:bg-emerald-600 text-white text-[11px] font-semibold flex items-center justify-center gap-1 disabled:opacity-60 focus-visible:ring-2 focus-visible:ring-emerald-500 focus-visible:ring-offset-1 focus-visible:outline-none"
+                >
+                  {adding === s.user_id ? (
+                    <Loader2 className="w-3 h-3 animate-spin" />
+                  ) : (
+                    <><UserPlus className="w-3 h-3" /> Add</>
+                  )}
+                </button>
+              )}
             </li>
           );
         })}
