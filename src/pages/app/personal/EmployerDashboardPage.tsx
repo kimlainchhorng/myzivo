@@ -1,6 +1,6 @@
 /** Employer dashboard — partner accounts manage their company + post/manage jobs */
 import { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { ArrowLeft, Plus, Building2, Users } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -15,6 +15,8 @@ export default function EmployerDashboardPage() {
   const navigate = useNavigate();
   const goBack = useSmartBack("/personal");
   const { user } = useAuth();
+  const [searchParams] = useSearchParams();
+  const prefillStoreId = searchParams.get("storeId");
   const [company, setCompany] = useState<any>(null);
   const [jobs, setJobs] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
