@@ -130,20 +130,31 @@ Deno.serve(async (req) => {
       return jsonResponse({ error: "Missing or invalid 'store_id'" }, 400);
     }
 
-    // Service-role lookup for ownership / role
-    const [{ data: store }, { data: roles }] = await Promise.all([
+    // Service-role lookup for ownership / role / employee membership
+    const [storeRes, rolesRes, empRes] = await Promise.all([
       admin
         .from("store_profiles")
         .select("id, owner_id, name, is_active")
         .eq("id", storeId)
         .maybeSingle(),
       admin.from("user_roles").select("role").eq("user_id", userId),
+      admin
+        .from("store_employees")
+        .select("id, role, status")
+        .eq("store_id", storeId)
+        .eq("user_id", userId)
+        .maybeSingle(),
     ]);
 
-    const roleList: string[] = (roles || []).map((r: any) => String(r.role));
-    const isAdmin = roleList.includes("admin");
-    const isOwner = !!store && store.owner_id === userId;
-    const ownsStore = isAdmin || isOwner;
+    const store = storeRes.data as any;
+    const storeErr = storeRes.error?.message || null;
+    const roleList: string[] = (rolesRes.data || []).map((r: any) => String(r.role));
+    const isAdmin = roleList.includes("admin") || roleList.includes("super_admin");
+    const ownerIdNorm = store?.owner_id ? String(store.owner_id).trim().toLowerCase() : "";
+    const userIdNorm = String(userId).trim().toLowerCase();
+    const isOwner = !!store && ownerIdNorm === userIdNorm;
+    const isEmployee = !!empRes.data;
+    const ownsStore = isAdmin || isOwner || isEmployee;
 
     if (action === "preflight") {
       return jsonResponse({
@@ -168,8 +179,13 @@ Deno.serve(async (req) => {
             error: "You don't have permission to upload receipts for this store.",
             user_id: userId,
             store_id: storeId,
+            store_found: !!store,
+            store_owner_id: store?.owner_id ?? null,
+            store_lookup_error: storeErr,
             is_owner: isOwner,
             is_admin: isAdmin,
+            is_employee: isEmployee,
+            roles: roleList,
           },
           403,
         );
