@@ -84,6 +84,19 @@ const amenityIconFor = (label: string) => {
   return AMENITY_ICON_MAP[key] || CheckCircle2;
 };
 
+// Convert "free_toiletries" / "non-smoking_room" -> "Free Toiletries"
+const humanizeLabel = (raw: string) =>
+  (raw || "")
+    .replace(/[_-]+/g, " ")
+    .trim()
+    .replace(/\b\w/g, (c) => c.toUpperCase());
+
+interface PromoInfo {
+  type: "percent" | "fixed";
+  value: number;
+  name: string;
+}
+
 export default function HotelResortDetailPage() {
   const { storeId = "" } = useParams<{ storeId: string }>();
   const navigate = useNavigate();
