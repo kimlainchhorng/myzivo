@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { useSmartBack } from "@/lib/smartBack";
-import { useNavigate } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import { ArrowLeft, Search, UserPlus, Loader2, Phone, Smartphone, Check } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
