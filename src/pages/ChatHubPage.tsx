@@ -44,6 +44,7 @@ import ChatRowActionsSheet, { type ChatRowActionsTarget } from "@/components/cha
 import NewChatFab from "@/components/chat/NewChatFab";
 import AddContactSheet from "@/components/chat/AddContactSheet";
 import MyChannelsStrip from "@/components/chat/MyChannelsStrip";
+import GlobalChatSearch from "@/components/chat/GlobalChatSearch";
 import { useChatPrefs } from "@/hooks/useChatPrefs";
 import { useBulkPresence } from "@/hooks/useBulkPresence";
 import { useTypingBus } from "@/hooks/useTypingBus";
