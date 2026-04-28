@@ -4075,6 +4075,51 @@ export type Database = {
           },
         ]
       }
+      ar_parts: {
+        Row: {
+          active: boolean
+          brand: string | null
+          category: string | null
+          created_at: string
+          id: string
+          image_url: string | null
+          name: string
+          price_cents: number
+          sku: string
+          stock: number
+          store_id: string
+          updated_at: string
+        }
+        Insert: {
+          active?: boolean
+          brand?: string | null
+          category?: string | null
+          created_at?: string
+          id?: string
+          image_url?: string | null
+          name: string
+          price_cents?: number
+          sku: string
+          stock?: number
+          store_id: string
+          updated_at?: string
+        }
+        Update: {
+          active?: boolean
+          brand?: string | null
+          category?: string | null
+          created_at?: string
+          id?: string
+          image_url?: string | null
+          name?: string
+          price_cents?: number
+          sku?: string
+          stock?: number
+          store_id?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       ar_recall_checks: {
         Row: {
           campaign_id: string | null
@@ -4246,6 +4291,33 @@ export type Database = {
           speed_rating?: string | null
           store_id?: string
           updated_at?: string
+        }
+        Relationships: []
+      }
+      ar_vin_lookups: {
+        Row: {
+          created_at: string
+          decoded: Json
+          id: string
+          looked_up_by: string | null
+          store_id: string
+          vin: string
+        }
+        Insert: {
+          created_at?: string
+          decoded?: Json
+          id?: string
+          looked_up_by?: string | null
+          store_id: string
+          vin: string
+        }
+        Update: {
+          created_at?: string
+          decoded?: Json
+          id?: string
+          looked_up_by?: string | null
+          store_id?: string
+          vin?: string
         }
         Relationships: []
       }
@@ -57202,6 +57274,7 @@ export type Database = {
       vehicles: {
         Row: {
           approval_status: Database["public"]["Enums"]["approval_status"]
+          assigned_store_id: string | null
           capacity: number | null
           color: string | null
           created_at: string
@@ -57228,6 +57301,7 @@ export type Database = {
         }
         Insert: {
           approval_status?: Database["public"]["Enums"]["approval_status"]
+          assigned_store_id?: string | null
           capacity?: number | null
           color?: string | null
           created_at?: string
@@ -57254,6 +57328,7 @@ export type Database = {
         }
         Update: {
           approval_status?: Database["public"]["Enums"]["approval_status"]
+          assigned_store_id?: string | null
           capacity?: number | null
           color?: string | null
           created_at?: string
