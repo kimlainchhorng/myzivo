@@ -1,77 +1,96 @@
-# Contacts Page — Bug Fixes + Missing Add-Ons
 
-The Contacts page is functional but has one broken link and several gaps that block real usage. This plan fixes the bugs, then layers in the missing must-haves.
+## What's wrong today
 
-## 1. Bug fixes (must do first)
+Looking at the Contacts screen and the supporting code, here is what's broken or out of place:
 
-- **Broken QR route.** Header QR icon and `AddContactSheet → "My QR code"` both navigate to `/chat/qr`, but the actual route registered in `App.tsx` is `/qr-profile`. Update both call sites to `/qr-profile`. Without this, the QR icon does nothing on tap.
-- **"Sync phone" tile is mislabeled.** It currently routes to `/chat/find-contacts`, the same page as "Find by phone". Either remove the duplicate, or wire a real native sync path (see §2).
-- **Realtime not refreshing suggestions.** `useSuggestedContacts` never invalidates when a new follower or DM arrives. Add a lightweight subscription on `follows` (where `following_id = me`) and on `direct_messages` so the cached "People you may know" list re-revalidates instead of going stale for 5 minutes.
-- **Suggestions cache leaks across users.** Memory cache is keyed by user id (good), but on sign-out it isn't cleared. Clear `memCache` and `sessionStorage` `zivo:suggested:*` keys on auth change.
+1. **`FindContactsPage.addContact` inserts directly into `contact_requests` and ignores duplicates.** The `contact_requests` table has `UNIQUE(from_user_id, to_user_id)`, so re-tapping "Add" or adding a person who already has an outstanding request returns a 23505 error and shows a raw Postgres message instead of "Request already sent." It also doesn't reuse `useContactRequests().send()` which already handles refresh.
 
-## 2. Real native contacts sync
+2. **No "Pending" / "In contacts" state on Find-by-phone matches.** Every match shows a generic "Add" button even when a request is already outgoing or the person is already in `user_contacts`. Users can spam-tap and get duplicate-key errors.
 
-Right now "Sync phone" just opens a paste-text screen. Add a true native path on iOS/Android via Capacitor:
+3. **Suggested row's "Add" sends a contact directly (`useContacts.add`) but the Find-by-phone flow sends a *request* (`contact_requests`).** Two entry points behave differently for the same action. The previous plan said "sending an invite creates a contact request" — Suggested should also go through `send()` so the receiver can approve, OR both flows should agree. They don't.
 
-- Add `@capacitor-community/contacts` as a dependency.
-- New helper `src/lib/nativeContacts.ts`: `isNativeAvailable()`, `requestPermission()`, `pickAndHashPhones()` — pulls phone numbers from device contacts, normalises to E.164 best-effort, hashes locally with the existing `hashPhoneE164` (no raw numbers ever leave the device), then calls the existing `contact-match` edge function.
-- `FindContactsPage.tsx`: when running on native, show a primary "Sync from phone" button that uses the native flow; fall back to the current paste-text UI on web.
-- "Sync phone" tile on Contacts page becomes the entry to this native flow (and gracefully falls back to the paste UI on web).
+4. **Requests tab doesn't show a badge on the Contacts header.** Users have no way to know an incoming request is waiting unless they tap into Requests.
 
-## 3. Blocked-users management
+5. **No way to dismiss a "People you may know" suggestion permanently.** Current dismissal is in-memory only — refresh and the same person reappears.
 
-`blocked_users` table exists and `useBlockUser` is already used elsewhere, but Contacts has no surface for it. Users blocked on a chat surface have no way to unblock from here.
+6. **No profile preview before adding.** Tapping Add commits immediately. There's no confirm sheet showing avatar/bio/mutuals so users add the wrong person by accident.
 
-- Add a 5th quick-action tile (or move "Nearby" to a secondary row) called **"Blocked"** linking to a new page `src/pages/chat/BlockedUsersPage.tsx`.
-- Page lists blocked profiles with avatar + name + Unblock button. Uses `useBlockUser` to list/unblock and the same profile-fetch pattern as `useContacts`.
-- Register route `/chat/blocked` in `App.tsx`.
+7. **`Recently added` section shows contacts whose `added_via = "chat_history"`** (the fallback in `useContacts.refresh`) which means the very first DM partner is mislabeled "Recently added" with no real add date. The fallback should be tagged differently or excluded from the Recently-added bucket.
 
-## 4. "Search everyone" fallback in contact search
+8. **`syncPhone()` quick-action navigates to `/chat/find-contacts` regardless of native availability.** On native devices we should kick off the picker directly instead of forcing an extra screen.
 
-Today the search bar only filters local contacts. If a user types a name that isn't in their list, they hit a dead end.
+9. **Accepting a request creates reciprocal `user_contacts` rows but doesn't auto-cancel any matching outgoing request the recipient might have already sent** (the "you sent me + I sent you" case yields two requests and only one gets resolved).
 
-- When `q.trim().length >= 2` and `filtered.length === 0`, render a "Search everyone on ZIVO" affordance that queries `usernames` + `profiles` (limit 8) and shows results inline with an Add button (reusing `add()` from `useContacts`).
-- Debounce the remote query 300 ms.
+10. **Missing pieces** the previous loop didn't deliver:
+    - Resend button on a declined outgoing request.
+    - Empty state on Requests tab is fine, but no link back to "Find friends".
+    - No header badge count on the Contacts → Requests quick-action tile (the count exists in the hook).
 
-## 5. Contact list sections
+## Plan
 
-The list is a flat dump. Add lightweight sectioning that already maps to existing data:
+### 1. Unify "Add" flow through `useContactRequests.send()`
+- Update `SuggestedContactsRow` and `FindContactsPage` to call `send(userId)` instead of `useContacts.add` / direct insert.
+- In `useContactRequests.send`, treat Postgres `23505` as success ("Request already sent") and return `{ ok: true, duplicate: true }`.
+- Suggested card and Find-by-phone match row both render three states:
+  `Add` → `Pending` (amber, links to Sent tab) → `In contacts` (muted, opens chat) — driven by `outgoing` + `useContacts().contacts`.
 
-- **Favorites** (rows where `favorite = true`) — pinned at top with star header.
-- **Recently added** (top 5 by `created_at`, last 7 days).
-- **All contacts** A–Z with sticky single-letter headers.
+### 2. Contacts header — incoming-request badge
+- Read `incoming.length` from `useContactRequests` in `ContactsPage`.
+- Show a small emerald dot + count on the **Requests** quick-action tile and a matching dot on the header `Inbox` icon if we add one. Tile aria-label updates: `"Requests, N pending"`.
 
-Pure client-side grouping over the existing `useContacts` result; no schema changes.
+### 3. Persistent "Not interested" for suggestions
+- Create migration `suggestion_dismissals(user_id, dismissed_user_id, created_at, PRIMARY KEY(user_id,dismissed_user_id))` with RLS (owner only).
+- Extend `useSuggestedContacts.fetchFresh` to read dismissals in parallel and exclude them.
+- Add `dismiss(id)` that inserts a row and updates the cache; replace the in-memory `dismissed` set in `SuggestedContactsRow`.
 
-## 6. Request status badge on suggestion cards
+### 4. Profile preview confirm sheet before send
+- New `ConfirmAddContactSheet` (avatar, name, @username, mutuals count if any, message textarea, **Send request** button).
+- Triggered by every Add action (Suggested, Find-by-phone, AddContactSheet username lookup). Optional `message` is forwarded to `send()`.
 
-If you've already sent a request to a suggested person, the "Add" button still says "Add" and a second tap returns a duplicate error. Fix:
+### 5. Fix Recently-added mislabeling
+- In `useContacts`, only build the `chat_history` fallback when there are zero real contacts (already true). When real contacts exist, never inject fallback rows.
+- In `ContactsPage`, exclude rows whose `added_via === "chat_history"` from the Recently-added bucket (push them to A–Z instead).
 
-- `SuggestedContactsRow` reads `outgoing` from `useContactRequests`. If a suggestion's `user_id` matches a pending outgoing request, render a disabled "Pending" pill (with link to `/chat/contacts/requests?tab=out`) instead of the green Add button.
-- After a successful `add()`, also remove the user from the local `dismissed`/visible set so the card disappears immediately.
+### 6. Native sync goes straight to picker
+- `ContactsPage.syncPhone()`: if `nativeReady`, call `pickAndHashPhones()` directly and navigate to `/chat/find-contacts` only with results. Otherwise navigate as today.
 
-## 7. Empty-state polish
+### 7. Accept resolves reciprocal request
+- In `useContactRequests.accept`, after the update, also `update({status:'accepted'})` any pending request where `from_user_id = me AND to_user_id = req.from_user_id` so the Sent tab clears.
 
-The "No contacts yet" empty state only offers "Add contact". Replace with three buttons: **Add by @username**, **Sync phone**, **Invite friends** — mirroring the three real ways to grow the list.
+### 8. Requests tab polish
+- Add **Resend** button on declined outgoing requests (deletes the row, then re-`send`).
+- Empty state: add "Find friends" CTA → `/chat/find-contacts`.
+- Show counts in tab labels (already partial; add `· N` for sent pending too).
 
----
+### 9. Minor cleanup
+- `nativeContacts.ts` — only register the optional plugin when `Capacitor.isNativePlatform()`; currently it tries on web and silently fails (still fine, but noise in logs).
+- Add `aria-current` on the active Requests tab.
 
-## Files to change / create
+## Technical details
 
-Edit:
-- `src/pages/chat/ContactsPage.tsx` — fix QR route, sectioned list, search-everyone fallback, Blocked tile, richer empty state.
-- `src/components/chat/AddContactSheet.tsx` — fix `/chat/qr` → `/qr-profile`.
-- `src/components/chat/SuggestedContactsRow.tsx` — Pending badge from outgoing requests; remove added user from list.
-- `src/hooks/useSuggestedContacts.ts` — realtime invalidation on follows/DMs; clear cache on sign-out.
-- `src/pages/chat/FindContactsPage.tsx` — native "Sync from phone" button when available.
-- `src/App.tsx` — register `/chat/blocked` route.
-- `package.json` — add `@capacitor-community/contacts`.
+**Files to edit**
+- `src/hooks/useContactRequests.ts` — handle 23505, reciprocal accept, expose `resend`.
+- `src/hooks/useSuggestedContacts.ts` — fetch + filter dismissals.
+- `src/components/chat/SuggestedContactsRow.tsx` — three-state button, persistent dismiss, open ConfirmAddContactSheet.
+- `src/components/chat/ConfirmAddContactSheet.tsx` — **new** shared confirm sheet.
+- `src/components/chat/AddContactSheet.tsx` — route through ConfirmAddContactSheet.
+- `src/pages/chat/FindContactsPage.tsx` — switch to `send()`, show Pending/In contacts states, ConfirmAddContactSheet, fix the duplicate insert behaviour.
+- `src/pages/chat/ContactsPage.tsx` — header/tile badge, native-direct sync, exclude `chat_history` from Recently-added, link to Requests with count.
+- `src/pages/chat/ContactRequestsPage.tsx` — Resend button, empty-state CTA, sent-pending count.
+- `src/hooks/useContacts.ts` — keep behaviour but expose `addedViaChatHistory` flag for filtering.
 
-Create:
-- `src/lib/nativeContacts.ts`
-- `src/pages/chat/BlockedUsersPage.tsx`
-- `src/components/chat/SearchEveryoneResults.tsx` (used by ContactsPage search fallback)
+**New migration** (`suggestion_dismissals`)
+```sql
+CREATE TABLE public.suggestion_dismissals (
+  user_id UUID NOT NULL,
+  dismissed_user_id UUID NOT NULL,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+  PRIMARY KEY (user_id, dismissed_user_id)
+);
+ALTER TABLE public.suggestion_dismissals ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "owner manages dismissals" ON public.suggestion_dismissals
+  FOR ALL TO authenticated USING (auth.uid() = user_id) WITH CHECK (auth.uid() = user_id);
+CREATE INDEX idx_suggestion_dismissals_user ON public.suggestion_dismissals(user_id);
+```
 
-No DB migrations required — `blocked_users`, `contact_requests`, `follows`, `user_contacts`, `direct_messages` already exist.
-
-After approval, the user will need to run `npx cap sync` once for the new native contacts plugin to take effect on device.
+**Out of scope** (not in this loop): server-side push when an incoming request arrives, Nearby contacts integration, group invite links — flag as follow-ups.

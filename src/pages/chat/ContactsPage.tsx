@@ -21,7 +21,9 @@ import SuggestedContactsRow from "@/components/chat/SuggestedContactsRow";
 import SearchEveryoneResults from "@/components/chat/SearchEveryoneResults";
 import { useContacts, type Contact } from "@/hooks/useContacts";
 import { useUsername } from "@/hooks/useUsername";
-import { isNativeAvailable } from "@/lib/nativeContacts";
+import { useContactRequests } from "@/hooks/useContactRequests";
+import { isNativeAvailable, pickAndHashPhones } from "@/lib/nativeContacts";
+import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 
 const SEVEN_DAYS = 7 * 24 * 60 * 60 * 1000;
@@ -39,11 +41,13 @@ export default function ContactsPage() {
   const goBack = useSmartBack("/chat");
   const { contacts, loading, toggleFavorite, remove } = useContacts();
   const { username } = useUsername();
+  const { incoming } = useContactRequests();
   const [q, setQ] = useState("");
   const [addOpen, setAddOpen] = useState(false);
   const [usernameOpen, setUsernameOpen] = useState(false);
   const [inviteOpen, setInviteOpen] = useState(false);
   const [nativeReady, setNativeReady] = useState(false);
+  const [syncingNative, setSyncingNative] = useState(false);
 
   useEffect(() => {
     let alive = true;
@@ -66,7 +70,11 @@ export default function ContactsPage() {
     const favorites = contacts.filter((c) => c.favorite);
     const now = Date.now();
     const recents = contacts
-      .filter((c) => !c.favorite && now - new Date(c.created_at).getTime() < SEVEN_DAYS)
+      .filter((c) =>
+        !c.favorite &&
+        c.added_via !== "chat_history" &&
+        now - new Date(c.created_at).getTime() < SEVEN_DAYS
+      )
       .slice(0, 5);
     const recentIds = new Set(recents.map((r) => r.contact_user_id));
     const rest = contacts
@@ -83,9 +91,34 @@ export default function ContactsPage() {
     return { favorites, recents, byLetter: Array.from(byLetter.entries()) };
   }, [contacts, q]);
 
-  function syncPhone() {
-    // Native contacts plugin is opt-in. Either way, route to the matcher page —
-    // it will surface the native button when available.
+  async function syncPhone() {
+    // On native devices: read contacts directly, hash on-device, then jump to results.
+    if (nativeReady && !syncingNative) {
+      setSyncingNative(true);
+      try {
+        const r = await pickAndHashPhones();
+        if (!r.ok) {
+          if (r.reason === "denied") toast.error("Permission denied. Enable Contacts in Settings.");
+          else if (r.reason === "empty") toast.message("No phone numbers found in your contacts.");
+          else toast.error("Couldn't read contacts on this device.");
+          navigate("/chat/find-contacts");
+          return;
+        }
+        const { data } = await supabase.functions.invoke("contact-match", { body: { hashes: r.hashes } });
+        const results = (data as any)?.matches ?? [];
+        toast.success(
+          results.length
+            ? `${results.length} of your ${r.count} contacts are on ZIVO`
+            : `Scanned ${r.count} contacts — no matches yet`
+        );
+        navigate("/chat/find-contacts", { state: { matches: results } });
+      } catch {
+        navigate("/chat/find-contacts");
+      } finally {
+        setSyncingNative(false);
+      }
+      return;
+    }
     navigate("/chat/find-contacts");
   }
 
@@ -220,22 +253,33 @@ export default function ContactsPage() {
           <button
             type="button"
             onClick={syncPhone}
+            disabled={syncingNative}
             aria-label={nativeReady ? "Sync contacts from your phone" : "Sync contacts (paste numbers)"}
-            className="flex flex-col items-center gap-1.5 p-3 rounded-2xl border bg-card hover:bg-muted/50 active:scale-[0.98] transition focus-visible:ring-2 focus-visible:ring-emerald-500 focus-visible:outline-none"
+            className="flex flex-col items-center gap-1.5 p-3 rounded-2xl border bg-card hover:bg-muted/50 active:scale-[0.98] transition focus-visible:ring-2 focus-visible:ring-emerald-500 focus-visible:outline-none disabled:opacity-60"
           >
             <div className="w-9 h-9 rounded-full bg-violet-500/15 text-violet-600 flex items-center justify-center">
-              <Smartphone className="w-4 h-4" />
+              <Smartphone className={`w-4 h-4 ${syncingNative ? "animate-pulse" : ""}`} />
             </div>
-            <span className="text-[11px] font-medium leading-tight text-center">Sync phone</span>
+            <span className="text-[11px] font-medium leading-tight text-center">{syncingNative ? "Syncing…" : "Sync phone"}</span>
           </button>
           <button
             type="button"
             onClick={() => navigate("/chat/contacts/requests")}
-            aria-label="View incoming and sent contact requests"
-            className="flex flex-col items-center gap-1.5 p-3 rounded-2xl border bg-card hover:bg-muted/50 active:scale-[0.98] transition focus-visible:ring-2 focus-visible:ring-emerald-500 focus-visible:outline-none"
+            aria-label={incoming.length > 0
+              ? `View contact requests, ${incoming.length} pending`
+              : "View incoming and sent contact requests"}
+            className="relative flex flex-col items-center gap-1.5 p-3 rounded-2xl border bg-card hover:bg-muted/50 active:scale-[0.98] transition focus-visible:ring-2 focus-visible:ring-emerald-500 focus-visible:outline-none"
           >
-            <div className="w-9 h-9 rounded-full bg-amber-500/15 text-amber-600 flex items-center justify-center">
+            <div className="relative w-9 h-9 rounded-full bg-amber-500/15 text-amber-600 flex items-center justify-center">
               <Inbox className="w-4 h-4" />
+              {incoming.length > 0 && (
+                <span
+                  aria-hidden="true"
+                  className="absolute -top-1 -right-1 min-w-[18px] h-[18px] px-1 rounded-full bg-emerald-500 text-white text-[10px] font-semibold flex items-center justify-center ring-2 ring-background"
+                >
+                  {incoming.length > 99 ? "99+" : incoming.length}
+                </span>
+              )}
             </div>
             <span className="text-[11px] font-medium leading-tight text-center">Requests</span>
           </button>

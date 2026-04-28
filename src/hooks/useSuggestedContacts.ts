@@ -42,8 +42,8 @@ export function useSuggestedContacts() {
   const [isStale, setIsStale] = useState(false);
 
   const fetchFresh = useCallback(async (uid: string): Promise<Suggested[]> => {
-    // Run the three independent reads in parallel
-    const [existingRes, followersRes, dmsRes] = await Promise.all([
+    // Run the four independent reads in parallel
+    const [existingRes, followersRes, dmsRes, dismissedRes] = await Promise.all([
       supabase.from("user_contacts").select("contact_user_id").eq("owner_id", uid),
       (supabase as any).from("follows").select("follower_id").eq("following_id", uid).limit(50),
       (supabase as any)
@@ -52,9 +52,11 @@ export function useSuggestedContacts() {
         .or(`sender_id.eq.${uid},receiver_id.eq.${uid}`)
         .order("created_at", { ascending: false })
         .limit(40),
+      (supabase as any).from("suggestion_dismissals").select("dismissed_user_id").eq("user_id", uid),
     ]);
 
     const skip = new Set<string>(((existingRes.data ?? []) as any[]).map((r) => r.contact_user_id));
+    ((dismissedRes.data ?? []) as any[]).forEach((r) => skip.add(r.dismissed_user_id));
     skip.add(uid);
 
     const candidates = new Map<string, Suggested["reason"]>();
@@ -155,5 +157,20 @@ export function useSuggestedContacts() {
     } catch { /* ignore */ }
   }, [user]);
 
-  return { items, loading, isStale, refresh };
+  const dismiss = useCallback(async (dismissedId: string) => {
+    if (!user) return;
+    const next = items.filter((i) => i.user_id !== dismissedId);
+    setItems(next);
+    const cur = memCache.get(user.id);
+    if (cur) {
+      const payload = { data: next, fetchedAt: cur.fetchedAt };
+      memCache.set(user.id, payload);
+      writeSession(user.id, payload);
+    }
+    await (supabase as any)
+      .from("suggestion_dismissals")
+      .upsert({ user_id: user.id, dismissed_user_id: dismissedId }, { onConflict: "user_id,dismissed_user_id" });
+  }, [user, items]);
+
+  return { items, loading, isStale, refresh, dismiss };
 }

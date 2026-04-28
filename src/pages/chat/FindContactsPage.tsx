@@ -1,7 +1,7 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useSmartBack } from "@/lib/smartBack";
-import { useNavigate } from "react-router-dom";
-import { ArrowLeft, Search, UserPlus, Loader2, Phone, Smartphone } from "lucide-react";
+import { useLocation, useNavigate } from "react-router-dom";
+import { ArrowLeft, Search, UserPlus, Loader2, Phone, Smartphone, Check } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
@@ -9,6 +9,9 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { toast } from "sonner";
 import { hashPhoneE164 } from "@/lib/phoneHash";
 import { isNativeAvailable, pickAndHashPhones } from "@/lib/nativeContacts";
+import { useContacts } from "@/hooks/useContacts";
+import { useContactRequests } from "@/hooks/useContactRequests";
+import ConfirmAddContactSheet, { type AddTarget } from "@/components/chat/ConfirmAddContactSheet";
 
 interface Match {
   user_id: string;
@@ -23,13 +26,24 @@ interface ContactMatchResponse {
 
 export default function FindContactsPage() {
   const navigate = useNavigate();
+  const location = useLocation();
   const goBack = useSmartBack("/chat");
   const [raw, setRaw] = useState("");
   const [scanning, setScanning] = useState(false);
-  const [matches, setMatches] = useState<Match[] | null>(null);
-  const [adding, setAdding] = useState<string | null>(null);
+  const initialMatches = (location.state as any)?.matches as Match[] | undefined;
+  const [matches, setMatches] = useState<Match[] | null>(initialMatches ?? null);
   const [nativeReady, setNativeReady] = useState(false);
   const [syncing, setSyncing] = useState(false);
+  const [confirmTarget, setConfirmTarget] = useState<AddTarget | null>(null);
+  const [confirmOpen, setConfirmOpen] = useState(false);
+
+  const { contacts } = useContacts();
+  const { outgoing } = useContactRequests();
+  const contactIds = useMemo(() => new Set((contacts ?? []).map((c) => c.contact_user_id)), [contacts]);
+  const pendingIds = useMemo(
+    () => new Set((outgoing ?? []).filter((r) => r.status === "pending").map((r) => r.to_user_id)),
+    [outgoing]
+  );
 
   useEffect(() => {
     let alive = true;
@@ -104,25 +118,23 @@ export default function FindContactsPage() {
     }
   };
 
-  const addContact = async (m: Match) => {
-    setAdding(m.user_id);
-    const { data: u } = await supabase.auth.getUser();
-    if (!u.user) {
-      toast.error("Sign in required");
-      setAdding(null);
-      return;
-    }
-    const { error } = await supabase.from("contact_requests").insert({
-      from_user_id: u.user.id,
-      to_user_id: m.user_id,
-      status: "pending",
+  const openConfirm = (m: Match) => {
+    setConfirmTarget({
+      user_id: m.user_id,
+      full_name: m.full_name,
+      username: m.username,
+      avatar_url: m.avatar_url,
     });
-    setAdding(null);
-    if (error) {
-      toast.error(error.message);
-      return;
-    }
-    toast.success("Request sent");
+    setConfirmOpen(true);
+  };
+
+  const openChat = (m: Match) => {
+    const name = m.full_name || (m.username ? `@${m.username}` : "ZIVO user");
+    navigate("/chat", {
+      state: {
+        openChat: { recipientId: m.user_id, recipientName: name, recipientAvatar: m.avatar_url || null },
+      },
+    });
   };
 
   return (
@@ -203,26 +215,31 @@ export default function FindContactsPage() {
                       <div className="truncate text-xs text-muted-foreground">@{m.username}</div>
                     )}
                   </div>
-                  <Button
-                    size="sm"
-                    variant="outline"
-                    onClick={() => addContact(m)}
-                    disabled={adding === m.user_id}
-                    className="gap-1"
-                  >
-                    {adding === m.user_id ? (
-                      <Loader2 className="h-4 w-4 animate-spin" />
-                    ) : (
-                      <UserPlus className="h-4 w-4" />
-                    )}
-                    Add
-                  </Button>
+                  {contactIds.has(m.user_id) ? (
+                    <Button size="sm" variant="ghost" onClick={() => openChat(m)} className="gap-1 text-emerald-600">
+                      <Check className="h-4 w-4" /> In contacts
+                    </Button>
+                  ) : pendingIds.has(m.user_id) ? (
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={() => navigate("/chat/contacts/requests?tab=out")}
+                      className="gap-1 text-amber-600 border-amber-300"
+                    >
+                      <Loader2 className="h-4 w-4" /> Pending
+                    </Button>
+                  ) : (
+                    <Button size="sm" variant="outline" onClick={() => openConfirm(m)} className="gap-1">
+                      <UserPlus className="h-4 w-4" /> Add
+                    </Button>
+                  )}
                 </div>
               ))
             )}
           </div>
         )}
       </div>
+      <ConfirmAddContactSheet open={confirmOpen} onOpenChange={setConfirmOpen} target={confirmTarget} />
     </div>
   );
 }
