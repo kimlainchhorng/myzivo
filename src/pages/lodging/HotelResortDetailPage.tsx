@@ -272,7 +272,7 @@ export default function HotelResortDetailPage() {
   }
 
   return (
-    <div className="min-h-dvh bg-background pb-28 md:pb-12">
+    <div className="min-h-dvh bg-background pb-32 md:pb-12">
       <Helmet>
         <title>{store?.name ? `${store.name} — ZIVO` : "Hotel & Resort — ZIVO"}</title>
         <meta
