@@ -304,7 +304,7 @@ export default function HotelResortDetailPage() {
               <div className="flex items-start gap-2">
                 <div className="min-w-0 flex-1">
                   <div className="flex items-center gap-2 flex-wrap">
-                    <h1 className="text-lg font-bold text-foreground truncate">{store?.name}</h1>
+                    <h1 className="text-lg font-bold text-foreground line-clamp-2 break-words">{store?.name}</h1>
                     <Badge variant="secondary" className="text-[10px] capitalize">
                       {store?.category?.replace(/_/g, " ") || "Hotel"}
                     </Badge>
