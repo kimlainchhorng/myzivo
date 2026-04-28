@@ -570,10 +570,12 @@ const PartnerOnboardingDispatcher = () => {
 function useAfterFirstPaint(timeout = 1600) {
   const [ready, setReady] = useState(false);
   useEffect(() => {
-    const schedule = window.requestIdleCallback || ((cb: () => void) => window.setTimeout(cb, timeout));
-    const cancel = window.cancelIdleCallback || window.clearTimeout;
-    const handle = schedule(() => setReady(true), { timeout } as IdleRequestOptions);
-    return () => cancel(handle as number);
+    if (window.requestIdleCallback) {
+      const handle = window.requestIdleCallback(() => setReady(true), { timeout });
+      return () => window.cancelIdleCallback?.(handle);
+    }
+    const handle = window.setTimeout(() => setReady(true), timeout);
+    return () => window.clearTimeout(handle);
   }, [timeout]);
   return ready;
 }
