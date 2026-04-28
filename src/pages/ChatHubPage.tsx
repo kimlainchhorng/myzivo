@@ -212,6 +212,7 @@ export default function ChatHubPage({ embedded = false }: { embedded?: boolean }
   const setActive = (c: ChatCategory) => setFolder(c);
   const [search, setSearch] = useState("");
   const [searchFilter, setSearchFilter] = useState<"chats" | "media" | "links" | "files">("chats");
+  const [globalSearchOpen, setGlobalSearchOpen] = useState(false);
   // Telegram-style: collapse Stories strip on scroll-down, restore on scroll-up
   const [storiesCollapsed, setStoriesCollapsed] = useState(false);
   const lastScrollYRef = useRef(0);
