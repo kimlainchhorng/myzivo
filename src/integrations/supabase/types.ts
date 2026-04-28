@@ -39470,6 +39470,7 @@ export type Database = {
           last_admin_login: string | null
           last_seen: string | null
           loyalty_tier_id: string | null
+          open_to_work: boolean
           payout_hold: boolean
           phone: string | null
           phone_e164: string | null
@@ -39534,6 +39535,7 @@ export type Database = {
           last_admin_login?: string | null
           last_seen?: string | null
           loyalty_tier_id?: string | null
+          open_to_work?: boolean
           payout_hold?: boolean
           phone?: string | null
           phone_e164?: string | null
@@ -39598,6 +39600,7 @@ export type Database = {
           last_admin_login?: string | null
           last_seen?: string | null
           loyalty_tier_id?: string | null
+          open_to_work?: boolean
           payout_hold?: boolean
           phone?: string | null
           phone_e164?: string | null
@@ -48946,6 +48949,65 @@ export type Database = {
             columns: ["store_id"]
             isOneToOne: false
             referencedRelation: "store_profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      store_employee_invites: {
+        Row: {
+          accepted_at: string | null
+          accepted_by: string | null
+          channel: string
+          created_at: string
+          email: string | null
+          expires_at: string
+          id: string
+          phone: string | null
+          sent_at: string
+          sent_by: string | null
+          status: string
+          store_employee_id: string
+          store_id: string
+          token: string
+        }
+        Insert: {
+          accepted_at?: string | null
+          accepted_by?: string | null
+          channel: string
+          created_at?: string
+          email?: string | null
+          expires_at?: string
+          id?: string
+          phone?: string | null
+          sent_at?: string
+          sent_by?: string | null
+          status?: string
+          store_employee_id: string
+          store_id: string
+          token: string
+        }
+        Update: {
+          accepted_at?: string | null
+          accepted_by?: string | null
+          channel?: string
+          created_at?: string
+          email?: string | null
+          expires_at?: string
+          id?: string
+          phone?: string | null
+          sent_at?: string
+          sent_by?: string | null
+          status?: string
+          store_employee_id?: string
+          store_id?: string
+          token?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "store_employee_invites_store_employee_id_fkey"
+            columns: ["store_employee_id"]
+            isOneToOne: false
+            referencedRelation: "store_employees"
             referencedColumns: ["id"]
           },
         ]
@@ -62069,6 +62131,7 @@ export type Database = {
           last_admin_login: string | null
           last_seen: string | null
           loyalty_tier_id: string | null
+          open_to_work: boolean
           payout_hold: boolean
           phone: string | null
           phone_e164: string | null
@@ -62302,6 +62365,7 @@ export type Database = {
         Args: { p_amount: number; p_driver_id: string }
         Returns: Json
       }
+      claim_employee_invite: { Args: { _token: string }; Returns: Json }
       clean_expired_flight_cache: { Args: never; Returns: undefined }
       cleanup_expired_device_link_tokens: { Args: never; Returns: undefined }
       cleanup_expired_messages: { Args: never; Returns: undefined }
@@ -62956,6 +63020,7 @@ export type Database = {
           last_admin_login: string | null
           last_seen: string | null
           loyalty_tier_id: string | null
+          open_to_work: boolean
           payout_hold: boolean
           phone: string | null
           phone_e164: string | null

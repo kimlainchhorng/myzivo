@@ -8,7 +8,7 @@ import { toast } from "sonner";
 import {
   Users, Plus, Edit, Trash2, Loader2, Phone, Mail, DollarSign, Search,
   Filter, MoreHorizontal, UserCheck, UserX, Download, Upload, MapPin,
-  Briefcase, Award, CalendarDays, ChevronDown, ArrowUpDown, Eye
+  Briefcase, Award, CalendarDays, ChevronDown, ArrowUpDown, Eye, Send, MailCheck, MessageSquare
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -55,6 +55,7 @@ const emptyForm = {
   pay_type: "hourly" as "hourly" | "monthly", monthly_salary: "",
   notes: "", department: "General", emergency_contact: "", address: "",
   start_date: format(new Date(), "yyyy-MM-dd"),
+  invite_email: true, invite_sms: false,
 };
 
 export default function StoreEmployeesSection({ storeId }: Props) {
@@ -79,6 +80,25 @@ export default function StoreEmployeesSection({ storeId }: Props) {
     },
   });
 
+  const sendInvite = async (employeeId: string, channel: "email" | "sms", payload: { email?: string | null; phone?: string | null; role: string }) => {
+    const fnName = channel === "email" ? "send-employee-email-invite" : "send-employee-sms-invite";
+    const body: any = { storeEmployeeId: employeeId, role: payload.role };
+    if (channel === "email") body.email = payload.email;
+    else body.phone = payload.phone;
+    const { data, error } = await supabase.functions.invoke(fnName, { body });
+    if (error || (data && (data as any).error)) {
+      throw new Error(error?.message || (data as any)?.error || "invite_failed");
+    }
+  };
+
+  const inviteMutation = useMutation({
+    mutationFn: async ({ emp, channel }: { emp: Employee; channel: "email" | "sms" }) => {
+      await sendInvite(emp.id, channel, { email: emp.email, phone: emp.phone, role: emp.role });
+    },
+    onSuccess: (_d, vars) => toast.success(vars.channel === "email" ? "Email invite sent" : "SMS invite sent"),
+    onError: (e: any) => toast.error("Invite failed: " + (e?.message || "unknown")),
+  });
+
   const saveMutation = useMutation({
     mutationFn: async () => {
       const rateValue = form.pay_type === "monthly"
@@ -91,12 +111,24 @@ export default function StoreEmployeesSection({ storeId }: Props) {
         pay_type: form.pay_type,
         notes: form.notes.trim() || null,
       };
+      let savedId = editing?.id;
       if (editing) {
         const { error } = await supabase.from("store_employees").update(payload).eq("id", editing.id);
         if (error) throw error;
       } else {
-        const { error } = await supabase.from("store_employees").insert(payload);
+        const { data, error } = await supabase.from("store_employees").insert(payload).select("id").maybeSingle();
         if (error) throw error;
+        savedId = data?.id;
+      }
+      // Fire invites if requested
+      if (savedId) {
+        const role = form.role;
+        if (form.invite_email && payload.email) {
+          try { await sendInvite(savedId, "email", { email: payload.email, role }); } catch (e: any) { toast.error("Email invite failed: " + e.message); }
+        }
+        if (form.invite_sms && payload.phone) {
+          try { await sendInvite(savedId, "sms", { phone: payload.phone, role }); } catch (e: any) { toast.error("SMS invite failed: " + e.message); }
+        }
       }
     },
     onSuccess: () => { queryClient.invalidateQueries({ queryKey: ["store-employees", storeId] }); toast.success(editing ? "Employee updated" : "Employee added"); closeDialog(); },
@@ -128,6 +160,7 @@ export default function StoreEmployeesSection({ storeId }: Props) {
       monthly_salary: isSalary ? (emp.hourly_rate?.toString() || "") : "",
       notes: emp.notes || "", department: "General", emergency_contact: "", address: "",
       start_date: format(new Date(emp.created_at), "yyyy-MM-dd"),
+      invite_email: false, invite_sms: false,
     });
     setDialog(true);
   };
@@ -258,7 +291,9 @@ export default function StoreEmployeesSection({ storeId }: Props) {
                         )}
                       </div>
                     </div>
-                    <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity shrink-0" onClick={e => e.stopPropagation()}>
+                    <div className="flex gap-1 opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity shrink-0" onClick={e => e.stopPropagation()}>
+                      <Button variant="ghost" size="icon" className="h-7 w-7 text-emerald-600" disabled={!emp.email || inviteMutation.isPending} title="Send Email Invite" onClick={() => inviteMutation.mutate({ emp, channel: "email" })}><MailCheck className="w-3.5 h-3.5" /></Button>
+                      <Button variant="ghost" size="icon" className="h-7 w-7 text-blue-600" disabled={!emp.phone || inviteMutation.isPending} title="Send SMS Invite" onClick={() => inviteMutation.mutate({ emp, channel: "sms" })}><MessageSquare className="w-3.5 h-3.5" /></Button>
                       <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => openEdit(emp)}><Edit className="w-3 h-3" /></Button>
                       <Button variant="ghost" size="icon" className="h-7 w-7 text-destructive" onClick={() => setDeleteId(emp.id)}><Trash2 className="w-3 h-3" /></Button>
                     </div>
