@@ -24,6 +24,12 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
 
 import tabHotelsBg from "@/assets/tab-hotels-bg.jpg";
+import destPhnomPenh from "@/assets/destinations/phnom-penh.jpg";
+import destSiemReap from "@/assets/destinations/siem-reap.jpg";
+import destSihanoukville from "@/assets/destinations/sihanoukville.jpg";
+import destKep from "@/assets/destinations/kep.jpg";
+import destKampot from "@/assets/destinations/kampot.jpg";
+import destBattambang from "@/assets/destinations/battambang.jpg";
 
 interface DirectoryStore {
   id: string;
