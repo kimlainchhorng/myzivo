@@ -26,10 +26,12 @@ interface ContactMatchResponse {
 
 export default function FindContactsPage() {
   const navigate = useNavigate();
+  const location = useLocation();
   const goBack = useSmartBack("/chat");
   const [raw, setRaw] = useState("");
   const [scanning, setScanning] = useState(false);
-  const [matches, setMatches] = useState<Match[] | null>(null);
+  const initialMatches = (location.state as any)?.matches as Match[] | undefined;
+  const [matches, setMatches] = useState<Match[] | null>(initialMatches ?? null);
   const [nativeReady, setNativeReady] = useState(false);
   const [syncing, setSyncing] = useState(false);
   const [confirmTarget, setConfirmTarget] = useState<AddTarget | null>(null);
