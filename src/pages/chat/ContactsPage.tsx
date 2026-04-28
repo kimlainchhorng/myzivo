@@ -41,11 +41,13 @@ export default function ContactsPage() {
   const goBack = useSmartBack("/chat");
   const { contacts, loading, toggleFavorite, remove } = useContacts();
   const { username } = useUsername();
+  const { incoming } = useContactRequests();
   const [q, setQ] = useState("");
   const [addOpen, setAddOpen] = useState(false);
   const [usernameOpen, setUsernameOpen] = useState(false);
   const [inviteOpen, setInviteOpen] = useState(false);
   const [nativeReady, setNativeReady] = useState(false);
+  const [syncingNative, setSyncingNative] = useState(false);
 
   useEffect(() => {
     let alive = true;
