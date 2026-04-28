@@ -48,10 +48,20 @@ export default function EmployerDashboardPage() {
       if (co) {
         const { data: js } = await (supabase as any).from("career_jobs").select("*, career_applications(count)").eq("company_id", co.id).order("created_at", { ascending: false });
         setJobs(js ?? []);
+      } else if (prefillStoreId) {
+        const { data: store } = await (supabase as any).from("stores").select("name,category,city,country,logo_url,description,website").eq("id", prefillStoreId).maybeSingle();
+        if (store) {
+          setName(store.name ?? "");
+          setIndustry(store.category ?? "");
+          setLocation([store.city, store.country].filter(Boolean).join(", "));
+          setWebsite(store.website ?? "");
+          setDescription(store.description ?? "");
+          toast.info("Prefilled from your store — review and save.");
+        }
       }
       setLoading(false);
     })();
-  }, [user]);
+  }, [user, prefillStoreId]);
 
   const createCompany = async () => {
     if (!user) return;
