@@ -15,8 +15,51 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
-import { Wallet, Plus, Trash2, ScanLine, Paperclip, Loader2, X } from "lucide-react";
+import { Wallet, Plus, Trash2, ScanLine, Paperclip, Loader2, X, ChevronDown, ChevronRight, Copy, AlertCircle, CheckCircle2 } from "lucide-react";
 import { toast } from "sonner";
+
+// ---------- Receipt-upload diagnostics ----------
+const PRIMARY_BUCKET = "ar-receipts";
+const FALLBACK_BUCKET = "ar-receipts-fallback";
+const FALLBACK_PREFIX = "fallback:";
+
+type AttemptLog = {
+  n: number;
+  started: string;
+  durationMs: number;
+  ok: boolean;
+  status?: number | null;
+  code?: string | null;
+  message?: string | null;
+  transient: boolean;
+};
+
+type DiagnosticsRecord = {
+  at: string;
+  user_id: string | null;
+  store_id: string;
+  bucket: string;
+  path: string | null;
+  url: string | null;
+  method: "POST";
+  headers: Record<string, string>;
+  preflight: any;
+  attempts: AttemptLog[];
+  used_fallback: boolean;
+  fallback_response: any;
+  final_receipt_ref: string | null;
+  scan_response_summary?: { items: number; vendor: string | null } | null;
+};
+
+function isTransientUploadError(err: any, status?: number | null): boolean {
+  if (status && status >= 500 && status < 600) return true;
+  const msg = String(err?.message || err || "");
+  if (/08P01|database error|timeout|ECONNRESET|fetch failed|network|temporarily/i.test(msg)) return true;
+  if (err?.name === "TypeError") return true; // browser network error
+  return false;
+}
+
+const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
 
 interface Props { storeId: string }
 

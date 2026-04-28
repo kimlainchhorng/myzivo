@@ -1,0 +1,206 @@
+// AR Receipts helper.
+//
+// Two actions:
+//   - "preflight":       verifies the caller is authenticated and owns the
+//                        given storeId (or is an admin). Returns details the
+//                        client uses to decide whether to attempt the direct
+//                        ar-receipts upload.
+//   - "fallback_upload": accepts a base64 image and writes it to the
+//                        "ar-receipts-fallback" bucket via the service role,
+//                        then returns the bucket+path and a signed URL.
+//
+// Used by FinanceExpensesSection when the primary ar-receipts upload fails
+// with a transient storage/DB error such as 08P01.
+
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
+
+const corsHeaders = {
+  "Access-Control-Allow-Origin": "*",
+  "Access-Control-Allow-Headers":
+    "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
+};
+
+const FALLBACK_BUCKET = "ar-receipts-fallback";
+const PRIMARY_BUCKET = "ar-receipts";
+
+function jsonResponse(body: unknown, status = 200) {
+  return new Response(JSON.stringify(body), {
+    status,
+    headers: { ...corsHeaders, "Content-Type": "application/json" },
+  });
+}
+
+function decodeBase64(b64: string): Uint8Array {
+  const clean = b64.includes(",") ? b64.slice(b64.indexOf(",") + 1) : b64;
+  const binary = atob(clean);
+  const bytes = new Uint8Array(binary.length);
+  for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);
+  return bytes;
+}
+
+function safeExt(mime: string | undefined, fallback = "jpg"): string {
+  if (!mime) return fallback;
+  const map: Record<string, string> = {
+    "image/jpeg": "jpg",
+    "image/jpg": "jpg",
+    "image/png": "png",
+    "image/webp": "webp",
+    "image/heic": "heic",
+    "image/heif": "heif",
+    "application/pdf": "pdf",
+  };
+  return map[mime] || fallback;
+}
+
+Deno.serve(async (req) => {
+  if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
+
+  try {
+    const SUPABASE_URL = Deno.env.get("SUPABASE_URL");
+    const SERVICE_ROLE = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
+    const ANON_KEY = Deno.env.get("SUPABASE_ANON_KEY");
+    if (!SUPABASE_URL || !SERVICE_ROLE || !ANON_KEY) {
+      return jsonResponse({ error: "Server is missing Supabase configuration" }, 500);
+    }
+
+    const authHeader = req.headers.get("Authorization") || "";
+    const accessToken = authHeader.replace(/^Bearer\s+/i, "").trim();
+    if (!accessToken) return jsonResponse({ error: "Missing Authorization bearer token" }, 401);
+
+    const userClient = createClient(SUPABASE_URL, ANON_KEY, {
+      global: { headers: { Authorization: `Bearer ${accessToken}` } },
+    });
+    const admin = createClient(SUPABASE_URL, SERVICE_ROLE);
+
+    const { data: userData, error: userErr } = await userClient.auth.getUser();
+    if (userErr || !userData?.user) {
+      return jsonResponse({ error: "Invalid or expired session", details: userErr?.message }, 401);
+    }
+    const userId = userData.user.id;
+
+    let payload: Record<string, unknown> = {};
+    try {
+      payload = await req.json();
+    } catch {
+      return jsonResponse({ error: "Body must be valid JSON" }, 400);
+    }
+
+    const action = String(payload.action || "").toLowerCase();
+    const storeId = typeof payload.store_id === "string" ? payload.store_id : "";
+    if (!action) return jsonResponse({ error: "Missing 'action'" }, 400);
+    if (!storeId || !/^[0-9a-f-]{36}$/i.test(storeId)) {
+      return jsonResponse({ error: "Missing or invalid 'store_id'" }, 400);
+    }
+
+    // Service-role lookup for ownership / role
+    const [{ data: store }, { data: roles }] = await Promise.all([
+      admin
+        .from("store_profiles")
+        .select("id, owner_id, name, is_active")
+        .eq("id", storeId)
+        .maybeSingle(),
+      admin.from("user_roles").select("role").eq("user_id", userId),
+    ]);
+
+    const roleList: string[] = (roles || []).map((r: any) => String(r.role));
+    const isAdmin = roleList.includes("admin");
+    const isOwner = !!store && store.owner_id === userId;
+    const ownsStore = isAdmin || isOwner;
+
+    if (action === "preflight") {
+      return jsonResponse({
+        ok: ownsStore,
+        user_id: userId,
+        store_id: storeId,
+        store_found: !!store,
+        owner_id: store?.owner_id ?? null,
+        is_owner: isOwner,
+        is_admin: isAdmin,
+        roles: roleList,
+        primary_bucket: PRIMARY_BUCKET,
+        fallback_bucket: FALLBACK_BUCKET,
+        expected_folder: storeId,
+      });
+    }
+
+    if (action === "fallback_upload") {
+      if (!ownsStore) {
+        return jsonResponse(
+          {
+            error: "You don't have permission to upload receipts for this store.",
+            user_id: userId,
+            store_id: storeId,
+            is_owner: isOwner,
+            is_admin: isAdmin,
+          },
+          403,
+        );
+      }
+
+      const b64 = typeof payload.image_base64 === "string" ? payload.image_base64 : "";
+      const mime = typeof payload.mime_type === "string" ? payload.mime_type : "image/jpeg";
+      if (!b64) return jsonResponse({ error: "Missing 'image_base64'" }, 400);
+
+      let bytes: Uint8Array;
+      try {
+        bytes = decodeBase64(b64);
+      } catch (e: any) {
+        return jsonResponse({ error: "Invalid base64 image", details: e?.message }, 400);
+      }
+      if (bytes.byteLength === 0) {
+        return jsonResponse({ error: "Decoded image is empty" }, 400);
+      }
+      if (bytes.byteLength > 12 * 1024 * 1024) {
+        return jsonResponse({ error: "Image too large (max 12MB)" }, 413);
+      }
+
+      const ext = safeExt(mime);
+      const path = `${storeId}/${Date.now()}-${crypto.randomUUID()}.${ext}`;
+
+      const { error: upErr } = await admin.storage.from(FALLBACK_BUCKET).upload(path, bytes, {
+        contentType: mime,
+        upsert: false,
+      });
+      if (upErr) {
+        return jsonResponse(
+          {
+            error: "Fallback upload failed",
+            details: upErr.message,
+            bucket: FALLBACK_BUCKET,
+            path,
+          },
+          500,
+        );
+      }
+
+      const { data: signed, error: signErr } = await admin.storage
+        .from(FALLBACK_BUCKET)
+        .createSignedUrl(path, 60 * 60);
+      if (signErr) {
+        return jsonResponse(
+          {
+            error: "Could not sign uploaded receipt",
+            details: signErr.message,
+            bucket: FALLBACK_BUCKET,
+            path,
+          },
+          500,
+        );
+      }
+
+      return jsonResponse({
+        ok: true,
+        bucket: FALLBACK_BUCKET,
+        path,
+        signed_url: signed?.signedUrl || null,
+        size: bytes.byteLength,
+        mime,
+      });
+    }
+
+    return jsonResponse({ error: `Unknown action '${action}'` }, 400);
+  } catch (e: any) {
+    console.error("ar-receipts-helper error", e);
+    return jsonResponse({ error: e?.message || "Unknown server error" }, 500);
+  }
+});
