@@ -66,6 +66,11 @@ import AutoRepairTiresSection from "@/components/admin/store/autorepair/AutoRepa
 import AutoRepairWarrantySection from "@/components/admin/store/autorepair/AutoRepairWarrantySection";
 import AutoRepairFleetSection from "@/components/admin/store/autorepair/AutoRepairFleetSection";
 import AutoRepairReportsSection from "@/components/admin/store/autorepair/AutoRepairReportsSection";
+import FinanceIncomeSection from "@/components/admin/store/autorepair/finance/FinanceIncomeSection";
+import FinanceExpensesSection from "@/components/admin/store/autorepair/finance/FinanceExpensesSection";
+import FinancePaymentsSection from "@/components/admin/store/autorepair/finance/FinancePaymentsSection";
+import FinanceProfitLossSection from "@/components/admin/store/autorepair/finance/FinanceProfitLossSection";
+import FinanceTaxPayoutsSection from "@/components/admin/store/autorepair/finance/FinanceTaxPayoutsSection";
 import LodgingRoomsSection from "@/components/admin/store/lodging/LodgingRoomsSection";
 import LodgingPropertyProfileSection from "@/components/admin/store/lodging/LodgingPropertyProfileSection";
 import LodgingReservationsSection from "@/components/admin/store/lodging/LodgingReservationsSection";
