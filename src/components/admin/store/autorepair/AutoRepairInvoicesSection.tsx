@@ -107,6 +107,46 @@ export default function AutoRepairInvoicesSection({ storeId }: Props) {
       if (data) setStoreInfo({ name: data.name || undefined, address: data.address || undefined, phone: data.phone || undefined });
     })();
   }, [storeId]);
+
+  // Load persisted invoices from ar_invoices and merge with seed (so the user's
+  // saved invoices survive a page refresh — fixes the "data disappears" bug).
+  useEffect(() => {
+    if (!storeId) return;
+    (async () => {
+      const { data, error } = await supabase
+        .from("ar_invoices" as any)
+        .select("*")
+        .eq("store_id", storeId)
+        .order("created_at", { ascending: false });
+      if (error || !data) return;
+      const persisted: Doc[] = (data as any[]).map((row) => ({
+        id: row.id,
+        type: "invoice" as const,
+        number: row.number || "",
+        customer: row.customer_name || "",
+        firstName: (row.customer_name || "").split(" ")[0] || "",
+        lastName: (row.customer_name || "").split(" ").slice(1).join(" ") || "",
+        phone: row.customer_phone || "",
+        email: row.customer_email || "",
+        address: row.customer_address || "",
+        vin: row.vin || "",
+        year: row.vehicle_year || "",
+        make: row.vehicle_make || "",
+        model: row.vehicle_model || "",
+        trim: "", engine: "", transmission: "", driveType: "", bodyClass: "", doors: "", fuel: "", plant: "",
+        vehicle: row.vehicle_label || "",
+        items: Array.isArray(row.items) ? row.items : [],
+        status: (row.status === "paid" ? "paid" : row.status === "sent" ? "sent" : "draft") as Doc["status"],
+        createdAt: row.created_at,
+      }));
+      setDocs((prev) => {
+        // Keep seed estimates + non-persisted invoices, replace any with same id
+        const persistedIds = new Set(persisted.map((p) => p.id));
+        const kept = prev.filter((d) => d.type === "estimate" || !persistedIds.has(d.id));
+        return [...persisted, ...kept];
+      });
+    })();
+  }, [storeId]);
   const draftKey = useMemo(() => `autorepair:invoice-draft:${storeId}`, [storeId]);
   const saveTimer = useRef<number | null>(null);
   const skipNextSave = useRef(true);
