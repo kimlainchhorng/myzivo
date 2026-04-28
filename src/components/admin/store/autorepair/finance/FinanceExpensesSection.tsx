@@ -84,6 +84,102 @@ const blankForm = () => ({
   receipt_url: "" as string | null,
   items: [emptyItem()] as Item[],
 });
+type ExpenseFormState = ReturnType<typeof blankForm>;
+
+function computeExpenseTotals(source: ExpenseFormState) {
+  const subtotalCents = source.items.reduce((s, it) => {
+    const q = parseFloat(it.quantity) || 0;
+    const u = Math.round((parseFloat(it.unit_price) || 0) * 100);
+    return s + Math.round(q * u);
+  }, 0);
+  const taxCents = Math.round((parseFloat(source.tax) || 0) * 100);
+  return { subtotalCents, taxCents, totalCents: subtotalCents + taxCents };
+}
+
+function toMoneyCents(value: unknown): number | null {
+  if (value == null || value === "") return null;
+  if (typeof value === "number" && Number.isFinite(value)) return Math.round(value);
+  const cleaned = String(value).replace(/[^0-9.-]/g, "");
+  if (!cleaned) return null;
+  const parsed = Number(cleaned);
+  if (!Number.isFinite(parsed)) return null;
+  return String(value).includes(".") ? Math.round(parsed * 100) : Math.round(parsed);
+}
+
+function normalizePaymentMethod(value: unknown): string {
+  const raw = String(value || "").trim().toLowerCase();
+  if (raw.includes("cash")) return "cash";
+  if (raw.includes("card") || raw.includes("visa") || raw.includes("master") || raw.includes("amex")) return "card";
+  if (raw.includes("check") || raw.includes("cheque")) return "check";
+  if (raw.includes("aba")) return "aba";
+  return raw === "other" ? "other" : "card";
+}
+
+function parseScannedTime(value: unknown): { h: string; m: string; ap: "AM" | "PM" } {
+  const raw = String(value || "").trim();
+  const match = raw.match(/(\d{1,2})\s*:\s*(\d{2})(?::\d{2})?\s*(AM|PM)?/i);
+  if (!match) return { h: "12", m: "00", ap: "PM" };
+  let hour = parseInt(match[1], 10);
+  const minute = match[2];
+  const suffix = match[3]?.toUpperCase() as "AM" | "PM" | undefined;
+  if (suffix) return { h: String(((hour + 11) % 12) + 1), m: minute, ap: suffix };
+  const ap: "AM" | "PM" = hour >= 12 ? "PM" : "AM";
+  return { h: String(((hour + 11) % 12) + 1), m: minute, ap };
+}
+
+function buildScannedExpenseForm(inv: any, receiptRef: string | null): ExpenseFormState {
+  const invoiceTotal = toMoneyCents(inv?.total_cents);
+  const invoiceSubtotal = toMoneyCents(inv?.subtotal_cents);
+  const invoiceTax = toMoneyCents(inv?.tax_cents) ?? Math.max(0, (invoiceTotal ?? 0) - (invoiceSubtotal ?? invoiceTotal ?? 0));
+  const scannedItems = Array.isArray(inv?.items) ? inv.items : [];
+  let items: Item[] = scannedItems
+    .map((it: any) => {
+      const quantity = Number(it?.quantity) > 0 ? Number(it.quantity) : 1;
+      const lineTotal = toMoneyCents(it?.line_total_cents);
+      const unitFromLine = lineTotal != null && quantity > 0 ? Math.round(lineTotal / quantity) : null;
+      const unit = unitFromLine ?? toMoneyCents(it?.unit_price_cents) ?? 0;
+      return {
+        part_number: String(it?.part_number || it?.part || it?.sku || "").trim(),
+        name: String(it?.name || it?.description || "Scanned line item").trim(),
+        quantity: String(quantity),
+        unit_price: unit > 0 ? (unit / 100).toFixed(2) : "",
+      };
+    })
+    .filter((it) => it.name || it.unit_price);
+
+  const expectedSubtotal = invoiceSubtotal ?? (invoiceTotal != null ? Math.max(0, invoiceTotal - invoiceTax) : null);
+  const currentSubtotal = items.reduce((sum, it) => sum + Math.round((parseFloat(it.quantity) || 1) * Math.round((parseFloat(it.unit_price) || 0) * 100)), 0);
+  if (items.length === 1 && expectedSubtotal && Math.abs(currentSubtotal - expectedSubtotal) > 2) {
+    const q = parseFloat(items[0].quantity) || 1;
+    items = [{ ...items[0], unit_price: (Math.round(expectedSubtotal / q) / 100).toFixed(2) }];
+  }
+  if (!items.length && expectedSubtotal && expectedSubtotal > 0) {
+    items = [{ part_number: "", name: "Scanned invoice total", quantity: "1", unit_price: (expectedSubtotal / 100).toFixed(2) }];
+  }
+
+  const t = parseScannedTime(inv?.time);
+  return {
+    ...blankForm(),
+    category: "parts",
+    vendor: String(inv?.vendor || "").trim(),
+    invoice_number: String(inv?.invoice_number || "").trim(),
+    description: "",
+    expense_date: /^\d{4}-\d{2}-\d{2}$/.test(String(inv?.date || "")) ? inv.date : new Date().toISOString().slice(0, 10),
+    hour: t.h,
+    minute: t.m,
+    ampm: t.ap,
+    payment_method: normalizePaymentMethod(inv?.payment_method),
+    tax: invoiceTax > 0 ? (invoiceTax / 100).toFixed(2) : "0.00",
+    receipt_url: receiptRef,
+    items: items.length ? items : [emptyItem()],
+    notes: "",
+  };
+}
+
+function isAutoSaveReady(source: ExpenseFormState) {
+  const { totalCents } = computeExpenseTotals(source);
+  return totalCents > 0 && source.items.some((it) => it.name.trim() && (parseFloat(it.unit_price) || 0) > 0);
+}
 
 // Convert 12h hh:mm AM/PM -> 24h "HH:MM:SS"
 function to24h(h: string, m: string, ap: "AM" | "PM"): string | null {
@@ -131,40 +227,33 @@ export default function FinanceExpensesSection({ storeId }: Props) {
   });
 
   // Compute derived totals from items + tax
-  const subtotalCents = useMemo(
-    () => form.items.reduce((s, it) => {
-      const q = parseFloat(it.quantity) || 0;
-      const u = Math.round((parseFloat(it.unit_price) || 0) * 100);
-      return s + Math.round(q * u);
-    }, 0),
-    [form.items]
-  );
-  const taxCents = Math.round((parseFloat(form.tax) || 0) * 100);
-  const totalCents = subtotalCents + taxCents;
+  const { subtotalCents, taxCents, totalCents } = useMemo(() => computeExpenseTotals(form), [form]);
 
   const create = useMutation({
-    mutationFn: async () => {
-      if (totalCents <= 0) throw new Error("Add at least one line item with a price");
+    mutationFn: async (source?: ExpenseFormState) => {
+      const expenseForm = source ?? form;
+      const totals = computeExpenseTotals(expenseForm);
+      if (totals.totalCents <= 0) throw new Error("Add at least one line item with a price");
       const { data: { user } } = await supabase.auth.getUser();
       const { data: inserted, error } = await supabase.from("ar_expenses" as any).insert({
         store_id: storeId,
-        category: form.category,
-        vendor: form.vendor || null,
-        description: form.description || null,
-        amount_cents: totalCents,
-        subtotal_cents: subtotalCents,
-        tax_cents: taxCents,
-        expense_date: form.expense_date,
-        invoice_time: to24h(form.hour, form.minute, form.ampm),
-        invoice_number: form.invoice_number || null,
-        payment_method: form.payment_method,
-        notes: form.notes || null,
-        receipt_url: form.receipt_url || null,
+        category: expenseForm.category,
+        vendor: expenseForm.vendor || null,
+        description: expenseForm.description || null,
+        amount_cents: totals.totalCents,
+        subtotal_cents: totals.subtotalCents,
+        tax_cents: totals.taxCents,
+        expense_date: expenseForm.expense_date,
+        invoice_time: to24h(expenseForm.hour, expenseForm.minute, expenseForm.ampm),
+        invoice_number: expenseForm.invoice_number || null,
+        payment_method: expenseForm.payment_method,
+        notes: expenseForm.notes || null,
+        receipt_url: expenseForm.receipt_url || null,
         created_by: user?.id,
       }).select("id").single();
       if (error) { (error as any)._stage = "expense"; throw error; }
 
-      const items = form.items
+      const items = expenseForm.items
         .filter((it) => it.name.trim())
         .map((it, i) => {
           const q = parseFloat(it.quantity) || 0;
@@ -215,6 +304,48 @@ export default function FinanceExpensesSection({ storeId }: Props) {
       qc.invalidateQueries({ queryKey: ["ar-fin-expenses", storeId] });
     },
   });
+
+  const saveScannedExpenseViaHelper = async (source: ExpenseFormState) => {
+    const totals = computeExpenseTotals(source);
+    const payloadItems = source.items
+      .filter((it) => it.name.trim())
+      .map((it, position) => {
+        const quantity = parseFloat(it.quantity) || 1;
+        const unit_price_cents = Math.round((parseFloat(it.unit_price) || 0) * 100);
+        return {
+          position,
+          part_number: it.part_number || null,
+          name: it.name.trim(),
+          quantity,
+          unit_price_cents,
+          line_total_cents: Math.round(quantity * unit_price_cents),
+        };
+      });
+    const { data, error } = await supabase.functions.invoke("ar-receipts-helper", {
+      body: {
+        action: "save_expense",
+        store_id: storeId,
+        expense: {
+          category: source.category,
+          vendor: source.vendor || null,
+          description: source.description || null,
+          amount_cents: totals.totalCents,
+          subtotal_cents: totals.subtotalCents,
+          tax_cents: totals.taxCents,
+          expense_date: source.expense_date,
+          invoice_time: to24h(source.hour, source.minute, source.ampm),
+          invoice_number: source.invoice_number || null,
+          payment_method: source.payment_method,
+          notes: source.notes || null,
+          receipt_url: source.receipt_url || null,
+        },
+        items: payloadItems,
+      },
+    });
+    if (error) throw error;
+    if (!(data as any)?.ok) throw new Error((data as any)?.error || "Could not save scanned invoice");
+    return data as any;
+  };
 
   // -------- Scan invoice flow --------
   const handleScanClick = () => fileRef.current?.click();
@@ -317,7 +448,7 @@ export default function FinanceExpensesSection({ storeId }: Props) {
       scan_response_summary: null,
     };
 
-    let stage: "preflight" | "read" | "scan" | "attach" = "preflight";
+    let stage: "preflight" | "read" | "scan" | "attach" | "save" = "preflight";
     try {
       // 1. Preflight — verify role + ownership before doing real work.
       const pre = await supabase.functions.invoke("ar-receipts-helper", {
@@ -379,43 +510,26 @@ export default function FinanceExpensesSection({ storeId }: Props) {
       }
       diag.final_receipt_ref = receiptRef;
 
-      // 5. Pre-fill form
-      const t = inv.time ? from24h(inv.time + (inv.time.length === 5 ? ":00" : "")) : { h: "12", m: "00", ap: "PM" as const };
-      setForm({
-        ...blankForm(),
-        category: "parts",
-        vendor: inv.vendor || "",
-        invoice_number: inv.invoice_number || "",
-        description: "",
-        expense_date: inv.date || new Date().toISOString().slice(0, 10),
-        hour: t.h, minute: t.m, ampm: t.ap,
-        payment_method: inv.payment_method || "card",
-        tax: inv.tax_cents != null ? (inv.tax_cents / 100).toFixed(2) : "",
-        receipt_url: receiptRef,
-        items: Array.isArray(inv.items) && inv.items.length
-          ? inv.items.map((it: any) => ({
-              part_number: it.part_number || "",
-              name: it.name || "",
-              quantity: String(it.quantity ?? 1),
-              unit_price: it.unit_price_cents != null ? (it.unit_price_cents / 100).toFixed(2) : "",
-            }))
-          : [emptyItem()],
-        notes: "",
-      });
-      setOpen(true);
-
-      if (receiptRef && !diag.used_fallback) {
-        toast.success("Invoice scanned — review and save");
-      } else if (receiptRef && diag.used_fallback) {
-        toast.success("Invoice scanned (receipt saved via fallback) — review and save");
+      // 5. Normalize scan values, then auto-save if usable.
+      const scannedForm = buildScannedExpenseForm(inv, receiptRef);
+      setForm(scannedForm);
+      if (isAutoSaveReady(scannedForm)) {
+        stage = "save";
+        await saveScannedExpenseViaHelper(scannedForm);
+        setOpen(false);
+        setForm(blankForm());
+        qc.invalidateQueries({ queryKey: ["ar-fin-expenses", storeId] });
+        toast.success(diag.used_fallback ? "Invoice scanned and saved via fallback" : "Invoice scanned and saved");
       } else {
-        toast.success("Invoice scanned — review and save (receipt image not attached)");
+        setOpen(true);
+        toast.success("Invoice scanned — review missing fields before saving");
       }
     } catch (err: any) {
       console.error("scan-invoice flow error", { stage, err, diag });
       const msg = err?.message || String(err);
       if (stage === "preflight") toast.error(`Preflight failed: ${msg}`);
       else if (stage === "read") toast.error(`Could not read image: ${msg}`);
+      else if (stage === "save") toast.error(`Invoice scanned but auto-save failed: ${msg}`);
       else toast.error(`Invoice scan failed: ${msg}`);
     } finally {
       setDiagnostics(diag);
@@ -683,7 +797,7 @@ export default function FinanceExpensesSection({ storeId }: Props) {
 
           <DialogFooter>
             <Button variant="outline" onClick={() => setOpen(false)}>Cancel</Button>
-            <Button onClick={() => create.mutate()} disabled={create.isPending}>
+            <Button onClick={() => create.mutate(form)} disabled={create.isPending}>
               {create.isPending && <Loader2 className="w-4 h-4 mr-1 animate-spin" />}
               Save expense
             </Button>

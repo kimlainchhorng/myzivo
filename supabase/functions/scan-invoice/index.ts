@@ -8,6 +8,8 @@ const corsHeaders = {
 
 const SYSTEM_PROMPT = `You are an OCR + invoice parser. The user uploads a photo of a receipt/invoice from an auto-parts vendor (e.g. AutoZone, NAPA, O'Reilly, Advance Auto Parts) or a service vendor.
 Extract a STRICT JSON object with these fields. Money values must be integers in cents. Quantity is a number. If a value is not present, use null (not empty string).
+For AutoZone Commercial Invoice photos, prefer these mappings: vendor = AutoZone, invoice_number = the "Invoice Number" value under Order Information, date/time = "Order Date", payment_method = CASH/CARD shown near the bottom, subtotal/tax/total = bottom summary, item name = Description, part_number = Part #, quantity = QTY, unit_price_cents = Cost when shown, line_total_cents = Total.
+Never return an empty item if a bottom total exists; create one line item from the invoice total/subtotal when the item table is partially unreadable.
 {
   "vendor": string|null,            // company/store name e.g. "AutoZone"
   "invoice_number": string|null,    // invoice / receipt # / order #
