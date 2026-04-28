@@ -44,6 +44,7 @@ import ChatRowActionsSheet, { type ChatRowActionsTarget } from "@/components/cha
 import NewChatFab from "@/components/chat/NewChatFab";
 import AddContactSheet from "@/components/chat/AddContactSheet";
 import MyChannelsStrip from "@/components/chat/MyChannelsStrip";
+import GlobalChatSearch from "@/components/chat/GlobalChatSearch";
 import { useChatPrefs } from "@/hooks/useChatPrefs";
 import { useBulkPresence } from "@/hooks/useBulkPresence";
 import { useTypingBus } from "@/hooks/useTypingBus";
@@ -212,6 +213,7 @@ export default function ChatHubPage({ embedded = false }: { embedded?: boolean }
   const setActive = (c: ChatCategory) => setFolder(c);
   const [search, setSearch] = useState("");
   const [searchFilter, setSearchFilter] = useState<"chats" | "media" | "links" | "files">("chats");
+  const [globalSearchOpen, setGlobalSearchOpen] = useState(false);
   // Telegram-style: collapse Stories strip on scroll-down, restore on scroll-up
   const [storiesCollapsed, setStoriesCollapsed] = useState(false);
   const lastScrollYRef = useRef(0);
@@ -1254,10 +1256,10 @@ export default function ChatHubPage({ embedded = false }: { embedded?: boolean }
                   placeholder="Search conversations..."
                   value={search}
                   onFocus={(e) => {
-                    // Tap-to-open global search (messages / people / media / links)
+                    // Open Telegram-style global search overlay (chats / contacts / channels / messages)
                     if (!search) {
                       e.currentTarget.blur();
-                      navigate('/chat/search');
+                      setGlobalSearchOpen(true);
                     }
                   }}
                   onChange={(e) => setSearch(e.target.value)}
@@ -2106,6 +2108,8 @@ export default function ChatHubPage({ embedded = false }: { embedded?: boolean }
           }}
         />
       </Suspense>
+
+      <GlobalChatSearch open={globalSearchOpen} onClose={() => setGlobalSearchOpen(false)} />
     </div>
   );
 
