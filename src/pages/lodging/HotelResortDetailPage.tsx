@@ -392,7 +392,7 @@ export default function HotelResortDetailPage() {
                   className="flex items-center gap-2 rounded-xl border border-border bg-card px-3 py-2"
                 >
                   <Icon className="w-4 h-4 text-primary" />
-                  <span className="text-xs font-medium text-foreground capitalize truncate">{label}</span>
+                  <span className="text-xs font-medium text-foreground truncate">{humanizeLabel(label)}</span>
                 </div>
               );
             })}
