@@ -4043,6 +4043,54 @@ export type Database = {
         }
         Relationships: []
       }
+      ar_expenses: {
+        Row: {
+          amount_cents: number
+          category: string
+          created_at: string
+          created_by: string | null
+          description: string | null
+          expense_date: string
+          id: string
+          notes: string | null
+          payment_method: string | null
+          receipt_url: string | null
+          store_id: string
+          updated_at: string
+          vendor: string | null
+        }
+        Insert: {
+          amount_cents?: number
+          category?: string
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          expense_date?: string
+          id?: string
+          notes?: string | null
+          payment_method?: string | null
+          receipt_url?: string | null
+          store_id: string
+          updated_at?: string
+          vendor?: string | null
+        }
+        Update: {
+          amount_cents?: number
+          category?: string
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          expense_date?: string
+          id?: string
+          notes?: string | null
+          payment_method?: string | null
+          receipt_url?: string | null
+          store_id?: string
+          updated_at?: string
+          vendor?: string | null
+        }
+        Relationships: []
+      }
       ar_fleet_accounts: {
         Row: {
           active: boolean
@@ -4185,6 +4233,143 @@ export type Database = {
           },
         ]
       }
+      ar_invoice_payments: {
+        Row: {
+          amount_cents: number
+          created_at: string
+          created_by: string | null
+          id: string
+          invoice_id: string
+          method: string
+          notes: string | null
+          paid_at: string
+          reference: string | null
+          store_id: string
+        }
+        Insert: {
+          amount_cents: number
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          invoice_id: string
+          method?: string
+          notes?: string | null
+          paid_at?: string
+          reference?: string | null
+          store_id: string
+        }
+        Update: {
+          amount_cents?: number
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          invoice_id?: string
+          method?: string
+          notes?: string | null
+          paid_at?: string
+          reference?: string | null
+          store_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ar_invoice_payments_invoice_id_fkey"
+            columns: ["invoice_id"]
+            isOneToOne: false
+            referencedRelation: "ar_invoices"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      ar_invoices: {
+        Row: {
+          amount_paid_cents: number
+          created_at: string
+          created_by: string | null
+          customer_address: string | null
+          customer_email: string | null
+          customer_name: string | null
+          customer_phone: string | null
+          discount_cents: number
+          due_at: string | null
+          estimate_id: string | null
+          id: string
+          items: Json
+          notes: string | null
+          number: string
+          paid_at: string | null
+          sent_at: string | null
+          status: string
+          store_id: string
+          subtotal_cents: number
+          tax_cents: number
+          total_cents: number
+          updated_at: string
+          vehicle_label: string | null
+          vehicle_make: string | null
+          vehicle_model: string | null
+          vehicle_year: string | null
+          vin: string | null
+        }
+        Insert: {
+          amount_paid_cents?: number
+          created_at?: string
+          created_by?: string | null
+          customer_address?: string | null
+          customer_email?: string | null
+          customer_name?: string | null
+          customer_phone?: string | null
+          discount_cents?: number
+          due_at?: string | null
+          estimate_id?: string | null
+          id?: string
+          items?: Json
+          notes?: string | null
+          number: string
+          paid_at?: string | null
+          sent_at?: string | null
+          status?: string
+          store_id: string
+          subtotal_cents?: number
+          tax_cents?: number
+          total_cents?: number
+          updated_at?: string
+          vehicle_label?: string | null
+          vehicle_make?: string | null
+          vehicle_model?: string | null
+          vehicle_year?: string | null
+          vin?: string | null
+        }
+        Update: {
+          amount_paid_cents?: number
+          created_at?: string
+          created_by?: string | null
+          customer_address?: string | null
+          customer_email?: string | null
+          customer_name?: string | null
+          customer_phone?: string | null
+          discount_cents?: number
+          due_at?: string | null
+          estimate_id?: string | null
+          id?: string
+          items?: Json
+          notes?: string | null
+          number?: string
+          paid_at?: string | null
+          sent_at?: string | null
+          status?: string
+          store_id?: string
+          subtotal_cents?: number
+          tax_cents?: number
+          total_cents?: number
+          updated_at?: string
+          vehicle_label?: string | null
+          vehicle_make?: string | null
+          vehicle_model?: string | null
+          vehicle_year?: string | null
+          vin?: string | null
+        }
+        Relationships: []
+      }
       ar_parts: {
         Row: {
           active: boolean
@@ -4227,6 +4412,42 @@ export type Database = {
           stock?: number
           store_id?: string
           updated_at?: string
+        }
+        Relationships: []
+      }
+      ar_payouts: {
+        Row: {
+          amount_cents: number
+          created_at: string
+          created_by: string | null
+          id: string
+          notes: string | null
+          payout_date: string
+          reference: string | null
+          source: string | null
+          store_id: string
+        }
+        Insert: {
+          amount_cents?: number
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          notes?: string | null
+          payout_date?: string
+          reference?: string | null
+          source?: string | null
+          store_id: string
+        }
+        Update: {
+          amount_cents?: number
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          notes?: string | null
+          payout_date?: string
+          reference?: string | null
+          source?: string | null
+          store_id?: string
         }
         Relationships: []
       }

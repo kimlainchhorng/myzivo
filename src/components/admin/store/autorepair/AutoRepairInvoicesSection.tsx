@@ -107,6 +107,46 @@ export default function AutoRepairInvoicesSection({ storeId }: Props) {
       if (data) setStoreInfo({ name: data.name || undefined, address: data.address || undefined, phone: data.phone || undefined });
     })();
   }, [storeId]);
+
+  // Load persisted invoices from ar_invoices and merge with seed (so the user's
+  // saved invoices survive a page refresh — fixes the "data disappears" bug).
+  useEffect(() => {
+    if (!storeId) return;
+    (async () => {
+      const { data, error } = await supabase
+        .from("ar_invoices" as any)
+        .select("*")
+        .eq("store_id", storeId)
+        .order("created_at", { ascending: false });
+      if (error || !data) return;
+      const persisted: Doc[] = (data as any[]).map((row) => ({
+        id: row.id,
+        type: "invoice" as const,
+        number: row.number || "",
+        customer: row.customer_name || "",
+        firstName: (row.customer_name || "").split(" ")[0] || "",
+        lastName: (row.customer_name || "").split(" ").slice(1).join(" ") || "",
+        phone: row.customer_phone || "",
+        email: row.customer_email || "",
+        address: row.customer_address || "",
+        vin: row.vin || "",
+        year: row.vehicle_year || "",
+        make: row.vehicle_make || "",
+        model: row.vehicle_model || "",
+        trim: "", engine: "", transmission: "", driveType: "", bodyClass: "", doors: "", fuel: "", plant: "",
+        vehicle: row.vehicle_label || "",
+        items: Array.isArray(row.items) ? row.items : [],
+        status: (row.status === "paid" ? "paid" : row.status === "sent" ? "sent" : "draft") as Doc["status"],
+        createdAt: row.created_at,
+      }));
+      setDocs((prev) => {
+        // Keep seed estimates + non-persisted invoices, replace any with same id
+        const persistedIds = new Set(persisted.map((p) => p.id));
+        const kept = prev.filter((d) => d.type === "estimate" || !persistedIds.has(d.id));
+        return [...persisted, ...kept];
+      });
+    })();
+  }, [storeId]);
   const draftKey = useMemo(() => `autorepair:invoice-draft:${storeId}`, [storeId]);
   const saveTimer = useRef<number | null>(null);
   const skipNextSave = useRef(true);
@@ -219,13 +259,51 @@ export default function AutoRepairInvoicesSection({ storeId }: Props) {
     }
   };
 
-  const save = () => {
+  const save = async () => {
     if (!draft.firstName || !draft.lastName || !draft.vehicle) { toast.error("First name, last name, and vehicle are required"); return; }
     const customer = `${draft.firstName} ${draft.lastName}`.trim();
-    setDocs(d => [{ ...draft, customer }, ...d]);
+
+    // Persist invoices to ar_invoices so they survive refresh and feed the Finance dashboards.
+    if (draft.type === "invoice") {
+      try {
+        const subtotalCents = Math.round(total(draft.items) * 100);
+        const { data: { user } } = await supabase.auth.getUser();
+        const { data: inserted, error } = await supabase
+          .from("ar_invoices" as any)
+          .insert({
+            store_id: storeId,
+            number: draft.number,
+            customer_name: customer,
+            customer_phone: draft.phone || null,
+            customer_email: draft.email || null,
+            customer_address: draft.address || null,
+            vehicle_label: draft.vehicle || null,
+            vin: draft.vin || null,
+            vehicle_year: draft.year || null,
+            vehicle_make: draft.make || null,
+            vehicle_model: draft.model || null,
+            items: draft.items as any,
+            subtotal_cents: subtotalCents,
+            total_cents: subtotalCents,
+            status: draft.status === "paid" ? "paid" : "draft",
+            created_by: user?.id,
+          })
+          .select("id,created_at")
+          .single();
+        if (error) throw error;
+        setDocs(d => [{ ...draft, id: (inserted as any).id, customer, createdAt: (inserted as any).created_at }, ...d]);
+        toast.success(`Invoice ${draft.number} saved`);
+      } catch (e: any) {
+        toast.error(`Could not save invoice: ${e.message || "unknown error"}`);
+        return;
+      }
+    } else {
+      // Estimates remain in local state here; managed in the dedicated Estimates tab via ar_estimates.
+      setDocs(d => [{ ...draft, customer }, ...d]);
+      toast.success(`Estimate ${draft.number} created`);
+    }
     clearDraft();
     setCreating(false);
-    toast.success(`${draft.type === "estimate" ? "Estimate" : "Invoice"} ${draft.number} created`);
   };
 
   const updateItem = (id: string, patch: Partial<LineItem>) =>

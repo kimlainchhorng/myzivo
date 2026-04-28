@@ -1,86 +1,144 @@
-## Auto Repair admin — fixes & upgrades
+## Goal
 
-After auditing every Auto Repair section in `AdminStoreEditPage.tsx` against the live database, I found a clear split: 7 sections are real (already wired to `ar_*` tables), 4 are static demos that look working but do nothing on save, and 2 have a real React warning. Here's the cleanup.
+Make the Auto Repair admin (left sidebar in your screenshot) feel organized and complete: re-group items so related tools sit together, fix the parts that don't actually save data, and add a brand new **Finance** section so you can see income, expenses, and profit.
 
-### 1. Sections that are demos / not actually working
+---
 
-These render data and respond to clicks but nothing persists — buttons like "Add Vehicle", "Send to Customer", "Add to Cart" all `toast` and disappear:
+## 1. Sidebar reorganization
 
-| Section | Current state | Fix |
-|---|---|---|
-| Vehicles | Hard-coded 3 vehicles, "Add Vehicle" button does nothing | Wire to `vehicles` table filtered by `store_id` (or new `ar_customer_vehicles`); add real Add/Edit dialog, list real customers' vehicles |
-| Inspections (DVI) | Static 20-point checklist, "Send to Customer" no-op | Wire to `vehicle_inspections` table; persist checklist JSON, link to vehicle, generate shareable customer report URL |
-| Auto Check (VIN) | VIN decode works, but lookups don't persist between page loads | Save lookups to a new `ar_vin_lookups` table so history survives reload; show last 20 across sessions |
-| Part Shop | 12 hard-coded parts, cart only lives in memory | Add `ar_parts` table (sku/name/brand/category/price_cents/stock); seed with the current 12; persist cart as a draft on `ar_estimates` so "Checkout" creates a real estimate |
+Current sidebar mixes "Manage" and "Shop Ops" with no clear flow. New grouping (top to bottom):
 
-### 2. Real bug — `forwardRef` warning in Bookings
-
-Console shows:
-```text
-Warning: Function components cannot be given refs.
-Check the render method of `AdminBookingsTab`. at Dialog
 ```
-This fires every time the Bookings tab opens. It comes from a `<Calendar>` component nested inside `<PopoverContent>` inside a `<Dialog>` — Calendar is a function component and Radix tries to forward a ref through it. Fix by wrapping Calendar usage in a `<div>` (or migrating to `React.forwardRef`-wrapped Calendar shim). Two locations: lines 865 and 941.
+MANAGE
+  Profile
+  Bookings
+  Customers
 
-### 3. UI polish across the AR sidebar
+FRONT DESK
+  Estimates
+  Invoices
+  Vehicles
+  Auto Check (VIN)
 
-Matching the screenshot (dense desktop layout, emerald brand, Lucide icons):
+SHOP FLOOR
+  Work Orders
+  Inspections
+  Technicians & Bays
+  Reminders & Recalls
 
-- **Sidebar active state** — current emerald text on plain bg looks washed out; add `bg-emerald-500/10` pill background like other admin areas.
-- **Section headers** — unify all 14 AR sections to the same `CardHeader` pattern (icon + title left, primary action button right with `gap-1.5`). Estimates/Invoices/Work Orders already follow this; Vehicles, Inspections, Auto Check, Part Shop don't.
-- **Empty states** — add real empty states (icon + 1-line label + primary action) instead of blank grids when the store has no records.
-- **Loading states** — Estimates/Invoices already use `isLoading` from `useQuery`; add the same skeleton to Reminders, Tires, Warranty, Fleet, Reports.
-- **Mobile** — sidebar `StoreOwnerLayout` already has scroll, but on `<768px` the AR section grids should collapse to single column (currently `md:grid-cols-2` is fine; `lg:grid-cols-3` parts grid too narrow → switch to `sm:grid-cols-2 xl:grid-cols-3`).
+INVENTORY
+  Part Shop
+  Tire Inventory
 
-### 4. Tables to add
+CUSTOMER CARE
+  Warranty & Comebacks
+  Fleet Accounts
 
-Two new migrations:
+FINANCE   ← NEW
+  Income & Revenue
+  Expenses & Bills
+  Payments Received
+  Profit & Loss
+  Tax & Payouts
 
-```sql
--- For Part Shop persistence
-create table public.ar_parts (
-  id uuid primary key default gen_random_uuid(),
-  store_id uuid not null references public.stores(id) on delete cascade,
-  sku text not null,
-  name text not null,
-  brand text,
-  category text,
-  price_cents integer not null default 0,
-  stock integer not null default 0,
-  active boolean not null default true,
-  created_at timestamptz default now(),
-  updated_at timestamptz default now()
-);
--- RLS: store owner full access; public can read active parts.
+INSIGHTS
+  Reports & Analytics
+  Marketing & Ads
+  Live Stream
 
--- For VIN history persistence
-create table public.ar_vin_lookups (
-  id uuid primary key default gen_random_uuid(),
-  store_id uuid not null references public.stores(id) on delete cascade,
-  vin text not null,
-  decoded jsonb not null,
-  looked_up_by uuid references auth.users(id),
-  created_at timestamptz default now()
-);
--- RLS: store owner only.
+TEAM
+  Employees / Payroll / Schedule / Time Clock / etc.
+
+SYSTEM
+  Settings / Software & Apps / Back to App / Sign Out
 ```
 
-Inspections will use existing `vehicle_inspections` table (already has columns for inspector, vehicle, results jsonb). Vehicles section will use existing `vehicles` table filtered by a new `assigned_store_id` nullable column (one small migration).
+Wider sidebar labels so "Warranty & Comeb…" and similar no longer truncate.
 
-### 5. Out of scope (intentionally)
+---
 
-- Carfax / accident-history paid integration (already disclosed in Auto Check banner).
-- Online parts ordering from external suppliers.
-- Tech timeclock / payroll — separate project.
+## 2. Fixes for things that don't work
 
-### Files I'll touch
+Found from auditing the code:
 
-- `src/components/admin/store/autorepair/AutoRepairVehiclesSection.tsx` — full rewrite, wire to `vehicles`
-- `src/components/admin/store/autorepair/AutoRepairInspectionsSection.tsx` — full rewrite, wire to `vehicle_inspections`
-- `src/components/admin/store/autorepair/AutoRepairAutoCheckSection.tsx` — add `ar_vin_lookups` persistence
-- `src/components/admin/store/autorepair/AutoRepairPartShopSection.tsx` — wire to new `ar_parts`
-- `src/components/admin/store/AdminBookingsTab.tsx` — fix Calendar ref warning (lines 865, 941)
-- `src/components/admin/StoreOwnerLayout.tsx` — sidebar active-pill polish
-- 3 new SQL migrations: `ar_parts`, `ar_vin_lookups`, `vehicles.assigned_store_id`
+- **Invoices tab** — currently keeps invoices only in browser memory. Refresh = data gone. Will create a real `ar_invoices` table and wire create / list / status updates / delete to the database.
+- **Estimates → Convert to Invoice** — today it creates a work order instead of an invoice. Will route conversion into the new `ar_invoices` table and mark the estimate as "converted".
+- **Reports tab** — only counts work orders, ignores invoices and payments, so revenue is wrong. Will pull from invoices + payments for accurate numbers.
+- **Send / Print buttons** on the invoice list — wire up to the existing PDF preview dialog instead of being no-ops.
+- **Status badges** — standardize colors (Draft / Sent / Paid / Overdue / Void) across Estimates and Invoices so they match.
+- **Sidebar deep-link reset** — already fixed last round; will verify the new Finance tab IDs are added to the allow-list so they don't bounce back to Profile.
 
-Approve to proceed.
+---
+
+## 3. New Finance section
+
+Five sub-tabs under Finance:
+
+**Income & Revenue**
+- Today / This week / This month / Custom range
+- Cards: Total Revenue, Paid Invoices, Outstanding (unpaid), Avg Ticket
+- Top 5 services by revenue
+- Mini chart: daily revenue last 30 days
+
+**Expenses & Bills**
+- Add expense (category, vendor, amount, date, receipt photo upload)
+- Categories: Parts, Rent, Utilities, Supplies, Tools, Marketing, Insurance, Other
+- List + filter by category/date
+- Monthly total
+
+**Payments Received**
+- Auto-logged when an invoice is marked Paid
+- Manual "Record Payment" for cash / check / card / ABA
+- Filter by method, date, customer
+
+**Profit & Loss**
+- Income − Expenses − Payroll = Net Profit
+- Month-over-month comparison
+- Export to CSV / PDF
+
+**Tax & Payouts**
+- Sales tax collected (auto from invoices)
+- Payout history (from existing Stripe/payment tables)
+- Quarterly tax estimate
+
+---
+
+## 4. Database changes (migration)
+
+New tables (all with `store_id`, RLS so only the store owner + admins can access):
+
+- `ar_invoices` — number, customer info, vehicle info, line items (jsonb), subtotal, tax, total, status (draft/sent/paid/overdue/void), paid_at, due_at, estimate_id (link back), created_at
+- `ar_invoice_payments` — invoice_id, amount_cents, method (cash/card/check/aba/other), reference, paid_at, notes
+- `ar_expenses` — category, vendor, amount_cents, expense_date, receipt_url, notes
+- `ar_payouts` — payout_date, amount_cents, source, reference (for tracking what was deposited to bank)
+
+Each gets indexes on `store_id` + date columns for the Finance dashboards.
+
+---
+
+## 5. Files that will change
+
+- `src/components/admin/StoreOwnerLayout.tsx` — new sidebar grouping + Finance items
+- `src/lib/admin/storeTabRouting.ts` — add Finance tab IDs to the allow-list
+- `src/pages/admin/AdminStoreEditPage.tsx` — render Finance sections, wire titles
+- `src/components/admin/store/autorepair/AutoRepairInvoicesSection.tsx` — replace local state with Supabase persistence
+- `src/components/admin/store/autorepair/AutoRepairEstimatesSection.tsx` — fix Convert-to-Invoice
+- `src/components/admin/store/autorepair/AutoRepairReportsSection.tsx` — pull from invoices + payments
+- New folder `src/components/admin/store/autorepair/finance/` with:
+  - `FinanceIncomeSection.tsx`
+  - `FinanceExpensesSection.tsx`
+  - `FinancePaymentsSection.tsx`
+  - `FinanceProfitLossSection.tsx`
+  - `FinanceTaxPayoutsSection.tsx`
+- One new Supabase migration creating the 4 tables above + RLS policies
+
+---
+
+## What you'll see after approval
+
+1. Sidebar regroups instantly into MANAGE / FRONT DESK / SHOP FLOOR / INVENTORY / CUSTOMER CARE / **FINANCE** / INSIGHTS / TEAM / SYSTEM.
+2. Invoices you create actually save and survive a refresh.
+3. New "Finance" group with Income, Expenses, Payments, P&L, Tax & Payouts.
+4. Reports show real revenue based on paid invoices.
+
+Approve and I'll run the migration first, then ship the UI changes.
