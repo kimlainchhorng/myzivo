@@ -13,10 +13,10 @@ const Index = () => {
   const isMobile = useIsMobile();
   const { user } = useAuth();
   const navigate = useNavigate();
-  const params = new URLSearchParams(window.location.search);
-  const shareCode = params.get("p");
+  const shareCode = new URLSearchParams(window.location.search).get("p");
   
   useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
     const hashParams = new URLSearchParams(window.location.hash.substring(1));
     const error = params.get("error") || hashParams.get("error");
     const errorDesc = params.get("error_description") || hashParams.get("error_description");
@@ -39,7 +39,7 @@ const Index = () => {
       toast({ title: "Sign-up blocked", description: message, variant: "destructive" });
       window.history.replaceState({}, "", window.location.pathname);
     }
-  }, [navigate, params, shareCode]);
+  }, [navigate, shareCode]);
 
   if (shareCode && /^[a-z0-9_-]{4,64}$/i.test(shareCode)) {
     return <Navigate to={`/p/${shareCode}`} replace />;
