@@ -1,17 +1,18 @@
-import { Suspense, lazy, useEffect } from "react";
-import { AdminShellRoute, restaurantNav, businessNav } from "@/components/admin/shell";
+import { Suspense, lazy, useEffect, useState, forwardRef } from "react";
+import { AdminShellRoute } from "@/components/admin/shell/AdminShellRoute";
+import { restaurantNav } from "@/components/admin/shell/nav/restaurant";
+import { businessNav } from "@/components/admin/shell/nav/business";
 import { usePageViewTracker } from "@/hooks/usePageViewTracker";
 import { useGeoDetect } from "@/hooks/useGeoDetect";
 import { HelmetProvider } from "react-helmet-async";
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
-import StoryDebugPanel from "@/components/stories/StoryDebugPanel";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { useVerificationRealtime } from "@/hooks/useVerificationRealtime";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, useLocation, useSearchParams } from "react-router-dom";
 import { ThemeProvider } from "next-themes";
-import { AuthProvider } from "@/contexts/AuthContext";
+import { AuthProvider, useAuth } from "@/contexts/AuthContext";
 import { RemoteConfigProvider } from "@/contexts/RemoteConfigContext";
 import { ZivoPlusProvider } from "@/contexts/ZivoPlusContext";
 import { UTMProvider } from "@/contexts/UTMContext";
@@ -35,6 +36,7 @@ const IncomingCallListener = lazyWithRetry(() => import("@/components/chat/Incom
 const ChatNotificationListener = lazyWithRetry(() => import("@/components/chat/ChatNotificationListener"));
 const RuntimeSecurityGuard = lazyWithRetry(() => import("@/components/security/RuntimeSecurityGuard"));
 const SpatialCursor = lazyWithRetry(() => import("./components/ui/SpatialCursor").then(m => ({ default: m.SpatialCursor })));
+const StoryDebugPanel = lazyWithRetry(() => import("@/components/stories/StoryDebugPanel"));
 const PostMenuRegressionPage = lazy(() => import("./pages/dev/PostMenuRegressionPage"));
 const SafeAreaQAPage = lazy(() => import("./pages/dev/SafeAreaQAPage"));
 
@@ -508,8 +510,9 @@ const queryClient = new QueryClient({
   },
 });
 
-const PageLoader = () => (
-  <div className="min-h-screen bg-background flex items-center justify-center">
+const PageLoader = forwardRef<HTMLDivElement>(function PageLoader(_, ref) {
+  return (
+  <div ref={ref} className="min-h-screen bg-background flex items-center justify-center">
     <div className="flex flex-col items-center gap-4">
       <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-primary to-teal-400 flex items-center justify-center shadow-lg shadow-primary/20">
         <svg className="w-6 h-6 text-primary-foreground animate-spin" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"/><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/></svg>
@@ -517,7 +520,8 @@ const PageLoader = () => (
       <p className="text-sm text-foreground font-semibold tracking-tight">ZIVO</p>
     </div>
   </div>
-);
+  );
+});
 
 function BrandThemeApplicator() {
   const { brand } = useBrand();
@@ -563,12 +567,37 @@ const PartnerOnboardingDispatcher = () => {
   return params.get("type") ? <PartnerOnboarding /> : <PartnerWithZivo />;
 };
 
+function useAfterFirstPaint(timeout = 1600) {
+  const [ready, setReady] = useState(false);
+  useEffect(() => {
+    if (window.requestIdleCallback) {
+      const handle = window.requestIdleCallback(() => setReady(true), { timeout });
+      return () => window.cancelIdleCallback?.(handle);
+    }
+    const handle = window.setTimeout(() => setReady(true), timeout);
+    return () => window.clearTimeout(handle);
+  }, [timeout]);
+  return ready;
+}
+
+function DeferredPageViewTracker() {
+  const ready = useAfterFirstPaint(2200);
+  return ready ? <PageViewTracker /> : null;
+}
+
+function DeferredGeoDetector() {
+  const ready = useAfterFirstPaint(3500);
+  return ready ? <GeoDetector /> : null;
+}
+
 function RouteAwareGlobalUI() {
   const location = useLocation();
+  const { user } = useAuth();
+  const ready = useAfterFirstPaint(2600);
   const blockedRoutes = ["/login", "/signup", "/setup", "/forgot-password", "/reset-password", "/verify-email", "/verify-otp", "/verify-new-device"];
   const hideGlobalUI = blockedRoutes.some((route) => location.pathname.startsWith(route));
 
-  if (hideGlobalUI) return null;
+  if (hideGlobalUI || !ready) return null;
 
   return (
     <Suspense fallback={null}>
@@ -578,9 +607,9 @@ function RouteAwareGlobalUI() {
       <InAppBrowserInterstitial />
       <SpatialCursor />
       <RuntimeSecurityGuard />
-      <IncomingCallListener />
-      <ChatNotificationListener />
-      <AppLockGate />
+      {user && <IncomingCallListener />}
+      {user && <ChatNotificationListener />}
+      {user && <AppLockGate />}
     </Suspense>
   );
 }
@@ -590,6 +619,21 @@ const VerificationRealtimeBridge = () => {
   useVerificationRealtime();
   return null;
 };
+
+function AuthBackgroundServices() {
+  const { user } = useAuth();
+  const ready = useAfterFirstPaint(2200);
+  if (!user || !ready) return null;
+  return (
+    <Suspense fallback={null}>
+      {import.meta.env.DEV && <StoryDebugPanel />}
+      <VerificationRealtimeBridge />
+      <PushNotificationsBootstrap />
+      <GeofenceBootstrap />
+      <DeletionReturnDialog />
+    </Suspense>
+  );
+}
 
 const App = () => (
   <ErrorBoundary>
@@ -603,15 +647,11 @@ const App = () => (
               <Toaster />
               <Sonner />
               <BrowserRouter>
-                <PageViewTracker />
-                <GeoDetector />
+                <DeferredPageViewTracker />
+                <DeferredGeoDetector />
                 <Suspense fallback={null}><RoutePrefetcher /></Suspense>
                 <AuthProvider>
-                  <StoryDebugPanel />
-                  <VerificationRealtimeBridge />
-                  <PushNotificationsBootstrap />
-                  <Suspense fallback={null}><GeofenceBootstrap /></Suspense>
-                  <Suspense fallback={null}><DeletionReturnDialog /></Suspense>
+                  <AuthBackgroundServices />
                    <RemoteConfigProvider>
                   <ZivoPlusProvider>
                   <CustomerCityProvider>
