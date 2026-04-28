@@ -17,6 +17,7 @@ import ArrowLeft from "lucide-react/dist/esm/icons/arrow-left";
 import Trash2 from "lucide-react/dist/esm/icons/trash-2";
 import X from "lucide-react/dist/esm/icons/x";
 import Bell from "lucide-react/dist/esm/icons/bell";
+import { ChatBellPopover } from "@/components/notifications/ChatBellPopover";
 import Users from "lucide-react/dist/esm/icons/users";
 import Plus from "lucide-react/dist/esm/icons/plus";
 import UserPlus from "lucide-react/dist/esm/icons/user-plus";
@@ -1227,13 +1228,7 @@ export default function ChatHubPage({ embedded = false }: { embedded?: boolean }
                       <Plus className="w-2.5 h-2.5 text-primary absolute bottom-1 right-1" />
                     </button>
                   )}
-                  <button
-                    onClick={() => navigate('/notifications')}
-                    className="relative w-9 h-9 flex items-center justify-center rounded-full hover:bg-muted active:scale-90 transition-all"
-                    aria-label="Notifications"
-                  >
-                    <Bell className="w-5 h-5 text-muted-foreground" />
-                  </button>
+                  <ChatBellPopover />
                 </div>
               </div>
             ) : null}
