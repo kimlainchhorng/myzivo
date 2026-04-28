@@ -687,13 +687,97 @@ export default function HotelResortDetailPage() {
           </motion.div>
         </div>
       )}
+
+      {/* All rooms sheet */}
+      {allRoomsOpen && (
+        <div
+          className="fixed inset-0 z-40 bg-black/40 flex items-end md:items-center justify-center"
+          onClick={() => setAllRoomsOpen(false)}
+        >
+          <motion.div
+            initial={{ y: 60, opacity: 0 }}
+            animate={{ y: 0, opacity: 1 }}
+            className="w-full max-w-md md:max-w-2xl max-h-[85dvh] bg-card rounded-t-3xl md:rounded-3xl shadow-2xl flex flex-col"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="p-5 pb-3 border-b border-border">
+              <div className="mx-auto h-1.5 w-10 rounded-full bg-muted mb-3 md:hidden" />
+              <h3 className="text-base font-bold text-foreground">All rooms · {activeRooms.length}</h3>
+              <p className="text-[11px] text-muted-foreground mt-0.5">{store?.name}</p>
+            </div>
+            <div className="flex-1 overflow-y-auto p-4 grid grid-cols-1 md:grid-cols-2 gap-3 pb-[max(env(safe-area-inset-bottom),16px)]">
+              {activeRooms.map((room) => {
+                const photo = room.photos?.[room.cover_photo_index ?? 0] || room.photos?.[0];
+                const deal = applyPromo(room.base_rate_cents);
+                const hasDiscount = deal.pctOff > 0 && deal.discounted < room.base_rate_cents;
+                const isTopPick = room.id === topPickRoomId;
+                return (
+                  <div key={room.id} className="rounded-xl border border-border bg-card overflow-hidden">
+                    <div className="h-28 bg-muted relative">
+                      {photo ? (
+                        <img src={photo} alt={room.name} className="w-full h-full object-cover" loading="lazy" />
+                      ) : (
+                        <div className="w-full h-full flex items-center justify-center">
+                          <Hotel className="w-6 h-6 text-muted-foreground" />
+                        </div>
+                      )}
+                      {hasDiscount && (
+                        <span className="absolute top-1.5 right-1.5 rounded-full bg-red-600 text-white px-1.5 py-0.5 text-[9px] font-bold">
+                          -{deal.pctOff}%
+                        </span>
+                      )}
+                    </div>
+                    <div className="p-2.5">
+                      <div className="flex items-center gap-1.5">
+                        <p className="text-xs font-bold text-foreground truncate flex-1">{room.name}</p>
+                        {isTopPick && (
+                          <span className="shrink-0 inline-flex items-center gap-0.5 rounded-full bg-amber-50 text-amber-700 border border-amber-200 px-1.5 py-0.5 text-[9px] font-bold dark:bg-amber-500/10 dark:text-amber-300 dark:border-amber-500/20">
+                            <Star className="w-2.5 h-2.5 fill-amber-500 text-amber-500" />
+                            Top pick
+                          </span>
+                        )}
+                      </div>
+                      <p className="mt-0.5 text-[10px] text-muted-foreground truncate">
+                        {room.beds || room.room_type || "Room"} · {room.max_guests} guests
+                      </p>
+                      <div className="mt-1.5">
+                        {hasDiscount ? (
+                          <>
+                            <span className="text-sm font-bold text-emerald-600">
+                              {formatPrice(deal.discounted)}
+                              <span className="text-[10px] font-normal text-muted-foreground"> /night</span>
+                            </span>
+                            <div className="text-[10px] text-muted-foreground line-through leading-none">
+                              {formatPrice(room.base_rate_cents)}
+                            </div>
+                          </>
+                        ) : (
+                          <span className="text-sm font-bold text-primary">
+                            {formatPrice(room.base_rate_cents)}
+                            <span className="text-[10px] font-normal text-muted-foreground"> /night</span>
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+            <div className="p-3 border-t border-border">
+              <Button variant="ghost" className="w-full" onClick={() => setAllRoomsOpen(false)}>
+                Close
+              </Button>
+            </div>
+          </motion.div>
+        </div>
+      )}
     </div>
   );
 }
 
 function Section({ title, children }: { title: string; children: React.ReactNode }) {
   return (
-    <section className="px-4 mt-5">
+    <section className="px-4 mt-5 md:mt-7">
       <h2 className="text-sm font-bold text-foreground mb-2">{title}</h2>
       {children}
     </section>
