@@ -62838,6 +62838,14 @@ export type Database = {
           updated_at: string
         }[]
       }
+      get_my_affiliate_attribution: {
+        Args: never
+        Returns: {
+          affiliate_captured_at: string
+          affiliate_code: string
+          affiliate_partner_name: string
+        }[]
+      }
       get_my_phone_status: {
         Args: never
         Returns: {

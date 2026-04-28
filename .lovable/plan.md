@@ -1,97 +1,72 @@
-# ZIVO Cybersecurity Upgrade Plan
+## Root cause
 
-Goal: raise the platform's baseline security to 2026 production standards across web, mobile (Capacitor), and edge functions — without breaking existing flows.
+The Phase 1 security migration revoked `SELECT` on `public.profiles` from `anon`/`authenticated` and re-granted only a subset of columns. But several frontend hooks still query columns that were **not** re-granted (or use `select("*")`), and PostgREST denies the entire query the moment it touches a column you don't have `SELECT` on.
 
-Below is what we already have, what's missing, and what I'll add.
+That is why `/profile` shows an infinite spinner and "a lot more is broken" — anything depending on `useUserProfile` (the most-used profile hook in the app) silently fails.
 
----
+## Specific breakages identified
 
-## 1. HTTP Security Headers (NEW — biggest gap)
+1. **`src/hooks/useUserProfile.ts`** — `select("*")` on `profiles` → fails because PII columns (email, phone, etc.) are no longer readable.
+   - This is the hook used by Profile, Account, Settings, edit flows, and many more pages.
+2. **`src/hooks/useAffiliateAttribution.ts`** — selects `affiliate_code`, `affiliate_captured_at` → both columns were **omitted** from the GRANT list. Affiliate attribution silently broken.
+3. **PII-dependent admin/account pages** — anything that previously read `email`, `phone`, `date_of_birth`, KYC fields directly from the table now needs the RPC path.
 
-`public/_headers` currently only sets caching. I'll add:
+The good news: all the *public* profile queries the feed/reels/chat already use safe column lists (`id, user_id, full_name, username, avatar_url, is_verified`, etc.) which **are** in the GRANT, so those keep working. The fix is targeted.
 
-- **Strict-Transport-Security**: `max-age=63072000; includeSubDomains; preload` — force HTTPS for 2 years across hizivo.com, zivollc.com, zivodriver.com.
-- **Content-Security-Policy** (report-only first, then enforce): allowlist Supabase, Stripe, Google Maps, Duffel, Travelpayouts, Twilio, LiveKit, Meta Pixel, GA. Block inline scripts where possible (nonce-based) and disallow `object-src`, restrict `frame-ancestors 'self'`.
-- **X-Frame-Options**: `SAMEORIGIN` (clickjacking protection).
-- **X-Content-Type-Options**: `nosniff`.
-- **Referrer-Policy**: `strict-origin-when-cross-origin`.
-- **Permissions-Policy**: lock down `camera`, `microphone`, `geolocation`, `payment` to self only (needed for video calls / ride GPS / Stripe).
-- **Cross-Origin-Opener-Policy**: `same-origin-allow-popups` (needed for Google OAuth popup).
-- **Cross-Origin-Resource-Policy**: `same-site`.
+## Fix plan
 
-## 2. Authentication & Session Hardening
+### 1. Restore `useUserProfile` via the secure RPC (primary fix)
+Replace the `select("*")` query with a call to the `get_my_profile()` RPC that the migration already created. This RPC runs as `SECURITY DEFINER` and returns the full row only to the owner — exactly what we want, and it's the pattern already used in `AccountExportPage.tsx`.
 
-- **Session rotation on sensitive actions**: force `supabase.auth.refreshSession()` after password change, two-step toggle, payout add, email change.
-- **Re-authentication gate**: require fresh login (<5 min) for: deleting account, changing payout method, disabling two-step, viewing wallet cash-out details. Add `useFreshAuth(maxAgeSec)` hook.
-- **Upgrade `passwordHash.ts`**: bump PBKDF2 iterations 200k → 600k (current OWASP 2026 guidance) with versioned hash format so existing hashes still verify.
-- **Login-alert emails**: extend existing `login_alerts` table — send email on new device/IP via existing `send-otp-email` template variant.
-- **Device binding for high-trust actions**: tie payout/withdrawal to a previously-seen `device_tokens` entry; new device = require email OTP.
+```ts
+// useUserProfile.ts
+const { data, error } = await supabase.rpc("get_my_profile").single();
+```
 
-## 3. Edge Function Hardening
+This single change unblocks `/profile`, `/account`, settings, and every screen that consumes `useUserProfile`.
 
-- **Standardize JWT validation**: audit all `supabase/functions/*` and ensure each one calls `getClaims(token)` (some legacy ones still trust the header). I'll add a shared `requireUser()` helper in `_shared/auth.ts`.
-- **Tighten CORS allowlist**: replace `*` with explicit origins (hizivo.com, zivollc.com, zivodriver.com, lovable.app preview) on payment/payout/admin/backup functions. Already partially done — finish remaining ~20 functions.
-- **Server-side rate limiting**: extend the existing `rate-limiter` function with sliding-window limits for: login (5/min/IP), OTP send (3/15min/phone), payment intents (10/hr/user), profile edits (30/hr/user). Persist in `rate_limit_buckets` table.
-- **Webhook signature verification**: confirm Stripe, Twilio, Duffel webhooks all verify signatures and reject replays (timestamp ±5 min).
-- **Input validation**: add Zod schemas to the top 15 most-called functions (payments, profile, posting, chat send, ride request).
+### 2. Re-grant truly non-sensitive columns that the app legitimately needs
+Add a tiny follow-up migration that grants `SELECT` on the columns we omitted by mistake but that aren't actually PII:
 
-## 4. Database / RLS Audit
+- `affiliate_code`, `affiliate_captured_at` (already grants `affiliate_partner_name` — these belong with it)
+- Anything else flagged during step 3's audit
 
-- Run `supabase--linter` and `security--run_security_scan` and fix every `error` / `warn`.
-- Re-verify `profiles` table policy (it's intentionally public-readable) — confirm sensitive columns (`phone`, `email`, `birthdate`, `payout_method`) are NOT in the public selection.
-- Add a **column-level grant** revocation script for `payout_method`, `stripe_customer_id`, `aba_account_number` — only `service_role` can read.
-- Add a missing `DELETE` policy review for: `messages`, `posts`, `stories`, `device_tokens`.
-- Confirm `user_roles` table has the `has_role()` SECURITY DEFINER pattern (already in memory, just verify).
+Sensitive columns stay revoked: `email`, `phone`, `date_of_birth`, KYC fields, password-related, `affiliate_code` only if you consider it sensitive (we'll keep it owner-only and read via a small dedicated RPC instead — safer).
 
-## 5. Client-Side Protections (upgrades to existing)
+Decision: read affiliate attribution via a new `get_my_affiliate_attribution()` RPC rather than re-granting, since affiliate codes can identify referral chains.
 
-- **`RuntimeSecurityGuard`**: extend to also detect and block prototype-pollution attempts and freeze critical globals (`Object.prototype`, `Array.prototype`).
-- **`urlSafety.ts`**: refresh allowlist; add SSRF-style protections for any user-pasted URLs that get fetched server-side (block `localhost`, `169.254.*`, `10.*`, `192.168.*`, `127.*`).
-- **DOMPurify** wrapper: introduce `src/lib/security/sanitizeHtml.ts` and replace any remaining `dangerouslySetInnerHTML` (audit will list them).
-- **Clipboard hygiene**: clear copied wallet addresses / OTPs from clipboard after 30s on mobile (Capacitor Clipboard plugin).
-- **Screen-capture blocker**: enable Android `FLAG_SECURE` on wallet, two-step setup, and locked-media unlock screens.
+### 3. Audit pass for any other broken column reads
+Run a sweep across the codebase looking for `from("profiles").select(...)` calls that reference columns outside the GRANT list, and convert each to either:
+- A safe column subset (if it's a public query), or
+- The `get_my_profile()` RPC (if it's the owner reading themselves), or
+- A new narrow RPC (if it's a specific narrow PII need).
 
-## 6. Abuse & Fraud Prevention
+Known files to verify in this pass:
+- `useAffiliateAttribution.ts` → switch to RPC
+- Any admin-only PII reads (`AdminFlightPriceAlerts` already migrated; verify others)
+- Edge cases in chat/notifications hooks
 
-- Strengthen existing `assess-fraud` 10-signal scorer: add **velocity check** (>3 ride requests in 60s = block), **impossible-travel** (GPS jump >900km/h), **payment-method recycling** (same card across >5 accounts).
-- **Account-takeover protection**: lock account after 10 failed logins from new IPs in 1h, require email verification to unlock (extends current progressive lockout).
-- **Comment/post spam filter**: integrate the existing `chatContentSafety.ts` logic into post creation flow (already in chat, missing on posts).
+### 4. Add a regression guard
+Add a small dev-time console warning in `useUserProfile` so the next time a column-grant breaks profile loading, the error appears immediately in the console (already partially in place — keep it).
 
-## 7. Privacy & Compliance Touch-ups
+## What stays the same
 
-- Add **CSP report endpoint** edge function (`csp-report`) that logs violations to a new `csp_violations` table — helps tune the policy.
-- Add **`X-Robots-Tag: noindex`** on `/admin/*`, `/account/*`, `/wallet`, `/chat/*` server responses (via `_headers` path rules).
-- Document the new posture in `SECURITY.md` and bump `security.txt` Expires date.
+- The PII protection model (column-level GRANT + owner RPC) — this is the correct, secure pattern. We're not rolling back security.
+- `get_my_profile()`, `admin_get_profile()`, `get_cv_by_share_code()` RPCs all stay.
+- HTTP security headers, audit log, CSP report-only — untouched.
 
-## 8. Audit Logging
+## What you'll see after the fix
 
-- New `security_audit_log` table (append-only, RLS: only admins can read, only service_role can write) capturing: login, password change, two-step toggle, payout change, role change, admin actions, account deletion. Add a small `logSecurityEvent()` helper used across edge functions.
+- `/profile` loads instantly with full data (name, bio, social links, settings).
+- Affiliate attribution works again.
+- All public profile cards/feeds keep working (they already used safe columns).
+- Security posture is unchanged — PII still protected by column grants + owner-RPC pattern.
 
----
+## Files touched
 
-## Rollout order (so nothing breaks)
+- `src/hooks/useUserProfile.ts` — switch to `get_my_profile()` RPC
+- `src/hooks/useAffiliateAttribution.ts` — switch to new narrow RPC
+- New migration — adds `get_my_affiliate_attribution()` RPC
+- Sweep of any other `profiles.select(...)` callers found during audit (small edits)
 
-1. **Day 1 — Headers & RLS:** add HTTP security headers (CSP in *report-only* mode), run linter + scan, fix findings, add `security_audit_log` table.
-2. **Day 2 — Auth upgrades:** PBKDF2 600k with versioned hashes, fresh-auth gate, login-alert emails, device binding for payouts.
-3. **Day 3 — Edge function sweep:** shared `requireUser()` + Zod validation + tightened CORS + signature replay checks on the top ~20 functions.
-4. **Day 4 — Client & abuse:** RuntimeSecurityGuard upgrade, DOMPurify wrapper, clipboard hygiene, FLAG_SECURE, fraud-scorer additions, post-spam filter.
-5. **Day 5 — CSP enforce:** review report-only violations, switch CSP to enforce mode, update `SECURITY.md` + `security.txt`.
-
----
-
-## Files that will change (high-level)
-
-- `public/_headers` — security headers + CSP
-- `src/lib/auth/passwordHash.ts` — versioned PBKDF2
-- `src/lib/security/*` — new `sanitizeHtml.ts`, upgraded `urlSafety.ts`, new `freshAuth.ts`
-- `src/components/security/RuntimeSecurityGuard.tsx` — prototype freeze
-- `supabase/functions/_shared/auth.ts` — new `requireUser()`
-- `supabase/functions/_shared/cors.ts` — finalized allowlist
-- `supabase/functions/rate-limiter/index.ts` — sliding window
-- `supabase/functions/csp-report/index.ts` — NEW
-- New table migrations: `security_audit_log`, `csp_violations`, `rate_limit_buckets` (if missing)
-- `SECURITY.md`, `public/security.txt`, `public/.well-known/security.txt`
-
-No breaking UX changes for end users — only added prompts on truly sensitive actions (payouts / account deletion).
-
-**Approve and I'll execute in the order above, starting with headers + RLS scan.**
+Approve and I'll implement in this order: RPC migration → `useUserProfile` fix → `useAffiliateAttribution` fix → audit sweep.
