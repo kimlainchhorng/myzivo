@@ -601,9 +601,11 @@ export default function AdminStoreEditPage() {
   }, [store]);
 
   useEffect(() => {
-    const isStoreLodging = isLodgingStoreCategory(store?.category);
+    const normalizedStoreCategory = (store?.category || "").toLowerCase().trim();
+    const isStoreLodging = isLodgingStoreCategory(normalizedStoreCategory);
+    const isStoreAutoRepair = normalizedStoreCategory === "auto-repair";
     const requestedTab = searchParams.get("tab");
-    const resolvedTab = resolveStoreTabFromSearch(searchParams, isStoreLodging);
+    const resolvedTab = resolveStoreTabFromSearch(searchParams, isStoreLodging, isStoreAutoRepair);
     if (requestedTab !== resolvedTab && (requestedTab || isStoreLodging)) {
       handleTabChange(resolvedTab);
       return;
