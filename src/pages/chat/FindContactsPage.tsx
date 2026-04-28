@@ -237,6 +237,7 @@ export default function FindContactsPage() {
           </div>
         )}
       </div>
+      <ConfirmAddContactSheet open={confirmOpen} onOpenChange={setConfirmOpen} target={confirmTarget} />
     </div>
   );
 }
