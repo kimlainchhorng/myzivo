@@ -1,42 +1,25 @@
-# Continue: Employee Invites + Find Talent + Shop Job Posting
+## Problem
 
-Pick up where the last loop ended. Infrastructure (DB, RPC, edge functions, accept-invite page, list-row buttons) is done. Remaining work:
+The Channels Directory page (`/channels`) shown in the screenshot has no back button in its sticky header — users on mobile have no way to return without using the bottom nav. The Channel detail page (`/c/:handle`) has the same issue, while sibling pages (NewChannel, ManageChannel) already use a `ChevronLeft` back button pattern.
 
-## 1. Employee Dialog Invite Controls
-In `StoreEmployeesSection.tsx` add to the create/edit employee dialog:
-- "Send email invite" checkbox (enabled when email present)
-- "Send SMS invite" checkbox (enabled when phone present)
-- On save, after upsert, fire `send-employee-email-invite` / `send-employee-sms-invite` for the new employee record
-- Toast feedback per channel; show invite status badge (pending / accepted / expired) next to each employee row using `store_employee_invites` latest record
+## Changes
 
-## 2. Shop → Post a Job Shortcut
-- In `ShopEmployeesPage.tsx` (and store admin Employees section) add a "Post a job" button that routes to `/employer` with prefilled `?storeId=...`
-- In `EmployerDashboardPage.tsx` read `storeId` query param, prefill company name, logo, location, category from `stores` row
-- Add an "Invite to apply" button on each open job that opens a small picker pulling from Find Talent results
+### 1. `src/pages/channels/ChannelsDirectoryPage.tsx`
+Add a `ChevronLeft` back button at the start of the sticky header, calling `navigate(-1)` (with a fallback to `/feed` if there is no history). Match the styling used in `NewChannelPage.tsx` / `ManageChannelPage.tsx` (rounded ghost button, `w-5 h-5` icon) so the design stays consistent.
 
-## 3. Find Talent Tab (Careers Hub)
-- Rename "Find Company" page header to "Careers"; add tab switcher: Find Jobs | Find Talent (Find Talent only visible to users who own at least one store)
-- New `FindTalentPage` component: query `profiles` where `open_to_work = true`, filter by skills/location/keyword, show cards with avatar, headline, bio, "Invite to apply" CTA
-- Add toggle in account settings (`SettingsPage` / profile edit): "Open to work" → updates `profiles.open_to_work`
+### 2. `src/pages/channels/ChannelPage.tsx`
+Add the same back button into its top header so users can leave a channel detail view on mobile without relying on the browser back gesture.
 
-## 4. Connect Both Flows
-- Accepted invite (via `/auth/accept-invite`) lands user on `/account` with toast "You're now an employee at {store}"
-- Employer invite-to-apply creates a `job_applications` row (or sends in-app notification + email via existing `send-transactional-email`) so talent sees it in their notifications
+### Pattern used (consistent with existing channel pages)
 
-## Technical Notes
-- Reuse existing `store_employee_invites` table + `claim_employee_invite` RPC
-- Add `profiles.open_to_work` index for filter performance
-- All new edge function calls go through `supabase.functions.invoke`
-- Respect existing v2026 high-density compact UI standard, Lucide icons, emerald tokens
+```tsx
+<button
+  onClick={() => (window.history.length > 1 ? navigate(-1) : navigate("/feed"))}
+  className="p-2 -ml-2 rounded-full hover:bg-muted"
+  aria-label="Back"
+>
+  <ChevronLeft className="w-5 h-5" />
+</button>
+```
 
-## Files To Touch
-- `src/components/admin/store/StoreEmployeesSection.tsx`
-- `src/pages/app/shop/ShopEmployeesPage.tsx`
-- `src/pages/app/personal/EmployerDashboardPage.tsx`
-- `src/pages/app/personal/FindEmployeePage.tsx` (rename/refactor to Careers)
-- New: `src/pages/app/personal/FindTalentPage.tsx`
-- `src/pages/account/SettingsPage.tsx` (open-to-work toggle)
-- `src/App.tsx` (route updates)
-- New migration: index on `profiles(open_to_work)`
-
-After implementation: hard-refresh test, send sample invite to verify email + SMS delivery, accept flow, and shop→post job prefill.
+No other behavior changes; layout, search, and "+ New" button remain in place.
