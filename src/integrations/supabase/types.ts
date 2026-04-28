@@ -9771,6 +9771,36 @@ export type Database = {
         }
         Relationships: []
       }
+      chat_thread_settings: {
+        Row: {
+          archived_at: string | null
+          muted_until: string | null
+          notification_mode: string
+          pinned_at: string | null
+          thread_id: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          archived_at?: string | null
+          muted_until?: string | null
+          notification_mode?: string
+          pinned_at?: string | null
+          thread_id: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          archived_at?: string | null
+          muted_until?: string | null
+          notification_mode?: string
+          pinned_at?: string | null
+          thread_id?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       chat_todos: {
         Row: {
           chat_partner_id: string
@@ -55901,6 +55931,33 @@ export type Database = {
           preferences?: Json | null
           updated_at?: string | null
           user_id?: string | null
+        }
+        Relationships: []
+      }
+      user_privacy: {
+        Row: {
+          call_scope: string
+          last_seen_scope: string
+          message_scope: string
+          read_receipts: boolean
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          call_scope?: string
+          last_seen_scope?: string
+          message_scope?: string
+          read_receipts?: boolean
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          call_scope?: string
+          last_seen_scope?: string
+          message_scope?: string
+          read_receipts?: boolean
+          updated_at?: string
+          user_id?: string
         }
         Relationships: []
       }
