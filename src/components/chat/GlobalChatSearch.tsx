@@ -263,13 +263,13 @@ export default function GlobalChatSearch({ open, onClose }: Props) {
           {messages.length > 0 && (
             <Section icon={<FileText className="w-3.5 h-3.5" />} title="Messages">
               {messages.map((m) => {
-                const partnerId = m.sender_id === user?.id ? m.recipient_id : m.sender_id;
+                const partnerId = m.sender_id === user?.id ? m.receiver_id : m.sender_id;
                 return (
                   <Row
                     key={`m-${m.id}`}
                     onClick={() => go(`/chat/dm/${partnerId}?msg=${m.id}`)}
                     avatar={<div className="w-9 h-9 rounded-full bg-muted/60 flex items-center justify-center"><FileText className="w-4 h-4 text-muted-foreground" /></div>}
-                    title={<HighlightedText text={m.body} term={debounced} />}
+                    title={<HighlightedText text={m.message} term={debounced} />}
                     subtitle={new Date(m.created_at).toLocaleDateString()}
                   />
                 );
