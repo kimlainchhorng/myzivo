@@ -239,7 +239,7 @@ export default function HotelResortDetailPage() {
   }
 
   return (
-    <div className="min-h-dvh bg-background pb-28">
+    <div className="min-h-dvh bg-background pb-28 md:pb-12">
       <Helmet>
         <title>{store?.name ? `${store.name} — ZIVO` : "Hotel & Resort — ZIVO"}</title>
         <meta
@@ -254,7 +254,7 @@ export default function HotelResortDetailPage() {
 
       {/* Hero / Cover */}
       <div className="relative">
-        <div className="relative h-56 md:h-80 w-full overflow-hidden bg-muted">
+        <div className="relative h-56 md:h-80 lg:h-[420px] w-full overflow-hidden bg-muted">
           {cover ? (
             <img
               src={cover}
@@ -265,7 +265,7 @@ export default function HotelResortDetailPage() {
           ) : (
             <div className="absolute inset-0 bg-gradient-to-br from-primary/30 via-primary/10 to-transparent" />
           )}
-          <div className="absolute inset-0 bg-gradient-to-t from-background via-background/30 to-transparent" />
+          <div className="absolute inset-0 bg-gradient-to-t from-background via-background/10 md:via-transparent to-transparent" />
         </div>
 
         {/* Top nav */}
@@ -282,13 +282,13 @@ export default function HotelResortDetailPage() {
             aria-label="Share"
             className="h-10 w-10 rounded-full bg-background/80 backdrop-blur flex items-center justify-center shadow-sm active:scale-95 transition"
           >
-            <Share2 className="w-4.5 h-4.5" />
+            <Share2 className="w-5 h-5" />
           </button>
         </div>
       </div>
 
       {/* Header card */}
-      <div className="px-4 -mt-12 relative z-10">
+      <div className="px-4 -mt-12 relative z-10 mx-auto w-full max-w-3xl lg:max-w-5xl">
         <motion.div
           initial={{ opacity: 0, y: 12 }}
           animate={{ opacity: 1, y: 0 }}
