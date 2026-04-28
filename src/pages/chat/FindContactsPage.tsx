@@ -135,6 +135,22 @@ export default function FindContactsPage() {
       </header>
 
       <div className="space-y-4 p-4">
+        {nativeReady && (
+          <div className="rounded-lg border border-emerald-500/30 bg-emerald-500/5 p-4">
+            <div className="mb-1 flex items-center gap-2 text-sm font-medium">
+              <Smartphone className="h-4 w-4 text-emerald-600" />
+              Sync from your phone
+            </div>
+            <p className="mb-3 text-xs text-muted-foreground">
+              Read contacts directly from this device. Numbers are hashed on-device — only hashes are sent.
+            </p>
+            <Button onClick={nativeSync} disabled={syncing} className="bg-emerald-500 hover:bg-emerald-600 text-white gap-2">
+              {syncing ? <Loader2 className="h-4 w-4 animate-spin" /> : <Smartphone className="h-4 w-4" />}
+              Sync now
+            </Button>
+          </div>
+        )}
+
         <div className="rounded-lg border border-border bg-card p-4">
           <div className="mb-2 flex items-center gap-2 text-sm font-medium">
             <Phone className="h-4 w-4 text-primary" />
