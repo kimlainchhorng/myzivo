@@ -121,22 +121,85 @@ export default function HotelsLandingPage() {
   const all = listQuery.data || [];
   const storeIds = useMemo(() => all.map((s) => s.id), [all]);
 
-  // Min rates per store
+  // Min rates per store (with stay-length discount info)
+  type RateInfo = {
+    base: number;
+    weeklyPct: number;
+    monthlyPct: number;
+  };
   const ratesQuery = useQuery({
     queryKey: ["lodge-min-rates", storeIds],
     enabled: storeIds.length > 0,
-    queryFn: async (): Promise<Record<string, number>> => {
+    queryFn: async (): Promise<Record<string, RateInfo>> => {
       const { data, error } = await (supabase as any)
         .from("lodge_rooms")
-        .select("store_id, base_rate_cents, is_active")
+        .select("store_id, base_rate_cents, weekly_discount_pct, monthly_discount_pct, is_active")
         .in("store_id", storeIds)
         .eq("is_active", true);
       if (error) throw error;
-      const map: Record<string, number> = {};
-      for (const r of (data || []) as Array<{ store_id: string; base_rate_cents: number }>) {
+      const map: Record<string, RateInfo> = {};
+      for (const r of (data || []) as Array<{
+        store_id: string;
+        base_rate_cents: number;
+        weekly_discount_pct: number | null;
+        monthly_discount_pct: number | null;
+      }>) {
         if (!r.base_rate_cents || r.base_rate_cents <= 0) continue;
-        if (map[r.store_id] === undefined || r.base_rate_cents < map[r.store_id]) {
-          map[r.store_id] = r.base_rate_cents;
+        const existing = map[r.store_id];
+        if (!existing || r.base_rate_cents < existing.base) {
+          map[r.store_id] = {
+            base: r.base_rate_cents,
+            weeklyPct: Number(r.weekly_discount_pct) || 0,
+            monthlyPct: Number(r.monthly_discount_pct) || 0,
+          };
+        }
+      }
+      return map;
+    },
+  });
+
+  // Active public promotions per store (largest discount wins)
+  type PromoInfo = {
+    type: "percent" | "fixed";
+    value: number;
+    name: string;
+    minNights: number;
+    maxNights: number | null;
+  };
+  const promotionsQuery = useQuery({
+    queryKey: ["lodge-promotions", storeIds],
+    enabled: storeIds.length > 0,
+    queryFn: async (): Promise<Record<string, PromoInfo>> => {
+      const nowIso = new Date().toISOString();
+      const { data, error } = await (supabase as any)
+        .from("lodging_promotions")
+        .select("store_id, promo_type, discount_value, name, min_nights, max_nights, starts_at, ends_at, active, member_only")
+        .in("store_id", storeIds)
+        .eq("active", true)
+        .eq("member_only", false);
+      if (error) {
+        // Silently ignore — fall back to base rates
+        return {};
+      }
+      const map: Record<string, PromoInfo> = {};
+      for (const r of (data || []) as Array<any>) {
+        if (r.starts_at && r.starts_at > nowIso) continue;
+        if (r.ends_at && r.ends_at < nowIso) continue;
+        const type = r.promo_type === "fixed" ? "fixed" : "percent";
+        const value = Number(r.discount_value) || 0;
+        if (value <= 0) continue;
+        const candidate: PromoInfo = {
+          type,
+          value,
+          name: r.name || "",
+          minNights: Number(r.min_nights) || 1,
+          maxNights: r.max_nights ? Number(r.max_nights) : null,
+        };
+        const existing = map[r.store_id];
+        // Prefer larger percentage; fixed treated roughly as value cents-equivalent
+        const score = (p: PromoInfo) => (p.type === "percent" ? p.value : p.value);
+        if (!existing || score(candidate) > score(existing)) {
+          map[r.store_id] = candidate;
         }
       }
       return map;
