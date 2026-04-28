@@ -1,11 +1,12 @@
-import { Suspense, lazy, useEffect } from "react";
-import { AdminShellRoute, restaurantNav, businessNav } from "@/components/admin/shell";
+import { Suspense, lazy, useEffect, useState, forwardRef } from "react";
+import { AdminShellRoute } from "@/components/admin/shell/AdminShellRoute";
+import { restaurantNav } from "@/components/admin/shell/nav/restaurant";
+import { businessNav } from "@/components/admin/shell/nav/business";
 import { usePageViewTracker } from "@/hooks/usePageViewTracker";
 import { useGeoDetect } from "@/hooks/useGeoDetect";
 import { HelmetProvider } from "react-helmet-async";
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
-import StoryDebugPanel from "@/components/stories/StoryDebugPanel";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { useVerificationRealtime } from "@/hooks/useVerificationRealtime";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
@@ -35,6 +36,7 @@ const IncomingCallListener = lazyWithRetry(() => import("@/components/chat/Incom
 const ChatNotificationListener = lazyWithRetry(() => import("@/components/chat/ChatNotificationListener"));
 const RuntimeSecurityGuard = lazyWithRetry(() => import("@/components/security/RuntimeSecurityGuard"));
 const SpatialCursor = lazyWithRetry(() => import("./components/ui/SpatialCursor").then(m => ({ default: m.SpatialCursor })));
+const StoryDebugPanel = lazyWithRetry(() => import("@/components/stories/StoryDebugPanel"));
 const PostMenuRegressionPage = lazy(() => import("./pages/dev/PostMenuRegressionPage"));
 const SafeAreaQAPage = lazy(() => import("./pages/dev/SafeAreaQAPage"));
 
