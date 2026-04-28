@@ -227,16 +227,7 @@ export default function FinanceExpensesSection({ storeId }: Props) {
   });
 
   // Compute derived totals from items + tax
-  const subtotalCents = useMemo(
-    () => form.items.reduce((s, it) => {
-      const q = parseFloat(it.quantity) || 0;
-      const u = Math.round((parseFloat(it.unit_price) || 0) * 100);
-      return s + Math.round(q * u);
-    }, 0),
-    [form.items]
-  );
-  const taxCents = Math.round((parseFloat(form.tax) || 0) * 100);
-  const totalCents = subtotalCents + taxCents;
+  const { subtotalCents, taxCents, totalCents } = useMemo(() => computeExpenseTotals(form), [form]);
 
   const create = useMutation({
     mutationFn: async () => {
