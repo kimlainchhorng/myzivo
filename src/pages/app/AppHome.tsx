@@ -375,7 +375,13 @@ const AppHome = () => {
               return (
                 <motion.button
                   key={tab.id}
-                  onClick={() => setActiveHomeTab(tab.id)}
+                  onClick={() => {
+                    if (isActive && tab.id === "hotels") {
+                      navigate("/hotels-list");
+                      return;
+                    }
+                    setActiveHomeTab(tab.id);
+                  }}
                   aria-label={tab.label}
                   aria-pressed={isActive}
                   whileTap={{ scale: 0.96 }}
@@ -443,7 +449,7 @@ const AppHome = () => {
                   rides: "/rides",
                   eats: "/eats",
                   flights: "/flights",
-                  hotels: "/hotels",
+                  hotels: "/hotels-list",
                 };
                 navigate(routes[activeHomeTab] || "/rides");
               }}
