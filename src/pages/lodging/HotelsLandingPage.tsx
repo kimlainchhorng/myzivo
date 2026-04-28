@@ -50,12 +50,12 @@ const FILTERS: Array<{ id: string; label: string; match: (cat: string) => boolea
 ];
 
 const POPULAR_DESTINATIONS: Array<{ id: string; label: string; city: string; img: string }> = [
-  { id: "pp", label: "Phnom Penh", city: "phnom penh", img: "https://images.unsplash.com/photo-1569949381669-ecf31ae8e613?w=320&h=200&fit=crop&auto=format&q=70" },
-  { id: "sr", label: "Siem Reap", city: "siem reap", img: "https://images.unsplash.com/photo-1508009603885-50cf7c579365?w=320&h=200&fit=crop&auto=format&q=70" },
-  { id: "sv", label: "Sihanoukville", city: "sihanoukville", img: "https://images.unsplash.com/photo-1540541338287-41700207dee6?w=320&h=200&fit=crop&auto=format&q=70" },
-  { id: "kep", label: "Kep", city: "kep", img: "https://source.unsplash.com/240x160/?kep,beach,cambodia" },
-  { id: "kampot", label: "Kampot", city: "kampot", img: "https://source.unsplash.com/240x160/?kampot,river,cambodia" },
-  { id: "btb", label: "Battambang", city: "battambang", img: "https://source.unsplash.com/240x160/?battambang,cambodia" },
+  { id: "pp", label: "Phnom Penh", city: "phnom penh", img: destPhnomPenh },
+  { id: "sr", label: "Siem Reap", city: "siem reap", img: destSiemReap },
+  { id: "sv", label: "Sihanoukville", city: "sihanoukville", img: destSihanoukville },
+  { id: "kep", label: "Kep", city: "kep", img: destKep },
+  { id: "kampot", label: "Kampot", city: "kampot", img: destKampot },
+  { id: "btb", label: "Battambang", city: "battambang", img: destBattambang },
 ];
 
 export default function HotelsLandingPage() {
