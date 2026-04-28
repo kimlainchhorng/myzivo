@@ -308,6 +308,7 @@ const HotelLanding = lazy(() => import("./pages/HotelLanding"));
 const HotelResultsPage = lazy(() => import("./pages/HotelResultsPage"));
 const HotelResortDetailPage = lazy(() => import("./pages/lodging/HotelResortDetailPage"));
 const HotelsResortsDirectoryPage = lazy(() => import("./pages/lodging/HotelsResortsDirectoryPage"));
+const HotelsLandingPage = lazy(() => import("./pages/lodging/HotelsLandingPage"));
 
 // Car Rental
 const CarRentalBooking = lazy(() => import("./pages/CarRentalBooking"));
@@ -918,6 +919,7 @@ const App = () => (
                 {/* Hotels */}
                 <Route path="/hotels/:city" element={<RouteErrorBoundary section="Hotels"><HotelCityLandingPage /></RouteErrorBoundary>} />
                 <Route path="/hotel/:storeId" element={<RouteErrorBoundary section="HotelDetail"><HotelResortDetailPage /></RouteErrorBoundary>} />
+                <Route path="/hotels" element={<RouteErrorBoundary section="HotelsLanding"><HotelsLandingPage /></RouteErrorBoundary>} />
                 <Route path="/hotels-list" element={<RouteErrorBoundary section="HotelsDirectory"><HotelsResortsDirectoryPage /></RouteErrorBoundary>} />
                 {/* /hotels and /hotels/in-:city removed */}
 
