@@ -80,6 +80,25 @@ export default function StoreEmployeesSection({ storeId }: Props) {
     },
   });
 
+  const sendInvite = async (employeeId: string, channel: "email" | "sms", payload: { email?: string | null; phone?: string | null; role: string }) => {
+    const fnName = channel === "email" ? "send-employee-email-invite" : "send-employee-sms-invite";
+    const body: any = { storeEmployeeId: employeeId, role: payload.role };
+    if (channel === "email") body.email = payload.email;
+    else body.phone = payload.phone;
+    const { data, error } = await supabase.functions.invoke(fnName, { body });
+    if (error || (data && (data as any).error)) {
+      throw new Error(error?.message || (data as any)?.error || "invite_failed");
+    }
+  };
+
+  const inviteMutation = useMutation({
+    mutationFn: async ({ emp, channel }: { emp: Employee; channel: "email" | "sms" }) => {
+      await sendInvite(emp.id, channel, { email: emp.email, phone: emp.phone, role: emp.role });
+    },
+    onSuccess: (_d, vars) => toast.success(vars.channel === "email" ? "Email invite sent" : "SMS invite sent"),
+    onError: (e: any) => toast.error("Invite failed: " + (e?.message || "unknown")),
+  });
+
   const saveMutation = useMutation({
     mutationFn: async () => {
       const rateValue = form.pay_type === "monthly"
@@ -92,12 +111,24 @@ export default function StoreEmployeesSection({ storeId }: Props) {
         pay_type: form.pay_type,
         notes: form.notes.trim() || null,
       };
+      let savedId = editing?.id;
       if (editing) {
         const { error } = await supabase.from("store_employees").update(payload).eq("id", editing.id);
         if (error) throw error;
       } else {
-        const { error } = await supabase.from("store_employees").insert(payload);
+        const { data, error } = await supabase.from("store_employees").insert(payload).select("id").maybeSingle();
         if (error) throw error;
+        savedId = data?.id;
+      }
+      // Fire invites if requested
+      if (savedId) {
+        const role = form.role;
+        if (form.invite_email && payload.email) {
+          try { await sendInvite(savedId, "email", { email: payload.email, role }); } catch (e: any) { toast.error("Email invite failed: " + e.message); }
+        }
+        if (form.invite_sms && payload.phone) {
+          try { await sendInvite(savedId, "sms", { phone: payload.phone, role }); } catch (e: any) { toast.error("SMS invite failed: " + e.message); }
+        }
       }
     },
     onSuccess: () => { queryClient.invalidateQueries({ queryKey: ["store-employees", storeId] }); toast.success(editing ? "Employee updated" : "Employee added"); closeDialog(); },
