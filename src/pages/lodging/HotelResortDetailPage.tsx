@@ -239,7 +239,7 @@ export default function HotelResortDetailPage() {
   }
 
   return (
-    <div className="min-h-dvh bg-background pb-28">
+    <div className="min-h-dvh bg-background pb-28 md:pb-12">
       <Helmet>
         <title>{store?.name ? `${store.name} — ZIVO` : "Hotel & Resort — ZIVO"}</title>
         <meta
@@ -254,7 +254,7 @@ export default function HotelResortDetailPage() {
 
       {/* Hero / Cover */}
       <div className="relative">
-        <div className="relative h-56 md:h-80 w-full overflow-hidden bg-muted">
+        <div className="relative h-56 md:h-80 lg:h-[420px] w-full overflow-hidden bg-muted">
           {cover ? (
             <img
               src={cover}
@@ -265,7 +265,7 @@ export default function HotelResortDetailPage() {
           ) : (
             <div className="absolute inset-0 bg-gradient-to-br from-primary/30 via-primary/10 to-transparent" />
           )}
-          <div className="absolute inset-0 bg-gradient-to-t from-background via-background/30 to-transparent" />
+          <div className="absolute inset-0 bg-gradient-to-t from-background via-background/10 md:via-transparent to-transparent" />
         </div>
 
         {/* Top nav */}
@@ -282,13 +282,13 @@ export default function HotelResortDetailPage() {
             aria-label="Share"
             className="h-10 w-10 rounded-full bg-background/80 backdrop-blur flex items-center justify-center shadow-sm active:scale-95 transition"
           >
-            <Share2 className="w-4.5 h-4.5" />
+            <Share2 className="w-5 h-5" />
           </button>
         </div>
       </div>
 
       {/* Header card */}
-      <div className="px-4 -mt-12 relative z-10">
+      <div className="px-4 -mt-12 relative z-10 mx-auto w-full max-w-3xl lg:max-w-5xl">
         <motion.div
           initial={{ opacity: 0, y: 12 }}
           animate={{ opacity: 1, y: 0 }}
@@ -339,7 +339,7 @@ export default function HotelResortDetailPage() {
                           </span>
                         </div>
                         {promo?.name && (
-                          <p className="mt-0.5 text-[9px] text-emerald-700 font-medium truncate max-w-[110px]">
+                          <p className="mt-0.5 text-[9px] text-emerald-700 font-medium truncate max-w-[110px] md:max-w-none">
                             {promo.name}
                           </p>
                         )}
@@ -371,6 +371,19 @@ export default function HotelResortDetailPage() {
         </motion.div>
       </div>
 
+      {/* Body wrapper for tablet/desktop centering */}
+      <div className="mx-auto w-full max-w-3xl lg:max-w-5xl">
+
+      {/* Inline desktop CTA (replaces sticky bar on md+) */}
+      <div className="hidden md:flex items-center gap-2 px-4 mt-4">
+        <Button variant="outline" size="lg" className="flex-1 max-w-[200px]" onClick={handleShare}>
+          <Share2 className="w-4 h-4 mr-1.5" /> Share
+        </Button>
+        <Button size="lg" className="flex-1" onClick={() => setBookingOpen(true)}>
+          <CalendarRange className="w-4 h-4 mr-1.5" /> Check Availability
+        </Button>
+      </div>
+
       {/* Description */}
       {!!store?.description && (
         <Section title="About">
@@ -383,7 +396,7 @@ export default function HotelResortDetailPage() {
       {/* Amenities */}
       {amenities.length > 0 && (
         <Section title="Amenities">
-          <div className="grid grid-cols-2 gap-2">
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2">
             {amenities.map((label) => {
               const Icon = amenityIconFor(label);
               return (
@@ -411,7 +424,7 @@ export default function HotelResortDetailPage() {
         ) : activeRooms.length === 0 ? (
           <p className="text-xs text-muted-foreground">No rooms published yet.</p>
         ) : (
-          <div className="-mx-4 px-4 flex gap-3 overflow-x-auto snap-x snap-mandatory pb-1 [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden">
+          <div className="-mx-4 px-4 pr-6 flex gap-3 overflow-x-auto snap-x snap-mandatory pb-1 [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden md:mx-0 md:px-0 md:pr-0 md:overflow-visible md:grid md:grid-cols-2 lg:grid-cols-3 md:gap-3">
             {activeRooms.slice(0, 8).map((room) => {
               const photo = room.photos?.[room.cover_photo_index ?? 0] || room.photos?.[0];
               const deal = applyPromo(room.base_rate_cents);
@@ -419,7 +432,7 @@ export default function HotelResortDetailPage() {
               return (
                 <div
                   key={room.id}
-                  className="snap-start shrink-0 w-56 rounded-xl border border-border bg-card overflow-hidden"
+                  className="snap-start shrink-0 w-60 md:w-auto rounded-xl border border-border bg-card overflow-hidden"
                 >
                   <div className="h-28 bg-muted relative">
                     {photo ? (
@@ -553,8 +566,11 @@ export default function HotelResortDetailPage() {
         </Section>
       )}
 
-      {/* Sticky CTA */}
-      <div className="fixed bottom-0 left-0 right-0 z-30 bg-background/95 backdrop-blur border-t border-border px-4 py-3 pb-[max(env(safe-area-inset-bottom),12px)]">
+      </div>
+      {/* /body wrapper */}
+
+      {/* Sticky CTA — mobile only */}
+      <div className="md:hidden fixed bottom-0 left-0 right-0 z-30 bg-background/95 backdrop-blur border-t border-border px-4 py-3 pb-[max(env(safe-area-inset-bottom),12px)]">
         <div className="mx-auto max-w-2xl flex items-center gap-2">
           <Button
             variant="outline"
@@ -577,13 +593,13 @@ export default function HotelResortDetailPage() {
       {/* Booking sheet (lightweight inline modal) */}
       {bookingOpen && (
         <div
-          className="fixed inset-0 z-40 bg-black/40 flex items-end justify-center"
+          className="fixed inset-0 z-40 bg-black/40 flex items-end md:items-center justify-center"
           onClick={() => setBookingOpen(false)}
         >
           <motion.div
             initial={{ y: 60, opacity: 0 }}
             animate={{ y: 0, opacity: 1 }}
-            className="w-full max-w-md bg-card rounded-t-3xl p-5 pb-[max(env(safe-area-inset-bottom),20px)] shadow-2xl"
+            className="w-full max-w-md md:max-w-lg bg-card rounded-t-3xl md:rounded-3xl p-5 pb-[max(env(safe-area-inset-bottom),20px)] md:pb-5 shadow-2xl"
             onClick={(e) => e.stopPropagation()}
           >
             <div className="mx-auto h-1.5 w-10 rounded-full bg-muted mb-3" />
@@ -633,9 +649,9 @@ function Section({ title, children }: { title: string; children: React.ReactNode
 
 function Stat({ label, value }: { label: string; value: string | number }) {
   return (
-    <div className="rounded-xl bg-muted/50 py-2">
-      <p className="text-sm font-bold text-foreground leading-none">{value}</p>
-      <p className="mt-0.5 text-[10px] text-muted-foreground">{label}</p>
+    <div className="rounded-xl bg-muted/50 py-2 md:py-2.5">
+      <p className="text-sm md:text-lg font-bold text-foreground leading-none">{value}</p>
+      <p className="mt-0.5 text-[10px] md:text-xs text-muted-foreground">{label}</p>
     </div>
   );
 }
