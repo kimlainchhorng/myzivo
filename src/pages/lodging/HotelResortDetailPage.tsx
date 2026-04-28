@@ -324,10 +324,32 @@ export default function HotelResortDetailPage() {
                 {minPriceCents > 0 && (
                   <div className="text-right shrink-0">
                     <p className="text-[10px] text-muted-foreground">From</p>
-                    <p className="text-base font-bold text-primary leading-tight">
-                      {formatPrice(minPriceCents)}
-                      <span className="text-[10px] font-normal text-muted-foreground"> /night</span>
-                    </p>
+                    {minDeal.pctOff > 0 && minDeal.discounted < minPriceCents ? (
+                      <>
+                        <p className="text-base font-bold text-emerald-600 leading-tight">
+                          {formatPrice(minDeal.discounted)}
+                          <span className="text-[10px] font-normal text-muted-foreground"> /night</span>
+                        </p>
+                        <div className="mt-0.5 flex items-center justify-end gap-1.5">
+                          <span className="text-[10px] text-muted-foreground line-through">
+                            {formatPrice(minPriceCents)}
+                          </span>
+                          <span className="rounded-full bg-red-600 text-white text-[9px] font-semibold px-1.5 py-0.5">
+                            -{minDeal.pctOff}%
+                          </span>
+                        </div>
+                        {promo?.name && (
+                          <p className="mt-0.5 text-[9px] text-emerald-700 font-medium truncate max-w-[110px]">
+                            {promo.name}
+                          </p>
+                        )}
+                      </>
+                    ) : (
+                      <p className="text-base font-bold text-primary leading-tight">
+                        {formatPrice(minPriceCents)}
+                        <span className="text-[10px] font-normal text-muted-foreground"> /night</span>
+                      </p>
+                    )}
                   </div>
                 )}
               </div>
