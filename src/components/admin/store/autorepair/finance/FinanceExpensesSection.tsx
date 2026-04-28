@@ -143,7 +143,15 @@ export default function FinanceExpensesSection({ storeId }: Props) {
       setForm(blankForm());
       qc.invalidateQueries({ queryKey: ["ar-fin-expenses", storeId] });
     },
-    onError: (e: any) => toast.error(e.message || "Failed to save expense"),
+    onError: (e: any) => {
+      const code = e?.code || "";
+      const msg = e?.message || "";
+      if (code === "42501" || /row-level security|permission denied/i.test(msg)) {
+        toast.error("You don't have permission to save expenses for this store.");
+      } else {
+        toast.error(msg || "Failed to save expense");
+      }
+    },
   });
 
   const remove = useMutation({
@@ -216,7 +224,15 @@ export default function FinanceExpensesSection({ storeId }: Props) {
       toast.success("Invoice scanned — review and save");
     } catch (err: any) {
       console.error(err);
-      toast.error(err?.message || "Scan failed");
+      const code = err?.code || err?.statusCode || "";
+      const msg = err?.message || "";
+      if (code === "42501" || /row-level security|permission denied|not authorized/i.test(msg)) {
+        toast.error("You don't have permission to upload receipts for this store.");
+      } else if (/storage|bucket|upload/i.test(msg)) {
+        toast.error(`Receipt upload failed: ${msg}`);
+      } else {
+        toast.error(msg || "Scan failed");
+      }
     } finally {
       setScanning(false);
     }
