@@ -1,12 +1,13 @@
 import { useEffect, useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Plus, Search, Users } from "lucide-react";
+import { ChevronLeft, Plus, Search, Users } from "lucide-react";
 
 export default function ChannelsDirectoryPage() {
+  const navigate = useNavigate();
   const [q, setQ] = useState("");
   const [channels, setChannels] = useState<any[]>([]);
 
