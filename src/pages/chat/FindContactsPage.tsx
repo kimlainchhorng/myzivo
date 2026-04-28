@@ -213,20 +213,24 @@ export default function FindContactsPage() {
                       <div className="truncate text-xs text-muted-foreground">@{m.username}</div>
                     )}
                   </div>
-                  <Button
-                    size="sm"
-                    variant="outline"
-                    onClick={() => addContact(m)}
-                    disabled={adding === m.user_id}
-                    className="gap-1"
-                  >
-                    {adding === m.user_id ? (
-                      <Loader2 className="h-4 w-4 animate-spin" />
-                    ) : (
-                      <UserPlus className="h-4 w-4" />
-                    )}
-                    Add
-                  </Button>
+                  {contactIds.has(m.user_id) ? (
+                    <Button size="sm" variant="ghost" onClick={() => openChat(m)} className="gap-1 text-emerald-600">
+                      <Check className="h-4 w-4" /> In contacts
+                    </Button>
+                  ) : pendingIds.has(m.user_id) ? (
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={() => navigate("/chat/contacts/requests?tab=out")}
+                      className="gap-1 text-amber-600 border-amber-300"
+                    >
+                      <Loader2 className="h-4 w-4" /> Pending
+                    </Button>
+                  ) : (
+                    <Button size="sm" variant="outline" onClick={() => openConfirm(m)} className="gap-1">
+                      <UserPlus className="h-4 w-4" /> Add
+                    </Button>
+                  )}
                 </div>
               ))
             )}
