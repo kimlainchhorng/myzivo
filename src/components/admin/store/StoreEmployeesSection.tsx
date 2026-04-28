@@ -8,7 +8,7 @@ import { toast } from "sonner";
 import {
   Users, Plus, Edit, Trash2, Loader2, Phone, Mail, DollarSign, Search,
   Filter, MoreHorizontal, UserCheck, UserX, Download, Upload, MapPin,
-  Briefcase, Award, CalendarDays, ChevronDown, ArrowUpDown, Eye
+  Briefcase, Award, CalendarDays, ChevronDown, ArrowUpDown, Eye, Send, MailCheck, MessageSquare
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
