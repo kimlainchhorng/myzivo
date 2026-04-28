@@ -232,6 +232,58 @@ export default function FinanceExpensesSection({ storeId }: Props) {
       reader.readAsDataURL(file);
     });
 
+  // Try the primary bucket up to MAX_ATTEMPTS times. Return signed-relative
+  // path on success, or throw the last error.
+  const uploadToPrimaryWithRetry = async (
+    file: File,
+    mime: string,
+    diag: DiagnosticsRecord,
+  ): Promise<string> => {
+    const MAX_ATTEMPTS = 3;
+    const backoff = [300, 700, 1500];
+    const ext = (file.name.split(".").pop() || "jpg").toLowerCase();
+    const path = `${storeId}/${Date.now()}-${crypto.randomUUID?.() ?? Math.random().toString(36).slice(2)}.${ext}`;
+    diag.path = path;
+    diag.bucket = PRIMARY_BUCKET;
+
+    let lastErr: any = null;
+    for (let n = 1; n <= MAX_ATTEMPTS; n++) {
+      const started = new Date();
+      const t0 = performance.now();
+      try {
+        const { error: upErr } = await supabase.storage
+          .from(PRIMARY_BUCKET)
+          .upload(path, file, { contentType: mime, upsert: false });
+        const durationMs = Math.round(performance.now() - t0);
+        if (!upErr) {
+          diag.attempts.push({ n, started: started.toISOString(), durationMs, ok: true, transient: false });
+          return path;
+        }
+        const status = (upErr as any)?.statusCode ?? (upErr as any)?.status ?? null;
+        const code = (upErr as any)?.error || (upErr as any)?.code || null;
+        const transient = isTransientUploadError(upErr, status);
+        diag.attempts.push({
+          n, started: started.toISOString(), durationMs, ok: false,
+          status, code, message: (upErr as any)?.message || String(upErr), transient,
+        });
+        lastErr = upErr;
+        if (!transient || n === MAX_ATTEMPTS) break;
+        await sleep(backoff[n - 1] ?? 1500);
+      } catch (netErr: any) {
+        const durationMs = Math.round(performance.now() - t0);
+        const transient = isTransientUploadError(netErr);
+        diag.attempts.push({
+          n, started: started.toISOString(), durationMs, ok: false,
+          status: null, code: netErr?.name || null, message: netErr?.message || String(netErr), transient,
+        });
+        lastErr = netErr;
+        if (!transient || n === MAX_ATTEMPTS) break;
+        await sleep(backoff[n - 1] ?? 1500);
+      }
+    }
+    throw lastErr || new Error("Primary upload failed");
+  };
+
   const onFile = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     e.target.value = "";
@@ -241,13 +293,51 @@ export default function FinanceExpensesSection({ storeId }: Props) {
       return;
     }
     setScanning(true);
-    let stage: "read" | "scan" | "attach" = "read";
+
+    const { data: { user } } = await supabase.auth.getUser();
+    const diag: DiagnosticsRecord = {
+      at: new Date().toISOString(),
+      user_id: user?.id ?? null,
+      store_id: storeId,
+      bucket: PRIMARY_BUCKET,
+      path: null,
+      url: supaUrl ? `${supaUrl}/storage/v1/object/${PRIMARY_BUCKET}/<path>` : null,
+      method: "POST",
+      headers: {
+        authorization: "Bearer <redacted>",
+        apikey: "<redacted>",
+        "x-upsert": "false",
+        "content-type": file.type || "image/jpeg",
+      },
+      preflight: null,
+      attempts: [],
+      used_fallback: false,
+      fallback_response: null,
+      final_receipt_ref: null,
+      scan_response_summary: null,
+    };
+
+    let stage: "preflight" | "read" | "scan" | "attach" = "preflight";
     try {
-      // Read the image directly in the browser (no Storage upload required)
+      // 1. Preflight — verify role + ownership before doing real work.
+      const pre = await supabase.functions.invoke("ar-receipts-helper", {
+        body: { action: "preflight", store_id: storeId },
+      });
+      diag.preflight = pre.error ? { error: pre.error.message } : pre.data;
+      if (pre.error) throw new Error(pre.error.message || "Preflight failed");
+      if (!(pre.data as any)?.ok) {
+        const reason = !(pre.data as any)?.store_found
+          ? "Store not found"
+          : "You don't have permission to upload receipts for this store";
+        throw new Error(reason);
+      }
+
+      // 2. Read file as base64.
+      stage = "read";
       const base64 = await fileToBase64(file);
       const mime = file.type || "image/jpeg";
 
-      // Send to AI edge function for parsing
+      // 3. AI scan.
       stage = "scan";
       toast.info("Scanning invoice…");
       const { data, error } = await supabase.functions.invoke("scan-invoice", {
@@ -256,23 +346,40 @@ export default function FinanceExpensesSection({ storeId }: Props) {
       if (error) throw error;
       const inv = (data as any)?.invoice;
       if (!inv) throw new Error("Could not parse invoice");
+      diag.scan_response_summary = {
+        items: Array.isArray(inv.items) ? inv.items.length : 0,
+        vendor: inv.vendor ?? null,
+      };
 
-      // Best-effort: try to attach the receipt to Storage. If it fails, continue silently.
+      // 4. Attempt the primary upload, with retries; fall back to edge fn.
       stage = "attach";
-      let receiptPath: string | null = null;
+      let receiptRef: string | null = null;
       try {
-        const ext = (file.name.split(".").pop() || "jpg").toLowerCase();
-        const path = `${storeId}/${Date.now()}.${ext}`;
-        const { error: upErr } = await supabase.storage
-          .from("ar-receipts")
-          .upload(path, file, { contentType: mime });
-        if (!upErr) receiptPath = path;
-        else console.warn("Receipt attach skipped:", upErr);
-      } catch (attachErr) {
-        console.warn("Receipt attach skipped:", attachErr);
+        const path = await uploadToPrimaryWithRetry(file, mime, diag);
+        receiptRef = path; // stored as-is (no prefix) when primary succeeds
+      } catch (primaryErr: any) {
+        console.warn("Primary upload failed, attempting fallback:", primaryErr);
+        try {
+          const fb = await supabase.functions.invoke("ar-receipts-helper", {
+            body: { action: "fallback_upload", store_id: storeId, image_base64: base64, mime_type: mime },
+          });
+          if (fb.error) {
+            diag.fallback_response = { error: fb.error.message };
+          } else {
+            diag.fallback_response = fb.data;
+            const fbPath = (fb.data as any)?.path;
+            if (fbPath) {
+              receiptRef = `${FALLBACK_PREFIX}${fbPath}`;
+              diag.used_fallback = true;
+            }
+          }
+        } catch (fbErr: any) {
+          diag.fallback_response = { error: fbErr?.message || String(fbErr) };
+        }
       }
+      diag.final_receipt_ref = receiptRef;
 
-      // Pre-fill form
+      // 5. Pre-fill form
       const t = inv.time ? from24h(inv.time + (inv.time.length === 5 ? ":00" : "")) : { h: "12", m: "00", ap: "PM" as const };
       setForm({
         ...blankForm(),
@@ -284,7 +391,7 @@ export default function FinanceExpensesSection({ storeId }: Props) {
         hour: t.h, minute: t.m, ampm: t.ap,
         payment_method: inv.payment_method || "card",
         tax: inv.tax_cents != null ? (inv.tax_cents / 100).toFixed(2) : "",
-        receipt_url: receiptPath, // null if storage attach failed
+        receipt_url: receiptRef,
         items: Array.isArray(inv.items) && inv.items.length
           ? inv.items.map((it: any) => ({
               part_number: it.part_number || "",
@@ -296,23 +403,26 @@ export default function FinanceExpensesSection({ storeId }: Props) {
         notes: "",
       });
       setOpen(true);
-      if (receiptPath) {
+
+      if (receiptRef && !diag.used_fallback) {
         toast.success("Invoice scanned — review and save");
+      } else if (receiptRef && diag.used_fallback) {
+        toast.success("Invoice scanned (receipt saved via fallback) — review and save");
       } else {
         toast.success("Invoice scanned — review and save (receipt image not attached)");
       }
     } catch (err: any) {
-      console.error("scan-invoice flow error", { stage, err });
+      console.error("scan-invoice flow error", { stage, err, diag });
       const msg = err?.message || String(err);
-      if (stage === "read") {
-        toast.error(`Could not read image: ${msg}`);
-      } else {
-        toast.error(`Invoice scan failed: ${msg}`);
-      }
+      if (stage === "preflight") toast.error(`Preflight failed: ${msg}`);
+      else if (stage === "read") toast.error(`Could not read image: ${msg}`);
+      else toast.error(`Invoice scan failed: ${msg}`);
     } finally {
+      setDiagnostics(diag);
       setScanning(false);
     }
   };
+
 
   // -------- List filters & totals --------
   const filtered = useMemo(
