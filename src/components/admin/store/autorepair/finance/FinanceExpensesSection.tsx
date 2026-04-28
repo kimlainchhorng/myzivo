@@ -4,7 +4,7 @@
  * Structured fields: vendor, invoice #, date, time (AM/PM), payment method,
  * line items (part #, name, qty, unit price, line total), subtotal/tax/total.
  */
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState, useCallback } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -15,7 +15,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
-import { Wallet, Plus, Trash2, ScanLine, Paperclip, Loader2, X, ChevronDown, ChevronRight, Copy, AlertCircle, CheckCircle2 } from "lucide-react";
+import { Wallet, Plus, Trash2, ScanLine, Paperclip, Loader2, X, ChevronDown, ChevronRight, Copy, AlertCircle, CheckCircle2, Upload, FileText, Image } from "lucide-react";
 import { toast } from "sonner";
 
 // ---------- Receipt-upload diagnostics ----------
@@ -202,12 +202,27 @@ function fmtTime12(t: string | null): string {
   return `${h}:${m} ${ap}`;
 }
 
+type ScanStage = "idle" | "read" | "scan" | "upload" | "save";
+
+const STAGE_LABELS: Record<ScanStage, string> = {
+  idle: "",
+  read: "Reading file…",
+  scan: "AI scanning invoice…",
+  upload: "Uploading receipt…",
+  save: "Saving…",
+};
+
+type ScanSummary = { vendor: string | null; invoice_number: string | null; total_cents: number | null; items_count: number; partial: boolean } | null;
+
 export default function FinanceExpensesSection({ storeId }: Props) {
   const qc = useQueryClient();
   const [open, setOpen] = useState(false);
   const [scanning, setScanning] = useState(false);
+  const [scanStage, setScanStage] = useState<ScanStage>("idle");
+  const [dragOver, setDragOver] = useState(false);
   const [filterCat, setFilterCat] = useState<string>("all");
   const [form, setForm] = useState(blankForm());
+  const [lastScan, setLastScan] = useState<ScanSummary>(null);
   const [detailId, setDetailId] = useState<string | null>(null);
   const [diagnostics, setDiagnostics] = useState<DiagnosticsRecord | null>(null);
   const [diagOpen, setDiagOpen] = useState(false);
@@ -375,6 +390,17 @@ export default function FinanceExpensesSection({ storeId }: Props) {
   // -------- Scan invoice flow --------
   const handleScanClick = () => fileRef.current?.click();
 
+  const handleDrop = useCallback((e: React.DragEvent) => {
+    e.preventDefault();
+    setDragOver(false);
+    const file = e.dataTransfer.files?.[0];
+    if (!file) return;
+    processFile(file);
+  }, [storeId]); // eslint-disable-line
+
+  const handleDragOver = (e: React.DragEvent) => { e.preventDefault(); setDragOver(true); };
+  const handleDragLeave = () => setDragOver(false);
+
   // Read a File as base64 (no data URL prefix)
   const fileToBase64 = (file: File) =>
     new Promise<string>((resolve, reject) => {
@@ -386,6 +412,32 @@ export default function FinanceExpensesSection({ storeId }: Props) {
         resolve(comma >= 0 ? result.slice(comma + 1) : result);
       };
       reader.readAsDataURL(file);
+    });
+
+  // Compress image to max 1920px, JPEG 85% — keeps Anthropic payload small + improves OCR
+  const compressImage = (file: File): Promise<{ base64: string; mime: string }> =>
+    new Promise((resolve, reject) => {
+      const url = URL.createObjectURL(file);
+      const img = document.createElement("img");
+      img.onerror = () => { URL.revokeObjectURL(url); reject(new Error("Could not load image for compression")); };
+      img.onload = () => {
+        URL.revokeObjectURL(url);
+        const MAX = 1920;
+        let w = img.naturalWidth, h = img.naturalHeight;
+        if (w > MAX || h > MAX) {
+          if (w >= h) { h = Math.round((h * MAX) / w); w = MAX; }
+          else { w = Math.round((w * MAX) / h); h = MAX; }
+        }
+        const canvas = document.createElement("canvas");
+        canvas.width = w; canvas.height = h;
+        const ctx = canvas.getContext("2d");
+        if (!ctx) { resolve(fileToBase64(file).then((b) => ({ base64: b, mime: file.type || "image/jpeg" }))); return; }
+        ctx.drawImage(img, 0, 0, w, h);
+        const dataUrl = canvas.toDataURL("image/jpeg", 0.88);
+        const comma = dataUrl.indexOf(",");
+        resolve({ base64: dataUrl.slice(comma + 1), mime: "image/jpeg" });
+      };
+      img.src = url;
     });
 
   // Try the primary bucket up to MAX_ATTEMPTS times. Return signed-relative
@@ -440,15 +492,19 @@ export default function FinanceExpensesSection({ storeId }: Props) {
     throw lastErr || new Error("Primary upload failed");
   };
 
-  const onFile = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    e.target.value = "";
-    if (!file) return;
+  const processFile = async (file: File) => {
     if (file.size > 10 * 1024 * 1024) {
-      toast.error("Image too large (max 10MB)");
+      toast.error("File too large (max 10 MB)");
+      return;
+    }
+    const isImage = file.type.startsWith("image/");
+    const isPdf = file.type === "application/pdf" || file.name.toLowerCase().endsWith(".pdf");
+    if (!isImage && !isPdf) {
+      toast.error("Please upload an image or PDF invoice");
       return;
     }
     setScanning(true);
+    setScanStage("read");
 
     const { data: { user } } = await supabase.auth.getUser();
     const diag: DiagnosticsRecord = {
@@ -473,35 +529,42 @@ export default function FinanceExpensesSection({ storeId }: Props) {
       scan_response_summary: null,
     };
 
-    let stage: "read" | "scan" | "attach" | "save" = "read";
     let scannedForm: ExpenseFormState | null = null;
     try {
-      // 1. Optional preflight (non-blocking) — only used for diagnostics.
       callHelper({ action: "preflight", store_id: storeId })
         .then((d) => { diag.preflight = d; })
         .catch((e: any) => { diag.preflight = { error: e?.message, details: e?.details }; });
 
-      // 2. Read file as base64.
-      stage = "read";
-      const base64 = await fileToBase64(file);
-      const mime = file.type || "image/jpeg";
+      setScanStage("read");
+      // Compress images before sending — phone photos are often 5-10MB which exceeds API limits
+      let base64: string;
+      let mime: string;
+      if (isImage) {
+        const compressed = await compressImage(file);
+        base64 = compressed.base64;
+        mime = compressed.mime;
+      } else {
+        base64 = await fileToBase64(file);
+        mime = "application/pdf";
+      }
 
-      // 3. AI scan — this is the only step that MUST succeed.
-      stage = "scan";
-      toast.info("Scanning invoice…");
-      const { data, error } = await supabase.functions.invoke("scan-invoice", {
+      setScanStage("scan");
+      const { data: scanData, error: scanError } = await supabase.functions.invoke("scan-invoice", {
         body: { image_base64: base64, mime_type: mime },
       });
-      if (error) throw error;
-      const inv = (data as any)?.invoice;
-      if (!inv) throw new Error("Could not parse invoice");
+      if (scanError) {
+        // Extract the real error message from the function response body if possible
+        const apiMsg = (scanData as any)?.error || (scanData as any)?.details || scanError?.message || String(scanError);
+        throw new Error(apiMsg);
+      }
+      const inv = (scanData as any)?.invoice;
+      if (!inv) throw new Error("Could not extract invoice data — check the image quality");
       diag.scan_response_summary = {
         items: Array.isArray(inv.items) ? inv.items.length : 0,
         vendor: inv.vendor ?? null,
       };
 
-      // 4. Best-effort upload (primary with retry → fallback edge fn).
-      stage = "attach";
+      setScanStage("upload");
       let receiptRef: string | null = null;
       try {
         const path = await uploadToPrimaryWithRetry(file, mime, diag);
@@ -521,40 +584,58 @@ export default function FinanceExpensesSection({ storeId }: Props) {
       }
       diag.final_receipt_ref = receiptRef;
 
-      // 5. Normalize then try to auto-save. If save fails, prefill dialog.
       scannedForm = buildScannedExpenseForm(inv, receiptRef);
+      const { totalCents: scannedTotal } = computeExpenseTotals(scannedForm);
+
+      // Build scan summary so dialog can show what was extracted
+      const scanSummary: ScanSummary = {
+        vendor: inv.vendor || null,
+        invoice_number: inv.invoice_number || null,
+        total_cents: inv.total_cents || scannedTotal || null,
+        items_count: Array.isArray(inv.items) ? inv.items.length : 0,
+        partial: !inv.vendor && !inv.invoice_number && scannedTotal === 0,
+      };
+      setLastScan(scanSummary);
       setForm(scannedForm);
+
       if (isAutoSaveReady(scannedForm)) {
-        stage = "save";
+        setScanStage("save");
         try {
           await saveScannedExpenseViaHelper(scannedForm);
           setOpen(false);
           setForm(blankForm());
+          setLastScan(null);
           qc.invalidateQueries({ queryKey: ["ar-fin-expenses", storeId] });
-          toast.success(diag.used_fallback ? "Invoice scanned and saved (fallback)" : "Invoice scanned and saved");
+          const vendor = inv.vendor ? ` from ${inv.vendor}` : "";
+          toast.success(`Invoice${vendor} scanned and saved automatically ✓`);
           return;
         } catch (saveErr: any) {
-          // Auto-save failed — keep extracted data and let user save manually.
           console.warn("auto-save failed, opening prefilled dialog:", saveErr);
           setOpen(true);
-          toast.error(`Auto-save failed (${saveErr?.message || "error"}). Review and press Save expense.`);
+          toast.warning("Invoice scanned — review and click Save expense.");
           return;
         }
       }
+      // Partial or no data — open pre-filled dialog with banner
       setOpen(true);
-      toast.success("Invoice scanned — review and Save expense");
     } catch (err: any) {
-      console.error("scan-invoice flow error", { stage, err, diag });
+      console.error("scan-invoice flow error", { err, diag });
       const msg = err?.message || String(err);
-      if (stage === "read") toast.error(`Could not read image: ${msg}`);
-      else if (stage === "scan") toast.error(`Invoice scan failed: ${msg}`);
-      else toast.error(`Scan flow failed: ${msg}`);
-      // If we already parsed something, still show it.
+      if (scanStage === "read") toast.error(`Could not read file: ${msg}`);
+      else if (scanStage === "scan") toast.error(`Scan failed: ${msg}`);
+      else toast.error(`Scan error: ${msg}`);
       if (scannedForm) setOpen(true);
     } finally {
       setDiagnostics(diag);
       setScanning(false);
+      setScanStage("idle");
     }
+  };
+
+  const onFile = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    e.target.value = "";
+    if (file) processFile(file);
   };
 
 
@@ -586,25 +667,65 @@ export default function FinanceExpensesSection({ storeId }: Props) {
           <CardTitle className="text-base flex items-center gap-2">
             <Wallet className="w-4 h-4 text-primary" /> Expenses & Bills
           </CardTitle>
-          <div className="flex items-center gap-2">
-            <Button size="sm" variant="outline" onClick={handleScanClick} disabled={scanning}>
-              {scanning ? <Loader2 className="w-4 h-4 mr-1 animate-spin" /> : <ScanLine className="w-4 h-4 mr-1" />}
-              {scanning ? "Scanning…" : "Scan invoice"}
-            </Button>
-            <Button size="sm" onClick={() => { setForm(blankForm()); setOpen(true); }}>
-              <Plus className="w-4 h-4 mr-1" /> Add expense
-            </Button>
+          <Button size="sm" onClick={() => { setForm(blankForm()); setLastScan(null); setOpen(true); }}>
+            <Plus className="w-4 h-4 mr-1" /> Add expense
+          </Button>
+        </CardHeader>
+        <CardContent className="space-y-3">
+          {/* Drop zone / scan area */}
+          <div
+            onDrop={handleDrop}
+            onDragOver={handleDragOver}
+            onDragLeave={handleDragLeave}
+            onClick={scanning ? undefined : handleScanClick}
+            className={`relative rounded-lg border-2 border-dashed transition-colors cursor-pointer select-none
+              ${scanning ? "cursor-default border-primary/40 bg-primary/5" : dragOver ? "border-primary bg-primary/10" : "border-muted-foreground/25 hover:border-primary/60 hover:bg-muted/40"}`}
+          >
+            <div className="flex flex-col items-center justify-center gap-2 py-6 px-4 text-center">
+              {scanning ? (
+                <>
+                  <Loader2 className="w-8 h-8 text-primary animate-spin" />
+                  <p className="text-sm font-medium text-primary">{STAGE_LABELS[scanStage]}</p>
+                  <div className="flex items-center gap-3 text-[11px] text-muted-foreground mt-1">
+                    {(["read","scan","upload","save"] as ScanStage[]).map((s, i) => (
+                      <span key={s} className={`flex items-center gap-1 ${
+                        scanStage === s ? "text-primary font-medium" :
+                        (["read","scan","upload","save"] as ScanStage[]).indexOf(scanStage) > i ? "text-emerald-600" : ""
+                      }`}>
+                        {(["read","scan","upload","save"] as ScanStage[]).indexOf(scanStage) > i && <CheckCircle2 className="w-3 h-3" />}
+                        {s === "read" ? "Read" : s === "scan" ? "Scan AI" : s === "upload" ? "Upload" : "Save"}
+                      </span>
+                    ))}
+                  </div>
+                </>
+              ) : (
+                <>
+                  <div className="flex items-center gap-3">
+                    <Upload className="w-7 h-7 text-muted-foreground" />
+                    <ScanLine className="w-7 h-7 text-primary" />
+                  </div>
+                  <p className="text-sm font-medium">Drop invoice here or click to scan</p>
+                  <p className="text-xs text-muted-foreground">Supports images (JPG, PNG, HEIC) and PDF · Max 10 MB</p>
+                  <p className="text-xs text-muted-foreground">AI extracts vendor, amount, line items and saves automatically</p>
+                  <div className="flex items-center gap-2 mt-1">
+                    <span className="inline-flex items-center gap-1 text-[11px] text-muted-foreground border rounded px-2 py-0.5">
+                      <Image className="w-3 h-3" /> Photo
+                    </span>
+                    <span className="inline-flex items-center gap-1 text-[11px] text-muted-foreground border rounded px-2 py-0.5">
+                      <FileText className="w-3 h-3" /> PDF
+                    </span>
+                  </div>
+                </>
+              )}
+            </div>
             <input
               ref={fileRef}
               type="file"
-              accept="image/*"
-              capture="environment"
+              accept="image/*,.pdf,application/pdf"
               className="hidden"
               onChange={onFile}
             />
           </div>
-        </CardHeader>
-        <CardContent className="space-y-3">
           <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
             <div className="rounded-md border p-3">
               <div className="text-xs text-muted-foreground">Last 30 days</div>
@@ -674,9 +795,42 @@ export default function FinanceExpensesSection({ storeId }: Props) {
       </Card>
 
       {/* Add / Review Expense Dialog */}
-      <Dialog open={open} onOpenChange={setOpen}>
+      <Dialog open={open} onOpenChange={(o) => { setOpen(o); if (!o) setLastScan(null); }}>
         <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
-          <DialogHeader><DialogTitle>Add Expense / Invoice</DialogTitle></DialogHeader>
+          <DialogHeader>
+            <DialogTitle>{lastScan ? "Scanned Invoice — Review & Save" : "Add Expense / Invoice"}</DialogTitle>
+          </DialogHeader>
+
+          {/* Scan result banner */}
+          {lastScan && (
+            <div className={`rounded-md border px-3 py-2 text-sm flex items-start gap-2 ${lastScan.partial ? "bg-amber-50 border-amber-200 text-amber-800" : "bg-emerald-50 border-emerald-200 text-emerald-800"}`}>
+              {lastScan.partial ? (
+                <AlertCircle className="w-4 h-4 mt-0.5 shrink-0 text-amber-500" />
+              ) : (
+                <CheckCircle2 className="w-4 h-4 mt-0.5 shrink-0 text-emerald-600" />
+              )}
+              <div className="flex-1 min-w-0">
+                {lastScan.partial ? (
+                  <p className="font-medium">Could not read invoice — please fill in the fields manually</p>
+                ) : (
+                  <>
+                    <p className="font-medium">Invoice scanned successfully</p>
+                    <p className="text-xs mt-0.5 text-emerald-700">
+                      {[
+                        lastScan.vendor && `Vendor: ${lastScan.vendor}`,
+                        lastScan.invoice_number && `Invoice #${lastScan.invoice_number}`,
+                        lastScan.total_cents && `Total: ${fmt(lastScan.total_cents)}`,
+                        lastScan.items_count > 0 && `${lastScan.items_count} line item${lastScan.items_count > 1 ? "s" : ""}`,
+                      ].filter(Boolean).join(" · ")}
+                    </p>
+                    {(!lastScan.vendor || !lastScan.invoice_number) && (
+                      <p className="text-xs mt-0.5 opacity-75">Some fields could not be read — please check and fill in below</p>
+                    )}
+                  </>
+                )}
+              </div>
+            </div>
+          )}
 
           <div className="grid grid-cols-2 gap-3">
             <div>
@@ -817,7 +971,20 @@ export default function FinanceExpensesSection({ storeId }: Props) {
 
           <DialogFooter>
             <Button variant="outline" onClick={() => setOpen(false)}>Cancel</Button>
-            <Button onClick={() => create.mutate(form)} disabled={create.isPending}>
+            <Button onClick={async () => {
+              const totals = computeExpenseTotals(form);
+              if (totals.totalCents <= 0) { toast.error("Add at least one line item with a price"); return; }
+              try {
+                create.reset();
+                await saveScannedExpenseViaHelper(form);
+                toast.success("Expense saved");
+                setOpen(false);
+                setForm(blankForm());
+                qc.invalidateQueries({ queryKey: ["ar-fin-expenses", storeId] });
+              } catch (e: any) {
+                toast.error(`Save failed: ${e?.message || "unknown error"}`);
+              }
+            }} disabled={create.isPending}>
               {create.isPending && <Loader2 className="w-4 h-4 mr-1 animate-spin" />}
               Save expense
             </Button>
