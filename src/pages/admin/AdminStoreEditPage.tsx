@@ -3743,6 +3743,11 @@ export default function AdminStoreEditPage() {
               <TabsContent value="ar-warranty"><div><AutoRepairWarrantySection storeId={storeId!} /></div></TabsContent>
               <TabsContent value="ar-fleet"><div><AutoRepairFleetSection storeId={storeId!} /></div></TabsContent>
               <TabsContent value="ar-reports"><div><AutoRepairReportsSection storeId={storeId!} /></div></TabsContent>
+              <TabsContent value="ar-fin-income"><div><FinanceIncomeSection storeId={storeId!} /></div></TabsContent>
+              <TabsContent value="ar-fin-expenses"><div><FinanceExpensesSection storeId={storeId!} /></div></TabsContent>
+              <TabsContent value="ar-fin-payments"><div><FinancePaymentsSection storeId={storeId!} /></div></TabsContent>
+              <TabsContent value="ar-fin-pnl"><div><FinanceProfitLossSection storeId={storeId!} /></div></TabsContent>
+              <TabsContent value="ar-fin-tax"><div><FinanceTaxPayoutsSection storeId={storeId!} /></div></TabsContent>
             </>
           )}
 
