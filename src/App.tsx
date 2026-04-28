@@ -647,15 +647,11 @@ const App = () => (
               <Toaster />
               <Sonner />
               <BrowserRouter>
-                <PageViewTracker />
-                <GeoDetector />
+                <DeferredPageViewTracker />
+                <DeferredGeoDetector />
                 <Suspense fallback={null}><RoutePrefetcher /></Suspense>
                 <AuthProvider>
-                  <StoryDebugPanel />
-                  <VerificationRealtimeBridge />
-                  <PushNotificationsBootstrap />
-                  <Suspense fallback={null}><GeofenceBootstrap /></Suspense>
-                  <Suspense fallback={null}><DeletionReturnDialog /></Suspense>
+                  <AuthBackgroundServices />
                    <RemoteConfigProvider>
                   <ZivoPlusProvider>
                   <CustomerCityProvider>
