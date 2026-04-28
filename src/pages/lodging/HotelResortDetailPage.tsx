@@ -593,13 +593,13 @@ export default function HotelResortDetailPage() {
       {/* Booking sheet (lightweight inline modal) */}
       {bookingOpen && (
         <div
-          className="fixed inset-0 z-40 bg-black/40 flex items-end justify-center"
+          className="fixed inset-0 z-40 bg-black/40 flex items-end md:items-center justify-center"
           onClick={() => setBookingOpen(false)}
         >
           <motion.div
             initial={{ y: 60, opacity: 0 }}
             animate={{ y: 0, opacity: 1 }}
-            className="w-full max-w-md bg-card rounded-t-3xl p-5 pb-[max(env(safe-area-inset-bottom),20px)] shadow-2xl"
+            className="w-full max-w-md md:max-w-lg bg-card rounded-t-3xl md:rounded-3xl p-5 pb-[max(env(safe-area-inset-bottom),20px)] md:pb-5 shadow-2xl"
             onClick={(e) => e.stopPropagation()}
           >
             <div className="mx-auto h-1.5 w-10 rounded-full bg-muted mb-3" />
