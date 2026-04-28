@@ -29,9 +29,9 @@ interface DirectoryStore {
   id: string;
   name: string;
   category: string | null;
-  city: string | null;
-  country: string | null;
+  address: string | null;
   logo_url: string | null;
+  banner_url: string | null;
   description: string | null;
   setup_complete: boolean | null;
 }
@@ -44,12 +44,12 @@ const FILTERS: Array<{ id: string; label: string; match: (cat: string) => boolea
 ];
 
 const POPULAR_DESTINATIONS: Array<{ id: string; label: string; city: string; img: string }> = [
-  { id: "pp", label: "Phnom Penh", city: "phnom penh", img: "https://images.unsplash.com/photo-1599540516405-9d7d4dbb7ddc?w=480&q=70" },
-  { id: "sr", label: "Siem Reap", city: "siem reap", img: "https://images.unsplash.com/photo-1583395145149-6f0c5e1d28a2?w=480&q=70" },
-  { id: "sv", label: "Sihanoukville", city: "sihanoukville", img: "https://images.unsplash.com/photo-1510414842594-a61c69b5ae57?w=480&q=70" },
-  { id: "kep", label: "Kep", city: "kep", img: "https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=480&q=70" },
-  { id: "kampot", label: "Kampot", city: "kampot", img: "https://images.unsplash.com/photo-1502920917128-1aa500764cbd?w=480&q=70" },
-  { id: "btb", label: "Battambang", city: "battambang", img: "https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?w=480&q=70" },
+  { id: "pp", label: "Phnom Penh", city: "phnom penh", img: "https://source.unsplash.com/240x160/?phnom-penh,city" },
+  { id: "sr", label: "Siem Reap", city: "siem reap", img: "https://source.unsplash.com/240x160/?siem-reap,angkor" },
+  { id: "sv", label: "Sihanoukville", city: "sihanoukville", img: "https://source.unsplash.com/240x160/?sihanoukville,beach" },
+  { id: "kep", label: "Kep", city: "kep", img: "https://source.unsplash.com/240x160/?kep,beach,cambodia" },
+  { id: "kampot", label: "Kampot", city: "kampot", img: "https://source.unsplash.com/240x160/?kampot,river,cambodia" },
+  { id: "btb", label: "Battambang", city: "battambang", img: "https://source.unsplash.com/240x160/?battambang,cambodia" },
 ];
 
 export default function HotelsLandingPage() {
@@ -65,8 +65,8 @@ export default function HotelsLandingPage() {
     queryKey: ["hotels-landing"],
     queryFn: async (): Promise<DirectoryStore[]> => {
       const { data, error } = await (supabase as any)
-        .from("stores")
-        .select("id, name, category, city, country, logo_url, description, setup_complete")
+        .from("store_profiles")
+        .select("id, name, category, address, logo_url, banner_url, description, setup_complete")
         .in("category", LODGING_STORE_CATEGORIES)
         .order("setup_complete", { ascending: false })
         .order("name", { ascending: true })
@@ -90,7 +90,7 @@ export default function HotelsLandingPage() {
       const cat = normalizeStoreCategory(store.category);
       if (!matcher(cat)) return false;
       if (!q) return true;
-      const haystack = [store.name, store.city, store.country, store.description]
+      const haystack = [store.name, store.address, store.description]
         .filter(Boolean)
         .join(" ")
         .toLowerCase();
