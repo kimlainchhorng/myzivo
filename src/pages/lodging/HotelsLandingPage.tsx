@@ -221,9 +221,9 @@ export default function HotelsLandingPage() {
                 aria-label={`Open ${store.name}`}
               >
                 <div className="relative w-full h-28 bg-muted">
-                  {store.logo_url ? (
+                  {(store.banner_url || store.logo_url) ? (
                     <img
-                      src={store.logo_url}
+                      src={store.banner_url || store.logo_url || ""}
                       alt={store.name}
                       loading="lazy"
                       className="absolute inset-0 w-full h-full object-cover"
@@ -239,10 +239,10 @@ export default function HotelsLandingPage() {
                 </div>
                 <div className="p-2.5">
                   <p className="text-[13px] font-bold text-foreground truncate">{store.name}</p>
-                  {(store.city || store.country) && (
+                  {store.address && (
                     <p className="mt-0.5 text-[11px] text-muted-foreground truncate flex items-center gap-1">
                       <MapPin className="w-3 h-3 shrink-0" />
-                      {[store.city, store.country].filter(Boolean).join(", ")}
+                      <span className="truncate">{store.address}</span>
                     </p>
                   )}
                   <div className="mt-1.5 flex items-center gap-1">
