@@ -3,7 +3,9 @@
  * Catches React render errors and shows a graceful fallback with retry
  */
 import { Component, type ErrorInfo, type ReactNode } from "react";
-import { AlertTriangle, RefreshCw, Home } from "lucide-react";
+import AlertTriangle from "lucide-react/dist/esm/icons/alert-triangle";
+import RefreshCw from "lucide-react/dist/esm/icons/refresh-cw";
+import Home from "lucide-react/dist/esm/icons/home";
 import { Button } from "@/components/ui/button";
 
 interface Props {
