@@ -1,0 +1,1788 @@
+import { createHotContext as __vite__createHotContext } from "/@vite/client";import.meta.hot = __vite__createHotContext("/src/components/chat/CallScreen.tsx");import __vite__cjsImport0_react_jsxDevRuntime from "/node_modules/.vite/deps/react_jsx-dev-runtime.js?v=7fd9520c"; const _jsxDEV = __vite__cjsImport0_react_jsxDevRuntime["jsxDEV"]; const _Fragment = __vite__cjsImport0_react_jsxDevRuntime["Fragment"];
+var _s = $RefreshSig$();
+/**
+ * CallScreen — Full-screen calling overlay with WebRTC, quality indicator, screen sharing, PiP
+ */ import __vite__cjsImport1_react from "/node_modules/.vite/deps/react.js?v=7fd9520c"; const useState = __vite__cjsImport1_react["useState"]; const useEffect = __vite__cjsImport1_react["useEffect"]; const useRef = __vite__cjsImport1_react["useRef"]; const useCallback = __vite__cjsImport1_react["useCallback"];
+import { Avatar, AvatarFallback, AvatarImage } from "/src/components/ui/avatar.tsx";
+import PhoneOff from "/node_modules/.vite/deps/lucide-react_dist_esm_icons_phone-off.js?v=7fd9520c";
+import Mic from "/node_modules/.vite/deps/lucide-react_dist_esm_icons_mic.js?v=7fd9520c";
+import MicOff from "/node_modules/.vite/deps/lucide-react_dist_esm_icons_mic-off.js?v=7fd9520c";
+import Video from "/node_modules/.vite/deps/lucide-react_dist_esm_icons_video.js?v=7fd9520c";
+import VideoOff from "/node_modules/.vite/deps/lucide-react_dist_esm_icons_video-off.js?v=7fd9520c";
+import Volume2 from "/node_modules/.vite/deps/lucide-react_dist_esm_icons_volume-2.js?v=7fd9520c";
+import Monitor from "/node_modules/.vite/deps/lucide-react_dist_esm_icons_monitor.js?v=7fd9520c";
+import MonitorOff from "/node_modules/.vite/deps/lucide-react_dist_esm_icons_monitor-off.js?v=7fd9520c";
+import Minimize2 from "/node_modules/.vite/deps/lucide-react_dist_esm_icons_minimize-2.js?v=7fd9520c";
+import MessageCircle from "/node_modules/.vite/deps/lucide-react_dist_esm_icons_message-circle.js?v=7fd9520c";
+import WifiOff from "/node_modules/.vite/deps/lucide-react_dist_esm_icons_wifi-off.js?v=7fd9520c";
+import SwitchCamera from "/node_modules/.vite/deps/lucide-react_dist_esm_icons_switch-camera.js?v=7fd9520c";
+import { motion } from "/node_modules/.vite/deps/framer-motion.js?v=7fd9520c";
+import { useWebRTC, classifyWebRTCFailure } from "/src/hooks/useWebRTC.ts";
+import { useCallQuality } from "/src/hooks/useCallQuality.ts";
+import { useScreenShare } from "/src/hooks/useScreenShare.ts";
+import { supabase } from "/src/integrations/supabase/client.ts";
+import { useAuth } from "/src/contexts/AuthContext.tsx";
+import { playOutgoingRingback } from "/src/lib/callAudio.ts";
+import CallQualityBadge from "/src/components/chat/CallQualityBadge.tsx";
+import CallReactions from "/src/components/chat/CallReactions.tsx";
+import AudioVisualizer from "/src/components/chat/AudioVisualizer.tsx";
+import { toast } from "/node_modules/.vite/deps/sonner.js?v=7fd9520c";
+import { useNavigate } from "/node_modules/.vite/deps/react-router-dom.js?v=7fd9520c";
+const dbFrom = (table)=>supabase.from(table);
+export default function CallScreen({ recipientName, recipientAvatar, callType, recipientId, existingCallId, onEnd, onMinimize, minimized = false, onPipStateChange, onPipControlsChange }) {
+    _s();
+    const { user } = useAuth();
+    const navigate = useNavigate();
+    const [callId, setCallId] = useState(existingCallId || null);
+    const [callHistoryId, setCallHistoryId] = useState(null);
+    const [duration, setDuration] = useState(0);
+    const [remoteAccepted, setRemoteAccepted] = useState(false);
+    const [isSpeaker, setIsSpeaker] = useState(false);
+    const timerRef = useRef();
+    const endReasonRef = useRef(null);
+    const remoteVideoRef = useRef(null);
+    const localVideoRef = useRef(null);
+    const remoteAudioRef = useRef(null);
+    const remoteStreamRef = useRef(null);
+    const reminderPushSentRef = useRef(false);
+    const createCallFiredRef = useRef(false);
+    const pipControlsChangeRef = useRef(onPipControlsChange);
+    const pipStateChangeRef = useRef(onPipStateChange);
+    const pipActionFnsRef = useRef({
+        toggleMute: ()=>{},
+        endCall: async ()=>{},
+        toggleCamera: ()=>{}
+    });
+    const handleCallFailure = useCallback((failure)=>{
+        toast.error(failure.title, {
+            description: failure.description
+        });
+    }, []);
+    const role = existingCallId ? "callee" : "caller";
+    const initials = (recipientName || "U").split(" ").map((n)=>n[0]).join("").toUpperCase().slice(0, 2);
+    const sendIncomingCallPush = useCallback(async (newCallId, mode = "initial")=>{
+        if (!user?.id || !recipientId || recipientId === user.id) return;
+        // Fetch caller profile from profiles table for accurate name & avatar
+        let callerName = user.user_metadata?.full_name || user.user_metadata?.name || user.email?.split("@")[0] || "Incoming call";
+        let callerAvatar = "";
+        try {
+            const { data } = await dbFrom("profiles").select("full_name, avatar_url").eq("id", user.id).maybeSingle();
+            const profile = data;
+            if (profile?.full_name) callerName = profile.full_name;
+            if (profile?.avatar_url) callerAvatar = profile.avatar_url;
+        } catch  {
+        // fallback to user_metadata values above
+        }
+        const sendPushAttempt = async (attempt)=>{
+            try {
+                const { error } = await supabase.functions.invoke("send-push-notification", {
+                    body: {
+                        user_id: recipientId,
+                        notification_type: "incoming_call",
+                        title: callerName,
+                        body: mode === "reminder" ? callType === "video" ? "Still video calling you" : "Still voice calling you" : callType === "video" ? "Video calling you" : "Voice calling you",
+                        image_url: callerAvatar || undefined,
+                        data: {
+                            type: "incoming_call",
+                            call_id: newCallId,
+                            call_type: callType,
+                            caller_id: user.id,
+                            caller_name: callerName,
+                            caller_avatar: callerAvatar,
+                            ring_stage: mode
+                        }
+                    }
+                });
+                if (error) throw error;
+            } catch (pushError) {
+                if (attempt < 2) {
+                    await new Promise((resolve)=>window.setTimeout(resolve, 600 * (attempt + 1)));
+                    await sendPushAttempt(attempt + 1);
+                    return;
+                }
+                console.error("[Call] Failed to send incoming call push:", pushError);
+            }
+        };
+        await sendPushAttempt(0);
+    }, [
+        callType,
+        recipientId,
+        user?.email,
+        user?.id,
+        user?.user_metadata
+    ]);
+    const handleRemoteStream = useCallback((stream)=>{
+        remoteStreamRef.current = stream;
+        if (callType === "video") {
+            if (remoteVideoRef.current) {
+                remoteVideoRef.current.srcObject = stream;
+                void remoteVideoRef.current.play().catch(()=>{});
+            }
+            return;
+        }
+        if (remoteAudioRef.current) {
+            remoteAudioRef.current.srcObject = stream;
+            remoteAudioRef.current.muted = false;
+            void remoteAudioRef.current.play().catch(()=>{});
+        }
+    }, [
+        callType
+    ]);
+    const handleEnded = useCallback(()=>{
+        if (timerRef.current) clearInterval(timerRef.current);
+        setRemoteAccepted(false);
+        const resolvedStatus = endReasonRef.current === "declined" ? "declined" : endReasonRef.current === "no_answer" ? "no_answer" : duration > 0 ? "answered" : "missed";
+        if (user?.id && callId) {
+            dbFrom("call_history").insert({
+                caller_id: role === "caller" ? user.id : recipientId,
+                callee_id: role === "caller" ? recipientId : user.id,
+                call_type: callType,
+                status: resolvedStatus,
+                duration_seconds: duration,
+                call_signal_id: callId
+            }).select("id").maybeSingle().then(({ data })=>{
+                const callHistory = data;
+                if (callHistory?.id) setCallHistoryId(callHistory.id);
+            });
+        }
+        if (role === "caller" && user?.id && (resolvedStatus === "no_answer" || resolvedStatus === "declined")) {
+            const callLabel = callType === "video" ? "video" : "voice";
+            const message = resolvedStatus === "declined" ? `Missed ${callLabel} call (declined)` : `Missed ${callLabel} call (no answer)`;
+            void dbFrom("direct_messages").insert({
+                sender_id: user.id,
+                receiver_id: recipientId,
+                message,
+                message_type: "text"
+            });
+        }
+        endReasonRef.current = null;
+        setTimeout(onEnd, 300);
+    }, [
+        onEnd,
+        user?.id,
+        callId,
+        role,
+        recipientId,
+        callType,
+        duration
+    ]);
+    const { start, endCall, toggleMute, toggleCamera, isMuted, isCameraOff, isReconnecting, callState, localStream, peerConnection } = useWebRTC({
+        callId: callId || "",
+        role,
+        callType,
+        userId: user?.id || "",
+        onRemoteStream: handleRemoteStream,
+        onEnded: handleEnded,
+        onFailure: handleCallFailure
+    });
+    const qualityStats = useCallQuality(peerConnection);
+    const screenShare = useScreenShare(peerConnection);
+    useEffect(()=>{
+        pipControlsChangeRef.current = onPipControlsChange;
+    }, [
+        onPipControlsChange
+    ]);
+    useEffect(()=>{
+        pipStateChangeRef.current = onPipStateChange;
+    }, [
+        onPipStateChange
+    ]);
+    useEffect(()=>{
+        pipActionFnsRef.current = {
+            toggleMute,
+            endCall,
+            toggleCamera
+        };
+    }, [
+        endCall,
+        toggleCamera,
+        toggleMute
+    ]);
+    useEffect(()=>{
+        if (!pipControlsChangeRef.current) return;
+        pipControlsChangeRef.current({
+            toggleMute: ()=>{
+                pipActionFnsRef.current.toggleMute();
+            },
+            endCall: ()=>{
+                void pipActionFnsRef.current.endCall();
+            },
+            toggleCamera: ()=>{
+                pipActionFnsRef.current.toggleCamera();
+            }
+        });
+        return ()=>{
+            pipControlsChangeRef.current?.(null);
+        };
+    }, []);
+    useEffect(()=>{
+        if (existingCallId || !user?.id || callId || createCallFiredRef.current) return;
+        createCallFiredRef.current = true;
+        const create = async ()=>{
+            // Preflight local media first. If caller cannot access required devices,
+            // do not create a ringing signal on the remote side.
+            try {
+                const preflightStream = await navigator.mediaDevices.getUserMedia({
+                    audio: true,
+                    video: callType === "video"
+                });
+                preflightStream.getTracks().forEach((track)=>track.stop());
+            } catch (mediaErr) {
+                handleCallFailure(classifyWebRTCFailure(mediaErr, callType));
+                onEnd();
+                return;
+            }
+            const nowIso = new Date().toISOString();
+            const stalePairWindow = new Date(Date.now() - 10 * 60 * 1000).toISOString();
+            // Always create a fresh outgoing call ID. Before doing so, close any
+            // stale open rows for this same caller/callee pair.
+            const { data: openPairCallsRaw } = await dbFrom("call_signals").select("id, status").eq("caller_id", user.id).eq("callee_id", recipientId).in("status", [
+                "ringing",
+                "answered"
+            ]).is("ended_at", null).gte("created_at", stalePairWindow).order("created_at", {
+                ascending: false
+            }).limit(10);
+            const openPairCalls = openPairCallsRaw || [];
+            const staleRingingPairIds = (openPairCalls || []).filter((row)=>row.status === "ringing").map((row)=>row.id);
+            const staleAnsweredPairIds = (openPairCalls || []).filter((row)=>row.status === "answered").map((row)=>row.id);
+            if (staleRingingPairIds.length) {
+                await dbFrom("call_signals").update({
+                    status: "missed",
+                    ended_at: nowIso
+                }).in("id", staleRingingPairIds).eq("status", "ringing");
+            }
+            if (staleAnsweredPairIds.length) {
+                await dbFrom("call_signals").update({
+                    status: "ended",
+                    ended_at: nowIso
+                }).in("id", staleAnsweredPairIds).eq("status", "answered");
+            }
+            const nowMs = Date.now();
+            const minCreatedAt = new Date(nowMs - 12 * 60 * 60 * 1000).toISOString();
+            const ringingStaleMs = 90 * 1000;
+            const answeredWithoutStartStaleMs = 90 * 1000;
+            const answeredStaleMs = 3 * 60 * 60 * 1000;
+            const { data: possibleActiveCallsRaw } = await dbFrom("call_signals").select("id, caller_id, callee_id, status, created_at, started_at").or(`caller_id.eq.${recipientId},callee_id.eq.${recipientId}`).in("status", [
+                "ringing",
+                "answered"
+            ]).is("ended_at", null).gte("created_at", minCreatedAt).order("created_at", {
+                ascending: false
+            }).limit(10);
+            const possibleActiveCalls = possibleActiveCallsRaw || [];
+            const candidateIds = possibleActiveCalls.map((row)=>row.id).filter(Boolean);
+            const historicalSignalIds = new Set();
+            if (candidateIds.length) {
+                const { data: existingHistoryRowsRaw } = await dbFrom("call_history").select("call_signal_id").in("call_signal_id", candidateIds).limit(50);
+                const existingHistoryRows = existingHistoryRowsRaw || [];
+                for (const row of existingHistoryRows || []){
+                    if (row?.call_signal_id) {
+                        historicalSignalIds.add(row.call_signal_id);
+                    }
+                }
+            }
+            const staleMissedIds = [];
+            const staleEndedIds = [];
+            const activeForRecipient = possibleActiveCalls.find((row)=>{
+                const otherPartyId = row.caller_id === recipientId ? row.callee_id : row.caller_id;
+                // Ignore rows that are only between current user and this recipient;
+                // those are handled via stale-pair cleanup and should not trigger busy.
+                if (otherPartyId === user.id) {
+                    return false;
+                }
+                const createdMs = new Date(row.created_at).getTime();
+                const startedMs = row.started_at ? new Date(row.started_at).getTime() : null;
+                const hasHistory = historicalSignalIds.has(row.id);
+                const isStaleRinging = row.status === "ringing" && (hasHistory || nowMs - createdMs > ringingStaleMs);
+                const isStaleAnswered = row.status === "answered" && (hasHistory || !startedMs && nowMs - createdMs > answeredWithoutStartStaleMs || (startedMs ? nowMs - startedMs > answeredStaleMs : false));
+                if (isStaleRinging) {
+                    staleMissedIds.push(row.id);
+                    return false;
+                }
+                if (isStaleAnswered) {
+                    staleEndedIds.push(row.id);
+                    return false;
+                }
+                return true;
+            });
+            if (staleMissedIds.length) {
+                await dbFrom("call_signals").update({
+                    status: "missed",
+                    ended_at: new Date().toISOString()
+                }).in("id", staleMissedIds).eq("status", "ringing");
+            }
+            if (staleEndedIds.length) {
+                await dbFrom("call_signals").update({
+                    status: "ended",
+                    ended_at: new Date().toISOString()
+                }).in("id", staleEndedIds).eq("status", "answered");
+            }
+            if (activeForRecipient?.id) {
+                toast.info("User is busy", {
+                    description: "They are currently in another call."
+                });
+                await dbFrom("call_history").insert({
+                    caller_id: user.id,
+                    callee_id: recipientId,
+                    call_type: callType,
+                    status: "busy",
+                    duration_seconds: 0
+                });
+                await dbFrom("direct_messages").insert({
+                    sender_id: user.id,
+                    receiver_id: recipientId,
+                    message: `${callType === "video" ? "Video" : "Voice"} call attempt (busy)`,
+                    message_type: "text"
+                });
+                onEnd();
+                return;
+            }
+            const { data, error } = await dbFrom("call_signals").insert({
+                caller_id: user.id,
+                callee_id: recipientId,
+                call_type: callType
+            }).select("id").single();
+            const newCall = data;
+            if (error) {
+                console.error("[Call] Failed to create call signal:", error);
+                toast.error("Failed to start call");
+                onEnd();
+                return;
+            }
+            if (newCall?.id) {
+                setCallId(newCall.id);
+                reminderPushSentRef.current = false;
+                await sendIncomingCallPush(newCall.id);
+            }
+        };
+        void create();
+    }, [
+        user?.id,
+        recipientId,
+        callType,
+        existingCallId,
+        callId,
+        onEnd,
+        sendIncomingCallPush,
+        handleCallFailure
+    ]);
+    useEffect(()=>{
+        if (role !== "caller" || !callId || callState !== "ringing" || remoteAccepted || reminderPushSentRef.current) return;
+        const reminderTimer = window.setTimeout(()=>{
+            (async ()=>{
+                const { data } = await dbFrom("call_signals").select("status").eq("id", callId).maybeSingle();
+                const row = data;
+                if (row?.status !== "ringing") return;
+                reminderPushSentRef.current = true;
+                await sendIncomingCallPush(callId, "reminder");
+            })();
+        }, 12000);
+        return ()=>window.clearTimeout(reminderTimer);
+    }, [
+        callId,
+        callState,
+        remoteAccepted,
+        role,
+        sendIncomingCallPush
+    ]);
+    useEffect(()=>{
+        if (!callId) return;
+        const init = async ()=>{
+            const localStr = await start(callId);
+            if (localStr && localVideoRef.current && callType === "video") {
+                localVideoRef.current.srcObject = localStr;
+            }
+        };
+        void init();
+    }, [
+        callId,
+        callType,
+        start
+    ]);
+    useEffect(()=>{
+        if (role !== "caller" || callState !== "ringing" || remoteAccepted || !callId) return;
+        const stopRingback = playOutgoingRingback();
+        return ()=>{
+            stopRingback();
+        };
+    }, [
+        role,
+        callId,
+        callState,
+        remoteAccepted
+    ]);
+    useEffect(()=>{
+        if (role !== "caller" || callState !== "ringing" || remoteAccepted || !callId) return;
+        const timeout = window.setTimeout(()=>{
+            (async ()=>{
+                const { data } = await dbFrom("call_signals").select("status").eq("id", callId).maybeSingle();
+                const liveCall = data;
+                // Guard race: if callee already accepted around timeout boundary,
+                // do not force a no-answer hangup.
+                if (liveCall?.status !== "ringing") return;
+                const { data: markedMissedRaw } = await dbFrom("call_signals").update({
+                    status: "missed",
+                    ended_at: new Date().toISOString()
+                }).eq("id", callId).eq("status", "ringing").select("id").maybeSingle();
+                const markedMissed = markedMissedRaw;
+                if (!markedMissed?.id) return;
+                endReasonRef.current = "no_answer";
+                toast.info("No answer", {
+                    description: "Call ended after 45 seconds."
+                });
+                await endCall();
+            })();
+        }, 45000);
+        return ()=>window.clearTimeout(timeout);
+    }, [
+        callId,
+        callState,
+        endCall,
+        remoteAccepted,
+        role
+    ]);
+    useEffect(()=>{
+        if (role !== "caller" || !callId) return;
+        const channel = supabase.channel(`caller-watch-${callId}`).on("postgres_changes", {
+            event: "UPDATE",
+            schema: "public",
+            table: "call_signals",
+            filter: `id=eq.${callId}`
+        }, (payload)=>{
+            if (payload.new.status === "answered") {
+                setRemoteAccepted(true);
+                return;
+            }
+            if (payload.new.status === "declined") {
+                endReasonRef.current = "declined";
+                void endCall();
+                return;
+            }
+            if (payload.new.status === "missed") {
+                if (remoteAccepted || callState === "connected") {
+                    return;
+                }
+                endReasonRef.current = "no_answer";
+                void endCall();
+                return;
+            }
+            if (payload.new.status === "ended") {
+                void endCall();
+            }
+        }).subscribe();
+        return ()=>{
+            supabase.removeChannel(channel);
+        };
+    }, [
+        role,
+        callId,
+        callState,
+        endCall,
+        remoteAccepted
+    ]);
+    useEffect(()=>{
+        if (role !== "caller" || !callId || callState === "ended") return;
+        const intervalId = window.setInterval(()=>{
+            (async ()=>{
+                const { data } = await dbFrom("call_signals").select("status").eq("id", callId).maybeSingle();
+                const row = data;
+                const status = row?.status;
+                if (status === "answered") {
+                    setRemoteAccepted(true);
+                    return;
+                }
+                if (status === "declined") {
+                    endReasonRef.current = "declined";
+                    await endCall();
+                    return;
+                }
+                if (status === "missed" && !(remoteAccepted || callState === "connected")) {
+                    endReasonRef.current = "no_answer";
+                    await endCall();
+                    return;
+                }
+                if (status === "ended") {
+                    await endCall();
+                }
+            })();
+        }, 1500);
+        return ()=>window.clearInterval(intervalId);
+    }, [
+        role,
+        callId,
+        callState,
+        endCall,
+        remoteAccepted
+    ]);
+    useEffect(()=>{
+        if (callState === "connected") {
+            timerRef.current = setInterval(()=>setDuration((d)=>d + 1), 1000);
+        }
+        return ()=>{
+            if (timerRef.current) clearInterval(timerRef.current);
+        };
+    }, [
+        callState
+    ]);
+    const formatDuration = (s)=>{
+        const m = Math.floor(s / 60);
+        const sec = s % 60;
+        return `${m.toString().padStart(2, "0")}:${sec.toString().padStart(2, "0")}`;
+    };
+    const statusText = callState === "ringing" ? role === "caller" ? remoteAccepted ? "Connecting..." : callType === "video" ? "Video calling..." : "Calling..." : "Connecting..." : callState === "connected" ? formatDuration(duration) : "Call ended";
+    const handleOpenChat = useCallback(()=>{
+        onMinimize?.({
+            remoteStream: remoteStreamRef.current,
+            duration,
+            isMuted,
+            callType,
+            isCameraOff
+        });
+        navigate("/chat", {
+            state: {
+                openChat: {
+                    recipientId,
+                    recipientName,
+                    recipientAvatar
+                }
+            }
+        });
+    }, [
+        callType,
+        duration,
+        isCameraOff,
+        isMuted,
+        navigate,
+        onMinimize,
+        recipientAvatar,
+        recipientId,
+        recipientName
+    ]);
+    useEffect(()=>{
+        if (!minimized || !pipStateChangeRef.current) return;
+        pipStateChangeRef.current({
+            remoteStream: remoteStreamRef.current,
+            duration,
+            isMuted,
+            callType,
+            isCameraOff
+        });
+    }, [
+        callType,
+        duration,
+        isCameraOff,
+        isMuted,
+        minimized
+    ]);
+    // Flip camera (switch front/back on mobile)
+    const handleFlipCamera = useCallback(async ()=>{
+        const stream = localStream?.current ?? localStream;
+        if (!stream || !(stream instanceof MediaStream)) return;
+        const videoTrack = stream.getVideoTracks()[0];
+        if (!videoTrack) return;
+        const constraints = videoTrack.getConstraints();
+        const currentFacingRaw = constraints.facingMode;
+        const currentFacing = Array.isArray(currentFacingRaw) ? currentFacingRaw[0] : currentFacingRaw;
+        const newFacing = currentFacing === "environment" ? "user" : "environment";
+        try {
+            const newStream = await navigator.mediaDevices.getUserMedia({
+                video: {
+                    facingMode: newFacing
+                },
+                audio: false
+            });
+            const newTrack = newStream.getVideoTracks()[0];
+            if (peerConnection?.current) {
+                const sender = peerConnection.current.getSenders().find((s)=>s.track?.kind === "video");
+                if (sender) await sender.replaceTrack(newTrack);
+            }
+            stream.removeTrack(videoTrack);
+            videoTrack.stop();
+            stream.addTrack(newTrack);
+            if (localVideoRef.current) localVideoRef.current.srcObject = stream;
+        } catch  {}
+    }, [
+        localStream,
+        peerConnection
+    ]);
+    if (minimized) {
+        return null;
+    }
+    // Control button helper
+    const ControlBtn = ({ onClick, active, activeColor = "destructive", children, size = "default" })=>{
+        const sizeClass = size === "large" ? "h-16 w-16" : "h-14 w-14";
+        return /*#__PURE__*/ _jsxDEV(motion.button, {
+            whileTap: {
+                scale: 0.88
+            },
+            onClick: onClick,
+            className: `${sizeClass} rounded-full flex flex-col items-center justify-center transition-all ${active ? activeColor === "destructive" ? "bg-destructive/12 text-destructive" : "bg-primary/12 text-primary" : "bg-foreground/6 text-foreground/60 hover:bg-foreground/10"}`,
+            children: children
+        }, void 0, false, {
+            fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/chat/CallScreen.tsx",
+            lineNumber: 722,
+            columnNumber: 7
+        }, this);
+    };
+    const ControlLabel = ({ children })=>/*#__PURE__*/ _jsxDEV("span", {
+            className: "text-[10px] mt-1 text-muted-foreground font-medium",
+            children: children
+        }, void 0, false, {
+            fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/chat/CallScreen.tsx",
+            lineNumber: 739,
+            columnNumber: 5
+        }, this);
+    // Full-screen video layout
+    if (callType === "video") {
+        return /*#__PURE__*/ _jsxDEV(motion.div, {
+            className: "fixed inset-0 z-[60] bg-black",
+            initial: {
+                opacity: 0
+            },
+            animate: {
+                opacity: 1
+            },
+            exit: {
+                opacity: 0
+            },
+            transition: {
+                duration: 0.25
+            },
+            children: [
+                /*#__PURE__*/ _jsxDEV("video", {
+                    ref: remoteVideoRef,
+                    autoPlay: true,
+                    playsInline: true,
+                    className: "absolute inset-0 w-full h-full object-cover"
+                }, void 0, false, {
+                    fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/chat/CallScreen.tsx",
+                    lineNumber: 753,
+                    columnNumber: 9
+                }, this),
+                /*#__PURE__*/ _jsxDEV("div", {
+                    className: "absolute inset-0 bg-gradient-to-b from-black/50 via-transparent to-black/60 pointer-events-none"
+                }, void 0, false, {
+                    fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/chat/CallScreen.tsx",
+                    lineNumber: 761,
+                    columnNumber: 9
+                }, this),
+                /*#__PURE__*/ _jsxDEV("div", {
+                    className: "absolute top-0 left-0 right-0 px-5 flex items-center justify-between z-20",
+                    style: {
+                        paddingTop: "max(calc(env(safe-area-inset-top, 0px) + 0.5rem), 1rem)"
+                    },
+                    children: [
+                        /*#__PURE__*/ _jsxDEV(CallQualityBadge, {
+                            stats: qualityStats
+                        }, void 0, false, {
+                            fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/chat/CallScreen.tsx",
+                            lineNumber: 766,
+                            columnNumber: 11
+                        }, this),
+                        /*#__PURE__*/ _jsxDEV("div", {
+                            className: "flex items-center gap-2",
+                            children: onMinimize && /*#__PURE__*/ _jsxDEV(motion.button, {
+                                whileTap: {
+                                    scale: 0.9
+                                },
+                                onClick: ()=>onMinimize({
+                                        remoteStream: remoteStreamRef.current,
+                                        duration,
+                                        isMuted,
+                                        callType,
+                                        isCameraOff
+                                    }),
+                                className: "h-10 w-10 rounded-full bg-white/10 backdrop-blur-md flex items-center justify-center border border-white/10",
+                                children: /*#__PURE__*/ _jsxDEV(Minimize2, {
+                                    className: "h-4 w-4 text-white/80"
+                                }, void 0, false, {
+                                    fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/chat/CallScreen.tsx",
+                                    lineNumber: 774,
+                                    columnNumber: 17
+                                }, this)
+                            }, void 0, false, {
+                                fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/chat/CallScreen.tsx",
+                                lineNumber: 769,
+                                columnNumber: 15
+                            }, this)
+                        }, void 0, false, {
+                            fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/chat/CallScreen.tsx",
+                            lineNumber: 767,
+                            columnNumber: 11
+                        }, this)
+                    ]
+                }, void 0, true, {
+                    fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/chat/CallScreen.tsx",
+                    lineNumber: 764,
+                    columnNumber: 9
+                }, this),
+                /*#__PURE__*/ _jsxDEV("div", {
+                    className: "absolute top-0 left-0 right-0 z-10 flex flex-col items-center",
+                    style: {
+                        paddingTop: "max(calc(env(safe-area-inset-top, 0px) + 3.5rem), 4.5rem)"
+                    },
+                    children: [
+                        /*#__PURE__*/ _jsxDEV("h2", {
+                            className: "text-xl font-bold text-white tracking-tight drop-shadow-lg",
+                            children: recipientName
+                        }, void 0, false, {
+                            fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/chat/CallScreen.tsx",
+                            lineNumber: 783,
+                            columnNumber: 11
+                        }, this),
+                        /*#__PURE__*/ _jsxDEV(motion.p, {
+                            initial: {
+                                opacity: 0,
+                                y: 4
+                            },
+                            animate: {
+                                opacity: 1,
+                                y: 0
+                            },
+                            className: `text-sm mt-0.5 font-medium ${callState === "connected" ? "text-emerald-400 tabular-nums" : "text-white/70"}`,
+                            children: statusText
+                        }, statusText, false, {
+                            fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/chat/CallScreen.tsx",
+                            lineNumber: 784,
+                            columnNumber: 11
+                        }, this),
+                        callState === "ringing" && /*#__PURE__*/ _jsxDEV("div", {
+                            className: "flex gap-1.5 mt-2",
+                            children: [
+                                0,
+                                1,
+                                2
+                            ].map((i)=>/*#__PURE__*/ _jsxDEV(motion.div, {
+                                    className: "h-2 w-2 rounded-full bg-emerald-400",
+                                    animate: {
+                                        opacity: [
+                                            0.2,
+                                            1,
+                                            0.2
+                                        ],
+                                        scale: [
+                                            0.6,
+                                            1.3,
+                                            0.6
+                                        ]
+                                    },
+                                    transition: {
+                                        duration: 1.4,
+                                        repeat: Infinity,
+                                        delay: i * 0.2
+                                    }
+                                }, i, false, {
+                                    fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/chat/CallScreen.tsx",
+                                    lineNumber: 795,
+                                    columnNumber: 17
+                                }, this))
+                        }, void 0, false, {
+                            fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/chat/CallScreen.tsx",
+                            lineNumber: 793,
+                            columnNumber: 13
+                        }, this),
+                        isReconnecting && /*#__PURE__*/ _jsxDEV("div", {
+                            className: "mt-2 inline-flex items-center gap-1.5 rounded-full bg-amber-500/20 px-3 py-1 text-[11px] font-semibold text-amber-200",
+                            children: [
+                                /*#__PURE__*/ _jsxDEV(WifiOff, {
+                                    className: "h-3.5 w-3.5"
+                                }, void 0, false, {
+                                    fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/chat/CallScreen.tsx",
+                                    lineNumber: 804,
+                                    columnNumber: 15
+                                }, this),
+                                " Reconnecting call..."
+                            ]
+                        }, void 0, true, {
+                            fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/chat/CallScreen.tsx",
+                            lineNumber: 803,
+                            columnNumber: 13
+                        }, this)
+                    ]
+                }, void 0, true, {
+                    fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/chat/CallScreen.tsx",
+                    lineNumber: 781,
+                    columnNumber: 9
+                }, this),
+                screenShare.isSharing && /*#__PURE__*/ _jsxDEV("div", {
+                    className: "absolute top-20 left-5 z-20 px-3 py-1.5 rounded-full bg-primary/90 text-primary-foreground text-[10px] font-semibold flex items-center gap-1.5 shadow-lg",
+                    children: [
+                        /*#__PURE__*/ _jsxDEV(Monitor, {
+                            className: "w-3 h-3"
+                        }, void 0, false, {
+                            fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/chat/CallScreen.tsx",
+                            lineNumber: 812,
+                            columnNumber: 13
+                        }, this),
+                        " Sharing screen"
+                    ]
+                }, void 0, true, {
+                    fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/chat/CallScreen.tsx",
+                    lineNumber: 811,
+                    columnNumber: 11
+                }, this),
+                !isCameraOff && /*#__PURE__*/ _jsxDEV(motion.div, {
+                    drag: true,
+                    dragMomentum: false,
+                    className: "absolute bottom-36 right-4 cursor-grab active:cursor-grabbing z-20",
+                    children: /*#__PURE__*/ _jsxDEV("div", {
+                        className: "relative",
+                        children: [
+                            /*#__PURE__*/ _jsxDEV("video", {
+                                ref: localVideoRef,
+                                autoPlay: true,
+                                playsInline: true,
+                                muted: true,
+                                className: "w-[110px] h-[150px] rounded-2xl border-2 border-white/20 object-cover shadow-2xl"
+                            }, void 0, false, {
+                                fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/chat/CallScreen.tsx",
+                                lineNumber: 824,
+                                columnNumber: 15
+                            }, this),
+                            /*#__PURE__*/ _jsxDEV(motion.button, {
+                                whileTap: {
+                                    scale: 0.85
+                                },
+                                onClick: handleFlipCamera,
+                                className: "absolute top-1.5 right-1.5 h-7 w-7 rounded-full bg-black/50 backdrop-blur-md flex items-center justify-center",
+                                children: /*#__PURE__*/ _jsxDEV(SwitchCamera, {
+                                    className: "h-3.5 w-3.5 text-white/80"
+                                }, void 0, false, {
+                                    fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/chat/CallScreen.tsx",
+                                    lineNumber: 832,
+                                    columnNumber: 17
+                                }, this)
+                            }, void 0, false, {
+                                fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/chat/CallScreen.tsx",
+                                lineNumber: 827,
+                                columnNumber: 15
+                            }, this)
+                        ]
+                    }, void 0, true, {
+                        fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/chat/CallScreen.tsx",
+                        lineNumber: 823,
+                        columnNumber: 13
+                    }, this)
+                }, void 0, false, {
+                    fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/chat/CallScreen.tsx",
+                    lineNumber: 818,
+                    columnNumber: 11
+                }, this),
+                /*#__PURE__*/ _jsxDEV("audio", {
+                    ref: remoteAudioRef,
+                    autoPlay: true,
+                    playsInline: true,
+                    className: "absolute h-0 w-0 opacity-0 pointer-events-none"
+                }, void 0, false, {
+                    fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/chat/CallScreen.tsx",
+                    lineNumber: 838,
+                    columnNumber: 9
+                }, this),
+                /*#__PURE__*/ _jsxDEV("div", {
+                    className: "absolute bottom-0 left-0 right-0 z-20 px-4",
+                    style: {
+                        paddingBottom: "max(calc(env(safe-area-inset-bottom, 0px) + 1rem), 1.5rem)"
+                    },
+                    children: /*#__PURE__*/ _jsxDEV("div", {
+                        className: "bg-white/10 backdrop-blur-xl rounded-3xl border border-white/10 px-4 py-4 shadow-2xl",
+                        children: /*#__PURE__*/ _jsxDEV("div", {
+                            className: "flex items-center justify-around",
+                            children: [
+                                /*#__PURE__*/ _jsxDEV("div", {
+                                    className: "flex flex-col items-center gap-1.5",
+                                    children: [
+                                        /*#__PURE__*/ _jsxDEV(motion.button, {
+                                            whileTap: {
+                                                scale: 0.88
+                                            },
+                                            onClick: toggleMute,
+                                            className: `h-12 w-12 rounded-full flex items-center justify-center transition-all ${isMuted ? "bg-white/25 text-white" : "bg-white/10 text-white/80 hover:bg-white/20"}`,
+                                            children: isMuted ? /*#__PURE__*/ _jsxDEV(MicOff, {
+                                                className: "h-5 w-5"
+                                            }, void 0, false, {
+                                                fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/chat/CallScreen.tsx",
+                                                lineNumber: 854,
+                                                columnNumber: 30
+                                            }, this) : /*#__PURE__*/ _jsxDEV(Mic, {
+                                                className: "h-5 w-5"
+                                            }, void 0, false, {
+                                                fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/chat/CallScreen.tsx",
+                                                lineNumber: 854,
+                                                columnNumber: 63
+                                            }, this)
+                                        }, void 0, false, {
+                                            fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/chat/CallScreen.tsx",
+                                            lineNumber: 847,
+                                            columnNumber: 17
+                                        }, this),
+                                        /*#__PURE__*/ _jsxDEV("span", {
+                                            className: "text-[10px] text-white/50 font-medium",
+                                            children: isMuted ? "Unmute" : "Mute"
+                                        }, void 0, false, {
+                                            fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/chat/CallScreen.tsx",
+                                            lineNumber: 856,
+                                            columnNumber: 17
+                                        }, this)
+                                    ]
+                                }, void 0, true, {
+                                    fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/chat/CallScreen.tsx",
+                                    lineNumber: 846,
+                                    columnNumber: 15
+                                }, this),
+                                /*#__PURE__*/ _jsxDEV("div", {
+                                    className: "flex flex-col items-center gap-1.5",
+                                    children: [
+                                        /*#__PURE__*/ _jsxDEV(motion.button, {
+                                            whileTap: {
+                                                scale: 0.88
+                                            },
+                                            onClick: toggleCamera,
+                                            className: `h-12 w-12 rounded-full flex items-center justify-center transition-all ${isCameraOff ? "bg-white/25 text-white" : "bg-white/10 text-white/80 hover:bg-white/20"}`,
+                                            children: isCameraOff ? /*#__PURE__*/ _jsxDEV(VideoOff, {
+                                                className: "h-5 w-5"
+                                            }, void 0, false, {
+                                                fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/chat/CallScreen.tsx",
+                                                lineNumber: 868,
+                                                columnNumber: 34
+                                            }, this) : /*#__PURE__*/ _jsxDEV(Video, {
+                                                className: "h-5 w-5"
+                                            }, void 0, false, {
+                                                fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/chat/CallScreen.tsx",
+                                                lineNumber: 868,
+                                                columnNumber: 69
+                                            }, this)
+                                        }, void 0, false, {
+                                            fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/chat/CallScreen.tsx",
+                                            lineNumber: 861,
+                                            columnNumber: 17
+                                        }, this),
+                                        /*#__PURE__*/ _jsxDEV("span", {
+                                            className: "text-[10px] text-white/50 font-medium",
+                                            children: isCameraOff ? "Start" : "Stop"
+                                        }, void 0, false, {
+                                            fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/chat/CallScreen.tsx",
+                                            lineNumber: 870,
+                                            columnNumber: 17
+                                        }, this)
+                                    ]
+                                }, void 0, true, {
+                                    fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/chat/CallScreen.tsx",
+                                    lineNumber: 860,
+                                    columnNumber: 15
+                                }, this),
+                                /*#__PURE__*/ _jsxDEV("div", {
+                                    className: "flex flex-col items-center gap-1.5",
+                                    children: [
+                                        /*#__PURE__*/ _jsxDEV(CallReactions, {
+                                            variant: "dark"
+                                        }, void 0, false, {
+                                            fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/chat/CallScreen.tsx",
+                                            lineNumber: 875,
+                                            columnNumber: 17
+                                        }, this),
+                                        /*#__PURE__*/ _jsxDEV("span", {
+                                            className: "text-[10px] text-white/50 font-medium",
+                                            children: "React"
+                                        }, void 0, false, {
+                                            fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/chat/CallScreen.tsx",
+                                            lineNumber: 876,
+                                            columnNumber: 17
+                                        }, this)
+                                    ]
+                                }, void 0, true, {
+                                    fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/chat/CallScreen.tsx",
+                                    lineNumber: 874,
+                                    columnNumber: 15
+                                }, this),
+                                /*#__PURE__*/ _jsxDEV("div", {
+                                    className: "flex flex-col items-center gap-1.5",
+                                    children: [
+                                        /*#__PURE__*/ _jsxDEV(motion.button, {
+                                            whileTap: {
+                                                scale: 0.88
+                                            },
+                                            onClick: screenShare.toggleSharing,
+                                            className: `h-12 w-12 rounded-full flex items-center justify-center transition-all ${screenShare.isSharing ? "bg-emerald-500/30 text-emerald-400" : "bg-white/10 text-white/80 hover:bg-white/20"}`,
+                                            children: screenShare.isSharing ? /*#__PURE__*/ _jsxDEV(MonitorOff, {
+                                                className: "h-5 w-5"
+                                            }, void 0, false, {
+                                                fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/chat/CallScreen.tsx",
+                                                lineNumber: 888,
+                                                columnNumber: 44
+                                            }, this) : /*#__PURE__*/ _jsxDEV(Monitor, {
+                                                className: "h-5 w-5"
+                                            }, void 0, false, {
+                                                fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/chat/CallScreen.tsx",
+                                                lineNumber: 888,
+                                                columnNumber: 81
+                                            }, this)
+                                        }, void 0, false, {
+                                            fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/chat/CallScreen.tsx",
+                                            lineNumber: 881,
+                                            columnNumber: 17
+                                        }, this),
+                                        /*#__PURE__*/ _jsxDEV("span", {
+                                            className: "text-[10px] text-white/50 font-medium",
+                                            children: "Screen"
+                                        }, void 0, false, {
+                                            fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/chat/CallScreen.tsx",
+                                            lineNumber: 890,
+                                            columnNumber: 17
+                                        }, this)
+                                    ]
+                                }, void 0, true, {
+                                    fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/chat/CallScreen.tsx",
+                                    lineNumber: 880,
+                                    columnNumber: 15
+                                }, this),
+                                /*#__PURE__*/ _jsxDEV("div", {
+                                    className: "flex flex-col items-center gap-1.5",
+                                    children: [
+                                        /*#__PURE__*/ _jsxDEV(motion.button, {
+                                            whileTap: {
+                                                scale: 0.85
+                                            },
+                                            onClick: ()=>{
+                                                void endCall();
+                                            },
+                                            className: "h-14 w-14 rounded-full bg-destructive text-destructive-foreground flex items-center justify-center shadow-lg shadow-destructive/40",
+                                            children: /*#__PURE__*/ _jsxDEV(PhoneOff, {
+                                                className: "h-6 w-6"
+                                            }, void 0, false, {
+                                                fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/chat/CallScreen.tsx",
+                                                lineNumber: 900,
+                                                columnNumber: 19
+                                            }, this)
+                                        }, void 0, false, {
+                                            fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/chat/CallScreen.tsx",
+                                            lineNumber: 895,
+                                            columnNumber: 17
+                                        }, this),
+                                        /*#__PURE__*/ _jsxDEV("span", {
+                                            className: "text-[10px] text-white/50 font-medium",
+                                            children: "End"
+                                        }, void 0, false, {
+                                            fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/chat/CallScreen.tsx",
+                                            lineNumber: 902,
+                                            columnNumber: 17
+                                        }, this)
+                                    ]
+                                }, void 0, true, {
+                                    fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/chat/CallScreen.tsx",
+                                    lineNumber: 894,
+                                    columnNumber: 15
+                                }, this)
+                            ]
+                        }, void 0, true, {
+                            fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/chat/CallScreen.tsx",
+                            lineNumber: 844,
+                            columnNumber: 13
+                        }, this)
+                    }, void 0, false, {
+                        fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/chat/CallScreen.tsx",
+                        lineNumber: 843,
+                        columnNumber: 11
+                    }, this)
+                }, void 0, false, {
+                    fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/chat/CallScreen.tsx",
+                    lineNumber: 841,
+                    columnNumber: 9
+                }, this)
+            ]
+        }, void 0, true, {
+            fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/chat/CallScreen.tsx",
+            lineNumber: 745,
+            columnNumber: 7
+        }, this);
+    }
+    // Voice call layout — FaceTime 2026 style
+    return /*#__PURE__*/ _jsxDEV(motion.div, {
+        className: "fixed inset-0 z-[60] flex flex-col items-center",
+        initial: {
+            opacity: 0,
+            scale: 1.05
+        },
+        animate: {
+            opacity: 1,
+            scale: 1
+        },
+        exit: {
+            opacity: 0,
+            scale: 0.95
+        },
+        transition: {
+            duration: 0.25
+        },
+        style: {
+            paddingTop: "max(env(safe-area-inset-top, 0px), 2.5rem)",
+            paddingBottom: "max(env(safe-area-inset-bottom, 0px), 1.5rem)",
+            background: "linear-gradient(165deg, hsl(var(--background)) 0%, hsl(var(--muted) / 0.4) 50%, hsl(var(--primary) / 0.08) 100%)"
+        },
+        children: [
+            /*#__PURE__*/ _jsxDEV("div", {
+                className: "absolute inset-0 overflow-hidden pointer-events-none",
+                children: [
+                    /*#__PURE__*/ _jsxDEV(motion.div, {
+                        className: "absolute -top-20 -right-20 w-72 h-72 rounded-full opacity-20",
+                        style: {
+                            background: "radial-gradient(circle, hsl(var(--primary) / 0.4), transparent 70%)"
+                        },
+                        animate: {
+                            scale: [
+                                1,
+                                1.2,
+                                1
+                            ],
+                            x: [
+                                0,
+                                20,
+                                0
+                            ],
+                            y: [
+                                0,
+                                -10,
+                                0
+                            ]
+                        },
+                        transition: {
+                            duration: 8,
+                            repeat: Infinity,
+                            ease: "easeInOut"
+                        }
+                    }, void 0, false, {
+                        fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/chat/CallScreen.tsx",
+                        lineNumber: 927,
+                        columnNumber: 9
+                    }, this),
+                    /*#__PURE__*/ _jsxDEV(motion.div, {
+                        className: "absolute -bottom-10 -left-10 w-56 h-56 rounded-full opacity-15",
+                        style: {
+                            background: "radial-gradient(circle, hsl(var(--primary) / 0.3), transparent 70%)"
+                        },
+                        animate: {
+                            scale: [
+                                1.2,
+                                1,
+                                1.2
+                            ],
+                            x: [
+                                0,
+                                -15,
+                                0
+                            ]
+                        },
+                        transition: {
+                            duration: 6,
+                            repeat: Infinity,
+                            ease: "easeInOut"
+                        }
+                    }, void 0, false, {
+                        fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/chat/CallScreen.tsx",
+                        lineNumber: 933,
+                        columnNumber: 9
+                    }, this)
+                ]
+            }, void 0, true, {
+                fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/chat/CallScreen.tsx",
+                lineNumber: 926,
+                columnNumber: 7
+            }, this),
+            /*#__PURE__*/ _jsxDEV("div", {
+                className: "absolute top-0 left-0 right-0 px-5 flex items-center justify-between z-10",
+                style: {
+                    paddingTop: "max(calc(env(safe-area-inset-top, 0px) + 0.5rem), 1rem)"
+                },
+                children: [
+                    /*#__PURE__*/ _jsxDEV(CallQualityBadge, {
+                        stats: qualityStats
+                    }, void 0, false, {
+                        fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/chat/CallScreen.tsx",
+                        lineNumber: 944,
+                        columnNumber: 9
+                    }, this),
+                    /*#__PURE__*/ _jsxDEV("div", {
+                        className: "flex items-center gap-2",
+                        children: onMinimize && /*#__PURE__*/ _jsxDEV(motion.button, {
+                            whileTap: {
+                                scale: 0.9
+                            },
+                            onClick: ()=>onMinimize({
+                                    remoteStream: remoteStreamRef.current,
+                                    duration,
+                                    isMuted,
+                                    callType,
+                                    isCameraOff
+                                }),
+                            className: "h-10 w-10 rounded-full bg-foreground/5 backdrop-blur-xl flex items-center justify-center border border-border/10",
+                            children: /*#__PURE__*/ _jsxDEV(Minimize2, {
+                                className: "h-4 w-4 text-foreground/60"
+                            }, void 0, false, {
+                                fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/chat/CallScreen.tsx",
+                                lineNumber: 952,
+                                columnNumber: 15
+                            }, this)
+                        }, void 0, false, {
+                            fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/chat/CallScreen.tsx",
+                            lineNumber: 947,
+                            columnNumber: 13
+                        }, this)
+                    }, void 0, false, {
+                        fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/chat/CallScreen.tsx",
+                        lineNumber: 945,
+                        columnNumber: 9
+                    }, this)
+                ]
+            }, void 0, true, {
+                fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/chat/CallScreen.tsx",
+                lineNumber: 942,
+                columnNumber: 7
+            }, this),
+            /*#__PURE__*/ _jsxDEV("div", {
+                className: "flex flex-col items-center gap-4 mt-14 px-6 relative z-[1]",
+                children: [
+                    /*#__PURE__*/ _jsxDEV("div", {
+                        className: "relative",
+                        children: [
+                            callState === "ringing" && /*#__PURE__*/ _jsxDEV(_Fragment, {
+                                children: [
+                                    /*#__PURE__*/ _jsxDEV(motion.div, {
+                                        className: "absolute -inset-5 rounded-full",
+                                        style: {
+                                            background: "radial-gradient(circle, hsl(var(--primary) / 0.15), transparent 70%)"
+                                        },
+                                        animate: {
+                                            scale: [
+                                                1,
+                                                1.6,
+                                                1
+                                            ],
+                                            opacity: [
+                                                0.8,
+                                                0,
+                                                0.8
+                                            ]
+                                        },
+                                        transition: {
+                                            duration: 2.4,
+                                            repeat: Infinity,
+                                            ease: "easeInOut"
+                                        }
+                                    }, void 0, false, {
+                                        fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/chat/CallScreen.tsx",
+                                        lineNumber: 963,
+                                        columnNumber: 15
+                                    }, this),
+                                    /*#__PURE__*/ _jsxDEV(motion.div, {
+                                        className: "absolute -inset-10 rounded-full",
+                                        style: {
+                                            background: "radial-gradient(circle, hsl(var(--primary) / 0.08), transparent 70%)"
+                                        },
+                                        animate: {
+                                            scale: [
+                                                1,
+                                                1.5,
+                                                1
+                                            ],
+                                            opacity: [
+                                                0.4,
+                                                0,
+                                                0.4
+                                            ]
+                                        },
+                                        transition: {
+                                            duration: 2.4,
+                                            repeat: Infinity,
+                                            delay: 0.5,
+                                            ease: "easeInOut"
+                                        }
+                                    }, void 0, false, {
+                                        fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/chat/CallScreen.tsx",
+                                        lineNumber: 967,
+                                        columnNumber: 15
+                                    }, this),
+                                    /*#__PURE__*/ _jsxDEV(motion.div, {
+                                        className: "absolute -inset-16 rounded-full",
+                                        style: {
+                                            background: "radial-gradient(circle, hsl(var(--primary) / 0.04), transparent 70%)"
+                                        },
+                                        animate: {
+                                            scale: [
+                                                1,
+                                                1.4,
+                                                1
+                                            ],
+                                            opacity: [
+                                                0.2,
+                                                0,
+                                                0.2
+                                            ]
+                                        },
+                                        transition: {
+                                            duration: 2.4,
+                                            repeat: Infinity,
+                                            delay: 1,
+                                            ease: "easeInOut"
+                                        }
+                                    }, void 0, false, {
+                                        fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/chat/CallScreen.tsx",
+                                        lineNumber: 971,
+                                        columnNumber: 15
+                                    }, this)
+                                ]
+                            }, void 0, true),
+                            callState === "connected" && /*#__PURE__*/ _jsxDEV(motion.div, {
+                                className: "absolute -inset-2 rounded-full",
+                                style: {
+                                    background: "radial-gradient(circle, hsl(var(--primary) / 0.15), transparent 70%)"
+                                },
+                                animate: {
+                                    scale: [
+                                        1,
+                                        1.1,
+                                        1
+                                    ]
+                                },
+                                transition: {
+                                    duration: 3,
+                                    repeat: Infinity,
+                                    ease: "easeInOut"
+                                }
+                            }, void 0, false, {
+                                fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/chat/CallScreen.tsx",
+                                lineNumber: 978,
+                                columnNumber: 13
+                            }, this),
+                            /*#__PURE__*/ _jsxDEV(Avatar, {
+                                className: "h-36 w-36 border-4 border-primary/8 shadow-2xl relative z-[1]",
+                                children: [
+                                    /*#__PURE__*/ _jsxDEV(AvatarImage, {
+                                        src: recipientAvatar || undefined
+                                    }, void 0, false, {
+                                        fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/chat/CallScreen.tsx",
+                                        lineNumber: 985,
+                                        columnNumber: 13
+                                    }, this),
+                                    /*#__PURE__*/ _jsxDEV(AvatarFallback, {
+                                        className: "text-5xl font-bold bg-primary/5 text-primary",
+                                        children: initials
+                                    }, void 0, false, {
+                                        fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/chat/CallScreen.tsx",
+                                        lineNumber: 986,
+                                        columnNumber: 13
+                                    }, this)
+                                ]
+                            }, void 0, true, {
+                                fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/chat/CallScreen.tsx",
+                                lineNumber: 984,
+                                columnNumber: 11
+                            }, this)
+                        ]
+                    }, void 0, true, {
+                        fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/chat/CallScreen.tsx",
+                        lineNumber: 960,
+                        columnNumber: 9
+                    }, this),
+                    /*#__PURE__*/ _jsxDEV("div", {
+                        className: "text-center mt-3",
+                        children: [
+                            /*#__PURE__*/ _jsxDEV("h2", {
+                                className: "text-[28px] font-bold text-foreground tracking-tight",
+                                children: recipientName
+                            }, void 0, false, {
+                                fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/chat/CallScreen.tsx",
+                                lineNumber: 990,
+                                columnNumber: 11
+                            }, this),
+                            /*#__PURE__*/ _jsxDEV(motion.p, {
+                                initial: {
+                                    opacity: 0,
+                                    y: 4
+                                },
+                                animate: {
+                                    opacity: 1,
+                                    y: 0
+                                },
+                                className: `text-[15px] mt-1 font-semibold ${callState === "connected" ? "text-primary tabular-nums" : "text-muted-foreground"}`,
+                                children: statusText
+                            }, statusText, false, {
+                                fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/chat/CallScreen.tsx",
+                                lineNumber: 991,
+                                columnNumber: 11
+                            }, this)
+                        ]
+                    }, void 0, true, {
+                        fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/chat/CallScreen.tsx",
+                        lineNumber: 989,
+                        columnNumber: 9
+                    }, this),
+                    callState === "connected" && /*#__PURE__*/ _jsxDEV(AudioVisualizer, {
+                        isActive: !isMuted,
+                        barCount: 7,
+                        className: "mt-2"
+                    }, void 0, false, {
+                        fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/chat/CallScreen.tsx",
+                        lineNumber: 999,
+                        columnNumber: 11
+                    }, this),
+                    callState === "ringing" && /*#__PURE__*/ _jsxDEV("div", {
+                        className: "flex gap-2 mt-1",
+                        children: [
+                            0,
+                            1,
+                            2
+                        ].map((i)=>/*#__PURE__*/ _jsxDEV(motion.div, {
+                                className: "h-2.5 w-2.5 rounded-full bg-primary/60",
+                                animate: {
+                                    opacity: [
+                                        0.2,
+                                        1,
+                                        0.2
+                                    ],
+                                    scale: [
+                                        0.5,
+                                        1.4,
+                                        0.5
+                                    ]
+                                },
+                                transition: {
+                                    duration: 1.6,
+                                    repeat: Infinity,
+                                    delay: i * 0.25
+                                }
+                            }, i, false, {
+                                fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/chat/CallScreen.tsx",
+                                lineNumber: 1005,
+                                columnNumber: 15
+                            }, this))
+                    }, void 0, false, {
+                        fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/chat/CallScreen.tsx",
+                        lineNumber: 1003,
+                        columnNumber: 11
+                    }, this),
+                    isReconnecting && /*#__PURE__*/ _jsxDEV("div", {
+                        className: "inline-flex items-center gap-1.5 rounded-full bg-amber-500/10 backdrop-blur-md px-3.5 py-1.5 text-[11px] font-semibold text-amber-600 border border-amber-500/10",
+                        children: [
+                            /*#__PURE__*/ _jsxDEV(WifiOff, {
+                                className: "h-3.5 w-3.5"
+                            }, void 0, false, {
+                                fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/chat/CallScreen.tsx",
+                                lineNumber: 1013,
+                                columnNumber: 13
+                            }, this),
+                            " Reconnecting..."
+                        ]
+                    }, void 0, true, {
+                        fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/chat/CallScreen.tsx",
+                        lineNumber: 1012,
+                        columnNumber: 11
+                    }, this)
+                ]
+            }, void 0, true, {
+                fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/chat/CallScreen.tsx",
+                lineNumber: 959,
+                columnNumber: 7
+            }, this),
+            /*#__PURE__*/ _jsxDEV("audio", {
+                ref: remoteAudioRef,
+                autoPlay: true,
+                playsInline: true,
+                className: "absolute h-0 w-0 opacity-0 pointer-events-none"
+            }, void 0, false, {
+                fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/chat/CallScreen.tsx",
+                lineNumber: 1018,
+                columnNumber: 7
+            }, this),
+            /*#__PURE__*/ _jsxDEV("div", {
+                className: "flex-1"
+            }, void 0, false, {
+                fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/chat/CallScreen.tsx",
+                lineNumber: 1019,
+                columnNumber: 7
+            }, this),
+            /*#__PURE__*/ _jsxDEV("div", {
+                className: "w-full px-5 pb-4 relative z-[1]",
+                children: /*#__PURE__*/ _jsxDEV("div", {
+                    className: "bg-foreground/[0.04] backdrop-blur-2xl rounded-[28px] border border-border/10 px-4 py-5 shadow-xl",
+                    children: [
+                        /*#__PURE__*/ _jsxDEV("div", {
+                            className: "flex items-end justify-center gap-5",
+                            children: [
+                                /*#__PURE__*/ _jsxDEV("div", {
+                                    className: "flex flex-col items-center gap-2",
+                                    children: [
+                                        /*#__PURE__*/ _jsxDEV(motion.button, {
+                                            whileTap: {
+                                                scale: 0.88
+                                            },
+                                            onClick: toggleMute,
+                                            className: `h-[52px] w-[52px] rounded-full flex items-center justify-center transition-all ${isMuted ? "bg-foreground/90 text-background shadow-lg" : "bg-foreground/[0.06] text-foreground/60 hover:bg-foreground/10"}`,
+                                            children: isMuted ? /*#__PURE__*/ _jsxDEV(MicOff, {
+                                                className: "h-5 w-5"
+                                            }, void 0, false, {
+                                                fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/chat/CallScreen.tsx",
+                                                lineNumber: 1036,
+                                                columnNumber: 28
+                                            }, this) : /*#__PURE__*/ _jsxDEV(Mic, {
+                                                className: "h-5 w-5"
+                                            }, void 0, false, {
+                                                fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/chat/CallScreen.tsx",
+                                                lineNumber: 1036,
+                                                columnNumber: 61
+                                            }, this)
+                                        }, void 0, false, {
+                                            fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/chat/CallScreen.tsx",
+                                            lineNumber: 1027,
+                                            columnNumber: 15
+                                        }, this),
+                                        /*#__PURE__*/ _jsxDEV("span", {
+                                            className: "text-[10px] text-muted-foreground/70 font-medium",
+                                            children: isMuted ? "Unmute" : "Mute"
+                                        }, void 0, false, {
+                                            fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/chat/CallScreen.tsx",
+                                            lineNumber: 1038,
+                                            columnNumber: 15
+                                        }, this)
+                                    ]
+                                }, void 0, true, {
+                                    fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/chat/CallScreen.tsx",
+                                    lineNumber: 1026,
+                                    columnNumber: 13
+                                }, this),
+                                /*#__PURE__*/ _jsxDEV("div", {
+                                    className: "flex flex-col items-center gap-2",
+                                    children: [
+                                        /*#__PURE__*/ _jsxDEV(motion.button, {
+                                            whileTap: {
+                                                scale: 0.88
+                                            },
+                                            onClick: ()=>setIsSpeaker(!isSpeaker),
+                                            className: `h-[52px] w-[52px] rounded-full flex items-center justify-center transition-all ${isSpeaker ? "bg-foreground/90 text-background shadow-lg" : "bg-foreground/[0.06] text-foreground/60 hover:bg-foreground/10"}`,
+                                            children: /*#__PURE__*/ _jsxDEV(Volume2, {
+                                                className: "h-5 w-5"
+                                            }, void 0, false, {
+                                                fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/chat/CallScreen.tsx",
+                                                lineNumber: 1050,
+                                                columnNumber: 17
+                                            }, this)
+                                        }, void 0, false, {
+                                            fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/chat/CallScreen.tsx",
+                                            lineNumber: 1041,
+                                            columnNumber: 15
+                                        }, this),
+                                        /*#__PURE__*/ _jsxDEV("span", {
+                                            className: "text-[10px] text-muted-foreground/70 font-medium",
+                                            children: "Speaker"
+                                        }, void 0, false, {
+                                            fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/chat/CallScreen.tsx",
+                                            lineNumber: 1052,
+                                            columnNumber: 15
+                                        }, this)
+                                    ]
+                                }, void 0, true, {
+                                    fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/chat/CallScreen.tsx",
+                                    lineNumber: 1040,
+                                    columnNumber: 13
+                                }, this),
+                                /*#__PURE__*/ _jsxDEV("div", {
+                                    className: "flex flex-col items-center gap-2",
+                                    children: [
+                                        /*#__PURE__*/ _jsxDEV(CallReactions, {
+                                            variant: "light"
+                                        }, void 0, false, {
+                                            fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/chat/CallScreen.tsx",
+                                            lineNumber: 1056,
+                                            columnNumber: 15
+                                        }, this),
+                                        /*#__PURE__*/ _jsxDEV("span", {
+                                            className: "text-[10px] text-muted-foreground/70 font-medium",
+                                            children: "React"
+                                        }, void 0, false, {
+                                            fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/chat/CallScreen.tsx",
+                                            lineNumber: 1057,
+                                            columnNumber: 15
+                                        }, this)
+                                    ]
+                                }, void 0, true, {
+                                    fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/chat/CallScreen.tsx",
+                                    lineNumber: 1055,
+                                    columnNumber: 13
+                                }, this),
+                                /*#__PURE__*/ _jsxDEV("div", {
+                                    className: "flex flex-col items-center gap-2",
+                                    children: [
+                                        /*#__PURE__*/ _jsxDEV(motion.button, {
+                                            whileTap: {
+                                                scale: 0.88
+                                            },
+                                            onClick: screenShare.toggleSharing,
+                                            className: `h-[52px] w-[52px] rounded-full flex items-center justify-center transition-all ${screenShare.isSharing ? "bg-primary/15 text-primary shadow-lg" : "bg-foreground/[0.06] text-foreground/60 hover:bg-foreground/10"}`,
+                                            children: screenShare.isSharing ? /*#__PURE__*/ _jsxDEV(MonitorOff, {
+                                                className: "h-5 w-5"
+                                            }, void 0, false, {
+                                                fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/chat/CallScreen.tsx",
+                                                lineNumber: 1070,
+                                                columnNumber: 42
+                                            }, this) : /*#__PURE__*/ _jsxDEV(Monitor, {
+                                                className: "h-5 w-5"
+                                            }, void 0, false, {
+                                                fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/chat/CallScreen.tsx",
+                                                lineNumber: 1070,
+                                                columnNumber: 79
+                                            }, this)
+                                        }, void 0, false, {
+                                            fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/chat/CallScreen.tsx",
+                                            lineNumber: 1061,
+                                            columnNumber: 15
+                                        }, this),
+                                        /*#__PURE__*/ _jsxDEV("span", {
+                                            className: "text-[10px] text-muted-foreground/70 font-medium",
+                                            children: "Screen"
+                                        }, void 0, false, {
+                                            fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/chat/CallScreen.tsx",
+                                            lineNumber: 1072,
+                                            columnNumber: 15
+                                        }, this)
+                                    ]
+                                }, void 0, true, {
+                                    fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/chat/CallScreen.tsx",
+                                    lineNumber: 1060,
+                                    columnNumber: 13
+                                }, this),
+                                /*#__PURE__*/ _jsxDEV("div", {
+                                    className: "flex flex-col items-center gap-2",
+                                    children: [
+                                        /*#__PURE__*/ _jsxDEV(motion.button, {
+                                            whileTap: {
+                                                scale: 0.88
+                                            },
+                                            onClick: handleOpenChat,
+                                            className: "h-[52px] w-[52px] rounded-full flex items-center justify-center transition-all bg-foreground/[0.06] text-foreground/60 hover:bg-foreground/10",
+                                            children: /*#__PURE__*/ _jsxDEV(MessageCircle, {
+                                                className: "h-5 w-5"
+                                            }, void 0, false, {
+                                                fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/chat/CallScreen.tsx",
+                                                lineNumber: 1080,
+                                                columnNumber: 17
+                                            }, this)
+                                        }, void 0, false, {
+                                            fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/chat/CallScreen.tsx",
+                                            lineNumber: 1075,
+                                            columnNumber: 15
+                                        }, this),
+                                        /*#__PURE__*/ _jsxDEV("span", {
+                                            className: "text-[10px] text-muted-foreground/70 font-medium",
+                                            children: "Chat"
+                                        }, void 0, false, {
+                                            fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/chat/CallScreen.tsx",
+                                            lineNumber: 1082,
+                                            columnNumber: 15
+                                        }, this)
+                                    ]
+                                }, void 0, true, {
+                                    fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/chat/CallScreen.tsx",
+                                    lineNumber: 1074,
+                                    columnNumber: 13
+                                }, this)
+                            ]
+                        }, void 0, true, {
+                            fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/chat/CallScreen.tsx",
+                            lineNumber: 1025,
+                            columnNumber: 11
+                        }, this),
+                        /*#__PURE__*/ _jsxDEV("div", {
+                            className: "flex justify-center mt-4",
+                            children: /*#__PURE__*/ _jsxDEV("div", {
+                                className: "flex flex-col items-center gap-2",
+                                children: [
+                                    /*#__PURE__*/ _jsxDEV(motion.button, {
+                                        whileTap: {
+                                            scale: 0.85
+                                        },
+                                        onClick: ()=>{
+                                            void endCall();
+                                        },
+                                        className: "h-[60px] w-[60px] rounded-full bg-destructive text-destructive-foreground flex items-center justify-center shadow-lg shadow-destructive/30",
+                                        children: /*#__PURE__*/ _jsxDEV(PhoneOff, {
+                                            className: "h-6 w-6"
+                                        }, void 0, false, {
+                                            fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/chat/CallScreen.tsx",
+                                            lineNumber: 1093,
+                                            columnNumber: 17
+                                        }, this)
+                                    }, void 0, false, {
+                                        fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/chat/CallScreen.tsx",
+                                        lineNumber: 1088,
+                                        columnNumber: 15
+                                    }, this),
+                                    /*#__PURE__*/ _jsxDEV("span", {
+                                        className: "text-[10px] text-muted-foreground/70 font-medium",
+                                        children: "End"
+                                    }, void 0, false, {
+                                        fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/chat/CallScreen.tsx",
+                                        lineNumber: 1095,
+                                        columnNumber: 15
+                                    }, this)
+                                ]
+                            }, void 0, true, {
+                                fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/chat/CallScreen.tsx",
+                                lineNumber: 1087,
+                                columnNumber: 13
+                            }, this)
+                        }, void 0, false, {
+                            fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/chat/CallScreen.tsx",
+                            lineNumber: 1086,
+                            columnNumber: 11
+                        }, this)
+                    ]
+                }, void 0, true, {
+                    fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/chat/CallScreen.tsx",
+                    lineNumber: 1023,
+                    columnNumber: 9
+                }, this)
+            }, void 0, false, {
+                fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/chat/CallScreen.tsx",
+                lineNumber: 1022,
+                columnNumber: 7
+            }, this)
+        ]
+    }, void 0, true, {
+        fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/chat/CallScreen.tsx",
+        lineNumber: 913,
+        columnNumber: 5
+    }, this);
+}
+_s(CallScreen, "yKim3taTVzh8u4OoKCai9Lufxqo=", false, function() {
+    return [
+        useAuth,
+        useNavigate,
+        useWebRTC,
+        useCallQuality,
+        useScreenShare
+    ];
+});
+_c = CallScreen;
+var _c;
+$RefreshReg$(_c, "CallScreen");
+
+
+import * as RefreshRuntime from "/@react-refresh";
+const inWebWorker = typeof WorkerGlobalScope !== 'undefined' && self instanceof WorkerGlobalScope;
+if (import.meta.hot && !inWebWorker) {
+  if (!window.$RefreshReg$) {
+    throw new Error(
+      "@vitejs/plugin-react-swc can't detect preamble. Something is wrong."
+    );
+  }
+
+  RefreshRuntime.__hmr_import(import.meta.url).then((currentExports) => {
+    RefreshRuntime.registerExportsForReactRefresh("C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/chat/CallScreen.tsx", currentExports);
+    import.meta.hot.accept((nextExports) => {
+      if (!nextExports) return;
+      const invalidateMessage = RefreshRuntime.validateRefreshBoundaryAndEnqueueUpdate("C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/chat/CallScreen.tsx", currentExports, nextExports);
+      if (invalidateMessage) import.meta.hot.invalidate(invalidateMessage);
+    });
+  });
+}
+function $RefreshReg$(type, id) { return RefreshRuntime.register(type, "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/chat/CallScreen.tsx" + ' ' + id) }
+function $RefreshSig$() { return RefreshRuntime.createSignatureFunctionForTransform(); }
+
+//# sourceMappingURL=data:application/json;base64,eyJ2ZXJzaW9uIjozLCJzb3VyY2VzIjpbIkNhbGxTY3JlZW4udHN4Il0sInNvdXJjZXNDb250ZW50IjpbIi8qKlxyXG4gKiBDYWxsU2NyZWVuIOKAlCBGdWxsLXNjcmVlbiBjYWxsaW5nIG92ZXJsYXkgd2l0aCBXZWJSVEMsIHF1YWxpdHkgaW5kaWNhdG9yLCBzY3JlZW4gc2hhcmluZywgUGlQXHJcbiAqL1xyXG5pbXBvcnQgeyB1c2VTdGF0ZSwgdXNlRWZmZWN0LCB1c2VSZWYsIHVzZUNhbGxiYWNrIH0gZnJvbSBcInJlYWN0XCI7XHJcbmltcG9ydCB7IEF2YXRhciwgQXZhdGFyRmFsbGJhY2ssIEF2YXRhckltYWdlIH0gZnJvbSBcIkAvY29tcG9uZW50cy91aS9hdmF0YXJcIjtcclxuaW1wb3J0IFBob25lT2ZmIGZyb20gXCJsdWNpZGUtcmVhY3QvZGlzdC9lc20vaWNvbnMvcGhvbmUtb2ZmXCI7XHJcbmltcG9ydCBNaWMgZnJvbSBcImx1Y2lkZS1yZWFjdC9kaXN0L2VzbS9pY29ucy9taWNcIjtcclxuaW1wb3J0IE1pY09mZiBmcm9tIFwibHVjaWRlLXJlYWN0L2Rpc3QvZXNtL2ljb25zL21pYy1vZmZcIjtcclxuaW1wb3J0IFZpZGVvIGZyb20gXCJsdWNpZGUtcmVhY3QvZGlzdC9lc20vaWNvbnMvdmlkZW9cIjtcclxuaW1wb3J0IFZpZGVvT2ZmIGZyb20gXCJsdWNpZGUtcmVhY3QvZGlzdC9lc20vaWNvbnMvdmlkZW8tb2ZmXCI7XHJcbmltcG9ydCBWb2x1bWUyIGZyb20gXCJsdWNpZGUtcmVhY3QvZGlzdC9lc20vaWNvbnMvdm9sdW1lLTJcIjtcclxuaW1wb3J0IE1vbml0b3IgZnJvbSBcImx1Y2lkZS1yZWFjdC9kaXN0L2VzbS9pY29ucy9tb25pdG9yXCI7XHJcbmltcG9ydCBNb25pdG9yT2ZmIGZyb20gXCJsdWNpZGUtcmVhY3QvZGlzdC9lc20vaWNvbnMvbW9uaXRvci1vZmZcIjtcclxuaW1wb3J0IE1pbmltaXplMiBmcm9tIFwibHVjaWRlLXJlYWN0L2Rpc3QvZXNtL2ljb25zL21pbmltaXplLTJcIjtcclxuaW1wb3J0IE1lc3NhZ2VDaXJjbGUgZnJvbSBcImx1Y2lkZS1yZWFjdC9kaXN0L2VzbS9pY29ucy9tZXNzYWdlLWNpcmNsZVwiO1xyXG5pbXBvcnQgV2lmaU9mZiBmcm9tIFwibHVjaWRlLXJlYWN0L2Rpc3QvZXNtL2ljb25zL3dpZmktb2ZmXCI7XHJcbmltcG9ydCBTd2l0Y2hDYW1lcmEgZnJvbSBcImx1Y2lkZS1yZWFjdC9kaXN0L2VzbS9pY29ucy9zd2l0Y2gtY2FtZXJhXCI7XHJcbmltcG9ydCBTcGFya2xlcyBmcm9tIFwibHVjaWRlLXJlYWN0L2Rpc3QvZXNtL2ljb25zL3NwYXJrbGVzXCI7XHJcbmltcG9ydCB7IG1vdGlvbiwgQW5pbWF0ZVByZXNlbmNlIH0gZnJvbSBcImZyYW1lci1tb3Rpb25cIjtcclxuaW1wb3J0IHsgdXNlV2ViUlRDLCBDYWxsUm9sZSwgV2ViUlRDRmFpbHVyZSwgY2xhc3NpZnlXZWJSVENGYWlsdXJlIH0gZnJvbSBcIkAvaG9va3MvdXNlV2ViUlRDXCI7XHJcbmltcG9ydCB7IHVzZUNhbGxRdWFsaXR5IH0gZnJvbSBcIkAvaG9va3MvdXNlQ2FsbFF1YWxpdHlcIjtcclxuaW1wb3J0IHsgdXNlU2NyZWVuU2hhcmUgfSBmcm9tIFwiQC9ob29rcy91c2VTY3JlZW5TaGFyZVwiO1xyXG5cclxuaW1wb3J0IHsgc3VwYWJhc2UgfSBmcm9tIFwiQC9pbnRlZ3JhdGlvbnMvc3VwYWJhc2UvY2xpZW50XCI7XHJcbmltcG9ydCB7IHVzZUF1dGggfSBmcm9tIFwiQC9jb250ZXh0cy9BdXRoQ29udGV4dFwiO1xyXG5pbXBvcnQgeyBwbGF5T3V0Z29pbmdSaW5nYmFjayB9IGZyb20gXCJAL2xpYi9jYWxsQXVkaW9cIjtcclxuaW1wb3J0IENhbGxRdWFsaXR5QmFkZ2UgZnJvbSBcIi4vQ2FsbFF1YWxpdHlCYWRnZVwiO1xyXG5pbXBvcnQgQ2FsbFJlYWN0aW9ucyBmcm9tIFwiLi9DYWxsUmVhY3Rpb25zXCI7XHJcbmltcG9ydCBBdWRpb1Zpc3VhbGl6ZXIgZnJvbSBcIi4vQXVkaW9WaXN1YWxpemVyXCI7XHJcbmltcG9ydCB7IHRvYXN0IH0gZnJvbSBcInNvbm5lclwiO1xyXG5pbXBvcnQgeyB1c2VOYXZpZ2F0ZSB9IGZyb20gXCJyZWFjdC1yb3V0ZXItZG9tXCI7XHJcblxyXG50eXBlIENhbGxTaWduYWxTdGF0dXMgPSBcInJpbmdpbmdcIiB8IFwiYW5zd2VyZWRcIiB8IFwiZGVjbGluZWRcIiB8IFwibWlzc2VkXCIgfCBcImVuZGVkXCI7XHJcblxyXG50eXBlIENhbGxlclByb2ZpbGVSb3cgPSB7XHJcbiAgZnVsbF9uYW1lOiBzdHJpbmcgfCBudWxsO1xyXG4gIGF2YXRhcl91cmw6IHN0cmluZyB8IG51bGw7XHJcbn07XHJcblxyXG50eXBlIENhbGxTaWduYWxSb3cgPSB7XHJcbiAgaWQ6IHN0cmluZztcclxuICBjYWxsZXJfaWQ6IHN0cmluZztcclxuICBjYWxsZWVfaWQ6IHN0cmluZztcclxuICBzdGF0dXM6IENhbGxTaWduYWxTdGF0dXM7XHJcbiAgY3JlYXRlZF9hdDogc3RyaW5nO1xyXG4gIHN0YXJ0ZWRfYXQ6IHN0cmluZyB8IG51bGw7XHJcbn07XHJcblxyXG50eXBlIENhbGxTaWduYWxTdGF0dXNSb3cgPSB7XHJcbiAgc3RhdHVzOiBDYWxsU2lnbmFsU3RhdHVzO1xyXG59O1xyXG5cclxudHlwZSBDYWxsU2lnbmFsSWRSb3cgPSB7XHJcbiAgaWQ6IHN0cmluZztcclxufTtcclxuXHJcbnR5cGUgQ2FsbEhpc3RvcnlTaWduYWxSb3cgPSB7XHJcbiAgY2FsbF9zaWduYWxfaWQ6IHN0cmluZyB8IG51bGw7XHJcbn07XHJcblxyXG50eXBlIENhbGxIaXN0b3J5SWRSb3cgPSB7XHJcbiAgaWQ6IHN0cmluZztcclxufTtcclxuXHJcbnR5cGUgQ2FsbFNpZ25hbFJlYWx0aW1lUGF5bG9hZCA9IHtcclxuICBuZXc6IHtcclxuICAgIHN0YXR1czogQ2FsbFNpZ25hbFN0YXR1cztcclxuICB9O1xyXG59O1xyXG5cclxuY29uc3QgZGJGcm9tID0gKHRhYmxlOiBzdHJpbmcpOiBhbnkgPT4gKHN1cGFiYXNlIGFzIGFueSkuZnJvbSh0YWJsZSk7XHJcblxyXG5pbnRlcmZhY2UgQ2FsbFNjcmVlblByb3BzIHtcclxuICByZWNpcGllbnROYW1lOiBzdHJpbmc7XHJcbiAgcmVjaXBpZW50QXZhdGFyPzogc3RyaW5nIHwgbnVsbDtcclxuICBjYWxsVHlwZTogXCJ2b2ljZVwiIHwgXCJ2aWRlb1wiO1xyXG4gIHJlY2lwaWVudElkOiBzdHJpbmc7XHJcbiAgZXhpc3RpbmdDYWxsSWQ/OiBzdHJpbmc7XHJcbiAgb25FbmQ6ICgpID0+IHZvaWQ7XHJcbiAgb25NaW5pbWl6ZT86IChkYXRhOiB7IHJlbW90ZVN0cmVhbTogTWVkaWFTdHJlYW0gfCBudWxsOyBkdXJhdGlvbjogbnVtYmVyOyBpc011dGVkOiBib29sZWFuOyBjYWxsVHlwZTogXCJ2b2ljZVwiIHwgXCJ2aWRlb1wiOyBpc0NhbWVyYU9mZjogYm9vbGVhbiB9KSA9PiB2b2lkO1xyXG4gIG1pbmltaXplZD86IGJvb2xlYW47XHJcbiAgb25QaXBTdGF0ZUNoYW5nZT86IChkYXRhOiB7IHJlbW90ZVN0cmVhbTogTWVkaWFTdHJlYW0gfCBudWxsOyBkdXJhdGlvbjogbnVtYmVyOyBpc011dGVkOiBib29sZWFuOyBjYWxsVHlwZTogXCJ2b2ljZVwiIHwgXCJ2aWRlb1wiOyBpc0NhbWVyYU9mZjogYm9vbGVhbiB9KSA9PiB2b2lkO1xyXG4gIG9uUGlwQ29udHJvbHNDaGFuZ2U/OiAoY29udHJvbHM6IHsgdG9nZ2xlTXV0ZTogKCkgPT4gdm9pZDsgZW5kQ2FsbDogKCkgPT4gdm9pZDsgdG9nZ2xlQ2FtZXJhOiAoKSA9PiB2b2lkIH0gfCBudWxsKSA9PiB2b2lkO1xyXG59XHJcblxyXG5leHBvcnQgZGVmYXVsdCBmdW5jdGlvbiBDYWxsU2NyZWVuKHtcclxuICByZWNpcGllbnROYW1lLFxyXG4gIHJlY2lwaWVudEF2YXRhcixcclxuICBjYWxsVHlwZSxcclxuICByZWNpcGllbnRJZCxcclxuICBleGlzdGluZ0NhbGxJZCxcclxuICBvbkVuZCxcclxuICBvbk1pbmltaXplLFxyXG4gIG1pbmltaXplZCA9IGZhbHNlLFxyXG4gIG9uUGlwU3RhdGVDaGFuZ2UsXHJcbiAgb25QaXBDb250cm9sc0NoYW5nZSxcclxufTogQ2FsbFNjcmVlblByb3BzKSB7XHJcbiAgY29uc3QgeyB1c2VyIH0gPSB1c2VBdXRoKCk7XHJcbiAgY29uc3QgbmF2aWdhdGUgPSB1c2VOYXZpZ2F0ZSgpO1xyXG4gIGNvbnN0IFtjYWxsSWQsIHNldENhbGxJZF0gPSB1c2VTdGF0ZTxzdHJpbmcgfCBudWxsPihleGlzdGluZ0NhbGxJZCB8fCBudWxsKTtcclxuICBjb25zdCBbY2FsbEhpc3RvcnlJZCwgc2V0Q2FsbEhpc3RvcnlJZF0gPSB1c2VTdGF0ZTxzdHJpbmcgfCBudWxsPihudWxsKTtcclxuICBjb25zdCBbZHVyYXRpb24sIHNldER1cmF0aW9uXSA9IHVzZVN0YXRlKDApO1xyXG4gIGNvbnN0IFtyZW1vdGVBY2NlcHRlZCwgc2V0UmVtb3RlQWNjZXB0ZWRdID0gdXNlU3RhdGUoZmFsc2UpO1xyXG4gIGNvbnN0IFtpc1NwZWFrZXIsIHNldElzU3BlYWtlcl0gPSB1c2VTdGF0ZShmYWxzZSk7XHJcbiAgY29uc3QgdGltZXJSZWYgPSB1c2VSZWY8UmV0dXJuVHlwZTx0eXBlb2Ygc2V0SW50ZXJ2YWw+PigpO1xyXG4gIGNvbnN0IGVuZFJlYXNvblJlZiA9IHVzZVJlZjxcImRlY2xpbmVkXCIgfCBcIm5vX2Fuc3dlclwiIHwgbnVsbD4obnVsbCk7XHJcbiAgY29uc3QgcmVtb3RlVmlkZW9SZWYgPSB1c2VSZWY8SFRNTFZpZGVvRWxlbWVudD4obnVsbCk7XHJcbiAgY29uc3QgbG9jYWxWaWRlb1JlZiA9IHVzZVJlZjxIVE1MVmlkZW9FbGVtZW50PihudWxsKTtcclxuICBjb25zdCByZW1vdGVBdWRpb1JlZiA9IHVzZVJlZjxIVE1MQXVkaW9FbGVtZW50PihudWxsKTtcclxuICBjb25zdCByZW1vdGVTdHJlYW1SZWYgPSB1c2VSZWY8TWVkaWFTdHJlYW0gfCBudWxsPihudWxsKTtcclxuICBjb25zdCByZW1pbmRlclB1c2hTZW50UmVmID0gdXNlUmVmKGZhbHNlKTtcclxuICBjb25zdCBjcmVhdGVDYWxsRmlyZWRSZWYgPSB1c2VSZWYoZmFsc2UpO1xyXG4gIGNvbnN0IHBpcENvbnRyb2xzQ2hhbmdlUmVmID0gdXNlUmVmKG9uUGlwQ29udHJvbHNDaGFuZ2UpO1xyXG4gIGNvbnN0IHBpcFN0YXRlQ2hhbmdlUmVmID0gdXNlUmVmKG9uUGlwU3RhdGVDaGFuZ2UpO1xyXG4gIGNvbnN0IHBpcEFjdGlvbkZuc1JlZiA9IHVzZVJlZih7XHJcbiAgICB0b2dnbGVNdXRlOiAoKSA9PiB7fSxcclxuICAgIGVuZENhbGw6IGFzeW5jICgpID0+IHt9LFxyXG4gICAgdG9nZ2xlQ2FtZXJhOiAoKSA9PiB7fSxcclxuICB9KTtcclxuXHJcbiAgY29uc3QgaGFuZGxlQ2FsbEZhaWx1cmUgPSB1c2VDYWxsYmFjaygoZmFpbHVyZTogV2ViUlRDRmFpbHVyZSkgPT4ge1xyXG4gICAgdG9hc3QuZXJyb3IoZmFpbHVyZS50aXRsZSwge1xyXG4gICAgICBkZXNjcmlwdGlvbjogZmFpbHVyZS5kZXNjcmlwdGlvbixcclxuICAgIH0pO1xyXG4gIH0sIFtdKTtcclxuXHJcbiAgY29uc3Qgcm9sZTogQ2FsbFJvbGUgPSBleGlzdGluZ0NhbGxJZCA/IFwiY2FsbGVlXCIgOiBcImNhbGxlclwiO1xyXG4gIGNvbnN0IGluaXRpYWxzID0gKHJlY2lwaWVudE5hbWUgfHwgXCJVXCIpLnNwbGl0KFwiIFwiKS5tYXAoKG4pID0+IG5bMF0pLmpvaW4oXCJcIikudG9VcHBlckNhc2UoKS5zbGljZSgwLCAyKTtcclxuXHJcbiAgY29uc3Qgc2VuZEluY29taW5nQ2FsbFB1c2ggPSB1c2VDYWxsYmFjayhhc3luYyAobmV3Q2FsbElkOiBzdHJpbmcsIG1vZGU6IFwiaW5pdGlhbFwiIHwgXCJyZW1pbmRlclwiID0gXCJpbml0aWFsXCIpID0+IHtcclxuICAgIGlmICghdXNlcj8uaWQgfHwgIXJlY2lwaWVudElkIHx8IHJlY2lwaWVudElkID09PSB1c2VyLmlkKSByZXR1cm47XHJcblxyXG4gICAgLy8gRmV0Y2ggY2FsbGVyIHByb2ZpbGUgZnJvbSBwcm9maWxlcyB0YWJsZSBmb3IgYWNjdXJhdGUgbmFtZSAmIGF2YXRhclxyXG4gICAgbGV0IGNhbGxlck5hbWUgPSB1c2VyLnVzZXJfbWV0YWRhdGE/LmZ1bGxfbmFtZSB8fCB1c2VyLnVzZXJfbWV0YWRhdGE/Lm5hbWUgfHwgdXNlci5lbWFpbD8uc3BsaXQoXCJAXCIpWzBdIHx8IFwiSW5jb21pbmcgY2FsbFwiO1xyXG4gICAgbGV0IGNhbGxlckF2YXRhciA9IFwiXCI7XHJcblxyXG4gICAgdHJ5IHtcclxuICAgICAgY29uc3QgeyBkYXRhIH0gPSBhd2FpdCBkYkZyb20oXCJwcm9maWxlc1wiKVxyXG4gICAgICAgIC5zZWxlY3QoXCJmdWxsX25hbWUsIGF2YXRhcl91cmxcIilcclxuICAgICAgICAuZXEoXCJpZFwiLCB1c2VyLmlkKVxyXG4gICAgICAgIC5tYXliZVNpbmdsZSgpO1xyXG4gICAgICBjb25zdCBwcm9maWxlID0gZGF0YSBhcyBDYWxsZXJQcm9maWxlUm93IHwgbnVsbDtcclxuXHJcbiAgICAgIGlmIChwcm9maWxlPy5mdWxsX25hbWUpIGNhbGxlck5hbWUgPSBwcm9maWxlLmZ1bGxfbmFtZTtcclxuICAgICAgaWYgKHByb2ZpbGU/LmF2YXRhcl91cmwpIGNhbGxlckF2YXRhciA9IHByb2ZpbGUuYXZhdGFyX3VybDtcclxuICAgIH0gY2F0Y2gge1xyXG4gICAgICAvLyBmYWxsYmFjayB0byB1c2VyX21ldGFkYXRhIHZhbHVlcyBhYm92ZVxyXG4gICAgfVxyXG5cclxuICAgIGNvbnN0IHNlbmRQdXNoQXR0ZW1wdCA9IGFzeW5jIChhdHRlbXB0OiBudW1iZXIpID0+IHtcclxuICAgICAgdHJ5IHtcclxuICAgICAgICBjb25zdCB7IGVycm9yIH0gPSBhd2FpdCBzdXBhYmFzZS5mdW5jdGlvbnMuaW52b2tlKFwic2VuZC1wdXNoLW5vdGlmaWNhdGlvblwiLCB7XHJcbiAgICAgICAgICBib2R5OiB7XHJcbiAgICAgICAgICAgIHVzZXJfaWQ6IHJlY2lwaWVudElkLFxyXG4gICAgICAgICAgICBub3RpZmljYXRpb25fdHlwZTogXCJpbmNvbWluZ19jYWxsXCIsXHJcbiAgICAgICAgICAgIHRpdGxlOiBjYWxsZXJOYW1lLFxyXG4gICAgICAgICAgICBib2R5OiBtb2RlID09PSBcInJlbWluZGVyXCJcclxuICAgICAgICAgICAgICA/IGNhbGxUeXBlID09PSBcInZpZGVvXCIgPyBcIlN0aWxsIHZpZGVvIGNhbGxpbmcgeW91XCIgOiBcIlN0aWxsIHZvaWNlIGNhbGxpbmcgeW91XCJcclxuICAgICAgICAgICAgICA6IGNhbGxUeXBlID09PSBcInZpZGVvXCIgPyBcIlZpZGVvIGNhbGxpbmcgeW91XCIgOiBcIlZvaWNlIGNhbGxpbmcgeW91XCIsXHJcbiAgICAgICAgICAgIGltYWdlX3VybDogY2FsbGVyQXZhdGFyIHx8IHVuZGVmaW5lZCxcclxuICAgICAgICAgICAgZGF0YToge1xyXG4gICAgICAgICAgICAgIHR5cGU6IFwiaW5jb21pbmdfY2FsbFwiLFxyXG4gICAgICAgICAgICAgIGNhbGxfaWQ6IG5ld0NhbGxJZCxcclxuICAgICAgICAgICAgICBjYWxsX3R5cGU6IGNhbGxUeXBlLFxyXG4gICAgICAgICAgICAgIGNhbGxlcl9pZDogdXNlci5pZCxcclxuICAgICAgICAgICAgICBjYWxsZXJfbmFtZTogY2FsbGVyTmFtZSxcclxuICAgICAgICAgICAgICBjYWxsZXJfYXZhdGFyOiBjYWxsZXJBdmF0YXIsXHJcbiAgICAgICAgICAgICAgcmluZ19zdGFnZTogbW9kZSxcclxuICAgICAgICAgICAgfSxcclxuICAgICAgICAgIH0sXHJcbiAgICAgICAgfSk7XHJcblxyXG4gICAgICAgIGlmIChlcnJvcikgdGhyb3cgZXJyb3I7XHJcbiAgICAgIH0gY2F0Y2ggKHB1c2hFcnJvcikge1xyXG4gICAgICAgIGlmIChhdHRlbXB0IDwgMikge1xyXG4gICAgICAgICAgYXdhaXQgbmV3IFByb21pc2UoKHJlc29sdmUpID0+IHdpbmRvdy5zZXRUaW1lb3V0KHJlc29sdmUsIDYwMCAqIChhdHRlbXB0ICsgMSkpKTtcclxuICAgICAgICAgIGF3YWl0IHNlbmRQdXNoQXR0ZW1wdChhdHRlbXB0ICsgMSk7XHJcbiAgICAgICAgICByZXR1cm47XHJcbiAgICAgICAgfVxyXG4gICAgICAgIGNvbnNvbGUuZXJyb3IoXCJbQ2FsbF0gRmFpbGVkIHRvIHNlbmQgaW5jb21pbmcgY2FsbCBwdXNoOlwiLCBwdXNoRXJyb3IpO1xyXG4gICAgICB9XHJcbiAgICB9O1xyXG5cclxuICAgIGF3YWl0IHNlbmRQdXNoQXR0ZW1wdCgwKTtcclxuICB9LCBbY2FsbFR5cGUsIHJlY2lwaWVudElkLCB1c2VyPy5lbWFpbCwgdXNlcj8uaWQsIHVzZXI/LnVzZXJfbWV0YWRhdGFdKTtcclxuXHJcbiAgY29uc3QgaGFuZGxlUmVtb3RlU3RyZWFtID0gdXNlQ2FsbGJhY2soKHN0cmVhbTogTWVkaWFTdHJlYW0pID0+IHtcclxuICAgIHJlbW90ZVN0cmVhbVJlZi5jdXJyZW50ID0gc3RyZWFtO1xyXG5cclxuICAgIGlmIChjYWxsVHlwZSA9PT0gXCJ2aWRlb1wiKSB7XHJcbiAgICAgIGlmIChyZW1vdGVWaWRlb1JlZi5jdXJyZW50KSB7XHJcbiAgICAgICAgcmVtb3RlVmlkZW9SZWYuY3VycmVudC5zcmNPYmplY3QgPSBzdHJlYW07XHJcbiAgICAgICAgdm9pZCByZW1vdGVWaWRlb1JlZi5jdXJyZW50LnBsYXkoKS5jYXRjaCgoKSA9PiB7fSk7XHJcbiAgICAgIH1cclxuICAgICAgcmV0dXJuO1xyXG4gICAgfVxyXG4gICAgaWYgKHJlbW90ZUF1ZGlvUmVmLmN1cnJlbnQpIHtcclxuICAgICAgcmVtb3RlQXVkaW9SZWYuY3VycmVudC5zcmNPYmplY3QgPSBzdHJlYW07XHJcbiAgICAgIHJlbW90ZUF1ZGlvUmVmLmN1cnJlbnQubXV0ZWQgPSBmYWxzZTtcclxuICAgICAgdm9pZCByZW1vdGVBdWRpb1JlZi5jdXJyZW50LnBsYXkoKS5jYXRjaCgoKSA9PiB7fSk7XHJcbiAgICB9XHJcbiAgfSwgW2NhbGxUeXBlXSk7XHJcblxyXG4gIGNvbnN0IGhhbmRsZUVuZGVkID0gdXNlQ2FsbGJhY2soKCkgPT4ge1xyXG4gICAgaWYgKHRpbWVyUmVmLmN1cnJlbnQpIGNsZWFySW50ZXJ2YWwodGltZXJSZWYuY3VycmVudCk7XHJcbiAgICBzZXRSZW1vdGVBY2NlcHRlZChmYWxzZSk7XHJcblxyXG4gICAgY29uc3QgcmVzb2x2ZWRTdGF0dXMgPVxyXG4gICAgICBlbmRSZWFzb25SZWYuY3VycmVudCA9PT0gXCJkZWNsaW5lZFwiXHJcbiAgICAgICAgPyBcImRlY2xpbmVkXCJcclxuICAgICAgICA6IGVuZFJlYXNvblJlZi5jdXJyZW50ID09PSBcIm5vX2Fuc3dlclwiXHJcbiAgICAgICAgICA/IFwibm9fYW5zd2VyXCJcclxuICAgICAgICAgIDogZHVyYXRpb24gPiAwXHJcbiAgICAgICAgICAgID8gXCJhbnN3ZXJlZFwiXHJcbiAgICAgICAgICAgIDogXCJtaXNzZWRcIjtcclxuXHJcbiAgICBpZiAodXNlcj8uaWQgJiYgY2FsbElkKSB7XHJcbiAgICAgIGRiRnJvbShcImNhbGxfaGlzdG9yeVwiKS5pbnNlcnQoe1xyXG4gICAgICAgIGNhbGxlcl9pZDogcm9sZSA9PT0gXCJjYWxsZXJcIiA/IHVzZXIuaWQgOiByZWNpcGllbnRJZCxcclxuICAgICAgICBjYWxsZWVfaWQ6IHJvbGUgPT09IFwiY2FsbGVyXCIgPyByZWNpcGllbnRJZCA6IHVzZXIuaWQsXHJcbiAgICAgICAgY2FsbF90eXBlOiBjYWxsVHlwZSxcclxuICAgICAgICBzdGF0dXM6IHJlc29sdmVkU3RhdHVzLFxyXG4gICAgICAgIGR1cmF0aW9uX3NlY29uZHM6IGR1cmF0aW9uLFxyXG4gICAgICAgIGNhbGxfc2lnbmFsX2lkOiBjYWxsSWQsXHJcbiAgICAgIH0pLnNlbGVjdChcImlkXCIpLm1heWJlU2luZ2xlKCkudGhlbigoeyBkYXRhIH0pID0+IHtcclxuICAgICAgICBjb25zdCBjYWxsSGlzdG9yeSA9IGRhdGEgYXMgQ2FsbEhpc3RvcnlJZFJvdyB8IG51bGw7XHJcbiAgICAgICAgaWYgKGNhbGxIaXN0b3J5Py5pZCkgc2V0Q2FsbEhpc3RvcnlJZChjYWxsSGlzdG9yeS5pZCk7XHJcbiAgICAgIH0pO1xyXG4gICAgfVxyXG5cclxuICAgIGlmIChyb2xlID09PSBcImNhbGxlclwiICYmIHVzZXI/LmlkICYmIChyZXNvbHZlZFN0YXR1cyA9PT0gXCJub19hbnN3ZXJcIiB8fCByZXNvbHZlZFN0YXR1cyA9PT0gXCJkZWNsaW5lZFwiKSkge1xyXG4gICAgICBjb25zdCBjYWxsTGFiZWwgPSBjYWxsVHlwZSA9PT0gXCJ2aWRlb1wiID8gXCJ2aWRlb1wiIDogXCJ2b2ljZVwiO1xyXG4gICAgICBjb25zdCBtZXNzYWdlID0gcmVzb2x2ZWRTdGF0dXMgPT09IFwiZGVjbGluZWRcIlxyXG4gICAgICAgID8gYE1pc3NlZCAke2NhbGxMYWJlbH0gY2FsbCAoZGVjbGluZWQpYFxyXG4gICAgICAgIDogYE1pc3NlZCAke2NhbGxMYWJlbH0gY2FsbCAobm8gYW5zd2VyKWA7XHJcblxyXG4gICAgICB2b2lkIGRiRnJvbShcImRpcmVjdF9tZXNzYWdlc1wiKS5pbnNlcnQoe1xyXG4gICAgICAgIHNlbmRlcl9pZDogdXNlci5pZCxcclxuICAgICAgICByZWNlaXZlcl9pZDogcmVjaXBpZW50SWQsXHJcbiAgICAgICAgbWVzc2FnZSxcclxuICAgICAgICBtZXNzYWdlX3R5cGU6IFwidGV4dFwiLFxyXG4gICAgICB9KTtcclxuICAgIH1cclxuXHJcbiAgICBlbmRSZWFzb25SZWYuY3VycmVudCA9IG51bGw7XHJcblxyXG4gICAgc2V0VGltZW91dChvbkVuZCwgMzAwKTtcclxuICB9LCBbb25FbmQsIHVzZXI/LmlkLCBjYWxsSWQsIHJvbGUsIHJlY2lwaWVudElkLCBjYWxsVHlwZSwgZHVyYXRpb25dKTtcclxuXHJcbiAgY29uc3Qge1xyXG4gICAgc3RhcnQsIGVuZENhbGwsIHRvZ2dsZU11dGUsIHRvZ2dsZUNhbWVyYSxcclxuICAgIGlzTXV0ZWQsIGlzQ2FtZXJhT2ZmLCBpc1JlY29ubmVjdGluZywgY2FsbFN0YXRlLCBsb2NhbFN0cmVhbSwgcGVlckNvbm5lY3Rpb24sXHJcbiAgfSA9IHVzZVdlYlJUQyh7XHJcbiAgICBjYWxsSWQ6IGNhbGxJZCB8fCBcIlwiLFxyXG4gICAgcm9sZSxcclxuICAgIGNhbGxUeXBlLFxyXG4gICAgdXNlcklkOiB1c2VyPy5pZCB8fCBcIlwiLFxyXG4gICAgb25SZW1vdGVTdHJlYW06IGhhbmRsZVJlbW90ZVN0cmVhbSxcclxuICAgIG9uRW5kZWQ6IGhhbmRsZUVuZGVkLFxyXG4gICAgb25GYWlsdXJlOiBoYW5kbGVDYWxsRmFpbHVyZSxcclxuICB9KTtcclxuXHJcbiAgY29uc3QgcXVhbGl0eVN0YXRzID0gdXNlQ2FsbFF1YWxpdHkocGVlckNvbm5lY3Rpb24pO1xyXG4gIGNvbnN0IHNjcmVlblNoYXJlID0gdXNlU2NyZWVuU2hhcmUocGVlckNvbm5lY3Rpb24pO1xyXG5cclxuICB1c2VFZmZlY3QoKCkgPT4ge1xyXG4gICAgcGlwQ29udHJvbHNDaGFuZ2VSZWYuY3VycmVudCA9IG9uUGlwQ29udHJvbHNDaGFuZ2U7XHJcbiAgfSwgW29uUGlwQ29udHJvbHNDaGFuZ2VdKTtcclxuXHJcbiAgdXNlRWZmZWN0KCgpID0+IHtcclxuICAgIHBpcFN0YXRlQ2hhbmdlUmVmLmN1cnJlbnQgPSBvblBpcFN0YXRlQ2hhbmdlO1xyXG4gIH0sIFtvblBpcFN0YXRlQ2hhbmdlXSk7XHJcblxyXG4gIHVzZUVmZmVjdCgoKSA9PiB7XHJcbiAgICBwaXBBY3Rpb25GbnNSZWYuY3VycmVudCA9IHtcclxuICAgICAgdG9nZ2xlTXV0ZSxcclxuICAgICAgZW5kQ2FsbCxcclxuICAgICAgdG9nZ2xlQ2FtZXJhLFxyXG4gICAgfTtcclxuICB9LCBbZW5kQ2FsbCwgdG9nZ2xlQ2FtZXJhLCB0b2dnbGVNdXRlXSk7XHJcblxyXG4gIHVzZUVmZmVjdCgoKSA9PiB7XHJcbiAgICBpZiAoIXBpcENvbnRyb2xzQ2hhbmdlUmVmLmN1cnJlbnQpIHJldHVybjtcclxuICAgIHBpcENvbnRyb2xzQ2hhbmdlUmVmLmN1cnJlbnQoe1xyXG4gICAgICB0b2dnbGVNdXRlOiAoKSA9PiB7XHJcbiAgICAgICAgcGlwQWN0aW9uRm5zUmVmLmN1cnJlbnQudG9nZ2xlTXV0ZSgpO1xyXG4gICAgICB9LFxyXG4gICAgICBlbmRDYWxsOiAoKSA9PiB7XHJcbiAgICAgICAgdm9pZCBwaXBBY3Rpb25GbnNSZWYuY3VycmVudC5lbmRDYWxsKCk7XHJcbiAgICAgIH0sXHJcbiAgICAgIHRvZ2dsZUNhbWVyYTogKCkgPT4ge1xyXG4gICAgICAgIHBpcEFjdGlvbkZuc1JlZi5jdXJyZW50LnRvZ2dsZUNhbWVyYSgpO1xyXG4gICAgICB9LFxyXG4gICAgfSk7XHJcblxyXG4gICAgcmV0dXJuICgpID0+IHtcclxuICAgICAgcGlwQ29udHJvbHNDaGFuZ2VSZWYuY3VycmVudD8uKG51bGwpO1xyXG4gICAgfTtcclxuICB9LCBbXSk7XHJcblxyXG4gIHVzZUVmZmVjdCgoKSA9PiB7XHJcbiAgICBpZiAoZXhpc3RpbmdDYWxsSWQgfHwgIXVzZXI/LmlkIHx8IGNhbGxJZCB8fCBjcmVhdGVDYWxsRmlyZWRSZWYuY3VycmVudCkgcmV0dXJuO1xyXG4gICAgY3JlYXRlQ2FsbEZpcmVkUmVmLmN1cnJlbnQgPSB0cnVlO1xyXG4gICAgY29uc3QgY3JlYXRlID0gYXN5bmMgKCkgPT4ge1xyXG4gICAgICAvLyBQcmVmbGlnaHQgbG9jYWwgbWVkaWEgZmlyc3QuIElmIGNhbGxlciBjYW5ub3QgYWNjZXNzIHJlcXVpcmVkIGRldmljZXMsXHJcbiAgICAgIC8vIGRvIG5vdCBjcmVhdGUgYSByaW5naW5nIHNpZ25hbCBvbiB0aGUgcmVtb3RlIHNpZGUuXHJcbiAgICAgIHRyeSB7XHJcbiAgICAgICAgY29uc3QgcHJlZmxpZ2h0U3RyZWFtID0gYXdhaXQgbmF2aWdhdG9yLm1lZGlhRGV2aWNlcy5nZXRVc2VyTWVkaWEoe1xyXG4gICAgICAgICAgYXVkaW86IHRydWUsXHJcbiAgICAgICAgICB2aWRlbzogY2FsbFR5cGUgPT09IFwidmlkZW9cIixcclxuICAgICAgICB9KTtcclxuICAgICAgICBwcmVmbGlnaHRTdHJlYW0uZ2V0VHJhY2tzKCkuZm9yRWFjaCgodHJhY2spID0+IHRyYWNrLnN0b3AoKSk7XHJcbiAgICAgIH0gY2F0Y2ggKG1lZGlhRXJyKSB7XHJcbiAgICAgICAgaGFuZGxlQ2FsbEZhaWx1cmUoY2xhc3NpZnlXZWJSVENGYWlsdXJlKG1lZGlhRXJyLCBjYWxsVHlwZSkpO1xyXG4gICAgICAgIG9uRW5kKCk7XHJcbiAgICAgICAgcmV0dXJuO1xyXG4gICAgICB9XHJcblxyXG4gICAgICBjb25zdCBub3dJc28gPSBuZXcgRGF0ZSgpLnRvSVNPU3RyaW5nKCk7XHJcbiAgICAgIGNvbnN0IHN0YWxlUGFpcldpbmRvdyA9IG5ldyBEYXRlKERhdGUubm93KCkgLSAxMCAqIDYwICogMTAwMCkudG9JU09TdHJpbmcoKTtcclxuXHJcbiAgICAgIC8vIEFsd2F5cyBjcmVhdGUgYSBmcmVzaCBvdXRnb2luZyBjYWxsIElELiBCZWZvcmUgZG9pbmcgc28sIGNsb3NlIGFueVxyXG4gICAgICAvLyBzdGFsZSBvcGVuIHJvd3MgZm9yIHRoaXMgc2FtZSBjYWxsZXIvY2FsbGVlIHBhaXIuXHJcbiAgICAgIGNvbnN0IHsgZGF0YTogb3BlblBhaXJDYWxsc1JhdyB9ID0gYXdhaXQgZGJGcm9tKFwiY2FsbF9zaWduYWxzXCIpXHJcbiAgICAgICAgLnNlbGVjdChcImlkLCBzdGF0dXNcIilcclxuICAgICAgICAuZXEoXCJjYWxsZXJfaWRcIiwgdXNlci5pZClcclxuICAgICAgICAuZXEoXCJjYWxsZWVfaWRcIiwgcmVjaXBpZW50SWQpXHJcbiAgICAgICAgLmluKFwic3RhdHVzXCIsIFtcInJpbmdpbmdcIiwgXCJhbnN3ZXJlZFwiXSlcclxuICAgICAgICAuaXMoXCJlbmRlZF9hdFwiLCBudWxsKVxyXG4gICAgICAgIC5ndGUoXCJjcmVhdGVkX2F0XCIsIHN0YWxlUGFpcldpbmRvdylcclxuICAgICAgICAub3JkZXIoXCJjcmVhdGVkX2F0XCIsIHsgYXNjZW5kaW5nOiBmYWxzZSB9KVxyXG4gICAgICAgIC5saW1pdCgxMCk7XHJcbiAgICAgIGNvbnN0IG9wZW5QYWlyQ2FsbHMgPSAob3BlblBhaXJDYWxsc1JhdyB8fCBbXSkgYXMgUGljazxDYWxsU2lnbmFsUm93LCBcImlkXCIgfCBcInN0YXR1c1wiPltdO1xyXG5cclxuICAgICAgY29uc3Qgc3RhbGVSaW5naW5nUGFpcklkcyA9IChvcGVuUGFpckNhbGxzIHx8IFtdKVxyXG4gICAgICAgIC5maWx0ZXIoKHJvdykgPT4gcm93LnN0YXR1cyA9PT0gXCJyaW5naW5nXCIpXHJcbiAgICAgICAgLm1hcCgocm93KSA9PiByb3cuaWQpO1xyXG5cclxuICAgICAgY29uc3Qgc3RhbGVBbnN3ZXJlZFBhaXJJZHMgPSAob3BlblBhaXJDYWxscyB8fCBbXSlcclxuICAgICAgICAuZmlsdGVyKChyb3cpID0+IHJvdy5zdGF0dXMgPT09IFwiYW5zd2VyZWRcIilcclxuICAgICAgICAubWFwKChyb3cpID0+IHJvdy5pZCk7XHJcblxyXG4gICAgICBpZiAoc3RhbGVSaW5naW5nUGFpcklkcy5sZW5ndGgpIHtcclxuICAgICAgICBhd2FpdCBkYkZyb20oXCJjYWxsX3NpZ25hbHNcIilcclxuICAgICAgICAgIC51cGRhdGUoeyBzdGF0dXM6IFwibWlzc2VkXCIsIGVuZGVkX2F0OiBub3dJc28gfSlcclxuICAgICAgICAgIC5pbihcImlkXCIsIHN0YWxlUmluZ2luZ1BhaXJJZHMpXHJcbiAgICAgICAgICAuZXEoXCJzdGF0dXNcIiwgXCJyaW5naW5nXCIpO1xyXG4gICAgICB9XHJcblxyXG4gICAgICBpZiAoc3RhbGVBbnN3ZXJlZFBhaXJJZHMubGVuZ3RoKSB7XHJcbiAgICAgICAgYXdhaXQgZGJGcm9tKFwiY2FsbF9zaWduYWxzXCIpXHJcbiAgICAgICAgICAudXBkYXRlKHsgc3RhdHVzOiBcImVuZGVkXCIsIGVuZGVkX2F0OiBub3dJc28gfSlcclxuICAgICAgICAgIC5pbihcImlkXCIsIHN0YWxlQW5zd2VyZWRQYWlySWRzKVxyXG4gICAgICAgICAgLmVxKFwic3RhdHVzXCIsIFwiYW5zd2VyZWRcIik7XHJcbiAgICAgIH1cclxuXHJcbiAgICAgIGNvbnN0IG5vd01zID0gRGF0ZS5ub3coKTtcclxuICAgICAgY29uc3QgbWluQ3JlYXRlZEF0ID0gbmV3IERhdGUobm93TXMgLSAxMiAqIDYwICogNjAgKiAxMDAwKS50b0lTT1N0cmluZygpO1xyXG4gICAgICBjb25zdCByaW5naW5nU3RhbGVNcyA9IDkwICogMTAwMDtcclxuICAgICAgY29uc3QgYW5zd2VyZWRXaXRob3V0U3RhcnRTdGFsZU1zID0gOTAgKiAxMDAwO1xyXG4gICAgICBjb25zdCBhbnN3ZXJlZFN0YWxlTXMgPSAzICogNjAgKiA2MCAqIDEwMDA7XHJcblxyXG4gICAgICBjb25zdCB7IGRhdGE6IHBvc3NpYmxlQWN0aXZlQ2FsbHNSYXcgfSA9IGF3YWl0IGRiRnJvbShcImNhbGxfc2lnbmFsc1wiKVxyXG4gICAgICAgIC5zZWxlY3QoXCJpZCwgY2FsbGVyX2lkLCBjYWxsZWVfaWQsIHN0YXR1cywgY3JlYXRlZF9hdCwgc3RhcnRlZF9hdFwiKVxyXG4gICAgICAgIC5vcihgY2FsbGVyX2lkLmVxLiR7cmVjaXBpZW50SWR9LGNhbGxlZV9pZC5lcS4ke3JlY2lwaWVudElkfWApXHJcbiAgICAgICAgLmluKFwic3RhdHVzXCIsIFtcInJpbmdpbmdcIiwgXCJhbnN3ZXJlZFwiXSlcclxuICAgICAgICAuaXMoXCJlbmRlZF9hdFwiLCBudWxsKVxyXG4gICAgICAgIC5ndGUoXCJjcmVhdGVkX2F0XCIsIG1pbkNyZWF0ZWRBdClcclxuICAgICAgICAub3JkZXIoXCJjcmVhdGVkX2F0XCIsIHsgYXNjZW5kaW5nOiBmYWxzZSB9KVxyXG4gICAgICAgIC5saW1pdCgxMCk7XHJcbiAgICAgIGNvbnN0IHBvc3NpYmxlQWN0aXZlQ2FsbHMgPSAocG9zc2libGVBY3RpdmVDYWxsc1JhdyB8fCBbXSkgYXMgQ2FsbFNpZ25hbFJvd1tdO1xyXG5cclxuICAgICAgY29uc3QgY2FuZGlkYXRlSWRzID0gcG9zc2libGVBY3RpdmVDYWxscy5tYXAoKHJvdykgPT4gcm93LmlkKS5maWx0ZXIoQm9vbGVhbik7XHJcbiAgICAgIGNvbnN0IGhpc3RvcmljYWxTaWduYWxJZHMgPSBuZXcgU2V0PHN0cmluZz4oKTtcclxuXHJcbiAgICAgIGlmIChjYW5kaWRhdGVJZHMubGVuZ3RoKSB7XHJcbiAgICAgICAgY29uc3QgeyBkYXRhOiBleGlzdGluZ0hpc3RvcnlSb3dzUmF3IH0gPSBhd2FpdCBkYkZyb20oXCJjYWxsX2hpc3RvcnlcIilcclxuICAgICAgICAgIC5zZWxlY3QoXCJjYWxsX3NpZ25hbF9pZFwiKVxyXG4gICAgICAgICAgLmluKFwiY2FsbF9zaWduYWxfaWRcIiwgY2FuZGlkYXRlSWRzKVxyXG4gICAgICAgICAgLmxpbWl0KDUwKTtcclxuICAgICAgICBjb25zdCBleGlzdGluZ0hpc3RvcnlSb3dzID0gKGV4aXN0aW5nSGlzdG9yeVJvd3NSYXcgfHwgW10pIGFzIENhbGxIaXN0b3J5U2lnbmFsUm93W107XHJcblxyXG4gICAgICAgIGZvciAoY29uc3Qgcm93IG9mIGV4aXN0aW5nSGlzdG9yeVJvd3MgfHwgW10pIHtcclxuICAgICAgICAgIGlmIChyb3c/LmNhbGxfc2lnbmFsX2lkKSB7XHJcbiAgICAgICAgICAgIGhpc3RvcmljYWxTaWduYWxJZHMuYWRkKHJvdy5jYWxsX3NpZ25hbF9pZCk7XHJcbiAgICAgICAgICB9XHJcbiAgICAgICAgfVxyXG4gICAgICB9XHJcblxyXG4gICAgICBjb25zdCBzdGFsZU1pc3NlZElkczogc3RyaW5nW10gPSBbXTtcclxuICAgICAgY29uc3Qgc3RhbGVFbmRlZElkczogc3RyaW5nW10gPSBbXTtcclxuXHJcbiAgICAgIGNvbnN0IGFjdGl2ZUZvclJlY2lwaWVudCA9IHBvc3NpYmxlQWN0aXZlQ2FsbHMuZmluZCgocm93KSA9PiB7XHJcbiAgICAgICAgY29uc3Qgb3RoZXJQYXJ0eUlkID0gcm93LmNhbGxlcl9pZCA9PT0gcmVjaXBpZW50SWQgPyByb3cuY2FsbGVlX2lkIDogcm93LmNhbGxlcl9pZDtcclxuXHJcbiAgICAgICAgLy8gSWdub3JlIHJvd3MgdGhhdCBhcmUgb25seSBiZXR3ZWVuIGN1cnJlbnQgdXNlciBhbmQgdGhpcyByZWNpcGllbnQ7XHJcbiAgICAgICAgLy8gdGhvc2UgYXJlIGhhbmRsZWQgdmlhIHN0YWxlLXBhaXIgY2xlYW51cCBhbmQgc2hvdWxkIG5vdCB0cmlnZ2VyIGJ1c3kuXHJcbiAgICAgICAgaWYgKG90aGVyUGFydHlJZCA9PT0gdXNlci5pZCkge1xyXG4gICAgICAgICAgcmV0dXJuIGZhbHNlO1xyXG4gICAgICAgIH1cclxuXHJcbiAgICAgICAgY29uc3QgY3JlYXRlZE1zID0gbmV3IERhdGUocm93LmNyZWF0ZWRfYXQpLmdldFRpbWUoKTtcclxuICAgICAgICBjb25zdCBzdGFydGVkTXMgPSByb3cuc3RhcnRlZF9hdCA/IG5ldyBEYXRlKHJvdy5zdGFydGVkX2F0KS5nZXRUaW1lKCkgOiBudWxsO1xyXG4gICAgICAgIGNvbnN0IGhhc0hpc3RvcnkgPSBoaXN0b3JpY2FsU2lnbmFsSWRzLmhhcyhyb3cuaWQpO1xyXG5cclxuICAgICAgICBjb25zdCBpc1N0YWxlUmluZ2luZyA9IHJvdy5zdGF0dXMgPT09IFwicmluZ2luZ1wiICYmIChoYXNIaXN0b3J5IHx8IG5vd01zIC0gY3JlYXRlZE1zID4gcmluZ2luZ1N0YWxlTXMpO1xyXG4gICAgICAgIGNvbnN0IGlzU3RhbGVBbnN3ZXJlZCA9IHJvdy5zdGF0dXMgPT09IFwiYW5zd2VyZWRcIiAmJiAoXHJcbiAgICAgICAgICBoYXNIaXN0b3J5XHJcbiAgICAgICAgICB8fCAoIXN0YXJ0ZWRNcyAmJiBub3dNcyAtIGNyZWF0ZWRNcyA+IGFuc3dlcmVkV2l0aG91dFN0YXJ0U3RhbGVNcylcclxuICAgICAgICAgIHx8IChzdGFydGVkTXMgPyBub3dNcyAtIHN0YXJ0ZWRNcyA+IGFuc3dlcmVkU3RhbGVNcyA6IGZhbHNlKVxyXG4gICAgICAgICk7XHJcblxyXG4gICAgICAgIGlmIChpc1N0YWxlUmluZ2luZykge1xyXG4gICAgICAgICAgc3RhbGVNaXNzZWRJZHMucHVzaChyb3cuaWQpO1xyXG4gICAgICAgICAgcmV0dXJuIGZhbHNlO1xyXG4gICAgICAgIH1cclxuXHJcbiAgICAgICAgaWYgKGlzU3RhbGVBbnN3ZXJlZCkge1xyXG4gICAgICAgICAgc3RhbGVFbmRlZElkcy5wdXNoKHJvdy5pZCk7XHJcbiAgICAgICAgICByZXR1cm4gZmFsc2U7XHJcbiAgICAgICAgfVxyXG5cclxuICAgICAgICByZXR1cm4gdHJ1ZTtcclxuICAgICAgfSk7XHJcblxyXG4gICAgICBpZiAoc3RhbGVNaXNzZWRJZHMubGVuZ3RoKSB7XHJcbiAgICAgICAgYXdhaXQgZGJGcm9tKFwiY2FsbF9zaWduYWxzXCIpXHJcbiAgICAgICAgICAudXBkYXRlKHsgc3RhdHVzOiBcIm1pc3NlZFwiLCBlbmRlZF9hdDogbmV3IERhdGUoKS50b0lTT1N0cmluZygpIH0pXHJcbiAgICAgICAgICAuaW4oXCJpZFwiLCBzdGFsZU1pc3NlZElkcylcclxuICAgICAgICAgIC5lcShcInN0YXR1c1wiLCBcInJpbmdpbmdcIik7XHJcbiAgICAgIH1cclxuXHJcbiAgICAgIGlmIChzdGFsZUVuZGVkSWRzLmxlbmd0aCkge1xyXG4gICAgICAgIGF3YWl0IGRiRnJvbShcImNhbGxfc2lnbmFsc1wiKVxyXG4gICAgICAgICAgLnVwZGF0ZSh7IHN0YXR1czogXCJlbmRlZFwiLCBlbmRlZF9hdDogbmV3IERhdGUoKS50b0lTT1N0cmluZygpIH0pXHJcbiAgICAgICAgICAuaW4oXCJpZFwiLCBzdGFsZUVuZGVkSWRzKVxyXG4gICAgICAgICAgLmVxKFwic3RhdHVzXCIsIFwiYW5zd2VyZWRcIik7XHJcbiAgICAgIH1cclxuXHJcbiAgICAgIGlmIChhY3RpdmVGb3JSZWNpcGllbnQ/LmlkKSB7XHJcbiAgICAgICAgdG9hc3QuaW5mbyhcIlVzZXIgaXMgYnVzeVwiLCB7IGRlc2NyaXB0aW9uOiBcIlRoZXkgYXJlIGN1cnJlbnRseSBpbiBhbm90aGVyIGNhbGwuXCIgfSk7XHJcbiAgICAgICAgYXdhaXQgZGJGcm9tKFwiY2FsbF9oaXN0b3J5XCIpLmluc2VydCh7XHJcbiAgICAgICAgICBjYWxsZXJfaWQ6IHVzZXIuaWQsXHJcbiAgICAgICAgICBjYWxsZWVfaWQ6IHJlY2lwaWVudElkLFxyXG4gICAgICAgICAgY2FsbF90eXBlOiBjYWxsVHlwZSxcclxuICAgICAgICAgIHN0YXR1czogXCJidXN5XCIsXHJcbiAgICAgICAgICBkdXJhdGlvbl9zZWNvbmRzOiAwLFxyXG4gICAgICAgIH0pO1xyXG5cclxuICAgICAgICBhd2FpdCBkYkZyb20oXCJkaXJlY3RfbWVzc2FnZXNcIikuaW5zZXJ0KHtcclxuICAgICAgICAgIHNlbmRlcl9pZDogdXNlci5pZCxcclxuICAgICAgICAgIHJlY2VpdmVyX2lkOiByZWNpcGllbnRJZCxcclxuICAgICAgICAgIG1lc3NhZ2U6IGAke2NhbGxUeXBlID09PSBcInZpZGVvXCIgPyBcIlZpZGVvXCIgOiBcIlZvaWNlXCJ9IGNhbGwgYXR0ZW1wdCAoYnVzeSlgLFxyXG4gICAgICAgICAgbWVzc2FnZV90eXBlOiBcInRleHRcIixcclxuICAgICAgICB9KTtcclxuXHJcbiAgICAgICAgb25FbmQoKTtcclxuICAgICAgICByZXR1cm47XHJcbiAgICAgIH1cclxuXHJcbiAgICAgIGNvbnN0IHsgZGF0YSwgZXJyb3IgfSA9IGF3YWl0IGRiRnJvbShcImNhbGxfc2lnbmFsc1wiKS5pbnNlcnQoe1xyXG4gICAgICAgIGNhbGxlcl9pZDogdXNlci5pZCxcclxuICAgICAgICBjYWxsZWVfaWQ6IHJlY2lwaWVudElkLFxyXG4gICAgICAgIGNhbGxfdHlwZTogY2FsbFR5cGUsXHJcbiAgICAgIH0pLnNlbGVjdChcImlkXCIpLnNpbmdsZSgpO1xyXG4gICAgICBjb25zdCBuZXdDYWxsID0gZGF0YSBhcyBDYWxsU2lnbmFsSWRSb3cgfCBudWxsO1xyXG5cclxuICAgICAgaWYgKGVycm9yKSB7XHJcbiAgICAgICAgY29uc29sZS5lcnJvcihcIltDYWxsXSBGYWlsZWQgdG8gY3JlYXRlIGNhbGwgc2lnbmFsOlwiLCBlcnJvcik7XHJcbiAgICAgICAgdG9hc3QuZXJyb3IoXCJGYWlsZWQgdG8gc3RhcnQgY2FsbFwiKTtcclxuICAgICAgICBvbkVuZCgpO1xyXG4gICAgICAgIHJldHVybjtcclxuICAgICAgfVxyXG5cclxuICAgICAgaWYgKG5ld0NhbGw/LmlkKSB7XHJcbiAgICAgICAgc2V0Q2FsbElkKG5ld0NhbGwuaWQpO1xyXG4gICAgICAgIHJlbWluZGVyUHVzaFNlbnRSZWYuY3VycmVudCA9IGZhbHNlO1xyXG4gICAgICAgIGF3YWl0IHNlbmRJbmNvbWluZ0NhbGxQdXNoKG5ld0NhbGwuaWQpO1xyXG4gICAgICB9XHJcbiAgICB9O1xyXG4gICAgdm9pZCBjcmVhdGUoKTtcclxuICB9LCBbdXNlcj8uaWQsIHJlY2lwaWVudElkLCBjYWxsVHlwZSwgZXhpc3RpbmdDYWxsSWQsIGNhbGxJZCwgb25FbmQsIHNlbmRJbmNvbWluZ0NhbGxQdXNoLCBoYW5kbGVDYWxsRmFpbHVyZV0pO1xyXG5cclxuICB1c2VFZmZlY3QoKCkgPT4ge1xyXG4gICAgaWYgKHJvbGUgIT09IFwiY2FsbGVyXCIgfHwgIWNhbGxJZCB8fCBjYWxsU3RhdGUgIT09IFwicmluZ2luZ1wiIHx8IHJlbW90ZUFjY2VwdGVkIHx8IHJlbWluZGVyUHVzaFNlbnRSZWYuY3VycmVudCkgcmV0dXJuO1xyXG5cclxuICAgIGNvbnN0IHJlbWluZGVyVGltZXIgPSB3aW5kb3cuc2V0VGltZW91dCgoKSA9PiB7XHJcbiAgICAgIChhc3luYyAoKSA9PiB7XHJcbiAgICAgICAgICBjb25zdCB7IGRhdGEgfSA9IGF3YWl0IGRiRnJvbShcImNhbGxfc2lnbmFsc1wiKVxyXG4gICAgICAgICAgLnNlbGVjdChcInN0YXR1c1wiKVxyXG4gICAgICAgICAgLmVxKFwiaWRcIiwgY2FsbElkKVxyXG4gICAgICAgICAgLm1heWJlU2luZ2xlKCk7XHJcbiAgICAgICAgICBjb25zdCByb3cgPSBkYXRhIGFzIENhbGxTaWduYWxTdGF0dXNSb3cgfCBudWxsO1xyXG5cclxuICAgICAgICAgIGlmIChyb3c/LnN0YXR1cyAhPT0gXCJyaW5naW5nXCIpIHJldHVybjtcclxuICAgICAgICByZW1pbmRlclB1c2hTZW50UmVmLmN1cnJlbnQgPSB0cnVlO1xyXG4gICAgICAgIGF3YWl0IHNlbmRJbmNvbWluZ0NhbGxQdXNoKGNhbGxJZCwgXCJyZW1pbmRlclwiKTtcclxuICAgICAgfSkoKTtcclxuICAgIH0sIDEyMDAwKTtcclxuXHJcbiAgICByZXR1cm4gKCkgPT4gd2luZG93LmNsZWFyVGltZW91dChyZW1pbmRlclRpbWVyKTtcclxuICB9LCBbY2FsbElkLCBjYWxsU3RhdGUsIHJlbW90ZUFjY2VwdGVkLCByb2xlLCBzZW5kSW5jb21pbmdDYWxsUHVzaF0pO1xyXG5cclxuICB1c2VFZmZlY3QoKCkgPT4ge1xyXG4gICAgaWYgKCFjYWxsSWQpIHJldHVybjtcclxuICAgIGNvbnN0IGluaXQgPSBhc3luYyAoKSA9PiB7XHJcbiAgICAgIGNvbnN0IGxvY2FsU3RyID0gYXdhaXQgc3RhcnQoY2FsbElkKTtcclxuICAgICAgaWYgKGxvY2FsU3RyICYmIGxvY2FsVmlkZW9SZWYuY3VycmVudCAmJiBjYWxsVHlwZSA9PT0gXCJ2aWRlb1wiKSB7XHJcbiAgICAgICAgbG9jYWxWaWRlb1JlZi5jdXJyZW50LnNyY09iamVjdCA9IGxvY2FsU3RyO1xyXG4gICAgICB9XHJcbiAgICB9O1xyXG4gICAgdm9pZCBpbml0KCk7XHJcbiAgfSwgW2NhbGxJZCwgY2FsbFR5cGUsIHN0YXJ0XSk7XHJcblxyXG4gIHVzZUVmZmVjdCgoKSA9PiB7XHJcbiAgICBpZiAocm9sZSAhPT0gXCJjYWxsZXJcIiB8fCBjYWxsU3RhdGUgIT09IFwicmluZ2luZ1wiIHx8IHJlbW90ZUFjY2VwdGVkIHx8ICFjYWxsSWQpIHJldHVybjtcclxuICAgIGNvbnN0IHN0b3BSaW5nYmFjayA9IHBsYXlPdXRnb2luZ1JpbmdiYWNrKCk7XHJcbiAgICByZXR1cm4gKCkgPT4geyBzdG9wUmluZ2JhY2soKTsgfTtcclxuICB9LCBbcm9sZSwgY2FsbElkLCBjYWxsU3RhdGUsIHJlbW90ZUFjY2VwdGVkXSk7XHJcblxyXG4gIHVzZUVmZmVjdCgoKSA9PiB7XHJcbiAgICBpZiAocm9sZSAhPT0gXCJjYWxsZXJcIiB8fCBjYWxsU3RhdGUgIT09IFwicmluZ2luZ1wiIHx8IHJlbW90ZUFjY2VwdGVkIHx8ICFjYWxsSWQpIHJldHVybjtcclxuXHJcbiAgICBjb25zdCB0aW1lb3V0ID0gd2luZG93LnNldFRpbWVvdXQoKCkgPT4ge1xyXG4gICAgICAoYXN5bmMgKCkgPT4ge1xyXG4gICAgICAgICAgY29uc3QgeyBkYXRhIH0gPSBhd2FpdCBkYkZyb20oXCJjYWxsX3NpZ25hbHNcIilcclxuICAgICAgICAgIC5zZWxlY3QoXCJzdGF0dXNcIilcclxuICAgICAgICAgIC5lcShcImlkXCIsIGNhbGxJZClcclxuICAgICAgICAgIC5tYXliZVNpbmdsZSgpO1xyXG4gICAgICAgICAgY29uc3QgbGl2ZUNhbGwgPSBkYXRhIGFzIENhbGxTaWduYWxTdGF0dXNSb3cgfCBudWxsO1xyXG5cclxuICAgICAgICAvLyBHdWFyZCByYWNlOiBpZiBjYWxsZWUgYWxyZWFkeSBhY2NlcHRlZCBhcm91bmQgdGltZW91dCBib3VuZGFyeSxcclxuICAgICAgICAvLyBkbyBub3QgZm9yY2UgYSBuby1hbnN3ZXIgaGFuZ3VwLlxyXG4gICAgICAgIGlmIChsaXZlQ2FsbD8uc3RhdHVzICE9PSBcInJpbmdpbmdcIikgcmV0dXJuO1xyXG5cclxuICAgICAgICAgIGNvbnN0IHsgZGF0YTogbWFya2VkTWlzc2VkUmF3IH0gPSBhd2FpdCBkYkZyb20oXCJjYWxsX3NpZ25hbHNcIilcclxuICAgICAgICAgIC51cGRhdGUoeyBzdGF0dXM6IFwibWlzc2VkXCIsIGVuZGVkX2F0OiBuZXcgRGF0ZSgpLnRvSVNPU3RyaW5nKCkgfSlcclxuICAgICAgICAgIC5lcShcImlkXCIsIGNhbGxJZClcclxuICAgICAgICAgIC5lcShcInN0YXR1c1wiLCBcInJpbmdpbmdcIilcclxuICAgICAgICAgIC5zZWxlY3QoXCJpZFwiKVxyXG4gICAgICAgICAgLm1heWJlU2luZ2xlKCk7XHJcbiAgICAgICAgICBjb25zdCBtYXJrZWRNaXNzZWQgPSBtYXJrZWRNaXNzZWRSYXcgYXMgQ2FsbFNpZ25hbElkUm93IHwgbnVsbDtcclxuXHJcbiAgICAgICAgaWYgKCFtYXJrZWRNaXNzZWQ/LmlkKSByZXR1cm47XHJcblxyXG4gICAgICAgIGVuZFJlYXNvblJlZi5jdXJyZW50ID0gXCJub19hbnN3ZXJcIjtcclxuICAgICAgICB0b2FzdC5pbmZvKFwiTm8gYW5zd2VyXCIsIHsgZGVzY3JpcHRpb246IFwiQ2FsbCBlbmRlZCBhZnRlciA0NSBzZWNvbmRzLlwiIH0pO1xyXG4gICAgICAgIGF3YWl0IGVuZENhbGwoKTtcclxuICAgICAgfSkoKTtcclxuICAgIH0sIDQ1MDAwKTtcclxuXHJcbiAgICByZXR1cm4gKCkgPT4gd2luZG93LmNsZWFyVGltZW91dCh0aW1lb3V0KTtcclxuICB9LCBbY2FsbElkLCBjYWxsU3RhdGUsIGVuZENhbGwsIHJlbW90ZUFjY2VwdGVkLCByb2xlXSk7XHJcblxyXG4gIHVzZUVmZmVjdCgoKSA9PiB7XHJcbiAgICBpZiAocm9sZSAhPT0gXCJjYWxsZXJcIiB8fCAhY2FsbElkKSByZXR1cm47XHJcbiAgICBjb25zdCBjaGFubmVsID0gc3VwYWJhc2VcclxuICAgICAgLmNoYW5uZWwoYGNhbGxlci13YXRjaC0ke2NhbGxJZH1gKVxyXG4gICAgICAub24oXCJwb3N0Z3Jlc19jaGFuZ2VzXCIsIHtcclxuICAgICAgICBldmVudDogXCJVUERBVEVcIiwgc2NoZW1hOiBcInB1YmxpY1wiLCB0YWJsZTogXCJjYWxsX3NpZ25hbHNcIixcclxuICAgICAgICBmaWx0ZXI6IGBpZD1lcS4ke2NhbGxJZH1gLFxyXG4gICAgICB9LCAocGF5bG9hZDogQ2FsbFNpZ25hbFJlYWx0aW1lUGF5bG9hZCkgPT4ge1xyXG4gICAgICAgIGlmIChwYXlsb2FkLm5ldy5zdGF0dXMgPT09IFwiYW5zd2VyZWRcIikge1xyXG4gICAgICAgICAgc2V0UmVtb3RlQWNjZXB0ZWQodHJ1ZSk7XHJcbiAgICAgICAgICByZXR1cm47XHJcbiAgICAgICAgfVxyXG4gICAgICAgIGlmIChwYXlsb2FkLm5ldy5zdGF0dXMgPT09IFwiZGVjbGluZWRcIikge1xyXG4gICAgICAgICAgZW5kUmVhc29uUmVmLmN1cnJlbnQgPSBcImRlY2xpbmVkXCI7XHJcbiAgICAgICAgICB2b2lkIGVuZENhbGwoKTtcclxuICAgICAgICAgIHJldHVybjtcclxuICAgICAgICB9XHJcbiAgICAgICAgaWYgKHBheWxvYWQubmV3LnN0YXR1cyA9PT0gXCJtaXNzZWRcIikge1xyXG4gICAgICAgICAgaWYgKHJlbW90ZUFjY2VwdGVkIHx8IGNhbGxTdGF0ZSA9PT0gXCJjb25uZWN0ZWRcIikge1xyXG4gICAgICAgICAgICByZXR1cm47XHJcbiAgICAgICAgICB9XHJcbiAgICAgICAgICBlbmRSZWFzb25SZWYuY3VycmVudCA9IFwibm9fYW5zd2VyXCI7XHJcbiAgICAgICAgICB2b2lkIGVuZENhbGwoKTtcclxuICAgICAgICAgIHJldHVybjtcclxuICAgICAgICB9XHJcbiAgICAgICAgaWYgKHBheWxvYWQubmV3LnN0YXR1cyA9PT0gXCJlbmRlZFwiKSB7XHJcbiAgICAgICAgICB2b2lkIGVuZENhbGwoKTtcclxuICAgICAgICB9XHJcbiAgICAgIH0pXHJcbiAgICAgIC5zdWJzY3JpYmUoKTtcclxuICAgIHJldHVybiAoKSA9PiB7IHN1cGFiYXNlLnJlbW92ZUNoYW5uZWwoY2hhbm5lbCk7IH07XHJcbiAgfSwgW3JvbGUsIGNhbGxJZCwgY2FsbFN0YXRlLCBlbmRDYWxsLCByZW1vdGVBY2NlcHRlZF0pO1xyXG5cclxuICB1c2VFZmZlY3QoKCkgPT4ge1xyXG4gICAgaWYgKHJvbGUgIT09IFwiY2FsbGVyXCIgfHwgIWNhbGxJZCB8fCBjYWxsU3RhdGUgPT09IFwiZW5kZWRcIikgcmV0dXJuO1xyXG5cclxuICAgIGNvbnN0IGludGVydmFsSWQgPSB3aW5kb3cuc2V0SW50ZXJ2YWwoKCkgPT4ge1xyXG4gICAgICAoYXN5bmMgKCkgPT4ge1xyXG4gICAgICAgICAgY29uc3QgeyBkYXRhIH0gPSBhd2FpdCBkYkZyb20oXCJjYWxsX3NpZ25hbHNcIilcclxuICAgICAgICAgIC5zZWxlY3QoXCJzdGF0dXNcIilcclxuICAgICAgICAgIC5lcShcImlkXCIsIGNhbGxJZClcclxuICAgICAgICAgIC5tYXliZVNpbmdsZSgpO1xyXG4gICAgICAgICAgY29uc3Qgcm93ID0gZGF0YSBhcyBDYWxsU2lnbmFsU3RhdHVzUm93IHwgbnVsbDtcclxuXHJcbiAgICAgICAgICBjb25zdCBzdGF0dXMgPSByb3c/LnN0YXR1cztcclxuICAgICAgICBpZiAoc3RhdHVzID09PSBcImFuc3dlcmVkXCIpIHtcclxuICAgICAgICAgIHNldFJlbW90ZUFjY2VwdGVkKHRydWUpO1xyXG4gICAgICAgICAgcmV0dXJuO1xyXG4gICAgICAgIH1cclxuXHJcbiAgICAgICAgaWYgKHN0YXR1cyA9PT0gXCJkZWNsaW5lZFwiKSB7XHJcbiAgICAgICAgICBlbmRSZWFzb25SZWYuY3VycmVudCA9IFwiZGVjbGluZWRcIjtcclxuICAgICAgICAgIGF3YWl0IGVuZENhbGwoKTtcclxuICAgICAgICAgIHJldHVybjtcclxuICAgICAgICB9XHJcblxyXG4gICAgICAgIGlmIChzdGF0dXMgPT09IFwibWlzc2VkXCIgJiYgIShyZW1vdGVBY2NlcHRlZCB8fCBjYWxsU3RhdGUgPT09IFwiY29ubmVjdGVkXCIpKSB7XHJcbiAgICAgICAgICBlbmRSZWFzb25SZWYuY3VycmVudCA9IFwibm9fYW5zd2VyXCI7XHJcbiAgICAgICAgICBhd2FpdCBlbmRDYWxsKCk7XHJcbiAgICAgICAgICByZXR1cm47XHJcbiAgICAgICAgfVxyXG5cclxuICAgICAgICBpZiAoc3RhdHVzID09PSBcImVuZGVkXCIpIHtcclxuICAgICAgICAgIGF3YWl0IGVuZENhbGwoKTtcclxuICAgICAgICB9XHJcbiAgICAgIH0pKCk7XHJcbiAgICB9LCAxNTAwKTtcclxuXHJcbiAgICByZXR1cm4gKCkgPT4gd2luZG93LmNsZWFySW50ZXJ2YWwoaW50ZXJ2YWxJZCk7XHJcbiAgfSwgW3JvbGUsIGNhbGxJZCwgY2FsbFN0YXRlLCBlbmRDYWxsLCByZW1vdGVBY2NlcHRlZF0pO1xyXG5cclxuICB1c2VFZmZlY3QoKCkgPT4ge1xyXG4gICAgaWYgKGNhbGxTdGF0ZSA9PT0gXCJjb25uZWN0ZWRcIikge1xyXG4gICAgICB0aW1lclJlZi5jdXJyZW50ID0gc2V0SW50ZXJ2YWwoKCkgPT4gc2V0RHVyYXRpb24oKGQpID0+IGQgKyAxKSwgMTAwMCk7XHJcbiAgICB9XHJcbiAgICByZXR1cm4gKCkgPT4geyBpZiAodGltZXJSZWYuY3VycmVudCkgY2xlYXJJbnRlcnZhbCh0aW1lclJlZi5jdXJyZW50KTsgfTtcclxuICB9LCBbY2FsbFN0YXRlXSk7XHJcblxyXG4gIGNvbnN0IGZvcm1hdER1cmF0aW9uID0gKHM6IG51bWJlcikgPT4ge1xyXG4gICAgY29uc3QgbSA9IE1hdGguZmxvb3IocyAvIDYwKTtcclxuICAgIGNvbnN0IHNlYyA9IHMgJSA2MDtcclxuICAgIHJldHVybiBgJHttLnRvU3RyaW5nKCkucGFkU3RhcnQoMiwgXCIwXCIpfToke3NlYy50b1N0cmluZygpLnBhZFN0YXJ0KDIsIFwiMFwiKX1gO1xyXG4gIH07XHJcblxyXG4gIGNvbnN0IHN0YXR1c1RleHQgPVxyXG4gICAgY2FsbFN0YXRlID09PSBcInJpbmdpbmdcIlxyXG4gICAgICA/IHJvbGUgPT09IFwiY2FsbGVyXCJcclxuICAgICAgICA/IHJlbW90ZUFjY2VwdGVkXHJcbiAgICAgICAgICA/IFwiQ29ubmVjdGluZy4uLlwiXHJcbiAgICAgICAgICA6IGNhbGxUeXBlID09PSBcInZpZGVvXCIgPyBcIlZpZGVvIGNhbGxpbmcuLi5cIiA6IFwiQ2FsbGluZy4uLlwiXHJcbiAgICAgICAgOiBcIkNvbm5lY3RpbmcuLi5cIlxyXG4gICAgICA6IGNhbGxTdGF0ZSA9PT0gXCJjb25uZWN0ZWRcIlxyXG4gICAgICAgID8gZm9ybWF0RHVyYXRpb24oZHVyYXRpb24pXHJcbiAgICAgICAgOiBcIkNhbGwgZW5kZWRcIjtcclxuXHJcbiAgY29uc3QgaGFuZGxlT3BlbkNoYXQgPSB1c2VDYWxsYmFjaygoKSA9PiB7XHJcbiAgICBvbk1pbmltaXplPy4oe1xyXG4gICAgICByZW1vdGVTdHJlYW06IHJlbW90ZVN0cmVhbVJlZi5jdXJyZW50LFxyXG4gICAgICBkdXJhdGlvbixcclxuICAgICAgaXNNdXRlZCxcclxuICAgICAgY2FsbFR5cGUsXHJcbiAgICAgIGlzQ2FtZXJhT2ZmLFxyXG4gICAgfSk7XHJcblxyXG4gICAgbmF2aWdhdGUoXCIvY2hhdFwiLCB7XHJcbiAgICAgIHN0YXRlOiB7XHJcbiAgICAgICAgb3BlbkNoYXQ6IHtcclxuICAgICAgICAgIHJlY2lwaWVudElkLFxyXG4gICAgICAgICAgcmVjaXBpZW50TmFtZSxcclxuICAgICAgICAgIHJlY2lwaWVudEF2YXRhcixcclxuICAgICAgICB9LFxyXG4gICAgICB9LFxyXG4gICAgfSk7XHJcbiAgfSwgW2NhbGxUeXBlLCBkdXJhdGlvbiwgaXNDYW1lcmFPZmYsIGlzTXV0ZWQsIG5hdmlnYXRlLCBvbk1pbmltaXplLCByZWNpcGllbnRBdmF0YXIsIHJlY2lwaWVudElkLCByZWNpcGllbnROYW1lXSk7XHJcblxyXG4gIHVzZUVmZmVjdCgoKSA9PiB7XHJcbiAgICBpZiAoIW1pbmltaXplZCB8fCAhcGlwU3RhdGVDaGFuZ2VSZWYuY3VycmVudCkgcmV0dXJuO1xyXG4gICAgcGlwU3RhdGVDaGFuZ2VSZWYuY3VycmVudCh7XHJcbiAgICAgIHJlbW90ZVN0cmVhbTogcmVtb3RlU3RyZWFtUmVmLmN1cnJlbnQsXHJcbiAgICAgIGR1cmF0aW9uLFxyXG4gICAgICBpc011dGVkLFxyXG4gICAgICBjYWxsVHlwZSxcclxuICAgICAgaXNDYW1lcmFPZmYsXHJcbiAgICB9KTtcclxuICB9LCBbY2FsbFR5cGUsIGR1cmF0aW9uLCBpc0NhbWVyYU9mZiwgaXNNdXRlZCwgbWluaW1pemVkXSk7XHJcblxyXG4gIC8vIEZsaXAgY2FtZXJhIChzd2l0Y2ggZnJvbnQvYmFjayBvbiBtb2JpbGUpXHJcbiAgY29uc3QgaGFuZGxlRmxpcENhbWVyYSA9IHVzZUNhbGxiYWNrKGFzeW5jICgpID0+IHtcclxuICAgIGNvbnN0IHN0cmVhbSA9IGxvY2FsU3RyZWFtPy5jdXJyZW50ID8/IGxvY2FsU3RyZWFtO1xyXG4gICAgaWYgKCFzdHJlYW0gfHwgIShzdHJlYW0gaW5zdGFuY2VvZiBNZWRpYVN0cmVhbSkpIHJldHVybjtcclxuICAgIGNvbnN0IHZpZGVvVHJhY2sgPSBzdHJlYW0uZ2V0VmlkZW9UcmFja3MoKVswXTtcclxuICAgIGlmICghdmlkZW9UcmFjaykgcmV0dXJuO1xyXG4gICAgY29uc3QgY29uc3RyYWludHMgPSB2aWRlb1RyYWNrLmdldENvbnN0cmFpbnRzKCk7XHJcbiAgICBjb25zdCBjdXJyZW50RmFjaW5nUmF3ID0gY29uc3RyYWludHMuZmFjaW5nTW9kZTtcclxuICAgIGNvbnN0IGN1cnJlbnRGYWNpbmcgPSBBcnJheS5pc0FycmF5KGN1cnJlbnRGYWNpbmdSYXcpID8gY3VycmVudEZhY2luZ1Jhd1swXSA6IGN1cnJlbnRGYWNpbmdSYXc7XHJcbiAgICBjb25zdCBuZXdGYWNpbmcgPSBjdXJyZW50RmFjaW5nID09PSBcImVudmlyb25tZW50XCIgPyBcInVzZXJcIiA6IFwiZW52aXJvbm1lbnRcIjtcclxuICAgIHRyeSB7XHJcbiAgICAgIGNvbnN0IG5ld1N0cmVhbSA9IGF3YWl0IG5hdmlnYXRvci5tZWRpYURldmljZXMuZ2V0VXNlck1lZGlhKHtcclxuICAgICAgICB2aWRlbzogeyBmYWNpbmdNb2RlOiBuZXdGYWNpbmcgfSxcclxuICAgICAgICBhdWRpbzogZmFsc2UsXHJcbiAgICAgIH0pO1xyXG4gICAgICBjb25zdCBuZXdUcmFjayA9IG5ld1N0cmVhbS5nZXRWaWRlb1RyYWNrcygpWzBdO1xyXG4gICAgICBpZiAocGVlckNvbm5lY3Rpb24/LmN1cnJlbnQpIHtcclxuICAgICAgICBjb25zdCBzZW5kZXIgPSBwZWVyQ29ubmVjdGlvbi5jdXJyZW50LmdldFNlbmRlcnMoKS5maW5kKChzKSA9PiBzLnRyYWNrPy5raW5kID09PSBcInZpZGVvXCIpO1xyXG4gICAgICAgIGlmIChzZW5kZXIpIGF3YWl0IHNlbmRlci5yZXBsYWNlVHJhY2sobmV3VHJhY2spO1xyXG4gICAgICB9XHJcbiAgICAgIHN0cmVhbS5yZW1vdmVUcmFjayh2aWRlb1RyYWNrKTtcclxuICAgICAgdmlkZW9UcmFjay5zdG9wKCk7XHJcbiAgICAgIHN0cmVhbS5hZGRUcmFjayhuZXdUcmFjayk7XHJcbiAgICAgIGlmIChsb2NhbFZpZGVvUmVmLmN1cnJlbnQpIGxvY2FsVmlkZW9SZWYuY3VycmVudC5zcmNPYmplY3QgPSBzdHJlYW07XHJcbiAgICB9IGNhdGNoIHsgLyogbm90IHN1cHBvcnRlZCAqLyB9XHJcbiAgfSwgW2xvY2FsU3RyZWFtLCBwZWVyQ29ubmVjdGlvbl0pO1xyXG5cclxuICBpZiAobWluaW1pemVkKSB7XHJcbiAgICByZXR1cm4gbnVsbDtcclxuICB9XHJcblxyXG4gIC8vIENvbnRyb2wgYnV0dG9uIGhlbHBlclxyXG4gIGNvbnN0IENvbnRyb2xCdG4gPSAoeyBvbkNsaWNrLCBhY3RpdmUsIGFjdGl2ZUNvbG9yID0gXCJkZXN0cnVjdGl2ZVwiLCBjaGlsZHJlbiwgc2l6ZSA9IFwiZGVmYXVsdFwiIH06IHtcclxuICAgIG9uQ2xpY2s6ICgpID0+IHZvaWQ7XHJcbiAgICBhY3RpdmU/OiBib29sZWFuO1xyXG4gICAgYWN0aXZlQ29sb3I/OiBcImRlc3RydWN0aXZlXCIgfCBcInByaW1hcnlcIjtcclxuICAgIGNoaWxkcmVuOiBSZWFjdC5SZWFjdE5vZGU7XHJcbiAgICBzaXplPzogXCJkZWZhdWx0XCIgfCBcImxhcmdlXCI7XHJcbiAgfSkgPT4ge1xyXG4gICAgY29uc3Qgc2l6ZUNsYXNzID0gc2l6ZSA9PT0gXCJsYXJnZVwiID8gXCJoLTE2IHctMTZcIiA6IFwiaC0xNCB3LTE0XCI7XHJcbiAgICByZXR1cm4gKFxyXG4gICAgICA8bW90aW9uLmJ1dHRvblxyXG4gICAgICAgIHdoaWxlVGFwPXt7IHNjYWxlOiAwLjg4IH19XHJcbiAgICAgICAgb25DbGljaz17b25DbGlja31cclxuICAgICAgICBjbGFzc05hbWU9e2Ake3NpemVDbGFzc30gcm91bmRlZC1mdWxsIGZsZXggZmxleC1jb2wgaXRlbXMtY2VudGVyIGp1c3RpZnktY2VudGVyIHRyYW5zaXRpb24tYWxsICR7XHJcbiAgICAgICAgICBhY3RpdmVcclxuICAgICAgICAgICAgPyBhY3RpdmVDb2xvciA9PT0gXCJkZXN0cnVjdGl2ZVwiXHJcbiAgICAgICAgICAgICAgPyBcImJnLWRlc3RydWN0aXZlLzEyIHRleHQtZGVzdHJ1Y3RpdmVcIlxyXG4gICAgICAgICAgICAgIDogXCJiZy1wcmltYXJ5LzEyIHRleHQtcHJpbWFyeVwiXHJcbiAgICAgICAgICAgIDogXCJiZy1mb3JlZ3JvdW5kLzYgdGV4dC1mb3JlZ3JvdW5kLzYwIGhvdmVyOmJnLWZvcmVncm91bmQvMTBcIlxyXG4gICAgICAgIH1gfVxyXG4gICAgICA+XHJcbiAgICAgICAge2NoaWxkcmVufVxyXG4gICAgICA8L21vdGlvbi5idXR0b24+XHJcbiAgICApO1xyXG4gIH07XHJcblxyXG4gIGNvbnN0IENvbnRyb2xMYWJlbCA9ICh7IGNoaWxkcmVuIH06IHsgY2hpbGRyZW46IFJlYWN0LlJlYWN0Tm9kZSB9KSA9PiAoXHJcbiAgICA8c3BhbiBjbGFzc05hbWU9XCJ0ZXh0LVsxMHB4XSBtdC0xIHRleHQtbXV0ZWQtZm9yZWdyb3VuZCBmb250LW1lZGl1bVwiPntjaGlsZHJlbn08L3NwYW4+XHJcbiAgKTtcclxuXHJcbiAgLy8gRnVsbC1zY3JlZW4gdmlkZW8gbGF5b3V0XHJcbiAgaWYgKGNhbGxUeXBlID09PSBcInZpZGVvXCIpIHtcclxuICAgIHJldHVybiAoXHJcbiAgICAgIDxtb3Rpb24uZGl2XHJcbiAgICAgICAgY2xhc3NOYW1lPVwiZml4ZWQgaW5zZXQtMCB6LVs2MF0gYmctYmxhY2tcIlxyXG4gICAgICAgIGluaXRpYWw9e3sgb3BhY2l0eTogMCB9fVxyXG4gICAgICAgIGFuaW1hdGU9e3sgb3BhY2l0eTogMSB9fVxyXG4gICAgICAgIGV4aXQ9e3sgb3BhY2l0eTogMCB9fVxyXG4gICAgICAgIHRyYW5zaXRpb249e3sgZHVyYXRpb246IDAuMjUgfX1cclxuICAgICAgPlxyXG4gICAgICAgIHsvKiBSZW1vdGUgdmlkZW8g4oCUIGZ1bGwgc2NyZWVuIGJhY2tncm91bmQgKi99XHJcbiAgICAgICAgPHZpZGVvXHJcbiAgICAgICAgICByZWY9e3JlbW90ZVZpZGVvUmVmfVxyXG4gICAgICAgICAgYXV0b1BsYXlcclxuICAgICAgICAgIHBsYXlzSW5saW5lXHJcbiAgICAgICAgICBjbGFzc05hbWU9XCJhYnNvbHV0ZSBpbnNldC0wIHctZnVsbCBoLWZ1bGwgb2JqZWN0LWNvdmVyXCJcclxuICAgICAgICAvPlxyXG5cclxuICAgICAgICB7LyogRGFyayBvdmVybGF5IGZvciByZWFkYWJpbGl0eSAqL31cclxuICAgICAgICA8ZGl2IGNsYXNzTmFtZT1cImFic29sdXRlIGluc2V0LTAgYmctZ3JhZGllbnQtdG8tYiBmcm9tLWJsYWNrLzUwIHZpYS10cmFuc3BhcmVudCB0by1ibGFjay82MCBwb2ludGVyLWV2ZW50cy1ub25lXCIgLz5cclxuXHJcbiAgICAgICAgey8qIFRvcCBiYXIgKi99XHJcbiAgICAgICAgPGRpdiBjbGFzc05hbWU9XCJhYnNvbHV0ZSB0b3AtMCBsZWZ0LTAgcmlnaHQtMCBweC01IGZsZXggaXRlbXMtY2VudGVyIGp1c3RpZnktYmV0d2VlbiB6LTIwXCJcclxuICAgICAgICAgIHN0eWxlPXt7IHBhZGRpbmdUb3A6IFwibWF4KGNhbGMoZW52KHNhZmUtYXJlYS1pbnNldC10b3AsIDBweCkgKyAwLjVyZW0pLCAxcmVtKVwiIH19PlxyXG4gICAgICAgICAgPENhbGxRdWFsaXR5QmFkZ2Ugc3RhdHM9e3F1YWxpdHlTdGF0c30gLz5cclxuICAgICAgICAgIDxkaXYgY2xhc3NOYW1lPVwiZmxleCBpdGVtcy1jZW50ZXIgZ2FwLTJcIj5cclxuICAgICAgICAgICAge29uTWluaW1pemUgJiYgKFxyXG4gICAgICAgICAgICAgIDxtb3Rpb24uYnV0dG9uXHJcbiAgICAgICAgICAgICAgICB3aGlsZVRhcD17eyBzY2FsZTogMC45IH19XHJcbiAgICAgICAgICAgICAgICBvbkNsaWNrPXsoKSA9PiBvbk1pbmltaXplKHsgcmVtb3RlU3RyZWFtOiByZW1vdGVTdHJlYW1SZWYuY3VycmVudCwgZHVyYXRpb24sIGlzTXV0ZWQsIGNhbGxUeXBlLCBpc0NhbWVyYU9mZiB9KX1cclxuICAgICAgICAgICAgICAgIGNsYXNzTmFtZT1cImgtMTAgdy0xMCByb3VuZGVkLWZ1bGwgYmctd2hpdGUvMTAgYmFja2Ryb3AtYmx1ci1tZCBmbGV4IGl0ZW1zLWNlbnRlciBqdXN0aWZ5LWNlbnRlciBib3JkZXIgYm9yZGVyLXdoaXRlLzEwXCJcclxuICAgICAgICAgICAgICA+XHJcbiAgICAgICAgICAgICAgICA8TWluaW1pemUyIGNsYXNzTmFtZT1cImgtNCB3LTQgdGV4dC13aGl0ZS84MFwiIC8+XHJcbiAgICAgICAgICAgICAgPC9tb3Rpb24uYnV0dG9uPlxyXG4gICAgICAgICAgICApfVxyXG4gICAgICAgICAgPC9kaXY+XHJcbiAgICAgICAgPC9kaXY+XHJcblxyXG4gICAgICAgIHsvKiBDYWxsZXIgaW5mbyBvdmVybGF5IOKAlCB0b3AgY2VudGVyICovfVxyXG4gICAgICAgIDxkaXYgY2xhc3NOYW1lPVwiYWJzb2x1dGUgdG9wLTAgbGVmdC0wIHJpZ2h0LTAgei0xMCBmbGV4IGZsZXgtY29sIGl0ZW1zLWNlbnRlclwiXHJcbiAgICAgICAgICBzdHlsZT17eyBwYWRkaW5nVG9wOiBcIm1heChjYWxjKGVudihzYWZlLWFyZWEtaW5zZXQtdG9wLCAwcHgpICsgMy41cmVtKSwgNC41cmVtKVwiIH19PlxyXG4gICAgICAgICAgPGgyIGNsYXNzTmFtZT1cInRleHQteGwgZm9udC1ib2xkIHRleHQtd2hpdGUgdHJhY2tpbmctdGlnaHQgZHJvcC1zaGFkb3ctbGdcIj57cmVjaXBpZW50TmFtZX08L2gyPlxyXG4gICAgICAgICAgPG1vdGlvbi5wXHJcbiAgICAgICAgICAgIGtleT17c3RhdHVzVGV4dH1cclxuICAgICAgICAgICAgaW5pdGlhbD17eyBvcGFjaXR5OiAwLCB5OiA0IH19XHJcbiAgICAgICAgICAgIGFuaW1hdGU9e3sgb3BhY2l0eTogMSwgeTogMCB9fVxyXG4gICAgICAgICAgICBjbGFzc05hbWU9e2B0ZXh0LXNtIG10LTAuNSBmb250LW1lZGl1bSAke2NhbGxTdGF0ZSA9PT0gXCJjb25uZWN0ZWRcIiA/IFwidGV4dC1lbWVyYWxkLTQwMCB0YWJ1bGFyLW51bXNcIiA6IFwidGV4dC13aGl0ZS83MFwifWB9XHJcbiAgICAgICAgICA+XHJcbiAgICAgICAgICAgIHtzdGF0dXNUZXh0fVxyXG4gICAgICAgICAgPC9tb3Rpb24ucD5cclxuICAgICAgICAgIHtjYWxsU3RhdGUgPT09IFwicmluZ2luZ1wiICYmIChcclxuICAgICAgICAgICAgPGRpdiBjbGFzc05hbWU9XCJmbGV4IGdhcC0xLjUgbXQtMlwiPlxyXG4gICAgICAgICAgICAgIHtbMCwgMSwgMl0ubWFwKChpKSA9PiAoXHJcbiAgICAgICAgICAgICAgICA8bW90aW9uLmRpdiBrZXk9e2l9IGNsYXNzTmFtZT1cImgtMiB3LTIgcm91bmRlZC1mdWxsIGJnLWVtZXJhbGQtNDAwXCJcclxuICAgICAgICAgICAgICAgICAgYW5pbWF0ZT17eyBvcGFjaXR5OiBbMC4yLCAxLCAwLjJdLCBzY2FsZTogWzAuNiwgMS4zLCAwLjZdIH19XHJcbiAgICAgICAgICAgICAgICAgIHRyYW5zaXRpb249e3sgZHVyYXRpb246IDEuNCwgcmVwZWF0OiBJbmZpbml0eSwgZGVsYXk6IGkgKiAwLjIgfX1cclxuICAgICAgICAgICAgICAgIC8+XHJcbiAgICAgICAgICAgICAgKSl9XHJcbiAgICAgICAgICAgIDwvZGl2PlxyXG4gICAgICAgICAgKX1cclxuICAgICAgICAgIHtpc1JlY29ubmVjdGluZyAmJiAoXHJcbiAgICAgICAgICAgIDxkaXYgY2xhc3NOYW1lPVwibXQtMiBpbmxpbmUtZmxleCBpdGVtcy1jZW50ZXIgZ2FwLTEuNSByb3VuZGVkLWZ1bGwgYmctYW1iZXItNTAwLzIwIHB4LTMgcHktMSB0ZXh0LVsxMXB4XSBmb250LXNlbWlib2xkIHRleHQtYW1iZXItMjAwXCI+XHJcbiAgICAgICAgICAgICAgPFdpZmlPZmYgY2xhc3NOYW1lPVwiaC0zLjUgdy0zLjVcIiAvPiBSZWNvbm5lY3RpbmcgY2FsbC4uLlxyXG4gICAgICAgICAgICA8L2Rpdj5cclxuICAgICAgICAgICl9XHJcbiAgICAgICAgPC9kaXY+XHJcblxyXG4gICAgICAgIHsvKiBTY3JlZW4gc2hhcmUgYmFkZ2UgKi99XHJcbiAgICAgICAge3NjcmVlblNoYXJlLmlzU2hhcmluZyAmJiAoXHJcbiAgICAgICAgICA8ZGl2IGNsYXNzTmFtZT1cImFic29sdXRlIHRvcC0yMCBsZWZ0LTUgei0yMCBweC0zIHB5LTEuNSByb3VuZGVkLWZ1bGwgYmctcHJpbWFyeS85MCB0ZXh0LXByaW1hcnktZm9yZWdyb3VuZCB0ZXh0LVsxMHB4XSBmb250LXNlbWlib2xkIGZsZXggaXRlbXMtY2VudGVyIGdhcC0xLjUgc2hhZG93LWxnXCI+XHJcbiAgICAgICAgICAgIDxNb25pdG9yIGNsYXNzTmFtZT1cInctMyBoLTNcIiAvPiBTaGFyaW5nIHNjcmVlblxyXG4gICAgICAgICAgPC9kaXY+XHJcbiAgICAgICAgKX1cclxuXHJcbiAgICAgICAgey8qIExvY2FsIHZpZGVvIOKAlCBkcmFnZ2FibGUgUGlQICovfVxyXG4gICAgICAgIHshaXNDYW1lcmFPZmYgJiYgKFxyXG4gICAgICAgICAgPG1vdGlvbi5kaXZcclxuICAgICAgICAgICAgZHJhZ1xyXG4gICAgICAgICAgICBkcmFnTW9tZW50dW09e2ZhbHNlfVxyXG4gICAgICAgICAgICBjbGFzc05hbWU9XCJhYnNvbHV0ZSBib3R0b20tMzYgcmlnaHQtNCBjdXJzb3ItZ3JhYiBhY3RpdmU6Y3Vyc29yLWdyYWJiaW5nIHotMjBcIlxyXG4gICAgICAgICAgPlxyXG4gICAgICAgICAgICA8ZGl2IGNsYXNzTmFtZT1cInJlbGF0aXZlXCI+XHJcbiAgICAgICAgICAgICAgPHZpZGVvIHJlZj17bG9jYWxWaWRlb1JlZn0gYXV0b1BsYXkgcGxheXNJbmxpbmUgbXV0ZWRcclxuICAgICAgICAgICAgICAgIGNsYXNzTmFtZT1cInctWzExMHB4XSBoLVsxNTBweF0gcm91bmRlZC0yeGwgYm9yZGVyLTIgYm9yZGVyLXdoaXRlLzIwIG9iamVjdC1jb3ZlciBzaGFkb3ctMnhsXCIgLz5cclxuICAgICAgICAgICAgICB7LyogRmxpcCBjYW1lcmEgbWluaS1idXR0b24gb24gUGlQICovfVxyXG4gICAgICAgICAgICAgIDxtb3Rpb24uYnV0dG9uXHJcbiAgICAgICAgICAgICAgICB3aGlsZVRhcD17eyBzY2FsZTogMC44NSB9fVxyXG4gICAgICAgICAgICAgICAgb25DbGljaz17aGFuZGxlRmxpcENhbWVyYX1cclxuICAgICAgICAgICAgICAgIGNsYXNzTmFtZT1cImFic29sdXRlIHRvcC0xLjUgcmlnaHQtMS41IGgtNyB3LTcgcm91bmRlZC1mdWxsIGJnLWJsYWNrLzUwIGJhY2tkcm9wLWJsdXItbWQgZmxleCBpdGVtcy1jZW50ZXIganVzdGlmeS1jZW50ZXJcIlxyXG4gICAgICAgICAgICAgID5cclxuICAgICAgICAgICAgICAgIDxTd2l0Y2hDYW1lcmEgY2xhc3NOYW1lPVwiaC0zLjUgdy0zLjUgdGV4dC13aGl0ZS84MFwiIC8+XHJcbiAgICAgICAgICAgICAgPC9tb3Rpb24uYnV0dG9uPlxyXG4gICAgICAgICAgICA8L2Rpdj5cclxuICAgICAgICAgIDwvbW90aW9uLmRpdj5cclxuICAgICAgICApfVxyXG5cclxuICAgICAgICA8YXVkaW8gcmVmPXtyZW1vdGVBdWRpb1JlZn0gYXV0b1BsYXkgcGxheXNJbmxpbmUgY2xhc3NOYW1lPVwiYWJzb2x1dGUgaC0wIHctMCBvcGFjaXR5LTAgcG9pbnRlci1ldmVudHMtbm9uZVwiIC8+XHJcblxyXG4gICAgICAgIHsvKiBCb3R0b20gY29udHJvbHMgKi99XHJcbiAgICAgICAgPGRpdiBjbGFzc05hbWU9XCJhYnNvbHV0ZSBib3R0b20tMCBsZWZ0LTAgcmlnaHQtMCB6LTIwIHB4LTRcIlxyXG4gICAgICAgICAgc3R5bGU9e3sgcGFkZGluZ0JvdHRvbTogXCJtYXgoY2FsYyhlbnYoc2FmZS1hcmVhLWluc2V0LWJvdHRvbSwgMHB4KSArIDFyZW0pLCAxLjVyZW0pXCIgfX0+XHJcbiAgICAgICAgICA8ZGl2IGNsYXNzTmFtZT1cImJnLXdoaXRlLzEwIGJhY2tkcm9wLWJsdXIteGwgcm91bmRlZC0zeGwgYm9yZGVyIGJvcmRlci13aGl0ZS8xMCBweC00IHB5LTQgc2hhZG93LTJ4bFwiPlxyXG4gICAgICAgICAgICA8ZGl2IGNsYXNzTmFtZT1cImZsZXggaXRlbXMtY2VudGVyIGp1c3RpZnktYXJvdW5kXCI+XHJcbiAgICAgICAgICAgICAgey8qIE11dGUgKi99XHJcbiAgICAgICAgICAgICAgPGRpdiBjbGFzc05hbWU9XCJmbGV4IGZsZXgtY29sIGl0ZW1zLWNlbnRlciBnYXAtMS41XCI+XHJcbiAgICAgICAgICAgICAgICA8bW90aW9uLmJ1dHRvblxyXG4gICAgICAgICAgICAgICAgICB3aGlsZVRhcD17eyBzY2FsZTogMC44OCB9fVxyXG4gICAgICAgICAgICAgICAgICBvbkNsaWNrPXt0b2dnbGVNdXRlfVxyXG4gICAgICAgICAgICAgICAgICBjbGFzc05hbWU9e2BoLTEyIHctMTIgcm91bmRlZC1mdWxsIGZsZXggaXRlbXMtY2VudGVyIGp1c3RpZnktY2VudGVyIHRyYW5zaXRpb24tYWxsICR7XHJcbiAgICAgICAgICAgICAgICAgICAgaXNNdXRlZCA/IFwiYmctd2hpdGUvMjUgdGV4dC13aGl0ZVwiIDogXCJiZy13aGl0ZS8xMCB0ZXh0LXdoaXRlLzgwIGhvdmVyOmJnLXdoaXRlLzIwXCJcclxuICAgICAgICAgICAgICAgICAgfWB9XHJcbiAgICAgICAgICAgICAgICA+XHJcbiAgICAgICAgICAgICAgICAgIHtpc011dGVkID8gPE1pY09mZiBjbGFzc05hbWU9XCJoLTUgdy01XCIgLz4gOiA8TWljIGNsYXNzTmFtZT1cImgtNSB3LTVcIiAvPn1cclxuICAgICAgICAgICAgICAgIDwvbW90aW9uLmJ1dHRvbj5cclxuICAgICAgICAgICAgICAgIDxzcGFuIGNsYXNzTmFtZT1cInRleHQtWzEwcHhdIHRleHQtd2hpdGUvNTAgZm9udC1tZWRpdW1cIj57aXNNdXRlZCA/IFwiVW5tdXRlXCIgOiBcIk11dGVcIn08L3NwYW4+XHJcbiAgICAgICAgICAgICAgPC9kaXY+XHJcblxyXG4gICAgICAgICAgICAgIHsvKiBDYW1lcmEgKi99XHJcbiAgICAgICAgICAgICAgPGRpdiBjbGFzc05hbWU9XCJmbGV4IGZsZXgtY29sIGl0ZW1zLWNlbnRlciBnYXAtMS41XCI+XHJcbiAgICAgICAgICAgICAgICA8bW90aW9uLmJ1dHRvblxyXG4gICAgICAgICAgICAgICAgICB3aGlsZVRhcD17eyBzY2FsZTogMC44OCB9fVxyXG4gICAgICAgICAgICAgICAgICBvbkNsaWNrPXt0b2dnbGVDYW1lcmF9XHJcbiAgICAgICAgICAgICAgICAgIGNsYXNzTmFtZT17YGgtMTIgdy0xMiByb3VuZGVkLWZ1bGwgZmxleCBpdGVtcy1jZW50ZXIganVzdGlmeS1jZW50ZXIgdHJhbnNpdGlvbi1hbGwgJHtcclxuICAgICAgICAgICAgICAgICAgICBpc0NhbWVyYU9mZiA/IFwiYmctd2hpdGUvMjUgdGV4dC13aGl0ZVwiIDogXCJiZy13aGl0ZS8xMCB0ZXh0LXdoaXRlLzgwIGhvdmVyOmJnLXdoaXRlLzIwXCJcclxuICAgICAgICAgICAgICAgICAgfWB9XHJcbiAgICAgICAgICAgICAgICA+XHJcbiAgICAgICAgICAgICAgICAgIHtpc0NhbWVyYU9mZiA/IDxWaWRlb09mZiBjbGFzc05hbWU9XCJoLTUgdy01XCIgLz4gOiA8VmlkZW8gY2xhc3NOYW1lPVwiaC01IHctNVwiIC8+fVxyXG4gICAgICAgICAgICAgICAgPC9tb3Rpb24uYnV0dG9uPlxyXG4gICAgICAgICAgICAgICAgPHNwYW4gY2xhc3NOYW1lPVwidGV4dC1bMTBweF0gdGV4dC13aGl0ZS81MCBmb250LW1lZGl1bVwiPntpc0NhbWVyYU9mZiA/IFwiU3RhcnRcIiA6IFwiU3RvcFwifTwvc3Bhbj5cclxuICAgICAgICAgICAgICA8L2Rpdj5cclxuXHJcbiAgICAgICAgICAgICAgey8qIFJlYWN0aW9ucyAqL31cclxuICAgICAgICAgICAgICA8ZGl2IGNsYXNzTmFtZT1cImZsZXggZmxleC1jb2wgaXRlbXMtY2VudGVyIGdhcC0xLjVcIj5cclxuICAgICAgICAgICAgICAgIDxDYWxsUmVhY3Rpb25zIHZhcmlhbnQ9XCJkYXJrXCIgLz5cclxuICAgICAgICAgICAgICAgIDxzcGFuIGNsYXNzTmFtZT1cInRleHQtWzEwcHhdIHRleHQtd2hpdGUvNTAgZm9udC1tZWRpdW1cIj5SZWFjdDwvc3Bhbj5cclxuICAgICAgICAgICAgICA8L2Rpdj5cclxuXHJcbiAgICAgICAgICAgICAgey8qIFNjcmVlbiBTaGFyZSAqL31cclxuICAgICAgICAgICAgICA8ZGl2IGNsYXNzTmFtZT1cImZsZXggZmxleC1jb2wgaXRlbXMtY2VudGVyIGdhcC0xLjVcIj5cclxuICAgICAgICAgICAgICAgIDxtb3Rpb24uYnV0dG9uXHJcbiAgICAgICAgICAgICAgICAgIHdoaWxlVGFwPXt7IHNjYWxlOiAwLjg4IH19XHJcbiAgICAgICAgICAgICAgICAgIG9uQ2xpY2s9e3NjcmVlblNoYXJlLnRvZ2dsZVNoYXJpbmd9XHJcbiAgICAgICAgICAgICAgICAgIGNsYXNzTmFtZT17YGgtMTIgdy0xMiByb3VuZGVkLWZ1bGwgZmxleCBpdGVtcy1jZW50ZXIganVzdGlmeS1jZW50ZXIgdHJhbnNpdGlvbi1hbGwgJHtcclxuICAgICAgICAgICAgICAgICAgICBzY3JlZW5TaGFyZS5pc1NoYXJpbmcgPyBcImJnLWVtZXJhbGQtNTAwLzMwIHRleHQtZW1lcmFsZC00MDBcIiA6IFwiYmctd2hpdGUvMTAgdGV4dC13aGl0ZS84MCBob3ZlcjpiZy13aGl0ZS8yMFwiXHJcbiAgICAgICAgICAgICAgICAgIH1gfVxyXG4gICAgICAgICAgICAgICAgPlxyXG4gICAgICAgICAgICAgICAgICB7c2NyZWVuU2hhcmUuaXNTaGFyaW5nID8gPE1vbml0b3JPZmYgY2xhc3NOYW1lPVwiaC01IHctNVwiIC8+IDogPE1vbml0b3IgY2xhc3NOYW1lPVwiaC01IHctNVwiIC8+fVxyXG4gICAgICAgICAgICAgICAgPC9tb3Rpb24uYnV0dG9uPlxyXG4gICAgICAgICAgICAgICAgPHNwYW4gY2xhc3NOYW1lPVwidGV4dC1bMTBweF0gdGV4dC13aGl0ZS81MCBmb250LW1lZGl1bVwiPlNjcmVlbjwvc3Bhbj5cclxuICAgICAgICAgICAgICA8L2Rpdj5cclxuXHJcbiAgICAgICAgICAgICAgey8qIEVuZCBDYWxsICovfVxyXG4gICAgICAgICAgICAgIDxkaXYgY2xhc3NOYW1lPVwiZmxleCBmbGV4LWNvbCBpdGVtcy1jZW50ZXIgZ2FwLTEuNVwiPlxyXG4gICAgICAgICAgICAgICAgPG1vdGlvbi5idXR0b25cclxuICAgICAgICAgICAgICAgICAgd2hpbGVUYXA9e3sgc2NhbGU6IDAuODUgfX1cclxuICAgICAgICAgICAgICAgICAgb25DbGljaz17KCkgPT4geyB2b2lkIGVuZENhbGwoKTsgfX1cclxuICAgICAgICAgICAgICAgICAgY2xhc3NOYW1lPVwiaC0xNCB3LTE0IHJvdW5kZWQtZnVsbCBiZy1kZXN0cnVjdGl2ZSB0ZXh0LWRlc3RydWN0aXZlLWZvcmVncm91bmQgZmxleCBpdGVtcy1jZW50ZXIganVzdGlmeS1jZW50ZXIgc2hhZG93LWxnIHNoYWRvdy1kZXN0cnVjdGl2ZS80MFwiXHJcbiAgICAgICAgICAgICAgICA+XHJcbiAgICAgICAgICAgICAgICAgIDxQaG9uZU9mZiBjbGFzc05hbWU9XCJoLTYgdy02XCIgLz5cclxuICAgICAgICAgICAgICAgIDwvbW90aW9uLmJ1dHRvbj5cclxuICAgICAgICAgICAgICAgIDxzcGFuIGNsYXNzTmFtZT1cInRleHQtWzEwcHhdIHRleHQtd2hpdGUvNTAgZm9udC1tZWRpdW1cIj5FbmQ8L3NwYW4+XHJcbiAgICAgICAgICAgICAgPC9kaXY+XHJcbiAgICAgICAgICAgIDwvZGl2PlxyXG4gICAgICAgICAgPC9kaXY+XHJcbiAgICAgICAgPC9kaXY+XHJcbiAgICAgIDwvbW90aW9uLmRpdj5cclxuICAgICk7XHJcbiAgfVxyXG5cclxuICAvLyBWb2ljZSBjYWxsIGxheW91dCDigJQgRmFjZVRpbWUgMjAyNiBzdHlsZVxyXG4gIHJldHVybiAoXHJcbiAgICA8bW90aW9uLmRpdlxyXG4gICAgICBjbGFzc05hbWU9XCJmaXhlZCBpbnNldC0wIHotWzYwXSBmbGV4IGZsZXgtY29sIGl0ZW1zLWNlbnRlclwiXHJcbiAgICAgIGluaXRpYWw9e3sgb3BhY2l0eTogMCwgc2NhbGU6IDEuMDUgfX1cclxuICAgICAgYW5pbWF0ZT17eyBvcGFjaXR5OiAxLCBzY2FsZTogMSB9fVxyXG4gICAgICBleGl0PXt7IG9wYWNpdHk6IDAsIHNjYWxlOiAwLjk1IH19XHJcbiAgICAgIHRyYW5zaXRpb249e3sgZHVyYXRpb246IDAuMjUgfX1cclxuICAgICAgc3R5bGU9e3tcclxuICAgICAgICBwYWRkaW5nVG9wOiBcIm1heChlbnYoc2FmZS1hcmVhLWluc2V0LXRvcCwgMHB4KSwgMi41cmVtKVwiLFxyXG4gICAgICAgIHBhZGRpbmdCb3R0b206IFwibWF4KGVudihzYWZlLWFyZWEtaW5zZXQtYm90dG9tLCAwcHgpLCAxLjVyZW0pXCIsXHJcbiAgICAgICAgYmFja2dyb3VuZDogXCJsaW5lYXItZ3JhZGllbnQoMTY1ZGVnLCBoc2wodmFyKC0tYmFja2dyb3VuZCkpIDAlLCBoc2wodmFyKC0tbXV0ZWQpIC8gMC40KSA1MCUsIGhzbCh2YXIoLS1wcmltYXJ5KSAvIDAuMDgpIDEwMCUpXCIsXHJcbiAgICAgIH19XHJcbiAgICA+XHJcbiAgICAgIHsvKiBBbWJpZW50IGJsdXIgb3JicyAqL31cclxuICAgICAgPGRpdiBjbGFzc05hbWU9XCJhYnNvbHV0ZSBpbnNldC0wIG92ZXJmbG93LWhpZGRlbiBwb2ludGVyLWV2ZW50cy1ub25lXCI+XHJcbiAgICAgICAgPG1vdGlvbi5kaXZcclxuICAgICAgICAgIGNsYXNzTmFtZT1cImFic29sdXRlIC10b3AtMjAgLXJpZ2h0LTIwIHctNzIgaC03MiByb3VuZGVkLWZ1bGwgb3BhY2l0eS0yMFwiXHJcbiAgICAgICAgICBzdHlsZT17eyBiYWNrZ3JvdW5kOiBcInJhZGlhbC1ncmFkaWVudChjaXJjbGUsIGhzbCh2YXIoLS1wcmltYXJ5KSAvIDAuNCksIHRyYW5zcGFyZW50IDcwJSlcIiB9fVxyXG4gICAgICAgICAgYW5pbWF0ZT17eyBzY2FsZTogWzEsIDEuMiwgMV0sIHg6IFswLCAyMCwgMF0sIHk6IFswLCAtMTAsIDBdIH19XHJcbiAgICAgICAgICB0cmFuc2l0aW9uPXt7IGR1cmF0aW9uOiA4LCByZXBlYXQ6IEluZmluaXR5LCBlYXNlOiBcImVhc2VJbk91dFwiIH19XHJcbiAgICAgICAgLz5cclxuICAgICAgICA8bW90aW9uLmRpdlxyXG4gICAgICAgICAgY2xhc3NOYW1lPVwiYWJzb2x1dGUgLWJvdHRvbS0xMCAtbGVmdC0xMCB3LTU2IGgtNTYgcm91bmRlZC1mdWxsIG9wYWNpdHktMTVcIlxyXG4gICAgICAgICAgc3R5bGU9e3sgYmFja2dyb3VuZDogXCJyYWRpYWwtZ3JhZGllbnQoY2lyY2xlLCBoc2wodmFyKC0tcHJpbWFyeSkgLyAwLjMpLCB0cmFuc3BhcmVudCA3MCUpXCIgfX1cclxuICAgICAgICAgIGFuaW1hdGU9e3sgc2NhbGU6IFsxLjIsIDEsIDEuMl0sIHg6IFswLCAtMTUsIDBdIH19XHJcbiAgICAgICAgICB0cmFuc2l0aW9uPXt7IGR1cmF0aW9uOiA2LCByZXBlYXQ6IEluZmluaXR5LCBlYXNlOiBcImVhc2VJbk91dFwiIH19XHJcbiAgICAgICAgLz5cclxuICAgICAgPC9kaXY+XHJcblxyXG4gICAgICB7LyogVG9wIGJhciAqL31cclxuICAgICAgPGRpdiBjbGFzc05hbWU9XCJhYnNvbHV0ZSB0b3AtMCBsZWZ0LTAgcmlnaHQtMCBweC01IGZsZXggaXRlbXMtY2VudGVyIGp1c3RpZnktYmV0d2VlbiB6LTEwXCJcclxuICAgICAgICBzdHlsZT17eyBwYWRkaW5nVG9wOiBcIm1heChjYWxjKGVudihzYWZlLWFyZWEtaW5zZXQtdG9wLCAwcHgpICsgMC41cmVtKSwgMXJlbSlcIiB9fT5cclxuICAgICAgICA8Q2FsbFF1YWxpdHlCYWRnZSBzdGF0cz17cXVhbGl0eVN0YXRzfSAvPlxyXG4gICAgICAgIDxkaXYgY2xhc3NOYW1lPVwiZmxleCBpdGVtcy1jZW50ZXIgZ2FwLTJcIj5cclxuICAgICAgICAgIHtvbk1pbmltaXplICYmIChcclxuICAgICAgICAgICAgPG1vdGlvbi5idXR0b25cclxuICAgICAgICAgICAgICB3aGlsZVRhcD17eyBzY2FsZTogMC45IH19XHJcbiAgICAgICAgICAgICAgb25DbGljaz17KCkgPT4gb25NaW5pbWl6ZSh7IHJlbW90ZVN0cmVhbTogcmVtb3RlU3RyZWFtUmVmLmN1cnJlbnQsIGR1cmF0aW9uLCBpc011dGVkLCBjYWxsVHlwZSwgaXNDYW1lcmFPZmYgfSl9XHJcbiAgICAgICAgICAgICAgY2xhc3NOYW1lPVwiaC0xMCB3LTEwIHJvdW5kZWQtZnVsbCBiZy1mb3JlZ3JvdW5kLzUgYmFja2Ryb3AtYmx1ci14bCBmbGV4IGl0ZW1zLWNlbnRlciBqdXN0aWZ5LWNlbnRlciBib3JkZXIgYm9yZGVyLWJvcmRlci8xMFwiXHJcbiAgICAgICAgICAgID5cclxuICAgICAgICAgICAgICA8TWluaW1pemUyIGNsYXNzTmFtZT1cImgtNCB3LTQgdGV4dC1mb3JlZ3JvdW5kLzYwXCIgLz5cclxuICAgICAgICAgICAgPC9tb3Rpb24uYnV0dG9uPlxyXG4gICAgICAgICAgKX1cclxuICAgICAgICA8L2Rpdj5cclxuICAgICAgPC9kaXY+XHJcblxyXG4gICAgICB7LyogQ2FsbGVyIGluZm8gKi99XHJcbiAgICAgIDxkaXYgY2xhc3NOYW1lPVwiZmxleCBmbGV4LWNvbCBpdGVtcy1jZW50ZXIgZ2FwLTQgbXQtMTQgcHgtNiByZWxhdGl2ZSB6LVsxXVwiPlxyXG4gICAgICAgIDxkaXYgY2xhc3NOYW1lPVwicmVsYXRpdmVcIj5cclxuICAgICAgICAgIHtjYWxsU3RhdGUgPT09IFwicmluZ2luZ1wiICYmIChcclxuICAgICAgICAgICAgPD5cclxuICAgICAgICAgICAgICA8bW90aW9uLmRpdiBjbGFzc05hbWU9XCJhYnNvbHV0ZSAtaW5zZXQtNSByb3VuZGVkLWZ1bGxcIlxyXG4gICAgICAgICAgICAgICAgc3R5bGU9e3sgYmFja2dyb3VuZDogXCJyYWRpYWwtZ3JhZGllbnQoY2lyY2xlLCBoc2wodmFyKC0tcHJpbWFyeSkgLyAwLjE1KSwgdHJhbnNwYXJlbnQgNzAlKVwiIH19XHJcbiAgICAgICAgICAgICAgICBhbmltYXRlPXt7IHNjYWxlOiBbMSwgMS42LCAxXSwgb3BhY2l0eTogWzAuOCwgMCwgMC44XSB9fVxyXG4gICAgICAgICAgICAgICAgdHJhbnNpdGlvbj17eyBkdXJhdGlvbjogMi40LCByZXBlYXQ6IEluZmluaXR5LCBlYXNlOiBcImVhc2VJbk91dFwiIH19IC8+XHJcbiAgICAgICAgICAgICAgPG1vdGlvbi5kaXYgY2xhc3NOYW1lPVwiYWJzb2x1dGUgLWluc2V0LTEwIHJvdW5kZWQtZnVsbFwiXHJcbiAgICAgICAgICAgICAgICBzdHlsZT17eyBiYWNrZ3JvdW5kOiBcInJhZGlhbC1ncmFkaWVudChjaXJjbGUsIGhzbCh2YXIoLS1wcmltYXJ5KSAvIDAuMDgpLCB0cmFuc3BhcmVudCA3MCUpXCIgfX1cclxuICAgICAgICAgICAgICAgIGFuaW1hdGU9e3sgc2NhbGU6IFsxLCAxLjUsIDFdLCBvcGFjaXR5OiBbMC40LCAwLCAwLjRdIH19XHJcbiAgICAgICAgICAgICAgICB0cmFuc2l0aW9uPXt7IGR1cmF0aW9uOiAyLjQsIHJlcGVhdDogSW5maW5pdHksIGRlbGF5OiAwLjUsIGVhc2U6IFwiZWFzZUluT3V0XCIgfX0gLz5cclxuICAgICAgICAgICAgICA8bW90aW9uLmRpdiBjbGFzc05hbWU9XCJhYnNvbHV0ZSAtaW5zZXQtMTYgcm91bmRlZC1mdWxsXCJcclxuICAgICAgICAgICAgICAgIHN0eWxlPXt7IGJhY2tncm91bmQ6IFwicmFkaWFsLWdyYWRpZW50KGNpcmNsZSwgaHNsKHZhcigtLXByaW1hcnkpIC8gMC4wNCksIHRyYW5zcGFyZW50IDcwJSlcIiB9fVxyXG4gICAgICAgICAgICAgICAgYW5pbWF0ZT17eyBzY2FsZTogWzEsIDEuNCwgMV0sIG9wYWNpdHk6IFswLjIsIDAsIDAuMl0gfX1cclxuICAgICAgICAgICAgICAgIHRyYW5zaXRpb249e3sgZHVyYXRpb246IDIuNCwgcmVwZWF0OiBJbmZpbml0eSwgZGVsYXk6IDEsIGVhc2U6IFwiZWFzZUluT3V0XCIgfX0gLz5cclxuICAgICAgICAgICAgPC8+XHJcbiAgICAgICAgICApfVxyXG4gICAgICAgICAge2NhbGxTdGF0ZSA9PT0gXCJjb25uZWN0ZWRcIiAmJiAoXHJcbiAgICAgICAgICAgIDxtb3Rpb24uZGl2IGNsYXNzTmFtZT1cImFic29sdXRlIC1pbnNldC0yIHJvdW5kZWQtZnVsbFwiXHJcbiAgICAgICAgICAgICAgc3R5bGU9e3sgYmFja2dyb3VuZDogXCJyYWRpYWwtZ3JhZGllbnQoY2lyY2xlLCBoc2wodmFyKC0tcHJpbWFyeSkgLyAwLjE1KSwgdHJhbnNwYXJlbnQgNzAlKVwiIH19XHJcbiAgICAgICAgICAgICAgYW5pbWF0ZT17eyBzY2FsZTogWzEsIDEuMSwgMV0gfX1cclxuICAgICAgICAgICAgICB0cmFuc2l0aW9uPXt7IGR1cmF0aW9uOiAzLCByZXBlYXQ6IEluZmluaXR5LCBlYXNlOiBcImVhc2VJbk91dFwiIH19XHJcbiAgICAgICAgICAgIC8+XHJcbiAgICAgICAgICApfVxyXG4gICAgICAgICAgPEF2YXRhciBjbGFzc05hbWU9XCJoLTM2IHctMzYgYm9yZGVyLTQgYm9yZGVyLXByaW1hcnkvOCBzaGFkb3ctMnhsIHJlbGF0aXZlIHotWzFdXCI+XHJcbiAgICAgICAgICAgIDxBdmF0YXJJbWFnZSBzcmM9e3JlY2lwaWVudEF2YXRhciB8fCB1bmRlZmluZWR9IC8+XHJcbiAgICAgICAgICAgIDxBdmF0YXJGYWxsYmFjayBjbGFzc05hbWU9XCJ0ZXh0LTV4bCBmb250LWJvbGQgYmctcHJpbWFyeS81IHRleHQtcHJpbWFyeVwiPntpbml0aWFsc308L0F2YXRhckZhbGxiYWNrPlxyXG4gICAgICAgICAgPC9BdmF0YXI+XHJcbiAgICAgICAgPC9kaXY+XHJcbiAgICAgICAgPGRpdiBjbGFzc05hbWU9XCJ0ZXh0LWNlbnRlciBtdC0zXCI+XHJcbiAgICAgICAgICA8aDIgY2xhc3NOYW1lPVwidGV4dC1bMjhweF0gZm9udC1ib2xkIHRleHQtZm9yZWdyb3VuZCB0cmFja2luZy10aWdodFwiPntyZWNpcGllbnROYW1lfTwvaDI+XHJcbiAgICAgICAgICA8bW90aW9uLnAga2V5PXtzdGF0dXNUZXh0fSBpbml0aWFsPXt7IG9wYWNpdHk6IDAsIHk6IDQgfX0gYW5pbWF0ZT17eyBvcGFjaXR5OiAxLCB5OiAwIH19XHJcbiAgICAgICAgICAgIGNsYXNzTmFtZT17YHRleHQtWzE1cHhdIG10LTEgZm9udC1zZW1pYm9sZCAke2NhbGxTdGF0ZSA9PT0gXCJjb25uZWN0ZWRcIiA/IFwidGV4dC1wcmltYXJ5IHRhYnVsYXItbnVtc1wiIDogXCJ0ZXh0LW11dGVkLWZvcmVncm91bmRcIn1gfT5cclxuICAgICAgICAgICAge3N0YXR1c1RleHR9XHJcbiAgICAgICAgICA8L21vdGlvbi5wPlxyXG4gICAgICAgIDwvZGl2PlxyXG5cclxuICAgICAgICB7LyogQXVkaW8gVmlzdWFsaXplciDigJQgc2hvd24gd2hlbiBjb25uZWN0ZWQgKi99XHJcbiAgICAgICAge2NhbGxTdGF0ZSA9PT0gXCJjb25uZWN0ZWRcIiAmJiAoXHJcbiAgICAgICAgICA8QXVkaW9WaXN1YWxpemVyIGlzQWN0aXZlPXshaXNNdXRlZH0gYmFyQ291bnQ9ezd9IGNsYXNzTmFtZT1cIm10LTJcIiAvPlxyXG4gICAgICAgICl9XHJcblxyXG4gICAgICAgIHtjYWxsU3RhdGUgPT09IFwicmluZ2luZ1wiICYmIChcclxuICAgICAgICAgIDxkaXYgY2xhc3NOYW1lPVwiZmxleCBnYXAtMiBtdC0xXCI+XHJcbiAgICAgICAgICAgIHtbMCwgMSwgMl0ubWFwKChpKSA9PiAoXHJcbiAgICAgICAgICAgICAgPG1vdGlvbi5kaXYga2V5PXtpfSBjbGFzc05hbWU9XCJoLTIuNSB3LTIuNSByb3VuZGVkLWZ1bGwgYmctcHJpbWFyeS82MFwiXHJcbiAgICAgICAgICAgICAgICBhbmltYXRlPXt7IG9wYWNpdHk6IFswLjIsIDEsIDAuMl0sIHNjYWxlOiBbMC41LCAxLjQsIDAuNV0gfX1cclxuICAgICAgICAgICAgICAgIHRyYW5zaXRpb249e3sgZHVyYXRpb246IDEuNiwgcmVwZWF0OiBJbmZpbml0eSwgZGVsYXk6IGkgKiAwLjI1IH19IC8+XHJcbiAgICAgICAgICAgICkpfVxyXG4gICAgICAgICAgPC9kaXY+XHJcbiAgICAgICAgKX1cclxuICAgICAgICB7aXNSZWNvbm5lY3RpbmcgJiYgKFxyXG4gICAgICAgICAgPGRpdiBjbGFzc05hbWU9XCJpbmxpbmUtZmxleCBpdGVtcy1jZW50ZXIgZ2FwLTEuNSByb3VuZGVkLWZ1bGwgYmctYW1iZXItNTAwLzEwIGJhY2tkcm9wLWJsdXItbWQgcHgtMy41IHB5LTEuNSB0ZXh0LVsxMXB4XSBmb250LXNlbWlib2xkIHRleHQtYW1iZXItNjAwIGJvcmRlciBib3JkZXItYW1iZXItNTAwLzEwXCI+XHJcbiAgICAgICAgICAgIDxXaWZpT2ZmIGNsYXNzTmFtZT1cImgtMy41IHctMy41XCIgLz4gUmVjb25uZWN0aW5nLi4uXHJcbiAgICAgICAgICA8L2Rpdj5cclxuICAgICAgICApfVxyXG4gICAgICA8L2Rpdj5cclxuXHJcbiAgICAgIDxhdWRpbyByZWY9e3JlbW90ZUF1ZGlvUmVmfSBhdXRvUGxheSBwbGF5c0lubGluZSBjbGFzc05hbWU9XCJhYnNvbHV0ZSBoLTAgdy0wIG9wYWNpdHktMCBwb2ludGVyLWV2ZW50cy1ub25lXCIgLz5cclxuICAgICAgPGRpdiBjbGFzc05hbWU9XCJmbGV4LTFcIiAvPlxyXG5cclxuICAgICAgey8qIENvbnRyb2xzIOKAlCBGYWNlVGltZSBnbGFzc21vcnBoaWMgcGlsbCAqL31cclxuICAgICAgPGRpdiBjbGFzc05hbWU9XCJ3LWZ1bGwgcHgtNSBwYi00IHJlbGF0aXZlIHotWzFdXCI+XHJcbiAgICAgICAgPGRpdiBjbGFzc05hbWU9XCJiZy1mb3JlZ3JvdW5kL1swLjA0XSBiYWNrZHJvcC1ibHVyLTJ4bCByb3VuZGVkLVsyOHB4XSBib3JkZXIgYm9yZGVyLWJvcmRlci8xMCBweC00IHB5LTUgc2hhZG93LXhsXCI+XHJcbiAgICAgICAgICB7LyogVG9wIHJvdyDigJQgbWFpbiBjb250cm9scyAqL31cclxuICAgICAgICAgIDxkaXYgY2xhc3NOYW1lPVwiZmxleCBpdGVtcy1lbmQganVzdGlmeS1jZW50ZXIgZ2FwLTVcIj5cclxuICAgICAgICAgICAgPGRpdiBjbGFzc05hbWU9XCJmbGV4IGZsZXgtY29sIGl0ZW1zLWNlbnRlciBnYXAtMlwiPlxyXG4gICAgICAgICAgICAgIDxtb3Rpb24uYnV0dG9uXHJcbiAgICAgICAgICAgICAgICB3aGlsZVRhcD17eyBzY2FsZTogMC44OCB9fVxyXG4gICAgICAgICAgICAgICAgb25DbGljaz17dG9nZ2xlTXV0ZX1cclxuICAgICAgICAgICAgICAgIGNsYXNzTmFtZT17YGgtWzUycHhdIHctWzUycHhdIHJvdW5kZWQtZnVsbCBmbGV4IGl0ZW1zLWNlbnRlciBqdXN0aWZ5LWNlbnRlciB0cmFuc2l0aW9uLWFsbCAke1xyXG4gICAgICAgICAgICAgICAgICBpc011dGVkXHJcbiAgICAgICAgICAgICAgICAgICAgPyBcImJnLWZvcmVncm91bmQvOTAgdGV4dC1iYWNrZ3JvdW5kIHNoYWRvdy1sZ1wiXHJcbiAgICAgICAgICAgICAgICAgICAgOiBcImJnLWZvcmVncm91bmQvWzAuMDZdIHRleHQtZm9yZWdyb3VuZC82MCBob3ZlcjpiZy1mb3JlZ3JvdW5kLzEwXCJcclxuICAgICAgICAgICAgICAgIH1gfVxyXG4gICAgICAgICAgICAgID5cclxuICAgICAgICAgICAgICAgIHtpc011dGVkID8gPE1pY09mZiBjbGFzc05hbWU9XCJoLTUgdy01XCIgLz4gOiA8TWljIGNsYXNzTmFtZT1cImgtNSB3LTVcIiAvPn1cclxuICAgICAgICAgICAgICA8L21vdGlvbi5idXR0b24+XHJcbiAgICAgICAgICAgICAgPHNwYW4gY2xhc3NOYW1lPVwidGV4dC1bMTBweF0gdGV4dC1tdXRlZC1mb3JlZ3JvdW5kLzcwIGZvbnQtbWVkaXVtXCI+e2lzTXV0ZWQgPyBcIlVubXV0ZVwiIDogXCJNdXRlXCJ9PC9zcGFuPlxyXG4gICAgICAgICAgICA8L2Rpdj5cclxuICAgICAgICAgICAgPGRpdiBjbGFzc05hbWU9XCJmbGV4IGZsZXgtY29sIGl0ZW1zLWNlbnRlciBnYXAtMlwiPlxyXG4gICAgICAgICAgICAgIDxtb3Rpb24uYnV0dG9uXHJcbiAgICAgICAgICAgICAgICB3aGlsZVRhcD17eyBzY2FsZTogMC44OCB9fVxyXG4gICAgICAgICAgICAgICAgb25DbGljaz17KCkgPT4gc2V0SXNTcGVha2VyKCFpc1NwZWFrZXIpfVxyXG4gICAgICAgICAgICAgICAgY2xhc3NOYW1lPXtgaC1bNTJweF0gdy1bNTJweF0gcm91bmRlZC1mdWxsIGZsZXggaXRlbXMtY2VudGVyIGp1c3RpZnktY2VudGVyIHRyYW5zaXRpb24tYWxsICR7XHJcbiAgICAgICAgICAgICAgICAgIGlzU3BlYWtlclxyXG4gICAgICAgICAgICAgICAgICAgID8gXCJiZy1mb3JlZ3JvdW5kLzkwIHRleHQtYmFja2dyb3VuZCBzaGFkb3ctbGdcIlxyXG4gICAgICAgICAgICAgICAgICAgIDogXCJiZy1mb3JlZ3JvdW5kL1swLjA2XSB0ZXh0LWZvcmVncm91bmQvNjAgaG92ZXI6YmctZm9yZWdyb3VuZC8xMFwiXHJcbiAgICAgICAgICAgICAgICB9YH1cclxuICAgICAgICAgICAgICA+XHJcbiAgICAgICAgICAgICAgICA8Vm9sdW1lMiBjbGFzc05hbWU9XCJoLTUgdy01XCIgLz5cclxuICAgICAgICAgICAgICA8L21vdGlvbi5idXR0b24+XHJcbiAgICAgICAgICAgICAgPHNwYW4gY2xhc3NOYW1lPVwidGV4dC1bMTBweF0gdGV4dC1tdXRlZC1mb3JlZ3JvdW5kLzcwIGZvbnQtbWVkaXVtXCI+U3BlYWtlcjwvc3Bhbj5cclxuICAgICAgICAgICAgPC9kaXY+XHJcbiAgICAgICAgICAgIHsvKiBSZWFjdGlvbnMgKi99XHJcbiAgICAgICAgICAgIDxkaXYgY2xhc3NOYW1lPVwiZmxleCBmbGV4LWNvbCBpdGVtcy1jZW50ZXIgZ2FwLTJcIj5cclxuICAgICAgICAgICAgICA8Q2FsbFJlYWN0aW9ucyB2YXJpYW50PVwibGlnaHRcIiAvPlxyXG4gICAgICAgICAgICAgIDxzcGFuIGNsYXNzTmFtZT1cInRleHQtWzEwcHhdIHRleHQtbXV0ZWQtZm9yZWdyb3VuZC83MCBmb250LW1lZGl1bVwiPlJlYWN0PC9zcGFuPlxyXG4gICAgICAgICAgICA8L2Rpdj5cclxuICAgICAgICAgICAgey8qIFNjcmVlbiBTaGFyZSAqL31cclxuICAgICAgICAgICAgPGRpdiBjbGFzc05hbWU9XCJmbGV4IGZsZXgtY29sIGl0ZW1zLWNlbnRlciBnYXAtMlwiPlxyXG4gICAgICAgICAgICAgIDxtb3Rpb24uYnV0dG9uXHJcbiAgICAgICAgICAgICAgICB3aGlsZVRhcD17eyBzY2FsZTogMC44OCB9fVxyXG4gICAgICAgICAgICAgICAgb25DbGljaz17c2NyZWVuU2hhcmUudG9nZ2xlU2hhcmluZ31cclxuICAgICAgICAgICAgICAgIGNsYXNzTmFtZT17YGgtWzUycHhdIHctWzUycHhdIHJvdW5kZWQtZnVsbCBmbGV4IGl0ZW1zLWNlbnRlciBqdXN0aWZ5LWNlbnRlciB0cmFuc2l0aW9uLWFsbCAke1xyXG4gICAgICAgICAgICAgICAgICBzY3JlZW5TaGFyZS5pc1NoYXJpbmdcclxuICAgICAgICAgICAgICAgICAgICA/IFwiYmctcHJpbWFyeS8xNSB0ZXh0LXByaW1hcnkgc2hhZG93LWxnXCJcclxuICAgICAgICAgICAgICAgICAgICA6IFwiYmctZm9yZWdyb3VuZC9bMC4wNl0gdGV4dC1mb3JlZ3JvdW5kLzYwIGhvdmVyOmJnLWZvcmVncm91bmQvMTBcIlxyXG4gICAgICAgICAgICAgICAgfWB9XHJcbiAgICAgICAgICAgICAgPlxyXG4gICAgICAgICAgICAgICAge3NjcmVlblNoYXJlLmlzU2hhcmluZyA/IDxNb25pdG9yT2ZmIGNsYXNzTmFtZT1cImgtNSB3LTVcIiAvPiA6IDxNb25pdG9yIGNsYXNzTmFtZT1cImgtNSB3LTVcIiAvPn1cclxuICAgICAgICAgICAgICA8L21vdGlvbi5idXR0b24+XHJcbiAgICAgICAgICAgICAgPHNwYW4gY2xhc3NOYW1lPVwidGV4dC1bMTBweF0gdGV4dC1tdXRlZC1mb3JlZ3JvdW5kLzcwIGZvbnQtbWVkaXVtXCI+U2NyZWVuPC9zcGFuPlxyXG4gICAgICAgICAgICA8L2Rpdj5cclxuICAgICAgICAgICAgPGRpdiBjbGFzc05hbWU9XCJmbGV4IGZsZXgtY29sIGl0ZW1zLWNlbnRlciBnYXAtMlwiPlxyXG4gICAgICAgICAgICAgIDxtb3Rpb24uYnV0dG9uXHJcbiAgICAgICAgICAgICAgICB3aGlsZVRhcD17eyBzY2FsZTogMC44OCB9fVxyXG4gICAgICAgICAgICAgICAgb25DbGljaz17aGFuZGxlT3BlbkNoYXR9XHJcbiAgICAgICAgICAgICAgICBjbGFzc05hbWU9XCJoLVs1MnB4XSB3LVs1MnB4XSByb3VuZGVkLWZ1bGwgZmxleCBpdGVtcy1jZW50ZXIganVzdGlmeS1jZW50ZXIgdHJhbnNpdGlvbi1hbGwgYmctZm9yZWdyb3VuZC9bMC4wNl0gdGV4dC1mb3JlZ3JvdW5kLzYwIGhvdmVyOmJnLWZvcmVncm91bmQvMTBcIlxyXG4gICAgICAgICAgICAgID5cclxuICAgICAgICAgICAgICAgIDxNZXNzYWdlQ2lyY2xlIGNsYXNzTmFtZT1cImgtNSB3LTVcIiAvPlxyXG4gICAgICAgICAgICAgIDwvbW90aW9uLmJ1dHRvbj5cclxuICAgICAgICAgICAgICA8c3BhbiBjbGFzc05hbWU9XCJ0ZXh0LVsxMHB4XSB0ZXh0LW11dGVkLWZvcmVncm91bmQvNzAgZm9udC1tZWRpdW1cIj5DaGF0PC9zcGFuPlxyXG4gICAgICAgICAgICA8L2Rpdj5cclxuICAgICAgICAgIDwvZGl2PlxyXG4gICAgICAgICAgey8qIEVuZCBjYWxsIOKAlCBjZW50ZXJlZCBiZWxvdyAqL31cclxuICAgICAgICAgIDxkaXYgY2xhc3NOYW1lPVwiZmxleCBqdXN0aWZ5LWNlbnRlciBtdC00XCI+XHJcbiAgICAgICAgICAgIDxkaXYgY2xhc3NOYW1lPVwiZmxleCBmbGV4LWNvbCBpdGVtcy1jZW50ZXIgZ2FwLTJcIj5cclxuICAgICAgICAgICAgICA8bW90aW9uLmJ1dHRvblxyXG4gICAgICAgICAgICAgICAgd2hpbGVUYXA9e3sgc2NhbGU6IDAuODUgfX1cclxuICAgICAgICAgICAgICAgIG9uQ2xpY2s9eygpID0+IHsgdm9pZCBlbmRDYWxsKCk7IH19XHJcbiAgICAgICAgICAgICAgICBjbGFzc05hbWU9XCJoLVs2MHB4XSB3LVs2MHB4XSByb3VuZGVkLWZ1bGwgYmctZGVzdHJ1Y3RpdmUgdGV4dC1kZXN0cnVjdGl2ZS1mb3JlZ3JvdW5kIGZsZXggaXRlbXMtY2VudGVyIGp1c3RpZnktY2VudGVyIHNoYWRvdy1sZyBzaGFkb3ctZGVzdHJ1Y3RpdmUvMzBcIlxyXG4gICAgICAgICAgICAgID5cclxuICAgICAgICAgICAgICAgIDxQaG9uZU9mZiBjbGFzc05hbWU9XCJoLTYgdy02XCIgLz5cclxuICAgICAgICAgICAgICA8L21vdGlvbi5idXR0b24+XHJcbiAgICAgICAgICAgICAgPHNwYW4gY2xhc3NOYW1lPVwidGV4dC1bMTBweF0gdGV4dC1tdXRlZC1mb3JlZ3JvdW5kLzcwIGZvbnQtbWVkaXVtXCI+RW5kPC9zcGFuPlxyXG4gICAgICAgICAgICA8L2Rpdj5cclxuICAgICAgICAgIDwvZGl2PlxyXG4gICAgICAgIDwvZGl2PlxyXG4gICAgICA8L2Rpdj5cclxuICAgIDwvbW90aW9uLmRpdj5cclxuICApO1xyXG59XHJcbiJdLCJuYW1lcyI6WyJ1c2VTdGF0ZSIsInVzZUVmZmVjdCIsInVzZVJlZiIsInVzZUNhbGxiYWNrIiwiQXZhdGFyIiwiQXZhdGFyRmFsbGJhY2siLCJBdmF0YXJJbWFnZSIsIlBob25lT2ZmIiwiTWljIiwiTWljT2ZmIiwiVmlkZW8iLCJWaWRlb09mZiIsIlZvbHVtZTIiLCJNb25pdG9yIiwiTW9uaXRvck9mZiIsIk1pbmltaXplMiIsIk1lc3NhZ2VDaXJjbGUiLCJXaWZpT2ZmIiwiU3dpdGNoQ2FtZXJhIiwibW90aW9uIiwidXNlV2ViUlRDIiwiY2xhc3NpZnlXZWJSVENGYWlsdXJlIiwidXNlQ2FsbFF1YWxpdHkiLCJ1c2VTY3JlZW5TaGFyZSIsInN1cGFiYXNlIiwidXNlQXV0aCIsInBsYXlPdXRnb2luZ1JpbmdiYWNrIiwiQ2FsbFF1YWxpdHlCYWRnZSIsIkNhbGxSZWFjdGlvbnMiLCJBdWRpb1Zpc3VhbGl6ZXIiLCJ0b2FzdCIsInVzZU5hdmlnYXRlIiwiZGJGcm9tIiwidGFibGUiLCJmcm9tIiwiQ2FsbFNjcmVlbiIsInJlY2lwaWVudE5hbWUiLCJyZWNpcGllbnRBdmF0YXIiLCJjYWxsVHlwZSIsInJlY2lwaWVudElkIiwiZXhpc3RpbmdDYWxsSWQiLCJvbkVuZCIsIm9uTWluaW1pemUiLCJtaW5pbWl6ZWQiLCJvblBpcFN0YXRlQ2hhbmdlIiwib25QaXBDb250cm9sc0NoYW5nZSIsInVzZXIiLCJuYXZpZ2F0ZSIsImNhbGxJZCIsInNldENhbGxJZCIsImNhbGxIaXN0b3J5SWQiLCJzZXRDYWxsSGlzdG9yeUlkIiwiZHVyYXRpb24iLCJzZXREdXJhdGlvbiIsInJlbW90ZUFjY2VwdGVkIiwic2V0UmVtb3RlQWNjZXB0ZWQiLCJpc1NwZWFrZXIiLCJzZXRJc1NwZWFrZXIiLCJ0aW1lclJlZiIsImVuZFJlYXNvblJlZiIsInJlbW90ZVZpZGVvUmVmIiwibG9jYWxWaWRlb1JlZiIsInJlbW90ZUF1ZGlvUmVmIiwicmVtb3RlU3RyZWFtUmVmIiwicmVtaW5kZXJQdXNoU2VudFJlZiIsImNyZWF0ZUNhbGxGaXJlZFJlZiIsInBpcENvbnRyb2xzQ2hhbmdlUmVmIiwicGlwU3RhdGVDaGFuZ2VSZWYiLCJwaXBBY3Rpb25GbnNSZWYiLCJ0b2dnbGVNdXRlIiwiZW5kQ2FsbCIsInRvZ2dsZUNhbWVyYSIsImhhbmRsZUNhbGxGYWlsdXJlIiwiZmFpbHVyZSIsImVycm9yIiwidGl0bGUiLCJkZXNjcmlwdGlvbiIsInJvbGUiLCJpbml0aWFscyIsInNwbGl0IiwibWFwIiwibiIsImpvaW4iLCJ0b1VwcGVyQ2FzZSIsInNsaWNlIiwic2VuZEluY29taW5nQ2FsbFB1c2giLCJuZXdDYWxsSWQiLCJtb2RlIiwiaWQiLCJjYWxsZXJOYW1lIiwidXNlcl9tZXRhZGF0YSIsImZ1bGxfbmFtZSIsIm5hbWUiLCJlbWFpbCIsImNhbGxlckF2YXRhciIsImRhdGEiLCJzZWxlY3QiLCJlcSIsIm1heWJlU2luZ2xlIiwicHJvZmlsZSIsImF2YXRhcl91cmwiLCJzZW5kUHVzaEF0dGVtcHQiLCJhdHRlbXB0IiwiZnVuY3Rpb25zIiwiaW52b2tlIiwiYm9keSIsInVzZXJfaWQiLCJub3RpZmljYXRpb25fdHlwZSIsImltYWdlX3VybCIsInVuZGVmaW5lZCIsInR5cGUiLCJjYWxsX2lkIiwiY2FsbF90eXBlIiwiY2FsbGVyX2lkIiwiY2FsbGVyX25hbWUiLCJjYWxsZXJfYXZhdGFyIiwicmluZ19zdGFnZSIsInB1c2hFcnJvciIsIlByb21pc2UiLCJyZXNvbHZlIiwid2luZG93Iiwic2V0VGltZW91dCIsImNvbnNvbGUiLCJoYW5kbGVSZW1vdGVTdHJlYW0iLCJzdHJlYW0iLCJjdXJyZW50Iiwic3JjT2JqZWN0IiwicGxheSIsImNhdGNoIiwibXV0ZWQiLCJoYW5kbGVFbmRlZCIsImNsZWFySW50ZXJ2YWwiLCJyZXNvbHZlZFN0YXR1cyIsImluc2VydCIsImNhbGxlZV9pZCIsInN0YXR1cyIsImR1cmF0aW9uX3NlY29uZHMiLCJjYWxsX3NpZ25hbF9pZCIsInRoZW4iLCJjYWxsSGlzdG9yeSIsImNhbGxMYWJlbCIsIm1lc3NhZ2UiLCJzZW5kZXJfaWQiLCJyZWNlaXZlcl9pZCIsIm1lc3NhZ2VfdHlwZSIsInN0YXJ0IiwiaXNNdXRlZCIsImlzQ2FtZXJhT2ZmIiwiaXNSZWNvbm5lY3RpbmciLCJjYWxsU3RhdGUiLCJsb2NhbFN0cmVhbSIsInBlZXJDb25uZWN0aW9uIiwidXNlcklkIiwib25SZW1vdGVTdHJlYW0iLCJvbkVuZGVkIiwib25GYWlsdXJlIiwicXVhbGl0eVN0YXRzIiwic2NyZWVuU2hhcmUiLCJjcmVhdGUiLCJwcmVmbGlnaHRTdHJlYW0iLCJuYXZpZ2F0b3IiLCJtZWRpYURldmljZXMiLCJnZXRVc2VyTWVkaWEiLCJhdWRpbyIsInZpZGVvIiwiZ2V0VHJhY2tzIiwiZm9yRWFjaCIsInRyYWNrIiwic3RvcCIsIm1lZGlhRXJyIiwibm93SXNvIiwiRGF0ZSIsInRvSVNPU3RyaW5nIiwic3RhbGVQYWlyV2luZG93Iiwibm93Iiwib3BlblBhaXJDYWxsc1JhdyIsImluIiwiaXMiLCJndGUiLCJvcmRlciIsImFzY2VuZGluZyIsImxpbWl0Iiwib3BlblBhaXJDYWxscyIsInN0YWxlUmluZ2luZ1BhaXJJZHMiLCJmaWx0ZXIiLCJyb3ciLCJzdGFsZUFuc3dlcmVkUGFpcklkcyIsImxlbmd0aCIsInVwZGF0ZSIsImVuZGVkX2F0Iiwibm93TXMiLCJtaW5DcmVhdGVkQXQiLCJyaW5naW5nU3RhbGVNcyIsImFuc3dlcmVkV2l0aG91dFN0YXJ0U3RhbGVNcyIsImFuc3dlcmVkU3RhbGVNcyIsInBvc3NpYmxlQWN0aXZlQ2FsbHNSYXciLCJvciIsInBvc3NpYmxlQWN0aXZlQ2FsbHMiLCJjYW5kaWRhdGVJZHMiLCJCb29sZWFuIiwiaGlzdG9yaWNhbFNpZ25hbElkcyIsIlNldCIsImV4aXN0aW5nSGlzdG9yeVJvd3NSYXciLCJleGlzdGluZ0hpc3RvcnlSb3dzIiwiYWRkIiwic3RhbGVNaXNzZWRJZHMiLCJzdGFsZUVuZGVkSWRzIiwiYWN0aXZlRm9yUmVjaXBpZW50IiwiZmluZCIsIm90aGVyUGFydHlJZCIsImNyZWF0ZWRNcyIsImNyZWF0ZWRfYXQiLCJnZXRUaW1lIiwic3RhcnRlZE1zIiwic3RhcnRlZF9hdCIsImhhc0hpc3RvcnkiLCJoYXMiLCJpc1N0YWxlUmluZ2luZyIsImlzU3RhbGVBbnN3ZXJlZCIsInB1c2giLCJpbmZvIiwic2luZ2xlIiwibmV3Q2FsbCIsInJlbWluZGVyVGltZXIiLCJjbGVhclRpbWVvdXQiLCJpbml0IiwibG9jYWxTdHIiLCJzdG9wUmluZ2JhY2siLCJ0aW1lb3V0IiwibGl2ZUNhbGwiLCJtYXJrZWRNaXNzZWRSYXciLCJtYXJrZWRNaXNzZWQiLCJjaGFubmVsIiwib24iLCJldmVudCIsInNjaGVtYSIsInBheWxvYWQiLCJuZXciLCJzdWJzY3JpYmUiLCJyZW1vdmVDaGFubmVsIiwiaW50ZXJ2YWxJZCIsInNldEludGVydmFsIiwiZCIsImZvcm1hdER1cmF0aW9uIiwicyIsIm0iLCJNYXRoIiwiZmxvb3IiLCJzZWMiLCJ0b1N0cmluZyIsInBhZFN0YXJ0Iiwic3RhdHVzVGV4dCIsImhhbmRsZU9wZW5DaGF0IiwicmVtb3RlU3RyZWFtIiwic3RhdGUiLCJvcGVuQ2hhdCIsImhhbmRsZUZsaXBDYW1lcmEiLCJNZWRpYVN0cmVhbSIsInZpZGVvVHJhY2siLCJnZXRWaWRlb1RyYWNrcyIsImNvbnN0cmFpbnRzIiwiZ2V0Q29uc3RyYWludHMiLCJjdXJyZW50RmFjaW5nUmF3IiwiZmFjaW5nTW9kZSIsImN1cnJlbnRGYWNpbmciLCJBcnJheSIsImlzQXJyYXkiLCJuZXdGYWNpbmciLCJuZXdTdHJlYW0iLCJuZXdUcmFjayIsInNlbmRlciIsImdldFNlbmRlcnMiLCJraW5kIiwicmVwbGFjZVRyYWNrIiwicmVtb3ZlVHJhY2siLCJhZGRUcmFjayIsIkNvbnRyb2xCdG4iLCJvbkNsaWNrIiwiYWN0aXZlIiwiYWN0aXZlQ29sb3IiLCJjaGlsZHJlbiIsInNpemUiLCJzaXplQ2xhc3MiLCJidXR0b24iLCJ3aGlsZVRhcCIsInNjYWxlIiwiY2xhc3NOYW1lIiwiQ29udHJvbExhYmVsIiwic3BhbiIsImRpdiIsImluaXRpYWwiLCJvcGFjaXR5IiwiYW5pbWF0ZSIsImV4aXQiLCJ0cmFuc2l0aW9uIiwicmVmIiwiYXV0b1BsYXkiLCJwbGF5c0lubGluZSIsInN0eWxlIiwicGFkZGluZ1RvcCIsInN0YXRzIiwiaDIiLCJwIiwieSIsImkiLCJyZXBlYXQiLCJJbmZpbml0eSIsImRlbGF5IiwiaXNTaGFyaW5nIiwiZHJhZyIsImRyYWdNb21lbnR1bSIsInBhZGRpbmdCb3R0b20iLCJ2YXJpYW50IiwidG9nZ2xlU2hhcmluZyIsImJhY2tncm91bmQiLCJ4IiwiZWFzZSIsInNyYyIsImlzQWN0aXZlIiwiYmFyQ291bnQiXSwibWFwcGluZ3MiOiI7O0FBQUE7O0NBRUMsR0FDRCxTQUFTQSxRQUFRLEVBQUVDLFNBQVMsRUFBRUMsTUFBTSxFQUFFQyxXQUFXLFFBQVEsUUFBUTtBQUNqRSxTQUFTQyxNQUFNLEVBQUVDLGNBQWMsRUFBRUMsV0FBVyxRQUFRLHlCQUF5QjtBQUM3RSxPQUFPQyxjQUFjLHdDQUF3QztBQUM3RCxPQUFPQyxTQUFTLGtDQUFrQztBQUNsRCxPQUFPQyxZQUFZLHNDQUFzQztBQUN6RCxPQUFPQyxXQUFXLG9DQUFvQztBQUN0RCxPQUFPQyxjQUFjLHdDQUF3QztBQUM3RCxPQUFPQyxhQUFhLHVDQUF1QztBQUMzRCxPQUFPQyxhQUFhLHNDQUFzQztBQUMxRCxPQUFPQyxnQkFBZ0IsMENBQTBDO0FBQ2pFLE9BQU9DLGVBQWUseUNBQXlDO0FBQy9ELE9BQU9DLG1CQUFtQiw2Q0FBNkM7QUFDdkUsT0FBT0MsYUFBYSx1Q0FBdUM7QUFDM0QsT0FBT0Msa0JBQWtC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
