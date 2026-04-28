@@ -116,25 +116,23 @@ export default function FindContactsPage() {
     }
   };
 
-  const addContact = async (m: Match) => {
-    setAdding(m.user_id);
-    const { data: u } = await supabase.auth.getUser();
-    if (!u.user) {
-      toast.error("Sign in required");
-      setAdding(null);
-      return;
-    }
-    const { error } = await supabase.from("contact_requests").insert({
-      from_user_id: u.user.id,
-      to_user_id: m.user_id,
-      status: "pending",
+  const openConfirm = (m: Match) => {
+    setConfirmTarget({
+      user_id: m.user_id,
+      full_name: m.full_name,
+      username: m.username,
+      avatar_url: m.avatar_url,
     });
-    setAdding(null);
-    if (error) {
-      toast.error(error.message);
-      return;
-    }
-    toast.success("Request sent");
+    setConfirmOpen(true);
+  };
+
+  const openChat = (m: Match) => {
+    const name = m.full_name || (m.username ? `@${m.username}` : "ZIVO user");
+    navigate("/chat", {
+      state: {
+        openChat: { recipientId: m.user_id, recipientName: name, recipientAvatar: m.avatar_url || null },
+      },
+    });
   };
 
   return (
