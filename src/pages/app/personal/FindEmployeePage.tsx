@@ -1,7 +1,7 @@
 /** Find Company — browse companies and open jobs */
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { ArrowLeft, Search, Building2, Briefcase, MapPin, FileText, Plus } from "lucide-react";
+import { ArrowLeft, Search, Building2, Briefcase, MapPin, FileText, Plus, UserCheck } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -9,6 +9,7 @@ import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { useSmartBack } from "@/lib/smartBack";
+import FindTalentTab from "@/components/careers/FindTalentTab";
 
 type CareerCompany = {
   id: string;
@@ -38,11 +39,12 @@ export default function FindEmployeePage() {
   const navigate = useNavigate();
   const goBack = useSmartBack("/personal/apply-job");
   const { user } = useAuth();
-  const [tab, setTab] = useState<"jobs" | "companies">("jobs");
+  const [tab, setTab] = useState<"jobs" | "companies" | "talent">("jobs");
   const [q, setQ] = useState("");
   const [companies, setCompanies] = useState<CareerCompany[]>([]);
   const [jobs, setJobs] = useState<CareerJob[]>([]);
   const [loading, setLoading] = useState(true);
+  const [isEmployer, setIsEmployer] = useState(false);
 
   useEffect(() => {
     let cancel = false;
@@ -59,6 +61,17 @@ export default function FindEmployeePage() {
     })();
     return () => { cancel = true; };
   }, []);
+
+  useEffect(() => {
+    if (!user) { setIsEmployer(false); return; }
+    (async () => {
+      const [coRes, stRes] = await Promise.all([
+        (supabase as any).from("career_companies").select("id").eq("owner_id", user.id).limit(1),
+        (supabase as any).from("stores").select("id").eq("owner_id", user.id).limit(1),
+      ]);
+      setIsEmployer(((coRes.data?.length ?? 0) + (stRes.data?.length ?? 0)) > 0);
+    })();
+  }, [user]);
 
   const filteredJobs = useMemo(() => {
     const s = q.trim().toLowerCase();
