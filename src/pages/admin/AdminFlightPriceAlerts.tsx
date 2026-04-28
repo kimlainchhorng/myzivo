@@ -45,11 +45,17 @@ export default function AdminFlightPriceAlerts() {
       if (error) throw error;
       const rows = (data || []) as unknown as PriceAlert[];
 
-      // Get emails
+      // Resolve customer emails via admin RPC (PII no longer exposed via direct table read).
       const userIds = [...new Set(rows.map((r) => r.user_id).filter(Boolean))] as string[];
       if (userIds.length > 0) {
-        const { data: profiles } = await supabase.from("profiles").select("user_id, email").in("user_id", userIds);
-        const emailMap = new Map((profiles || []).map((p: any) => [p.user_id, p.email]));
+        const emailMap = new Map<string, string | null>();
+        await Promise.all(
+          userIds.map(async (uid) => {
+            const { data } = await (supabase.rpc as any)("admin_get_profile", { _user_id: uid });
+            const row: any = Array.isArray(data) ? data[0] : data;
+            emailMap.set(uid, row?.email ?? null);
+          })
+        );
         rows.forEach((r) => { r.customer_email = r.user_id ? emailMap.get(r.user_id) || null : null; });
       }
       return rows;

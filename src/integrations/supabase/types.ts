@@ -13019,6 +13019,42 @@ export type Database = {
         }
         Relationships: []
       }
+      csp_violations: {
+        Row: {
+          blocked_uri: string | null
+          created_at: string
+          document_uri: string | null
+          id: string
+          line_number: number | null
+          raw: Json | null
+          source_file: string | null
+          user_agent: string | null
+          violated_directive: string | null
+        }
+        Insert: {
+          blocked_uri?: string | null
+          created_at?: string
+          document_uri?: string | null
+          id?: string
+          line_number?: number | null
+          raw?: Json | null
+          source_file?: string | null
+          user_agent?: string | null
+          violated_directive?: string | null
+        }
+        Update: {
+          blocked_uri?: string | null
+          created_at?: string
+          document_uri?: string | null
+          id?: string
+          line_number?: number | null
+          raw?: Json | null
+          source_file?: string | null
+          user_agent?: string | null
+          violated_directive?: string | null
+        }
+        Relationships: []
+      }
       currencies: {
         Row: {
           code: string | null
@@ -45848,6 +45884,39 @@ export type Database = {
           },
         ]
       }
+      security_audit_log: {
+        Row: {
+          actor_id: string | null
+          created_at: string
+          event: string
+          id: string
+          ip: string | null
+          metadata: Json | null
+          user_agent: string | null
+          user_id: string | null
+        }
+        Insert: {
+          actor_id?: string | null
+          created_at?: string
+          event: string
+          id?: string
+          ip?: string | null
+          metadata?: Json | null
+          user_agent?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          actor_id?: string | null
+          created_at?: string
+          event?: string
+          id?: string
+          ip?: string | null
+          metadata?: Json | null
+          user_agent?: string | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       security_events: {
         Row: {
           created_at: string
@@ -61899,6 +61968,79 @@ export type Database = {
         Args: { p_customer_id: string }
         Returns: Json
       }
+      admin_get_profile: {
+        Args: { _user_id: string }
+        Returns: {
+          admin_2fa_enabled: boolean | null
+          admin_role: string | null
+          affiliate_captured_at: string | null
+          affiliate_code: string | null
+          affiliate_partner_name: string | null
+          allow_friend_requests: boolean
+          allow_mentions: boolean
+          allow_sharing: boolean
+          avatar_url: string | null
+          background_check_reason: string | null
+          background_check_status: string
+          bio: string | null
+          comment_control: string
+          cover_position: number | null
+          cover_url: string | null
+          created_at: string | null
+          date_of_birth: string | null
+          display_brand_name: string | null
+          email: string | null
+          email_verified: boolean | null
+          full_name: string | null
+          hide_from_drivers: boolean
+          hide_like_counts: boolean
+          id: string
+          is_private: boolean
+          is_verified: boolean
+          kyc_rejection_reason: string | null
+          kyc_status: string
+          kyc_verified_at: string | null
+          last_admin_login: string | null
+          last_seen: string | null
+          loyalty_tier_id: string | null
+          payout_hold: boolean
+          phone: string | null
+          phone_e164: string | null
+          phone_hash: string | null
+          phone_verified: boolean
+          phone_verified_at: string | null
+          profile_visibility: string
+          role: string | null
+          selected_city_id: string | null
+          selected_city_name: string | null
+          setup_complete: boolean | null
+          share_code: string | null
+          sms_consent: boolean
+          sms_opted_out: boolean
+          sms_opted_out_at: string | null
+          social_facebook: string | null
+          social_instagram: string | null
+          social_linkedin: string | null
+          social_links: Json | null
+          social_links_visible: boolean | null
+          social_onlyfans: string | null
+          social_snapchat: string | null
+          social_telegram: string | null
+          social_tiktok: string | null
+          social_x: string | null
+          status: string | null
+          updated_at: string | null
+          user_id: string | null
+          username: string | null
+          zone_id: string | null
+        }
+        SetofOptions: {
+          from: "*"
+          to: "profiles"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
       admin_issue_order_refund: {
         Args: {
           p_amount: number
@@ -62549,6 +62691,42 @@ export type Database = {
         Args: { p_policy_type: string }
         Returns: string
       }
+      get_cv_by_share_code: {
+        Args: { _share_code: string }
+        Returns: {
+          certifications: Json | null
+          created_at: string
+          date_of_birth: string | null
+          educations: Json | null
+          email: string | null
+          experiences: Json | null
+          full_name: string
+          hobbies: string | null
+          id: string
+          is_primary: boolean | null
+          job_title: string | null
+          languages: Json | null
+          linkedin: string | null
+          location: string | null
+          phone: string | null
+          photo_url: string | null
+          portfolio: string | null
+          references_list: Json | null
+          share_code: string | null
+          skills: Json | null
+          summary: string | null
+          template: string | null
+          updated_at: string
+          user_id: string
+          website: string | null
+        }[]
+        SetofOptions: {
+          from: "*"
+          to: "user_cvs"
+          isOneToOne: false
+          isSetofReturn: true
+        }
+      }
       get_day_of_week: { Args: { ts: string }; Returns: number }
       get_default_pricing_zone_id: { Args: never; Returns: string }
       get_delivered_order_for_rating: {
@@ -62668,6 +62846,79 @@ export type Database = {
           phone: string
           phone_confirmed_at: string
         }[]
+      }
+      get_my_profile: {
+        Args: never
+        Returns: {
+          admin_2fa_enabled: boolean | null
+          admin_role: string | null
+          affiliate_captured_at: string | null
+          affiliate_code: string | null
+          affiliate_partner_name: string | null
+          allow_friend_requests: boolean
+          allow_mentions: boolean
+          allow_sharing: boolean
+          avatar_url: string | null
+          background_check_reason: string | null
+          background_check_status: string
+          bio: string | null
+          comment_control: string
+          cover_position: number | null
+          cover_url: string | null
+          created_at: string | null
+          date_of_birth: string | null
+          display_brand_name: string | null
+          email: string | null
+          email_verified: boolean | null
+          full_name: string | null
+          hide_from_drivers: boolean
+          hide_like_counts: boolean
+          id: string
+          is_private: boolean
+          is_verified: boolean
+          kyc_rejection_reason: string | null
+          kyc_status: string
+          kyc_verified_at: string | null
+          last_admin_login: string | null
+          last_seen: string | null
+          loyalty_tier_id: string | null
+          payout_hold: boolean
+          phone: string | null
+          phone_e164: string | null
+          phone_hash: string | null
+          phone_verified: boolean
+          phone_verified_at: string | null
+          profile_visibility: string
+          role: string | null
+          selected_city_id: string | null
+          selected_city_name: string | null
+          setup_complete: boolean | null
+          share_code: string | null
+          sms_consent: boolean
+          sms_opted_out: boolean
+          sms_opted_out_at: string | null
+          social_facebook: string | null
+          social_instagram: string | null
+          social_linkedin: string | null
+          social_links: Json | null
+          social_links_visible: boolean | null
+          social_onlyfans: string | null
+          social_snapchat: string | null
+          social_telegram: string | null
+          social_tiktok: string | null
+          social_x: string | null
+          status: string | null
+          updated_at: string | null
+          user_id: string | null
+          username: string | null
+          zone_id: string | null
+        }
+        SetofOptions: {
+          from: "*"
+          to: "profiles"
+          isOneToOne: true
+          isSetofReturn: false
+        }
       }
       get_my_tenant_permissions: {
         Args: { p_tenant_id: string }
