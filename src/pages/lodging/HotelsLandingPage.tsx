@@ -176,7 +176,7 @@ export default function HotelsLandingPage() {
                   document.getElementById("hotels-all")?.scrollIntoView({ behavior: "smooth", block: "start" });
                 }}
                 className={
-                  "shrink-0 relative w-[120px] h-[80px] rounded-2xl overflow-hidden border transition active:scale-95 " +
+                  "shrink-0 relative w-[140px] h-[88px] rounded-2xl overflow-hidden border transition active:scale-95 " +
                   (active ? "border-primary ring-2 ring-primary/30" : "border-border")
                 }
                 aria-label={`Show hotels in ${dest.label}`}
@@ -185,10 +185,13 @@ export default function HotelsLandingPage() {
                   src={dest.img}
                   alt={dest.label}
                   loading="lazy"
-                  className="absolute inset-0 w-full h-full object-cover"
+                  onError={(e) => {
+                    (e.currentTarget as HTMLImageElement).style.display = "none";
+                  }}
+                  className="absolute inset-0 w-full h-full object-cover bg-muted"
                 />
-                <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/10 to-transparent" />
-                <span className="absolute bottom-1.5 left-2 right-2 text-[11px] font-bold text-white drop-shadow text-left truncate">
+                <div className="absolute inset-0 bg-gradient-to-t from-black/75 via-black/20 to-transparent" />
+                <span className="absolute bottom-1.5 left-2 right-2 text-[11px] font-bold text-white drop-shadow text-left whitespace-nowrap">
                   {dest.label}
                 </span>
               </button>
