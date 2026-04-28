@@ -918,6 +918,7 @@ const App = () => (
                 {/* Hotels */}
                 <Route path="/hotels/:city" element={<RouteErrorBoundary section="Hotels"><HotelCityLandingPage /></RouteErrorBoundary>} />
                 <Route path="/hotel/:storeId" element={<RouteErrorBoundary section="HotelDetail"><HotelResortDetailPage /></RouteErrorBoundary>} />
+                <Route path="/hotels-list" element={<RouteErrorBoundary section="HotelsDirectory"><HotelsResortsDirectoryPage /></RouteErrorBoundary>} />
                 {/* /hotels and /hotels/in-:city removed */}
 
                 {/* Car Rental */}
