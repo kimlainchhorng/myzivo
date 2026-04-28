@@ -179,8 +179,13 @@ Deno.serve(async (req) => {
             error: "You don't have permission to upload receipts for this store.",
             user_id: userId,
             store_id: storeId,
+            store_found: !!store,
+            store_owner_id: store?.owner_id ?? null,
+            store_lookup_error: storeErr,
             is_owner: isOwner,
             is_admin: isAdmin,
+            is_employee: isEmployee,
+            roles: roleList,
           },
           403,
         );
