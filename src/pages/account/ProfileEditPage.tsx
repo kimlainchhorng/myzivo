@@ -8,7 +8,7 @@ import {
   User, Camera, ArrowLeft, Mail, Phone, Loader2, Save, Sparkles,
   AlertCircle, CheckCircle2, Lock, Unlock, Users, Eye, EyeOff, Car,
   Link2, Trash2, ExternalLink, MessageSquare, Heart, Share2, AtSign,
-  UserPlus, Globe,
+  UserPlus, Globe, Briefcase,
 } from "lucide-react";
 import { useIsMobile } from "@/hooks/use-mobile";
 import NavBar from "@/components/home/NavBar";
