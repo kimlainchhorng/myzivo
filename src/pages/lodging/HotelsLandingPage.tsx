@@ -232,6 +232,7 @@ export default function HotelsLandingPage() {
   });
 
   const minRates = ratesQuery.data || {};
+  const promotions = promotionsQuery.data || {};
   const amenitiesMap = amenitiesQuery.data || {};
   const nights = Math.max(1, differenceInCalendarDays(checkOut, checkIn));
 
