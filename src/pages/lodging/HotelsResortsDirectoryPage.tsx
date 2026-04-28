@@ -186,7 +186,7 @@ function PropertyCard({
   index: number;
   onOpen: () => void;
 }) {
-  const location = [store.city, store.country].filter(Boolean).join(", ");
+  const location = store.address || "";
   return (
     <motion.button
       type="button"
@@ -199,9 +199,9 @@ function PropertyCard({
     >
       <div className="flex">
         <div className="relative w-32 shrink-0 bg-muted">
-          {store.logo_url ? (
+          {(store.banner_url || store.logo_url) ? (
             <img
-              src={store.logo_url}
+              src={store.banner_url || store.logo_url || ""}
               alt={`${store.name} cover`}
               className="absolute inset-0 w-full h-full object-cover"
               loading="lazy"
