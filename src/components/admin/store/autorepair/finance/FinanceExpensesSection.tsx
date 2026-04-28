@@ -401,42 +401,61 @@ export default function FinanceExpensesSection({ storeId }: Props) {
                 <Plus className="w-3.5 h-3.5 mr-1" /> Add line
               </Button>
             </div>
-            <div className="border rounded-md divide-y">
-              <div className="grid grid-cols-12 gap-2 px-2 py-1.5 text-[11px] font-medium text-muted-foreground bg-muted/40">
-                <div className="col-span-3">Part #</div>
-                <div className="col-span-4">Name</div>
-                <div className="col-span-1 text-right">Qty</div>
-                <div className="col-span-2 text-right">Unit price</div>
-                <div className="col-span-2 text-right">Total</div>
+            <div className="border rounded-md divide-y overflow-hidden">
+              {/* Header (md+) */}
+              <div className="hidden md:grid grid-cols-[1.2fr_2fr_0.7fr_1.2fr_1.2fr_auto] gap-2 px-3 py-2 text-[11px] font-medium text-muted-foreground bg-muted/40">
+                <div>Part #</div>
+                <div>Name</div>
+                <div className="text-right">Qty</div>
+                <div className="text-right">Unit price</div>
+                <div className="text-right">Total</div>
+                <div className="w-7" />
               </div>
               {form.items.map((it, i) => {
                 const q = parseFloat(it.quantity) || 0;
                 const u = Math.round((parseFloat(it.unit_price) || 0) * 100);
                 const lineTotal = Math.round(q * u);
                 return (
-                  <div key={i} className="grid grid-cols-12 gap-2 px-2 py-1.5 items-center">
-                    <Input className="col-span-3 h-8 text-xs" value={it.part_number} onChange={(e) => updateItem(i, { part_number: e.target.value })} placeholder="SKU" />
-                    <Input className="col-span-4 h-8 text-xs" value={it.name} onChange={(e) => updateItem(i, { name: e.target.value })} placeholder="Item name" />
-                    <Input className="col-span-1 h-8 text-xs text-right" type="number" step="0.01" value={it.quantity} onChange={(e) => updateItem(i, { quantity: e.target.value })} />
-                    <Input className="col-span-2 h-8 text-xs text-right" type="number" step="0.01" value={it.unit_price} onChange={(e) => updateItem(i, { unit_price: e.target.value })} placeholder="0.00" />
-                    <div className="col-span-1 text-xs text-right tabular-nums">{fmt(lineTotal)}</div>
-                    <Button type="button" size="icon" variant="ghost" className="col-span-1 h-7 w-7 justify-self-end" onClick={() => removeItem(i)}>
-                      <X className="w-3.5 h-3.5" />
-                    </Button>
+                  <div key={i} className="px-3 py-2 md:grid md:grid-cols-[1.2fr_2fr_0.7fr_1.2fr_1.2fr_auto] md:gap-2 md:items-center">
+                    {/* Mobile stacked */}
+                    <div className="grid grid-cols-2 gap-2 md:contents">
+                      <div className="md:col-auto">
+                        <Label className="md:hidden text-[10px] text-muted-foreground">Part #</Label>
+                        <Input className="h-9 text-sm" value={it.part_number} onChange={(e) => updateItem(i, { part_number: e.target.value })} placeholder="SKU" />
+                      </div>
+                      <div className="md:col-auto">
+                        <Label className="md:hidden text-[10px] text-muted-foreground">Name</Label>
+                        <Input className="h-9 text-sm" value={it.name} onChange={(e) => updateItem(i, { name: e.target.value })} placeholder="Item name" />
+                      </div>
+                    </div>
+                    <div className="grid grid-cols-[1fr_1.4fr_1.4fr_auto] gap-2 mt-2 md:mt-0 md:contents items-center">
+                      <div className="md:col-auto">
+                        <Label className="md:hidden text-[10px] text-muted-foreground">Qty</Label>
+                        <Input className="h-9 text-sm text-right" type="number" step="0.01" value={it.quantity} onChange={(e) => updateItem(i, { quantity: e.target.value })} />
+                      </div>
+                      <div className="md:col-auto">
+                        <Label className="md:hidden text-[10px] text-muted-foreground">Unit price</Label>
+                        <Input className="h-9 text-sm text-right" type="number" step="0.01" value={it.unit_price} onChange={(e) => updateItem(i, { unit_price: e.target.value })} placeholder="0.00" />
+                      </div>
+                      <div className="text-sm text-right tabular-nums font-medium self-center">{fmt(lineTotal)}</div>
+                      <Button type="button" size="icon" variant="ghost" className="h-8 w-8 self-center" onClick={() => removeItem(i)}>
+                        <X className="w-4 h-4 text-muted-foreground" />
+                      </Button>
+                    </div>
                   </div>
                 );
               })}
             </div>
 
-            <div className="grid grid-cols-2 gap-3 mt-3">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mt-3">
               <div>
                 <Label className="text-xs">Tax (USD)</Label>
                 <Input type="number" step="0.01" value={form.tax} onChange={(e) => setForm({ ...form, tax: e.target.value })} placeholder="0.00" />
               </div>
-              <div className="text-right text-sm space-y-0.5 pt-4">
-                <div className="text-muted-foreground">Subtotal: <span className="tabular-nums">{fmt(subtotalCents)}</span></div>
-                <div className="text-muted-foreground">Tax: <span className="tabular-nums">{fmt(taxCents)}</span></div>
-                <div className="font-semibold">Total: <span className="tabular-nums">{fmt(totalCents)}</span></div>
+              <div className="rounded-md border bg-muted/30 p-3 text-sm space-y-1">
+                <div className="flex justify-between text-muted-foreground"><span>Subtotal</span><span className="tabular-nums">{fmt(subtotalCents)}</span></div>
+                <div className="flex justify-between text-muted-foreground"><span>Tax</span><span className="tabular-nums">{fmt(taxCents)}</span></div>
+                <div className="flex justify-between font-semibold text-base pt-1 border-t"><span>Total</span><span className="tabular-nums">{fmt(totalCents)}</span></div>
               </div>
             </div>
           </div>
