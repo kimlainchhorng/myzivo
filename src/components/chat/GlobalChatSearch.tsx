@@ -110,9 +110,9 @@ export default function GlobalChatSearch({ open, onClose }: Props) {
       // 3) Messages in user's DM threads
       const messagesP = supabase
         .from("direct_messages")
-        .select("id, body, sender_id, recipient_id, created_at")
-        .or(`sender_id.eq.${user.id},recipient_id.eq.${user.id}`)
-        .ilike("body", term)
+        .select("id, message, sender_id, receiver_id, created_at")
+        .or(`sender_id.eq.${user.id},receiver_id.eq.${user.id}`)
+        .ilike("message", term)
         .order("created_at", { ascending: false })
         .limit(5);
 
