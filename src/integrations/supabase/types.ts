@@ -3923,6 +3923,60 @@ export type Database = {
         }
         Relationships: []
       }
+      ar_customer_vehicles: {
+        Row: {
+          color: string | null
+          created_at: string
+          id: string
+          make: string
+          mileage: number | null
+          model: string
+          notes: string | null
+          owner_email: string | null
+          owner_name: string
+          owner_phone: string | null
+          plate: string | null
+          store_id: string
+          updated_at: string
+          vin: string | null
+          year: number | null
+        }
+        Insert: {
+          color?: string | null
+          created_at?: string
+          id?: string
+          make: string
+          mileage?: number | null
+          model: string
+          notes?: string | null
+          owner_email?: string | null
+          owner_name: string
+          owner_phone?: string | null
+          plate?: string | null
+          store_id: string
+          updated_at?: string
+          vin?: string | null
+          year?: number | null
+        }
+        Update: {
+          color?: string | null
+          created_at?: string
+          id?: string
+          make?: string
+          mileage?: number | null
+          model?: string
+          notes?: string | null
+          owner_email?: string | null
+          owner_name?: string
+          owner_phone?: string | null
+          plate?: string | null
+          store_id?: string
+          updated_at?: string
+          vin?: string | null
+          year?: number | null
+        }
+        Relationships: []
+      }
       ar_estimates: {
         Row: {
           converted_workorder_id: string | null
@@ -4074,6 +4128,107 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      ar_inspections: {
+        Row: {
+          checklist: Json
+          created_at: string
+          customer_vehicle_id: string | null
+          id: string
+          sent_at: string | null
+          share_token: string | null
+          status: string
+          store_id: string
+          summary: string | null
+          technician_id: string | null
+          technician_name: string | null
+          updated_at: string
+          vehicle_label: string | null
+        }
+        Insert: {
+          checklist?: Json
+          created_at?: string
+          customer_vehicle_id?: string | null
+          id?: string
+          sent_at?: string | null
+          share_token?: string | null
+          status?: string
+          store_id: string
+          summary?: string | null
+          technician_id?: string | null
+          technician_name?: string | null
+          updated_at?: string
+          vehicle_label?: string | null
+        }
+        Update: {
+          checklist?: Json
+          created_at?: string
+          customer_vehicle_id?: string | null
+          id?: string
+          sent_at?: string | null
+          share_token?: string | null
+          status?: string
+          store_id?: string
+          summary?: string | null
+          technician_id?: string | null
+          technician_name?: string | null
+          updated_at?: string
+          vehicle_label?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ar_inspections_customer_vehicle_id_fkey"
+            columns: ["customer_vehicle_id"]
+            isOneToOne: false
+            referencedRelation: "ar_customer_vehicles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      ar_parts: {
+        Row: {
+          active: boolean
+          brand: string | null
+          category: string | null
+          created_at: string
+          id: string
+          image_url: string | null
+          name: string
+          price_cents: number
+          sku: string
+          stock: number
+          store_id: string
+          updated_at: string
+        }
+        Insert: {
+          active?: boolean
+          brand?: string | null
+          category?: string | null
+          created_at?: string
+          id?: string
+          image_url?: string | null
+          name: string
+          price_cents?: number
+          sku: string
+          stock?: number
+          store_id: string
+          updated_at?: string
+        }
+        Update: {
+          active?: boolean
+          brand?: string | null
+          category?: string | null
+          created_at?: string
+          id?: string
+          image_url?: string | null
+          name?: string
+          price_cents?: number
+          sku?: string
+          stock?: number
+          store_id?: string
+          updated_at?: string
+        }
+        Relationships: []
       }
       ar_recall_checks: {
         Row: {
@@ -4246,6 +4401,33 @@ export type Database = {
           speed_rating?: string | null
           store_id?: string
           updated_at?: string
+        }
+        Relationships: []
+      }
+      ar_vin_lookups: {
+        Row: {
+          created_at: string
+          decoded: Json
+          id: string
+          looked_up_by: string | null
+          store_id: string
+          vin: string
+        }
+        Insert: {
+          created_at?: string
+          decoded?: Json
+          id?: string
+          looked_up_by?: string | null
+          store_id: string
+          vin: string
+        }
+        Update: {
+          created_at?: string
+          decoded?: Json
+          id?: string
+          looked_up_by?: string | null
+          store_id?: string
+          vin?: string
         }
         Relationships: []
       }
