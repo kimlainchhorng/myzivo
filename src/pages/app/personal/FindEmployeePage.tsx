@@ -99,7 +99,7 @@ export default function FindEmployeePage() {
         <Button variant="ghost" size="icon" onClick={goBack} aria-label="Back">
           <ArrowLeft className="h-5 w-5" />
         </Button>
-        <h1 className="text-lg font-bold">Find Company</h1>
+        <h1 className="text-lg font-bold">Careers</h1>
         {user && (
           <Button size="sm" variant="outline" className="ml-auto" onClick={() => navigate("/personal/my-applications")}>
             <FileText className="mr-1 h-4 w-4" /> My Apps
@@ -134,14 +134,24 @@ export default function FindEmployeePage() {
         </Card>
 
         <Tabs value={tab} onValueChange={v => setTab(v as any)}>
-          <TabsList className="grid w-full grid-cols-2">
+          <TabsList className={isEmployer ? "grid w-full grid-cols-3" : "grid w-full grid-cols-2"}>
             <TabsTrigger value="jobs">
-              <Briefcase className="mr-1 h-4 w-4" /> Open Jobs ({filteredJobs.length})
+              <Briefcase className="mr-1 h-4 w-4" /> Jobs ({filteredJobs.length})
             </TabsTrigger>
             <TabsTrigger value="companies">
               <Building2 className="mr-1 h-4 w-4" /> Companies ({filteredCompanies.length})
             </TabsTrigger>
+            {isEmployer && (
+              <TabsTrigger value="talent">
+                <UserCheck className="mr-1 h-4 w-4" /> Talent
+              </TabsTrigger>
+            )}
           </TabsList>
+          {isEmployer && (
+            <TabsContent value="talent" className="mt-3">
+              <FindTalentTab />
+            </TabsContent>
+          )}
 
           <TabsContent value="jobs" className="mt-3 space-y-2">
             {loading && <p className="text-center text-sm text-muted-foreground">Loading…</p>}
