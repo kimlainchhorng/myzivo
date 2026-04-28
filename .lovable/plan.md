@@ -1,63 +1,25 @@
-## Goal
+## Fix lodging pages — wrong table + broken thumbnails
 
-Tapping the **Hotels** pill on Home opens a full Hotels & Resorts landing page (not just the flat list). The landing page features a hero search, popular destinations, featured properties, and the full directory below.
+DB confirmed: Koh Sdach Resort exists in `store_profiles` (category `resort`, has `address`, `banner_url`, `logo_url`). The pages currently query a non-existent `stores` table, so the list is empty and the detail page would 404.
 
-## Changes
+### 1. `src/pages/lodging/HotelsLandingPage.tsx`
+- `.from("stores")` → `.from("store_profiles")`
+- Replace `city, country` columns with `address, banner_url`
+- Update `DirectoryStore` interface and search haystack to use `address`
+- `PropertyCard`: prefer `banner_url` over `logo_url` for cover, show `address` as location
+- Featured carousel: prefer `banner_url`
+- Replace broken Unsplash photo URLs in `POPULAR_DESTINATIONS` with `https://source.unsplash.com/240x160/?<keywords>` and add `onError` → hide `<img>` so the gradient fallback shows
 
-### 1. New page: `src/pages/lodging/HotelsLandingPage.tsx`
-Route: `/hotels` (replaces today's `/hotels-list` as the primary entry point; old route stays as alias).
+### 2. `src/pages/lodging/HotelsResortsDirectoryPage.tsx`
+- Same table + column rename (`stores` → `store_profiles`, `city/country` → `address`)
+- Update `DirectoryStore`, query, search haystack, `PropertyCard` location
 
-Sections, top to bottom:
+### 3. `src/pages/lodging/HotelResortDetailPage.tsx`
+- `StoreRow`: drop `city, country, website`; add `address, banner_url, phone`
+- Query: `.from("store_profiles")` selecting `id, name, category, address, logo_url, banner_url, description, phone, setup_complete`
+- `cover` uses `banner_url || logo_url`
+- `location` = `store?.address || ""`
+- Contact section: replace `store?.website` references with `store?.phone` (render as `tel:` link if not already shown by `profile.contact.phone`)
 
-```text
-┌─────────────────────────────────┐
-│  HERO  (gradient + cover image) │
-│  "Find your perfect stay"       │
-│  [ Search city or hotel...   ] │
-├─────────────────────────────────┤
-│  Popular Destinations  →        │
-│  [PP] [Siem Reap] [Sihanoukville]
-│  [Kep] [Kampot] [Battambang]   │
-│  (horizontal scroll cards w/ img)
-├─────────────────────────────────┤
-│  Featured Properties  →         │
-│  (horizontal carousel of top    │
-│   3-6 setup_complete stores)    │
-├─────────────────────────────────┤
-│  All Hotels & Resorts           │
-│  [filter chips: All Hotels ...] │
-│  ▣ property card                │
-│  ▣ property card                │
-└─────────────────────────────────┘
-```
-
-Behavior:
-- Hero search input is sticky-collapsed when scrolled past (mirror current sticky header pattern).
-- Tapping a destination chip pre-fills the search/filter to that city.
-- Featured carousel pulls from the same `stores` query, filtered to `setup_complete = true`, ordered by name. Tap → `/hotel/:storeId`.
-- "All Hotels & Resorts" reuses the existing `PropertyCard` and filter chips logic from `HotelsResortsDirectoryPage.tsx`.
-
-Imports follow project rule: default imports from `lucide-react/dist/esm/icons/<name>` (no barrel imports).
-
-### 2. Update `src/pages/app/AppHome.tsx`
-- "Hotels" pill: single tap navigates to `/hotels` immediately (skip the second-tap-to-open behavior).
-- `tabSearchRoutes.hotels` → `/hotels`.
-- The Hotel/Resort Admin card stays as-is on the Home Hotels tab (so admins still land there from notifications).
-
-### 3. Routing in `src/App.tsx`
-- Register `/hotels` → `HotelsLandingPage` (lazy + ErrorBoundary, same pattern as existing routes).
-- Keep `/hotels-list` route pointing to the existing `HotelsResortsDirectoryPage` so any old links still resolve.
-
-### 4. Quiet runtime fix
-The current preview shows a Vite cache error: `does not provide an export named 'ArrowLeft'`. Re-saving the file (which the new code will do anyway) resolves the stale Vite optimize-deps cache. No code change needed beyond the touch.
-
-## Out of scope
-- No real booking/availability (still uses the existing contact-modal flow on `HotelResortDetailPage`).
-- No new database tables — popular destinations are a static curated list in code.
-- No changes to admin/Ops pages.
-
-## Files
-
-- **Create**: `src/pages/lodging/HotelsLandingPage.tsx`
-- **Edit**: `src/pages/app/AppHome.tsx` (pill onClick + search route)
-- **Edit**: `src/App.tsx` (register `/hotels` route)
+### 4. Verify
+After edits, all three pages should compile clean and Koh Sdach Resort should appear in the directory and open from `/hotel/<id>`.
