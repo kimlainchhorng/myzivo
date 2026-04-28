@@ -78,6 +78,24 @@ export default function CustomFoldersPage() {
     refresh();
   };
 
+  const addSuggested = async (preset: { name: string; icon: string }) => {
+    if (!user?.id) return;
+    if (folders.some((f) => f.name.toLowerCase() === preset.name.toLowerCase())) {
+      toast.info(`"${preset.name}" already exists`);
+      return;
+    }
+    const sort_order = folders.length;
+    const { error } = await dbFrom("chat_folders").insert({
+      user_id: user.id,
+      name: preset.name,
+      icon: preset.icon,
+      sort_order,
+    });
+    if (error) return toast.error("Could not add folder");
+    toast.success(`"${preset.name}" folder added`);
+    refresh();
+  };
+
   const remove = async (id: string) => {
     const { error } = await dbFrom("chat_folders").delete().eq("id", id);
     if (error) return toast.error("Could not delete");
