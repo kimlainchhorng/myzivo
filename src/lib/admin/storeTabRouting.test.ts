@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
-import { buildStoreTabUrl, getTabFromSearch, isLodgingTab, resolveStoreTab, resolveStoreTabFromSearch } from "./storeTabRouting";
-import { tabQueryFixtures, validBaseTabFixtures, validLodgingTabFixtures } from "@/test/fixtures/lodgingTabFixtures";
+import { buildStoreTabUrl, getTabFromSearch, isAutoRepairTab, isLodgingTab, resolveStoreTab, resolveStoreTabFromSearch } from "./storeTabRouting";
+import { tabQueryFixtures, validAutoRepairTabFixtures, validBaseTabFixtures, validLodgingTabFixtures } from "@/test/fixtures/lodgingTabFixtures";
 
 describe("store tab routing", () => {
   it("accepts valid lodging deep links for lodging stores", () => {
@@ -10,6 +10,12 @@ describe("store tab routing", () => {
 
   it("accepts valid base store tabs", () => {
     validBaseTabFixtures.forEach((tab) => expect(resolveStoreTab(tab, true)).toBe(tab));
+  });
+
+  it("accepts valid auto repair deep links only for auto repair stores", () => {
+    validAutoRepairTabFixtures.forEach((tab) => expect(resolveStoreTab(tab, false, true)).toBe(tab));
+    validAutoRepairTabFixtures.forEach((tab) => expect(isAutoRepairTab(tab)).toBe(true));
+    expect(resolveStoreTab("ar-vehicles", false, false)).toBe("profile");
   });
 
   it("falls invalid lodging-store tabs back to overview", () => {
@@ -25,8 +31,8 @@ describe("store tab routing", () => {
     expect(resolveStoreTab(undefined, false)).toBe("profile");
   });
 
-  it.each(tabQueryFixtures)("resolves query string $search", ({ search, lodging, expected }) => {
-    expect(resolveStoreTabFromSearch(search, lodging)).toBe(expected);
+  it.each(tabQueryFixtures)("resolves query string $search", ({ search, lodging, autoRepair, expected }) => {
+    expect(resolveStoreTabFromSearch(search, lodging, autoRepair)).toBe(expected);
   });
 
   it("parses tab query strings and builds URLs", () => {
