@@ -307,6 +307,7 @@ const HotelLanding = lazy(() => import("./pages/HotelLanding"));
 // HotelDashboard removed
 const HotelResultsPage = lazy(() => import("./pages/HotelResultsPage"));
 const HotelResortDetailPage = lazy(() => import("./pages/lodging/HotelResortDetailPage"));
+const HotelsResortsDirectoryPage = lazy(() => import("./pages/lodging/HotelsResortsDirectoryPage"));
 
 // Car Rental
 const CarRentalBooking = lazy(() => import("./pages/CarRentalBooking"));
