@@ -629,7 +629,8 @@ export default function HotelsLandingPage() {
                   key={store.id}
                   store={store}
                   index={idx}
-                  minRateCents={minRates[store.id]}
+                  rateInfo={minRates[store.id]}
+                  promo={promotions[store.id]}
                   amenities={amenitiesMap[store.id] || []}
                   nights={nights}
                   onOpen={() => navigate(`/hotel/${store.id}`)}
