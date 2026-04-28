@@ -1,29 +1,42 @@
-I found the likely cause of the scan/save error.
+Do I know what the issue is? Yes.
 
-The Expenses & Bills page is using `store_profiles.id` as the store ID, but the new `ar_expenses`, `ar_expense_items`, and `ar-receipts` RLS policies check ownership against the older `restaurants` table. Your auto repair store exists in `store_profiles` (`AB Complete Car Care`), so the RLS ownership check fails when the app uploads/scans/saves. The storage receipt policies also have a bug where they check `storage.foldername(r.name)` instead of the uploaded object path.
+The last fix left two database-policy problems:
+
+1. The receipt storage policy still uses the wrong `name` field. In the saved policy, `storage.foldername(name)` is resolving to `store_profiles.name` / `restaurants.name`, not the uploaded file path on `storage.objects.name`. So an upload path like:
+
+```text
+a914b90d-c249-4794-ba5e-3fdac0deed44/receipt.jpg
+```
+
+is not being matched correctly, which blocks Scan invoice.
+
+2. The expense policies still reference `restaurants`, but `authenticated` currently has no `SELECT` privilege on `restaurants`. Because the RLS policy checks that table, manual Add expense can still fail even though the store is correctly in `store_profiles`.
 
 Plan to fix it:
 
-1. Update database RLS policies for auto-repair finance
-   - Replace the owner checks on `ar_expenses` so they validate against `public.store_profiles.owner_id` using `ar_expenses.store_id`.
-   - Replace the owner checks on `ar_expense_items` so they validate through `ar_expenses -> store_profiles`.
-   - Keep admin access through `has_role(auth.uid(), 'admin')`.
+1. Apply a new Supabase migration that:
+   - Drops and recreates `ar_expenses` policies using only `store_profiles.owner_id = auth.uid()` plus admin access.
+   - Drops and recreates `ar_expense_items` policies through `ar_expenses -> store_profiles` only.
+   - Drops and recreates `ar-receipts` storage policies using the fully qualified file path: `storage.objects.name`.
+   - Adds explicit `WITH CHECK` rules for insert/update so uploads and saves are validated correctly.
+   - Keeps admin access via `has_role(auth.uid(), 'admin')`.
+   - Grants the needed table/function privileges to `authenticated`.
+   - Sends `NOTIFY pgrst, 'reload schema'` so Supabase/PostgREST refreshes its API cache after these policy changes.
 
-2. Fix scanned receipt storage policies
-   - Update `ar_receipts_select`, `ar_receipts_insert`, `ar_receipts_update`, and `ar_receipts_delete` to compare the first folder in the object path to `store_profiles.id`.
-   - Correct the current broken expression from checking `storage.foldername(r.name)` to checking `storage.foldername(name)`.
-   - This allows uploads to paths like:
+2. Update the finance UI error handling so if anything still fails, the toast shows whether it failed at:
+   - receipt upload,
+   - invoice scan AI function,
+   - expense row insert,
+   - line item insert.
 
-```text
-{storeId}/{timestamp}.jpg
-```
+3. Validate after approval:
+   - Manual Add expense saves a row in `ar_expenses`.
+   - Scan invoice uploads to `ar-receipts`, calls `scan-invoice`, opens the review form, and saves line items.
+   - The page refreshes totals instead of showing `database error, code: 08P01`.
 
-3. Improve the app error message
-   - In `FinanceExpensesSection.tsx`, make scan/upload/save errors more specific instead of showing only `database error, code: 08P01`.
-   - If storage upload fails, show a receipt upload permission message.
-   - If save fails due to RLS/permission, show a clear message like “You do not have permission to save expenses for this store.”
+After you approve, I’ll apply the migration and code change directly.
 
-4. Validation after implementation
-   - Re-check the active RLS policies in Supabase.
-   - Verify the user/store ownership path matches `store_profiles.owner_id`.
-   - Deploy the migration and retest the scan flow so the invoice can upload, parse, open the review dialog, and save line items.
+<lov-actions>
+  <lov-open-history>View History</lov-open-history>
+  <lov-link url="https://docs.lovable.dev/tips-tricks/troubleshooting">Troubleshooting docs</lov-link>
+</lov-actions>

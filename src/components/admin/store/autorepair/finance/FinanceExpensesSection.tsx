@@ -115,7 +115,7 @@ export default function FinanceExpensesSection({ storeId }: Props) {
         receipt_url: form.receipt_url || null,
         created_by: user?.id,
       }).select("id").single();
-      if (error) throw error;
+      if (error) { (error as any)._stage = "expense"; throw error; }
 
       const items = form.items
         .filter((it) => it.name.trim())
@@ -134,7 +134,7 @@ export default function FinanceExpensesSection({ storeId }: Props) {
         });
       if (items.length) {
         const { error: e2 } = await supabase.from("ar_expense_items" as any).insert(items);
-        if (e2) throw e2;
+        if (e2) { (e2 as any)._stage = "items"; throw e2; }
       }
     },
     onSuccess: () => {
@@ -144,12 +144,16 @@ export default function FinanceExpensesSection({ storeId }: Props) {
       qc.invalidateQueries({ queryKey: ["ar-fin-expenses", storeId] });
     },
     onError: (e: any) => {
+      const stage = e?._stage || "expense";
       const code = e?.code || "";
-      const msg = e?.message || "";
-      if (code === "42501" || /row-level security|permission denied/i.test(msg)) {
-        toast.error("You don't have permission to save expenses for this store.");
+      const msg = e?.message || String(e);
+      const isPerm = code === "42501" || /row-level security|permission denied|new row violates/i.test(msg);
+      if (isPerm) {
+        toast.error(stage === "items"
+          ? "You don't have permission to save line items for this expense."
+          : "You don't have permission to save expenses for this store.");
       } else {
-        toast.error(msg || "Failed to save expense");
+        toast.error(`${stage === "items" ? "Saving line items failed" : "Saving expense failed"}: ${msg}`);
       }
     },
   });
@@ -177,6 +181,7 @@ export default function FinanceExpensesSection({ storeId }: Props) {
       return;
     }
     setScanning(true);
+    let stage: "upload" | "sign" | "scan" = "upload";
     try {
       // Upload to storage
       const ext = (file.name.split(".").pop() || "jpg").toLowerCase();
@@ -185,10 +190,14 @@ export default function FinanceExpensesSection({ storeId }: Props) {
         contentType: file.type || "image/jpeg",
       });
       if (upErr) throw upErr;
-      const { data: signed } = await supabase.storage.from("ar-receipts").createSignedUrl(path, 60 * 60);
+      stage = "sign";
+      const { data: signed, error: signErr } = await supabase.storage
+        .from("ar-receipts").createSignedUrl(path, 60 * 60);
+      if (signErr) throw signErr;
       const signedUrl = signed?.signedUrl;
       if (!signedUrl) throw new Error("Could not get image URL");
 
+      stage = "scan";
       toast.info("Scanning invoice…");
       const { data, error } = await supabase.functions.invoke("scan-invoice", {
         body: { image_url: signedUrl },
@@ -223,15 +232,17 @@ export default function FinanceExpensesSection({ storeId }: Props) {
       setOpen(true);
       toast.success("Invoice scanned — review and save");
     } catch (err: any) {
-      console.error(err);
-      const code = err?.code || err?.statusCode || "";
-      const msg = err?.message || "";
-      if (code === "42501" || /row-level security|permission denied|not authorized/i.test(msg)) {
-        toast.error("You don't have permission to upload receipts for this store.");
-      } else if (/storage|bucket|upload/i.test(msg)) {
-        toast.error(`Receipt upload failed: ${msg}`);
+      console.error("scan-invoice flow error", { stage, err });
+      const msg = err?.message || String(err);
+      const isPerm = err?.code === "42501" || /row-level security|permission denied|not authorized|new row violates/i.test(msg);
+      if (stage === "upload") {
+        toast.error(isPerm
+          ? "You don't have permission to upload receipts for this store."
+          : `Receipt upload failed: ${msg}`);
+      } else if (stage === "sign") {
+        toast.error(`Could not access uploaded receipt: ${msg}`);
       } else {
-        toast.error(msg || "Scan failed");
+        toast.error(`Invoice scan failed: ${msg}`);
       }
     } finally {
       setScanning(false);
