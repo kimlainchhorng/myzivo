@@ -8,6 +8,8 @@
 //   - "fallback_upload": accepts a base64 image and writes it to the
 //                        "ar-receipts-fallback" bucket via the service role,
 //                        then returns the bucket+path and a signed URL.
+//   - "save_expense":    validates ownership and inserts the scanned expense
+//                        + line items via service role after a successful scan.
 //
 // Used by FinanceExpensesSection when the primary ar-receipts upload fails
 // with a transient storage/DB error such as 08P01.
@@ -50,6 +52,18 @@ function safeExt(mime: string | undefined, fallback = "jpg"): string {
     "application/pdf": "pdf",
   };
   return map[mime] || fallback;
+}
+
+function toInt(value: unknown, fallback = 0): number {
+  const n = typeof value === "number" ? value : Number(value);
+  return Number.isFinite(n) ? Math.round(n) : fallback;
+}
+
+function cleanText(value: unknown, max = 500): string | null {
+  if (value == null) return null;
+  const text = String(value).trim();
+  if (!text) return null;
+  return text.slice(0, max);
 }
 
 Deno.serve(async (req) => {
