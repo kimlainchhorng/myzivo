@@ -3718,19 +3718,19 @@ export default function AdminStoreEditPage() {
 
           {form.category === "auto-repair" && (
             <>
-              <TabsContent value="ar-invoices"><AutoRepairInvoicesSection storeId={storeId!} /></TabsContent>
-              <TabsContent value="ar-autocheck"><AutoRepairAutoCheckSection storeId={storeId!} /></TabsContent>
-              <TabsContent value="ar-parts"><AutoRepairPartShopSection storeId={storeId!} /></TabsContent>
-              <TabsContent value="ar-inspections"><AutoRepairInspectionsSection storeId={storeId!} /></TabsContent>
-              <TabsContent value="ar-vehicles"><AutoRepairVehiclesSection storeId={storeId!} /></TabsContent>
-              <TabsContent value="ar-estimates"><AutoRepairEstimatesSection storeId={storeId!} /></TabsContent>
-              <TabsContent value="ar-workorders"><AutoRepairWorkOrdersSection storeId={storeId!} /></TabsContent>
-              <TabsContent value="ar-techs"><AutoRepairTechniciansSection storeId={storeId!} /></TabsContent>
-              <TabsContent value="ar-reminders"><AutoRepairRemindersSection storeId={storeId!} /></TabsContent>
-              <TabsContent value="ar-tires"><AutoRepairTiresSection storeId={storeId!} /></TabsContent>
-              <TabsContent value="ar-warranty"><AutoRepairWarrantySection storeId={storeId!} /></TabsContent>
-              <TabsContent value="ar-fleet"><AutoRepairFleetSection storeId={storeId!} /></TabsContent>
-              <TabsContent value="ar-reports"><AutoRepairReportsSection storeId={storeId!} /></TabsContent>
+              <TabsContent value="ar-invoices"><div><AutoRepairInvoicesSection storeId={storeId!} /></div></TabsContent>
+              <TabsContent value="ar-autocheck"><div><AutoRepairAutoCheckSection storeId={storeId!} /></div></TabsContent>
+              <TabsContent value="ar-parts"><div><AutoRepairPartShopSection storeId={storeId!} /></div></TabsContent>
+              <TabsContent value="ar-inspections"><div><AutoRepairInspectionsSection storeId={storeId!} /></div></TabsContent>
+              <TabsContent value="ar-vehicles"><div><AutoRepairVehiclesSection storeId={storeId!} /></div></TabsContent>
+              <TabsContent value="ar-estimates"><div><AutoRepairEstimatesSection storeId={storeId!} /></div></TabsContent>
+              <TabsContent value="ar-workorders"><div><AutoRepairWorkOrdersSection storeId={storeId!} /></div></TabsContent>
+              <TabsContent value="ar-techs"><div><AutoRepairTechniciansSection storeId={storeId!} /></div></TabsContent>
+              <TabsContent value="ar-reminders"><div><AutoRepairRemindersSection storeId={storeId!} /></div></TabsContent>
+              <TabsContent value="ar-tires"><div><AutoRepairTiresSection storeId={storeId!} /></div></TabsContent>
+              <TabsContent value="ar-warranty"><div><AutoRepairWarrantySection storeId={storeId!} /></div></TabsContent>
+              <TabsContent value="ar-fleet"><div><AutoRepairFleetSection storeId={storeId!} /></div></TabsContent>
+              <TabsContent value="ar-reports"><div><AutoRepairReportsSection storeId={storeId!} /></div></TabsContent>
             </>
           )}
 
