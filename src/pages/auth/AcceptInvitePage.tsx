@@ -10,7 +10,7 @@ import { useAuth } from "@/contexts/AuthContext";
 export default function AcceptInvitePage() {
   const [params] = useSearchParams();
   const navigate = useNavigate();
-  const { user, loading: authLoading } = useAuth();
+  const { user, isLoading: authLoading } = useAuth();
   const token = params.get("token") || "";
   const [state, setState] = useState<"idle" | "claiming" | "ok" | "already" | "error">("idle");
   const [errorMsg, setErrorMsg] = useState<string>("");
