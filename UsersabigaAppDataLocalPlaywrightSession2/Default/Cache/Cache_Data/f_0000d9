@@ -1,0 +1,1051 @@
+import { createHotContext as __vite__createHotContext } from "/@vite/client";import.meta.hot = __vite__createHotContext("/src/components/admin/store/StorePerformanceSection.tsx");import __vite__cjsImport0_react_jsxDevRuntime from "/node_modules/.vite/deps/react_jsx-dev-runtime.js?v=7fd9520c"; const _jsxDEV = __vite__cjsImport0_react_jsxDevRuntime["jsxDEV"]; const _Fragment = __vite__cjsImport0_react_jsxDevRuntime["Fragment"];
+var _s = $RefreshSig$();
+import __vite__cjsImport1_react from "/node_modules/.vite/deps/react.js?v=7fd9520c"; const useState = __vite__cjsImport1_react["useState"];
+import { useQuery } from "/node_modules/.vite/deps/@tanstack_react-query.js?v=7fd9520c";
+import { supabase } from "/src/integrations/supabase/client.ts";
+import { cn } from "/src/lib/utils.ts";
+import { Badge } from "/src/components/ui/badge.tsx";
+import { StarRating } from "/src/components/shared/StarRating.tsx";
+import { Button } from "/src/components/ui/button.tsx";
+import { Input } from "/src/components/ui/input.tsx";
+import { Progress } from "/src/components/ui/progress.tsx";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "/src/components/ui/dialog.tsx";
+import { Label } from "/src/components/ui/label.tsx";
+import { Textarea } from "/src/components/ui/textarea.tsx";
+import { Star, Target, TrendingUp, MessageSquare, Plus, Search, ChevronRight, Award, BarChart3, Users, AlertCircle } from "/node_modules/.vite/deps/lucide-react.js?v=7fd9520c";
+import { toast } from "/node_modules/.vite/deps/sonner.js?v=7fd9520c";
+export default function StorePerformanceSection({ storeId }) {
+    _s();
+    const [tab, setTab] = useState("reviews");
+    const [search, setSearch] = useState("");
+    const [showNewReview, setShowNewReview] = useState(false);
+    const [selectedReview, setSelectedReview] = useState(null);
+    const [newReview, setNewReview] = useState({
+        employeeId: "",
+        period: "Q2 2026",
+        feedback: ""
+    });
+    const { data: employees = [] } = useQuery({
+        queryKey: [
+            "store-employees-perf",
+            storeId
+        ],
+        queryFn: async ()=>{
+            const { data } = await supabase.from("store_employees").select("*").eq("store_id", storeId).eq("status", "active");
+            return data || [];
+        }
+    });
+    const [reviews, setReviews] = useState([
+        {
+            id: "1",
+            employeeId: "e1",
+            employeeName: "kimlain",
+            period: "Q1 2026",
+            rating: 4.2,
+            status: "completed",
+            reviewDate: "2026-03-31",
+            feedback: "Excellent customer service skills. Consistently meets targets.",
+            goals: [
+                {
+                    id: "g1",
+                    title: "Increase sales by 15%",
+                    progress: 85,
+                    status: "on-track"
+                },
+                {
+                    id: "g2",
+                    title: "Complete advanced training",
+                    progress: 100,
+                    status: "completed"
+                },
+                {
+                    id: "g3",
+                    title: "Reduce customer complaints",
+                    progress: 60,
+                    status: "at-risk"
+                }
+            ]
+        }
+    ]);
+    const avgRating = reviews.length ? (reviews.reduce((a, r)=>a + r.rating, 0) / reviews.length).toFixed(1) : "0";
+    const completedReviews = reviews.filter((r)=>r.status === "completed").length;
+    const totalGoals = reviews.reduce((a, r)=>a + r.goals.length, 0);
+    const completedGoals = reviews.reduce((a, r)=>a + r.goals.filter((g)=>g.status === "completed").length, 0);
+    const stats = [
+        {
+            icon: Star,
+            label: "Avg Rating",
+            value: `${avgRating}/5`,
+            color: "text-yellow-500",
+            bg: "bg-yellow-500/10"
+        },
+        {
+            icon: BarChart3,
+            label: "Reviews",
+            value: `${completedReviews}/${reviews.length}`,
+            color: "text-blue-500",
+            bg: "bg-blue-500/10"
+        },
+        {
+            icon: Target,
+            label: "Goals Met",
+            value: `${completedGoals}/${totalGoals}`,
+            color: "text-emerald-500",
+            bg: "bg-emerald-500/10"
+        },
+        {
+            icon: Users,
+            label: "Active Staff",
+            value: employees.length,
+            color: "text-purple-500",
+            bg: "bg-purple-500/10"
+        }
+    ];
+    const statusConfig = {
+        draft: {
+            label: "Draft",
+            color: "bg-gray-100 text-gray-600"
+        },
+        submitted: {
+            label: "Submitted",
+            color: "bg-blue-100 text-blue-600"
+        },
+        completed: {
+            label: "Completed",
+            color: "bg-emerald-100 text-emerald-600"
+        }
+    };
+    const goalStatusConfig = {
+        "on-track": {
+            label: "On Track",
+            color: "text-emerald-600",
+            icon: TrendingUp
+        },
+        "at-risk": {
+            label: "At Risk",
+            color: "text-amber-600",
+            icon: AlertCircle
+        },
+        completed: {
+            label: "Completed",
+            color: "text-blue-600",
+            icon: Award
+        }
+    };
+    const renderStars = (rating)=>/*#__PURE__*/ _jsxDEV(StarRating, {
+            value: rating,
+            size: "sm",
+            showValue: true
+        }, void 0, false, {
+            fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/StorePerformanceSection.tsx",
+            lineNumber: 81,
+            columnNumber: 5
+        }, this);
+    const handleCreateReview = ()=>{
+        if (!newReview.employeeId) return toast.error("Select an employee");
+        const emp = employees.find((e)=>e.id === newReview.employeeId);
+        const r = {
+            id: Date.now().toString(),
+            employeeId: newReview.employeeId,
+            employeeName: emp?.name || "Employee",
+            period: newReview.period,
+            rating: 0,
+            status: "draft",
+            reviewDate: new Date().toISOString().split("T")[0],
+            feedback: newReview.feedback,
+            goals: []
+        };
+        setReviews((prev)=>[
+                r,
+                ...prev
+            ]);
+        setShowNewReview(false);
+        setNewReview({
+            employeeId: "",
+            period: "Q2 2026",
+            feedback: ""
+        });
+        toast.success("Review created");
+    };
+    return /*#__PURE__*/ _jsxDEV("div", {
+        className: "space-y-6",
+        children: [
+            /*#__PURE__*/ _jsxDEV("div", {
+                className: "grid grid-cols-2 lg:grid-cols-4 gap-4",
+                children: stats.map((s)=>/*#__PURE__*/ _jsxDEV("div", {
+                        className: "rounded-xl border border-border/40 bg-card p-4",
+                        children: [
+                            /*#__PURE__*/ _jsxDEV("div", {
+                                className: "flex items-center gap-3 mb-2",
+                                children: [
+                                    /*#__PURE__*/ _jsxDEV("div", {
+                                        className: cn("w-10 h-10 rounded-full flex items-center justify-center", s.bg),
+                                        children: /*#__PURE__*/ _jsxDEV(s.icon, {
+                                            className: cn("w-5 h-5", s.color)
+                                        }, void 0, false, {
+                                            fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/StorePerformanceSection.tsx",
+                                            lineNumber: 107,
+                                            columnNumber: 17
+                                        }, this)
+                                    }, void 0, false, {
+                                        fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/StorePerformanceSection.tsx",
+                                        lineNumber: 106,
+                                        columnNumber: 15
+                                    }, this),
+                                    /*#__PURE__*/ _jsxDEV("span", {
+                                        className: "text-xs text-muted-foreground",
+                                        children: s.label
+                                    }, void 0, false, {
+                                        fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/StorePerformanceSection.tsx",
+                                        lineNumber: 109,
+                                        columnNumber: 15
+                                    }, this)
+                                ]
+                            }, void 0, true, {
+                                fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/StorePerformanceSection.tsx",
+                                lineNumber: 105,
+                                columnNumber: 13
+                            }, this),
+                            /*#__PURE__*/ _jsxDEV("p", {
+                                className: "text-2xl font-bold",
+                                children: s.value
+                            }, void 0, false, {
+                                fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/StorePerformanceSection.tsx",
+                                lineNumber: 111,
+                                columnNumber: 13
+                            }, this)
+                        ]
+                    }, s.label, true, {
+                        fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/StorePerformanceSection.tsx",
+                        lineNumber: 104,
+                        columnNumber: 11
+                    }, this))
+            }, void 0, false, {
+                fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/StorePerformanceSection.tsx",
+                lineNumber: 102,
+                columnNumber: 7
+            }, this),
+            /*#__PURE__*/ _jsxDEV("div", {
+                className: "flex items-center gap-1 bg-muted/50 rounded-lg p-1 w-fit",
+                children: [
+                    {
+                        id: "reviews",
+                        label: "Reviews",
+                        icon: Star
+                    },
+                    {
+                        id: "goals",
+                        label: "Goals",
+                        icon: Target
+                    },
+                    {
+                        id: "feedback",
+                        label: "Feedback",
+                        icon: MessageSquare
+                    }
+                ].map((t)=>/*#__PURE__*/ _jsxDEV("button", {
+                        onClick: ()=>setTab(t.id),
+                        className: cn("flex items-center gap-1.5 px-3 py-1.5 rounded-md text-sm font-medium transition-all", tab === t.id ? "bg-background shadow-sm text-foreground" : "text-muted-foreground hover:text-foreground"),
+                        children: [
+                            /*#__PURE__*/ _jsxDEV(t.icon, {
+                                className: "w-3.5 h-3.5"
+                            }, void 0, false, {
+                                fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/StorePerformanceSection.tsx",
+                                lineNumber: 127,
+                                columnNumber: 13
+                            }, this),
+                            " ",
+                            t.label
+                        ]
+                    }, t.id, true, {
+                        fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/StorePerformanceSection.tsx",
+                        lineNumber: 123,
+                        columnNumber: 11
+                    }, this))
+            }, void 0, false, {
+                fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/StorePerformanceSection.tsx",
+                lineNumber: 117,
+                columnNumber: 7
+            }, this),
+            /*#__PURE__*/ _jsxDEV("div", {
+                className: "flex items-center gap-3 flex-wrap",
+                children: [
+                    /*#__PURE__*/ _jsxDEV("div", {
+                        className: "relative flex-1 min-w-[200px]",
+                        children: [
+                            /*#__PURE__*/ _jsxDEV(Search, {
+                                className: "absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground"
+                            }, void 0, false, {
+                                fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/StorePerformanceSection.tsx",
+                                lineNumber: 135,
+                                columnNumber: 11
+                            }, this),
+                            /*#__PURE__*/ _jsxDEV(Input, {
+                                placeholder: "Search reviews...",
+                                value: search,
+                                onChange: (e)=>setSearch(e.target.value),
+                                className: "pl-9"
+                            }, void 0, false, {
+                                fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/StorePerformanceSection.tsx",
+                                lineNumber: 136,
+                                columnNumber: 11
+                            }, this)
+                        ]
+                    }, void 0, true, {
+                        fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/StorePerformanceSection.tsx",
+                        lineNumber: 134,
+                        columnNumber: 9
+                    }, this),
+                    /*#__PURE__*/ _jsxDEV(Button, {
+                        onClick: ()=>setShowNewReview(true),
+                        className: "bg-emerald-500 hover:bg-emerald-600 text-white",
+                        children: [
+                            /*#__PURE__*/ _jsxDEV(Plus, {
+                                className: "w-4 h-4 mr-1.5"
+                            }, void 0, false, {
+                                fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/StorePerformanceSection.tsx",
+                                lineNumber: 139,
+                                columnNumber: 11
+                            }, this),
+                            " New Review"
+                        ]
+                    }, void 0, true, {
+                        fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/StorePerformanceSection.tsx",
+                        lineNumber: 138,
+                        columnNumber: 9
+                    }, this)
+                ]
+            }, void 0, true, {
+                fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/StorePerformanceSection.tsx",
+                lineNumber: 133,
+                columnNumber: 7
+            }, this),
+            tab === "reviews" && /*#__PURE__*/ _jsxDEV("div", {
+                className: "space-y-3",
+                children: [
+                    reviews.filter((r)=>r.employeeName.toLowerCase().includes(search.toLowerCase())).map((r)=>/*#__PURE__*/ _jsxDEV("button", {
+                            onClick: ()=>setSelectedReview(r),
+                            className: "w-full text-left rounded-xl border border-border/40 bg-card p-4 hover:shadow-md transition-all",
+                            children: [
+                                /*#__PURE__*/ _jsxDEV("div", {
+                                    className: "flex items-center justify-between mb-2",
+                                    children: [
+                                        /*#__PURE__*/ _jsxDEV("div", {
+                                            className: "flex items-center gap-3",
+                                            children: [
+                                                /*#__PURE__*/ _jsxDEV("div", {
+                                                    className: "w-10 h-10 rounded-full bg-yellow-500/10 flex items-center justify-center text-sm font-bold text-yellow-600",
+                                                    children: r.employeeName[0].toUpperCase()
+                                                }, void 0, false, {
+                                                    fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/StorePerformanceSection.tsx",
+                                                    lineNumber: 151,
+                                                    columnNumber: 19
+                                                }, this),
+                                                /*#__PURE__*/ _jsxDEV("div", {
+                                                    children: [
+                                                        /*#__PURE__*/ _jsxDEV("p", {
+                                                            className: "font-semibold text-sm",
+                                                            children: r.employeeName
+                                                        }, void 0, false, {
+                                                            fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/StorePerformanceSection.tsx",
+                                                            lineNumber: 155,
+                                                            columnNumber: 21
+                                                        }, this),
+                                                        /*#__PURE__*/ _jsxDEV("p", {
+                                                            className: "text-[10px] text-muted-foreground",
+                                                            children: [
+                                                                r.period,
+                                                                " • ",
+                                                                r.reviewDate
+                                                            ]
+                                                        }, void 0, true, {
+                                                            fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/StorePerformanceSection.tsx",
+                                                            lineNumber: 156,
+                                                            columnNumber: 21
+                                                        }, this)
+                                                    ]
+                                                }, void 0, true, {
+                                                    fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/StorePerformanceSection.tsx",
+                                                    lineNumber: 154,
+                                                    columnNumber: 19
+                                                }, this)
+                                            ]
+                                        }, void 0, true, {
+                                            fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/StorePerformanceSection.tsx",
+                                            lineNumber: 150,
+                                            columnNumber: 17
+                                        }, this),
+                                        /*#__PURE__*/ _jsxDEV("div", {
+                                            className: "flex items-center gap-2",
+                                            children: [
+                                                /*#__PURE__*/ _jsxDEV("span", {
+                                                    className: cn("text-[10px] px-2 py-0.5 rounded-full font-medium", statusConfig[r.status].color),
+                                                    children: statusConfig[r.status].label
+                                                }, void 0, false, {
+                                                    fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/StorePerformanceSection.tsx",
+                                                    lineNumber: 160,
+                                                    columnNumber: 19
+                                                }, this),
+                                                /*#__PURE__*/ _jsxDEV(ChevronRight, {
+                                                    className: "w-4 h-4 text-muted-foreground"
+                                                }, void 0, false, {
+                                                    fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/StorePerformanceSection.tsx",
+                                                    lineNumber: 163,
+                                                    columnNumber: 19
+                                                }, this)
+                                            ]
+                                        }, void 0, true, {
+                                            fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/StorePerformanceSection.tsx",
+                                            lineNumber: 159,
+                                            columnNumber: 17
+                                        }, this)
+                                    ]
+                                }, void 0, true, {
+                                    fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/StorePerformanceSection.tsx",
+                                    lineNumber: 149,
+                                    columnNumber: 15
+                                }, this),
+                                r.rating > 0 && renderStars(r.rating),
+                                /*#__PURE__*/ _jsxDEV("div", {
+                                    className: "flex items-center gap-4 mt-2 text-[10px] text-muted-foreground",
+                                    children: [
+                                        /*#__PURE__*/ _jsxDEV("span", {
+                                            children: [
+                                                r.goals.length,
+                                                " goals"
+                                            ]
+                                        }, void 0, true, {
+                                            fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/StorePerformanceSection.tsx",
+                                            lineNumber: 168,
+                                            columnNumber: 17
+                                        }, this),
+                                        /*#__PURE__*/ _jsxDEV("span", {
+                                            children: [
+                                                r.goals.filter((g)=>g.status === "completed").length,
+                                                " completed"
+                                            ]
+                                        }, void 0, true, {
+                                            fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/StorePerformanceSection.tsx",
+                                            lineNumber: 169,
+                                            columnNumber: 17
+                                        }, this)
+                                    ]
+                                }, void 0, true, {
+                                    fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/StorePerformanceSection.tsx",
+                                    lineNumber: 167,
+                                    columnNumber: 15
+                                }, this)
+                            ]
+                        }, r.id, true, {
+                            fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/StorePerformanceSection.tsx",
+                            lineNumber: 147,
+                            columnNumber: 13
+                        }, this)),
+                    !reviews.length && /*#__PURE__*/ _jsxDEV("div", {
+                        className: "text-center py-12 text-muted-foreground text-sm",
+                        children: "No reviews yet."
+                    }, void 0, false, {
+                        fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/StorePerformanceSection.tsx",
+                        lineNumber: 173,
+                        columnNumber: 31
+                    }, this)
+                ]
+            }, void 0, true, {
+                fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/StorePerformanceSection.tsx",
+                lineNumber: 145,
+                columnNumber: 9
+            }, this),
+            tab === "goals" && /*#__PURE__*/ _jsxDEV("div", {
+                className: "space-y-3",
+                children: [
+                    reviews.flatMap((r)=>r.goals.map((g)=>({
+                                ...g,
+                                employee: r.employeeName,
+                                period: r.period
+                            }))).map((g)=>{
+                        const cfg = goalStatusConfig[g.status];
+                        return /*#__PURE__*/ _jsxDEV("div", {
+                            className: "rounded-xl border border-border/40 bg-card p-4",
+                            children: [
+                                /*#__PURE__*/ _jsxDEV("div", {
+                                    className: "flex items-center justify-between mb-2",
+                                    children: [
+                                        /*#__PURE__*/ _jsxDEV("div", {
+                                            className: "flex items-center gap-2",
+                                            children: [
+                                                /*#__PURE__*/ _jsxDEV(cfg.icon, {
+                                                    className: cn("w-4 h-4", cfg.color)
+                                                }, void 0, false, {
+                                                    fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/StorePerformanceSection.tsx",
+                                                    lineNumber: 186,
+                                                    columnNumber: 21
+                                                }, this),
+                                                /*#__PURE__*/ _jsxDEV("h3", {
+                                                    className: "font-medium text-sm",
+                                                    children: g.title
+                                                }, void 0, false, {
+                                                    fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/StorePerformanceSection.tsx",
+                                                    lineNumber: 187,
+                                                    columnNumber: 21
+                                                }, this)
+                                            ]
+                                        }, void 0, true, {
+                                            fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/StorePerformanceSection.tsx",
+                                            lineNumber: 185,
+                                            columnNumber: 19
+                                        }, this),
+                                        /*#__PURE__*/ _jsxDEV(Badge, {
+                                            variant: "outline",
+                                            className: cn("text-[10px]", cfg.color),
+                                            children: cfg.label
+                                        }, void 0, false, {
+                                            fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/StorePerformanceSection.tsx",
+                                            lineNumber: 189,
+                                            columnNumber: 19
+                                        }, this)
+                                    ]
+                                }, void 0, true, {
+                                    fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/StorePerformanceSection.tsx",
+                                    lineNumber: 184,
+                                    columnNumber: 17
+                                }, this),
+                                /*#__PURE__*/ _jsxDEV("div", {
+                                    className: "flex items-center gap-3",
+                                    children: [
+                                        /*#__PURE__*/ _jsxDEV(Progress, {
+                                            value: g.progress,
+                                            className: "h-2 flex-1"
+                                        }, void 0, false, {
+                                            fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/StorePerformanceSection.tsx",
+                                            lineNumber: 192,
+                                            columnNumber: 19
+                                        }, this),
+                                        /*#__PURE__*/ _jsxDEV("span", {
+                                            className: "text-xs font-medium",
+                                            children: [
+                                                g.progress,
+                                                "%"
+                                            ]
+                                        }, void 0, true, {
+                                            fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/StorePerformanceSection.tsx",
+                                            lineNumber: 193,
+                                            columnNumber: 19
+                                        }, this)
+                                    ]
+                                }, void 0, true, {
+                                    fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/StorePerformanceSection.tsx",
+                                    lineNumber: 191,
+                                    columnNumber: 17
+                                }, this),
+                                /*#__PURE__*/ _jsxDEV("p", {
+                                    className: "text-[10px] text-muted-foreground mt-1",
+                                    children: [
+                                        g.employee,
+                                        " • ",
+                                        g.period
+                                    ]
+                                }, void 0, true, {
+                                    fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/StorePerformanceSection.tsx",
+                                    lineNumber: 195,
+                                    columnNumber: 17
+                                }, this)
+                            ]
+                        }, g.id, true, {
+                            fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/StorePerformanceSection.tsx",
+                            lineNumber: 183,
+                            columnNumber: 15
+                        }, this);
+                    }),
+                    !reviews.flatMap((r)=>r.goals).length && /*#__PURE__*/ _jsxDEV("div", {
+                        className: "text-center py-12 text-muted-foreground text-sm",
+                        children: "No goals set."
+                    }, void 0, false, {
+                        fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/StorePerformanceSection.tsx",
+                        lineNumber: 199,
+                        columnNumber: 53
+                    }, this)
+                ]
+            }, void 0, true, {
+                fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/StorePerformanceSection.tsx",
+                lineNumber: 179,
+                columnNumber: 9
+            }, this),
+            tab === "feedback" && /*#__PURE__*/ _jsxDEV("div", {
+                className: "space-y-3",
+                children: [
+                    reviews.filter((r)=>r.feedback).map((r)=>/*#__PURE__*/ _jsxDEV("div", {
+                            className: "rounded-xl border border-border/40 bg-card p-4",
+                            children: [
+                                /*#__PURE__*/ _jsxDEV("div", {
+                                    className: "flex items-center gap-3 mb-2",
+                                    children: [
+                                        /*#__PURE__*/ _jsxDEV("div", {
+                                            className: "w-8 h-8 rounded-full bg-purple-500/10 flex items-center justify-center text-xs font-bold text-purple-600",
+                                            children: r.employeeName[0].toUpperCase()
+                                        }, void 0, false, {
+                                            fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/StorePerformanceSection.tsx",
+                                            lineNumber: 209,
+                                            columnNumber: 17
+                                        }, this),
+                                        /*#__PURE__*/ _jsxDEV("div", {
+                                            children: [
+                                                /*#__PURE__*/ _jsxDEV("p", {
+                                                    className: "font-medium text-sm",
+                                                    children: r.employeeName
+                                                }, void 0, false, {
+                                                    fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/StorePerformanceSection.tsx",
+                                                    lineNumber: 213,
+                                                    columnNumber: 19
+                                                }, this),
+                                                /*#__PURE__*/ _jsxDEV("p", {
+                                                    className: "text-[10px] text-muted-foreground",
+                                                    children: r.period
+                                                }, void 0, false, {
+                                                    fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/StorePerformanceSection.tsx",
+                                                    lineNumber: 214,
+                                                    columnNumber: 19
+                                                }, this)
+                                            ]
+                                        }, void 0, true, {
+                                            fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/StorePerformanceSection.tsx",
+                                            lineNumber: 212,
+                                            columnNumber: 17
+                                        }, this),
+                                        r.rating > 0 && /*#__PURE__*/ _jsxDEV("div", {
+                                            className: "ml-auto",
+                                            children: renderStars(r.rating)
+                                        }, void 0, false, {
+                                            fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/StorePerformanceSection.tsx",
+                                            lineNumber: 216,
+                                            columnNumber: 34
+                                        }, this)
+                                    ]
+                                }, void 0, true, {
+                                    fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/StorePerformanceSection.tsx",
+                                    lineNumber: 208,
+                                    columnNumber: 15
+                                }, this),
+                                /*#__PURE__*/ _jsxDEV("p", {
+                                    className: "text-sm text-muted-foreground bg-muted/30 rounded-lg p-3 mt-2",
+                                    children: [
+                                        '"',
+                                        r.feedback,
+                                        '"'
+                                    ]
+                                }, void 0, true, {
+                                    fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/StorePerformanceSection.tsx",
+                                    lineNumber: 218,
+                                    columnNumber: 15
+                                }, this)
+                            ]
+                        }, r.id, true, {
+                            fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/StorePerformanceSection.tsx",
+                            lineNumber: 207,
+                            columnNumber: 13
+                        }, this)),
+                    !reviews.filter((r)=>r.feedback).length && /*#__PURE__*/ _jsxDEV("div", {
+                        className: "text-center py-12 text-muted-foreground text-sm",
+                        children: "No feedback yet."
+                    }, void 0, false, {
+                        fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/StorePerformanceSection.tsx",
+                        lineNumber: 221,
+                        columnNumber: 55
+                    }, this)
+                ]
+            }, void 0, true, {
+                fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/StorePerformanceSection.tsx",
+                lineNumber: 205,
+                columnNumber: 9
+            }, this),
+            /*#__PURE__*/ _jsxDEV(Dialog, {
+                open: !!selectedReview,
+                onOpenChange: ()=>setSelectedReview(null),
+                children: /*#__PURE__*/ _jsxDEV(DialogContent, {
+                    className: "max-w-lg max-h-[80vh] overflow-y-auto",
+                    children: selectedReview && /*#__PURE__*/ _jsxDEV(_Fragment, {
+                        children: [
+                            /*#__PURE__*/ _jsxDEV(DialogHeader, {
+                                children: [
+                                    /*#__PURE__*/ _jsxDEV(DialogTitle, {
+                                        className: "text-base",
+                                        children: [
+                                            "Performance Review — ",
+                                            selectedReview.employeeName
+                                        ]
+                                    }, void 0, true, {
+                                        fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/StorePerformanceSection.tsx",
+                                        lineNumber: 231,
+                                        columnNumber: 17
+                                    }, this),
+                                    /*#__PURE__*/ _jsxDEV("p", {
+                                        className: "text-xs text-muted-foreground",
+                                        children: [
+                                            selectedReview.period,
+                                            " • ",
+                                            selectedReview.reviewDate
+                                        ]
+                                    }, void 0, true, {
+                                        fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/StorePerformanceSection.tsx",
+                                        lineNumber: 232,
+                                        columnNumber: 17
+                                    }, this)
+                                ]
+                            }, void 0, true, {
+                                fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/StorePerformanceSection.tsx",
+                                lineNumber: 230,
+                                columnNumber: 15
+                            }, this),
+                            /*#__PURE__*/ _jsxDEV("div", {
+                                className: "space-y-4 mt-2",
+                                children: [
+                                    selectedReview.rating > 0 && /*#__PURE__*/ _jsxDEV("div", {
+                                        className: "flex items-center gap-3 p-3 rounded-lg bg-yellow-50 border border-yellow-100",
+                                        children: [
+                                            /*#__PURE__*/ _jsxDEV("span", {
+                                                className: "text-sm font-medium",
+                                                children: "Overall Rating:"
+                                            }, void 0, false, {
+                                                fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/StorePerformanceSection.tsx",
+                                                lineNumber: 237,
+                                                columnNumber: 21
+                                            }, this),
+                                            renderStars(selectedReview.rating)
+                                        ]
+                                    }, void 0, true, {
+                                        fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/StorePerformanceSection.tsx",
+                                        lineNumber: 236,
+                                        columnNumber: 19
+                                    }, this),
+                                    /*#__PURE__*/ _jsxDEV("div", {
+                                        children: [
+                                            /*#__PURE__*/ _jsxDEV("h4", {
+                                                className: "text-sm font-semibold mb-2",
+                                                children: [
+                                                    "Goals (",
+                                                    selectedReview.goals.length,
+                                                    ")"
+                                                ]
+                                            }, void 0, true, {
+                                                fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/StorePerformanceSection.tsx",
+                                                lineNumber: 242,
+                                                columnNumber: 19
+                                            }, this),
+                                            /*#__PURE__*/ _jsxDEV("div", {
+                                                className: "space-y-2",
+                                                children: selectedReview.goals.map((g)=>{
+                                                    const cfg = goalStatusConfig[g.status];
+                                                    return /*#__PURE__*/ _jsxDEV("div", {
+                                                        className: "flex items-center gap-3 p-2.5 rounded-lg border border-border/30",
+                                                        children: [
+                                                            /*#__PURE__*/ _jsxDEV(cfg.icon, {
+                                                                className: cn("w-4 h-4 shrink-0", cfg.color)
+                                                            }, void 0, false, {
+                                                                fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/StorePerformanceSection.tsx",
+                                                                lineNumber: 248,
+                                                                columnNumber: 27
+                                                            }, this),
+                                                            /*#__PURE__*/ _jsxDEV("div", {
+                                                                className: "flex-1 min-w-0",
+                                                                children: [
+                                                                    /*#__PURE__*/ _jsxDEV("p", {
+                                                                        className: "text-xs font-medium",
+                                                                        children: g.title
+                                                                    }, void 0, false, {
+                                                                        fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/StorePerformanceSection.tsx",
+                                                                        lineNumber: 250,
+                                                                        columnNumber: 29
+                                                                    }, this),
+                                                                    /*#__PURE__*/ _jsxDEV(Progress, {
+                                                                        value: g.progress,
+                                                                        className: "h-1.5 mt-1"
+                                                                    }, void 0, false, {
+                                                                        fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/StorePerformanceSection.tsx",
+                                                                        lineNumber: 251,
+                                                                        columnNumber: 29
+                                                                    }, this)
+                                                                ]
+                                                            }, void 0, true, {
+                                                                fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/StorePerformanceSection.tsx",
+                                                                lineNumber: 249,
+                                                                columnNumber: 27
+                                                            }, this),
+                                                            /*#__PURE__*/ _jsxDEV("span", {
+                                                                className: "text-xs font-medium",
+                                                                children: [
+                                                                    g.progress,
+                                                                    "%"
+                                                                ]
+                                                            }, void 0, true, {
+                                                                fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/StorePerformanceSection.tsx",
+                                                                lineNumber: 253,
+                                                                columnNumber: 27
+                                                            }, this)
+                                                        ]
+                                                    }, g.id, true, {
+                                                        fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/StorePerformanceSection.tsx",
+                                                        lineNumber: 247,
+                                                        columnNumber: 25
+                                                    }, this);
+                                                })
+                                            }, void 0, false, {
+                                                fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/StorePerformanceSection.tsx",
+                                                lineNumber: 243,
+                                                columnNumber: 19
+                                            }, this)
+                                        ]
+                                    }, void 0, true, {
+                                        fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/StorePerformanceSection.tsx",
+                                        lineNumber: 241,
+                                        columnNumber: 17
+                                    }, this),
+                                    selectedReview.feedback && /*#__PURE__*/ _jsxDEV("div", {
+                                        children: [
+                                            /*#__PURE__*/ _jsxDEV("h4", {
+                                                className: "text-sm font-semibold mb-2",
+                                                children: "Manager Feedback"
+                                            }, void 0, false, {
+                                                fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/StorePerformanceSection.tsx",
+                                                lineNumber: 261,
+                                                columnNumber: 21
+                                            }, this),
+                                            /*#__PURE__*/ _jsxDEV("p", {
+                                                className: "text-sm text-muted-foreground bg-muted/30 rounded-lg p-3",
+                                                children: [
+                                                    '"',
+                                                    selectedReview.feedback,
+                                                    '"'
+                                                ]
+                                            }, void 0, true, {
+                                                fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/StorePerformanceSection.tsx",
+                                                lineNumber: 262,
+                                                columnNumber: 21
+                                            }, this)
+                                        ]
+                                    }, void 0, true, {
+                                        fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/StorePerformanceSection.tsx",
+                                        lineNumber: 260,
+                                        columnNumber: 19
+                                    }, this)
+                                ]
+                            }, void 0, true, {
+                                fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/StorePerformanceSection.tsx",
+                                lineNumber: 234,
+                                columnNumber: 15
+                            }, this)
+                        ]
+                    }, void 0, true)
+                }, void 0, false, {
+                    fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/StorePerformanceSection.tsx",
+                    lineNumber: 227,
+                    columnNumber: 9
+                }, this)
+            }, void 0, false, {
+                fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/StorePerformanceSection.tsx",
+                lineNumber: 226,
+                columnNumber: 7
+            }, this),
+            /*#__PURE__*/ _jsxDEV(Dialog, {
+                open: showNewReview,
+                onOpenChange: setShowNewReview,
+                children: /*#__PURE__*/ _jsxDEV(DialogContent, {
+                    className: "max-w-md",
+                    children: [
+                        /*#__PURE__*/ _jsxDEV(DialogHeader, {
+                            children: /*#__PURE__*/ _jsxDEV(DialogTitle, {
+                                children: "New Performance Review"
+                            }, void 0, false, {
+                                fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/StorePerformanceSection.tsx",
+                                lineNumber: 274,
+                                columnNumber: 25
+                            }, this)
+                        }, void 0, false, {
+                            fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/StorePerformanceSection.tsx",
+                            lineNumber: 274,
+                            columnNumber: 11
+                        }, this),
+                        /*#__PURE__*/ _jsxDEV("div", {
+                            className: "space-y-4 py-2",
+                            children: [
+                                /*#__PURE__*/ _jsxDEV("div", {
+                                    className: "space-y-2",
+                                    children: [
+                                        /*#__PURE__*/ _jsxDEV(Label, {
+                                            children: "Employee"
+                                        }, void 0, false, {
+                                            fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/StorePerformanceSection.tsx",
+                                            lineNumber: 277,
+                                            columnNumber: 15
+                                        }, this),
+                                        /*#__PURE__*/ _jsxDEV("select", {
+                                            value: newReview.employeeId,
+                                            onChange: (e)=>setNewReview((p)=>({
+                                                        ...p,
+                                                        employeeId: e.target.value
+                                                    })),
+                                            className: "w-full border border-border rounded-lg px-3 py-2 text-sm bg-background",
+                                            children: [
+                                                /*#__PURE__*/ _jsxDEV("option", {
+                                                    value: "",
+                                                    children: "Select employee..."
+                                                }, void 0, false, {
+                                                    fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/StorePerformanceSection.tsx",
+                                                    lineNumber: 280,
+                                                    columnNumber: 17
+                                                }, this),
+                                                employees.map((e)=>/*#__PURE__*/ _jsxDEV("option", {
+                                                        value: e.id,
+                                                        children: e.name
+                                                    }, e.id, false, {
+                                                        fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/StorePerformanceSection.tsx",
+                                                        lineNumber: 281,
+                                                        columnNumber: 44
+                                                    }, this))
+                                            ]
+                                        }, void 0, true, {
+                                            fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/StorePerformanceSection.tsx",
+                                            lineNumber: 278,
+                                            columnNumber: 15
+                                        }, this)
+                                    ]
+                                }, void 0, true, {
+                                    fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/StorePerformanceSection.tsx",
+                                    lineNumber: 276,
+                                    columnNumber: 13
+                                }, this),
+                                /*#__PURE__*/ _jsxDEV("div", {
+                                    className: "space-y-2",
+                                    children: [
+                                        /*#__PURE__*/ _jsxDEV(Label, {
+                                            children: "Review Period"
+                                        }, void 0, false, {
+                                            fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/StorePerformanceSection.tsx",
+                                            lineNumber: 285,
+                                            columnNumber: 15
+                                        }, this),
+                                        /*#__PURE__*/ _jsxDEV(Input, {
+                                            value: newReview.period,
+                                            onChange: (e)=>setNewReview((p)=>({
+                                                        ...p,
+                                                        period: e.target.value
+                                                    }))
+                                        }, void 0, false, {
+                                            fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/StorePerformanceSection.tsx",
+                                            lineNumber: 286,
+                                            columnNumber: 15
+                                        }, this)
+                                    ]
+                                }, void 0, true, {
+                                    fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/StorePerformanceSection.tsx",
+                                    lineNumber: 284,
+                                    columnNumber: 13
+                                }, this),
+                                /*#__PURE__*/ _jsxDEV("div", {
+                                    className: "space-y-2",
+                                    children: [
+                                        /*#__PURE__*/ _jsxDEV(Label, {
+                                            children: "Initial Feedback"
+                                        }, void 0, false, {
+                                            fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/StorePerformanceSection.tsx",
+                                            lineNumber: 289,
+                                            columnNumber: 15
+                                        }, this),
+                                        /*#__PURE__*/ _jsxDEV(Textarea, {
+                                            value: newReview.feedback,
+                                            onChange: (e)=>setNewReview((p)=>({
+                                                        ...p,
+                                                        feedback: e.target.value
+                                                    })),
+                                            rows: 3
+                                        }, void 0, false, {
+                                            fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/StorePerformanceSection.tsx",
+                                            lineNumber: 290,
+                                            columnNumber: 15
+                                        }, this)
+                                    ]
+                                }, void 0, true, {
+                                    fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/StorePerformanceSection.tsx",
+                                    lineNumber: 288,
+                                    columnNumber: 13
+                                }, this)
+                            ]
+                        }, void 0, true, {
+                            fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/StorePerformanceSection.tsx",
+                            lineNumber: 275,
+                            columnNumber: 11
+                        }, this),
+                        /*#__PURE__*/ _jsxDEV(DialogFooter, {
+                            children: [
+                                /*#__PURE__*/ _jsxDEV(Button, {
+                                    variant: "outline",
+                                    onClick: ()=>setShowNewReview(false),
+                                    children: "Cancel"
+                                }, void 0, false, {
+                                    fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/StorePerformanceSection.tsx",
+                                    lineNumber: 294,
+                                    columnNumber: 13
+                                }, this),
+                                /*#__PURE__*/ _jsxDEV(Button, {
+                                    onClick: handleCreateReview,
+                                    className: "bg-emerald-500 hover:bg-emerald-600 text-white",
+                                    children: "Create Review"
+                                }, void 0, false, {
+                                    fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/StorePerformanceSection.tsx",
+                                    lineNumber: 295,
+                                    columnNumber: 13
+                                }, this)
+                            ]
+                        }, void 0, true, {
+                            fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/StorePerformanceSection.tsx",
+                            lineNumber: 293,
+                            columnNumber: 11
+                        }, this)
+                    ]
+                }, void 0, true, {
+                    fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/StorePerformanceSection.tsx",
+                    lineNumber: 273,
+                    columnNumber: 9
+                }, this)
+            }, void 0, false, {
+                fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/StorePerformanceSection.tsx",
+                lineNumber: 272,
+                columnNumber: 7
+            }, this)
+        ]
+    }, void 0, true, {
+        fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/StorePerformanceSection.tsx",
+        lineNumber: 100,
+        columnNumber: 5
+    }, this);
+}
+_s(StorePerformanceSection, "eMwi5bzxlbtj2EG9ZPeG8KqeUiI=", false, function() {
+    return [
+        useQuery
+    ];
+});
+_c = StorePerformanceSection;
+var _c;
+$RefreshReg$(_c, "StorePerformanceSection");
+
+
+import * as RefreshRuntime from "/@react-refresh";
+const inWebWorker = typeof WorkerGlobalScope !== 'undefined' && self instanceof WorkerGlobalScope;
+if (import.meta.hot && !inWebWorker) {
+  if (!window.$RefreshReg$) {
+    throw new Error(
+      "@vitejs/plugin-react-swc can't detect preamble. Something is wrong."
+    );
+  }
+
+  RefreshRuntime.__hmr_import(import.meta.url).then((currentExports) => {
+    RefreshRuntime.registerExportsForReactRefresh("C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/StorePerformanceSection.tsx", currentExports);
+    import.meta.hot.accept((nextExports) => {
+      if (!nextExports) return;
+      const invalidateMessage = RefreshRuntime.validateRefreshBoundaryAndEnqueueUpdate("C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/StorePerformanceSection.tsx", currentExports, nextExports);
+      if (invalidateMessage) import.meta.hot.invalidate(invalidateMessage);
+    });
+  });
+}
+function $RefreshReg$(type, id) { return RefreshRuntime.register(type, "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/StorePerformanceSection.tsx" + ' ' + id) }
+function $RefreshSig$() { return RefreshRuntime.createSignatureFunctionForTransform(); }
+
+//# sourceMappingURL=data:application/json;base64,eyJ2ZXJzaW9uIjozLCJzb3VyY2VzIjpbIlN0b3JlUGVyZm9ybWFuY2VTZWN0aW9uLnRzeCJdLCJzb3VyY2VzQ29udGVudCI6WyJpbXBvcnQgeyB1c2VTdGF0ZSB9IGZyb20gXCJyZWFjdFwiO1xyXG5pbXBvcnQgeyB1c2VRdWVyeSB9IGZyb20gXCJAdGFuc3RhY2svcmVhY3QtcXVlcnlcIjtcclxuaW1wb3J0IHsgc3VwYWJhc2UgfSBmcm9tIFwiQC9pbnRlZ3JhdGlvbnMvc3VwYWJhc2UvY2xpZW50XCI7XHJcbmltcG9ydCB7IGNuIH0gZnJvbSBcIkAvbGliL3V0aWxzXCI7XHJcbmltcG9ydCB7IEJhZGdlIH0gZnJvbSBcIkAvY29tcG9uZW50cy91aS9iYWRnZVwiO1xyXG5pbXBvcnQgeyBTdGFyUmF0aW5nIH0gZnJvbSBcIkAvY29tcG9uZW50cy9zaGFyZWQvU3RhclJhdGluZ1wiO1xyXG5pbXBvcnQgeyBCdXR0b24gfSBmcm9tIFwiQC9jb21wb25lbnRzL3VpL2J1dHRvblwiO1xyXG5pbXBvcnQgeyBJbnB1dCB9IGZyb20gXCJAL2NvbXBvbmVudHMvdWkvaW5wdXRcIjtcclxuaW1wb3J0IHsgUHJvZ3Jlc3MgfSBmcm9tIFwiQC9jb21wb25lbnRzL3VpL3Byb2dyZXNzXCI7XHJcbmltcG9ydCB7IERpYWxvZywgRGlhbG9nQ29udGVudCwgRGlhbG9nSGVhZGVyLCBEaWFsb2dUaXRsZSwgRGlhbG9nRm9vdGVyIH0gZnJvbSBcIkAvY29tcG9uZW50cy91aS9kaWFsb2dcIjtcclxuaW1wb3J0IHsgTGFiZWwgfSBmcm9tIFwiQC9jb21wb25lbnRzL3VpL2xhYmVsXCI7XHJcbmltcG9ydCB7IFRleHRhcmVhIH0gZnJvbSBcIkAvY29tcG9uZW50cy91aS90ZXh0YXJlYVwiO1xyXG5pbXBvcnQge1xyXG4gIFN0YXIsIFRhcmdldCwgVHJlbmRpbmdVcCwgTWVzc2FnZVNxdWFyZSwgUGx1cywgU2VhcmNoLCBDYWxlbmRhcixcclxuICBDaGV2cm9uUmlnaHQsIEF3YXJkLCBCYXJDaGFydDMsIFVzZXJzLCBUaHVtYnNVcCwgQWxlcnRDaXJjbGVcclxufSBmcm9tIFwibHVjaWRlLXJlYWN0XCI7XHJcbmltcG9ydCB7IHRvYXN0IH0gZnJvbSBcInNvbm5lclwiO1xyXG5cclxuaW50ZXJmYWNlIFByb3BzIHsgc3RvcmVJZDogc3RyaW5nOyB9XHJcblxyXG50eXBlIFJldmlldyA9IHtcclxuICBpZDogc3RyaW5nOyBlbXBsb3llZUlkOiBzdHJpbmc7IGVtcGxveWVlTmFtZTogc3RyaW5nOyBwZXJpb2Q6IHN0cmluZztcclxuICByYXRpbmc6IG51bWJlcjsgc3RhdHVzOiBcImRyYWZ0XCIgfCBcInN1Ym1pdHRlZFwiIHwgXCJjb21wbGV0ZWRcIjtcclxuICBnb2FsczogR29hbFtdOyBmZWVkYmFjazogc3RyaW5nOyByZXZpZXdEYXRlOiBzdHJpbmc7XHJcbn07XHJcbnR5cGUgR29hbCA9IHsgaWQ6IHN0cmluZzsgdGl0bGU6IHN0cmluZzsgcHJvZ3Jlc3M6IG51bWJlcjsgc3RhdHVzOiBcIm9uLXRyYWNrXCIgfCBcImF0LXJpc2tcIiB8IFwiY29tcGxldGVkXCI7IH07XHJcblxyXG5leHBvcnQgZGVmYXVsdCBmdW5jdGlvbiBTdG9yZVBlcmZvcm1hbmNlU2VjdGlvbih7IHN0b3JlSWQgfTogUHJvcHMpIHtcclxuICBjb25zdCBbdGFiLCBzZXRUYWJdID0gdXNlU3RhdGU8XCJyZXZpZXdzXCIgfCBcImdvYWxzXCIgfCBcImZlZWRiYWNrXCI+KFwicmV2aWV3c1wiKTtcclxuICBjb25zdCBbc2VhcmNoLCBzZXRTZWFyY2hdID0gdXNlU3RhdGUoXCJcIik7XHJcbiAgY29uc3QgW3Nob3dOZXdSZXZpZXcsIHNldFNob3dOZXdSZXZpZXddID0gdXNlU3RhdGUoZmFsc2UpO1xyXG4gIGNvbnN0IFtzZWxlY3RlZFJldmlldywgc2V0U2VsZWN0ZWRSZXZpZXddID0gdXNlU3RhdGU8UmV2aWV3IHwgbnVsbD4obnVsbCk7XHJcbiAgY29uc3QgW25ld1Jldmlldywgc2V0TmV3UmV2aWV3XSA9IHVzZVN0YXRlKHsgZW1wbG95ZWVJZDogXCJcIiwgcGVyaW9kOiBcIlEyIDIwMjZcIiwgZmVlZGJhY2s6IFwiXCIgfSk7XHJcblxyXG4gIGNvbnN0IHsgZGF0YTogZW1wbG95ZWVzID0gW10gfSA9IHVzZVF1ZXJ5KHtcclxuICAgIHF1ZXJ5S2V5OiBbXCJzdG9yZS1lbXBsb3llZXMtcGVyZlwiLCBzdG9yZUlkXSxcclxuICAgIHF1ZXJ5Rm46IGFzeW5jICgpID0+IHtcclxuICAgICAgY29uc3QgeyBkYXRhIH0gPSBhd2FpdCBzdXBhYmFzZS5mcm9tKFwic3RvcmVfZW1wbG95ZWVzXCIpLnNlbGVjdChcIipcIikuZXEoXCJzdG9yZV9pZFwiLCBzdG9yZUlkKS5lcShcInN0YXR1c1wiLCBcImFjdGl2ZVwiKTtcclxuICAgICAgcmV0dXJuIGRhdGEgfHwgW107XHJcbiAgICB9LFxyXG4gIH0pO1xyXG5cclxuICBjb25zdCBbcmV2aWV3cywgc2V0UmV2aWV3c10gPSB1c2VTdGF0ZTxSZXZpZXdbXT4oW1xyXG4gICAge1xyXG4gICAgICBpZDogXCIxXCIsIGVtcGxveWVlSWQ6IFwiZTFcIiwgZW1wbG95ZWVOYW1lOiBcImtpbWxhaW5cIiwgcGVyaW9kOiBcIlExIDIwMjZcIixcclxuICAgICAgcmF0aW5nOiA0LjIsIHN0YXR1czogXCJjb21wbGV0ZWRcIiwgcmV2aWV3RGF0ZTogXCIyMDI2LTAzLTMxXCIsXHJcbiAgICAgIGZlZWRiYWNrOiBcIkV4Y2VsbGVudCBjdXN0b21lciBzZXJ2aWNlIHNraWxscy4gQ29uc2lzdGVudGx5IG1lZXRzIHRhcmdldHMuXCIsXHJcbiAgICAgIGdvYWxzOiBbXHJcbiAgICAgICAgeyBpZDogXCJnMVwiLCB0aXRsZTogXCJJbmNyZWFzZSBzYWxlcyBieSAxNSVcIiwgcHJvZ3Jlc3M6IDg1LCBzdGF0dXM6IFwib24tdHJhY2tcIiB9LFxyXG4gICAgICAgIHsgaWQ6IFwiZzJcIiwgdGl0bGU6IFwiQ29tcGxldGUgYWR2YW5jZWQgdHJhaW5pbmdcIiwgcHJvZ3Jlc3M6IDEwMCwgc3RhdHVzOiBcImNvbXBsZXRlZFwiIH0sXHJcbiAgICAgICAgeyBpZDogXCJnM1wiLCB0aXRsZTogXCJSZWR1Y2UgY3VzdG9tZXIgY29tcGxhaW50c1wiLCBwcm9ncmVzczogNjAsIHN0YXR1czogXCJhdC1yaXNrXCIgfSxcclxuICAgICAgXSxcclxuICAgIH0sXHJcbiAgXSk7XHJcblxyXG4gIGNvbnN0IGF2Z1JhdGluZyA9IHJldmlld3MubGVuZ3RoID8gKHJldmlld3MucmVkdWNlKChhLCByKSA9PiBhICsgci5yYXRpbmcsIDApIC8gcmV2aWV3cy5sZW5ndGgpLnRvRml4ZWQoMSkgOiBcIjBcIjtcclxuICBjb25zdCBjb21wbGV0ZWRSZXZpZXdzID0gcmV2aWV3cy5maWx0ZXIociA9PiByLnN0YXR1cyA9PT0gXCJjb21wbGV0ZWRcIikubGVuZ3RoO1xyXG4gIGNvbnN0IHRvdGFsR29hbHMgPSByZXZpZXdzLnJlZHVjZSgoYSwgcikgPT4gYSArIHIuZ29hbHMubGVuZ3RoLCAwKTtcclxuICBjb25zdCBjb21wbGV0ZWRHb2FscyA9IHJldmlld3MucmVkdWNlKChhLCByKSA9PiBhICsgci5nb2Fscy5maWx0ZXIoZyA9PiBnLnN0YXR1cyA9PT0gXCJjb21wbGV0ZWRcIikubGVuZ3RoLCAwKTtcclxuXHJcbiAgY29uc3Qgc3RhdHMgPSBbXHJcbiAgICB7IGljb246IFN0YXIsIGxhYmVsOiBcIkF2ZyBSYXRpbmdcIiwgdmFsdWU6IGAke2F2Z1JhdGluZ30vNWAsIGNvbG9yOiBcInRleHQteWVsbG93LTUwMFwiLCBiZzogXCJiZy15ZWxsb3ctNTAwLzEwXCIgfSxcclxuICAgIHsgaWNvbjogQmFyQ2hhcnQzLCBsYWJlbDogXCJSZXZpZXdzXCIsIHZhbHVlOiBgJHtjb21wbGV0ZWRSZXZpZXdzfS8ke3Jldmlld3MubGVuZ3RofWAsIGNvbG9yOiBcInRleHQtYmx1ZS01MDBcIiwgYmc6IFwiYmctYmx1ZS01MDAvMTBcIiB9LFxyXG4gICAgeyBpY29uOiBUYXJnZXQsIGxhYmVsOiBcIkdvYWxzIE1ldFwiLCB2YWx1ZTogYCR7Y29tcGxldGVkR29hbHN9LyR7dG90YWxHb2Fsc31gLCBjb2xvcjogXCJ0ZXh0LWVtZXJhbGQtNTAwXCIsIGJnOiBcImJnLWVtZXJhbGQtNTAwLzEwXCIgfSxcclxuICAgIHsgaWNvbjogVXNlcnMsIGxhYmVsOiBcIkFjdGl2ZSBTdGFmZlwiLCB2YWx1ZTogZW1wbG95ZWVzLmxlbmd0aCwgY29sb3I6IFwidGV4dC1wdXJwbGUtNTAwXCIsIGJnOiBcImJnLXB1cnBsZS01MDAvMTBcIiB9LFxyXG4gIF07XHJcblxyXG4gIGNvbnN0IHN0YXR1c0NvbmZpZyA9IHtcclxuICAgIGRyYWZ0OiB7IGxhYmVsOiBcIkRyYWZ0XCIsIGNvbG9yOiBcImJnLWdyYXktMTAwIHRleHQtZ3JheS02MDBcIiB9LFxyXG4gICAgc3VibWl0dGVkOiB7IGxhYmVsOiBcIlN1Ym1pdHRlZFwiLCBjb2xvcjogXCJiZy1ibHVlLTEwMCB0ZXh0LWJsdWUtNjAwXCIgfSxcclxuICAgIGNvbXBsZXRlZDogeyBsYWJlbDogXCJDb21wbGV0ZWRcIiwgY29sb3I6IFwiYmctZW1lcmFsZC0xMDAgdGV4dC1lbWVyYWxkLTYwMFwiIH0sXHJcbiAgfTtcclxuXHJcbiAgY29uc3QgZ29hbFN0YXR1c0NvbmZpZyA9IHtcclxuICAgIFwib24tdHJhY2tcIjogeyBsYWJlbDogXCJPbiBUcmFja1wiLCBjb2xvcjogXCJ0ZXh0LWVtZXJhbGQtNjAwXCIsIGljb246IFRyZW5kaW5nVXAgfSxcclxuICAgIFwiYXQtcmlza1wiOiB7IGxhYmVsOiBcIkF0IFJpc2tcIiwgY29sb3I6IFwidGV4dC1hbWJlci02MDBcIiwgaWNvbjogQWxlcnRDaXJjbGUgfSxcclxuICAgIGNvbXBsZXRlZDogeyBsYWJlbDogXCJDb21wbGV0ZWRcIiwgY29sb3I6IFwidGV4dC1ibHVlLTYwMFwiLCBpY29uOiBBd2FyZCB9LFxyXG4gIH07XHJcblxyXG4gIGNvbnN0IHJlbmRlclN0YXJzID0gKHJhdGluZzogbnVtYmVyKSA9PiAoXHJcbiAgICA8U3RhclJhdGluZyB2YWx1ZT17cmF0aW5nfSBzaXplPVwic21cIiBzaG93VmFsdWUgLz5cclxuICApO1xyXG5cclxuICBjb25zdCBoYW5kbGVDcmVhdGVSZXZpZXcgPSAoKSA9PiB7XHJcbiAgICBpZiAoIW5ld1Jldmlldy5lbXBsb3llZUlkKSByZXR1cm4gdG9hc3QuZXJyb3IoXCJTZWxlY3QgYW4gZW1wbG95ZWVcIik7XHJcbiAgICBjb25zdCBlbXAgPSBlbXBsb3llZXMuZmluZCgoZTogYW55KSA9PiBlLmlkID09PSBuZXdSZXZpZXcuZW1wbG95ZWVJZCk7XHJcbiAgICBjb25zdCByOiBSZXZpZXcgPSB7XHJcbiAgICAgIGlkOiBEYXRlLm5vdygpLnRvU3RyaW5nKCksIGVtcGxveWVlSWQ6IG5ld1Jldmlldy5lbXBsb3llZUlkLFxyXG4gICAgICBlbXBsb3llZU5hbWU6IChlbXAgYXMgYW55KT8ubmFtZSB8fCBcIkVtcGxveWVlXCIsIHBlcmlvZDogbmV3UmV2aWV3LnBlcmlvZCxcclxuICAgICAgcmF0aW5nOiAwLCBzdGF0dXM6IFwiZHJhZnRcIiwgcmV2aWV3RGF0ZTogbmV3IERhdGUoKS50b0lTT1N0cmluZygpLnNwbGl0KFwiVFwiKVswXSxcclxuICAgICAgZmVlZGJhY2s6IG5ld1Jldmlldy5mZWVkYmFjaywgZ29hbHM6IFtdLFxyXG4gICAgfTtcclxuICAgIHNldFJldmlld3MocHJldiA9PiBbciwgLi4ucHJldl0pO1xyXG4gICAgc2V0U2hvd05ld1JldmlldyhmYWxzZSk7XHJcbiAgICBzZXROZXdSZXZpZXcoeyBlbXBsb3llZUlkOiBcIlwiLCBwZXJpb2Q6IFwiUTIgMjAyNlwiLCBmZWVkYmFjazogXCJcIiB9KTtcclxuICAgIHRvYXN0LnN1Y2Nlc3MoXCJSZXZpZXcgY3JlYXRlZFwiKTtcclxuICB9O1xyXG5cclxuICByZXR1cm4gKFxyXG4gICAgPGRpdiBjbGFzc05hbWU9XCJzcGFjZS15LTZcIj5cclxuICAgICAgey8qIFN0YXRzICovfVxyXG4gICAgICA8ZGl2IGNsYXNzTmFtZT1cImdyaWQgZ3JpZC1jb2xzLTIgbGc6Z3JpZC1jb2xzLTQgZ2FwLTRcIj5cclxuICAgICAgICB7c3RhdHMubWFwKHMgPT4gKFxyXG4gICAgICAgICAgPGRpdiBrZXk9e3MubGFiZWx9IGNsYXNzTmFtZT1cInJvdW5kZWQteGwgYm9yZGVyIGJvcmRlci1ib3JkZXIvNDAgYmctY2FyZCBwLTRcIj5cclxuICAgICAgICAgICAgPGRpdiBjbGFzc05hbWU9XCJmbGV4IGl0ZW1zLWNlbnRlciBnYXAtMyBtYi0yXCI+XHJcbiAgICAgICAgICAgICAgPGRpdiBjbGFzc05hbWU9e2NuKFwidy0xMCBoLTEwIHJvdW5kZWQtZnVsbCBmbGV4IGl0ZW1zLWNlbnRlciBqdXN0aWZ5LWNlbnRlclwiLCBzLmJnKX0+XHJcbiAgICAgICAgICAgICAgICA8cy5pY29uIGNsYXNzTmFtZT17Y24oXCJ3LTUgaC01XCIsIHMuY29sb3IpfSAvPlxyXG4gICAgICAgICAgICAgIDwvZGl2PlxyXG4gICAgICAgICAgICAgIDxzcGFuIGNsYXNzTmFtZT1cInRleHQteHMgdGV4dC1tdXRlZC1mb3JlZ3JvdW5kXCI+e3MubGFiZWx9PC9zcGFuPlxyXG4gICAgICAgICAgICA8L2Rpdj5cclxuICAgICAgICAgICAgPHAgY2xhc3NOYW1lPVwidGV4dC0yeGwgZm9udC1ib2xkXCI+e3MudmFsdWV9PC9wPlxyXG4gICAgICAgICAgPC9kaXY+XHJcbiAgICAgICAgKSl9XHJcbiAgICAgIDwvZGl2PlxyXG5cclxuICAgICAgey8qIFRhYnMgKi99XHJcbiAgICAgIDxkaXYgY2xhc3NOYW1lPVwiZmxleCBpdGVtcy1jZW50ZXIgZ2FwLTEgYmctbXV0ZWQvNTAgcm91bmRlZC1sZyBwLTEgdy1maXRcIj5cclxuICAgICAgICB7W1xyXG4gICAgICAgICAgeyBpZDogXCJyZXZpZXdzXCIgYXMgY29uc3QsIGxhYmVsOiBcIlJldmlld3NcIiwgaWNvbjogU3RhciB9LFxyXG4gICAgICAgICAgeyBpZDogXCJnb2Fsc1wiIGFzIGNvbnN0LCBsYWJlbDogXCJHb2Fsc1wiLCBpY29uOiBUYXJnZXQgfSxcclxuICAgICAgICAgIHsgaWQ6IFwiZmVlZGJhY2tcIiBhcyBjb25zdCwgbGFiZWw6IFwiRmVlZGJhY2tcIiwgaWNvbjogTWVzc2FnZVNxdWFyZSB9LFxyXG4gICAgICAgIF0ubWFwKHQgPT4gKFxyXG4gICAgICAgICAgPGJ1dHRvbiBrZXk9e3QuaWR9IG9uQ2xpY2s9eygpID0+IHNldFRhYih0LmlkKX1cclxuICAgICAgICAgICAgY2xhc3NOYW1lPXtjbihcImZsZXggaXRlbXMtY2VudGVyIGdhcC0xLjUgcHgtMyBweS0xLjUgcm91bmRlZC1tZCB0ZXh0LXNtIGZvbnQtbWVkaXVtIHRyYW5zaXRpb24tYWxsXCIsXHJcbiAgICAgICAgICAgICAgdGFiID09PSB0LmlkID8gXCJiZy1iYWNrZ3JvdW5kIHNoYWRvdy1zbSB0ZXh0LWZvcmVncm91bmRcIiA6IFwidGV4dC1tdXRlZC1mb3JlZ3JvdW5kIGhvdmVyOnRleHQtZm9yZWdyb3VuZFwiXHJcbiAgICAgICAgICAgICl9PlxyXG4gICAgICAgICAgICA8dC5pY29uIGNsYXNzTmFtZT1cInctMy41IGgtMy41XCIgLz4ge3QubGFiZWx9XHJcbiAgICAgICAgICA8L2J1dHRvbj5cclxuICAgICAgICApKX1cclxuICAgICAgPC9kaXY+XHJcblxyXG4gICAgICB7LyogVG9vbGJhciAqL31cclxuICAgICAgPGRpdiBjbGFzc05hbWU9XCJmbGV4IGl0ZW1zLWNlbnRlciBnYXAtMyBmbGV4LXdyYXBcIj5cclxuICAgICAgICA8ZGl2IGNsYXNzTmFtZT1cInJlbGF0aXZlIGZsZXgtMSBtaW4tdy1bMjAwcHhdXCI+XHJcbiAgICAgICAgICA8U2VhcmNoIGNsYXNzTmFtZT1cImFic29sdXRlIGxlZnQtMyB0b3AtMS8yIC10cmFuc2xhdGUteS0xLzIgdy00IGgtNCB0ZXh0LW11dGVkLWZvcmVncm91bmRcIiAvPlxyXG4gICAgICAgICAgPElucHV0IHBsYWNlaG9sZGVyPVwiU2VhcmNoIHJldmlld3MuLi5cIiB2YWx1ZT17c2VhcmNofSBvbkNoYW5nZT17ZSA9PiBzZXRTZWFyY2goZS50YXJnZXQudmFsdWUpfSBjbGFzc05hbWU9XCJwbC05XCIgLz5cclxuICAgICAgICA8L2Rpdj5cclxuICAgICAgICA8QnV0dG9uIG9uQ2xpY2s9eygpID0+IHNldFNob3dOZXdSZXZpZXcodHJ1ZSl9IGNsYXNzTmFtZT1cImJnLWVtZXJhbGQtNTAwIGhvdmVyOmJnLWVtZXJhbGQtNjAwIHRleHQtd2hpdGVcIj5cclxuICAgICAgICAgIDxQbHVzIGNsYXNzTmFtZT1cInctNCBoLTQgbXItMS41XCIgLz4gTmV3IFJldmlld1xyXG4gICAgICAgIDwvQnV0dG9uPlxyXG4gICAgICA8L2Rpdj5cclxuXHJcbiAgICAgIHsvKiBSZXZpZXdzIFRhYiAqL31cclxuICAgICAge3RhYiA9PT0gXCJyZXZpZXdzXCIgJiYgKFxyXG4gICAgICAgIDxkaXYgY2xhc3NOYW1lPVwic3BhY2UteS0zXCI+XHJcbiAgICAgICAgICB7cmV2aWV3cy5maWx0ZXIociA9PiByLmVtcGxveWVlTmFtZS50b0xvd2VyQ2FzZSgpLmluY2x1ZGVzKHNlYXJjaC50b0xvd2VyQ2FzZSgpKSkubWFwKHIgPT4gKFxyXG4gICAgICAgICAgICA8YnV0dG9uIGtleT17ci5pZH0gb25DbGljaz17KCkgPT4gc2V0U2VsZWN0ZWRSZXZpZXcocil9XHJcbiAgICAgICAgICAgICAgY2xhc3NOYW1lPVwidy1mdWxsIHRleHQtbGVmdCByb3VuZGVkLXhsIGJvcmRlciBib3JkZXItYm9yZGVyLzQwIGJnLWNhcmQgcC00IGhvdmVyOnNoYWRvdy1tZCB0cmFuc2l0aW9uLWFsbFwiPlxyXG4gICAgICAgICAgICAgIDxkaXYgY2xhc3NOYW1lPVwiZmxleCBpdGVtcy1jZW50ZXIganVzdGlmeS1iZXR3ZWVuIG1iLTJcIj5cclxuICAgICAgICAgICAgICAgIDxkaXYgY2xhc3NOYW1lPVwiZmxleCBpdGVtcy1jZW50ZXIgZ2FwLTNcIj5cclxuICAgICAgICAgICAgICAgICAgPGRpdiBjbGFzc05hbWU9XCJ3LTEwIGgtMTAgcm91bmRlZC1mdWxsIGJnLXllbGxvdy01MDAvMTAgZmxleCBpdGVtcy1jZW50ZXIganVzdGlmeS1jZW50ZXIgdGV4dC1zbSBmb250LWJvbGQgdGV4dC15ZWxsb3ctNjAwXCI+XHJcbiAgICAgICAgICAgICAgICAgICAge3IuZW1wbG95ZWVOYW1lWzBdLnRvVXBwZXJDYXNlKCl9XHJcbiAgICAgICAgICAgICAgICAgIDwvZGl2PlxyXG4gICAgICAgICAgICAgICAgICA8ZGl2PlxyXG4gICAgICAgICAgICAgICAgICAgIDxwIGNsYXNzTmFtZT1cImZvbnQtc2VtaWJvbGQgdGV4dC1zbVwiPntyLmVtcGxveWVlTmFtZX08L3A+XHJcbiAgICAgICAgICAgICAgICAgICAgPHAgY2xhc3NOYW1lPVwidGV4dC1bMTBweF0gdGV4dC1tdXRlZC1mb3JlZ3JvdW5kXCI+e3IucGVyaW9kfSDigKIge3IucmV2aWV3RGF0ZX08L3A+XHJcbiAgICAgICAgICAgICAgICAgIDwvZGl2PlxyXG4gICAgICAgICAgICAgICAgPC9kaXY+XHJcbiAgICAgICAgICAgICAgICA8ZGl2IGNsYXNzTmFtZT1cImZsZXggaXRlbXMtY2VudGVyIGdhcC0yXCI+XHJcbiAgICAgICAgICAgICAgICAgIDxzcGFuIGNsYXNzTmFtZT17Y24oXCJ0ZXh0LVsxMHB4XSBweC0yIHB5LTAuNSByb3VuZGVkLWZ1bGwgZm9udC1tZWRpdW1cIiwgc3RhdHVzQ29uZmlnW3Iuc3RhdHVzXS5jb2xvcil9PlxyXG4gICAgICAgICAgICAgICAgICAgIHtzdGF0dXNDb25maWdbci5zdGF0dXNdLmxhYmVsfVxyXG4gICAgICAgICAgICAgICAgICA8L3NwYW4+XHJcbiAgICAgICAgICAgICAgICAgIDxDaGV2cm9uUmlnaHQgY2xhc3NOYW1lPVwidy00IGgtNCB0ZXh0LW11dGVkLWZvcmVncm91bmRcIiAvPlxyXG4gICAgICAgICAgICAgICAgPC9kaXY+XHJcbiAgICAgICAgICAgICAgPC9kaXY+XHJcbiAgICAgICAgICAgICAge3IucmF0aW5nID4gMCAmJiByZW5kZXJTdGFycyhyLnJhdGluZyl9XHJcbiAgICAgICAgICAgICAgPGRpdiBjbGFzc05hbWU9XCJmbGV4IGl0ZW1zLWNlbnRlciBnYXAtNCBtdC0yIHRleHQtWzEwcHhdIHRleHQtbXV0ZWQtZm9yZWdyb3VuZFwiPlxyXG4gICAgICAgICAgICAgICAgPHNwYW4+e3IuZ29hbHMubGVuZ3RofSBnb2Fsczwvc3Bhbj5cclxuICAgICAgICAgICAgICAgIDxzcGFuPntyLmdvYWxzLmZpbHRlcihnID0+IGcuc3RhdHVzID09PSBcImNvbXBsZXRlZFwiKS5sZW5ndGh9IGNvbXBsZXRlZDwvc3Bhbj5cclxuICAgICAgICAgICAgICA8L2Rpdj5cclxuICAgICAgICAgICAgPC9idXR0b24+XHJcbiAgICAgICAgICApKX1cclxuICAgICAgICAgIHshcmV2aWV3cy5sZW5ndGggJiYgPGRpdiBjbGFzc05hbWU9XCJ0ZXh0LWNlbnRlciBweS0xMiB0ZXh0LW11dGVkLWZvcmVncm91bmQgdGV4dC1zbVwiPk5vIHJldmlld3MgeWV0LjwvZGl2Pn1cclxuICAgICAgICA8L2Rpdj5cclxuICAgICAgKX1cclxuXHJcbiAgICAgIHsvKiBHb2FscyBUYWIgKi99XHJcbiAgICAgIHt0YWIgPT09IFwiZ29hbHNcIiAmJiAoXHJcbiAgICAgICAgPGRpdiBjbGFzc05hbWU9XCJzcGFjZS15LTNcIj5cclxuICAgICAgICAgIHtyZXZpZXdzLmZsYXRNYXAociA9PiByLmdvYWxzLm1hcChnID0+ICh7IC4uLmcsIGVtcGxveWVlOiByLmVtcGxveWVlTmFtZSwgcGVyaW9kOiByLnBlcmlvZCB9KSkpLm1hcChnID0+IHtcclxuICAgICAgICAgICAgY29uc3QgY2ZnID0gZ29hbFN0YXR1c0NvbmZpZ1tnLnN0YXR1c107XHJcbiAgICAgICAgICAgIHJldHVybiAoXHJcbiAgICAgICAgICAgICAgPGRpdiBrZXk9e2cuaWR9IGNsYXNzTmFtZT1cInJvdW5kZWQteGwgYm9yZGVyIGJvcmRlci1ib3JkZXIvNDAgYmctY2FyZCBwLTRcIj5cclxuICAgICAgICAgICAgICAgIDxkaXYgY2xhc3NOYW1lPVwiZmxleCBpdGVtcy1jZW50ZXIganVzdGlmeS1iZXR3ZWVuIG1iLTJcIj5cclxuICAgICAgICAgICAgICAgICAgPGRpdiBjbGFzc05hbWU9XCJmbGV4IGl0ZW1zLWNlbnRlciBnYXAtMlwiPlxyXG4gICAgICAgICAgICAgICAgICAgIDxjZmcuaWNvbiBjbGFzc05hbWU9e2NuKFwidy00IGgtNFwiLCBjZmcuY29sb3IpfSAvPlxyXG4gICAgICAgICAgICAgICAgICAgIDxoMyBjbGFzc05hbWU9XCJmb250LW1lZGl1bSB0ZXh0LXNtXCI+e2cudGl0bGV9PC9oMz5cclxuICAgICAgICAgICAgICAgICAgPC9kaXY+XHJcbiAgICAgICAgICAgICAgICAgIDxCYWRnZSB2YXJpYW50PVwib3V0bGluZVwiIGNsYXNzTmFtZT17Y24oXCJ0ZXh0LVsxMHB4XVwiLCBjZmcuY29sb3IpfT57Y2ZnLmxhYmVsfTwvQmFkZ2U+XHJcbiAgICAgICAgICAgICAgICA8L2Rpdj5cclxuICAgICAgICAgICAgICAgIDxkaXYgY2xhc3NOYW1lPVwiZmxleCBpdGVtcy1jZW50ZXIgZ2FwLTNcIj5cclxuICAgICAgICAgICAgICAgICAgPFByb2dyZXNzIHZhbHVlPXtnLnByb2dyZXNzfSBjbGFzc05hbWU9XCJoLTIgZmxleC0xXCIgLz5cclxuICAgICAgICAgICAgICAgICAgPHNwYW4gY2xhc3NOYW1lPVwidGV4dC14cyBmb250LW1lZGl1bVwiPntnLnByb2dyZXNzfSU8L3NwYW4+XHJcbiAgICAgICAgICAgICAgICA8L2Rpdj5cclxuICAgICAgICAgICAgICAgIDxwIGNsYXNzTmFtZT1cInRleHQtWzEwcHhdIHRleHQtbXV0ZWQtZm9yZWdyb3VuZCBtdC0xXCI+e2cuZW1wbG95ZWV9IOKAoiB7Zy5wZXJpb2R9PC9wPlxyXG4gICAgICAgICAgICAgIDwvZGl2PlxyXG4gICAgICAgICAgICApO1xyXG4gICAgICAgICAgfSl9XHJcbiAgICAgICAgICB7IXJldmlld3MuZmxhdE1hcChyID0+IHIuZ29hbHMpLmxlbmd0aCAmJiA8ZGl2IGNsYXNzTmFtZT1cInRleHQtY2VudGVyIHB5LTEyIHRleHQtbXV0ZWQtZm9yZWdyb3VuZCB0ZXh0LXNtXCI+Tm8gZ29hbHMgc2V0LjwvZGl2Pn1cclxuICAgICAgICA8L2Rpdj5cclxuICAgICAgKX1cclxuXHJcbiAgICAgIHsvKiBGZWVkYmFjayBUYWIgKi99XHJcbiAgICAgIHt0YWIgPT09IFwiZmVlZGJhY2tcIiAmJiAoXHJcbiAgICAgICAgPGRpdiBjbGFzc05hbWU9XCJzcGFjZS15LTNcIj5cclxuICAgICAgICAgIHtyZXZpZXdzLmZpbHRlcihyID0+IHIuZmVlZGJhY2spLm1hcChyID0+IChcclxuICAgICAgICAgICAgPGRpdiBrZXk9e3IuaWR9IGNsYXNzTmFtZT1cInJvdW5kZWQteGwgYm9yZGVyIGJvcmRlci1ib3JkZXIvNDAgYmctY2FyZCBwLTRcIj5cclxuICAgICAgICAgICAgICA8ZGl2IGNsYXNzTmFtZT1cImZsZXggaXRlbXMtY2VudGVyIGdhcC0zIG1iLTJcIj5cclxuICAgICAgICAgICAgICAgIDxkaXYgY2xhc3NOYW1lPVwidy04IGgtOCByb3VuZGVkLWZ1bGwgYmctcHVycGxlLTUwMC8xMCBmbGV4IGl0ZW1zLWNlbnRlciBqdXN0aWZ5LWNlbnRlciB0ZXh0LXhzIGZvbnQtYm9sZCB0ZXh0LXB1cnBsZS02MDBcIj5cclxuICAgICAgICAgICAgICAgICAge3IuZW1wbG95ZWVOYW1lWzBdLnRvVXBwZXJDYXNlKCl9XHJcbiAgICAgICAgICAgICAgICA8L2Rpdj5cclxuICAgICAgICAgICAgICAgIDxkaXY+XHJcbiAgICAgICAgICAgICAgICAgIDxwIGNsYXNzTmFtZT1cImZvbnQtbWVkaXVtIHRleHQtc21cIj57ci5lbXBsb3llZU5hbWV9PC9wPlxyXG4gICAgICAgICAgICAgICAgICA8cCBjbGFzc05hbWU9XCJ0ZXh0LVsxMHB4XSB0ZXh0LW11dGVkLWZvcmVncm91bmRcIj57ci5wZXJpb2R9PC9wPlxyXG4gICAgICAgICAgICAgICAgPC9kaXY+XHJcbiAgICAgICAgICAgICAgICB7ci5yYXRpbmcgPiAwICYmIDxkaXYgY2xhc3NOYW1lPVwibWwtYXV0b1wiPntyZW5kZXJTdGFycyhyLnJhdGluZyl9PC9kaXY+fVxyXG4gICAgICAgICAgICAgIDwvZGl2PlxyXG4gICAgICAgICAgICAgIDxwIGNsYXNzTmFtZT1cInRleHQtc20gdGV4dC1tdXRlZC1mb3JlZ3JvdW5kIGJnLW11dGVkLzMwIHJvdW5kZWQtbGcgcC0zIG10LTJcIj5cIntyLmZlZWRiYWNrfVwiPC9wPlxyXG4gICAgICAgICAgICA8L2Rpdj5cclxuICAgICAgICAgICkpfVxyXG4gICAgICAgICAgeyFyZXZpZXdzLmZpbHRlcihyID0+IHIuZmVlZGJhY2spLmxlbmd0aCAmJiA8ZGl2IGNsYXNzTmFtZT1cInRleHQtY2VudGVyIHB5LTEyIHRleHQtbXV0ZWQtZm9yZWdyb3VuZCB0ZXh0LXNtXCI+Tm8gZmVlZGJhY2sgeWV0LjwvZGl2Pn1cclxuICAgICAgICA8L2Rpdj5cclxuICAgICAgKX1cclxuXHJcbiAgICAgIHsvKiBSZXZpZXcgRGV0YWlsIERpYWxvZyAqL31cclxuICAgICAgPERpYWxvZyBvcGVuPXshIXNlbGVjdGVkUmV2aWV3fSBvbk9wZW5DaGFuZ2U9eygpID0+IHNldFNlbGVjdGVkUmV2aWV3KG51bGwpfT5cclxuICAgICAgICA8RGlhbG9nQ29udGVudCBjbGFzc05hbWU9XCJtYXgtdy1sZyBtYXgtaC1bODB2aF0gb3ZlcmZsb3cteS1hdXRvXCI+XHJcbiAgICAgICAgICB7c2VsZWN0ZWRSZXZpZXcgJiYgKFxyXG4gICAgICAgICAgICA8PlxyXG4gICAgICAgICAgICAgIDxEaWFsb2dIZWFkZXI+XHJcbiAgICAgICAgICAgICAgICA8RGlhbG9nVGl0bGUgY2xhc3NOYW1lPVwidGV4dC1iYXNlXCI+UGVyZm9ybWFuY2UgUmV2aWV3IOKAlCB7c2VsZWN0ZWRSZXZpZXcuZW1wbG95ZWVOYW1lfTwvRGlhbG9nVGl0bGU+XHJcbiAgICAgICAgICAgICAgICA8cCBjbGFzc05hbWU9XCJ0ZXh0LXhzIHRleHQtbXV0ZWQtZm9yZWdyb3VuZFwiPntzZWxlY3RlZFJldmlldy5wZXJpb2R9IOKAoiB7c2VsZWN0ZWRSZXZpZXcucmV2aWV3RGF0ZX08L3A+XHJcbiAgICAgICAgICAgICAgPC9EaWFsb2dIZWFkZXI+XHJcbiAgICAgICAgICAgICAgPGRpdiBjbGFzc05hbWU9XCJzcGFjZS15LTQgbXQtMlwiPlxyXG4gICAgICAgICAgICAgICAge3NlbGVjdGVkUmV2aWV3LnJhdGluZyA+IDAgJiYgKFxyXG4gICAgICAgICAgICAgICAgICA8ZGl2IGNsYXNzTmFtZT1cImZsZXggaXRlbXMtY2VudGVyIGdhcC0zIHAtMyByb3VuZGVkLWxnIGJnLXllbGxvdy01MCBib3JkZXIgYm9yZGVyLXllbGxvdy0xMDBcIj5cclxuICAgICAgICAgICAgICAgICAgICA8c3BhbiBjbGFzc05hbWU9XCJ0ZXh0LXNtIGZvbnQtbWVkaXVtXCI+T3ZlcmFsbCBSYXRpbmc6PC9zcGFuPlxyXG4gICAgICAgICAgICAgICAgICAgIHtyZW5kZXJTdGFycyhzZWxlY3RlZFJldmlldy5yYXRpbmcpfVxyXG4gICAgICAgICAgICAgICAgICA8L2Rpdj5cclxuICAgICAgICAgICAgICAgICl9XHJcbiAgICAgICAgICAgICAgICA8ZGl2PlxyXG4gICAgICAgICAgICAgICAgICA8aDQgY2xhc3NOYW1lPVwidGV4dC1zbSBmb250LXNlbWlib2xkIG1iLTJcIj5Hb2FscyAoe3NlbGVjdGVkUmV2aWV3LmdvYWxzLmxlbmd0aH0pPC9oND5cclxuICAgICAgICAgICAgICAgICAgPGRpdiBjbGFzc05hbWU9XCJzcGFjZS15LTJcIj5cclxuICAgICAgICAgICAgICAgICAgICB7c2VsZWN0ZWRSZXZpZXcuZ29hbHMubWFwKGcgPT4ge1xyXG4gICAgICAgICAgICAgICAgICAgICAgY29uc3QgY2ZnID0gZ29hbFN0YXR1c0NvbmZpZ1tnLnN0YXR1c107XHJcbiAgICAgICAgICAgICAgICAgICAgICByZXR1cm4gKFxyXG4gICAgICAgICAgICAgICAgICAgICAgICA8ZGl2IGtleT17Zy5pZH0gY2xhc3NOYW1lPVwiZmxleCBpdGVtcy1jZW50ZXIgZ2FwLTMgcC0yLjUgcm91bmRlZC1sZyBib3JkZXIgYm9yZGVyLWJvcmRlci8zMFwiPlxyXG4gICAgICAgICAgICAgICAgICAgICAgICAgIDxjZmcuaWNvbiBjbGFzc05hbWU9e2NuKFwidy00IGgtNCBzaHJpbmstMFwiLCBjZmcuY29sb3IpfSAvPlxyXG4gICAgICAgICAgICAgICAgICAgICAgICAgIDxkaXYgY2xhc3NOYW1lPVwiZmxleC0xIG1pbi13LTBcIj5cclxuICAgICAgICAgICAgICAgICAgICAgICAgICAgIDxwIGNsYXNzTmFtZT1cInRleHQteHMgZm9udC1tZWRpdW1cIj57Zy50aXRsZX08L3A+XHJcbiAgICAgICAgICAgICAgICAgICAgICAgICAgICA8UHJvZ3Jlc3MgdmFsdWU9e2cucHJvZ3Jlc3N9IGNsYXNzTmFtZT1cImgtMS41IG10LTFcIiAvPlxyXG4gICAgICAgICAgICAgICAgICAgICAgICAgIDwvZGl2PlxyXG4gICAgICAgICAgICAgICAgICAgICAgICAgIDxzcGFuIGNsYXNzTmFtZT1cInRleHQteHMgZm9udC1tZWRpdW1cIj57Zy5wcm9ncmVzc30lPC9zcGFuPlxyXG4gICAgICAgICAgICAgICAgICAgICAgICA8L2Rpdj5cclxuICAgICAgICAgICAgICAgICAgICAgICk7XHJcbiAgICAgICAgICAgICAgICAgICAgfSl9XHJcbiAgICAgICAgICAgICAgICAgIDwvZGl2PlxyXG4gICAgICAgICAgICAgICAgPC9kaXY+XHJcbiAgICAgICAgICAgICAgICB7c2VsZWN0ZWRSZXZpZXcuZmVlZGJhY2sgJiYgKFxyXG4gICAgICAgICAgICAgICAgICA8ZGl2PlxyXG4gICAgICAgICAgICAgICAgICAgIDxoNCBjbGFzc05hbWU9XCJ0ZXh0LXNtIGZvbnQtc2VtaWJvbGQgbWItMlwiPk1hbmFnZXIgRmVlZGJhY2s8L2g0PlxyXG4gICAgICAgICAgICAgICAgICAgIDxwIGNsYXNzTmFtZT1cInRleHQtc20gdGV4dC1tdXRlZC1mb3JlZ3JvdW5kIGJnLW11dGVkLzMwIHJvdW5kZWQtbGcgcC0zXCI+XCJ7c2VsZWN0ZWRSZXZpZXcuZmVlZGJhY2t9XCI8L3A+XHJcbiAgICAgICAgICAgICAgICAgIDwvZGl2PlxyXG4gICAgICAgICAgICAgICAgKX1cclxuICAgICAgICAgICAgICA8L2Rpdj5cclxuICAgICAgICAgICAgPC8+XHJcbiAgICAgICAgICApfVxyXG4gICAgICAgIDwvRGlhbG9nQ29udGVudD5cclxuICAgICAgPC9EaWFsb2c+XHJcblxyXG4gICAgICB7LyogTmV3IFJldmlldyBEaWFsb2cgKi99XHJcbiAgICAgIDxEaWFsb2cgb3Blbj17c2hvd05ld1Jldmlld30gb25PcGVuQ2hhbmdlPXtzZXRTaG93TmV3UmV2aWV3fT5cclxuICAgICAgICA8RGlhbG9nQ29udGVudCBjbGFzc05hbWU9XCJtYXgtdy1tZFwiPlxyXG4gICAgICAgICAgPERpYWxvZ0hlYWRlcj48RGlhbG9nVGl0bGU+TmV3IFBlcmZvcm1hbmNlIFJldmlldzwvRGlhbG9nVGl0bGU+PC9EaWFsb2dIZWFkZXI+XHJcbiAgICAgICAgICA8ZGl2IGNsYXNzTmFtZT1cInNwYWNlLXktNCBweS0yXCI+XHJcbiAgICAgICAgICAgIDxkaXYgY2xhc3NOYW1lPVwic3BhY2UteS0yXCI+XHJcbiAgICAgICAgICAgICAgPExhYmVsPkVtcGxveWVlPC9MYWJlbD5cclxuICAgICAgICAgICAgICA8c2VsZWN0IHZhbHVlPXtuZXdSZXZpZXcuZW1wbG95ZWVJZH0gb25DaGFuZ2U9e2UgPT4gc2V0TmV3UmV2aWV3KHAgPT4gKHsgLi4ucCwgZW1wbG95ZWVJZDogZS50YXJnZXQudmFsdWUgfSkpfVxyXG4gICAgICAgICAgICAgICAgY2xhc3NOYW1lPVwidy1mdWxsIGJvcmRlciBib3JkZXItYm9yZGVyIHJvdW5kZWQtbGcgcHgtMyBweS0yIHRleHQtc20gYmctYmFja2dyb3VuZFwiPlxyXG4gICAgICAgICAgICAgICAgPG9wdGlvbiB2YWx1ZT1cIlwiPlNlbGVjdCBlbXBsb3llZS4uLjwvb3B0aW9uPlxyXG4gICAgICAgICAgICAgICAge2VtcGxveWVlcy5tYXAoKGU6IGFueSkgPT4gPG9wdGlvbiBrZXk9e2UuaWR9IHZhbHVlPXtlLmlkfT57ZS5uYW1lfTwvb3B0aW9uPil9XHJcbiAgICAgICAgICAgICAgPC9zZWxlY3Q+XHJcbiAgICAgICAgICAgIDwvZGl2PlxyXG4gICAgICAgICAgICA8ZGl2IGNsYXNzTmFtZT1cInNwYWNlLXktMlwiPlxyXG4gICAgICAgICAgICAgIDxMYWJlbD5SZXZpZXcgUGVyaW9kPC9MYWJlbD5cclxuICAgICAgICAgICAgICA8SW5wdXQgdmFsdWU9e25ld1Jldmlldy5wZXJpb2R9IG9uQ2hhbmdlPXtlID0+IHNldE5ld1JldmlldyhwID0+ICh7IC4uLnAsIHBlcmlvZDogZS50YXJnZXQudmFsdWUgfSkpfSAvPlxyXG4gICAgICAgICAgICA8L2Rpdj5cclxuICAgICAgICAgICAgPGRpdiBjbGFzc05hbWU9XCJzcGFjZS15LTJcIj5cclxuICAgICAgICAgICAgICA8TGFiZWw+SW5pdGlhbCBGZWVkYmFjazwvTGFiZWw+XHJcbiAgICAgICAgICAgICAgPFRleHRhcmVhIHZhbHVlPXtuZXdSZXZpZXcuZmVlZGJhY2t9IG9uQ2hhbmdlPXtlID0+IHNldE5ld1JldmlldyhwID0+ICh7IC4uLnAsIGZlZWRiYWNrOiBlLnRhcmdldC52YWx1ZSB9KSl9IHJvd3M9ezN9IC8+XHJcbiAgICAgICAgICAgIDwvZGl2PlxyXG4gICAgICAgICAgPC9kaXY+XHJcbiAgICAgICAgICA8RGlhbG9nRm9vdGVyPlxyXG4gICAgICAgICAgICA8QnV0dG9uIHZhcmlhbnQ9XCJvdXRsaW5lXCIgb25DbGljaz17KCkgPT4gc2V0U2hvd05ld1JldmlldyhmYWxzZSl9PkNhbmNlbDwvQnV0dG9uPlxyXG4gICAgICAgICAgICA8QnV0dG9uIG9uQ2xpY2s9e2hhbmRsZUNyZWF0ZVJldmlld30gY2xhc3NOYW1lPVwiYmctZW1lcmFsZC01MDAgaG92ZXI6YmctZW1lcmFsZC02MDAgdGV4dC13aGl0ZVwiPkNyZWF0ZSBSZXZpZXc8L0J1dHRvbj5cclxuICAgICAgICAgIDwvRGlhbG9nRm9vdGVyPlxyXG4gICAgICAgIDwvRGlhbG9nQ29udGVudD5cclxuICAgICAgPC9EaWFsb2c+XHJcbiAgICA8L2Rpdj5cclxuICApO1xyXG59XHJcbiJdLCJuYW1lcyI6WyJ1c2VTdGF0ZSIsInVzZVF1ZXJ5Iiwic3VwYWJhc2UiLCJjbiIsIkJhZGdlIiwiU3RhclJhdGluZyIsIkJ1dHRvbiIsIklucHV0IiwiUHJvZ3Jlc3MiLCJEaWFsb2ciLCJEaWFsb2dDb250ZW50IiwiRGlhbG9nSGVhZGVyIiwiRGlhbG9nVGl0bGUiLCJEaWFsb2dGb290ZXIiLCJMYWJlbCIsIlRleHRhcmVhIiwiU3RhciIsIlRhcmdldCIsIlRyZW5kaW5nVXAiLCJNZXNzYWdlU3F1YXJlIiwiUGx1cyIsIlNlYXJjaCIsIkNoZXZyb25SaWdodCIsIkF3YXJkIiwiQmFyQ2hhcnQzIiwiVXNlcnMiLCJBbGVydENpcmNsZSIsInRvYXN0IiwiU3RvcmVQZXJmb3JtYW5jZVNlY3Rpb24iLCJzdG9yZUlkIiwidGFiIiwic2V0VGFiIiwic2VhcmNoIiwic2V0U2VhcmNoIiwic2hvd05ld1JldmlldyIsInNldFNob3dOZXdSZXZpZXciLCJzZWxlY3RlZFJldmlldyIsInNldFNlbGVjdGVkUmV2aWV3IiwibmV3UmV2aWV3Iiwic2V0TmV3UmV2aWV3IiwiZW1wbG95ZWVJZCIsInBlcmlvZCIsImZlZWRiYWNrIiwiZGF0YSIsImVtcGxveWVlcyIsInF1ZXJ5S2V5IiwicXVlcnlGbiIsImZyb20iLCJzZWxlY3QiLCJlcSIsInJldmlld3MiLCJzZXRSZXZpZXdzIiwiaWQiLCJlbXBsb3llZU5hbWUiLCJyYXRpbmciLCJzdGF0dXMiLCJyZXZpZXdEYXRlIiwiZ29hbHMiLCJ0aXRsZSIsInByb2dyZXNzIiwiYXZnUmF0aW5nIiwibGVuZ3RoIiwicmVkdWNlIiwiYSIsInIiLCJ0b0ZpeGVkIiwiY29tcGxldGVkUmV2aWV3cyIsImZpbHRlciIsInRvdGFsR29hbHMiLCJjb21wbGV0ZWRHb2FscyIsImciLCJzdGF0cyIsImljb24iLCJsYWJlbCIsInZhbHVlIiwiY29sb3IiLCJiZyIsInN0YXR1c0NvbmZpZyIsImRyYWZ0Iiwic3VibWl0dGVkIiwiY29tcGxldGVkIiwiZ29hbFN0YXR1c0NvbmZpZyIsInJlbmRlclN0YXJzIiwic2l6ZSIsInNob3dWYWx1ZSIsImhhbmRsZUNyZWF0ZVJldmlldyIsImVycm9yIiwiZW1wIiwiZmluZCIsImUiLCJEYXRlIiwibm93IiwidG9TdHJpbmciLCJuYW1lIiwidG9JU09TdHJpbmciLCJzcGxpdCIsInByZXYiLCJzdWNjZXNzIiwiZGl2IiwiY2xhc3NOYW1lIiwibWFwIiwicyIsInNwYW4iLCJwIiwidCIsImJ1dHRvbiIsIm9uQ2xpY2siLCJwbGFjZWhvbGRlciIsIm9uQ2hhbmdlIiwidGFyZ2V0IiwidG9Mb3dlckNhc2UiLCJpbmNsdWRlcyIsInRvVXBwZXJDYXNlIiwiZmxhdE1hcCIsImVtcGxveWVlIiwiY2ZnIiwiaDMiLCJ2YXJpYW50Iiwib3BlbiIsIm9uT3BlbkNoYW5nZSIsImg0Iiwib3B0aW9uIiwicm93cyJdLCJtYXBwaW5ncyI6Ijs7QUFBQSxTQUFTQSxRQUFRLFFBQVEsUUFBUTtBQUNqQyxTQUFTQyxRQUFRLFFBQVEsd0JBQXdCO0FBQ2pELFNBQVNDLFFBQVEsUUFBUSxpQ0FBaUM7QUFDMUQsU0FBU0MsRUFBRSxRQUFRLGNBQWM7QUFDakMsU0FBU0MsS0FBSyxRQUFRLHdCQUF3QjtBQUM5QyxTQUFTQyxVQUFVLFFBQVEsaUNBQWlDO0FBQzVELFNBQVNDLE1BQU0sUUFBUSx5QkFBeUI7QUFDaEQsU0FBU0MsS0FBSyxRQUFRLHdCQUF3QjtBQUM5QyxTQUFTQyxRQUFRLFFBQVEsMkJBQTJCO0FBQ3BELFNBQVNDLE1BQU0sRUFBRUMsYUFBYSxFQUFFQyxZQUFZLEVBQUVDLFdBQVcsRUFBRUMsWUFBWSxRQUFRLHlCQUF5QjtBQUN4RyxTQUFTQyxLQUFLLFFBQVEsd0JBQXdCO0FBQzlDLFNBQVNDLFFBQVEsUUFBUSwy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

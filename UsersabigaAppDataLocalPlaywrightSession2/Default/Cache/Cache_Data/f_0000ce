@@ -1,0 +1,1337 @@
+import { createHotContext as __vite__createHotContext } from "/@vite/client";import.meta.hot = __vite__createHotContext("/src/components/grocery/StoreLiveChat.tsx");import __vite__cjsImport0_react_jsxDevRuntime from "/node_modules/.vite/deps/react_jsx-dev-runtime.js?v=7fd9520c"; const _jsxDEV = __vite__cjsImport0_react_jsxDevRuntime["jsxDEV"]; const _Fragment = __vite__cjsImport0_react_jsxDevRuntime["Fragment"];
+var _s = $RefreshSig$(), _s1 = $RefreshSig$();
+/**
+ * StoreLiveChat — Real-time in-app chat between customer and store
+ * Supports admin mode: shows customer info, lists all chats, allows deletion
+ */ import __vite__cjsImport1_react from "/node_modules/.vite/deps/react.js?v=7fd9520c"; const useState = __vite__cjsImport1_react["useState"]; const useEffect = __vite__cjsImport1_react["useEffect"]; const useRef = __vite__cjsImport1_react["useRef"]; const useCallback = __vite__cjsImport1_react["useCallback"];
+import { motion, AnimatePresence } from "/node_modules/.vite/deps/framer-motion.js?v=7fd9520c";
+import { X, Send, MessageCircle, Loader2, Trash2, ChevronLeft, User, MapPin, QrCode, Truck } from "/node_modules/.vite/deps/lucide-react.js?v=7fd9520c";
+import { supabase } from "/src/integrations/supabase/client.ts";
+import { QRCodeSVG } from "/node_modules/.vite/deps/qrcode__react.js?v=7fd9520c";
+import { toast } from "/node_modules/.vite/deps/sonner.js?v=7fd9520c";
+import { isAllowedPaymentUrl } from "/src/lib/urlSafety.ts";
+import { assessChatMessageRisk, sanitizeOutgoingMessage } from "/src/lib/security/chatContentSafety.ts";
+function parseRichContent(content) {
+    try {
+        const trimmed = content.trim();
+        let parsed = JSON.parse(trimmed);
+        // Handle double-encoded JSON strings
+        if (typeof parsed === "string") parsed = JSON.parse(parsed);
+        if (parsed && parsed.__rich && parsed.payload) return parsed.payload;
+    } catch  {}
+    return null;
+}
+function wrapRich(payload) {
+    return JSON.stringify({
+        __rich: true,
+        payload
+    });
+}
+/* ─── Rich message card renderer ─── */ function RichMessageCard({ payload, isOwn }) {
+    if (payload.type === "location") {
+        const mapUrl = `https://www.google.com/maps?q=${payload.lat},${payload.lng}`;
+        const rideUrl = `/rides/hub?destination=${encodeURIComponent(payload.address)}&destLat=${payload.lat}&destLng=${payload.lng}`;
+        return /*#__PURE__*/ _jsxDEV("div", {
+            className: "space-y-2",
+            children: [
+                /*#__PURE__*/ _jsxDEV("div", {
+                    className: "flex items-center gap-1.5",
+                    children: [
+                        /*#__PURE__*/ _jsxDEV(MapPin, {
+                            className: "h-3.5 w-3.5"
+                        }, void 0, false, {
+                            fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/grocery/StoreLiveChat.tsx",
+                            lineNumber: 73,
+                            columnNumber: 11
+                        }, this),
+                        /*#__PURE__*/ _jsxDEV("span", {
+                            className: "text-xs font-semibold",
+                            children: "Store Location"
+                        }, void 0, false, {
+                            fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/grocery/StoreLiveChat.tsx",
+                            lineNumber: 74,
+                            columnNumber: 11
+                        }, this)
+                    ]
+                }, void 0, true, {
+                    fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/grocery/StoreLiveChat.tsx",
+                    lineNumber: 72,
+                    columnNumber: 9
+                }, this),
+                /*#__PURE__*/ _jsxDEV("p", {
+                    className: "text-[11px] leading-relaxed",
+                    children: payload.address
+                }, void 0, false, {
+                    fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/grocery/StoreLiveChat.tsx",
+                    lineNumber: 76,
+                    columnNumber: 9
+                }, this),
+                /*#__PURE__*/ _jsxDEV("div", {
+                    className: "flex flex-col gap-1.5",
+                    children: /*#__PURE__*/ _jsxDEV("a", {
+                        href: rideUrl,
+                        className: `inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[11px] font-semibold transition-colors w-fit ${isOwn ? "bg-white/20 backdrop-blur hover:bg-white/30 text-primary-foreground" : "bg-primary/10 hover:bg-primary/20 text-primary"}`,
+                        children: "🚗 Ride There"
+                    }, void 0, false, {
+                        fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/grocery/StoreLiveChat.tsx",
+                        lineNumber: 78,
+                        columnNumber: 11
+                    }, this)
+                }, void 0, false, {
+                    fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/grocery/StoreLiveChat.tsx",
+                    lineNumber: 77,
+                    columnNumber: 9
+                }, this)
+            ]
+        }, void 0, true, {
+            fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/grocery/StoreLiveChat.tsx",
+            lineNumber: 71,
+            columnNumber: 7
+        }, this);
+    }
+    if (payload.type === "payment_qr") {
+        const isSafePaymentUrl = payload.paymentUrl && isAllowedPaymentUrl(payload.paymentUrl);
+        return /*#__PURE__*/ _jsxDEV("div", {
+            className: "space-y-2",
+            children: [
+                /*#__PURE__*/ _jsxDEV("div", {
+                    className: "flex items-center gap-1.5",
+                    children: [
+                        /*#__PURE__*/ _jsxDEV(QrCode, {
+                            className: "h-3.5 w-3.5"
+                        }, void 0, false, {
+                            fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/grocery/StoreLiveChat.tsx",
+                            lineNumber: 99,
+                            columnNumber: 11
+                        }, this),
+                        /*#__PURE__*/ _jsxDEV("span", {
+                            className: "text-xs font-semibold",
+                            children: "Payment QR"
+                        }, void 0, false, {
+                            fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/grocery/StoreLiveChat.tsx",
+                            lineNumber: 100,
+                            columnNumber: 11
+                        }, this)
+                    ]
+                }, void 0, true, {
+                    fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/grocery/StoreLiveChat.tsx",
+                    lineNumber: 98,
+                    columnNumber: 9
+                }, this),
+                payload.note && /*#__PURE__*/ _jsxDEV("p", {
+                    className: "text-[11px]",
+                    children: payload.note
+                }, void 0, false, {
+                    fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/grocery/StoreLiveChat.tsx",
+                    lineNumber: 102,
+                    columnNumber: 26
+                }, this),
+                payload.amount && /*#__PURE__*/ _jsxDEV("p", {
+                    className: "text-[12px] font-bold",
+                    children: payload.amount
+                }, void 0, false, {
+                    fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/grocery/StoreLiveChat.tsx",
+                    lineNumber: 103,
+                    columnNumber: 28
+                }, this),
+                isSafePaymentUrl ? /*#__PURE__*/ _jsxDEV(_Fragment, {
+                    children: [
+                        /*#__PURE__*/ _jsxDEV("div", {
+                            className: "bg-white rounded-lg p-2 inline-block",
+                            children: /*#__PURE__*/ _jsxDEV(QRCodeSVG, {
+                                value: payload.paymentUrl,
+                                size: 120
+                            }, void 0, false, {
+                                fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/grocery/StoreLiveChat.tsx",
+                                lineNumber: 107,
+                                columnNumber: 15
+                            }, this)
+                        }, void 0, false, {
+                            fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/grocery/StoreLiveChat.tsx",
+                            lineNumber: 106,
+                            columnNumber: 13
+                        }, this),
+                        /*#__PURE__*/ _jsxDEV("a", {
+                            href: payload.paymentUrl,
+                            target: "_blank",
+                            rel: "noopener noreferrer",
+                            className: `block text-[11px] font-medium underline ${isOwn ? "text-primary-foreground/80" : "text-primary"}`,
+                            children: "Open Payment Link →"
+                        }, void 0, false, {
+                            fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/grocery/StoreLiveChat.tsx",
+                            lineNumber: 109,
+                            columnNumber: 13
+                        }, this)
+                    ]
+                }, void 0, true) : /*#__PURE__*/ _jsxDEV("p", {
+                    className: "text-[11px] text-destructive",
+                    children: "⚠ Payment link blocked for security — unrecognized domain."
+                }, void 0, false, {
+                    fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/grocery/StoreLiveChat.tsx",
+                    lineNumber: 121,
+                    columnNumber: 11
+                }, this)
+            ]
+        }, void 0, true, {
+            fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/grocery/StoreLiveChat.tsx",
+            lineNumber: 97,
+            columnNumber: 7
+        }, this);
+    }
+    if (payload.type === "tracking") {
+        return /*#__PURE__*/ _jsxDEV("div", {
+            className: "space-y-2",
+            children: [
+                /*#__PURE__*/ _jsxDEV("div", {
+                    className: "flex items-center gap-1.5",
+                    children: [
+                        /*#__PURE__*/ _jsxDEV(Truck, {
+                            className: "h-3.5 w-3.5"
+                        }, void 0, false, {
+                            fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/grocery/StoreLiveChat.tsx",
+                            lineNumber: 133,
+                            columnNumber: 11
+                        }, this),
+                        /*#__PURE__*/ _jsxDEV("span", {
+                            className: "text-xs font-semibold",
+                            children: "Delivery Tracking"
+                        }, void 0, false, {
+                            fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/grocery/StoreLiveChat.tsx",
+                            lineNumber: 134,
+                            columnNumber: 11
+                        }, this)
+                    ]
+                }, void 0, true, {
+                    fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/grocery/StoreLiveChat.tsx",
+                    lineNumber: 132,
+                    columnNumber: 9
+                }, this),
+                /*#__PURE__*/ _jsxDEV("p", {
+                    className: "text-[11px]",
+                    children: [
+                        "Order: ",
+                        /*#__PURE__*/ _jsxDEV("span", {
+                            className: "font-mono font-medium",
+                            children: payload.orderId
+                        }, void 0, false, {
+                            fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/grocery/StoreLiveChat.tsx",
+                            lineNumber: 136,
+                            columnNumber: 43
+                        }, this)
+                    ]
+                }, void 0, true, {
+                    fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/grocery/StoreLiveChat.tsx",
+                    lineNumber: 136,
+                    columnNumber: 9
+                }, this),
+                /*#__PURE__*/ _jsxDEV("p", {
+                    className: "text-[11px]",
+                    children: [
+                        "Status: ",
+                        /*#__PURE__*/ _jsxDEV("span", {
+                            className: "font-semibold capitalize",
+                            children: payload.status
+                        }, void 0, false, {
+                            fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/grocery/StoreLiveChat.tsx",
+                            lineNumber: 137,
+                            columnNumber: 44
+                        }, this)
+                    ]
+                }, void 0, true, {
+                    fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/grocery/StoreLiveChat.tsx",
+                    lineNumber: 137,
+                    columnNumber: 9
+                }, this)
+            ]
+        }, void 0, true, {
+            fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/grocery/StoreLiveChat.tsx",
+            lineNumber: 131,
+            columnNumber: 7
+        }, this);
+    }
+    return null;
+}
+_c = RichMessageCard;
+function ConfirmDialog({ open, message, onConfirm, onCancel }) {
+    if (!open) return null;
+    return /*#__PURE__*/ _jsxDEV("div", {
+        className: "fixed inset-0 z-[250] flex items-center justify-center bg-black/40 backdrop-blur-sm",
+        onClick: onCancel,
+        children: /*#__PURE__*/ _jsxDEV(motion.div, {
+            initial: {
+                scale: 0.9,
+                opacity: 0
+            },
+            animate: {
+                scale: 1,
+                opacity: 1
+            },
+            exit: {
+                scale: 0.9,
+                opacity: 0
+            },
+            onClick: (e)=>e.stopPropagation(),
+            className: "bg-background rounded-2xl border border-border/30 shadow-2xl p-5 mx-6 max-w-sm w-full space-y-4",
+            children: [
+                /*#__PURE__*/ _jsxDEV("p", {
+                    className: "text-sm font-medium text-foreground text-center",
+                    children: message
+                }, void 0, false, {
+                    fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/grocery/StoreLiveChat.tsx",
+                    lineNumber: 157,
+                    columnNumber: 9
+                }, this),
+                /*#__PURE__*/ _jsxDEV("div", {
+                    className: "flex gap-3",
+                    children: [
+                        /*#__PURE__*/ _jsxDEV("button", {
+                            onClick: onCancel,
+                            className: "flex-1 h-10 rounded-xl border border-border/30 text-sm font-medium text-muted-foreground hover:bg-muted transition-colors",
+                            children: "Cancel"
+                        }, void 0, false, {
+                            fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/grocery/StoreLiveChat.tsx",
+                            lineNumber: 159,
+                            columnNumber: 11
+                        }, this),
+                        /*#__PURE__*/ _jsxDEV("button", {
+                            onClick: onConfirm,
+                            className: "flex-1 h-10 rounded-xl bg-destructive text-destructive-foreground text-sm font-medium hover:bg-destructive/90 transition-colors",
+                            children: "Yes, Delete"
+                        }, void 0, false, {
+                            fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/grocery/StoreLiveChat.tsx",
+                            lineNumber: 165,
+                            columnNumber: 11
+                        }, this)
+                    ]
+                }, void 0, true, {
+                    fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/grocery/StoreLiveChat.tsx",
+                    lineNumber: 158,
+                    columnNumber: 9
+                }, this)
+            ]
+        }, void 0, true, {
+            fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/grocery/StoreLiveChat.tsx",
+            lineNumber: 150,
+            columnNumber: 7
+        }, this)
+    }, void 0, false, {
+        fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/grocery/StoreLiveChat.tsx",
+        lineNumber: 149,
+        columnNumber: 5
+    }, this);
+}
+_c1 = ConfirmDialog;
+/* ─── Admin chat list ─── */ function AdminChatList({ storeId, storeName, storeLogo, onSelectChat, onDeleteChat, onClose }) {
+    _s();
+    const [chats, setChats] = useState([]);
+    const [loading, setLoading] = useState(true);
+    const [deleteConfirmId, setDeleteConfirmId] = useState(null);
+    useEffect(()=>{
+        const loadChats = async ()=>{
+            setLoading(true);
+            // Get all chats for this store
+            const { data: chatRows } = await supabase.from("store_chats").select("id, user_id, created_at").eq("store_id", storeId).order("updated_at", {
+                ascending: false
+            });
+            if (!chatRows?.length) {
+                setChats([]);
+                setLoading(false);
+                return;
+            }
+            // Get customer profiles
+            const userIds = chatRows.map((c)=>c.user_id);
+            const { data: profiles } = await supabase.from("profiles").select("id, full_name, email, phone, phone_e164").in("id", userIds);
+            const profileMap = new Map(profiles?.map((p)=>[
+                    p.id,
+                    p
+                ]) || []);
+            // Get last message per chat
+            const enriched = [];
+            for (const chat of chatRows){
+                const { data: lastMsg } = await supabase.from("store_chat_messages").select("content, created_at, is_read, sender_type").eq("chat_id", chat.id).order("created_at", {
+                    ascending: false
+                }).limit(1).maybeSingle();
+                const { count } = await supabase.from("store_chat_messages").select("*", {
+                    count: "exact",
+                    head: true
+                }).eq("chat_id", chat.id).eq("is_read", false).eq("sender_type", "customer");
+                const profile = profileMap.get(chat.user_id);
+                enriched.push({
+                    ...chat,
+                    customer_email: profile?.email || "Unknown",
+                    customer_name: profile?.full_name || undefined,
+                    customer_phone: profile?.phone_e164 || profile?.phone || undefined,
+                    last_message: lastMsg?.content,
+                    last_message_at: lastMsg?.created_at,
+                    unread_count: count || 0
+                });
+            }
+            setChats(enriched);
+            setLoading(false);
+        };
+        loadChats();
+    }, [
+        storeId
+    ]);
+    return /*#__PURE__*/ _jsxDEV(_Fragment, {
+        children: [
+            /*#__PURE__*/ _jsxDEV("div", {
+                className: "flex items-center gap-3 px-4 py-3 border-b border-border/30 shrink-0",
+                children: [
+                    /*#__PURE__*/ _jsxDEV("div", {
+                        className: "h-10 w-10 rounded-full bg-muted border border-border/30 overflow-hidden flex items-center justify-center",
+                        children: storeLogo ? /*#__PURE__*/ _jsxDEV("img", {
+                            src: storeLogo,
+                            alt: storeName,
+                            className: "h-full w-full object-contain p-1"
+                        }, void 0, false, {
+                            fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/grocery/StoreLiveChat.tsx",
+                            lineNumber: 265,
+                            columnNumber: 13
+                        }, this) : /*#__PURE__*/ _jsxDEV(MessageCircle, {
+                            className: "h-5 w-5 text-muted-foreground"
+                        }, void 0, false, {
+                            fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/grocery/StoreLiveChat.tsx",
+                            lineNumber: 267,
+                            columnNumber: 13
+                        }, this)
+                    }, void 0, false, {
+                        fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/grocery/StoreLiveChat.tsx",
+                        lineNumber: 263,
+                        columnNumber: 9
+                    }, this),
+                    /*#__PURE__*/ _jsxDEV("div", {
+                        className: "flex-1 min-w-0",
+                        children: [
+                            /*#__PURE__*/ _jsxDEV("p", {
+                                className: "text-sm font-bold text-foreground truncate",
+                                children: storeName
+                            }, void 0, false, {
+                                fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/grocery/StoreLiveChat.tsx",
+                                lineNumber: 271,
+                                columnNumber: 11
+                            }, this),
+                            /*#__PURE__*/ _jsxDEV("p", {
+                                className: "text-[10px] text-muted-foreground",
+                                children: "Customer Chats"
+                            }, void 0, false, {
+                                fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/grocery/StoreLiveChat.tsx",
+                                lineNumber: 272,
+                                columnNumber: 11
+                            }, this)
+                        ]
+                    }, void 0, true, {
+                        fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/grocery/StoreLiveChat.tsx",
+                        lineNumber: 270,
+                        columnNumber: 9
+                    }, this),
+                    /*#__PURE__*/ _jsxDEV("button", {
+                        onClick: onClose,
+                        className: "p-2 rounded-full hover:bg-muted transition-colors",
+                        children: /*#__PURE__*/ _jsxDEV(X, {
+                            className: "h-5 w-5 text-muted-foreground"
+                        }, void 0, false, {
+                            fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/grocery/StoreLiveChat.tsx",
+                            lineNumber: 275,
+                            columnNumber: 11
+                        }, this)
+                    }, void 0, false, {
+                        fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/grocery/StoreLiveChat.tsx",
+                        lineNumber: 274,
+                        columnNumber: 9
+                    }, this)
+                ]
+            }, void 0, true, {
+                fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/grocery/StoreLiveChat.tsx",
+                lineNumber: 262,
+                columnNumber: 7
+            }, this),
+            /*#__PURE__*/ _jsxDEV("div", {
+                className: "flex-1 overflow-y-auto",
+                children: [
+                    loading ? /*#__PURE__*/ _jsxDEV("div", {
+                        className: "flex items-center justify-center h-32",
+                        children: /*#__PURE__*/ _jsxDEV(Loader2, {
+                            className: "h-5 w-5 animate-spin text-primary"
+                        }, void 0, false, {
+                            fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/grocery/StoreLiveChat.tsx",
+                            lineNumber: 283,
+                            columnNumber: 13
+                        }, this)
+                    }, void 0, false, {
+                        fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/grocery/StoreLiveChat.tsx",
+                        lineNumber: 282,
+                        columnNumber: 11
+                    }, this) : chats.length === 0 ? /*#__PURE__*/ _jsxDEV("div", {
+                        className: "flex flex-col items-center justify-center h-32 text-center",
+                        children: [
+                            /*#__PURE__*/ _jsxDEV(MessageCircle, {
+                                className: "h-8 w-8 text-muted-foreground/30 mb-2"
+                            }, void 0, false, {
+                                fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/grocery/StoreLiveChat.tsx",
+                                lineNumber: 287,
+                                columnNumber: 13
+                            }, this),
+                            /*#__PURE__*/ _jsxDEV("p", {
+                                className: "text-sm text-muted-foreground",
+                                children: "No customer chats yet"
+                            }, void 0, false, {
+                                fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/grocery/StoreLiveChat.tsx",
+                                lineNumber: 288,
+                                columnNumber: 13
+                            }, this)
+                        ]
+                    }, void 0, true, {
+                        fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/grocery/StoreLiveChat.tsx",
+                        lineNumber: 286,
+                        columnNumber: 11
+                    }, this) : chats.map((chat)=>/*#__PURE__*/ _jsxDEV("div", {
+                            className: "flex items-center gap-3 px-4 py-3 border-b border-border/10 hover:bg-muted/50 transition-colors cursor-pointer group",
+                            onClick: ()=>onSelectChat(chat),
+                            children: [
+                                /*#__PURE__*/ _jsxDEV("div", {
+                                    className: "h-9 w-9 rounded-full bg-primary/10 flex items-center justify-center shrink-0",
+                                    children: /*#__PURE__*/ _jsxDEV(User, {
+                                        className: "h-4 w-4 text-primary"
+                                    }, void 0, false, {
+                                        fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/grocery/StoreLiveChat.tsx",
+                                        lineNumber: 298,
+                                        columnNumber: 17
+                                    }, this)
+                                }, void 0, false, {
+                                    fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/grocery/StoreLiveChat.tsx",
+                                    lineNumber: 297,
+                                    columnNumber: 15
+                                }, this),
+                                /*#__PURE__*/ _jsxDEV("div", {
+                                    className: "flex-1 min-w-0",
+                                    children: [
+                                        /*#__PURE__*/ _jsxDEV("div", {
+                                            className: "flex items-center gap-2",
+                                            children: [
+                                                /*#__PURE__*/ _jsxDEV("p", {
+                                                    className: "text-sm font-medium text-foreground truncate",
+                                                    children: chat.customer_name || chat.customer_email
+                                                }, void 0, false, {
+                                                    fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/grocery/StoreLiveChat.tsx",
+                                                    lineNumber: 302,
+                                                    columnNumber: 19
+                                                }, this),
+                                                (chat.unread_count ?? 0) > 0 && /*#__PURE__*/ _jsxDEV("span", {
+                                                    className: "h-5 min-w-[20px] px-1.5 rounded-full bg-primary text-primary-foreground text-[10px] font-bold flex items-center justify-center",
+                                                    children: chat.unread_count
+                                                }, void 0, false, {
+                                                    fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/grocery/StoreLiveChat.tsx",
+                                                    lineNumber: 306,
+                                                    columnNumber: 21
+                                                }, this)
+                                            ]
+                                        }, void 0, true, {
+                                            fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/grocery/StoreLiveChat.tsx",
+                                            lineNumber: 301,
+                                            columnNumber: 17
+                                        }, this),
+                                        chat.last_message && /*#__PURE__*/ _jsxDEV("p", {
+                                            className: "text-[11px] text-muted-foreground truncate mt-0.5",
+                                            children: (()=>{
+                                                const rich = parseRichContent(chat.last_message);
+                                                if (!rich) return chat.last_message;
+                                                if (rich.type === "location") return `📍 ${rich.address}`;
+                                                if (rich.type === "payment_qr") return `💳 Payment QR${rich.amount ? ` — ${rich.amount}` : ""}`;
+                                                if (rich.type === "tracking") return `🚚 Tracking: ${rich.orderId}`;
+                                                return chat.last_message;
+                                            })()
+                                        }, void 0, false, {
+                                            fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/grocery/StoreLiveChat.tsx",
+                                            lineNumber: 312,
+                                            columnNumber: 19
+                                        }, this)
+                                    ]
+                                }, void 0, true, {
+                                    fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/grocery/StoreLiveChat.tsx",
+                                    lineNumber: 300,
+                                    columnNumber: 15
+                                }, this),
+                                /*#__PURE__*/ _jsxDEV("div", {
+                                    className: "flex items-center gap-1 shrink-0",
+                                    children: [
+                                        chat.last_message_at && /*#__PURE__*/ _jsxDEV("span", {
+                                            className: "text-[9px] text-muted-foreground",
+                                            children: new Date(chat.last_message_at).toLocaleDateString([], {
+                                                month: "short",
+                                                day: "numeric"
+                                            })
+                                        }, void 0, false, {
+                                            fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/grocery/StoreLiveChat.tsx",
+                                            lineNumber: 326,
+                                            columnNumber: 19
+                                        }, this),
+                                        /*#__PURE__*/ _jsxDEV("button", {
+                                            onClick: (e)=>{
+                                                e.stopPropagation();
+                                                setDeleteConfirmId(chat.id);
+                                            },
+                                            className: "p-1.5 rounded-lg opacity-0 group-hover:opacity-100 hover:bg-destructive/10 transition-all",
+                                            children: /*#__PURE__*/ _jsxDEV(Trash2, {
+                                                className: "h-3.5 w-3.5 text-destructive"
+                                            }, void 0, false, {
+                                                fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/grocery/StoreLiveChat.tsx",
+                                                lineNumber: 337,
+                                                columnNumber: 19
+                                            }, this)
+                                        }, void 0, false, {
+                                            fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/grocery/StoreLiveChat.tsx",
+                                            lineNumber: 330,
+                                            columnNumber: 17
+                                        }, this)
+                                    ]
+                                }, void 0, true, {
+                                    fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/grocery/StoreLiveChat.tsx",
+                                    lineNumber: 324,
+                                    columnNumber: 15
+                                }, this)
+                            ]
+                        }, chat.id, true, {
+                            fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/grocery/StoreLiveChat.tsx",
+                            lineNumber: 292,
+                            columnNumber: 13
+                        }, this)),
+                    /*#__PURE__*/ _jsxDEV(ConfirmDialog, {
+                        open: !!deleteConfirmId,
+                        message: "Delete this chat? This cannot be undone.",
+                        onCancel: ()=>setDeleteConfirmId(null),
+                        onConfirm: ()=>{
+                            if (deleteConfirmId) onDeleteChat(deleteConfirmId);
+                            setDeleteConfirmId(null);
+                        }
+                    }, void 0, false, {
+                        fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/grocery/StoreLiveChat.tsx",
+                        lineNumber: 343,
+                        columnNumber: 9
+                    }, this)
+                ]
+            }, void 0, true, {
+                fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/grocery/StoreLiveChat.tsx",
+                lineNumber: 280,
+                columnNumber: 7
+            }, this)
+        ]
+    }, void 0, true);
+}
+_s(AdminChatList, "Px5UAiE0KG+nAmOHQDaGkrTCNMk=");
+_c2 = AdminChatList;
+/* ─── Main component ─── */ export default function StoreLiveChat({ storeId, storeName, storeLogo, open, onClose, isAdmin, reservationContext }) {
+    _s1();
+    const [messages, setMessages] = useState([]);
+    const [input, setInput] = useState("");
+    const [loading, setLoading] = useState(true);
+    const [sending, setSending] = useState(false);
+    const [chatId, setChatId] = useState(null);
+    const [selectedChat, setSelectedChat] = useState(null);
+    const [chatListKey, setChatListKey] = useState(0);
+    const messagesEndRef = useRef(null);
+    const scrollToBottom = useCallback(()=>{
+        messagesEndRef.current?.scrollIntoView({
+            behavior: "smooth"
+        });
+    }, []);
+    // Reset state on close
+    useEffect(()=>{
+        if (!open) {
+            setChatId(null);
+            setSelectedChat(null);
+            setMessages([]);
+        }
+    }, [
+        open
+    ]);
+    // Customer mode: get or create chat
+    useEffect(()=>{
+        if (!open || isAdmin) return;
+        let cancelled = false;
+        const initChat = async ()=>{
+            setLoading(true);
+            const { data: { user } } = await supabase.auth.getUser();
+            if (!user) {
+                toast.error("Please sign in to chat");
+                onClose();
+                return;
+            }
+            const { data: existing } = await supabase.from("store_chats").select("id").eq("store_id", storeId).eq("user_id", user.id).maybeSingle();
+            let id = existing?.id;
+            if (!id) {
+                const { data: created, error } = await supabase.from("store_chats").insert({
+                    store_id: storeId,
+                    user_id: user.id
+                }).select("id").single();
+                if (error) {
+                    toast.error("Could not start chat");
+                    onClose();
+                    return;
+                }
+                id = created.id;
+            }
+            if (cancelled) return;
+            setChatId(id);
+            const { data: msgs } = await supabase.from("store_chat_messages").select("id, sender_type, content, created_at, is_read").eq("chat_id", id).order("created_at", {
+                ascending: true
+            });
+            if (!cancelled) {
+                setMessages(msgs || []);
+                setLoading(false);
+                setTimeout(scrollToBottom, 100);
+            }
+        };
+        initChat();
+        return ()=>{
+            cancelled = true;
+        };
+    }, [
+        open,
+        storeId,
+        isAdmin,
+        onClose,
+        scrollToBottom
+    ]);
+    // Admin mode: load messages for selected chat
+    useEffect(()=>{
+        if (!selectedChat || !isAdmin) return;
+        let cancelled = false;
+        const loadMessages = async ()=>{
+            setLoading(true);
+            setChatId(selectedChat.id);
+            const { data: msgs } = await supabase.from("store_chat_messages").select("id, sender_type, content, created_at, is_read").eq("chat_id", selectedChat.id).order("created_at", {
+                ascending: true
+            });
+            if (!cancelled) {
+                setMessages(msgs || []);
+                setLoading(false);
+                setTimeout(scrollToBottom, 100);
+            }
+        };
+        loadMessages();
+        return ()=>{
+            cancelled = true;
+        };
+    }, [
+        selectedChat,
+        isAdmin,
+        scrollToBottom
+    ]);
+    // Realtime subscription
+    useEffect(()=>{
+        if (!chatId) return;
+        const channel = supabase.channel(`store-chat-${chatId}`).on("postgres_changes", {
+            event: "INSERT",
+            schema: "public",
+            table: "store_chat_messages",
+            filter: `chat_id=eq.${chatId}`
+        }, (payload)=>{
+            const msg = payload.new;
+            setMessages((prev)=>{
+                if (prev.some((m)=>m.id === msg.id)) return prev;
+                return [
+                    ...prev,
+                    msg
+                ];
+            });
+            setTimeout(scrollToBottom, 50);
+        }).subscribe();
+        return ()=>{
+            supabase.removeChannel(channel);
+        };
+    }, [
+        chatId,
+        scrollToBottom
+    ]);
+    const sendMessage = async ()=>{
+        if (!input.trim() || !chatId || sending) return;
+        const text = sanitizeOutgoingMessage(input);
+        if (!text) return;
+        const risk = assessChatMessageRisk(text);
+        if (risk.blocked) {
+            toast.error("Blocked message containing unsafe link pattern");
+            return;
+        }
+        if (risk.warnings.length > 0) {
+            toast.warning("Potentially suspicious link pattern detected in message");
+        }
+        setInput("");
+        setSending(true);
+        const { data: { user } } = await supabase.auth.getUser();
+        if (!user) return;
+        const { error } = await supabase.from("store_chat_messages").insert({
+            chat_id: chatId,
+            sender_id: user.id,
+            sender_type: isAdmin ? "store" : "customer",
+            content: text
+        });
+        if (error) toast.error(error.message || "Failed to send message");
+        setSending(false);
+    };
+    const handleDeleteChat = async (deleteChatId)=>{
+        const { error } = await supabase.from("store_chats").delete().eq("id", deleteChatId);
+        if (error) {
+            toast.error("Failed to delete chat");
+        } else {
+            toast.success("Chat deleted");
+            setChatListKey((k)=>k + 1);
+            if (chatId === deleteChatId) {
+                setChatId(null);
+                setSelectedChat(null);
+                setMessages([]);
+            }
+        }
+    };
+    const [confirmDeleteInChat, setConfirmDeleteInChat] = useState(false);
+    const showChatList = isAdmin && !selectedChat;
+    const chatTitle = isAdmin && selectedChat ? selectedChat.customer_name || selectedChat.customer_email || "Customer" : storeName;
+    const chatSubtitle = isAdmin && selectedChat ? "Customer Chat" : "Live Chat";
+    return /*#__PURE__*/ _jsxDEV(AnimatePresence, {
+        children: open && /*#__PURE__*/ _jsxDEV(motion.div, {
+            initial: {
+                opacity: 0
+            },
+            animate: {
+                opacity: 1
+            },
+            exit: {
+                opacity: 0
+            },
+            className: "fixed inset-0 z-[200] bg-black/50 backdrop-blur-sm",
+            onClick: onClose,
+            children: /*#__PURE__*/ _jsxDEV(motion.div, {
+                initial: {
+                    y: "100%"
+                },
+                animate: {
+                    y: 0
+                },
+                exit: {
+                    y: "100%"
+                },
+                transition: {
+                    type: "spring",
+                    stiffness: 300,
+                    damping: 30
+                },
+                onClick: (e)=>e.stopPropagation(),
+                className: "absolute bottom-0 left-0 right-0 h-[85vh] bg-background rounded-t-3xl border-t border-border/30 flex flex-col overflow-hidden",
+                children: [
+                    showChatList ? /*#__PURE__*/ _jsxDEV(AdminChatList, {
+                        storeId: storeId,
+                        storeName: storeName,
+                        storeLogo: storeLogo,
+                        onSelectChat: setSelectedChat,
+                        onDeleteChat: handleDeleteChat,
+                        onClose: onClose
+                    }, chatListKey, false, {
+                        fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/grocery/StoreLiveChat.tsx",
+                        lineNumber: 561,
+                        columnNumber: 15
+                    }, this) : /*#__PURE__*/ _jsxDEV(_Fragment, {
+                        children: [
+                            /*#__PURE__*/ _jsxDEV("div", {
+                                className: "flex items-center gap-3 px-4 py-3 border-b border-border/30 shrink-0",
+                                children: [
+                                    isAdmin && /*#__PURE__*/ _jsxDEV("button", {
+                                        onClick: ()=>{
+                                            setSelectedChat(null);
+                                            setChatId(null);
+                                            setMessages([]);
+                                        },
+                                        className: "p-1.5 rounded-full hover:bg-muted transition-colors",
+                                        children: /*#__PURE__*/ _jsxDEV(ChevronLeft, {
+                                            className: "h-5 w-5 text-muted-foreground"
+                                        }, void 0, false, {
+                                            fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/grocery/StoreLiveChat.tsx",
+                                            lineNumber: 579,
+                                            columnNumber: 23
+                                        }, this)
+                                    }, void 0, false, {
+                                        fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/grocery/StoreLiveChat.tsx",
+                                        lineNumber: 575,
+                                        columnNumber: 21
+                                    }, this),
+                                    /*#__PURE__*/ _jsxDEV("div", {
+                                        className: "h-10 w-10 rounded-full bg-muted border border-border/30 overflow-hidden flex items-center justify-center",
+                                        children: isAdmin ? /*#__PURE__*/ _jsxDEV(User, {
+                                            className: "h-5 w-5 text-primary"
+                                        }, void 0, false, {
+                                            fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/grocery/StoreLiveChat.tsx",
+                                            lineNumber: 584,
+                                            columnNumber: 23
+                                        }, this) : storeLogo ? /*#__PURE__*/ _jsxDEV("img", {
+                                            src: storeLogo,
+                                            alt: storeName,
+                                            className: "h-full w-full object-contain p-1"
+                                        }, void 0, false, {
+                                            fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/grocery/StoreLiveChat.tsx",
+                                            lineNumber: 586,
+                                            columnNumber: 23
+                                        }, this) : /*#__PURE__*/ _jsxDEV(MessageCircle, {
+                                            className: "h-5 w-5 text-muted-foreground"
+                                        }, void 0, false, {
+                                            fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/grocery/StoreLiveChat.tsx",
+                                            lineNumber: 588,
+                                            columnNumber: 23
+                                        }, this)
+                                    }, void 0, false, {
+                                        fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/grocery/StoreLiveChat.tsx",
+                                        lineNumber: 582,
+                                        columnNumber: 19
+                                    }, this),
+                                    /*#__PURE__*/ _jsxDEV("div", {
+                                        className: "flex-1 min-w-0",
+                                        children: [
+                                            /*#__PURE__*/ _jsxDEV("p", {
+                                                className: "text-sm font-bold text-foreground truncate",
+                                                children: chatTitle
+                                            }, void 0, false, {
+                                                fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/grocery/StoreLiveChat.tsx",
+                                                lineNumber: 592,
+                                                columnNumber: 21
+                                            }, this),
+                                            /*#__PURE__*/ _jsxDEV("p", {
+                                                className: "text-[10px] text-muted-foreground truncate",
+                                                children: chatSubtitle
+                                            }, void 0, false, {
+                                                fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/grocery/StoreLiveChat.tsx",
+                                                lineNumber: 593,
+                                                columnNumber: 21
+                                            }, this)
+                                        ]
+                                    }, void 0, true, {
+                                        fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/grocery/StoreLiveChat.tsx",
+                                        lineNumber: 591,
+                                        columnNumber: 19
+                                    }, this),
+                                    isAdmin && chatId && /*#__PURE__*/ _jsxDEV("button", {
+                                        onClick: ()=>setConfirmDeleteInChat(true),
+                                        className: "p-2 rounded-full hover:bg-destructive/10 transition-colors",
+                                        children: /*#__PURE__*/ _jsxDEV(Trash2, {
+                                            className: "h-4 w-4 text-destructive"
+                                        }, void 0, false, {
+                                            fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/grocery/StoreLiveChat.tsx",
+                                            lineNumber: 600,
+                                            columnNumber: 23
+                                        }, this)
+                                    }, void 0, false, {
+                                        fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/grocery/StoreLiveChat.tsx",
+                                        lineNumber: 596,
+                                        columnNumber: 21
+                                    }, this),
+                                    /*#__PURE__*/ _jsxDEV("button", {
+                                        onClick: onClose,
+                                        className: "p-2 rounded-full hover:bg-muted transition-colors",
+                                        children: /*#__PURE__*/ _jsxDEV(X, {
+                                            className: "h-5 w-5 text-muted-foreground"
+                                        }, void 0, false, {
+                                            fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/grocery/StoreLiveChat.tsx",
+                                            lineNumber: 604,
+                                            columnNumber: 21
+                                        }, this)
+                                    }, void 0, false, {
+                                        fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/grocery/StoreLiveChat.tsx",
+                                        lineNumber: 603,
+                                        columnNumber: 19
+                                    }, this)
+                                ]
+                            }, void 0, true, {
+                                fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/grocery/StoreLiveChat.tsx",
+                                lineNumber: 573,
+                                columnNumber: 17
+                            }, this),
+                            /*#__PURE__*/ _jsxDEV("div", {
+                                className: "flex-1 overflow-y-auto px-4 py-3 space-y-2",
+                                children: [
+                                    reservationContext && /*#__PURE__*/ _jsxDEV("div", {
+                                        className: "rounded-xl border bg-muted/40 p-3 text-xs space-y-1",
+                                        children: [
+                                            /*#__PURE__*/ _jsxDEV("div", {
+                                                className: "font-semibold",
+                                                children: [
+                                                    "Reservation ",
+                                                    reservationContext.reservationNumber
+                                                ]
+                                            }, void 0, true, {
+                                                fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/grocery/StoreLiveChat.tsx",
+                                                lineNumber: 612,
+                                                columnNumber: 23
+                                            }, this),
+                                            /*#__PURE__*/ _jsxDEV("div", {
+                                                className: "text-muted-foreground",
+                                                children: [
+                                                    reservationContext.dates,
+                                                    " · ",
+                                                    reservationContext.roomLabel
+                                                ]
+                                            }, void 0, true, {
+                                                fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/grocery/StoreLiveChat.tsx",
+                                                lineNumber: 613,
+                                                columnNumber: 23
+                                            }, this),
+                                            /*#__PURE__*/ _jsxDEV("div", {
+                                                className: "capitalize text-muted-foreground",
+                                                children: [
+                                                    "Status: ",
+                                                    reservationContext.status.replace(/_/g, " ")
+                                                ]
+                                            }, void 0, true, {
+                                                fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/grocery/StoreLiveChat.tsx",
+                                                lineNumber: 614,
+                                                columnNumber: 23
+                                            }, this),
+                                            /*#__PURE__*/ _jsxDEV("a", {
+                                                href: reservationContext.href,
+                                                className: "text-primary font-medium",
+                                                children: "View reservation"
+                                            }, void 0, false, {
+                                                fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/grocery/StoreLiveChat.tsx",
+                                                lineNumber: 615,
+                                                columnNumber: 23
+                                            }, this)
+                                        ]
+                                    }, void 0, true, {
+                                        fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/grocery/StoreLiveChat.tsx",
+                                        lineNumber: 611,
+                                        columnNumber: 21
+                                    }, this),
+                                    loading ? /*#__PURE__*/ _jsxDEV("div", {
+                                        className: "flex items-center justify-center h-32",
+                                        children: /*#__PURE__*/ _jsxDEV(Loader2, {
+                                            className: "h-5 w-5 animate-spin text-primary"
+                                        }, void 0, false, {
+                                            fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/grocery/StoreLiveChat.tsx",
+                                            lineNumber: 620,
+                                            columnNumber: 23
+                                        }, this)
+                                    }, void 0, false, {
+                                        fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/grocery/StoreLiveChat.tsx",
+                                        lineNumber: 619,
+                                        columnNumber: 21
+                                    }, this) : messages.length === 0 ? /*#__PURE__*/ _jsxDEV("div", {
+                                        className: "flex flex-col items-center justify-center h-32 text-center",
+                                        children: [
+                                            /*#__PURE__*/ _jsxDEV(MessageCircle, {
+                                                className: "h-8 w-8 text-muted-foreground/30 mb-2"
+                                            }, void 0, false, {
+                                                fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/grocery/StoreLiveChat.tsx",
+                                                lineNumber: 624,
+                                                columnNumber: 23
+                                            }, this),
+                                            /*#__PURE__*/ _jsxDEV("p", {
+                                                className: "text-sm text-muted-foreground",
+                                                children: isAdmin ? "No messages yet" : `Start a conversation with ${storeName}`
+                                            }, void 0, false, {
+                                                fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/grocery/StoreLiveChat.tsx",
+                                                lineNumber: 625,
+                                                columnNumber: 23
+                                            }, this),
+                                            /*#__PURE__*/ _jsxDEV("p", {
+                                                className: "text-[10px] text-muted-foreground/60 mt-1",
+                                                children: isAdmin ? "Waiting for customer to send a message" : "Ask about products, availability, or delivery"
+                                            }, void 0, false, {
+                                                fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/grocery/StoreLiveChat.tsx",
+                                                lineNumber: 628,
+                                                columnNumber: 23
+                                            }, this)
+                                        ]
+                                    }, void 0, true, {
+                                        fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/grocery/StoreLiveChat.tsx",
+                                        lineNumber: 623,
+                                        columnNumber: 21
+                                    }, this) : messages.map((msg)=>{
+                                        const isOwn = isAdmin ? msg.sender_type === "store" : msg.sender_type === "customer";
+                                        const richPayload = parseRichContent(msg.content);
+                                        return /*#__PURE__*/ _jsxDEV("div", {
+                                            className: `flex ${isOwn ? "justify-end" : "justify-start"}`,
+                                            children: /*#__PURE__*/ _jsxDEV("div", {
+                                                className: `max-w-[80%] px-3 py-2 rounded-2xl text-[13px] ${isOwn ? "bg-primary text-primary-foreground rounded-br-md" : "bg-muted text-foreground rounded-bl-md"}`,
+                                                children: [
+                                                    richPayload ? /*#__PURE__*/ _jsxDEV(RichMessageCard, {
+                                                        payload: richPayload,
+                                                        isOwn: isOwn
+                                                    }, void 0, false, {
+                                                        fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/grocery/StoreLiveChat.tsx",
+                                                        lineNumber: 646,
+                                                        columnNumber: 31
+                                                    }, this) : msg.content,
+                                                    /*#__PURE__*/ _jsxDEV("p", {
+                                                        className: `text-[9px] mt-1 ${isOwn ? "text-primary-foreground/60" : "text-muted-foreground"}`,
+                                                        children: new Date(msg.created_at).toLocaleTimeString([], {
+                                                            hour: "2-digit",
+                                                            minute: "2-digit"
+                                                        })
+                                                    }, void 0, false, {
+                                                        fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/grocery/StoreLiveChat.tsx",
+                                                        lineNumber: 650,
+                                                        columnNumber: 29
+                                                    }, this)
+                                                ]
+                                            }, void 0, true, {
+                                                fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/grocery/StoreLiveChat.tsx",
+                                                lineNumber: 638,
+                                                columnNumber: 27
+                                            }, this)
+                                        }, msg.id, false, {
+                                            fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/grocery/StoreLiveChat.tsx",
+                                            lineNumber: 637,
+                                            columnNumber: 25
+                                        }, this);
+                                    }),
+                                    /*#__PURE__*/ _jsxDEV("div", {
+                                        ref: messagesEndRef
+                                    }, void 0, false, {
+                                        fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/grocery/StoreLiveChat.tsx",
+                                        lineNumber: 660,
+                                        columnNumber: 19
+                                    }, this)
+                                ]
+                            }, void 0, true, {
+                                fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/grocery/StoreLiveChat.tsx",
+                                lineNumber: 609,
+                                columnNumber: 17
+                            }, this),
+                            isAdmin && chatId && /*#__PURE__*/ _jsxDEV("div", {
+                                className: "px-4 pt-2 flex items-center gap-2 border-t border-border/10",
+                                children: [
+                                    /*#__PURE__*/ _jsxDEV("button", {
+                                        onClick: async ()=>{
+                                            const { data: store } = await supabase.from("store_profiles").select("address, latitude, longitude").eq("id", storeId).single();
+                                            if (!store?.address) {
+                                                toast.error("Store address not set");
+                                                return;
+                                            }
+                                            const content = wrapRich({
+                                                type: "location",
+                                                address: store.address,
+                                                lat: store.latitude || 0,
+                                                lng: store.longitude || 0
+                                            });
+                                            const { data: { user } } = await supabase.auth.getUser();
+                                            if (!user) return;
+                                            await supabase.from("store_chat_messages").insert({
+                                                chat_id: chatId,
+                                                sender_id: user.id,
+                                                sender_type: "store",
+                                                content
+                                            });
+                                        },
+                                        className: "flex items-center gap-1.5 px-3 h-8 rounded-full bg-accent/60 text-accent-foreground text-[11px] font-medium hover:bg-accent transition-colors",
+                                        children: [
+                                            /*#__PURE__*/ _jsxDEV(MapPin, {
+                                                className: "h-3.5 w-3.5"
+                                            }, void 0, false, {
+                                                fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/grocery/StoreLiveChat.tsx",
+                                                lineNumber: 688,
+                                                columnNumber: 23
+                                            }, this),
+                                            "Location"
+                                        ]
+                                    }, void 0, true, {
+                                        fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/grocery/StoreLiveChat.tsx",
+                                        lineNumber: 666,
+                                        columnNumber: 21
+                                    }, this),
+                                    /*#__PURE__*/ _jsxDEV("button", {
+                                        onClick: ()=>{
+                                            const url = prompt("Paste your payment link or URL:");
+                                            if (!url?.trim()) return;
+                                            if (!isAllowedPaymentUrl(url.trim())) {
+                                                toast.error("Payment link blocked. Use an approved payment domain.");
+                                                return;
+                                            }
+                                            const amount = prompt("Amount (optional):");
+                                            const note = prompt("Note (optional):");
+                                            const sendQR = async ()=>{
+                                                const content = wrapRich({
+                                                    type: "payment_qr",
+                                                    paymentUrl: url.trim(),
+                                                    amount: amount?.trim() || undefined,
+                                                    note: note?.trim() || undefined
+                                                });
+                                                const { data: { user } } = await supabase.auth.getUser();
+                                                if (!user) return;
+                                                await supabase.from("store_chat_messages").insert({
+                                                    chat_id: chatId,
+                                                    sender_id: user.id,
+                                                    sender_type: "store",
+                                                    content
+                                                });
+                                            };
+                                            sendQR();
+                                        },
+                                        className: "flex items-center gap-1.5 px-3 h-8 rounded-full bg-accent/60 text-accent-foreground text-[11px] font-medium hover:bg-accent transition-colors",
+                                        children: [
+                                            /*#__PURE__*/ _jsxDEV(QrCode, {
+                                                className: "h-3.5 w-3.5"
+                                            }, void 0, false, {
+                                                fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/grocery/StoreLiveChat.tsx",
+                                                lineNumber: 718,
+                                                columnNumber: 23
+                                            }, this),
+                                            "Payment"
+                                        ]
+                                    }, void 0, true, {
+                                        fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/grocery/StoreLiveChat.tsx",
+                                        lineNumber: 691,
+                                        columnNumber: 21
+                                    }, this),
+                                    /*#__PURE__*/ _jsxDEV("button", {
+                                        onClick: ()=>{
+                                            const orderId = prompt("Enter order ID to share tracking:");
+                                            if (!orderId?.trim()) return;
+                                            const status = prompt("Current status (e.g. preparing, on the way, delivered):") || "preparing";
+                                            const sendTracking = async ()=>{
+                                                const content = wrapRich({
+                                                    type: "tracking",
+                                                    orderId: orderId.trim(),
+                                                    status: status.trim()
+                                                });
+                                                const { data: { user } } = await supabase.auth.getUser();
+                                                if (!user) return;
+                                                await supabase.from("store_chat_messages").insert({
+                                                    chat_id: chatId,
+                                                    sender_id: user.id,
+                                                    sender_type: "store",
+                                                    content
+                                                });
+                                            };
+                                            sendTracking();
+                                        },
+                                        className: "flex items-center gap-1.5 px-3 h-8 rounded-full bg-accent/60 text-accent-foreground text-[11px] font-medium hover:bg-accent transition-colors",
+                                        children: [
+                                            /*#__PURE__*/ _jsxDEV(Truck, {
+                                                className: "h-3.5 w-3.5"
+                                            }, void 0, false, {
+                                                fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/grocery/StoreLiveChat.tsx",
+                                                lineNumber: 742,
+                                                columnNumber: 23
+                                            }, this),
+                                            "Tracking"
+                                        ]
+                                    }, void 0, true, {
+                                        fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/grocery/StoreLiveChat.tsx",
+                                        lineNumber: 721,
+                                        columnNumber: 21
+                                    }, this)
+                                ]
+                            }, void 0, true, {
+                                fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/grocery/StoreLiveChat.tsx",
+                                lineNumber: 665,
+                                columnNumber: 19
+                            }, this),
+                            /*#__PURE__*/ _jsxDEV("div", {
+                                className: "px-4 py-3 shrink-0 pb-safe",
+                                children: /*#__PURE__*/ _jsxDEV("div", {
+                                    className: "flex items-center gap-2",
+                                    children: [
+                                        /*#__PURE__*/ _jsxDEV("input", {
+                                            type: "text",
+                                            value: input,
+                                            onChange: (e)=>setInput(e.target.value),
+                                            onKeyDown: (e)=>e.key === "Enter" && sendMessage(),
+                                            placeholder: isAdmin ? "Reply as store..." : "Type a message...",
+                                            className: "flex-1 h-10 px-4 rounded-full bg-muted border border-border/30 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-primary/30"
+                                        }, void 0, false, {
+                                            fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/grocery/StoreLiveChat.tsx",
+                                            lineNumber: 751,
+                                            columnNumber: 21
+                                        }, this),
+                                        /*#__PURE__*/ _jsxDEV("button", {
+                                            onClick: sendMessage,
+                                            disabled: !input.trim() || sending,
+                                            className: "h-10 w-10 rounded-full bg-primary text-primary-foreground flex items-center justify-center shrink-0 disabled:opacity-50 transition-opacity",
+                                            children: sending ? /*#__PURE__*/ _jsxDEV(Loader2, {
+                                                className: "h-4 w-4 animate-spin"
+                                            }, void 0, false, {
+                                                fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/grocery/StoreLiveChat.tsx",
+                                                lineNumber: 764,
+                                                columnNumber: 34
+                                            }, this) : /*#__PURE__*/ _jsxDEV(Send, {
+                                                className: "h-4 w-4"
+                                            }, void 0, false, {
+                                                fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/grocery/StoreLiveChat.tsx",
+                                                lineNumber: 764,
+                                                columnNumber: 81
+                                            }, this)
+                                        }, void 0, false, {
+                                            fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/grocery/StoreLiveChat.tsx",
+                                            lineNumber: 759,
+                                            columnNumber: 21
+                                        }, this)
+                                    ]
+                                }, void 0, true, {
+                                    fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/grocery/StoreLiveChat.tsx",
+                                    lineNumber: 750,
+                                    columnNumber: 19
+                                }, this)
+                            }, void 0, false, {
+                                fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/grocery/StoreLiveChat.tsx",
+                                lineNumber: 749,
+                                columnNumber: 17
+                            }, this)
+                        ]
+                    }, void 0, true),
+                    /*#__PURE__*/ _jsxDEV(ConfirmDialog, {
+                        open: confirmDeleteInChat,
+                        message: "Delete this chat? This cannot be undone.",
+                        onCancel: ()=>setConfirmDeleteInChat(false),
+                        onConfirm: ()=>{
+                            if (chatId) handleDeleteChat(chatId);
+                            setConfirmDeleteInChat(false);
+                        }
+                    }, void 0, false, {
+                        fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/grocery/StoreLiveChat.tsx",
+                        lineNumber: 770,
+                        columnNumber: 13
+                    }, this)
+                ]
+            }, void 0, true, {
+                fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/grocery/StoreLiveChat.tsx",
+                lineNumber: 552,
+                columnNumber: 11
+            }, this)
+        }, void 0, false, {
+            fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/grocery/StoreLiveChat.tsx",
+            lineNumber: 545,
+            columnNumber: 9
+        }, this)
+    }, void 0, false, {
+        fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/grocery/StoreLiveChat.tsx",
+        lineNumber: 543,
+        columnNumber: 5
+    }, this);
+}
+_s1(StoreLiveChat, "YMLcuytH+VTGE8vPalDEQEgcXrg=");
+_c3 = StoreLiveChat;
+var _c, _c1, _c2, _c3;
+$RefreshReg$(_c, "RichMessageCard");
+$RefreshReg$(_c1, "ConfirmDialog");
+$RefreshReg$(_c2, "AdminChatList");
+$RefreshReg$(_c3, "StoreLiveChat");
+
+
+import * as RefreshRuntime from "/@react-refresh";
+const inWebWorker = typeof WorkerGlobalScope !== 'undefined' && self instanceof WorkerGlobalScope;
+if (import.meta.hot && !inWebWorker) {
+  if (!window.$RefreshReg$) {
+    throw new Error(
+      "@vitejs/plugin-react-swc can't detect preamble. Something is wrong."
+    );
+  }
+
+  RefreshRuntime.__hmr_import(import.meta.url).then((currentExports) => {
+    RefreshRuntime.registerExportsForReactRefresh("C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/grocery/StoreLiveChat.tsx", currentExports);
+    import.meta.hot.accept((nextExports) => {
+      if (!nextExports) return;
+      const invalidateMessage = RefreshRuntime.validateRefreshBoundaryAndEnqueueUpdate("C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/grocery/StoreLiveChat.tsx", currentExports, nextExports);
+      if (invalidateMessage) import.meta.hot.invalidate(invalidateMessage);
+    });
+  });
+}
+function $RefreshReg$(type, id) { return RefreshRuntime.register(type, "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/grocery/StoreLiveChat.tsx" + ' ' + id) }
+function $RefreshSig$() { return RefreshRuntime.createSignatureFunctionForTransform(); }
+
+//# sourceMappingURL=data:application/json;base64,eyJ2ZXJzaW9uIjozLCJzb3VyY2VzIjpbIlN0b3JlTGl2ZUNoYXQudHN4Il0sInNvdXJjZXNDb250ZW50IjpbIi8qKlxyXG4gKiBTdG9yZUxpdmVDaGF0IOKAlCBSZWFsLXRpbWUgaW4tYXBwIGNoYXQgYmV0d2VlbiBjdXN0b21lciBhbmQgc3RvcmVcclxuICogU3VwcG9ydHMgYWRtaW4gbW9kZTogc2hvd3MgY3VzdG9tZXIgaW5mbywgbGlzdHMgYWxsIGNoYXRzLCBhbGxvd3MgZGVsZXRpb25cclxuICovXHJcbmltcG9ydCB7IHVzZVN0YXRlLCB1c2VFZmZlY3QsIHVzZVJlZiwgdXNlQ2FsbGJhY2sgfSBmcm9tIFwicmVhY3RcIjtcclxuaW1wb3J0IHsgbW90aW9uLCBBbmltYXRlUHJlc2VuY2UgfSBmcm9tIFwiZnJhbWVyLW1vdGlvblwiO1xyXG5pbXBvcnQgeyBYLCBTZW5kLCBNZXNzYWdlQ2lyY2xlLCBMb2FkZXIyLCBUcmFzaDIsIENoZXZyb25MZWZ0LCBVc2VyLCBNYXBQaW4sIFFyQ29kZSwgVHJ1Y2sgfSBmcm9tIFwibHVjaWRlLXJlYWN0XCI7XHJcbmltcG9ydCB7IHN1cGFiYXNlIH0gZnJvbSBcIkAvaW50ZWdyYXRpb25zL3N1cGFiYXNlL2NsaWVudFwiO1xyXG5pbXBvcnQgeyBRUkNvZGVTVkcgfSBmcm9tIFwicXJjb2RlLnJlYWN0XCI7XHJcbmltcG9ydCB7IHRvYXN0IH0gZnJvbSBcInNvbm5lclwiO1xyXG5pbXBvcnQgeyBpc0FsbG93ZWRQYXltZW50VXJsIH0gZnJvbSBcIkAvbGliL3VybFNhZmV0eVwiO1xyXG5pbXBvcnQgeyBhc3Nlc3NDaGF0TWVzc2FnZVJpc2ssIHNhbml0aXplT3V0Z29pbmdNZXNzYWdlIH0gZnJvbSBcIkAvbGliL3NlY3VyaXR5L2NoYXRDb250ZW50U2FmZXR5XCI7XHJcblxyXG5pbnRlcmZhY2UgU3RvcmVMaXZlQ2hhdFByb3BzIHtcclxuICBzdG9yZUlkOiBzdHJpbmc7XHJcbiAgc3RvcmVOYW1lOiBzdHJpbmc7XHJcbiAgc3RvcmVMb2dvPzogc3RyaW5nIHwgbnVsbDtcclxuICBvcGVuOiBib29sZWFuO1xyXG4gIG9uQ2xvc2U6ICgpID0+IHZvaWQ7XHJcbiAgaXNBZG1pbj86IGJvb2xlYW47XHJcbiAgcmVzZXJ2YXRpb25Db250ZXh0PzogeyByZXNlcnZhdGlvbk51bWJlcjogc3RyaW5nOyBkYXRlczogc3RyaW5nOyByb29tTGFiZWw6IHN0cmluZzsgc3RhdHVzOiBzdHJpbmc7IGhyZWY6IHN0cmluZyB9O1xyXG59XHJcblxyXG5pbnRlcmZhY2UgQ2hhdE1lc3NhZ2Uge1xyXG4gIGlkOiBzdHJpbmc7XHJcbiAgc2VuZGVyX3R5cGU6IHN0cmluZztcclxuICBjb250ZW50OiBzdHJpbmc7XHJcbiAgY3JlYXRlZF9hdDogc3RyaW5nO1xyXG4gIGlzX3JlYWQ6IGJvb2xlYW47XHJcbn1cclxuXHJcbmludGVyZmFjZSBDaGF0VGhyZWFkIHtcclxuICBpZDogc3RyaW5nO1xyXG4gIHVzZXJfaWQ6IHN0cmluZztcclxuICBjcmVhdGVkX2F0OiBzdHJpbmc7XHJcbiAgY3VzdG9tZXJfZW1haWw/OiBzdHJpbmc7XHJcbiAgY3VzdG9tZXJfbmFtZT86IHN0cmluZztcclxuICBjdXN0b21lcl9waG9uZT86IHN0cmluZztcclxuICBsYXN0X21lc3NhZ2U/OiBzdHJpbmc7XHJcbiAgbGFzdF9tZXNzYWdlX2F0Pzogc3RyaW5nO1xyXG4gIHVucmVhZF9jb3VudD86IG51bWJlcjtcclxufVxyXG5cclxuLyog4pSA4pSA4pSAIFJpY2ggbWVzc2FnZSB0eXBlcyDilIDilIDilIAgKi9cclxudHlwZSBSaWNoUGF5bG9hZCA9XHJcbiAgfCB7IHR5cGU6IFwibG9jYXRpb25cIjsgYWRkcmVzczogc3RyaW5nOyBsYXQ6IG51bWJlcjsgbG5nOiBudW1iZXIgfVxyXG4gIHwgeyB0eXBlOiBcInBheW1lbnRfcXJcIjsgYW1vdW50Pzogc3RyaW5nOyBub3RlPzogc3RyaW5nOyBwYXltZW50VXJsOiBzdHJpbmcgfVxyXG4gIHwgeyB0eXBlOiBcInRyYWNraW5nXCI7IG9yZGVySWQ6IHN0cmluZzsgc3RhdHVzOiBzdHJpbmcgfTtcclxuXHJcbmZ1bmN0aW9uIHBhcnNlUmljaENvbnRlbnQoY29udGVudDogc3RyaW5nKTogUmljaFBheWxvYWQgfCBudWxsIHtcclxuICB0cnkge1xyXG4gICAgY29uc3QgdHJpbW1lZCA9IGNvbnRlbnQudHJpbSgpO1xyXG4gICAgbGV0IHBhcnNlZCA9IEpTT04ucGFyc2UodHJpbW1lZCk7XHJcbiAgICAvLyBIYW5kbGUgZG91YmxlLWVuY29kZWQgSlNPTiBzdHJpbmdzXHJcbiAgICBpZiAodHlwZW9mIHBhcnNlZCA9PT0gXCJzdHJpbmdcIikgcGFyc2VkID0gSlNPTi5wYXJzZShwYXJzZWQpO1xyXG4gICAgaWYgKHBhcnNlZCAmJiBwYXJzZWQuX19yaWNoICYmIHBhcnNlZC5wYXlsb2FkKSByZXR1cm4gcGFyc2VkLnBheWxvYWQgYXMgUmljaFBheWxvYWQ7XHJcbiAgfSBjYXRjaCB7fVxyXG4gIHJldHVybiBudWxsO1xyXG59XHJcblxyXG5mdW5jdGlvbiB3cmFwUmljaChwYXlsb2FkOiBSaWNoUGF5bG9hZCk6IHN0cmluZyB7XHJcbiAgcmV0dXJuIEpTT04uc3RyaW5naWZ5KHsgX19yaWNoOiB0cnVlLCBwYXlsb2FkIH0pO1xyXG59XHJcblxyXG4vKiDilIDilIDilIAgUmljaCBtZXNzYWdlIGNhcmQgcmVuZGVyZXIg4pSA4pSA4pSAICovXHJcbmZ1bmN0aW9uIFJpY2hNZXNzYWdlQ2FyZCh7IHBheWxvYWQsIGlzT3duIH06IHsgcGF5bG9hZDogUmljaFBheWxvYWQ7IGlzT3duOiBib29sZWFuIH0pIHtcclxuICBpZiAocGF5bG9hZC50eXBlID09PSBcImxvY2F0aW9uXCIpIHtcclxuICAgIGNvbnN0IG1hcFVybCA9IGBodHRwczovL3d3dy5nb29nbGUuY29tL21hcHM/cT0ke3BheWxvYWQubGF0fSwke3BheWxvYWQubG5nfWA7XHJcbiAgICBjb25zdCByaWRlVXJsID0gYC9yaWRlcy9odWI/ZGVzdGluYXRpb249JHtlbmNvZGVVUklDb21wb25lbnQocGF5bG9hZC5hZGRyZXNzKX0mZGVzdExhdD0ke3BheWxvYWQubGF0fSZkZXN0TG5nPSR7cGF5bG9hZC5sbmd9YDtcclxuICAgIHJldHVybiAoXHJcbiAgICAgIDxkaXYgY2xhc3NOYW1lPVwic3BhY2UteS0yXCI+XHJcbiAgICAgICAgPGRpdiBjbGFzc05hbWU9XCJmbGV4IGl0ZW1zLWNlbnRlciBnYXAtMS41XCI+XHJcbiAgICAgICAgICA8TWFwUGluIGNsYXNzTmFtZT1cImgtMy41IHctMy41XCIgLz5cclxuICAgICAgICAgIDxzcGFuIGNsYXNzTmFtZT1cInRleHQteHMgZm9udC1zZW1pYm9sZFwiPlN0b3JlIExvY2F0aW9uPC9zcGFuPlxyXG4gICAgICAgIDwvZGl2PlxyXG4gICAgICAgIDxwIGNsYXNzTmFtZT1cInRleHQtWzExcHhdIGxlYWRpbmctcmVsYXhlZFwiPntwYXlsb2FkLmFkZHJlc3N9PC9wPlxyXG4gICAgICAgIDxkaXYgY2xhc3NOYW1lPVwiZmxleCBmbGV4LWNvbCBnYXAtMS41XCI+XHJcbiAgICAgICAgICA8YVxyXG4gICAgICAgICAgICBocmVmPXtyaWRlVXJsfVxyXG4gICAgICAgICAgICBjbGFzc05hbWU9e2BpbmxpbmUtZmxleCBpdGVtcy1jZW50ZXIgZ2FwLTEuNSBweC0zIHB5LTEuNSByb3VuZGVkLWZ1bGwgdGV4dC1bMTFweF0gZm9udC1zZW1pYm9sZCB0cmFuc2l0aW9uLWNvbG9ycyB3LWZpdCAke1xyXG4gICAgICAgICAgICAgIGlzT3duXHJcbiAgICAgICAgICAgICAgICA/IFwiYmctd2hpdGUvMjAgYmFja2Ryb3AtYmx1ciBob3ZlcjpiZy13aGl0ZS8zMCB0ZXh0LXByaW1hcnktZm9yZWdyb3VuZFwiXHJcbiAgICAgICAgICAgICAgICA6IFwiYmctcHJpbWFyeS8xMCBob3ZlcjpiZy1wcmltYXJ5LzIwIHRleHQtcHJpbWFyeVwiXHJcbiAgICAgICAgICAgIH1gfVxyXG4gICAgICAgICAgPlxyXG4gICAgICAgICAgICDwn5qXIFJpZGUgVGhlcmVcclxuICAgICAgICAgIDwvYT5cclxuICAgICAgICA8L2Rpdj5cclxuICAgICAgPC9kaXY+XHJcbiAgICApO1xyXG4gIH1cclxuXHJcbiAgaWYgKHBheWxvYWQudHlwZSA9PT0gXCJwYXltZW50X3FyXCIpIHtcclxuICAgIGNvbnN0IGlzU2FmZVBheW1lbnRVcmwgPSBwYXlsb2FkLnBheW1lbnRVcmwgJiYgaXNBbGxvd2VkUGF5bWVudFVybChwYXlsb2FkLnBheW1lbnRVcmwpO1xyXG4gICAgXHJcbiAgICByZXR1cm4gKFxyXG4gICAgICA8ZGl2IGNsYXNzTmFtZT1cInNwYWNlLXktMlwiPlxyXG4gICAgICAgIDxkaXYgY2xhc3NOYW1lPVwiZmxleCBpdGVtcy1jZW50ZXIgZ2FwLTEuNVwiPlxyXG4gICAgICAgICAgPFFyQ29kZSBjbGFzc05hbWU9XCJoLTMuNSB3LTMuNVwiIC8+XHJcbiAgICAgICAgICA8c3BhbiBjbGFzc05hbWU9XCJ0ZXh0LXhzIGZvbnQtc2VtaWJvbGRcIj5QYXltZW50IFFSPC9zcGFuPlxyXG4gICAgICAgIDwvZGl2PlxyXG4gICAgICAgIHtwYXlsb2FkLm5vdGUgJiYgPHAgY2xhc3NOYW1lPVwidGV4dC1bMTFweF1cIj57cGF5bG9hZC5ub3RlfTwvcD59XHJcbiAgICAgICAge3BheWxvYWQuYW1vdW50ICYmIDxwIGNsYXNzTmFtZT1cInRleHQtWzEycHhdIGZvbnQtYm9sZFwiPntwYXlsb2FkLmFtb3VudH08L3A+fVxyXG4gICAgICAgIHtpc1NhZmVQYXltZW50VXJsID8gKFxyXG4gICAgICAgICAgPD5cclxuICAgICAgICAgICAgPGRpdiBjbGFzc05hbWU9XCJiZy13aGl0ZSByb3VuZGVkLWxnIHAtMiBpbmxpbmUtYmxvY2tcIj5cclxuICAgICAgICAgICAgICA8UVJDb2RlU1ZHIHZhbHVlPXtwYXlsb2FkLnBheW1lbnRVcmx9IHNpemU9ezEyMH0gLz5cclxuICAgICAgICAgICAgPC9kaXY+XHJcbiAgICAgICAgICAgIDxhXHJcbiAgICAgICAgICAgICAgaHJlZj17cGF5bG9hZC5wYXltZW50VXJsfVxyXG4gICAgICAgICAgICAgIHRhcmdldD1cIl9ibGFua1wiXHJcbiAgICAgICAgICAgICAgcmVsPVwibm9vcGVuZXIgbm9yZWZlcnJlclwiXHJcbiAgICAgICAgICAgICAgY2xhc3NOYW1lPXtgYmxvY2sgdGV4dC1bMTFweF0gZm9udC1tZWRpdW0gdW5kZXJsaW5lICR7XHJcbiAgICAgICAgICAgICAgICBpc093biA/IFwidGV4dC1wcmltYXJ5LWZvcmVncm91bmQvODBcIiA6IFwidGV4dC1wcmltYXJ5XCJcclxuICAgICAgICAgICAgICB9YH1cclxuICAgICAgICAgICAgPlxyXG4gICAgICAgICAgICAgIE9wZW4gUGF5bWVudCBMaW5rIOKGklxyXG4gICAgICAgICAgICA8L2E+XHJcbiAgICAgICAgICA8Lz5cclxuICAgICAgICApIDogKFxyXG4gICAgICAgICAgPHAgY2xhc3NOYW1lPVwidGV4dC1bMTFweF0gdGV4dC1kZXN0cnVjdGl2ZVwiPlxyXG4gICAgICAgICAgICDimqAgUGF5bWVudCBsaW5rIGJsb2NrZWQgZm9yIHNlY3VyaXR5IOKAlCB1bnJlY29nbml6ZWQgZG9tYWluLlxyXG4gICAgICAgICAgPC9wPlxyXG4gICAgICAgICl9XHJcbiAgICAgIDwvZGl2PlxyXG4gICAgKTtcclxuICB9XHJcblxyXG4gIGlmIChwYXlsb2FkLnR5cGUgPT09IFwidHJhY2tpbmdcIikge1xyXG4gICAgcmV0dXJuIChcclxuICAgICAgPGRpdiBjbGFzc05hbWU9XCJzcGFjZS15LTJcIj5cclxuICAgICAgICA8ZGl2IGNsYXNzTmFtZT1cImZsZXggaXRlbXMtY2VudGVyIGdhcC0xLjVcIj5cclxuICAgICAgICAgIDxUcnVjayBjbGFzc05hbWU9XCJoLTMuNSB3LTMuNVwiIC8+XHJcbiAgICAgICAgICA8c3BhbiBjbGFzc05hbWU9XCJ0ZXh0LXhzIGZvbnQtc2VtaWJvbGRcIj5EZWxpdmVyeSBUcmFja2luZzwvc3Bhbj5cclxuICAgICAgICA8L2Rpdj5cclxuICAgICAgICA8cCBjbGFzc05hbWU9XCJ0ZXh0LVsxMXB4XVwiPk9yZGVyOiA8c3BhbiBjbGFzc05hbWU9XCJmb250LW1vbm8gZm9udC1tZWRpdW1cIj57cGF5bG9hZC5vcmRlcklkfTwvc3Bhbj48L3A+XHJcbiAgICAgICAgPHAgY2xhc3NOYW1lPVwidGV4dC1bMTFweF1cIj5TdGF0dXM6IDxzcGFuIGNsYXNzTmFtZT1cImZvbnQtc2VtaWJvbGQgY2FwaXRhbGl6ZVwiPntwYXlsb2FkLnN0YXR1c308L3NwYW4+PC9wPlxyXG4gICAgICA8L2Rpdj5cclxuICAgICk7XHJcbiAgfVxyXG5cclxuICByZXR1cm4gbnVsbDtcclxufVxyXG5cclxuXHJcbmZ1bmN0aW9uIENvbmZpcm1EaWFsb2coeyBvcGVuLCBtZXNzYWdlLCBvbkNvbmZpcm0sIG9uQ2FuY2VsIH06IHsgb3BlbjogYm9vbGVhbjsgbWVzc2FnZTogc3RyaW5nOyBvbkNvbmZpcm06ICgpID0+IHZvaWQ7IG9uQ2FuY2VsOiAoKSA9PiB2b2lkIH0pIHtcclxuICBpZiAoIW9wZW4pIHJldHVybiBudWxsO1xyXG4gIHJldHVybiAoXHJcbiAgICA8ZGl2IGNsYXNzTmFtZT1cImZpeGVkIGluc2V0LTAgei1bMjUwXSBmbGV4IGl0ZW1zLWNlbnRlciBqdXN0aWZ5LWNlbnRlciBiZy1ibGFjay80MCBiYWNrZHJvcC1ibHVyLXNtXCIgb25DbGljaz17b25DYW5jZWx9PlxyXG4gICAgICA8bW90aW9uLmRpdlxyXG4gICAgICAgIGluaXRpYWw9e3sgc2NhbGU6IDAuOSwgb3BhY2l0eTogMCB9fVxyXG4gICAgICAgIGFuaW1hdGU9e3sgc2NhbGU6IDEsIG9wYWNpdHk6IDEgfX1cclxuICAgICAgICBleGl0PXt7IHNjYWxlOiAwLjksIG9wYWNpdHk6IDAgfX1cclxuICAgICAgICBvbkNsaWNrPXsoZSkgPT4gZS5zdG9wUHJvcGFnYXRpb24oKX1cclxuICAgICAgICBjbGFzc05hbWU9XCJiZy1iYWNrZ3JvdW5kIHJvdW5kZWQtMnhsIGJvcmRlciBib3JkZXItYm9yZGVyLzMwIHNoYWRvdy0yeGwgcC01IG14LTYgbWF4LXctc20gdy1mdWxsIHNwYWNlLXktNFwiXHJcbiAgICAgID5cclxuICAgICAgICA8cCBjbGFzc05hbWU9XCJ0ZXh0LXNtIGZvbnQtbWVkaXVtIHRleHQtZm9yZWdyb3VuZCB0ZXh0LWNlbnRlclwiPnttZXNzYWdlfTwvcD5cclxuICAgICAgICA8ZGl2IGNsYXNzTmFtZT1cImZsZXggZ2FwLTNcIj5cclxuICAgICAgICAgIDxidXR0b25cclxuICAgICAgICAgICAgb25DbGljaz17b25DYW5jZWx9XHJcbiAgICAgICAgICAgIGNsYXNzTmFtZT1cImZsZXgtMSBoLTEwIHJvdW5kZWQteGwgYm9yZGVyIGJvcmRlci1ib3JkZXIvMzAgdGV4dC1zbSBmb250LW1lZGl1bSB0ZXh0LW11dGVkLWZvcmVncm91bmQgaG92ZXI6YmctbXV0ZWQgdHJhbnNpdGlvbi1jb2xvcnNcIlxyXG4gICAgICAgICAgPlxyXG4gICAgICAgICAgICBDYW5jZWxcclxuICAgICAgICAgIDwvYnV0dG9uPlxyXG4gICAgICAgICAgPGJ1dHRvblxyXG4gICAgICAgICAgICBvbkNsaWNrPXtvbkNvbmZpcm19XHJcbiAgICAgICAgICAgIGNsYXNzTmFtZT1cImZsZXgtMSBoLTEwIHJvdW5kZWQteGwgYmctZGVzdHJ1Y3RpdmUgdGV4dC1kZXN0cnVjdGl2ZS1mb3JlZ3JvdW5kIHRleHQtc20gZm9udC1tZWRpdW0gaG92ZXI6YmctZGVzdHJ1Y3RpdmUvOTAgdHJhbnNpdGlvbi1jb2xvcnNcIlxyXG4gICAgICAgICAgPlxyXG4gICAgICAgICAgICBZZXMsIERlbGV0ZVxyXG4gICAgICAgICAgPC9idXR0b24+XHJcbiAgICAgICAgPC9kaXY+XHJcbiAgICAgIDwvbW90aW9uLmRpdj5cclxuICAgIDwvZGl2PlxyXG4gICk7XHJcbn1cclxuXHJcbi8qIOKUgOKUgOKUgCBBZG1pbiBjaGF0IGxpc3Qg4pSA4pSA4pSAICovXHJcbmZ1bmN0aW9uIEFkbWluQ2hhdExpc3Qoe1xyXG4gIHN0b3JlSWQsXHJcbiAgc3RvcmVOYW1lLFxyXG4gIHN0b3JlTG9nbyxcclxuICBvblNlbGVjdENoYXQsXHJcbiAgb25EZWxldGVDaGF0LFxyXG4gIG9uQ2xvc2UsXHJcbn06IHtcclxuICBzdG9yZUlkOiBzdHJpbmc7XHJcbiAgc3RvcmVOYW1lOiBzdHJpbmc7XHJcbiAgc3RvcmVMb2dvPzogc3RyaW5nIHwgbnVsbDtcclxuICBvblNlbGVjdENoYXQ6IChjaGF0OiBDaGF0VGhyZWFkKSA9PiB2b2lkO1xyXG4gIG9uRGVsZXRlQ2hhdDogKGNoYXRJZDogc3RyaW5nKSA9PiB2b2lkO1xyXG4gIG9uQ2xvc2U6ICgpID0+IHZvaWQ7XHJcbn0pIHtcclxuICBjb25zdCBbY2hhdHMsIHNldENoYXRzXSA9IHVzZVN0YXRlPENoYXRUaHJlYWRbXT4oW10pO1xyXG4gIGNvbnN0IFtsb2FkaW5nLCBzZXRMb2FkaW5nXSA9IHVzZVN0YXRlKHRydWUpO1xyXG4gIGNvbnN0IFtkZWxldGVDb25maXJtSWQsIHNldERlbGV0ZUNvbmZpcm1JZF0gPSB1c2VTdGF0ZTxzdHJpbmcgfCBudWxsPihudWxsKTtcclxuXHJcbiAgdXNlRWZmZWN0KCgpID0+IHtcclxuICAgIGNvbnN0IGxvYWRDaGF0cyA9IGFzeW5jICgpID0+IHtcclxuICAgICAgc2V0TG9hZGluZyh0cnVlKTtcclxuICAgICAgLy8gR2V0IGFsbCBjaGF0cyBmb3IgdGhpcyBzdG9yZVxyXG4gICAgICBjb25zdCB7IGRhdGE6IGNoYXRSb3dzIH0gPSBhd2FpdCBzdXBhYmFzZVxyXG4gICAgICAgIC5mcm9tKFwic3RvcmVfY2hhdHNcIilcclxuICAgICAgICAuc2VsZWN0KFwiaWQsIHVzZXJfaWQsIGNyZWF0ZWRfYXRcIilcclxuICAgICAgICAuZXEoXCJzdG9yZV9pZFwiLCBzdG9yZUlkKVxyXG4gICAgICAgIC5vcmRlcihcInVwZGF0ZWRfYXRcIiwgeyBhc2NlbmRpbmc6IGZhbHNlIH0pO1xyXG5cclxuICAgICAgaWYgKCFjaGF0Um93cz8ubGVuZ3RoKSB7XHJcbiAgICAgICAgc2V0Q2hhdHMoW10pO1xyXG4gICAgICAgIHNldExvYWRpbmcoZmFsc2UpO1xyXG4gICAgICAgIHJldHVybjtcclxuICAgICAgfVxyXG5cclxuICAgICAgLy8gR2V0IGN1c3RvbWVyIHByb2ZpbGVzXHJcbiAgICAgIGNvbnN0IHVzZXJJZHMgPSBjaGF0Um93cy5tYXAoKGMpID0+IGMudXNlcl9pZCk7XHJcbiAgICAgIGNvbnN0IHsgZGF0YTogcHJvZmlsZXMgfSA9IGF3YWl0IHN1cGFiYXNlXHJcbiAgICAgICAgLmZyb20oXCJwcm9maWxlc1wiKVxyXG4gICAgICAgIC5zZWxlY3QoXCJpZCwgZnVsbF9uYW1lLCBlbWFpbCwgcGhvbmUsIHBob25lX2UxNjRcIilcclxuICAgICAgICAuaW4oXCJpZFwiLCB1c2VySWRzKTtcclxuXHJcbiAgICAgIGNvbnN0IHByb2ZpbGVNYXAgPSBuZXcgTWFwKHByb2ZpbGVzPy5tYXAoKHApID0+IFtwLmlkLCBwXSkgfHwgW10pO1xyXG5cclxuICAgICAgLy8gR2V0IGxhc3QgbWVzc2FnZSBwZXIgY2hhdFxyXG4gICAgICBjb25zdCBlbnJpY2hlZDogQ2hhdFRocmVhZFtdID0gW107XHJcbiAgICAgIGZvciAoY29uc3QgY2hhdCBvZiBjaGF0Um93cykge1xyXG4gICAgICAgIGNvbnN0IHsgZGF0YTogbGFzdE1zZyB9ID0gYXdhaXQgc3VwYWJhc2VcclxuICAgICAgICAgIC5mcm9tKFwic3RvcmVfY2hhdF9tZXNzYWdlc1wiKVxyXG4gICAgICAgICAgLnNlbGVjdChcImNvbnRlbnQsIGNyZWF0ZWRfYXQsIGlzX3JlYWQsIHNlbmRlcl90eXBlXCIpXHJcbiAgICAgICAgICAuZXEoXCJjaGF0X2lkXCIsIGNoYXQuaWQpXHJcbiAgICAgICAgICAub3JkZXIoXCJjcmVhdGVkX2F0XCIsIHsgYXNjZW5kaW5nOiBmYWxzZSB9KVxyXG4gICAgICAgICAgLmxpbWl0KDEpXHJcbiAgICAgICAgICAubWF5YmVTaW5nbGUoKTtcclxuXHJcbiAgICAgICAgY29uc3QgeyBjb3VudCB9ID0gYXdhaXQgc3VwYWJhc2VcclxuICAgICAgICAgIC5mcm9tKFwic3RvcmVfY2hhdF9tZXNzYWdlc1wiKVxyXG4gICAgICAgICAgLnNlbGVjdChcIipcIiwgeyBjb3VudDogXCJleGFjdFwiLCBoZWFkOiB0cnVlIH0pXHJcbiAgICAgICAgICAuZXEoXCJjaGF0X2lkXCIsIGNoYXQuaWQpXHJcbiAgICAgICAgICAuZXEoXCJpc19yZWFkXCIsIGZhbHNlKVxyXG4gICAgICAgICAgLmVxKFwic2VuZGVyX3R5cGVcIiwgXCJjdXN0b21lclwiKTtcclxuXHJcbiAgICAgICAgY29uc3QgcHJvZmlsZSA9IHByb2ZpbGVNYXAuZ2V0KGNoYXQudXNlcl9pZCk7XHJcbiAgICAgICAgZW5yaWNoZWQucHVzaCh7XHJcbiAgICAgICAgICAuLi5jaGF0LFxyXG4gICAgICAgICAgY3VzdG9tZXJfZW1haWw6IHByb2ZpbGU/LmVtYWlsIHx8IFwiVW5rbm93blwiLFxyXG4gICAgICAgICAgY3VzdG9tZXJfbmFtZTogcHJvZmlsZT8uZnVsbF9uYW1lIHx8IHVuZGVmaW5lZCxcclxuICAgICAgICAgIGN1c3RvbWVyX3Bob25lOiBwcm9maWxlPy5waG9uZV9lMTY0IHx8IHByb2ZpbGU/LnBob25lIHx8IHVuZGVmaW5lZCxcclxuICAgICAgICAgIGxhc3RfbWVzc2FnZTogbGFzdE1zZz8uY29udGVudCxcclxuICAgICAgICAgIGxhc3RfbWVzc2FnZV9hdDogbGFzdE1zZz8uY3JlYXRlZF9hdCxcclxuICAgICAgICAgIHVucmVhZF9jb3VudDogY291bnQgfHwgMCxcclxuICAgICAgICB9KTtcclxuICAgICAgfVxyXG5cclxuICAgICAgc2V0Q2hhdHMoZW5yaWNoZWQpO1xyXG4gICAgICBzZXRMb2FkaW5nKGZhbHNlKTtcclxuICAgIH07XHJcblxyXG4gICAgbG9hZENoYXRzKCk7XHJcbiAgfSwgW3N0b3JlSWRdKTtcclxuXHJcbiAgcmV0dXJuIChcclxuICAgIDw+XHJcbiAgICAgIHsvKiBIZWFkZXIgKi99XHJcbiAgICAgIDxkaXYgY2xhc3NOYW1lPVwiZmxleCBpdGVtcy1jZW50ZXIgZ2FwLTMgcHgtNCBweS0zIGJvcmRlci1iIGJvcmRlci1ib3JkZXIvMzAgc2hyaW5rLTBcIj5cclxuICAgICAgICA8ZGl2IGNsYXNzTmFtZT1cImgtMTAgdy0xMCByb3VuZGVkLWZ1bGwgYmctbXV0ZWQgYm9yZGVyIGJvcmRlci1ib3JkZXIvMzAgb3ZlcmZsb3ctaGlkZGVuIGZsZXggaXRlbXMtY2VudGVyIGp1c3RpZnktY2VudGVyXCI+XHJcbiAgICAgICAgICB7c3RvcmVMb2dvID8gKFxyXG4gICAgICAgICAgICA8aW1nIHNyYz17c3RvcmVMb2dvfSBhbHQ9e3N0b3JlTmFtZX0gY2xhc3NOYW1lPVwiaC1mdWxsIHctZnVsbCBvYmplY3QtY29udGFpbiBwLTFcIiAvPlxyXG4gICAgICAgICAgKSA6IChcclxuICAgICAgICAgICAgPE1lc3NhZ2VDaXJjbGUgY2xhc3NOYW1lPVwiaC01IHctNSB0ZXh0LW11dGVkLWZvcmVncm91bmRcIiAvPlxyXG4gICAgICAgICAgKX1cclxuICAgICAgICA8L2Rpdj5cclxuICAgICAgICA8ZGl2IGNsYXNzTmFtZT1cImZsZXgtMSBtaW4tdy0wXCI+XHJcbiAgICAgICAgICA8cCBjbGFzc05hbWU9XCJ0ZXh0LXNtIGZvbnQtYm9sZCB0ZXh0LWZvcmVncm91bmQgdHJ1bmNhdGVcIj57c3RvcmVOYW1lfTwvcD5cclxuICAgICAgICAgIDxwIGNsYXNzTmFtZT1cInRleHQtWzEwcHhdIHRleHQtbXV0ZWQtZm9yZWdyb3VuZFwiPkN1c3RvbWVyIENoYXRzPC9wPlxyXG4gICAgICAgIDwvZGl2PlxyXG4gICAgICAgIDxidXR0b24gb25DbGljaz17b25DbG9zZX0gY2xhc3NOYW1lPVwicC0yIHJvdW5kZWQtZnVsbCBob3ZlcjpiZy1tdXRlZCB0cmFuc2l0aW9uLWNvbG9yc1wiPlxyXG4gICAgICAgICAgPFggY2xhc3NOYW1lPVwiaC01IHctNSB0ZXh0LW11dGVkLWZvcmVncm91bmRcIiAvPlxyXG4gICAgICAgIDwvYnV0dG9uPlxyXG4gICAgICA8L2Rpdj5cclxuXHJcbiAgICAgIHsvKiBDaGF0IGxpc3QgKi99XHJcbiAgICAgIDxkaXYgY2xhc3NOYW1lPVwiZmxleC0xIG92ZXJmbG93LXktYXV0b1wiPlxyXG4gICAgICAgIHtsb2FkaW5nID8gKFxyXG4gICAgICAgICAgPGRpdiBjbGFzc05hbWU9XCJmbGV4IGl0ZW1zLWNlbnRlciBqdXN0aWZ5LWNlbnRlciBoLTMyXCI+XHJcbiAgICAgICAgICAgIDxMb2FkZXIyIGNsYXNzTmFtZT1cImgtNSB3LTUgYW5pbWF0ZS1zcGluIHRleHQtcHJpbWFyeVwiIC8+XHJcbiAgICAgICAgICA8L2Rpdj5cclxuICAgICAgICApIDogY2hhdHMubGVuZ3RoID09PSAwID8gKFxyXG4gICAgICAgICAgPGRpdiBjbGFzc05hbWU9XCJmbGV4IGZsZXgtY29sIGl0ZW1zLWNlbnRlciBqdXN0aWZ5LWNlbnRlciBoLTMyIHRleHQtY2VudGVyXCI+XHJcbiAgICAgICAgICAgIDxNZXNzYWdlQ2lyY2xlIGNsYXNzTmFtZT1cImgtOCB3LTggdGV4dC1tdXRlZC1mb3JlZ3JvdW5kLzMwIG1iLTJcIiAvPlxyXG4gICAgICAgICAgICA8cCBjbGFzc05hbWU9XCJ0ZXh0LXNtIHRleHQtbXV0ZWQtZm9yZWdyb3VuZFwiPk5vIGN1c3RvbWVyIGNoYXRzIHlldDwvcD5cclxuICAgICAgICAgIDwvZGl2PlxyXG4gICAgICAgICkgOiAoXHJcbiAgICAgICAgICBjaGF0cy5tYXAoKGNoYXQpID0+IChcclxuICAgICAgICAgICAgPGRpdlxyXG4gICAgICAgICAgICAgIGtleT17Y2hhdC5pZH1cclxuICAgICAgICAgICAgICBjbGFzc05hbWU9XCJmbGV4IGl0ZW1zLWNlbnRlciBnYXAtMyBweC00IHB5LTMgYm9yZGVyLWIgYm9yZGVyLWJvcmRlci8xMCBob3ZlcjpiZy1tdXRlZC81MCB0cmFuc2l0aW9uLWNvbG9ycyBjdXJzb3ItcG9pbnRlciBncm91cFwiXHJcbiAgICAgICAgICAgICAgb25DbGljaz17KCkgPT4gb25TZWxlY3RDaGF0KGNoYXQpfVxyXG4gICAgICAgICAgICA+XHJcbiAgICAgICAgICAgICAgPGRpdiBjbGFzc05hbWU9XCJoLTkgdy05IHJvdW5kZWQtZnVsbCBiZy1wcmltYXJ5LzEwIGZsZXggaXRlbXMtY2VudGVyIGp1c3RpZnktY2VudGVyIHNocmluay0wXCI+XHJcbiAgICAgICAgICAgICAgICA8VXNlciBjbGFzc05hbWU9XCJoLTQgdy00IHRleHQtcHJpbWFyeVwiIC8+XHJcbiAgICAgICAgICAgICAgPC9kaXY+XHJcbiAgICAgICAgICAgICAgPGRpdiBjbGFzc05hbWU9XCJmbGV4LTEgbWluLXctMFwiPlxyXG4gICAgICAgICAgICAgICAgPGRpdiBjbGFzc05hbWU9XCJmbGV4IGl0ZW1zLWNlbnRlciBnYXAtMlwiPlxyXG4gICAgICAgICAgICAgICAgICA8cCBjbGFzc05hbWU9XCJ0ZXh0LXNtIGZvbnQtbWVkaXVtIHRleHQtZm9yZWdyb3VuZCB0cnVuY2F0ZVwiPlxyXG4gICAgICAgICAgICAgICAgICAgIHtjaGF0LmN1c3RvbWVyX25hbWUgfHwgY2hhdC5jdXN0b21lcl9lbWFpbH1cclxuICAgICAgICAgICAgICAgICAgPC9wPlxyXG4gICAgICAgICAgICAgICAgICB7KGNoYXQudW5yZWFkX2NvdW50ID8/IDApID4gMCAmJiAoXHJcbiAgICAgICAgICAgICAgICAgICAgPHNwYW4gY2xhc3NOYW1lPVwiaC01IG1pbi13LVsyMHB4XSBweC0xLjUgcm91bmRlZC1mdWxsIGJnLXByaW1hcnkgdGV4dC1wcmltYXJ5LWZvcmVncm91bmQgdGV4dC1bMTBweF0gZm9udC1ib2xkIGZsZXggaXRlbXMtY2VudGVyIGp1c3RpZnktY2VudGVyXCI+XHJcbiAgICAgICAgICAgICAgICAgICAgICB7Y2hhdC51bnJlYWRfY291bnR9XHJcbiAgICAgICAgICAgICAgICAgICAgPC9zcGFuPlxyXG4gICAgICAgICAgICAgICAgICApfVxyXG4gICAgICAgICAgICAgICAgPC9kaXY+XHJcbiAgICAgICAgICAgICAgICB7Y2hhdC5sYXN0X21lc3NhZ2UgJiYgKFxyXG4gICAgICAgICAgICAgICAgICA8cCBjbGFzc05hbWU9XCJ0ZXh0LVsxMXB4XSB0ZXh0LW11dGVkLWZvcmVncm91bmQgdHJ1bmNhdGUgbXQtMC41XCI+XHJcbiAgICAgICAgICAgICAgICAgICAgeygoKSA9PiB7XHJcbiAgICAgICAgICAgICAgICAgICAgICBjb25zdCByaWNoID0gcGFyc2VSaWNoQ29udGVudChjaGF0Lmxhc3RfbWVzc2FnZSk7XHJcbiAgICAgICAgICAgICAgICAgICAgICBpZiAoIXJpY2gpIHJldHVybiBjaGF0Lmxhc3RfbWVzc2FnZTtcclxuICAgICAgICAgICAgICAgICAgICAgIGlmIChyaWNoLnR5cGUgPT09IFwibG9jYXRpb25cIikgcmV0dXJuIGDwn5ONICR7cmljaC5hZGRyZXNzfWA7XHJcbiAgICAgICAgICAgICAgICAgICAgICBpZiAocmljaC50eXBlID09PSBcInBheW1lbnRfcXJcIikgcmV0dXJuIGDwn5KzIFBheW1lbnQgUVIke3JpY2guYW1vdW50ID8gYCDigJQgJHtyaWNoLmFtb3VudH1gIDogXCJcIn1gO1xyXG4gICAgICAgICAgICAgICAgICAgICAgaWYgKHJpY2gudHlwZSA9PT0gXCJ0cmFja2luZ1wiKSByZXR1cm4gYPCfmpogVHJhY2tpbmc6ICR7cmljaC5vcmRlcklkfWA7XHJcbiAgICAgICAgICAgICAgICAgICAgICByZXR1cm4gY2hhdC5sYXN0X21lc3NhZ2U7XHJcbiAgICAgICAgICAgICAgICAgICAgfSkoKX1cclxuICAgICAgICAgICAgICAgICAgPC9wPlxyXG4gICAgICAgICAgICAgICAgKX1cclxuICAgICAgICAgICAgICA8L2Rpdj5cclxuICAgICAgICAgICAgICA8ZGl2IGNsYXNzTmFtZT1cImZsZXggaXRlbXMtY2VudGVyIGdhcC0xIHNocmluay0wXCI+XHJcbiAgICAgICAgICAgICAgICB7Y2hhdC5sYXN0X21lc3NhZ2VfYXQgJiYgKFxyXG4gICAgICAgICAgICAgICAgICA8c3BhbiBjbGFzc05hbWU9XCJ0ZXh0LVs5cHhdIHRleHQtbXV0ZWQtZm9yZWdyb3VuZFwiPlxyXG4gICAgICAgICAgICAgICAgICAgIHtuZXcgRGF0ZShjaGF0Lmxhc3RfbWVzc2FnZV9hdCkudG9Mb2NhbGVEYXRlU3RyaW5nKFtdLCB7IG1vbnRoOiBcInNob3J0XCIsIGRheTogXCJudW1lcmljXCIgfSl9XHJcbiAgICAgICAgICAgICAgICAgIDwvc3Bhbj5cclxuICAgICAgICAgICAgICAgICl9XHJcbiAgICAgICAgICAgICAgICA8YnV0dG9uXHJcbiAgICAgICAgICAgICAgICAgIG9uQ2xpY2s9eyhlKSA9PiB7XHJcbiAgICAgICAgICAgICAgICAgICAgZS5zdG9wUHJvcGFnYXRpb24oKTtcclxuICAgICAgICAgICAgICAgICAgICBzZXREZWxldGVDb25maXJtSWQoY2hhdC5pZCk7XHJcbiAgICAgICAgICAgICAgICAgIH19XHJcbiAgICAgICAgICAgICAgICAgIGNsYXNzTmFtZT1cInAtMS41IHJvdW5kZWQtbGcgb3BhY2l0eS0wIGdyb3VwLWhvdmVyOm9wYWNpdHktMTAwIGhvdmVyOmJnLWRlc3RydWN0aXZlLzEwIHRyYW5zaXRpb24tYWxsXCJcclxuICAgICAgICAgICAgICAgID5cclxuICAgICAgICAgICAgICAgICAgPFRyYXNoMiBjbGFzc05hbWU9XCJoLTMuNSB3LTMuNSB0ZXh0LWRlc3RydWN0aXZlXCIgLz5cclxuICAgICAgICAgICAgICAgIDwvYnV0dG9uPlxyXG4gICAgICAgICAgICAgIDwvZGl2PlxyXG4gICAgICAgICAgICA8L2Rpdj5cclxuICAgICAgICApKVxyXG4gICAgICAgICl9XHJcbiAgICAgICAgPENvbmZpcm1EaWFsb2dcclxuICAgICAgICAgIG9wZW49eyEhZGVsZXRlQ29uZmlybUlkfVxyXG4gICAgICAgICAgbWVzc2FnZT1cIkRlbGV0ZSB0aGlzIGNoYXQ/IFRoaXMgY2Fubm90IGJlIHVuZG9uZS5cIlxyXG4gICAgICAgICAgb25DYW5jZWw9eygpID0+IHNldERlbGV0ZUNvbmZpcm1JZChudWxsKX1cclxuICAgICAgICAgIG9uQ29uZmlybT17KCkgPT4ge1xyXG4gICAgICAgICAgICBpZiAoZGVsZXRlQ29uZmlybUlkKSBvbkRlbGV0ZUNoYXQoZGVsZXRlQ29uZmlybUlkKTtcclxuICAgICAgICAgICAgc2V0RGVsZXRlQ29uZmlybUlkKG51bGwpO1xyXG4gICAgICAgICAgfX1cclxuICAgICAgICAvPlxyXG4gICAgICA8L2Rpdj5cclxuICAgIDwvPlxyXG4gICk7XHJcbn1cclxuXHJcbi8qIOKUgOKUgOKUgCBNYWluIGNvbXBvbmVudCDilIDilIDilIAgKi9cclxuZXhwb3J0IGRlZmF1bHQgZnVuY3Rpb24gU3RvcmVMaXZlQ2hhdCh7IHN0b3JlSWQsIHN0b3JlTmFtZSwgc3RvcmVMb2dvLCBvcGVuLCBvbkNsb3NlLCBpc0FkbWluLCByZXNlcnZhdGlvbkNvbnRleHQgfTogU3RvcmVMaXZlQ2hhdFByb3BzKSB7XHJcbiAgY29uc3QgW21lc3NhZ2VzLCBzZXRNZXNzYWdlc10gPSB1c2VTdGF0ZTxDaGF0TWVzc2FnZVtdPihbXSk7XHJcbiAgY29uc3QgW2lucHV0LCBzZXRJbnB1dF0gPSB1c2VTdGF0ZShcIlwiKTtcclxuICBjb25zdCBbbG9hZGluZywgc2V0TG9hZGluZ10gPSB1c2VTdGF0ZSh0cnVlKTtcclxuICBjb25zdCBbc2VuZGluZywgc2V0U2VuZGluZ10gPSB1c2VTdGF0ZShmYWxzZSk7XHJcbiAgY29uc3QgW2NoYXRJZCwgc2V0Q2hhdElkXSA9IHVzZVN0YXRlPHN0cmluZyB8IG51bGw+KG51bGwpO1xyXG4gIGNvbnN0IFtzZWxlY3RlZENoYXQsIHNldFNlbGVjdGVkQ2hhdF0gPSB1c2VTdGF0ZTxDaGF0VGhyZWFkIHwgbnVsbD4obnVsbCk7XHJcbiAgY29uc3QgW2NoYXRMaXN0S2V5LCBzZXRDaGF0TGlzdEtleV0gPSB1c2VTdGF0ZSgwKTtcclxuICBjb25zdCBtZXNzYWdlc0VuZFJlZiA9IHVzZVJlZjxIVE1MRGl2RWxlbWVudD4obnVsbCk7XHJcblxyXG4gIGNvbnN0IHNjcm9sbFRvQm90dG9tID0gdXNlQ2FsbGJhY2soKCkgPT4ge1xyXG4gICAgbWVzc2FnZXNFbmRSZWYuY3VycmVudD8uc2Nyb2xsSW50b1ZpZXcoeyBiZWhhdmlvcjogXCJzbW9vdGhcIiB9KTtcclxuICB9LCBbXSk7XHJcblxyXG4gIC8vIFJlc2V0IHN0YXRlIG9uIGNsb3NlXHJcbiAgdXNlRWZmZWN0KCgpID0+IHtcclxuICAgIGlmICghb3Blbikge1xyXG4gICAgICBzZXRDaGF0SWQobnVsbCk7XHJcbiAgICAgIHNldFNlbGVjdGVkQ2hhdChudWxsKTtcclxuICAgICAgc2V0TWVzc2FnZXMoW10pO1xyXG4gICAgfVxyXG4gIH0sIFtvcGVuXSk7XHJcblxyXG4gIC8vIEN1c3RvbWVyIG1vZGU6IGdldCBvciBjcmVhdGUgY2hhdFxyXG4gIHVzZUVmZmVjdCgoKSA9PiB7XHJcbiAgICBpZiAoIW9wZW4gfHwgaXNBZG1pbikgcmV0dXJuO1xyXG4gICAgbGV0IGNhbmNlbGxlZCA9IGZhbHNlO1xyXG5cclxuICAgIGNvbnN0IGluaXRDaGF0ID0gYXN5bmMgKCkgPT4ge1xyXG4gICAgICBzZXRMb2FkaW5nKHRydWUpO1xyXG4gICAgICBjb25zdCB7IGRhdGE6IHsgdXNlciB9IH0gPSBhd2FpdCBzdXBhYmFzZS5hdXRoLmdldFVzZXIoKTtcclxuICAgICAgaWYgKCF1c2VyKSB7XHJcbiAgICAgICAgdG9hc3QuZXJyb3IoXCJQbGVhc2Ugc2lnbiBpbiB0byBjaGF0XCIpO1xyXG4gICAgICAgIG9uQ2xvc2UoKTtcclxuICAgICAgICByZXR1cm47XHJcbiAgICAgIH1cclxuXHJcbiAgICAgIGNvbnN0IHsgZGF0YTogZXhpc3RpbmcgfSA9IGF3YWl0IHN1cGFiYXNlXHJcbiAgICAgICAgLmZyb20oXCJzdG9yZV9jaGF0c1wiKVxyXG4gICAgICAgIC5zZWxlY3QoXCJpZFwiKVxyXG4gICAgICAgIC5lcShcInN0b3JlX2lkXCIsIHN0b3JlSWQpXHJcbiAgICAgICAgLmVxKFwidXNlcl9pZFwiLCB1c2VyLmlkKVxyXG4gICAgICAgIC5tYXliZVNpbmdsZSgpO1xyXG5cclxuICAgICAgbGV0IGlkID0gZXhpc3Rpbmc/LmlkO1xyXG4gICAgICBpZiAoIWlkKSB7XHJcbiAgICAgICAgY29uc3QgeyBkYXRhOiBjcmVhdGVkLCBlcnJvciB9ID0gYXdhaXQgc3VwYWJhc2VcclxuICAgICAgICAgIC5mcm9tKFwic3RvcmVfY2hhdHNcIilcclxuICAgICAgICAgIC5pbnNlcnQoeyBzdG9yZV9pZDogc3RvcmVJZCwgdXNlcl9pZDogdXNlci5pZCB9KVxyXG4gICAgICAgICAgLnNlbGVjdChcImlkXCIpXHJcbiAgICAgICAgICAuc2luZ2xlKCk7XHJcbiAgICAgICAgaWYgKGVycm9yKSB7XHJcbiAgICAgICAgICB0b2FzdC5lcnJvcihcIkNvdWxkIG5vdCBzdGFydCBjaGF0XCIpO1xyXG4gICAgICAgICAgb25DbG9zZSgpO1xyXG4gICAgICAgICAgcmV0dXJuO1xyXG4gICAgICAgIH1cclxuICAgICAgICBpZCA9IGNyZWF0ZWQuaWQ7XHJcbiAgICAgIH1cclxuXHJcbiAgICAgIGlmIChjYW5jZWxsZWQpIHJldHVybjtcclxuICAgICAgc2V0Q2hhdElkKGlkKTtcclxuXHJcbiAgICAgIGNvbnN0IHsgZGF0YTogbXNncyB9ID0gYXdhaXQgc3VwYWJhc2VcclxuICAgICAgICAuZnJvbShcInN0b3JlX2NoYXRfbWVzc2FnZXNcIilcclxuICAgICAgICAuc2VsZWN0KFwiaWQsIHNlbmRlcl90eXBlLCBjb250ZW50LCBjcmVhdGVkX2F0LCBpc19yZWFkXCIpXHJcbiAgICAgICAgLmVxKFwiY2hhdF9pZFwiLCBpZClcclxuICAgICAgICAub3JkZXIoXCJjcmVhdGVkX2F0XCIsIHsgYXNjZW5kaW5nOiB0cnVlIH0pO1xyXG5cclxuICAgICAgaWYgKCFjYW5jZWxsZWQpIHtcclxuICAgICAgICBzZXRNZXNzYWdlcyhtc2dzIHx8IFtdKTtcclxuICAgICAgICBzZXRMb2FkaW5nKGZhbHNlKTtcclxuICAgICAgICBzZXRUaW1lb3V0KHNjcm9sbFRvQm90dG9tLCAxMDApO1xyXG4gICAgICB9XHJcbiAgICB9O1xyXG5cclxuICAgIGluaXRDaGF0KCk7XHJcbiAgICByZXR1cm4gKCkgPT4geyBjYW5jZWxsZWQgPSB0cnVlOyB9O1xyXG4gIH0sIFtvcGVuLCBzdG9yZUlkLCBpc0FkbWluLCBvbkNsb3NlLCBzY3JvbGxUb0JvdHRvbV0pO1xyXG5cclxuICAvLyBBZG1pbiBtb2RlOiBsb2FkIG1lc3NhZ2VzIGZvciBzZWxlY3RlZCBjaGF0XHJcbiAgdXNlRWZmZWN0KCgpID0+IHtcclxuICAgIGlmICghc2VsZWN0ZWRDaGF0IHx8ICFpc0FkbWluKSByZXR1cm47XHJcbiAgICBsZXQgY2FuY2VsbGVkID0gZmFsc2U7XHJcblxyXG4gICAgY29uc3QgbG9hZE1lc3NhZ2VzID0gYXN5bmMgKCkgPT4ge1xyXG4gICAgICBzZXRMb2FkaW5nKHRydWUpO1xyXG4gICAgICBzZXRDaGF0SWQoc2VsZWN0ZWRDaGF0LmlkKTtcclxuXHJcbiAgICAgIGNvbnN0IHsgZGF0YTogbXNncyB9ID0gYXdhaXQgc3VwYWJhc2VcclxuICAgICAgICAuZnJvbShcInN0b3JlX2NoYXRfbWVzc2FnZXNcIilcclxuICAgICAgICAuc2VsZWN0KFwiaWQsIHNlbmRlcl90eXBlLCBjb250ZW50LCBjcmVhdGVkX2F0LCBpc19yZWFkXCIpXHJcbiAgICAgICAgLmVxKFwiY2hhdF9pZFwiLCBzZWxlY3RlZENoYXQuaWQpXHJcbiAgICAgICAgLm9yZGVyKFwiY3JlYXRlZF9hdFwiLCB7IGFzY2VuZGluZzogdHJ1ZSB9KTtcclxuXHJcbiAgICAgIGlmICghY2FuY2VsbGVkKSB7XHJcbiAgICAgICAgc2V0TWVzc2FnZXMobXNncyB8fCBbXSk7XHJcbiAgICAgICAgc2V0TG9hZGluZyhmYWxzZSk7XHJcbiAgICAgICAgc2V0VGltZW91dChzY3JvbGxUb0JvdHRvbSwgMTAwKTtcclxuICAgICAgfVxyXG4gICAgfTtcclxuXHJcbiAgICBsb2FkTWVzc2FnZXMoKTtcclxuICAgIHJldHVybiAoKSA9PiB7IGNhbmNlbGxlZCA9IHRydWU7IH07XHJcbiAgfSwgW3NlbGVjdGVkQ2hhdCwgaXNBZG1pbiwgc2Nyb2xsVG9Cb3R0b21dKTtcclxuXHJcbiAgLy8gUmVhbHRpbWUgc3Vic2NyaXB0aW9uXHJcbiAgdXNlRWZmZWN0KCgpID0+IHtcclxuICAgIGlmICghY2hhdElkKSByZXR1cm47XHJcblxyXG4gICAgY29uc3QgY2hhbm5lbCA9IHN1cGFiYXNlXHJcbiAgICAgIC5jaGFubmVsKGBzdG9yZS1jaGF0LSR7Y2hhdElkfWApXHJcbiAgICAgIC5vbihcclxuICAgICAgICBcInBvc3RncmVzX2NoYW5nZXNcIixcclxuICAgICAgICB7IGV2ZW50OiBcIklOU0VSVFwiLCBzY2hlbWE6IFwicHVibGljXCIsIHRhYmxlOiBcInN0b3JlX2NoYXRfbWVzc2FnZXNcIiwgZmlsdGVyOiBgY2hhdF9pZD1lcS4ke2NoYXRJZH1gIH0sXHJcbiAgICAgICAgKHBheWxvYWQpID0+IHtcclxuICAgICAgICAgIGNvbnN0IG1zZyA9IHBheWxvYWQubmV3IGFzIENoYXRNZXNzYWdlO1xyXG4gICAgICAgICAgc2V0TWVzc2FnZXMoKHByZXYpID0+IHtcclxuICAgICAgICAgICAgaWYgKHByZXYuc29tZSgobSkgPT4gbS5pZCA9PT0gbXNnLmlkKSkgcmV0dXJuIHByZXY7XHJcbiAgICAgICAgICAgIHJldHVybiBbLi4ucHJldiwgbXNnXTtcclxuICAgICAgICAgIH0pO1xyXG4gICAgICAgICAgc2V0VGltZW91dChzY3JvbGxUb0JvdHRvbSwgNTApO1xyXG4gICAgICAgIH1cclxuICAgICAgKVxyXG4gICAgICAuc3Vic2NyaWJlKCk7XHJcblxyXG4gICAgcmV0dXJuICgpID0+IHsgc3VwYWJhc2UucmVtb3ZlQ2hhbm5lbChjaGFubmVsKTsgfTtcclxuICB9LCBbY2hhdElkLCBzY3JvbGxUb0JvdHRvbV0pO1xyXG5cclxuICBjb25zdCBzZW5kTWVzc2FnZSA9IGFzeW5jICgpID0+IHtcclxuICAgIGlmICghaW5wdXQudHJpbSgpIHx8ICFjaGF0SWQgfHwgc2VuZGluZykgcmV0dXJuO1xyXG4gICAgY29uc3QgdGV4dCA9IHNhbml0aXplT3V0Z29pbmdNZXNzYWdlKGlucHV0KTtcclxuICAgIGlmICghdGV4dCkgcmV0dXJuO1xyXG5cclxuICAgIGNvbnN0IHJpc2sgPSBhc3Nlc3NDaGF0TWVzc2FnZVJpc2sodGV4dCk7XHJcbiAgICBpZiAocmlzay5ibG9ja2VkKSB7XHJcbiAgICAgIHRvYXN0LmVycm9yKFwiQmxvY2tlZCBtZXNzYWdlIGNvbnRhaW5pbmcgdW5zYWZlIGxpbmsgcGF0dGVyblwiKTtcclxuICAgICAgcmV0dXJuO1xyXG4gICAgfVxyXG5cclxuICAgIGlmIChyaXNrLndhcm5pbmdzLmxlbmd0aCA+IDApIHtcclxuICAgICAgdG9hc3Qud2FybmluZyhcIlBvdGVudGlhbGx5IHN1c3BpY2lvdXMgbGluayBwYXR0ZXJuIGRldGVjdGVkIGluIG1lc3NhZ2VcIik7XHJcbiAgICB9XHJcblxyXG4gICAgc2V0SW5wdXQoXCJcIik7XHJcbiAgICBzZXRTZW5kaW5nKHRydWUpO1xyXG5cclxuICAgIGNvbnN0IHsgZGF0YTogeyB1c2VyIH0gfSA9IGF3YWl0IHN1cGFiYXNlLmF1dGguZ2V0VXNlcigpO1xyXG4gICAgaWYgKCF1c2VyKSByZXR1cm47XHJcblxyXG4gICAgY29uc3QgeyBlcnJvciB9ID0gYXdhaXQgc3VwYWJhc2UuZnJvbShcInN0b3JlX2NoYXRfbWVzc2FnZXNcIikuaW5zZXJ0KHtcclxuICAgICAgY2hhdF9pZDogY2hhdElkLFxyXG4gICAgICBzZW5kZXJfaWQ6IHVzZXIuaWQsXHJcbiAgICAgIHNlbmRlcl90eXBlOiBpc0FkbWluID8gXCJzdG9yZVwiIDogXCJjdXN0b21lclwiLFxyXG4gICAgICBjb250ZW50OiB0ZXh0LFxyXG4gICAgfSk7XHJcblxyXG4gICAgaWYgKGVycm9yKSB0b2FzdC5lcnJvcihlcnJvci5tZXNzYWdlIHx8IFwiRmFpbGVkIHRvIHNlbmQgbWVzc2FnZVwiKTtcclxuICAgIHNldFNlbmRpbmcoZmFsc2UpO1xyXG4gIH07XHJcblxyXG4gIGNvbnN0IGhhbmRsZURlbGV0ZUNoYXQgPSBhc3luYyAoZGVsZXRlQ2hhdElkOiBzdHJpbmcpID0+IHtcclxuICAgIGNvbnN0IHsgZXJyb3IgfSA9IGF3YWl0IHN1cGFiYXNlLmZyb20oXCJzdG9yZV9jaGF0c1wiKS5kZWxldGUoKS5lcShcImlkXCIsIGRlbGV0ZUNoYXRJZCk7XHJcbiAgICBpZiAoZXJyb3IpIHtcclxuICAgICAgdG9hc3QuZXJyb3IoXCJGYWlsZWQgdG8gZGVsZXRlIGNoYXRcIik7XHJcbiAgICB9IGVsc2Uge1xyXG4gICAgICB0b2FzdC5zdWNjZXNzKFwiQ2hhdCBkZWxldGVkXCIpO1xyXG4gICAgICBzZXRDaGF0TGlzdEtleSgoaykgPT4gayArIDEpO1xyXG4gICAgICBpZiAoY2hhdElkID09PSBkZWxldGVDaGF0SWQpIHtcclxuICAgICAgICBzZXRDaGF0SWQobnVsbCk7XHJcbiAgICAgICAgc2V0U2VsZWN0ZWRDaGF0KG51bGwpO1xyXG4gICAgICAgIHNldE1lc3NhZ2VzKFtdKTtcclxuICAgICAgfVxyXG4gICAgfVxyXG4gIH07XHJcblxyXG4gIGNvbnN0IFtjb25maXJtRGVsZXRlSW5DaGF0LCBzZXRDb25maXJtRGVsZXRlSW5DaGF0XSA9IHVzZVN0YXRlKGZhbHNlKTtcclxuICBjb25zdCBzaG93Q2hhdExpc3QgPSBpc0FkbWluICYmICFzZWxlY3RlZENoYXQ7XHJcbiAgY29uc3QgY2hhdFRpdGxlID0gaXNBZG1pbiAmJiBzZWxlY3RlZENoYXRcclxuICAgID8gKHNlbGVjdGVkQ2hhdC5jdXN0b21lcl9uYW1lIHx8IHNlbGVjdGVkQ2hhdC5jdXN0b21lcl9lbWFpbCB8fCBcIkN1c3RvbWVyXCIpXHJcbiAgICA6IHN0b3JlTmFtZTtcclxuICBjb25zdCBjaGF0U3VidGl0bGUgPSBpc0FkbWluICYmIHNlbGVjdGVkQ2hhdFxyXG4gICAgPyBcIkN1c3RvbWVyIENoYXRcIlxyXG4gICAgOiBcIkxpdmUgQ2hhdFwiO1xyXG5cclxuICByZXR1cm4gKFxyXG4gICAgPEFuaW1hdGVQcmVzZW5jZT5cclxuICAgICAge29wZW4gJiYgKFxyXG4gICAgICAgIDxtb3Rpb24uZGl2XHJcbiAgICAgICAgICBpbml0aWFsPXt7IG9wYWNpdHk6IDAgfX1cclxuICAgICAgICAgIGFuaW1hdGU9e3sgb3BhY2l0eTogMSB9fVxyXG4gICAgICAgICAgZXhpdD17eyBvcGFjaXR5OiAwIH19XHJcbiAgICAgICAgICBjbGFzc05hbWU9XCJmaXhlZCBpbnNldC0wIHotWzIwMF0gYmctYmxhY2svNTAgYmFja2Ryb3AtYmx1ci1zbVwiXHJcbiAgICAgICAgICBvbkNsaWNrPXtvbkNsb3NlfVxyXG4gICAgICAgID5cclxuICAgICAgICAgIDxtb3Rpb24uZGl2XHJcbiAgICAgICAgICAgIGluaXRpYWw9e3sgeTogXCIxMDAlXCIgfX1cclxuICAgICAgICAgICAgYW5pbWF0ZT17eyB5OiAwIH19XHJcbiAgICAgICAgICAgIGV4aXQ9e3sgeTogXCIxMDAlXCIgfX1cclxuICAgICAgICAgICAgdHJhbnNpdGlvbj17eyB0eXBlOiBcInNwcmluZ1wiLCBzdGlmZm5lc3M6IDMwMCwgZGFtcGluZzogMzAgfX1cclxuICAgICAgICAgICAgb25DbGljaz17KGUpID0+IGUuc3RvcFByb3BhZ2F0aW9uKCl9XHJcbiAgICAgICAgICAgIGNsYXNzTmFtZT1cImFic29sdXRlIGJvdHRvbS0wIGxlZnQtMCByaWdodC0wIGgtWzg1dmhdIGJnLWJhY2tncm91bmQgcm91bmRlZC10LTN4bCBib3JkZXItdCBib3JkZXItYm9yZGVyLzMwIGZsZXggZmxleC1jb2wgb3ZlcmZsb3ctaGlkZGVuXCJcclxuICAgICAgICAgID5cclxuICAgICAgICAgICAge3Nob3dDaGF0TGlzdCA/IChcclxuICAgICAgICAgICAgICA8QWRtaW5DaGF0TGlzdFxyXG4gICAgICAgICAgICAgICAga2V5PXtjaGF0TGlzdEtleX1cclxuICAgICAgICAgICAgICAgIHN0b3JlSWQ9e3N0b3JlSWR9XHJcbiAgICAgICAgICAgICAgICBzdG9yZU5hbWU9e3N0b3JlTmFtZX1cclxuICAgICAgICAgICAgICAgIHN0b3JlTG9nbz17c3RvcmVMb2dvfVxyXG4gICAgICAgICAgICAgICAgb25TZWxlY3RDaGF0PXtzZXRTZWxlY3RlZENoYXR9XHJcbiAgICAgICAgICAgICAgICBvbkRlbGV0ZUNoYXQ9e2hhbmRsZURlbGV0ZUNoYXR9XHJcbiAgICAgICAgICAgICAgICBvbkNsb3NlPXtvbkNsb3NlfVxyXG4gICAgICAgICAgICAgIC8+XHJcbiAgICAgICAgICAgICkgOiAoXHJcbiAgICAgICAgICAgICAgPD5cclxuICAgICAgICAgICAgICAgIHsvKiBIZWFkZXIgKi99XHJcbiAgICAgICAgICAgICAgICA8ZGl2IGNsYXNzTmFtZT1cImZsZXggaXRlbXMtY2VudGVyIGdhcC0zIHB4LTQgcHktMyBib3JkZXItYiBib3JkZXItYm9yZGVyLzMwIHNocmluay0wXCI+XHJcbiAgICAgICAgICAgICAgICAgIHtpc0FkbWluICYmIChcclxuICAgICAgICAgICAgICAgICAgICA8YnV0dG9uXHJcbiAgICAgICAgICAgICAgICAgICAgICBvbkNsaWNrPXsoKSA9PiB7IHNldFNlbGVjdGVkQ2hhdChudWxsKTsgc2V0Q2hhdElkKG51bGwpOyBzZXRNZXNzYWdlcyhbXSk7IH19XHJcbiAgICAgICAgICAgICAgICAgICAgICBjbGFzc05hbWU9XCJwLTEuNSByb3VuZGVkLWZ1bGwgaG92ZXI6YmctbXV0ZWQgdHJhbnNpdGlvbi1jb2xvcnNcIlxyXG4gICAgICAgICAgICAgICAgICAgID5cclxuICAgICAgICAgICAgICAgICAgICAgIDxDaGV2cm9uTGVmdCBjbGFzc05hbWU9XCJoLTUgdy01IHRleHQtbXV0ZWQtZm9yZWdyb3VuZFwiIC8+XHJcbiAgICAgICAgICAgICAgICAgICAgPC9idXR0b24+XHJcbiAgICAgICAgICAgICAgICAgICl9XHJcbiAgICAgICAgICAgICAgICAgIDxkaXYgY2xhc3NOYW1lPVwiaC0xMCB3LTEwIHJvdW5kZWQtZnVsbCBiZy1tdXRlZCBib3JkZXIgYm9yZGVyLWJvcmRlci8zMCBvdmVyZmxvdy1oaWRkZW4gZmxleCBpdGVtcy1jZW50ZXIganVzdGlmeS1jZW50ZXJcIj5cclxuICAgICAgICAgICAgICAgICAgICB7aXNBZG1pbiA/IChcclxuICAgICAgICAgICAgICAgICAgICAgIDxVc2VyIGNsYXNzTmFtZT1cImgtNSB3LTUgdGV4dC1wcmltYXJ5XCIgLz5cclxuICAgICAgICAgICAgICAgICAgICApIDogc3RvcmVMb2dvID8gKFxyXG4gICAgICAgICAgICAgICAgICAgICAgPGltZyBzcmM9e3N0b3JlTG9nb30gYWx0PXtzdG9yZU5hbWV9IGNsYXNzTmFtZT1cImgtZnVsbCB3LWZ1bGwgb2JqZWN0LWNvbnRhaW4gcC0xXCIgLz5cclxuICAgICAgICAgICAgICAgICAgICApIDogKFxyXG4gICAgICAgICAgICAgICAgICAgICAgPE1lc3NhZ2VDaXJjbGUgY2xhc3NOYW1lPVwiaC01IHctNSB0ZXh0LW11dGVkLWZvcmVncm91bmRcIiAvPlxyXG4gICAgICAgICAgICAgICAgICAgICl9XHJcbiAgICAgICAgICAgICAgICAgIDwvZGl2PlxyXG4gICAgICAgICAgICAgICAgICA8ZGl2IGNsYXNzTmFtZT1cImZsZXgtMSBtaW4tdy0wXCI+XHJcbiAgICAgICAgICAgICAgICAgICAgPHAgY2xhc3NOYW1lPVwidGV4dC1zbSBmb250LWJvbGQgdGV4dC1mb3JlZ3JvdW5kIHRydW5jYXRlXCI+e2NoYXRUaXRsZX08L3A+XHJcbiAgICAgICAgICAgICAgICAgICAgPHAgY2xhc3NOYW1lPVwidGV4dC1bMTBweF0gdGV4dC1tdXRlZC1mb3JlZ3JvdW5kIHRydW5jYXRlXCI+e2NoYXRTdWJ0aXRsZX08L3A+XHJcbiAgICAgICAgICAgICAgICAgIDwvZGl2PlxyXG4gICAgICAgICAgICAgICAgICB7aXNBZG1pbiAmJiBjaGF0SWQgJiYgKFxyXG4gICAgICAgICAgICAgICAgICAgIDxidXR0b25cclxuICAgICAgICAgICAgICAgICAgICAgIG9uQ2xpY2s9eygpID0+IHNldENvbmZpcm1EZWxldGVJbkNoYXQodHJ1ZSl9XHJcbiAgICAgICAgICAgICAgICAgICAgICBjbGFzc05hbWU9XCJwLTIgcm91bmRlZC1mdWxsIGhvdmVyOmJnLWRlc3RydWN0aXZlLzEwIHRyYW5zaXRpb24tY29sb3JzXCJcclxuICAgICAgICAgICAgICAgICAgICA+XHJcbiAgICAgICAgICAgICAgICAgICAgICA8VHJhc2gyIGNsYXNzTmFtZT1cImgtNCB3LTQgdGV4dC1kZXN0cnVjdGl2ZVwiIC8+XHJcbiAgICAgICAgICAgICAgICAgICAgPC9idXR0b24+XHJcbiAgICAgICAgICAgICAgICAgICl9XHJcbiAgICAgICAgICAgICAgICAgIDxidXR0b24gb25DbGljaz17b25DbG9zZX0gY2xhc3NOYW1lPVwicC0yIHJvdW5kZWQtZnVsbCBob3ZlcjpiZy1tdXRlZCB0cmFuc2l0aW9uLWNvbG9yc1wiPlxyXG4gICAgICAgICAgICAgICAgICAgIDxYIGNsYXNzTmFtZT1cImgtNSB3LTUgdGV4dC1tdXRlZC1mb3JlZ3JvdW5kXCIgLz5cclxuICAgICAgICAgICAgICAgICAgPC9idXR0b24+XHJcbiAgICAgICAgICAgICAgICA8L2Rpdj5cclxuXHJcbiAgICAgICAgICAgICAgICB7LyogTWVzc2FnZXMgKi99XHJcbiAgICAgICAgICAgICAgICA8ZGl2IGNsYXNzTmFtZT1cImZsZXgtMSBvdmVyZmxvdy15LWF1dG8gcHgtNCBweS0zIHNwYWNlLXktMlwiPlxyXG4gICAgICAgICAgICAgICAgICB7cmVzZXJ2YXRpb25Db250ZXh0ICYmIChcclxuICAgICAgICAgICAgICAgICAgICA8ZGl2IGNsYXNzTmFtZT1cInJvdW5kZWQteGwgYm9yZGVyIGJnLW11dGVkLzQwIHAtMyB0ZXh0LXhzIHNwYWNlLXktMVwiPlxyXG4gICAgICAgICAgICAgICAgICAgICAgPGRpdiBjbGFzc05hbWU9XCJmb250LXNlbWlib2xkXCI+UmVzZXJ2YXRpb24ge3Jlc2VydmF0aW9uQ29udGV4dC5yZXNlcnZhdGlvbk51bWJlcn08L2Rpdj5cclxuICAgICAgICAgICAgICAgICAgICAgIDxkaXYgY2xhc3NOYW1lPVwidGV4dC1tdXRlZC1mb3JlZ3JvdW5kXCI+e3Jlc2VydmF0aW9uQ29udGV4dC5kYXRlc30gwrcge3Jlc2VydmF0aW9uQ29udGV4dC5yb29tTGFiZWx9PC9kaXY+XHJcbiAgICAgICAgICAgICAgICAgICAgICA8ZGl2IGNsYXNzTmFtZT1cImNhcGl0YWxpemUgdGV4dC1tdXRlZC1mb3JlZ3JvdW5kXCI+U3RhdHVzOiB7cmVzZXJ2YXRpb25Db250ZXh0LnN0YXR1cy5yZXBsYWNlKC9fL2csIFwiIFwiKX08L2Rpdj5cclxuICAgICAgICAgICAgICAgICAgICAgIDxhIGhyZWY9e3Jlc2VydmF0aW9uQ29udGV4dC5ocmVmfSBjbGFzc05hbWU9XCJ0ZXh0LXByaW1hcnkgZm9udC1tZWRpdW1cIj5WaWV3IHJlc2VydmF0aW9uPC9hPlxyXG4gICAgICAgICAgICAgICAgICAgIDwvZGl2PlxyXG4gICAgICAgICAgICAgICAgICApfVxyXG4gICAgICAgICAgICAgICAgICB7bG9hZGluZyA/IChcclxuICAgICAgICAgICAgICAgICAgICA8ZGl2IGNsYXNzTmFtZT1cImZsZXggaXRlbXMtY2VudGVyIGp1c3RpZnktY2VudGVyIGgtMzJcIj5cclxuICAgICAgICAgICAgICAgICAgICAgIDxMb2FkZXIyIGNsYXNzTmFtZT1cImgtNSB3LTUgYW5pbWF0ZS1zcGluIHRleHQtcHJpbWFyeVwiIC8+XHJcbiAgICAgICAgICAgICAgICAgICAgPC9kaXY+XHJcbiAgICAgICAgICAgICAgICAgICkgOiBtZXNzYWdlcy5sZW5ndGggPT09IDAgPyAoXHJcbiAgICAgICAgICAgICAgICAgICAgPGRpdiBjbGFzc05hbWU9XCJmbGV4IGZsZXgtY29sIGl0ZW1zLWNlbnRlciBqdXN0aWZ5LWNlbnRlciBoLTMyIHRleHQtY2VudGVyXCI+XHJcbiAgICAgICAgICAgICAgICAgICAgICA8TWVzc2FnZUNpcmNsZSBjbGFzc05hbWU9XCJoLTggdy04IHRleHQtbXV0ZWQtZm9yZWdyb3VuZC8zMCBtYi0yXCIgLz5cclxuICAgICAgICAgICAgICAgICAgICAgIDxwIGNsYXNzTmFtZT1cInRleHQtc20gdGV4dC1tdXRlZC1mb3JlZ3JvdW5kXCI+XHJcbiAgICAgICAgICAgICAgICAgICAgICAgIHtpc0FkbWluID8gXCJObyBtZXNzYWdlcyB5ZXRcIiA6IGBTdGFydCBhIGNvbnZlcnNhdGlvbiB3aXRoICR7c3RvcmVOYW1lfWB9XHJcbiAgICAgICAgICAgICAgICAgICAgICA8L3A+XHJcbiAgICAgICAgICAgICAgICAgICAgICA8cCBjbGFzc05hbWU9XCJ0ZXh0LVsxMHB4XSB0ZXh0LW11dGVkLWZvcmVncm91bmQvNjAgbXQtMVwiPlxyXG4gICAgICAgICAgICAgICAgICAgICAgICB7aXNBZG1pbiA/IFwiV2FpdGluZyBmb3IgY3VzdG9tZXIgdG8gc2VuZCBhIG1lc3NhZ2VcIiA6IFwiQXNrIGFib3V0IHByb2R1Y3RzLCBhdmFpbGFiaWxpdHksIG9yIGRlbGl2ZXJ5XCJ9XHJcbiAgICAgICAgICAgICAgICAgICAgICA8L3A+XHJcbiAgICAgICAgICAgICAgICAgICAgPC9kaXY+XHJcbiAgICAgICAgICAgICAgICAgICkgOiAoXHJcbiAgICAgICAgICAgICAgICAgICAgbWVzc2FnZXMubWFwKChtc2cpID0+IHtcclxuICAgICAgICAgICAgICAgICAgICAgIGNvbnN0IGlzT3duID0gaXNBZG1pbiA/IG1zZy5zZW5kZXJfdHlwZSA9PT0gXCJzdG9yZVwiIDogbXNnLnNlbmRlcl90eXBlID09PSBcImN1c3RvbWVyXCI7XHJcbiAgICAgICAgICAgICAgICAgICAgICBjb25zdCByaWNoUGF5bG9hZCA9IHBhcnNlUmljaENvbnRlbnQobXNnLmNvbnRlbnQpO1xyXG4gICAgICAgICAgICAgICAgICAgICAgcmV0dXJuIChcclxuICAgICAgICAgICAgICAgICAgICAgICAgPGRpdiBrZXk9e21zZy5pZH0gY2xhc3NOYW1lPXtgZmxleCAke2lzT3duID8gXCJqdXN0aWZ5LWVuZFwiIDogXCJqdXN0aWZ5LXN0YXJ0XCJ9YH0+XHJcbiAgICAgICAgICAgICAgICAgICAgICAgICAgPGRpdlxyXG4gICAgICAgICAgICAgICAgICAgICAgICAgICAgY2xhc3NOYW1lPXtgbWF4LXctWzgwJV0gcHgtMyBweS0yIHJvdW5kZWQtMnhsIHRleHQtWzEzcHhdICR7XHJcbiAgICAgICAgICAgICAgICAgICAgICAgICAgICAgIGlzT3duXHJcbiAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgPyBcImJnLXByaW1hcnkgdGV4dC1wcmltYXJ5LWZvcmVncm91bmQgcm91bmRlZC1ici1tZFwiXHJcbiAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgOiBcImJnLW11dGVkIHRleHQtZm9yZWdyb3VuZCByb3VuZGVkLWJsLW1kXCJcclxuICAgICAgICAgICAgICAgICAgICAgICAgICAgIH1gfVxyXG4gICAgICAgICAgICAgICAgICAgICAgICAgID5cclxuICAgICAgICAgICAgICAgICAgICAgICAgICAgIHtyaWNoUGF5bG9hZCA/IChcclxuICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgPFJpY2hNZXNzYWdlQ2FyZCBwYXlsb2FkPXtyaWNoUGF5bG9hZH0gaXNPd249e2lzT3dufSAvPlxyXG4gICAgICAgICAgICAgICAgICAgICAgICAgICAgKSA6IChcclxuICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgbXNnLmNvbnRlbnRcclxuICAgICAgICAgICAgICAgICAgICAgICAgICAgICl9XHJcbiAgICAgICAgICAgICAgICAgICAgICAgICAgICA8cCBjbGFzc05hbWU9e2B0ZXh0LVs5cHhdIG10LTEgJHtcclxuICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgaXNPd24gPyBcInRleHQtcHJpbWFyeS1mb3JlZ3JvdW5kLzYwXCIgOiBcInRleHQtbXV0ZWQtZm9yZWdyb3VuZFwiXHJcbiAgICAgICAgICAgICAgICAgICAgICAgICAgICB9YH0+XHJcbiAgICAgICAgICAgICAgICAgICAgICAgICAgICAgIHtuZXcgRGF0ZShtc2cuY3JlYXRlZF9hdCkudG9Mb2NhbGVUaW1lU3RyaW5nKFtdLCB7IGhvdXI6IFwiMi1kaWdpdFwiLCBtaW51dGU6IFwiMi1kaWdpdFwiIH0pfVxyXG4gICAgICAgICAgICAgICAgICAgICAgICAgICAgPC9wPlxyXG4gICAgICAgICAgICAgICAgICAgICAgICAgIDwvZGl2PlxyXG4gICAgICAgICAgICAgICAgICAgICAgICA8L2Rpdj5cclxuICAgICAgICAgICAgICAgICAgICAgICk7XHJcbiAgICAgICAgICAgICAgICAgICAgfSlcclxuICAgICAgICAgICAgICAgICAgKX1cclxuICAgICAgICAgICAgICAgICAgPGRpdiByZWY9e21lc3NhZ2VzRW5kUmVmfSAvPlxyXG4gICAgICAgICAgICAgICAgPC9kaXY+XHJcblxyXG4gICAgICAgICAgICAgICAgey8qIEFkbWluIGFjdGlvbiBidXR0b25zICovfVxyXG4gICAgICAgICAgICAgICAge2lzQWRtaW4gJiYgY2hhdElkICYmIChcclxuICAgICAgICAgICAgICAgICAgPGRpdiBjbGFzc05hbWU9XCJweC00IHB0LTIgZmxleCBpdGVtcy1jZW50ZXIgZ2FwLTIgYm9yZGVyLXQgYm9yZGVyLWJvcmRlci8xMFwiPlxyXG4gICAgICAgICAgICAgICAgICAgIDxidXR0b25cclxuICAgICAgICAgICAgICAgICAgICAgIG9uQ2xpY2s9e2FzeW5jICgpID0+IHtcclxuICAgICAgICAgICAgICAgICAgICAgICAgY29uc3QgeyBkYXRhOiBzdG9yZSB9ID0gYXdhaXQgc3VwYWJhc2VcclxuICAgICAgICAgICAgICAgICAgICAgICAgICAuZnJvbShcInN0b3JlX3Byb2ZpbGVzXCIpXHJcbiAgICAgICAgICAgICAgICAgICAgICAgICAgLnNlbGVjdChcImFkZHJlc3MsIGxhdGl0dWRlLCBsb25naXR1ZGVcIilcclxuICAgICAgICAgICAgICAgICAgICAgICAgICAuZXEoXCJpZFwiLCBzdG9yZUlkKVxyXG4gICAgICAgICAgICAgICAgICAgICAgICAgIC5zaW5nbGUoKTtcclxuICAgICAgICAgICAgICAgICAgICAgICAgaWYgKCFzdG9yZT8uYWRkcmVzcykgeyB0b2FzdC5lcnJvcihcIlN0b3JlIGFkZHJlc3Mgbm90IHNldFwiKTsgcmV0dXJuOyB9XHJcbiAgICAgICAgICAgICAgICAgICAgICAgIGNvbnN0IGNvbnRlbnQgPSB3cmFwUmljaCh7XHJcbiAgICAgICAgICAgICAgICAgICAgICAgICAgdHlwZTogXCJsb2NhdGlvblwiLFxyXG4gICAgICAgICAgICAgICAgICAgICAgICAgIGFkZHJlc3M6IHN0b3JlLmFkZHJlc3MsXHJcbiAgICAgICAgICAgICAgICAgICAgICAgICAgbGF0OiBzdG9yZS5sYXRpdHVkZSB8fCAwLFxyXG4gICAgICAgICAgICAgICAgICAgICAgICAgIGxuZzogc3RvcmUubG9uZ2l0dWRlIHx8IDAsXHJcbiAgICAgICAgICAgICAgICAgICAgICAgIH0pO1xyXG4gICAgICAgICAgICAgICAgICAgICAgICBjb25zdCB7IGRhdGE6IHsgdXNlciB9IH0gPSBhd2FpdCBzdXBhYmFzZS5hdXRoLmdldFVzZXIoKTtcclxuICAgICAgICAgICAgICAgICAgICAgICAgaWYgKCF1c2VyKSByZXR1cm47XHJcbiAgICAgICAgICAgICAgICAgICAgICAgIGF3YWl0IHN1cGFiYXNlLmZyb20oXCJzdG9yZV9jaGF0X21lc3NhZ2VzXCIpLmluc2VydCh7XHJcbiAgICAgICAgICAgICAgICAgICAgICAgICAgY2hhdF9pZDogY2hhdElkLCBzZW5kZXJfaWQ6IHVzZXIuaWQsIHNlbmRlcl90eXBlOiBcInN0b3JlXCIsIGNvbnRlbnQsXHJcbiAgICAgICAgICAgICAgICAgICAgICAgIH0pO1xyXG4gICAgICAgICAgICAgICAgICAgICAgfX1cclxuICAgICAgICAgICAgICAgICAgICAgIGNsYXNzTmFtZT1cImZsZXggaXRlbXMtY2VudGVyIGdhcC0xLjUgcHgtMyBoLTggcm91bmRlZC1mdWxsIGJnLWFjY2VudC82MCB0ZXh0LWFjY2VudC1mb3JlZ3JvdW5kIHRleHQtWzExcHhdIGZvbnQtbWVkaXVtIGhvdmVyOmJnLWFjY2VudCB0cmFuc2l0aW9uLWNvbG9yc1wiXHJcbiAgICAgICAgICAgICAgICAgICAgPlxyXG4gICAgICAgICAgICAgICAgICAgICAgPE1hcFBpbiBjbGFzc05hbWU9XCJoLTMuNSB3LTMuNVwiIC8+XHJcbiAgICAgICAgICAgICAgICAgICAgICBMb2NhdGlvblxyXG4gICAgICAgICAgICAgICAgICAgIDwvYnV0dG9uPlxyXG4gICAgICAgICAgICAgICAgICAgIDxidXR0b25cclxuICAgICAgICAgICAgICAgICAgICAgIG9uQ2xpY2s9eygpID0+IHtcclxuICAgICAgICAgICAgICAgICAgICAgICAgY29uc3QgdXJsID0gcHJvbXB0KFwiUGFzdGUgeW91ciBwYXltZW50IGxpbmsgb3IgVVJMOlwiKTtcclxuICAgICAgICAgICAgICAgICAgICAgICAgaWYgKCF1cmw/LnRyaW0oKSkgcmV0dXJuO1xyXG4gICAgICAgICAgICAgICAgICAgICAgICBpZiAoIWlzQWxsb3dlZFBheW1lbnRVcmwodXJsLnRyaW0oKSkpIHtcclxuICAgICAgICAgICAgICAgICAgICAgICAgICB0b2FzdC5lcnJvcihcIlBheW1lbnQgbGluayBibG9ja2VkLiBVc2UgYW4gYXBwcm92ZWQgcGF5bWVudCBkb21haW4uXCIpO1xyXG4gICAgICAgICAgICAgICAgICAgICAgICAgIHJldHVybjtcclxuICAgICAgICAgICAgICAgICAgICAgICAgfVxyXG4gICAgICAgICAgICAgICAgICAgICAgICBjb25zdCBhbW91bnQgPSBwcm9tcHQoXCJBbW91bnQgKG9wdGlvbmFsKTpcIik7XHJcbiAgICAgICAgICAgICAgICAgICAgICAgIGNvbnN0IG5vdGUgPSBwcm9tcHQoXCJOb3RlIChvcHRpb25hbCk6XCIpO1xyXG4gICAgICAgICAgICAgICAgICAgICAgICBjb25zdCBzZW5kUVIgPSBhc3luYyAoKSA9PiB7XHJcbiAgICAgICAgICAgICAgICAgICAgICAgICAgY29uc3QgY29udGVudCA9IHdyYXBSaWNoKHtcclxuICAgICAgICAgICAgICAgICAgICAgICAgICAgIHR5cGU6IFwicGF5bWVudF9xclwiLFxyXG4gICAgICAgICAgICAgICAgICAgICAgICAgICAgcGF5bWVudFVybDogdXJsLnRyaW0oKSxcclxuICAgICAgICAgICAgICAgICAgICAgICAgICAgIGFtb3VudDogYW1vdW50Py50cmltKCkgfHwgdW5kZWZpbmVkLFxyXG4gICAgICAgICAgICAgICAgICAgICAgICAgICAgbm90ZTogbm90ZT8udHJpbSgpIHx8IHVuZGVmaW5lZCxcclxuICAgICAgICAgICAgICAgICAgICAgICAgICB9KTtcclxuICAgICAgICAgICAgICAgICAgICAgICAgICBjb25zdCB7IGRhdGE6IHsgdXNlciB9IH0gPSBhd2FpdCBzdXBhYmFzZS5hdXRoLmdldFVzZXIoKTtcclxuICAgICAgICAgICAgICAgICAgICAgICAgICBpZiAoIXVzZXIpIHJldHVybjtcclxuICAgICAgICAgICAgICAgICAgICAgICAgICBhd2FpdCBzdXBhYmFzZS5mcm9tKFwic3RvcmVfY2hhdF9tZXNzYWdlc1wiKS5pbnNlcnQoe1xyXG4gICAgICAgICAgICAgICAgICAgICAgICAgICAgY2hhdF9pZDogY2hhdElkLCBzZW5kZXJfaWQ6IHVzZXIuaWQsIHNlbmRlcl90eXBlOiBcInN0b3JlXCIsIGNvbnRlbnQsXHJcbiAgICAgICAgICAgICAgICAgICAgICAgICAgfSk7XHJcbiAgICAgICAgICAgICAgICAgICAgICAgIH07XHJcbiAgICAgICAgICAgICAgICAgICAgICAgIHNlbmRRUigpO1xyXG4gICAgICAgICAgICAgICAgICAgICAgfX1cclxuICAgICAgICAgICAgICAgICAgICAgIGNsYXNzTmFtZT1cImZsZXggaXRlbXMtY2VudGVyIGdhcC0xLjUgcHgtMyBoLTggcm91bmRlZC1mdWxsIGJnLWFjY2VudC82MCB0ZXh0LWFjY2VudC1mb3JlZ3JvdW5kIHRleHQtWzExcHhdIGZvbnQtbWVkaXVtIGhvdmVyOmJnLWFjY2VudCB0cmFuc2l0aW9uLWNvbG9yc1wiXHJcbiAgICAgICAgICAgICAgICAgICAgPlxyXG4gICAgICAgICAgICAgICAgICAgICAgPFFyQ29kZSBjbGFzc05hbWU9XCJoLTMuNSB3LTMuNVwiIC8+XHJcbiAgICAgICAgICAgICAgICAgICAgICBQYXltZW50XHJcbiAgICAgICAgICAgICAgICAgICAgPC9idXR0b24+XHJcbiAgICAgICAgICAgICAgICAgICAgPGJ1dHRvblxyXG4gICAgICAgICAgICAgICAgICAgICAgb25DbGljaz17KCkgPT4ge1xyXG4gICAgICAgICAgICAgICAgICAgICAgICBjb25zdCBvcmRlcklkID0gcHJvbXB0KFwiRW50ZXIgb3JkZXIgSUQgdG8gc2hhcmUgdHJhY2tpbmc6XCIpO1xyXG4gICAgICAgICAgICAgICAgICAgICAgICBpZiAoIW9yZGVySWQ/LnRyaW0oKSkgcmV0dXJuO1xyXG4gICAgICAgICAgICAgICAgICAgICAgICBjb25zdCBzdGF0dXMgPSBwcm9tcHQoXCJDdXJyZW50IHN0YXR1cyAoZS5nLiBwcmVwYXJpbmcsIG9uIHRoZSB3YXksIGRlbGl2ZXJlZCk6XCIpIHx8IFwicHJlcGFyaW5nXCI7XHJcbiAgICAgICAgICAgICAgICAgICAgICAgIGNvbnN0IHNlbmRUcmFja2luZyA9IGFzeW5jICgpID0+IHtcclxuICAgICAgICAgICAgICAgICAgICAgICAgICBjb25zdCBjb250ZW50ID0gd3JhcFJpY2goe1xyXG4gICAgICAgICAgICAgICAgICAgICAgICAgICAgdHlwZTogXCJ0cmFja2luZ1wiLFxyXG4gICAgICAgICAgICAgICAgICAgICAgICAgICAgb3JkZXJJZDogb3JkZXJJZC50cmltKCksXHJcbiAgICAgICAgICAgICAgICAgICAgICAgICAgICBzdGF0dXM6IHN0YXR1cy50cmltKCksXHJcbiAgICAgICAgICAgICAgICAgICAgICAgICAgfSk7XHJcbiAgICAgICAgICAgICAgICAgICAgICAgICAgY29uc3QgeyBkYXRhOiB7IHVzZXIgfSB9ID0gYXdhaXQgc3VwYWJhc2UuYXV0aC5nZXRVc2VyKCk7XHJcbiAgICAgICAgICAgICAgICAgICAgICAgICAgaWYgKCF1c2VyKSByZXR1cm47XHJcbiAgICAgICAgICAgICAgICAgICAgICAgICAgYXdhaXQgc3VwYWJhc2UuZnJvbShcInN0b3JlX2NoYXRfbWVzc2FnZXNcIikuaW5zZXJ0KHtcclxuICAgICAgICAgICAgICAgICAgICAgICAgICAgIGNoYXRfaWQ6IGNoYXRJZCwgc2VuZGVyX2lkOiB1c2VyLmlkLCBzZW5kZXJfdHlwZTogXCJzdG9yZVwiLCBjb250ZW50LFxyXG4gICAgICAgICAgICAgICAgICAgICAgICAgIH0pO1xyXG4gICAgICAgICAgICAgICAgICAgICAgICB9O1xyXG4gICAgICAgICAgICAgICAgICAgICAgICBzZW5kVHJhY2tpbmcoKTtcclxuICAgICAgICAgICAgICAgICAgICAgIH19XHJcbiAgICAgICAgICAgICAgICAgICAgICBjbGFzc05hbWU9XCJmbGV4IGl0ZW1zLWNlbnRlciBnYXAtMS41IHB4LTMgaC04IHJvdW5kZWQtZnVsbCBiZy1hY2NlbnQvNjAgdGV4dC1hY2NlbnQtZm9yZWdyb3VuZCB0ZXh0LVsxMXB4XSBmb250LW1lZGl1bSBob3ZlcjpiZy1hY2NlbnQgdHJhbnNpdGlvbi1jb2xvcnNcIlxyXG4gICAgICAgICAgICAgICAgICAgID5cclxuICAgICAgICAgICAgICAgICAgICAgIDxUcnVjayBjbGFzc05hbWU9XCJoLTMuNSB3LTMuNVwiIC8+XHJcbiAgICAgICAgICAgICAgICAgICAgICBUcmFja2luZ1xyXG4gICAgICAgICAgICAgICAgICAgIDwvYnV0dG9uPlxyXG4gICAgICAgICAgICAgICAgICA8L2Rpdj5cclxuICAgICAgICAgICAgICAgICl9XHJcblxyXG4gICAgICAgICAgICAgICAgey8qIElucHV0ICovfVxyXG4gICAgICAgICAgICAgICAgPGRpdiBjbGFzc05hbWU9XCJweC00IHB5LTMgc2hyaW5rLTAgcGItc2FmZVwiPlxyXG4gICAgICAgICAgICAgICAgICA8ZGl2IGNsYXNzTmFtZT1cImZsZXggaXRlbXMtY2VudGVyIGdhcC0yXCI+XHJcbiAgICAgICAgICAgICAgICAgICAgPGlucHV0XHJcbiAgICAgICAgICAgICAgICAgICAgICB0eXBlPVwidGV4dFwiXHJcbiAgICAgICAgICAgICAgICAgICAgICB2YWx1ZT17aW5wdXR9XHJcbiAgICAgICAgICAgICAgICAgICAgICBvbkNoYW5nZT17KGUpID0+IHNldElucHV0KGUudGFyZ2V0LnZhbHVlKX1cclxuICAgICAgICAgICAgICAgICAgICAgIG9uS2V5RG93bj17KGUpID0+IGUua2V5ID09PSBcIkVudGVyXCIgJiYgc2VuZE1lc3NhZ2UoKX1cclxuICAgICAgICAgICAgICAgICAgICAgIHBsYWNlaG9sZGVyPXtpc0FkbWluID8gXCJSZXBseSBhcyBzdG9yZS4uLlwiIDogXCJUeXBlIGEgbWVzc2FnZS4uLlwifVxyXG4gICAgICAgICAgICAgICAgICAgICAgY2xhc3NOYW1lPVwiZmxleC0xIGgtMTAgcHgtNCByb3VuZGVkLWZ1bGwgYmctbXV0ZWQgYm9yZGVyIGJvcmRlci1ib3JkZXIvMzAgdGV4dC1zbSB0ZXh0LWZvcmVncm91bmQgcGxhY2Vob2xkZXI6dGV4dC1tdXRlZC1mb3JlZ3JvdW5kIGZvY3VzOm91dGxpbmUtbm9uZSBmb2N1czpib3JkZXItcHJpbWFyeS8zMFwiXHJcbiAgICAgICAgICAgICAgICAgICAgLz5cclxuICAgICAgICAgICAgICAgICAgICA8YnV0dG9uXHJcbiAgICAgICAgICAgICAgICAgICAgICBvbkNsaWNrPXtzZW5kTWVzc2FnZX1cclxuICAgICAgICAgICAgICAgICAgICAgIGRpc2FibGVkPXshaW5wdXQudHJpbSgpIHx8IHNlbmRpbmd9XHJcbiAgICAgICAgICAgICAgICAgICAgICBjbGFzc05hbWU9XCJoLTEwIHctMTAgcm91bmRlZC1mdWxsIGJnLXByaW1hcnkgdGV4dC1wcmltYXJ5LWZvcmVncm91bmQgZmxleCBpdGVtcy1jZW50ZXIganVzdGlmeS1jZW50ZXIgc2hyaW5rLTAgZGlzYWJsZWQ6b3BhY2l0eS01MCB0cmFuc2l0aW9uLW9wYWNpdHlcIlxyXG4gICAgICAgICAgICAgICAgICAgID5cclxuICAgICAgICAgICAgICAgICAgICAgIHtzZW5kaW5nID8gPExvYWRlcjIgY2xhc3NOYW1lPVwiaC00IHctNCBhbmltYXRlLXNwaW5cIiAvPiA6IDxTZW5kIGNsYXNzTmFtZT1cImgtNCB3LTRcIiAvPn1cclxuICAgICAgICAgICAgICAgICAgICA8L2J1dHRvbj5cclxuICAgICAgICAgICAgICAgICAgPC9kaXY+XHJcbiAgICAgICAgICAgICAgICA8L2Rpdj5cclxuICAgICAgICAgICAgICA8Lz5cclxuICAgICAgICAgICAgKX1cclxuICAgICAgICAgICAgPENvbmZpcm1EaWFsb2dcclxuICAgICAgICAgICAgICBvcGVuPXtjb25maXJtRGVsZXRlSW5DaGF0fVxyXG4gICAgICAgICAgICAgIG1lc3NhZ2U9XCJEZWxldGUgdGhpcyBjaGF0PyBUaGlzIGNhbm5vdCBiZSB1bmRvbmUuXCJcclxuICAgICAgICAgICAgICBvbkNhbmNlbD17KCkgPT4gc2V0Q29uZmlybURlbGV0ZUluQ2hhdChmYWxzZSl9XHJcbiAgICAgICAgICAgICAgb25Db25maXJtPXsoKSA9PiB7XHJcbiAgICAgICAgICAgICAgICBpZiAoY2hhdElkKSBoYW5kbGVEZWxldGVDaGF0KGNoYXRJZCk7XHJcbiAgICAgICAgICAgICAgICBzZXRDb25maXJtRGVsZXRlSW5DaGF0KGZhbHNlKTtcclxuICAgICAgICAgICAgICB9fVxyXG4gICAgICAgICAgICAvPlxyXG4gICAgICAgICAgPC9tb3Rpb24uZGl2PlxyXG4gICAgICAgIDwvbW90aW9uLmRpdj5cclxuICAgICAgKX1cclxuICAgIDwvQW5pbWF0ZVByZXNlbmNlPlxyXG4gICk7XHJcbn1cclxuIl0sIm5hbWVzIjpbInVzZVN0YXRlIiwidXNlRWZmZWN0IiwidXNlUmVmIiwidXNlQ2FsbGJhY2siLCJtb3Rpb24iLCJBbmltYXRlUHJlc2VuY2UiLCJYIiwiU2VuZCIsIk1lc3NhZ2VDaXJjbGUiLCJMb2FkZXIyIiwiVHJhc2gyIiwiQ2hldnJvbkxlZnQiLCJVc2VyIiwiTWFwUGluIiwiUXJDb2RlIiwiVHJ1Y2siLCJzdXBhYmFzZSIsIlFSQ29kZVNWRyIsInRvYXN0IiwiaXNBbGxvd2VkUGF5bWVudFVybCIsImFzc2Vzc0NoYXRNZXNzYWdlUmlzayIsInNhbml0aXplT3V0Z29pbmdNZXNzYWdlIiwicGFyc2VSaWNoQ29udGVudCIsImNvbnRlbnQiLCJ0cmltbWVkIiwidHJpbSIsInBhcnNlZCIsIkpTT04iLCJwYXJzZSIsIl9fcmljaCIsInBheWxvYWQiLCJ3cmFwUmljaCIsInN0cmluZ2lmeSIsIlJpY2hNZXNzYWdlQ2FyZCIsImlzT3duIiwidHlwZSIsIm1hcFVybCIsImxhdCIsImxuZyIsInJpZGVVcmwiLCJlbmNvZGVVUklDb21wb25lbnQiLCJhZGRyZXNzIiwiZGl2IiwiY2xhc3NOYW1lIiwic3BhbiIsInAiLCJhIiwiaHJlZiIsImlzU2FmZVBheW1lbnRVcmwiLCJwYXltZW50VXJsIiwibm90ZSIsImFtb3VudCIsInZhbHVlIiwic2l6ZSIsInRhcmdldCIsInJlbCIsIm9yZGVySWQiLCJzdGF0dXMiLCJDb25maXJtRGlhbG9nIiwib3BlbiIsIm1lc3NhZ2UiLCJvbkNvbmZpcm0iLCJvbkNhbmNlbCIsIm9uQ2xpY2siLCJpbml0aWFsIiwic2NhbGUiLCJvcGFjaXR5IiwiYW5pbWF0ZSIsImV4aXQiLCJlIiwic3RvcFByb3BhZ2F0aW9uIiwiYnV0dG9uIiwiQWRtaW5DaGF0TGlzdCIsInN0b3JlSWQiLCJzdG9yZU5hbWUiLCJzdG9yZUxvZ28iLCJvblNlbGVjdENoYXQiLCJvbkRlbGV0ZUNoYXQiLCJvbkNsb3NlIiwiY2hhdHMiLCJzZXRDaGF0cyIsImxvYWRpbmciLCJzZXRMb2FkaW5nIiwiZGVsZXRlQ29uZmlybUlkIiwic2V0RGVsZXRlQ29uZmlybUlkIiwibG9hZENoYXRzIiwiZGF0YSIsImNoYXRSb3dzIiwiZnJvbSIsInNlbGVjdCIsImVxIiwib3JkZXIiLCJhc2NlbmRpbmciLCJsZW5ndGgiLCJ1c2VySWRzIiwibWFwIiwiYyIsInVzZXJfaWQiLCJwcm9maWxlcyIsImluIiwicHJvZmlsZU1hcCIsIk1hcCIsImlkIiwiZW5yaWNoZWQiLCJjaGF0IiwibGFzdE1zZyIsImxpbWl0IiwibWF5YmVTaW5nbGUiLCJjb3VudCIsImhlYWQiLCJwcm9maWxlIiwiZ2V0IiwicHVzaCIsImN1c3RvbWVyX2VtYWlsIiwiZW1haWwiLCJjdXN0b21lcl9uYW1lIiwiZnVsbF9uYW1lIiwidW5kZWZpbmVkIiwiY3VzdG9tZXJfcGhvbmUiLCJwaG9uZV9lMTY0IiwicGhvbmUiLCJsYXN0X21lc3NhZ2UiLCJsYXN0X21lc3NhZ2VfYXQiLCJjcmVhdGVkX2F0IiwidW5yZWFkX2NvdW50IiwiaW1nIiwic3JjIiwiYWx0IiwicmljaCIsIkRhdGUiLCJ0b0xvY2FsZURhdGVTdHJpbmciLCJtb250aCIsImRheSIsIlN0b3JlTGl2ZUNoYXQiLCJpc0FkbWluIiwicmVzZXJ2YXRpb25Db250ZXh0IiwibWVzc2FnZXMiLCJzZXRNZXNzYWdlcyIsImlucHV0Iiwic2V0SW5wdXQiLCJzZW5kaW5nIiwic2V0U2VuZGluZyIsImNoYXRJZCIsInNldENoYXRJZCIsInNlbGVjdGVkQ2hhdCIsInNldFNlbGVjdGVkQ2hhdCIsImNoYXRMaXN0S2V5Iiwic2V0Q2hhdExpc3RLZXkiLCJtZXNzYWdlc0VuZFJlZiIsInNjcm9sbFRvQm90dG9tIiwiY3VycmVudCIsInNjcm9sbEludG9WaWV3IiwiYmVoYXZpb3IiLCJjYW5jZWxsZWQiLCJpbml0Q2hhdCIsInVzZXIiLCJhdXRoIiwiZ2V0VXNlciIsImVycm9yIiwiZXhpc3RpbmciLCJjcmVhdGVkIiwiaW5zZXJ0Iiwic3RvcmVfaWQiLCJzaW5nbGUiLCJtc2dzIiwic2V0VGltZW91dCIsImxvYWRNZXNzYWdlcyIsImNoYW5uZWwiLCJvbiIsImV2ZW50Iiwic2NoZW1hIiwidGFibGUiLCJmaWx0ZXIiLCJtc2ciLCJuZXciLCJwcmV2Iiwic29tZSIsIm0iLCJzdWJzY3JpYmUiLCJyZW1vdmVDaGFubmVsIiwic2VuZE1lc3NhZ2UiLCJ0ZXh0IiwicmlzayIsImJsb2NrZWQiLCJ3YXJuaW5ncyIsIndhcm5pbmciLCJjaGF0X2lkIiwic2VuZGVyX2lkIiwic2VuZGVyX3R5cGUiLCJoYW5kbGVEZWxldGVDaGF0IiwiZGVsZXRlQ2hhdElkIiwiZGVsZXRlIiwic3VjY2VzcyIsImsiLCJjb25maXJtRGVsZXRlSW5DaGF0Iiwic2V0Q29uZmlybURlbGV0ZUluQ2hhdCIsInNob3dDaGF0TGlzdCIsImNoYXRUaXRsZSIsImNoYXRTdWJ0aXRsZSIsInkiLCJ0cmFuc2l0aW9uIiwic3RpZmZuZXNzIiwiZGFtcGluZyIsInJlc2VydmF0aW9uTnVtYmVyIiwiZGF0ZXMiLCJyb29tTGFiZWwiLCJyZXBsYWNlIiwicmljaFBheWxvYWQiLCJ0b0xvY2FsZVRpbWVTdHJpbmciLCJob3VyIiwibWludXRlIiwicmVmIiwic3RvcmUiLCJsYXRpdHVkZSIsImxvbmdpdHVkZSIsInVybCIsInByb21wdCIsInNlbmRRUiIsInNlbmRUcmFja2luZyIsIm9uQ2hhbmdlIiwib25LZXlEb3duIiwia2V5IiwicGxhY2Vob2xkZXIiLCJkaXNhYmxlZCJdLCJtYXBwaW5ncyI6Ijs7QUFBQTs7O0NBR0MsR0FDRCxTQUFTQSxRQUFRLEVBQUVDLFNBQVMsRUFBRUMsTUFBTSxFQUFFQyxXQUFXLFFBQVEsUUFBUTtBQUNqRSxTQUFTQyxNQUFNLEVBQUVDLGVBQWUsUUFBUSxnQkFBZ0I7QUFDeEQsU0FBU0MsQ0FBQyxFQUFFQyxJQUFJLEVBQUVDLGFBQWEsRUFBRUMsT0FBTyxFQUFFQyxNQUFNLEVBQUVDLFdBQVcsRUFBRUMsSUFBSSxFQUFFQyxNQUFNLEVBQUVDLE1BQU0sRUFBRUMsS0FBSyxRQUFRLGVBQWU7QUFDakgsU0FBU0MsUUFBUSxRQUFRLGlDQUFpQztBQUMxRCxTQUFTQyxTQUFTLFFBQVEsZUFBZTtBQUN6QyxTQUFTQyxLQUFLLFFBQVEsU0FBUztBQUMvQixTQUFTQyxtQkFBbUIsUUFBUSxrQkFBa0I7QUFDdEQsU0FBU0MscUJB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

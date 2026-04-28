@@ -1,0 +1,1592 @@
+import { createHotContext as __vite__createHotContext } from "/@vite/client";import.meta.hot = __vite__createHotContext("/src/components/admin/store/StoreAttendanceSection.tsx");import __vite__cjsImport0_react_jsxDevRuntime from "/node_modules/.vite/deps/react_jsx-dev-runtime.js?v=7fd9520c"; const _jsxDEV = __vite__cjsImport0_react_jsxDevRuntime["jsxDEV"]; const _Fragment = __vite__cjsImport0_react_jsxDevRuntime["Fragment"];
+var _s = $RefreshSig$();
+/**
+ * StoreAttendanceSection — 2026 Attendance & Leave with calendar view, leave balances, history, and bulk attendance.
+ */ import __vite__cjsImport1_react from "/node_modules/.vite/deps/react.js?v=7fd9520c"; const useState = __vite__cjsImport1_react["useState"];
+import { useQuery } from "/node_modules/.vite/deps/@tanstack_react-query.js?v=7fd9520c";
+import { supabase } from "/src/integrations/supabase/client.ts";
+import { CalendarCheck, Plus, CheckCircle2, XCircle, Clock, AlertTriangle, Palmtree, Thermometer, Baby, Calendar, BarChart3, TrendingUp, Filter, Download, History, Eye } from "/node_modules/.vite/deps/lucide-react.js?v=7fd9520c";
+import { Button } from "/src/components/ui/button.tsx";
+import { Card } from "/src/components/ui/card.tsx";
+import { Badge } from "/src/components/ui/badge.tsx";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "/src/components/ui/dialog.tsx";
+import { Input } from "/src/components/ui/input.tsx";
+import { Label } from "/src/components/ui/label.tsx";
+import { Textarea } from "/src/components/ui/textarea.tsx";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "/src/components/ui/select.tsx";
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "/src/components/ui/tabs.tsx";
+import { Progress } from "/src/components/ui/progress.tsx";
+import { cn } from "/src/lib/utils.ts";
+import { format, differenceInDays } from "/node_modules/.vite/deps/date-fns.js?v=7fd9520c";
+import { toast } from "/node_modules/.vite/deps/sonner.js?v=7fd9520c";
+const LEAVE_TYPES = [
+    {
+        value: "vacation",
+        label: "Vacation",
+        icon: Palmtree,
+        color: "text-emerald-500",
+        bg: "bg-emerald-500/10",
+        max: 20
+    },
+    {
+        value: "sick",
+        label: "Sick Leave",
+        icon: Thermometer,
+        color: "text-red-500",
+        bg: "bg-red-500/10",
+        max: 10
+    },
+    {
+        value: "personal",
+        label: "Personal",
+        icon: Calendar,
+        color: "text-blue-500",
+        bg: "bg-blue-500/10",
+        max: 5
+    },
+    {
+        value: "parental",
+        label: "Parental",
+        icon: Baby,
+        color: "text-purple-500",
+        bg: "bg-purple-500/10",
+        max: 60
+    },
+    {
+        value: "bereavement",
+        label: "Bereavement",
+        icon: Calendar,
+        color: "text-muted-foreground",
+        bg: "bg-muted",
+        max: 5
+    }
+];
+const ATTENDANCE_STATUS = {
+    present: {
+        label: "Present",
+        color: "bg-emerald-500/10 text-emerald-600",
+        icon: CheckCircle2
+    },
+    absent: {
+        label: "Absent",
+        color: "bg-red-500/10 text-red-600",
+        icon: XCircle
+    },
+    late: {
+        label: "Late",
+        color: "bg-amber-500/10 text-amber-600",
+        icon: Clock
+    },
+    "half-day": {
+        label: "Half Day",
+        color: "bg-blue-500/10 text-blue-600",
+        icon: AlertTriangle
+    },
+    remote: {
+        label: "Remote",
+        color: "bg-purple-500/10 text-purple-600",
+        icon: Eye
+    }
+};
+export default function StoreAttendanceSection({ storeId }) {
+    _s();
+    const [tab, setTab] = useState("attendance");
+    const [leaveRequests, setLeaveRequests] = useState([]);
+    const [attendanceRecords, setAttendanceRecords] = useState([]);
+    const [leaveDialog, setLeaveDialog] = useState(false);
+    const [leaveForm, setLeaveForm] = useState({
+        employeeId: "",
+        type: "vacation",
+        startDate: "",
+        endDate: "",
+        reason: ""
+    });
+    const [leaveFilter, setLeaveFilter] = useState("all");
+    const [bulkMode, setBulkMode] = useState(false);
+    const { data: employees = [] } = useQuery({
+        queryKey: [
+            "store-employees-attendance",
+            storeId
+        ],
+        queryFn: async ()=>{
+            const { data } = await supabase.from("store_employees").select("*").eq("store_id", storeId).eq("status", "active").order("name");
+            return data || [];
+        }
+    });
+    const submitLeave = ()=>{
+        if (!leaveForm.employeeId || !leaveForm.startDate) return;
+        const emp = employees.find((e)=>e.id === leaveForm.employeeId);
+        const end = leaveForm.endDate || leaveForm.startDate;
+        const days = differenceInDays(new Date(end), new Date(leaveForm.startDate)) + 1;
+        setLeaveRequests((prev)=>[
+                ...prev,
+                {
+                    id: crypto.randomUUID(),
+                    employeeId: leaveForm.employeeId,
+                    employeeName: emp?.name || "",
+                    type: leaveForm.type,
+                    startDate: leaveForm.startDate,
+                    endDate: end,
+                    reason: leaveForm.reason,
+                    status: "pending",
+                    createdAt: new Date(),
+                    days
+                }
+            ]);
+        setLeaveDialog(false);
+        setLeaveForm({
+            employeeId: "",
+            type: "vacation",
+            startDate: "",
+            endDate: "",
+            reason: ""
+        });
+        toast.success("Leave request submitted");
+    };
+    const updateLeaveStatus = (id, status)=>{
+        setLeaveRequests((prev)=>prev.map((r)=>r.id === id ? {
+                    ...r,
+                    status
+                } : r));
+        toast.success(`Leave ${status}`);
+    };
+    const markAttendance = (employeeId, status)=>{
+        const emp = employees.find((e)=>e.id === employeeId);
+        const today = format(new Date(), "yyyy-MM-dd");
+        setAttendanceRecords((prev)=>{
+            const filtered = prev.filter((r)=>!(r.employeeId === employeeId && r.date === today));
+            return [
+                ...filtered,
+                {
+                    employeeId,
+                    employeeName: emp?.name || "",
+                    date: today,
+                    status: status
+                }
+            ];
+        });
+    };
+    const markAllPresent = ()=>{
+        const today = format(new Date(), "yyyy-MM-dd");
+        const newRecords = employees.map((emp)=>({
+                employeeId: emp.id,
+                employeeName: emp.name,
+                date: today,
+                status: "present"
+            }));
+        setAttendanceRecords((prev)=>{
+            const filtered = prev.filter((r)=>r.date !== today);
+            return [
+                ...filtered,
+                ...newRecords
+            ];
+        });
+        toast.success("All employees marked present");
+    };
+    const todayStr = format(new Date(), "yyyy-MM-dd");
+    const pendingCount = leaveRequests.filter((r)=>r.status === "pending").length;
+    const presentToday = attendanceRecords.filter((r)=>r.date === todayStr && r.status === "present").length;
+    const lateToday = attendanceRecords.filter((r)=>r.date === todayStr && r.status === "late").length;
+    const absentToday = attendanceRecords.filter((r)=>r.date === todayStr && r.status === "absent").length;
+    const remoteToday = attendanceRecords.filter((r)=>r.date === todayStr && r.status === "remote").length;
+    const markedToday = attendanceRecords.filter((r)=>r.date === todayStr).length;
+    const attendanceRate = employees.length > 0 ? (presentToday + remoteToday + lateToday) / employees.length * 100 : 0;
+    const filteredLeaves = leaveFilter === "all" ? leaveRequests : leaveRequests.filter((r)=>r.status === leaveFilter);
+    // Leave balances per employee (mock)
+    const getLeaveBalance = (employeeId, type)=>{
+        const used = leaveRequests.filter((r)=>r.employeeId === employeeId && r.type === type && r.status === "approved").reduce((s, r)=>s + r.days, 0);
+        const max = LEAVE_TYPES.find((t)=>t.value === type)?.max || 0;
+        return {
+            used,
+            max,
+            remaining: max - used
+        };
+    };
+    return /*#__PURE__*/ _jsxDEV("div", {
+        className: "space-y-5",
+        children: [
+            /*#__PURE__*/ _jsxDEV("div", {
+                className: "grid grid-cols-2 lg:grid-cols-5 gap-3",
+                children: [
+                    {
+                        icon: CheckCircle2,
+                        label: "Present",
+                        value: presentToday,
+                        color: "text-emerald-500",
+                        bg: "bg-emerald-500/10"
+                    },
+                    {
+                        icon: Clock,
+                        label: "Late",
+                        value: lateToday,
+                        color: "text-amber-500",
+                        bg: "bg-amber-500/10"
+                    },
+                    {
+                        icon: XCircle,
+                        label: "Absent",
+                        value: absentToday,
+                        color: "text-red-500",
+                        bg: "bg-red-500/10"
+                    },
+                    {
+                        icon: Eye,
+                        label: "Remote",
+                        value: remoteToday,
+                        color: "text-purple-500",
+                        bg: "bg-purple-500/10"
+                    },
+                    {
+                        icon: CalendarCheck,
+                        label: "Pending Leaves",
+                        value: pendingCount,
+                        color: "text-sky-500",
+                        bg: "bg-sky-500/10"
+                    }
+                ].map((s, i)=>/*#__PURE__*/ _jsxDEV(Card, {
+                        className: "p-3.5",
+                        children: /*#__PURE__*/ _jsxDEV("div", {
+                            className: "flex items-center gap-2.5",
+                            children: [
+                                /*#__PURE__*/ _jsxDEV("div", {
+                                    className: cn("w-9 h-9 rounded-xl flex items-center justify-center shrink-0", s.bg),
+                                    children: /*#__PURE__*/ _jsxDEV(s.icon, {
+                                        className: cn("w-4.5 h-4.5", s.color)
+                                    }, void 0, false, {
+                                        fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/StoreAttendanceSection.tsx",
+                                        lineNumber: 147,
+                                        columnNumber: 105
+                                    }, this)
+                                }, void 0, false, {
+                                    fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/StoreAttendanceSection.tsx",
+                                    lineNumber: 147,
+                                    columnNumber: 15
+                                }, this),
+                                /*#__PURE__*/ _jsxDEV("div", {
+                                    children: [
+                                        /*#__PURE__*/ _jsxDEV("p", {
+                                            className: "text-[10px] text-muted-foreground font-medium",
+                                            children: s.label
+                                        }, void 0, false, {
+                                            fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/StoreAttendanceSection.tsx",
+                                            lineNumber: 148,
+                                            columnNumber: 20
+                                        }, this),
+                                        /*#__PURE__*/ _jsxDEV("p", {
+                                            className: "text-base font-bold",
+                                            children: s.value
+                                        }, void 0, false, {
+                                            fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/StoreAttendanceSection.tsx",
+                                            lineNumber: 148,
+                                            columnNumber: 94
+                                        }, this)
+                                    ]
+                                }, void 0, true, {
+                                    fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/StoreAttendanceSection.tsx",
+                                    lineNumber: 148,
+                                    columnNumber: 15
+                                }, this)
+                            ]
+                        }, void 0, true, {
+                            fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/StoreAttendanceSection.tsx",
+                            lineNumber: 146,
+                            columnNumber: 13
+                        }, this)
+                    }, i, false, {
+                        fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/StoreAttendanceSection.tsx",
+                        lineNumber: 145,
+                        columnNumber: 11
+                    }, this))
+            }, void 0, false, {
+                fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/StoreAttendanceSection.tsx",
+                lineNumber: 137,
+                columnNumber: 7
+            }, this),
+            /*#__PURE__*/ _jsxDEV(Card, {
+                className: "p-4",
+                children: [
+                    /*#__PURE__*/ _jsxDEV("div", {
+                        className: "flex items-center justify-between mb-2",
+                        children: [
+                            /*#__PURE__*/ _jsxDEV("div", {
+                                className: "flex items-center gap-2",
+                                children: [
+                                    /*#__PURE__*/ _jsxDEV(BarChart3, {
+                                        className: "w-4 h-4 text-muted-foreground"
+                                    }, void 0, false, {
+                                        fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/StoreAttendanceSection.tsx",
+                                        lineNumber: 157,
+                                        columnNumber: 52
+                                    }, this),
+                                    /*#__PURE__*/ _jsxDEV("p", {
+                                        className: "text-xs font-semibold",
+                                        children: "Today's Attendance Rate"
+                                    }, void 0, false, {
+                                        fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/StoreAttendanceSection.tsx",
+                                        lineNumber: 157,
+                                        columnNumber: 107
+                                    }, this)
+                                ]
+                            }, void 0, true, {
+                                fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/StoreAttendanceSection.tsx",
+                                lineNumber: 157,
+                                columnNumber: 11
+                            }, this),
+                            /*#__PURE__*/ _jsxDEV("p", {
+                                className: "text-sm font-bold",
+                                children: [
+                                    attendanceRate.toFixed(0),
+                                    "%"
+                                ]
+                            }, void 0, true, {
+                                fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/StoreAttendanceSection.tsx",
+                                lineNumber: 158,
+                                columnNumber: 11
+                            }, this)
+                        ]
+                    }, void 0, true, {
+                        fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/StoreAttendanceSection.tsx",
+                        lineNumber: 156,
+                        columnNumber: 9
+                    }, this),
+                    /*#__PURE__*/ _jsxDEV(Progress, {
+                        value: attendanceRate,
+                        className: "h-2.5"
+                    }, void 0, false, {
+                        fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/StoreAttendanceSection.tsx",
+                        lineNumber: 160,
+                        columnNumber: 9
+                    }, this),
+                    /*#__PURE__*/ _jsxDEV("p", {
+                        className: "text-[10px] text-muted-foreground mt-1",
+                        children: [
+                            markedToday,
+                            " of ",
+                            employees.length,
+                            " marked · ",
+                            format(new Date(), "EEEE, MMMM d, yyyy")
+                        ]
+                    }, void 0, true, {
+                        fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/StoreAttendanceSection.tsx",
+                        lineNumber: 161,
+                        columnNumber: 9
+                    }, this)
+                ]
+            }, void 0, true, {
+                fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/StoreAttendanceSection.tsx",
+                lineNumber: 155,
+                columnNumber: 7
+            }, this),
+            /*#__PURE__*/ _jsxDEV(Tabs, {
+                value: tab,
+                onValueChange: setTab,
+                children: [
+                    /*#__PURE__*/ _jsxDEV(TabsList, {
+                        className: "w-full justify-start",
+                        children: [
+                            /*#__PURE__*/ _jsxDEV(TabsTrigger, {
+                                value: "attendance",
+                                className: "gap-1.5 text-xs",
+                                children: [
+                                    /*#__PURE__*/ _jsxDEV(CalendarCheck, {
+                                        className: "w-3.5 h-3.5"
+                                    }, void 0, false, {
+                                        fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/StoreAttendanceSection.tsx",
+                                        lineNumber: 166,
+                                        columnNumber: 71
+                                    }, this),
+                                    " Daily Attendance"
+                                ]
+                            }, void 0, true, {
+                                fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/StoreAttendanceSection.tsx",
+                                lineNumber: 166,
+                                columnNumber: 11
+                            }, this),
+                            /*#__PURE__*/ _jsxDEV(TabsTrigger, {
+                                value: "leave",
+                                className: "gap-1.5 text-xs",
+                                children: [
+                                    /*#__PURE__*/ _jsxDEV(Palmtree, {
+                                        className: "w-3.5 h-3.5"
+                                    }, void 0, false, {
+                                        fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/StoreAttendanceSection.tsx",
+                                        lineNumber: 168,
+                                        columnNumber: 13
+                                    }, this),
+                                    " Leave Requests",
+                                    pendingCount > 0 && /*#__PURE__*/ _jsxDEV(Badge, {
+                                        className: "ml-1 text-[9px] h-4 px-1.5 bg-amber-500 text-white",
+                                        children: pendingCount
+                                    }, void 0, false, {
+                                        fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/StoreAttendanceSection.tsx",
+                                        lineNumber: 169,
+                                        columnNumber: 34
+                                    }, this)
+                                ]
+                            }, void 0, true, {
+                                fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/StoreAttendanceSection.tsx",
+                                lineNumber: 167,
+                                columnNumber: 11
+                            }, this),
+                            /*#__PURE__*/ _jsxDEV(TabsTrigger, {
+                                value: "balances",
+                                className: "gap-1.5 text-xs",
+                                children: [
+                                    /*#__PURE__*/ _jsxDEV(TrendingUp, {
+                                        className: "w-3.5 h-3.5"
+                                    }, void 0, false, {
+                                        fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/StoreAttendanceSection.tsx",
+                                        lineNumber: 171,
+                                        columnNumber: 69
+                                    }, this),
+                                    " Leave Balances"
+                                ]
+                            }, void 0, true, {
+                                fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/StoreAttendanceSection.tsx",
+                                lineNumber: 171,
+                                columnNumber: 11
+                            }, this),
+                            /*#__PURE__*/ _jsxDEV(TabsTrigger, {
+                                value: "history",
+                                className: "gap-1.5 text-xs",
+                                children: [
+                                    /*#__PURE__*/ _jsxDEV(History, {
+                                        className: "w-3.5 h-3.5"
+                                    }, void 0, false, {
+                                        fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/StoreAttendanceSection.tsx",
+                                        lineNumber: 172,
+                                        columnNumber: 68
+                                    }, this),
+                                    " History"
+                                ]
+                            }, void 0, true, {
+                                fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/StoreAttendanceSection.tsx",
+                                lineNumber: 172,
+                                columnNumber: 11
+                            }, this)
+                        ]
+                    }, void 0, true, {
+                        fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/StoreAttendanceSection.tsx",
+                        lineNumber: 165,
+                        columnNumber: 9
+                    }, this),
+                    /*#__PURE__*/ _jsxDEV(TabsContent, {
+                        value: "attendance",
+                        className: "mt-4 space-y-3",
+                        children: [
+                            /*#__PURE__*/ _jsxDEV("div", {
+                                className: "flex items-center justify-between",
+                                children: [
+                                    /*#__PURE__*/ _jsxDEV("h3", {
+                                        className: "font-semibold text-sm",
+                                        children: format(new Date(), "EEEE, MMMM d")
+                                    }, void 0, false, {
+                                        fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/StoreAttendanceSection.tsx",
+                                        lineNumber: 178,
+                                        columnNumber: 13
+                                    }, this),
+                                    /*#__PURE__*/ _jsxDEV(Button, {
+                                        variant: "outline",
+                                        size: "sm",
+                                        className: "gap-1.5 text-xs h-8",
+                                        onClick: markAllPresent,
+                                        children: [
+                                            /*#__PURE__*/ _jsxDEV(CheckCircle2, {
+                                                className: "w-3 h-3"
+                                            }, void 0, false, {
+                                                fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/StoreAttendanceSection.tsx",
+                                                lineNumber: 180,
+                                                columnNumber: 15
+                                            }, this),
+                                            " Mark All Present"
+                                        ]
+                                    }, void 0, true, {
+                                        fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/StoreAttendanceSection.tsx",
+                                        lineNumber: 179,
+                                        columnNumber: 13
+                                    }, this)
+                                ]
+                            }, void 0, true, {
+                                fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/StoreAttendanceSection.tsx",
+                                lineNumber: 177,
+                                columnNumber: 11
+                            }, this),
+                            /*#__PURE__*/ _jsxDEV(Card, {
+                                className: "overflow-hidden",
+                                children: employees.length === 0 ? /*#__PURE__*/ _jsxDEV("div", {
+                                    className: "text-center py-12 text-muted-foreground text-sm",
+                                    children: "No employees yet."
+                                }, void 0, false, {
+                                    fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/StoreAttendanceSection.tsx",
+                                    lineNumber: 185,
+                                    columnNumber: 15
+                                }, this) : /*#__PURE__*/ _jsxDEV("div", {
+                                    className: "divide-y",
+                                    children: employees.map((emp)=>{
+                                        const record = attendanceRecords.find((r)=>r.employeeId === emp.id && r.date === todayStr);
+                                        return /*#__PURE__*/ _jsxDEV("div", {
+                                            className: "flex items-center justify-between px-4 py-3 hover:bg-muted/10 transition-colors",
+                                            children: [
+                                                /*#__PURE__*/ _jsxDEV("div", {
+                                                    className: "flex items-center gap-3",
+                                                    children: [
+                                                        /*#__PURE__*/ _jsxDEV("div", {
+                                                            className: "w-9 h-9 rounded-xl bg-primary/10 flex items-center justify-center text-xs font-bold text-primary",
+                                                            children: emp.name?.charAt(0)?.toUpperCase()
+                                                        }, void 0, false, {
+                                                            fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/StoreAttendanceSection.tsx",
+                                                            lineNumber: 193,
+                                                            columnNumber: 25
+                                                        }, this),
+                                                        /*#__PURE__*/ _jsxDEV("div", {
+                                                            children: [
+                                                                /*#__PURE__*/ _jsxDEV("p", {
+                                                                    className: "font-medium text-[13px]",
+                                                                    children: emp.name
+                                                                }, void 0, false, {
+                                                                    fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/StoreAttendanceSection.tsx",
+                                                                    lineNumber: 195,
+                                                                    columnNumber: 27
+                                                                }, this),
+                                                                /*#__PURE__*/ _jsxDEV("p", {
+                                                                    className: "text-[11px] text-muted-foreground capitalize",
+                                                                    children: emp.role
+                                                                }, void 0, false, {
+                                                                    fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/StoreAttendanceSection.tsx",
+                                                                    lineNumber: 196,
+                                                                    columnNumber: 27
+                                                                }, this)
+                                                            ]
+                                                        }, void 0, true, {
+                                                            fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/StoreAttendanceSection.tsx",
+                                                            lineNumber: 194,
+                                                            columnNumber: 25
+                                                        }, this)
+                                                    ]
+                                                }, void 0, true, {
+                                                    fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/StoreAttendanceSection.tsx",
+                                                    lineNumber: 192,
+                                                    columnNumber: 23
+                                                }, this),
+                                                /*#__PURE__*/ _jsxDEV("div", {
+                                                    className: "flex items-center gap-1",
+                                                    children: Object.entries(ATTENDANCE_STATUS).map(([key, s])=>{
+                                                        const isActive = record?.status === key;
+                                                        return /*#__PURE__*/ _jsxDEV("button", {
+                                                            onClick: ()=>markAttendance(emp.id, key),
+                                                            className: cn("px-2.5 py-1.5 rounded-lg text-[10px] font-medium border transition-all", isActive ? s.color + " border-current shadow-sm" : "bg-muted/20 text-muted-foreground border-transparent hover:bg-muted"),
+                                                            children: s.label
+                                                        }, key, false, {
+                                                            fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/StoreAttendanceSection.tsx",
+                                                            lineNumber: 203,
+                                                            columnNumber: 29
+                                                        }, this);
+                                                    })
+                                                }, void 0, false, {
+                                                    fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/StoreAttendanceSection.tsx",
+                                                    lineNumber: 199,
+                                                    columnNumber: 23
+                                                }, this)
+                                            ]
+                                        }, emp.id, true, {
+                                            fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/StoreAttendanceSection.tsx",
+                                            lineNumber: 191,
+                                            columnNumber: 21
+                                        }, this);
+                                    })
+                                }, void 0, false, {
+                                    fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/StoreAttendanceSection.tsx",
+                                    lineNumber: 187,
+                                    columnNumber: 15
+                                }, this)
+                            }, void 0, false, {
+                                fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/StoreAttendanceSection.tsx",
+                                lineNumber: 183,
+                                columnNumber: 11
+                            }, this)
+                        ]
+                    }, void 0, true, {
+                        fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/StoreAttendanceSection.tsx",
+                        lineNumber: 176,
+                        columnNumber: 9
+                    }, this),
+                    /*#__PURE__*/ _jsxDEV(TabsContent, {
+                        value: "leave",
+                        className: "mt-4 space-y-4",
+                        children: [
+                            /*#__PURE__*/ _jsxDEV("div", {
+                                className: "flex items-center justify-between gap-3",
+                                children: [
+                                    /*#__PURE__*/ _jsxDEV(Select, {
+                                        value: leaveFilter,
+                                        onValueChange: setLeaveFilter,
+                                        children: [
+                                            /*#__PURE__*/ _jsxDEV(SelectTrigger, {
+                                                className: "w-36 h-8",
+                                                children: [
+                                                    /*#__PURE__*/ _jsxDEV(Filter, {
+                                                        className: "w-3 h-3 mr-1.5 text-muted-foreground"
+                                                    }, void 0, false, {
+                                                        fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/StoreAttendanceSection.tsx",
+                                                        lineNumber: 225,
+                                                        columnNumber: 51
+                                                    }, this),
+                                                    /*#__PURE__*/ _jsxDEV(SelectValue, {}, void 0, false, {
+                                                        fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/StoreAttendanceSection.tsx",
+                                                        lineNumber: 225,
+                                                        columnNumber: 110
+                                                    }, this)
+                                                ]
+                                            }, void 0, true, {
+                                                fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/StoreAttendanceSection.tsx",
+                                                lineNumber: 225,
+                                                columnNumber: 15
+                                            }, this),
+                                            /*#__PURE__*/ _jsxDEV(SelectContent, {
+                                                children: [
+                                                    /*#__PURE__*/ _jsxDEV(SelectItem, {
+                                                        value: "all",
+                                                        children: "All Requests"
+                                                    }, void 0, false, {
+                                                        fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/StoreAttendanceSection.tsx",
+                                                        lineNumber: 227,
+                                                        columnNumber: 17
+                                                    }, this),
+                                                    /*#__PURE__*/ _jsxDEV(SelectItem, {
+                                                        value: "pending",
+                                                        children: "Pending"
+                                                    }, void 0, false, {
+                                                        fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/StoreAttendanceSection.tsx",
+                                                        lineNumber: 228,
+                                                        columnNumber: 17
+                                                    }, this),
+                                                    /*#__PURE__*/ _jsxDEV(SelectItem, {
+                                                        value: "approved",
+                                                        children: "Approved"
+                                                    }, void 0, false, {
+                                                        fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/StoreAttendanceSection.tsx",
+                                                        lineNumber: 229,
+                                                        columnNumber: 17
+                                                    }, this),
+                                                    /*#__PURE__*/ _jsxDEV(SelectItem, {
+                                                        value: "rejected",
+                                                        children: "Rejected"
+                                                    }, void 0, false, {
+                                                        fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/StoreAttendanceSection.tsx",
+                                                        lineNumber: 230,
+                                                        columnNumber: 17
+                                                    }, this)
+                                                ]
+                                            }, void 0, true, {
+                                                fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/StoreAttendanceSection.tsx",
+                                                lineNumber: 226,
+                                                columnNumber: 15
+                                            }, this)
+                                        ]
+                                    }, void 0, true, {
+                                        fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/StoreAttendanceSection.tsx",
+                                        lineNumber: 224,
+                                        columnNumber: 13
+                                    }, this),
+                                    /*#__PURE__*/ _jsxDEV(Button, {
+                                        size: "sm",
+                                        className: "gap-1.5 h-8",
+                                        onClick: ()=>setLeaveDialog(true),
+                                        children: [
+                                            /*#__PURE__*/ _jsxDEV(Plus, {
+                                                className: "w-3.5 h-3.5"
+                                            }, void 0, false, {
+                                                fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/StoreAttendanceSection.tsx",
+                                                lineNumber: 233,
+                                                columnNumber: 92
+                                            }, this),
+                                            " New Request"
+                                        ]
+                                    }, void 0, true, {
+                                        fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/StoreAttendanceSection.tsx",
+                                        lineNumber: 233,
+                                        columnNumber: 13
+                                    }, this)
+                                ]
+                            }, void 0, true, {
+                                fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/StoreAttendanceSection.tsx",
+                                lineNumber: 223,
+                                columnNumber: 11
+                            }, this),
+                            filteredLeaves.length === 0 ? /*#__PURE__*/ _jsxDEV(Card, {
+                                className: "p-10 text-center",
+                                children: [
+                                    /*#__PURE__*/ _jsxDEV(Palmtree, {
+                                        className: "w-10 h-10 text-muted-foreground/30 mx-auto mb-3"
+                                    }, void 0, false, {
+                                        fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/StoreAttendanceSection.tsx",
+                                        lineNumber: 237,
+                                        columnNumber: 48
+                                    }, this),
+                                    /*#__PURE__*/ _jsxDEV("p", {
+                                        className: "text-sm text-muted-foreground",
+                                        children: [
+                                            "No leave requests",
+                                            leaveFilter !== "all" ? ` with status "${leaveFilter}"` : "",
+                                            "."
+                                        ]
+                                    }, void 0, true, {
+                                        fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/StoreAttendanceSection.tsx",
+                                        lineNumber: 237,
+                                        columnNumber: 120
+                                    }, this)
+                                ]
+                            }, void 0, true, {
+                                fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/StoreAttendanceSection.tsx",
+                                lineNumber: 237,
+                                columnNumber: 13
+                            }, this) : /*#__PURE__*/ _jsxDEV("div", {
+                                className: "space-y-2",
+                                children: filteredLeaves.sort((a, b)=>b.createdAt.getTime() - a.createdAt.getTime()).map((req)=>{
+                                    const leaveType = LEAVE_TYPES.find((t)=>t.value === req.type);
+                                    const Icon = leaveType?.icon || Calendar;
+                                    return /*#__PURE__*/ _jsxDEV(Card, {
+                                        className: "p-4 hover:shadow-sm transition-all",
+                                        children: /*#__PURE__*/ _jsxDEV("div", {
+                                            className: "flex items-start justify-between gap-3",
+                                            children: [
+                                                /*#__PURE__*/ _jsxDEV("div", {
+                                                    className: "flex items-start gap-3 flex-1 min-w-0",
+                                                    children: [
+                                                        /*#__PURE__*/ _jsxDEV("div", {
+                                                            className: cn("w-10 h-10 rounded-xl flex items-center justify-center shrink-0", leaveType?.bg || "bg-muted"),
+                                                            children: /*#__PURE__*/ _jsxDEV(Icon, {
+                                                                className: cn("w-5 h-5", leaveType?.color || "text-muted-foreground")
+                                                            }, void 0, false, {
+                                                                fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/StoreAttendanceSection.tsx",
+                                                                lineNumber: 248,
+                                                                columnNumber: 27
+                                                            }, this)
+                                                        }, void 0, false, {
+                                                            fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/StoreAttendanceSection.tsx",
+                                                            lineNumber: 247,
+                                                            columnNumber: 25
+                                                        }, this),
+                                                        /*#__PURE__*/ _jsxDEV("div", {
+                                                            className: "min-w-0",
+                                                            children: [
+                                                                /*#__PURE__*/ _jsxDEV("div", {
+                                                                    className: "flex items-center gap-2 flex-wrap",
+                                                                    children: [
+                                                                        /*#__PURE__*/ _jsxDEV("p", {
+                                                                            className: "font-semibold text-[13px]",
+                                                                            children: req.employeeName
+                                                                        }, void 0, false, {
+                                                                            fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/StoreAttendanceSection.tsx",
+                                                                            lineNumber: 252,
+                                                                            columnNumber: 29
+                                                                        }, this),
+                                                                        /*#__PURE__*/ _jsxDEV(Badge, {
+                                                                            variant: "secondary",
+                                                                            className: "text-[10px] capitalize",
+                                                                            children: req.type
+                                                                        }, void 0, false, {
+                                                                            fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/StoreAttendanceSection.tsx",
+                                                                            lineNumber: 253,
+                                                                            columnNumber: 29
+                                                                        }, this),
+                                                                        /*#__PURE__*/ _jsxDEV(Badge, {
+                                                                            variant: "outline",
+                                                                            className: "text-[10px]",
+                                                                            children: [
+                                                                                req.days,
+                                                                                " day",
+                                                                                req.days > 1 ? "s" : ""
+                                                                            ]
+                                                                        }, void 0, true, {
+                                                                            fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/StoreAttendanceSection.tsx",
+                                                                            lineNumber: 254,
+                                                                            columnNumber: 29
+                                                                        }, this)
+                                                                    ]
+                                                                }, void 0, true, {
+                                                                    fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/StoreAttendanceSection.tsx",
+                                                                    lineNumber: 251,
+                                                                    columnNumber: 27
+                                                                }, this),
+                                                                /*#__PURE__*/ _jsxDEV("p", {
+                                                                    className: "text-[11px] text-muted-foreground mt-0.5",
+                                                                    children: [
+                                                                        req.startDate,
+                                                                        req.endDate !== req.startDate ? ` → ${req.endDate}` : ""
+                                                                    ]
+                                                                }, void 0, true, {
+                                                                    fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/StoreAttendanceSection.tsx",
+                                                                    lineNumber: 256,
+                                                                    columnNumber: 27
+                                                                }, this),
+                                                                req.reason && /*#__PURE__*/ _jsxDEV("p", {
+                                                                    className: "text-[11px] text-muted-foreground mt-0.5 italic truncate max-w-xs",
+                                                                    children: [
+                                                                        '"',
+                                                                        req.reason,
+                                                                        '"'
+                                                                    ]
+                                                                }, void 0, true, {
+                                                                    fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/StoreAttendanceSection.tsx",
+                                                                    lineNumber: 259,
+                                                                    columnNumber: 42
+                                                                }, this),
+                                                                /*#__PURE__*/ _jsxDEV("p", {
+                                                                    className: "text-[10px] text-muted-foreground mt-1",
+                                                                    children: [
+                                                                        "Submitted ",
+                                                                        format(req.createdAt, "MMM d, h:mm a")
+                                                                    ]
+                                                                }, void 0, true, {
+                                                                    fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/StoreAttendanceSection.tsx",
+                                                                    lineNumber: 260,
+                                                                    columnNumber: 27
+                                                                }, this)
+                                                            ]
+                                                        }, void 0, true, {
+                                                            fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/StoreAttendanceSection.tsx",
+                                                            lineNumber: 250,
+                                                            columnNumber: 25
+                                                        }, this)
+                                                    ]
+                                                }, void 0, true, {
+                                                    fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/StoreAttendanceSection.tsx",
+                                                    lineNumber: 246,
+                                                    columnNumber: 23
+                                                }, this),
+                                                /*#__PURE__*/ _jsxDEV("div", {
+                                                    className: "flex items-center gap-1.5 shrink-0",
+                                                    children: req.status === "pending" ? /*#__PURE__*/ _jsxDEV(_Fragment, {
+                                                        children: [
+                                                            /*#__PURE__*/ _jsxDEV(Button, {
+                                                                variant: "outline",
+                                                                size: "sm",
+                                                                className: "h-7 text-[11px] text-red-500 border-red-200",
+                                                                onClick: ()=>updateLeaveStatus(req.id, "rejected"),
+                                                                children: "Reject"
+                                                            }, void 0, false, {
+                                                                fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/StoreAttendanceSection.tsx",
+                                                                lineNumber: 266,
+                                                                columnNumber: 29
+                                                            }, this),
+                                                            /*#__PURE__*/ _jsxDEV(Button, {
+                                                                size: "sm",
+                                                                className: "h-7 text-[11px]",
+                                                                onClick: ()=>updateLeaveStatus(req.id, "approved"),
+                                                                children: "Approve"
+                                                            }, void 0, false, {
+                                                                fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/StoreAttendanceSection.tsx",
+                                                                lineNumber: 267,
+                                                                columnNumber: 29
+                                                            }, this)
+                                                        ]
+                                                    }, void 0, true) : /*#__PURE__*/ _jsxDEV(Badge, {
+                                                        className: cn("text-[10px]", req.status === "approved" ? "bg-emerald-500/10 text-emerald-600" : "bg-red-500/10 text-red-600"),
+                                                        children: req.status === "approved" ? "✓ Approved" : "✗ Rejected"
+                                                    }, void 0, false, {
+                                                        fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/StoreAttendanceSection.tsx",
+                                                        lineNumber: 270,
+                                                        columnNumber: 27
+                                                    }, this)
+                                                }, void 0, false, {
+                                                    fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/StoreAttendanceSection.tsx",
+                                                    lineNumber: 263,
+                                                    columnNumber: 23
+                                                }, this)
+                                            ]
+                                        }, void 0, true, {
+                                            fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/StoreAttendanceSection.tsx",
+                                            lineNumber: 245,
+                                            columnNumber: 21
+                                        }, this)
+                                    }, req.id, false, {
+                                        fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/StoreAttendanceSection.tsx",
+                                        lineNumber: 244,
+                                        columnNumber: 19
+                                    }, this);
+                                })
+                            }, void 0, false, {
+                                fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/StoreAttendanceSection.tsx",
+                                lineNumber: 239,
+                                columnNumber: 13
+                            }, this)
+                        ]
+                    }, void 0, true, {
+                        fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/StoreAttendanceSection.tsx",
+                        lineNumber: 222,
+                        columnNumber: 9
+                    }, this),
+                    /*#__PURE__*/ _jsxDEV(TabsContent, {
+                        value: "balances",
+                        className: "mt-4",
+                        children: /*#__PURE__*/ _jsxDEV(Card, {
+                            className: "overflow-hidden",
+                            children: [
+                                /*#__PURE__*/ _jsxDEV("div", {
+                                    className: "px-5 py-3 border-b",
+                                    children: /*#__PURE__*/ _jsxDEV("h3", {
+                                        className: "font-semibold text-sm",
+                                        children: [
+                                            "Leave Balances — ",
+                                            new Date().getFullYear()
+                                        ]
+                                    }, void 0, true, {
+                                        fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/StoreAttendanceSection.tsx",
+                                        lineNumber: 286,
+                                        columnNumber: 49
+                                    }, this)
+                                }, void 0, false, {
+                                    fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/StoreAttendanceSection.tsx",
+                                    lineNumber: 286,
+                                    columnNumber: 13
+                                }, this),
+                                employees.length === 0 ? /*#__PURE__*/ _jsxDEV("div", {
+                                    className: "text-center py-12 text-muted-foreground text-sm",
+                                    children: "No employees."
+                                }, void 0, false, {
+                                    fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/StoreAttendanceSection.tsx",
+                                    lineNumber: 288,
+                                    columnNumber: 15
+                                }, this) : /*#__PURE__*/ _jsxDEV("div", {
+                                    className: "overflow-x-auto",
+                                    children: /*#__PURE__*/ _jsxDEV("table", {
+                                        className: "w-full text-sm",
+                                        children: [
+                                            /*#__PURE__*/ _jsxDEV("thead", {
+                                                children: /*#__PURE__*/ _jsxDEV("tr", {
+                                                    className: "border-b bg-muted/40",
+                                                    children: [
+                                                        /*#__PURE__*/ _jsxDEV("th", {
+                                                            className: "text-left px-4 py-2.5 text-xs font-semibold text-muted-foreground",
+                                                            children: "Employee"
+                                                        }, void 0, false, {
+                                                            fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/StoreAttendanceSection.tsx",
+                                                            lineNumber: 294,
+                                                            columnNumber: 23
+                                                        }, this),
+                                                        LEAVE_TYPES.slice(0, 4).map((t)=>/*#__PURE__*/ _jsxDEV("th", {
+                                                                className: "text-center px-3 py-2.5 text-xs font-semibold text-muted-foreground",
+                                                                children: t.label
+                                                            }, t.value, false, {
+                                                                fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/StoreAttendanceSection.tsx",
+                                                                lineNumber: 296,
+                                                                columnNumber: 25
+                                                            }, this)),
+                                                        /*#__PURE__*/ _jsxDEV("th", {
+                                                            className: "text-center px-3 py-2.5 text-xs font-semibold text-muted-foreground",
+                                                            children: "Total Used"
+                                                        }, void 0, false, {
+                                                            fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/StoreAttendanceSection.tsx",
+                                                            lineNumber: 298,
+                                                            columnNumber: 23
+                                                        }, this)
+                                                    ]
+                                                }, void 0, true, {
+                                                    fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/StoreAttendanceSection.tsx",
+                                                    lineNumber: 293,
+                                                    columnNumber: 21
+                                                }, this)
+                                            }, void 0, false, {
+                                                fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/StoreAttendanceSection.tsx",
+                                                lineNumber: 292,
+                                                columnNumber: 19
+                                            }, this),
+                                            /*#__PURE__*/ _jsxDEV("tbody", {
+                                                children: employees.map((emp)=>{
+                                                    const totalUsed = LEAVE_TYPES.slice(0, 4).reduce((s, t)=>s + getLeaveBalance(emp.id, t.value).used, 0);
+                                                    return /*#__PURE__*/ _jsxDEV("tr", {
+                                                        className: "border-b last:border-0 hover:bg-muted/10",
+                                                        children: [
+                                                            /*#__PURE__*/ _jsxDEV("td", {
+                                                                className: "px-4 py-3",
+                                                                children: /*#__PURE__*/ _jsxDEV("div", {
+                                                                    className: "flex items-center gap-2",
+                                                                    children: [
+                                                                        /*#__PURE__*/ _jsxDEV("div", {
+                                                                            className: "w-7 h-7 rounded-full bg-primary/10 flex items-center justify-center text-[10px] font-bold text-primary",
+                                                                            children: emp.name.charAt(0)
+                                                                        }, void 0, false, {
+                                                                            fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/StoreAttendanceSection.tsx",
+                                                                            lineNumber: 307,
+                                                                            columnNumber: 70
+                                                                        }, this),
+                                                                        /*#__PURE__*/ _jsxDEV("span", {
+                                                                            className: "font-medium text-[13px]",
+                                                                            children: emp.name
+                                                                        }, void 0, false, {
+                                                                            fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/StoreAttendanceSection.tsx",
+                                                                            lineNumber: 307,
+                                                                            columnNumber: 216
+                                                                        }, this)
+                                                                    ]
+                                                                }, void 0, true, {
+                                                                    fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/StoreAttendanceSection.tsx",
+                                                                    lineNumber: 307,
+                                                                    columnNumber: 29
+                                                                }, this)
+                                                            }, void 0, false, {
+                                                                fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/StoreAttendanceSection.tsx",
+                                                                lineNumber: 306,
+                                                                columnNumber: 27
+                                                            }, this),
+                                                            LEAVE_TYPES.slice(0, 4).map((t)=>{
+                                                                const bal = getLeaveBalance(emp.id, t.value);
+                                                                const pct = bal.used / bal.max * 100;
+                                                                return /*#__PURE__*/ _jsxDEV("td", {
+                                                                    className: "px-3 py-3 text-center",
+                                                                    children: /*#__PURE__*/ _jsxDEV("div", {
+                                                                        className: "flex flex-col items-center gap-1",
+                                                                        children: [
+                                                                            /*#__PURE__*/ _jsxDEV("span", {
+                                                                                className: "text-[12px] font-semibold",
+                                                                                children: [
+                                                                                    bal.remaining,
+                                                                                    "/",
+                                                                                    bal.max
+                                                                                ]
+                                                                            }, void 0, true, {
+                                                                                fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/StoreAttendanceSection.tsx",
+                                                                                lineNumber: 315,
+                                                                                columnNumber: 35
+                                                                            }, this),
+                                                                            /*#__PURE__*/ _jsxDEV(Progress, {
+                                                                                value: pct,
+                                                                                className: "h-1.5 w-16"
+                                                                            }, void 0, false, {
+                                                                                fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/StoreAttendanceSection.tsx",
+                                                                                lineNumber: 316,
+                                                                                columnNumber: 35
+                                                                            }, this)
+                                                                        ]
+                                                                    }, void 0, true, {
+                                                                        fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/StoreAttendanceSection.tsx",
+                                                                        lineNumber: 314,
+                                                                        columnNumber: 33
+                                                                    }, this)
+                                                                }, t.value, false, {
+                                                                    fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/StoreAttendanceSection.tsx",
+                                                                    lineNumber: 313,
+                                                                    columnNumber: 31
+                                                                }, this);
+                                                            }),
+                                                            /*#__PURE__*/ _jsxDEV("td", {
+                                                                className: "px-3 py-3 text-center",
+                                                                children: /*#__PURE__*/ _jsxDEV("span", {
+                                                                    className: "text-[12px] font-bold",
+                                                                    children: [
+                                                                        totalUsed,
+                                                                        " days"
+                                                                    ]
+                                                                }, void 0, true, {
+                                                                    fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/StoreAttendanceSection.tsx",
+                                                                    lineNumber: 321,
+                                                                    columnNumber: 65
+                                                                }, this)
+                                                            }, void 0, false, {
+                                                                fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/StoreAttendanceSection.tsx",
+                                                                lineNumber: 321,
+                                                                columnNumber: 27
+                                                            }, this)
+                                                        ]
+                                                    }, emp.id, true, {
+                                                        fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/StoreAttendanceSection.tsx",
+                                                        lineNumber: 305,
+                                                        columnNumber: 25
+                                                    }, this);
+                                                })
+                                            }, void 0, false, {
+                                                fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/StoreAttendanceSection.tsx",
+                                                lineNumber: 301,
+                                                columnNumber: 19
+                                            }, this)
+                                        ]
+                                    }, void 0, true, {
+                                        fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/StoreAttendanceSection.tsx",
+                                        lineNumber: 291,
+                                        columnNumber: 17
+                                    }, this)
+                                }, void 0, false, {
+                                    fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/StoreAttendanceSection.tsx",
+                                    lineNumber: 290,
+                                    columnNumber: 15
+                                }, this)
+                            ]
+                        }, void 0, true, {
+                            fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/StoreAttendanceSection.tsx",
+                            lineNumber: 285,
+                            columnNumber: 11
+                        }, this)
+                    }, void 0, false, {
+                        fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/StoreAttendanceSection.tsx",
+                        lineNumber: 284,
+                        columnNumber: 9
+                    }, this),
+                    /*#__PURE__*/ _jsxDEV(TabsContent, {
+                        value: "history",
+                        className: "mt-4",
+                        children: /*#__PURE__*/ _jsxDEV(Card, {
+                            className: "p-5",
+                            children: [
+                                /*#__PURE__*/ _jsxDEV("div", {
+                                    className: "flex items-center justify-between mb-4",
+                                    children: [
+                                        /*#__PURE__*/ _jsxDEV("h3", {
+                                            className: "font-semibold text-sm flex items-center gap-2",
+                                            children: [
+                                                /*#__PURE__*/ _jsxDEV(History, {
+                                                    className: "w-4 h-4 text-muted-foreground"
+                                                }, void 0, false, {
+                                                    fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/StoreAttendanceSection.tsx",
+                                                    lineNumber: 336,
+                                                    columnNumber: 77
+                                                }, this),
+                                                " Recent Attendance History"
+                                            ]
+                                        }, void 0, true, {
+                                            fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/StoreAttendanceSection.tsx",
+                                            lineNumber: 336,
+                                            columnNumber: 15
+                                        }, this),
+                                        /*#__PURE__*/ _jsxDEV(Button, {
+                                            variant: "ghost",
+                                            size: "sm",
+                                            className: "gap-1.5 text-xs",
+                                            children: [
+                                                /*#__PURE__*/ _jsxDEV(Download, {
+                                                    className: "w-3.5 h-3.5"
+                                                }, void 0, false, {
+                                                    fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/StoreAttendanceSection.tsx",
+                                                    lineNumber: 337,
+                                                    columnNumber: 77
+                                                }, this),
+                                                " Export"
+                                            ]
+                                        }, void 0, true, {
+                                            fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/StoreAttendanceSection.tsx",
+                                            lineNumber: 337,
+                                            columnNumber: 15
+                                        }, this)
+                                    ]
+                                }, void 0, true, {
+                                    fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/StoreAttendanceSection.tsx",
+                                    lineNumber: 335,
+                                    columnNumber: 13
+                                }, this),
+                                attendanceRecords.length === 0 ? /*#__PURE__*/ _jsxDEV("div", {
+                                    className: "text-center py-10 text-muted-foreground text-sm",
+                                    children: "No attendance records yet. Mark attendance above to see history."
+                                }, void 0, false, {
+                                    fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/StoreAttendanceSection.tsx",
+                                    lineNumber: 340,
+                                    columnNumber: 15
+                                }, this) : /*#__PURE__*/ _jsxDEV("div", {
+                                    className: "space-y-2",
+                                    children: [
+                                        ...attendanceRecords
+                                    ].reverse().slice(0, 20).map((rec, i)=>{
+                                        const statusInfo = ATTENDANCE_STATUS[rec.status];
+                                        const StatusIcon = statusInfo?.icon || CheckCircle2;
+                                        return /*#__PURE__*/ _jsxDEV("div", {
+                                            className: "flex items-center justify-between p-2.5 rounded-lg bg-muted/20",
+                                            children: [
+                                                /*#__PURE__*/ _jsxDEV("div", {
+                                                    className: "flex items-center gap-2.5",
+                                                    children: [
+                                                        /*#__PURE__*/ _jsxDEV(StatusIcon, {
+                                                            className: cn("w-4 h-4", statusInfo?.color.split(" ")[1])
+                                                        }, void 0, false, {
+                                                            fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/StoreAttendanceSection.tsx",
+                                                            lineNumber: 349,
+                                                            columnNumber: 25
+                                                        }, this),
+                                                        /*#__PURE__*/ _jsxDEV("span", {
+                                                            className: "text-[13px] font-medium",
+                                                            children: rec.employeeName
+                                                        }, void 0, false, {
+                                                            fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/StoreAttendanceSection.tsx",
+                                                            lineNumber: 350,
+                                                            columnNumber: 25
+                                                        }, this)
+                                                    ]
+                                                }, void 0, true, {
+                                                    fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/StoreAttendanceSection.tsx",
+                                                    lineNumber: 348,
+                                                    columnNumber: 23
+                                                }, this),
+                                                /*#__PURE__*/ _jsxDEV("div", {
+                                                    className: "flex items-center gap-2",
+                                                    children: [
+                                                        /*#__PURE__*/ _jsxDEV("span", {
+                                                            className: "text-[11px] text-muted-foreground",
+                                                            children: rec.date
+                                                        }, void 0, false, {
+                                                            fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/StoreAttendanceSection.tsx",
+                                                            lineNumber: 353,
+                                                            columnNumber: 25
+                                                        }, this),
+                                                        /*#__PURE__*/ _jsxDEV(Badge, {
+                                                            className: cn("text-[10px]", statusInfo?.color),
+                                                            children: statusInfo?.label
+                                                        }, void 0, false, {
+                                                            fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/StoreAttendanceSection.tsx",
+                                                            lineNumber: 354,
+                                                            columnNumber: 25
+                                                        }, this)
+                                                    ]
+                                                }, void 0, true, {
+                                                    fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/StoreAttendanceSection.tsx",
+                                                    lineNumber: 352,
+                                                    columnNumber: 23
+                                                }, this)
+                                            ]
+                                        }, i, true, {
+                                            fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/StoreAttendanceSection.tsx",
+                                            lineNumber: 347,
+                                            columnNumber: 21
+                                        }, this);
+                                    })
+                                }, void 0, false, {
+                                    fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/StoreAttendanceSection.tsx",
+                                    lineNumber: 342,
+                                    columnNumber: 15
+                                }, this)
+                            ]
+                        }, void 0, true, {
+                            fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/StoreAttendanceSection.tsx",
+                            lineNumber: 334,
+                            columnNumber: 11
+                        }, this)
+                    }, void 0, false, {
+                        fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/StoreAttendanceSection.tsx",
+                        lineNumber: 333,
+                        columnNumber: 9
+                    }, this)
+                ]
+            }, void 0, true, {
+                fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/StoreAttendanceSection.tsx",
+                lineNumber: 164,
+                columnNumber: 7
+            }, this),
+            /*#__PURE__*/ _jsxDEV(Dialog, {
+                open: leaveDialog,
+                onOpenChange: setLeaveDialog,
+                children: /*#__PURE__*/ _jsxDEV(DialogContent, {
+                    className: "max-w-md",
+                    children: [
+                        /*#__PURE__*/ _jsxDEV(DialogHeader, {
+                            children: /*#__PURE__*/ _jsxDEV(DialogTitle, {
+                                children: "New Leave Request"
+                            }, void 0, false, {
+                                fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/StoreAttendanceSection.tsx",
+                                lineNumber: 368,
+                                columnNumber: 25
+                            }, this)
+                        }, void 0, false, {
+                            fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/StoreAttendanceSection.tsx",
+                            lineNumber: 368,
+                            columnNumber: 11
+                        }, this),
+                        /*#__PURE__*/ _jsxDEV("div", {
+                            className: "space-y-4 py-3",
+                            children: [
+                                /*#__PURE__*/ _jsxDEV("div", {
+                                    className: "space-y-2",
+                                    children: [
+                                        /*#__PURE__*/ _jsxDEV(Label, {
+                                            children: "Employee"
+                                        }, void 0, false, {
+                                            fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/StoreAttendanceSection.tsx",
+                                            lineNumber: 370,
+                                            columnNumber: 40
+                                        }, this),
+                                        /*#__PURE__*/ _jsxDEV(Select, {
+                                            value: leaveForm.employeeId,
+                                            onValueChange: (v)=>setLeaveForm((f)=>({
+                                                        ...f,
+                                                        employeeId: v
+                                                    })),
+                                            children: [
+                                                /*#__PURE__*/ _jsxDEV(SelectTrigger, {
+                                                    children: /*#__PURE__*/ _jsxDEV(SelectValue, {
+                                                        placeholder: "Select employee"
+                                                    }, void 0, false, {
+                                                        fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/StoreAttendanceSection.tsx",
+                                                        lineNumber: 370,
+                                                        columnNumber: 181
+                                                    }, this)
+                                                }, void 0, false, {
+                                                    fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/StoreAttendanceSection.tsx",
+                                                    lineNumber: 370,
+                                                    columnNumber: 166
+                                                }, this),
+                                                /*#__PURE__*/ _jsxDEV(SelectContent, {
+                                                    children: employees.map((e)=>/*#__PURE__*/ _jsxDEV(SelectItem, {
+                                                            value: e.id,
+                                                            children: e.name
+                                                        }, e.id, false, {
+                                                            fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/StoreAttendanceSection.tsx",
+                                                            lineNumber: 370,
+                                                            columnNumber: 284
+                                                        }, this))
+                                                }, void 0, false, {
+                                                    fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/StoreAttendanceSection.tsx",
+                                                    lineNumber: 370,
+                                                    columnNumber: 242
+                                                }, this)
+                                            ]
+                                        }, void 0, true, {
+                                            fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/StoreAttendanceSection.tsx",
+                                            lineNumber: 370,
+                                            columnNumber: 63
+                                        }, this)
+                                    ]
+                                }, void 0, true, {
+                                    fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/StoreAttendanceSection.tsx",
+                                    lineNumber: 370,
+                                    columnNumber: 13
+                                }, this),
+                                /*#__PURE__*/ _jsxDEV("div", {
+                                    className: "space-y-2",
+                                    children: [
+                                        /*#__PURE__*/ _jsxDEV(Label, {
+                                            children: "Leave Type"
+                                        }, void 0, false, {
+                                            fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/StoreAttendanceSection.tsx",
+                                            lineNumber: 372,
+                                            columnNumber: 15
+                                        }, this),
+                                        /*#__PURE__*/ _jsxDEV("div", {
+                                            className: "grid grid-cols-2 gap-2",
+                                            children: LEAVE_TYPES.map((t)=>{
+                                                const Icon = t.icon;
+                                                return /*#__PURE__*/ _jsxDEV("button", {
+                                                    onClick: ()=>setLeaveForm((f)=>({
+                                                                ...f,
+                                                                type: t.value
+                                                            })),
+                                                    className: cn("flex items-center gap-2 p-2.5 rounded-xl border text-left text-[12px] font-medium transition-all", leaveForm.type === t.value ? t.bg + " " + t.color + " border-current shadow-sm" : "bg-muted/20 text-muted-foreground border-transparent hover:bg-muted"),
+                                                    children: [
+                                                        /*#__PURE__*/ _jsxDEV(Icon, {
+                                                            className: "w-4 h-4 shrink-0"
+                                                        }, void 0, false, {
+                                                            fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/StoreAttendanceSection.tsx",
+                                                            lineNumber: 380,
+                                                            columnNumber: 23
+                                                        }, this),
+                                                        t.label
+                                                    ]
+                                                }, t.value, true, {
+                                                    fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/StoreAttendanceSection.tsx",
+                                                    lineNumber: 377,
+                                                    columnNumber: 21
+                                                }, this);
+                                            })
+                                        }, void 0, false, {
+                                            fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/StoreAttendanceSection.tsx",
+                                            lineNumber: 373,
+                                            columnNumber: 15
+                                        }, this)
+                                    ]
+                                }, void 0, true, {
+                                    fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/StoreAttendanceSection.tsx",
+                                    lineNumber: 371,
+                                    columnNumber: 13
+                                }, this),
+                                /*#__PURE__*/ _jsxDEV("div", {
+                                    className: "grid grid-cols-2 gap-3",
+                                    children: [
+                                        /*#__PURE__*/ _jsxDEV("div", {
+                                            className: "space-y-2",
+                                            children: [
+                                                /*#__PURE__*/ _jsxDEV(Label, {
+                                                    children: "Start Date"
+                                                }, void 0, false, {
+                                                    fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/StoreAttendanceSection.tsx",
+                                                    lineNumber: 387,
+                                                    columnNumber: 42
+                                                }, this),
+                                                /*#__PURE__*/ _jsxDEV(Input, {
+                                                    type: "date",
+                                                    value: leaveForm.startDate,
+                                                    onChange: (e)=>setLeaveForm((f)=>({
+                                                                ...f,
+                                                                startDate: e.target.value
+                                                            }))
+                                                }, void 0, false, {
+                                                    fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/StoreAttendanceSection.tsx",
+                                                    lineNumber: 387,
+                                                    columnNumber: 67
+                                                }, this)
+                                            ]
+                                        }, void 0, true, {
+                                            fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/StoreAttendanceSection.tsx",
+                                            lineNumber: 387,
+                                            columnNumber: 15
+                                        }, this),
+                                        /*#__PURE__*/ _jsxDEV("div", {
+                                            className: "space-y-2",
+                                            children: [
+                                                /*#__PURE__*/ _jsxDEV(Label, {
+                                                    children: "End Date"
+                                                }, void 0, false, {
+                                                    fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/StoreAttendanceSection.tsx",
+                                                    lineNumber: 388,
+                                                    columnNumber: 42
+                                                }, this),
+                                                /*#__PURE__*/ _jsxDEV(Input, {
+                                                    type: "date",
+                                                    value: leaveForm.endDate,
+                                                    onChange: (e)=>setLeaveForm((f)=>({
+                                                                ...f,
+                                                                endDate: e.target.value
+                                                            }))
+                                                }, void 0, false, {
+                                                    fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/StoreAttendanceSection.tsx",
+                                                    lineNumber: 388,
+                                                    columnNumber: 65
+                                                }, this)
+                                            ]
+                                        }, void 0, true, {
+                                            fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/StoreAttendanceSection.tsx",
+                                            lineNumber: 388,
+                                            columnNumber: 15
+                                        }, this)
+                                    ]
+                                }, void 0, true, {
+                                    fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/StoreAttendanceSection.tsx",
+                                    lineNumber: 386,
+                                    columnNumber: 13
+                                }, this),
+                                leaveForm.startDate && /*#__PURE__*/ _jsxDEV("div", {
+                                    className: "p-3 rounded-lg bg-muted/30 text-xs text-muted-foreground",
+                                    children: [
+                                        "Duration: ",
+                                        /*#__PURE__*/ _jsxDEV("span", {
+                                            className: "font-semibold text-foreground",
+                                            children: [
+                                                differenceInDays(new Date(leaveForm.endDate || leaveForm.startDate), new Date(leaveForm.startDate)) + 1,
+                                                " day(s)"
+                                            ]
+                                        }, void 0, true, {
+                                            fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/StoreAttendanceSection.tsx",
+                                            lineNumber: 392,
+                                            columnNumber: 27
+                                        }, this)
+                                    ]
+                                }, void 0, true, {
+                                    fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/StoreAttendanceSection.tsx",
+                                    lineNumber: 391,
+                                    columnNumber: 15
+                                }, this),
+                                /*#__PURE__*/ _jsxDEV("div", {
+                                    className: "space-y-2",
+                                    children: [
+                                        /*#__PURE__*/ _jsxDEV(Label, {
+                                            children: "Reason (optional)"
+                                        }, void 0, false, {
+                                            fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/StoreAttendanceSection.tsx",
+                                            lineNumber: 395,
+                                            columnNumber: 40
+                                        }, this),
+                                        /*#__PURE__*/ _jsxDEV(Textarea, {
+                                            value: leaveForm.reason,
+                                            onChange: (e)=>setLeaveForm((f)=>({
+                                                        ...f,
+                                                        reason: e.target.value
+                                                    })),
+                                            rows: 2,
+                                            placeholder: "Brief reason..."
+                                        }, void 0, false, {
+                                            fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/StoreAttendanceSection.tsx",
+                                            lineNumber: 395,
+                                            columnNumber: 72
+                                        }, this)
+                                    ]
+                                }, void 0, true, {
+                                    fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/StoreAttendanceSection.tsx",
+                                    lineNumber: 395,
+                                    columnNumber: 13
+                                }, this)
+                            ]
+                        }, void 0, true, {
+                            fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/StoreAttendanceSection.tsx",
+                            lineNumber: 369,
+                            columnNumber: 11
+                        }, this),
+                        /*#__PURE__*/ _jsxDEV(DialogFooter, {
+                            children: [
+                                /*#__PURE__*/ _jsxDEV(Button, {
+                                    variant: "outline",
+                                    onClick: ()=>setLeaveDialog(false),
+                                    children: "Cancel"
+                                }, void 0, false, {
+                                    fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/StoreAttendanceSection.tsx",
+                                    lineNumber: 398,
+                                    columnNumber: 13
+                                }, this),
+                                /*#__PURE__*/ _jsxDEV(Button, {
+                                    onClick: submitLeave,
+                                    disabled: !leaveForm.employeeId || !leaveForm.startDate,
+                                    children: "Submit Request"
+                                }, void 0, false, {
+                                    fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/StoreAttendanceSection.tsx",
+                                    lineNumber: 399,
+                                    columnNumber: 13
+                                }, this)
+                            ]
+                        }, void 0, true, {
+                            fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/StoreAttendanceSection.tsx",
+                            lineNumber: 397,
+                            columnNumber: 11
+                        }, this)
+                    ]
+                }, void 0, true, {
+                    fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/StoreAttendanceSection.tsx",
+                    lineNumber: 367,
+                    columnNumber: 9
+                }, this)
+            }, void 0, false, {
+                fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/StoreAttendanceSection.tsx",
+                lineNumber: 366,
+                columnNumber: 7
+            }, this)
+        ]
+    }, void 0, true, {
+        fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/StoreAttendanceSection.tsx",
+        lineNumber: 135,
+        columnNumber: 5
+    }, this);
+}
+_s(StoreAttendanceSection, "Z2iaHKs09kx1l6u9VtwGUSeg+k8=", false, function() {
+    return [
+        useQuery
+    ];
+});
+_c = StoreAttendanceSection;
+var _c;
+$RefreshReg$(_c, "StoreAttendanceSection");
+
+
+import * as RefreshRuntime from "/@react-refresh";
+const inWebWorker = typeof WorkerGlobalScope !== 'undefined' && self instanceof WorkerGlobalScope;
+if (import.meta.hot && !inWebWorker) {
+  if (!window.$RefreshReg$) {
+    throw new Error(
+      "@vitejs/plugin-react-swc can't detect preamble. Something is wrong."
+    );
+  }
+
+  RefreshRuntime.__hmr_import(import.meta.url).then((currentExports) => {
+    RefreshRuntime.registerExportsForReactRefresh("C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/StoreAttendanceSection.tsx", currentExports);
+    import.meta.hot.accept((nextExports) => {
+      if (!nextExports) return;
+      const invalidateMessage = RefreshRuntime.validateRefreshBoundaryAndEnqueueUpdate("C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/StoreAttendanceSection.tsx", currentExports, nextExports);
+      if (invalidateMessage) import.meta.hot.invalidate(invalidateMessage);
+    });
+  });
+}
+function $RefreshReg$(type, id) { return RefreshRuntime.register(type, "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/StoreAttendanceSection.tsx" + ' ' + id) }
+function $RefreshSig$() { return RefreshRuntime.createSignatureFunctionForTransform(); }
+
+//# sourceMappingURL=data:application/json;base64,eyJ2ZXJzaW9uIjozLCJzb3VyY2VzIjpbIlN0b3JlQXR0ZW5kYW5jZVNlY3Rpb24udHN4Il0sInNvdXJjZXNDb250ZW50IjpbIi8qKlxyXG4gKiBTdG9yZUF0dGVuZGFuY2VTZWN0aW9uIOKAlCAyMDI2IEF0dGVuZGFuY2UgJiBMZWF2ZSB3aXRoIGNhbGVuZGFyIHZpZXcsIGxlYXZlIGJhbGFuY2VzLCBoaXN0b3J5LCBhbmQgYnVsayBhdHRlbmRhbmNlLlxyXG4gKi9cclxuaW1wb3J0IHsgdXNlU3RhdGUsIHVzZU1lbW8gfSBmcm9tIFwicmVhY3RcIjtcclxuaW1wb3J0IHsgdXNlUXVlcnkgfSBmcm9tIFwiQHRhbnN0YWNrL3JlYWN0LXF1ZXJ5XCI7XHJcbmltcG9ydCB7IHN1cGFiYXNlIH0gZnJvbSBcIkAvaW50ZWdyYXRpb25zL3N1cGFiYXNlL2NsaWVudFwiO1xyXG5pbXBvcnQge1xyXG4gIENhbGVuZGFyQ2hlY2ssIFBsdXMsIENoZWNrQ2lyY2xlMiwgWENpcmNsZSwgQ2xvY2ssIEFsZXJ0VHJpYW5nbGUsXHJcbiAgUGFsbXRyZWUsIFRoZXJtb21ldGVyLCBCYWJ5LCBDYWxlbmRhciwgQmFyQ2hhcnQzLCBUcmVuZGluZ1VwLFxyXG4gIEZpbHRlciwgRG93bmxvYWQsIEhpc3RvcnksIEV5ZVxyXG59IGZyb20gXCJsdWNpZGUtcmVhY3RcIjtcclxuaW1wb3J0IHsgQnV0dG9uIH0gZnJvbSBcIkAvY29tcG9uZW50cy91aS9idXR0b25cIjtcclxuaW1wb3J0IHsgQ2FyZCB9IGZyb20gXCJAL2NvbXBvbmVudHMvdWkvY2FyZFwiO1xyXG5pbXBvcnQgeyBCYWRnZSB9IGZyb20gXCJAL2NvbXBvbmVudHMvdWkvYmFkZ2VcIjtcclxuaW1wb3J0IHsgRGlhbG9nLCBEaWFsb2dDb250ZW50LCBEaWFsb2dIZWFkZXIsIERpYWxvZ1RpdGxlLCBEaWFsb2dGb290ZXIgfSBmcm9tIFwiQC9jb21wb25lbnRzL3VpL2RpYWxvZ1wiO1xyXG5pbXBvcnQgeyBJbnB1dCB9IGZyb20gXCJAL2NvbXBvbmVudHMvdWkvaW5wdXRcIjtcclxuaW1wb3J0IHsgTGFiZWwgfSBmcm9tIFwiQC9jb21wb25lbnRzL3VpL2xhYmVsXCI7XHJcbmltcG9ydCB7IFRleHRhcmVhIH0gZnJvbSBcIkAvY29tcG9uZW50cy91aS90ZXh0YXJlYVwiO1xyXG5pbXBvcnQgeyBTZWxlY3QsIFNlbGVjdENvbnRlbnQsIFNlbGVjdEl0ZW0sIFNlbGVjdFRyaWdnZXIsIFNlbGVjdFZhbHVlIH0gZnJvbSBcIkAvY29tcG9uZW50cy91aS9zZWxlY3RcIjtcclxuaW1wb3J0IHsgVGFicywgVGFic0xpc3QsIFRhYnNUcmlnZ2VyLCBUYWJzQ29udGVudCB9IGZyb20gXCJAL2NvbXBvbmVudHMvdWkvdGFic1wiO1xyXG5pbXBvcnQgeyBQcm9ncmVzcyB9IGZyb20gXCJAL2NvbXBvbmVudHMvdWkvcHJvZ3Jlc3NcIjtcclxuaW1wb3J0IHsgY24gfSBmcm9tIFwiQC9saWIvdXRpbHNcIjtcclxuaW1wb3J0IHsgZm9ybWF0LCBzdWJEYXlzLCBkaWZmZXJlbmNlSW5EYXlzIH0gZnJvbSBcImRhdGUtZm5zXCI7XHJcbmltcG9ydCB7IHRvYXN0IH0gZnJvbSBcInNvbm5lclwiO1xyXG5cclxuaW50ZXJmYWNlIFByb3BzIHsgc3RvcmVJZDogc3RyaW5nOyB9XHJcblxyXG50eXBlIExlYXZlUmVxdWVzdCA9IHtcclxuICBpZDogc3RyaW5nOyBlbXBsb3llZUlkOiBzdHJpbmc7IGVtcGxveWVlTmFtZTogc3RyaW5nO1xyXG4gIHR5cGU6IHN0cmluZzsgc3RhcnREYXRlOiBzdHJpbmc7IGVuZERhdGU6IHN0cmluZztcclxuICByZWFzb246IHN0cmluZzsgc3RhdHVzOiBcInBlbmRpbmdcIiB8IFwiYXBwcm92ZWRcIiB8IFwicmVqZWN0ZWRcIjtcclxuICBjcmVhdGVkQXQ6IERhdGU7IGRheXM6IG51bWJlcjtcclxufTtcclxuXHJcbnR5cGUgQXR0ZW5kYW5jZVJlY29yZCA9IHtcclxuICBlbXBsb3llZUlkOiBzdHJpbmc7IGVtcGxveWVlTmFtZTogc3RyaW5nO1xyXG4gIGRhdGU6IHN0cmluZzsgc3RhdHVzOiBcInByZXNlbnRcIiB8IFwiYWJzZW50XCIgfCBcImxhdGVcIiB8IFwiaGFsZi1kYXlcIiB8IFwicmVtb3RlXCI7XHJcbn07XHJcblxyXG5jb25zdCBMRUFWRV9UWVBFUyA9IFtcclxuICB7IHZhbHVlOiBcInZhY2F0aW9uXCIsIGxhYmVsOiBcIlZhY2F0aW9uXCIsIGljb246IFBhbG10cmVlLCBjb2xvcjogXCJ0ZXh0LWVtZXJhbGQtNTAwXCIsIGJnOiBcImJnLWVtZXJhbGQtNTAwLzEwXCIsIG1heDogMjAgfSxcclxuICB7IHZhbHVlOiBcInNpY2tcIiwgbGFiZWw6IFwiU2ljayBMZWF2ZVwiLCBpY29uOiBUaGVybW9tZXRlciwgY29sb3I6IFwidGV4dC1yZWQtNTAwXCIsIGJnOiBcImJnLXJlZC01MDAvMTBcIiwgbWF4OiAxMCB9LFxyXG4gIHsgdmFsdWU6IFwicGVyc29uYWxcIiwgbGFiZWw6IFwiUGVyc29uYWxcIiwgaWNvbjogQ2FsZW5kYXIsIGNvbG9yOiBcInRleHQtYmx1ZS01MDBcIiwgYmc6IFwiYmctYmx1ZS01MDAvMTBcIiwgbWF4OiA1IH0sXHJcbiAgeyB2YWx1ZTogXCJwYXJlbnRhbFwiLCBsYWJlbDogXCJQYXJlbnRhbFwiLCBpY29uOiBCYWJ5LCBjb2xvcjogXCJ0ZXh0LXB1cnBsZS01MDBcIiwgYmc6IFwiYmctcHVycGxlLTUwMC8xMFwiLCBtYXg6IDYwIH0sXHJcbiAgeyB2YWx1ZTogXCJiZXJlYXZlbWVudFwiLCBsYWJlbDogXCJCZXJlYXZlbWVudFwiLCBpY29uOiBDYWxlbmRhciwgY29sb3I6IFwidGV4dC1tdXRlZC1mb3JlZ3JvdW5kXCIsIGJnOiBcImJnLW11dGVkXCIsIG1heDogNSB9LFxyXG5dO1xyXG5cclxuY29uc3QgQVRURU5EQU5DRV9TVEFUVVM6IFJlY29yZDxzdHJpbmcsIHsgbGFiZWw6IHN0cmluZzsgY29sb3I6IHN0cmluZzsgaWNvbjogdHlwZW9mIENoZWNrQ2lyY2xlMiB9PiA9IHtcclxuICBwcmVzZW50OiB7IGxhYmVsOiBcIlByZXNlbnRcIiwgY29sb3I6IFwiYmctZW1lcmFsZC01MDAvMTAgdGV4dC1lbWVyYWxkLTYwMFwiLCBpY29uOiBDaGVja0NpcmNsZTIgfSxcclxuICBhYnNlbnQ6IHsgbGFiZWw6IFwiQWJzZW50XCIsIGNvbG9yOiBcImJnLXJlZC01MDAvMTAgdGV4dC1yZWQtNjAwXCIsIGljb246IFhDaXJjbGUgfSxcclxuICBsYXRlOiB7IGxhYmVsOiBcIkxhdGVcIiwgY29sb3I6IFwiYmctYW1iZXItNTAwLzEwIHRleHQtYW1iZXItNjAwXCIsIGljb246IENsb2NrIH0sXHJcbiAgXCJoYWxmLWRheVwiOiB7IGxhYmVsOiBcIkhhbGYgRGF5XCIsIGNvbG9yOiBcImJnLWJsdWUtNTAwLzEwIHRleHQtYmx1ZS02MDBcIiwgaWNvbjogQWxlcnRUcmlhbmdsZSB9LFxyXG4gIHJlbW90ZTogeyBsYWJlbDogXCJSZW1vdGVcIiwgY29sb3I6IFwiYmctcHVycGxlLTUwMC8xMCB0ZXh0LXB1cnBsZS02MDBcIiwgaWNvbjogRXllIH0sXHJcbn07XHJcblxyXG5leHBvcnQgZGVmYXVsdCBmdW5jdGlvbiBTdG9yZUF0dGVuZGFuY2VTZWN0aW9uKHsgc3RvcmVJZCB9OiBQcm9wcykge1xyXG4gIGNvbnN0IFt0YWIsIHNldFRhYl0gPSB1c2VTdGF0ZShcImF0dGVuZGFuY2VcIik7XHJcbiAgY29uc3QgW2xlYXZlUmVxdWVzdHMsIHNldExlYXZlUmVxdWVzdHNdID0gdXNlU3RhdGU8TGVhdmVSZXF1ZXN0W10+KFtdKTtcclxuICBjb25zdCBbYXR0ZW5kYW5jZVJlY29yZHMsIHNldEF0dGVuZGFuY2VSZWNvcmRzXSA9IHVzZVN0YXRlPEF0dGVuZGFuY2VSZWNvcmRbXT4oW10pO1xyXG4gIGNvbnN0IFtsZWF2ZURpYWxvZywgc2V0TGVhdmVEaWFsb2ddID0gdXNlU3RhdGUoZmFsc2UpO1xyXG4gIGNvbnN0IFtsZWF2ZUZvcm0sIHNldExlYXZlRm9ybV0gPSB1c2VTdGF0ZSh7IGVtcGxveWVlSWQ6IFwiXCIsIHR5cGU6IFwidmFjYXRpb25cIiwgc3RhcnREYXRlOiBcIlwiLCBlbmREYXRlOiBcIlwiLCByZWFzb246IFwiXCIgfSk7XHJcbiAgY29uc3QgW2xlYXZlRmlsdGVyLCBzZXRMZWF2ZUZpbHRlcl0gPSB1c2VTdGF0ZShcImFsbFwiKTtcclxuICBjb25zdCBbYnVsa01vZGUsIHNldEJ1bGtNb2RlXSA9IHVzZVN0YXRlKGZhbHNlKTtcclxuXHJcbiAgY29uc3QgeyBkYXRhOiBlbXBsb3llZXMgPSBbXSB9ID0gdXNlUXVlcnkoe1xyXG4gICAgcXVlcnlLZXk6IFtcInN0b3JlLWVtcGxveWVlcy1hdHRlbmRhbmNlXCIsIHN0b3JlSWRdLFxyXG4gICAgcXVlcnlGbjogYXN5bmMgKCkgPT4ge1xyXG4gICAgICBjb25zdCB7IGRhdGEgfSA9IGF3YWl0IHN1cGFiYXNlLmZyb20oXCJzdG9yZV9lbXBsb3llZXNcIikuc2VsZWN0KFwiKlwiKS5lcShcInN0b3JlX2lkXCIsIHN0b3JlSWQpLmVxKFwic3RhdHVzXCIsIFwiYWN0aXZlXCIpLm9yZGVyKFwibmFtZVwiKTtcclxuICAgICAgcmV0dXJuIChkYXRhIHx8IFtdKSBhcyBhbnlbXTtcclxuICAgIH0sXHJcbiAgfSk7XHJcblxyXG4gIGNvbnN0IHN1Ym1pdExlYXZlID0gKCkgPT4ge1xyXG4gICAgaWYgKCFsZWF2ZUZvcm0uZW1wbG95ZWVJZCB8fCAhbGVhdmVGb3JtLnN0YXJ0RGF0ZSkgcmV0dXJuO1xyXG4gICAgY29uc3QgZW1wID0gZW1wbG95ZWVzLmZpbmQoKGU6IGFueSkgPT4gZS5pZCA9PT0gbGVhdmVGb3JtLmVtcGxveWVlSWQpO1xyXG4gICAgY29uc3QgZW5kID0gbGVhdmVGb3JtLmVuZERhdGUgfHwgbGVhdmVGb3JtLnN0YXJ0RGF0ZTtcclxuICAgIGNvbnN0IGRheXMgPSBkaWZmZXJlbmNlSW5EYXlzKG5ldyBEYXRlKGVuZCksIG5ldyBEYXRlKGxlYXZlRm9ybS5zdGFydERhdGUpKSArIDE7XHJcbiAgICBzZXRMZWF2ZVJlcXVlc3RzKHByZXYgPT4gWy4uLnByZXYsIHtcclxuICAgICAgaWQ6IGNyeXB0by5yYW5kb21VVUlEKCksIGVtcGxveWVlSWQ6IGxlYXZlRm9ybS5lbXBsb3llZUlkLFxyXG4gICAgICBlbXBsb3llZU5hbWU6IGVtcD8ubmFtZSB8fCBcIlwiLCB0eXBlOiBsZWF2ZUZvcm0udHlwZSxcclxuICAgICAgc3RhcnREYXRlOiBsZWF2ZUZvcm0uc3RhcnREYXRlLCBlbmREYXRlOiBlbmQsXHJcbiAgICAgIHJlYXNvbjogbGVhdmVGb3JtLnJlYXNvbiwgc3RhdHVzOiBcInBlbmRpbmdcIixcclxuICAgICAgY3JlYXRlZEF0OiBuZXcgRGF0ZSgpLCBkYXlzLFxyXG4gICAgfV0pO1xyXG4gICAgc2V0TGVhdmVEaWFsb2coZmFsc2UpO1xyXG4gICAgc2V0TGVhdmVGb3JtKHsgZW1wbG95ZWVJZDogXCJcIiwgdHlwZTogXCJ2YWNhdGlvblwiLCBzdGFydERhdGU6IFwiXCIsIGVuZERhdGU6IFwiXCIsIHJlYXNvbjogXCJcIiB9KTtcclxuICAgIHRvYXN0LnN1Y2Nlc3MoXCJMZWF2ZSByZXF1ZXN0IHN1Ym1pdHRlZFwiKTtcclxuICB9O1xyXG5cclxuICBjb25zdCB1cGRhdGVMZWF2ZVN0YXR1cyA9IChpZDogc3RyaW5nLCBzdGF0dXM6IFwiYXBwcm92ZWRcIiB8IFwicmVqZWN0ZWRcIikgPT4ge1xyXG4gICAgc2V0TGVhdmVSZXF1ZXN0cyhwcmV2ID0+IHByZXYubWFwKHIgPT4gci5pZCA9PT0gaWQgPyB7IC4uLnIsIHN0YXR1cyB9IDogcikpO1xyXG4gICAgdG9hc3Quc3VjY2VzcyhgTGVhdmUgJHtzdGF0dXN9YCk7XHJcbiAgfTtcclxuXHJcbiAgY29uc3QgbWFya0F0dGVuZGFuY2UgPSAoZW1wbG95ZWVJZDogc3RyaW5nLCBzdGF0dXM6IHN0cmluZykgPT4ge1xyXG4gICAgY29uc3QgZW1wID0gZW1wbG95ZWVzLmZpbmQoKGU6IGFueSkgPT4gZS5pZCA9PT0gZW1wbG95ZWVJZCk7XHJcbiAgICBjb25zdCB0b2RheSA9IGZvcm1hdChuZXcgRGF0ZSgpLCBcInl5eXktTU0tZGRcIik7XHJcbiAgICBzZXRBdHRlbmRhbmNlUmVjb3JkcyhwcmV2ID0+IHtcclxuICAgICAgY29uc3QgZmlsdGVyZWQgPSBwcmV2LmZpbHRlcihyID0+ICEoci5lbXBsb3llZUlkID09PSBlbXBsb3llZUlkICYmIHIuZGF0ZSA9PT0gdG9kYXkpKTtcclxuICAgICAgcmV0dXJuIFsuLi5maWx0ZXJlZCwgeyBlbXBsb3llZUlkLCBlbXBsb3llZU5hbWU6IGVtcD8ubmFtZSB8fCBcIlwiLCBkYXRlOiB0b2RheSwgc3RhdHVzOiBzdGF0dXMgYXMgYW55IH1dO1xyXG4gICAgfSk7XHJcbiAgfTtcclxuXHJcbiAgY29uc3QgbWFya0FsbFByZXNlbnQgPSAoKSA9PiB7XHJcbiAgICBjb25zdCB0b2RheSA9IGZvcm1hdChuZXcgRGF0ZSgpLCBcInl5eXktTU0tZGRcIik7XHJcbiAgICBjb25zdCBuZXdSZWNvcmRzID0gZW1wbG95ZWVzLm1hcCgoZW1wOiBhbnkpID0+ICh7XHJcbiAgICAgIGVtcGxveWVlSWQ6IGVtcC5pZCwgZW1wbG95ZWVOYW1lOiBlbXAubmFtZSwgZGF0ZTogdG9kYXksIHN0YXR1czogXCJwcmVzZW50XCIgYXMgY29uc3QsXHJcbiAgICB9KSk7XHJcbiAgICBzZXRBdHRlbmRhbmNlUmVjb3JkcyhwcmV2ID0+IHtcclxuICAgICAgY29uc3QgZmlsdGVyZWQgPSBwcmV2LmZpbHRlcihyID0+IHIuZGF0ZSAhPT0gdG9kYXkpO1xyXG4gICAgICByZXR1cm4gWy4uLmZpbHRlcmVkLCAuLi5uZXdSZWNvcmRzXTtcclxuICAgIH0pO1xyXG4gICAgdG9hc3Quc3VjY2VzcyhcIkFsbCBlbXBsb3llZXMgbWFya2VkIHByZXNlbnRcIik7XHJcbiAgfTtcclxuXHJcbiAgY29uc3QgdG9kYXlTdHIgPSBmb3JtYXQobmV3IERhdGUoKSwgXCJ5eXl5LU1NLWRkXCIpO1xyXG4gIGNvbnN0IHBlbmRpbmdDb3VudCA9IGxlYXZlUmVxdWVzdHMuZmlsdGVyKHIgPT4gci5zdGF0dXMgPT09IFwicGVuZGluZ1wiKS5sZW5ndGg7XHJcbiAgY29uc3QgcHJlc2VudFRvZGF5ID0gYXR0ZW5kYW5jZVJlY29yZHMuZmlsdGVyKHIgPT4gci5kYXRlID09PSB0b2RheVN0ciAmJiByLnN0YXR1cyA9PT0gXCJwcmVzZW50XCIpLmxlbmd0aDtcclxuICBjb25zdCBsYXRlVG9kYXkgPSBhdHRlbmRhbmNlUmVjb3Jkcy5maWx0ZXIociA9PiByLmRhdGUgPT09IHRvZGF5U3RyICYmIHIuc3RhdHVzID09PSBcImxhdGVcIikubGVuZ3RoO1xyXG4gIGNvbnN0IGFic2VudFRvZGF5ID0gYXR0ZW5kYW5jZVJlY29yZHMuZmlsdGVyKHIgPT4gci5kYXRlID09PSB0b2RheVN0ciAmJiByLnN0YXR1cyA9PT0gXCJhYnNlbnRcIikubGVuZ3RoO1xyXG4gIGNvbnN0IHJlbW90ZVRvZGF5ID0gYXR0ZW5kYW5jZVJlY29yZHMuZmlsdGVyKHIgPT4gci5kYXRlID09PSB0b2RheVN0ciAmJiByLnN0YXR1cyA9PT0gXCJyZW1vdGVcIikubGVuZ3RoO1xyXG4gIGNvbnN0IG1hcmtlZFRvZGF5ID0gYXR0ZW5kYW5jZVJlY29yZHMuZmlsdGVyKHIgPT4gci5kYXRlID09PSB0b2RheVN0cikubGVuZ3RoO1xyXG4gIGNvbnN0IGF0dGVuZGFuY2VSYXRlID0gZW1wbG95ZWVzLmxlbmd0aCA+IDAgPyAoKHByZXNlbnRUb2RheSArIHJlbW90ZVRvZGF5ICsgbGF0ZVRvZGF5KSAvIGVtcGxveWVlcy5sZW5ndGgpICogMTAwIDogMDtcclxuXHJcbiAgY29uc3QgZmlsdGVyZWRMZWF2ZXMgPSBsZWF2ZUZpbHRlciA9PT0gXCJhbGxcIiA/IGxlYXZlUmVxdWVzdHMgOiBsZWF2ZVJlcXVlc3RzLmZpbHRlcihyID0+IHIuc3RhdHVzID09PSBsZWF2ZUZpbHRlcik7XHJcblxyXG4gIC8vIExlYXZlIGJhbGFuY2VzIHBlciBlbXBsb3llZSAobW9jaylcclxuICBjb25zdCBnZXRMZWF2ZUJhbGFuY2UgPSAoZW1wbG95ZWVJZDogc3RyaW5nLCB0eXBlOiBzdHJpbmcpID0+IHtcclxuICAgIGNvbnN0IHVzZWQgPSBsZWF2ZVJlcXVlc3RzLmZpbHRlcihyID0+IHIuZW1wbG95ZWVJZCA9PT0gZW1wbG95ZWVJZCAmJiByLnR5cGUgPT09IHR5cGUgJiYgci5zdGF0dXMgPT09IFwiYXBwcm92ZWRcIikucmVkdWNlKChzLCByKSA9PiBzICsgci5kYXlzLCAwKTtcclxuICAgIGNvbnN0IG1heCA9IExFQVZFX1RZUEVTLmZpbmQodCA9PiB0LnZhbHVlID09PSB0eXBlKT8ubWF4IHx8IDA7XHJcbiAgICByZXR1cm4geyB1c2VkLCBtYXgsIHJlbWFpbmluZzogbWF4IC0gdXNlZCB9O1xyXG4gIH07XHJcblxyXG4gIHJldHVybiAoXHJcbiAgICA8ZGl2IGNsYXNzTmFtZT1cInNwYWNlLXktNVwiPlxyXG4gICAgICB7LyogU3VtbWFyeSAqL31cclxuICAgICAgPGRpdiBjbGFzc05hbWU9XCJncmlkIGdyaWQtY29scy0yIGxnOmdyaWQtY29scy01IGdhcC0zXCI+XHJcbiAgICAgICAge1tcclxuICAgICAgICAgIHsgaWNvbjogQ2hlY2tDaXJjbGUyLCBsYWJlbDogXCJQcmVzZW50XCIsIHZhbHVlOiBwcmVzZW50VG9kYXksIGNvbG9yOiBcInRleHQtZW1lcmFsZC01MDBcIiwgYmc6IFwiYmctZW1lcmFsZC01MDAvMTBcIiB9LFxyXG4gICAgICAgICAgeyBpY29uOiBDbG9jaywgbGFiZWw6IFwiTGF0ZVwiLCB2YWx1ZTogbGF0ZVRvZGF5LCBjb2xvcjogXCJ0ZXh0LWFtYmVyLTUwMFwiLCBiZzogXCJiZy1hbWJlci01MDAvMTBcIiB9LFxyXG4gICAgICAgICAgeyBpY29uOiBYQ2lyY2xlLCBsYWJlbDogXCJBYnNlbnRcIiwgdmFsdWU6IGFic2VudFRvZGF5LCBjb2xvcjogXCJ0ZXh0LXJlZC01MDBcIiwgYmc6IFwiYmctcmVkLTUwMC8xMFwiIH0sXHJcbiAgICAgICAgICB7IGljb246IEV5ZSwgbGFiZWw6IFwiUmVtb3RlXCIsIHZhbHVlOiByZW1vdGVUb2RheSwgY29sb3I6IFwidGV4dC1wdXJwbGUtNTAwXCIsIGJnOiBcImJnLXB1cnBsZS01MDAvMTBcIiB9LFxyXG4gICAgICAgICAgeyBpY29uOiBDYWxlbmRhckNoZWNrLCBsYWJlbDogXCJQZW5kaW5nIExlYXZlc1wiLCB2YWx1ZTogcGVuZGluZ0NvdW50LCBjb2xvcjogXCJ0ZXh0LXNreS01MDBcIiwgYmc6IFwiYmctc2t5LTUwMC8xMFwiIH0sXHJcbiAgICAgICAgXS5tYXAoKHMsIGkpID0+IChcclxuICAgICAgICAgIDxDYXJkIGtleT17aX0gY2xhc3NOYW1lPVwicC0zLjVcIj5cclxuICAgICAgICAgICAgPGRpdiBjbGFzc05hbWU9XCJmbGV4IGl0ZW1zLWNlbnRlciBnYXAtMi41XCI+XHJcbiAgICAgICAgICAgICAgPGRpdiBjbGFzc05hbWU9e2NuKFwidy05IGgtOSByb3VuZGVkLXhsIGZsZXggaXRlbXMtY2VudGVyIGp1c3RpZnktY2VudGVyIHNocmluay0wXCIsIHMuYmcpfT48cy5pY29uIGNsYXNzTmFtZT17Y24oXCJ3LTQuNSBoLTQuNVwiLCBzLmNvbG9yKX0gLz48L2Rpdj5cclxuICAgICAgICAgICAgICA8ZGl2PjxwIGNsYXNzTmFtZT1cInRleHQtWzEwcHhdIHRleHQtbXV0ZWQtZm9yZWdyb3VuZCBmb250LW1lZGl1bVwiPntzLmxhYmVsfTwvcD48cCBjbGFzc05hbWU9XCJ0ZXh0LWJhc2UgZm9udC1ib2xkXCI+e3MudmFsdWV9PC9wPjwvZGl2PlxyXG4gICAgICAgICAgICA8L2Rpdj5cclxuICAgICAgICAgIDwvQ2FyZD5cclxuICAgICAgICApKX1cclxuICAgICAgPC9kaXY+XHJcblxyXG4gICAgICB7LyogQXR0ZW5kYW5jZSBSYXRlICovfVxyXG4gICAgICA8Q2FyZCBjbGFzc05hbWU9XCJwLTRcIj5cclxuICAgICAgICA8ZGl2IGNsYXNzTmFtZT1cImZsZXggaXRlbXMtY2VudGVyIGp1c3RpZnktYmV0d2VlbiBtYi0yXCI+XHJcbiAgICAgICAgICA8ZGl2IGNsYXNzTmFtZT1cImZsZXggaXRlbXMtY2VudGVyIGdhcC0yXCI+PEJhckNoYXJ0MyBjbGFzc05hbWU9XCJ3LTQgaC00IHRleHQtbXV0ZWQtZm9yZWdyb3VuZFwiIC8+PHAgY2xhc3NOYW1lPVwidGV4dC14cyBmb250LXNlbWlib2xkXCI+VG9kYXkncyBBdHRlbmRhbmNlIFJhdGU8L3A+PC9kaXY+XHJcbiAgICAgICAgICA8cCBjbGFzc05hbWU9XCJ0ZXh0LXNtIGZvbnQtYm9sZFwiPnthdHRlbmRhbmNlUmF0ZS50b0ZpeGVkKDApfSU8L3A+XHJcbiAgICAgICAgPC9kaXY+XHJcbiAgICAgICAgPFByb2dyZXNzIHZhbHVlPXthdHRlbmRhbmNlUmF0ZX0gY2xhc3NOYW1lPVwiaC0yLjVcIiAvPlxyXG4gICAgICAgIDxwIGNsYXNzTmFtZT1cInRleHQtWzEwcHhdIHRleHQtbXV0ZWQtZm9yZWdyb3VuZCBtdC0xXCI+e21hcmtlZFRvZGF5fSBvZiB7ZW1wbG95ZWVzLmxlbmd0aH0gbWFya2VkIMK3IHtmb3JtYXQobmV3IERhdGUoKSwgXCJFRUVFLCBNTU1NIGQsIHl5eXlcIil9PC9wPlxyXG4gICAgICA8L0NhcmQ+XHJcblxyXG4gICAgICA8VGFicyB2YWx1ZT17dGFifSBvblZhbHVlQ2hhbmdlPXtzZXRUYWJ9PlxyXG4gICAgICAgIDxUYWJzTGlzdCBjbGFzc05hbWU9XCJ3LWZ1bGwganVzdGlmeS1zdGFydFwiPlxyXG4gICAgICAgICAgPFRhYnNUcmlnZ2VyIHZhbHVlPVwiYXR0ZW5kYW5jZVwiIGNsYXNzTmFtZT1cImdhcC0xLjUgdGV4dC14c1wiPjxDYWxlbmRhckNoZWNrIGNsYXNzTmFtZT1cInctMy41IGgtMy41XCIgLz4gRGFpbHkgQXR0ZW5kYW5jZTwvVGFic1RyaWdnZXI+XHJcbiAgICAgICAgICA8VGFic1RyaWdnZXIgdmFsdWU9XCJsZWF2ZVwiIGNsYXNzTmFtZT1cImdhcC0xLjUgdGV4dC14c1wiPlxyXG4gICAgICAgICAgICA8UGFsbXRyZWUgY2xhc3NOYW1lPVwidy0zLjUgaC0zLjVcIiAvPiBMZWF2ZSBSZXF1ZXN0c1xyXG4gICAgICAgICAgICB7cGVuZGluZ0NvdW50ID4gMCAmJiA8QmFkZ2UgY2xhc3NOYW1lPVwibWwtMSB0ZXh0LVs5cHhdIGgtNCBweC0xLjUgYmctYW1iZXItNTAwIHRleHQtd2hpdGVcIj57cGVuZGluZ0NvdW50fTwvQmFkZ2U+fVxyXG4gICAgICAgICAgPC9UYWJzVHJpZ2dlcj5cclxuICAgICAgICAgIDxUYWJzVHJpZ2dlciB2YWx1ZT1cImJhbGFuY2VzXCIgY2xhc3NOYW1lPVwiZ2FwLTEuNSB0ZXh0LXhzXCI+PFRyZW5kaW5nVXAgY2xhc3NOYW1lPVwidy0zLjUgaC0zLjVcIiAvPiBMZWF2ZSBCYWxhbmNlczwvVGFic1RyaWdnZXI+XHJcbiAgICAgICAgICA8VGFic1RyaWdnZXIgdmFsdWU9XCJoaXN0b3J5XCIgY2xhc3NOYW1lPVwiZ2FwLTEuNSB0ZXh0LXhzXCI+PEhpc3RvcnkgY2xhc3NOYW1lPVwidy0zLjUgaC0zLjVcIiAvPiBIaXN0b3J5PC9UYWJzVHJpZ2dlcj5cclxuICAgICAgICA8L1RhYnNMaXN0PlxyXG5cclxuICAgICAgICB7LyogRGFpbHkgQXR0ZW5kYW5jZSAqL31cclxuICAgICAgICA8VGFic0NvbnRlbnQgdmFsdWU9XCJhdHRlbmRhbmNlXCIgY2xhc3NOYW1lPVwibXQtNCBzcGFjZS15LTNcIj5cclxuICAgICAgICAgIDxkaXYgY2xhc3NOYW1lPVwiZmxleCBpdGVtcy1jZW50ZXIganVzdGlmeS1iZXR3ZWVuXCI+XHJcbiAgICAgICAgICAgIDxoMyBjbGFzc05hbWU9XCJmb250LXNlbWlib2xkIHRleHQtc21cIj57Zm9ybWF0KG5ldyBEYXRlKCksIFwiRUVFRSwgTU1NTSBkXCIpfTwvaDM+XHJcbiAgICAgICAgICAgIDxCdXR0b24gdmFyaWFudD1cIm91dGxpbmVcIiBzaXplPVwic21cIiBjbGFzc05hbWU9XCJnYXAtMS41IHRleHQteHMgaC04XCIgb25DbGljaz17bWFya0FsbFByZXNlbnR9PlxyXG4gICAgICAgICAgICAgIDxDaGVja0NpcmNsZTIgY2xhc3NOYW1lPVwidy0zIGgtM1wiIC8+IE1hcmsgQWxsIFByZXNlbnRcclxuICAgICAgICAgICAgPC9CdXR0b24+XHJcbiAgICAgICAgICA8L2Rpdj5cclxuICAgICAgICAgIDxDYXJkIGNsYXNzTmFtZT1cIm92ZXJmbG93LWhpZGRlblwiPlxyXG4gICAgICAgICAgICB7ZW1wbG95ZWVzLmxlbmd0aCA9PT0gMCA/IChcclxuICAgICAgICAgICAgICA8ZGl2IGNsYXNzTmFtZT1cInRleHQtY2VudGVyIHB5LTEyIHRleHQtbXV0ZWQtZm9yZWdyb3VuZCB0ZXh0LXNtXCI+Tm8gZW1wbG95ZWVzIHlldC48L2Rpdj5cclxuICAgICAgICAgICAgKSA6IChcclxuICAgICAgICAgICAgICA8ZGl2IGNsYXNzTmFtZT1cImRpdmlkZS15XCI+XHJcbiAgICAgICAgICAgICAgICB7ZW1wbG95ZWVzLm1hcCgoZW1wOiBhbnkpID0+IHtcclxuICAgICAgICAgICAgICAgICAgY29uc3QgcmVjb3JkID0gYXR0ZW5kYW5jZVJlY29yZHMuZmluZChyID0+IHIuZW1wbG95ZWVJZCA9PT0gZW1wLmlkICYmIHIuZGF0ZSA9PT0gdG9kYXlTdHIpO1xyXG4gICAgICAgICAgICAgICAgICByZXR1cm4gKFxyXG4gICAgICAgICAgICAgICAgICAgIDxkaXYga2V5PXtlbXAuaWR9IGNsYXNzTmFtZT1cImZsZXggaXRlbXMtY2VudGVyIGp1c3RpZnktYmV0d2VlbiBweC00IHB5LTMgaG92ZXI6YmctbXV0ZWQvMTAgdHJhbnNpdGlvbi1jb2xvcnNcIj5cclxuICAgICAgICAgICAgICAgICAgICAgIDxkaXYgY2xhc3NOYW1lPVwiZmxleCBpdGVtcy1jZW50ZXIgZ2FwLTNcIj5cclxuICAgICAgICAgICAgICAgICAgICAgICAgPGRpdiBjbGFzc05hbWU9XCJ3LTkgaC05IHJvdW5kZWQteGwgYmctcHJpbWFyeS8xMCBmbGV4IGl0ZW1zLWNlbnRlciBqdXN0aWZ5LWNlbnRlciB0ZXh0LXhzIGZvbnQtYm9sZCB0ZXh0LXByaW1hcnlcIj57ZW1wLm5hbWU/LmNoYXJBdCgwKT8udG9VcHBlckNhc2UoKX08L2Rpdj5cclxuICAgICAgICAgICAgICAgICAgICAgICAgPGRpdj5cclxuICAgICAgICAgICAgICAgICAgICAgICAgICA8cCBjbGFzc05hbWU9XCJmb250LW1lZGl1bSB0ZXh0LVsxM3B4XVwiPntlbXAubmFtZX08L3A+XHJcbiAgICAgICAgICAgICAgICAgICAgICAgICAgPHAgY2xhc3NOYW1lPVwidGV4dC1bMTFweF0gdGV4dC1tdXRlZC1mb3JlZ3JvdW5kIGNhcGl0YWxpemVcIj57ZW1wLnJvbGV9PC9wPlxyXG4gICAgICAgICAgICAgICAgICAgICAgICA8L2Rpdj5cclxuICAgICAgICAgICAgICAgICAgICAgIDwvZGl2PlxyXG4gICAgICAgICAgICAgICAgICAgICAgPGRpdiBjbGFzc05hbWU9XCJmbGV4IGl0ZW1zLWNlbnRlciBnYXAtMVwiPlxyXG4gICAgICAgICAgICAgICAgICAgICAgICB7T2JqZWN0LmVudHJpZXMoQVRURU5EQU5DRV9TVEFUVVMpLm1hcCgoW2tleSwgc10pID0+IHtcclxuICAgICAgICAgICAgICAgICAgICAgICAgICBjb25zdCBpc0FjdGl2ZSA9IHJlY29yZD8uc3RhdHVzID09PSBrZXk7XHJcbiAgICAgICAgICAgICAgICAgICAgICAgICAgcmV0dXJuIChcclxuICAgICAgICAgICAgICAgICAgICAgICAgICAgIDxidXR0b24ga2V5PXtrZXl9IG9uQ2xpY2s9eygpID0+IG1hcmtBdHRlbmRhbmNlKGVtcC5pZCwga2V5KX1cclxuICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgY2xhc3NOYW1lPXtjbihcclxuICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICBcInB4LTIuNSBweS0xLjUgcm91bmRlZC1sZyB0ZXh0LVsxMHB4XSBmb250LW1lZGl1bSBib3JkZXIgdHJhbnNpdGlvbi1hbGxcIixcclxuICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICBpc0FjdGl2ZSA/IHMuY29sb3IgKyBcIiBib3JkZXItY3VycmVudCBzaGFkb3ctc21cIiA6IFwiYmctbXV0ZWQvMjAgdGV4dC1tdXRlZC1mb3JlZ3JvdW5kIGJvcmRlci10cmFuc3BhcmVudCBob3ZlcjpiZy1tdXRlZFwiXHJcbiAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICl9PlxyXG4gICAgICAgICAgICAgICAgICAgICAgICAgICAgICB7cy5sYWJlbH1cclxuICAgICAgICAgICAgICAgICAgICAgICAgICAgIDwvYnV0dG9uPlxyXG4gICAgICAgICAgICAgICAgICAgICAgICAgICk7XHJcbiAgICAgICAgICAgICAgICAgICAgICAgIH0pfVxyXG4gICAgICAgICAgICAgICAgICAgICAgPC9kaXY+XHJcbiAgICAgICAgICAgICAgICAgICAgPC9kaXY+XHJcbiAgICAgICAgICAgICAgICAgICk7XHJcbiAgICAgICAgICAgICAgICB9KX1cclxuICAgICAgICAgICAgICA8L2Rpdj5cclxuICAgICAgICAgICAgKX1cclxuICAgICAgICAgIDwvQ2FyZD5cclxuICAgICAgICA8L1RhYnNDb250ZW50PlxyXG5cclxuICAgICAgICB7LyogTGVhdmUgUmVxdWVzdHMgKi99XHJcbiAgICAgICAgPFRhYnNDb250ZW50IHZhbHVlPVwibGVhdmVcIiBjbGFzc05hbWU9XCJtdC00IHNwYWNlLXktNFwiPlxyXG4gICAgICAgICAgPGRpdiBjbGFzc05hbWU9XCJmbGV4IGl0ZW1zLWNlbnRlciBqdXN0aWZ5LWJldHdlZW4gZ2FwLTNcIj5cclxuICAgICAgICAgICAgPFNlbGVjdCB2YWx1ZT17bGVhdmVGaWx0ZXJ9IG9uVmFsdWVDaGFuZ2U9e3NldExlYXZlRmlsdGVyfT5cclxuICAgICAgICAgICAgICA8U2VsZWN0VHJpZ2dlciBjbGFzc05hbWU9XCJ3LTM2IGgtOFwiPjxGaWx0ZXIgY2xhc3NOYW1lPVwidy0zIGgtMyBtci0xLjUgdGV4dC1tdXRlZC1mb3JlZ3JvdW5kXCIgLz48U2VsZWN0VmFsdWUgLz48L1NlbGVjdFRyaWdnZXI+XHJcbiAgICAgICAgICAgICAgPFNlbGVjdENvbnRlbnQ+XHJcbiAgICAgICAgICAgICAgICA8U2VsZWN0SXRlbSB2YWx1ZT1cImFsbFwiPkFsbCBSZXF1ZXN0czwvU2VsZWN0SXRlbT5cclxuICAgICAgICAgICAgICAgIDxTZWxlY3RJdGVtIHZhbHVlPVwicGVuZGluZ1wiPlBlbmRpbmc8L1NlbGVjdEl0ZW0+XHJcbiAgICAgICAgICAgICAgICA8U2VsZWN0SXRlbSB2YWx1ZT1cImFwcHJvdmVkXCI+QXBwcm92ZWQ8L1NlbGVjdEl0ZW0+XHJcbiAgICAgICAgICAgICAgICA8U2VsZWN0SXRlbSB2YWx1ZT1cInJlamVjdGVkXCI+UmVqZWN0ZWQ8L1NlbGVjdEl0ZW0+XHJcbiAgICAgICAgICAgICAgPC9TZWxlY3RDb250ZW50PlxyXG4gICAgICAgICAgICA8L1NlbGVjdD5cclxuICAgICAgICAgICAgPEJ1dHRvbiBzaXplPVwic21cIiBjbGFzc05hbWU9XCJnYXAtMS41IGgtOFwiIG9uQ2xpY2s9eygpID0+IHNldExlYXZlRGlhbG9nKHRydWUpfT48UGx1cyBjbGFzc05hbWU9XCJ3LTMuNSBoLTMuNVwiIC8+IE5ldyBSZXF1ZXN0PC9CdXR0b24+XHJcbiAgICAgICAgICA8L2Rpdj5cclxuXHJcbiAgICAgICAgICB7ZmlsdGVyZWRMZWF2ZXMubGVuZ3RoID09PSAwID8gKFxyXG4gICAgICAgICAgICA8Q2FyZCBjbGFzc05hbWU9XCJwLTEwIHRleHQtY2VudGVyXCI+PFBhbG10cmVlIGNsYXNzTmFtZT1cInctMTAgaC0xMCB0ZXh0LW11dGVkLWZvcmVncm91bmQvMzAgbXgtYXV0byBtYi0zXCIgLz48cCBjbGFzc05hbWU9XCJ0ZXh0LXNtIHRleHQtbXV0ZWQtZm9yZWdyb3VuZFwiPk5vIGxlYXZlIHJlcXVlc3Rze2xlYXZlRmlsdGVyICE9PSBcImFsbFwiID8gYCB3aXRoIHN0YXR1cyBcIiR7bGVhdmVGaWx0ZXJ9XCJgIDogXCJcIn0uPC9wPjwvQ2FyZD5cclxuICAgICAgICAgICkgOiAoXHJcbiAgICAgICAgICAgIDxkaXYgY2xhc3NOYW1lPVwic3BhY2UteS0yXCI+XHJcbiAgICAgICAgICAgICAge2ZpbHRlcmVkTGVhdmVzLnNvcnQoKGEsIGIpID0+IGIuY3JlYXRlZEF0LmdldFRpbWUoKSAtIGEuY3JlYXRlZEF0LmdldFRpbWUoKSkubWFwKHJlcSA9PiB7XHJcbiAgICAgICAgICAgICAgICBjb25zdCBsZWF2ZVR5cGUgPSBMRUFWRV9UWVBFUy5maW5kKHQgPT4gdC52YWx1ZSA9PT0gcmVxLnR5cGUpO1xyXG4gICAgICAgICAgICAgICAgY29uc3QgSWNvbiA9IGxlYXZlVHlwZT8uaWNvbiB8fCBDYWxlbmRhcjtcclxuICAgICAgICAgICAgICAgIHJldHVybiAoXHJcbiAgICAgICAgICAgICAgICAgIDxDYXJkIGtleT17cmVxLmlkfSBjbGFzc05hbWU9XCJwLTQgaG92ZXI6c2hhZG93LXNtIHRyYW5zaXRpb24tYWxsXCI+XHJcbiAgICAgICAgICAgICAgICAgICAgPGRpdiBjbGFzc05hbWU9XCJmbGV4IGl0ZW1zLXN0YXJ0IGp1c3RpZnktYmV0d2VlbiBnYXAtM1wiPlxyXG4gICAgICAgICAgICAgICAgICAgICAgPGRpdiBjbGFzc05hbWU9XCJmbGV4IGl0ZW1zLXN0YXJ0IGdhcC0zIGZsZXgtMSBtaW4tdy0wXCI+XHJcbiAgICAgICAgICAgICAgICAgICAgICAgIDxkaXYgY2xhc3NOYW1lPXtjbihcInctMTAgaC0xMCByb3VuZGVkLXhsIGZsZXggaXRlbXMtY2VudGVyIGp1c3RpZnktY2VudGVyIHNocmluay0wXCIsIGxlYXZlVHlwZT8uYmcgfHwgXCJiZy1tdXRlZFwiKX0+XHJcbiAgICAgICAgICAgICAgICAgICAgICAgICAgPEljb24gY2xhc3NOYW1lPXtjbihcInctNSBoLTVcIiwgbGVhdmVUeXBlPy5jb2xvciB8fCBcInRleHQtbXV0ZWQtZm9yZWdyb3VuZFwiKX0gLz5cclxuICAgICAgICAgICAgICAgICAgICAgICAgPC9kaXY+XHJcbiAgICAgICAgICAgICAgICAgICAgICAgIDxkaXYgY2xhc3NOYW1lPVwibWluLXctMFwiPlxyXG4gICAgICAgICAgICAgICAgICAgICAgICAgIDxkaXYgY2xhc3NOYW1lPVwiZmxleCBpdGVtcy1jZW50ZXIgZ2FwLTIgZmxleC13cmFwXCI+XHJcbiAgICAgICAgICAgICAgICAgICAgICAgICAgICA8cCBjbGFzc05hbWU9XCJmb250LXNlbWlib2xkIHRleHQtWzEzcHhdXCI+e3JlcS5lbXBsb3llZU5hbWV9PC9wPlxyXG4gICAgICAgICAgICAgICAgICAgICAgICAgICAgPEJhZGdlIHZhcmlhbnQ9XCJzZWNvbmRhcnlcIiBjbGFzc05hbWU9XCJ0ZXh0LVsxMHB4XSBjYXBpdGFsaXplXCI+e3JlcS50eXBlfTwvQmFkZ2U+XHJcbiAgICAgICAgICAgICAgICAgICAgICAgICAgICA8QmFkZ2UgdmFyaWFudD1cIm91dGxpbmVcIiBjbGFzc05hbWU9XCJ0ZXh0LVsxMHB4XVwiPntyZXEuZGF5c30gZGF5e3JlcS5kYXlzID4gMSA/IFwic1wiIDogXCJcIn08L0JhZGdlPlxyXG4gICAgICAgICAgICAgICAgICAgICAgICAgIDwvZGl2PlxyXG4gICAgICAgICAgICAgICAgICAgICAgICAgIDxwIGNsYXNzTmFtZT1cInRleHQtWzExcHhdIHRleHQtbXV0ZWQtZm9yZWdyb3VuZCBtdC0wLjVcIj5cclxuICAgICAgICAgICAgICAgICAgICAgICAgICAgIHtyZXEuc3RhcnREYXRlfXtyZXEuZW5kRGF0ZSAhPT0gcmVxLnN0YXJ0RGF0ZSA/IGAg4oaSICR7cmVxLmVuZERhdGV9YCA6IFwiXCJ9XHJcbiAgICAgICAgICAgICAgICAgICAgICAgICAgPC9wPlxyXG4gICAgICAgICAgICAgICAgICAgICAgICAgIHtyZXEucmVhc29uICYmIDxwIGNsYXNzTmFtZT1cInRleHQtWzExcHhdIHRleHQtbXV0ZWQtZm9yZWdyb3VuZCBtdC0wLjUgaXRhbGljIHRydW5jYXRlIG1heC13LXhzXCI+XCJ7cmVxLnJlYXNvbn1cIjwvcD59XHJcbiAgICAgICAgICAgICAgICAgICAgICAgICAgPHAgY2xhc3NOYW1lPVwidGV4dC1bMTBweF0gdGV4dC1tdXRlZC1mb3JlZ3JvdW5kIG10LTFcIj5TdWJtaXR0ZWQge2Zvcm1hdChyZXEuY3JlYXRlZEF0LCBcIk1NTSBkLCBoOm1tIGFcIil9PC9wPlxyXG4gICAgICAgICAgICAgICAgICAgICAgICA8L2Rpdj5cclxuICAgICAgICAgICAgICAgICAgICAgIDwvZGl2PlxyXG4gICAgICAgICAgICAgICAgICAgICAgPGRpdiBjbGFzc05hbWU9XCJmbGV4IGl0ZW1zLWNlbnRlciBnYXAtMS41IHNocmluay0wXCI+XHJcbiAgICAgICAgICAgICAgICAgICAgICAgIHtyZXEuc3RhdHVzID09PSBcInBlbmRpbmdcIiA/IChcclxuICAgICAgICAgICAgICAgICAgICAgICAgICA8PlxyXG4gICAgICAgICAgICAgICAgICAgICAgICAgICAgPEJ1dHRvbiB2YXJpYW50PVwib3V0bGluZVwiIHNpemU9XCJzbVwiIGNsYXNzTmFtZT1cImgtNyB0ZXh0LVsxMXB4XSB0ZXh0LXJlZC01MDAgYm9yZGVyLXJlZC0yMDBcIiBvbkNsaWNrPXsoKSA9PiB1cGRhdGVMZWF2ZVN0YXR1cyhyZXEuaWQsIFwicmVqZWN0ZWRcIil9PlJlamVjdDwvQnV0dG9uPlxyXG4gICAgICAgICAgICAgICAgICAgICAgICAgICAgPEJ1dHRvbiBzaXplPVwic21cIiBjbGFzc05hbWU9XCJoLTcgdGV4dC1bMTFweF1cIiBvbkNsaWNrPXsoKSA9PiB1cGRhdGVMZWF2ZVN0YXR1cyhyZXEuaWQsIFwiYXBwcm92ZWRcIil9PkFwcHJvdmU8L0J1dHRvbj5cclxuICAgICAgICAgICAgICAgICAgICAgICAgICA8Lz5cclxuICAgICAgICAgICAgICAgICAgICAgICAgKSA6IChcclxuICAgICAgICAgICAgICAgICAgICAgICAgICA8QmFkZ2UgY2xhc3NOYW1lPXtjbihcInRleHQtWzEwcHhdXCIsIHJlcS5zdGF0dXMgPT09IFwiYXBwcm92ZWRcIiA/IFwiYmctZW1lcmFsZC01MDAvMTAgdGV4dC1lbWVyYWxkLTYwMFwiIDogXCJiZy1yZWQtNTAwLzEwIHRleHQtcmVkLTYwMFwiKX0+XHJcbiAgICAgICAgICAgICAgICAgICAgICAgICAgICB7cmVxLnN0YXR1cyA9PT0gXCJhcHByb3ZlZFwiID8gXCLinJMgQXBwcm92ZWRcIiA6IFwi4pyXIFJlamVjdGVkXCJ9XHJcbiAgICAgICAgICAgICAgICAgICAgICAgICAgPC9CYWRnZT5cclxuICAgICAgICAgICAgICAgICAgICAgICAgKX1cclxuICAgICAgICAgICAgICAgICAgICAgIDwvZGl2PlxyXG4gICAgICAgICAgICAgICAgICAgIDwvZGl2PlxyXG4gICAgICAgICAgICAgICAgICA8L0NhcmQ+XHJcbiAgICAgICAgICAgICAgICApO1xyXG4gICAgICAgICAgICAgIH0pfVxyXG4gICAgICAgICAgICA8L2Rpdj5cclxuICAgICAgICAgICl9XHJcbiAgICAgICAgPC9UYWJzQ29udGVudD5cclxuXHJcbiAgICAgICAgey8qIExlYXZlIEJhbGFuY2VzICovfVxyXG4gICAgICAgIDxUYWJzQ29udGVudCB2YWx1ZT1cImJhbGFuY2VzXCIgY2xhc3NOYW1lPVwibXQtNFwiPlxyXG4gICAgICAgICAgPENhcmQgY2xhc3NOYW1lPVwib3ZlcmZsb3ctaGlkZGVuXCI+XHJcbiAgICAgICAgICAgIDxkaXYgY2xhc3NOYW1lPVwicHgtNSBweS0zIGJvcmRlci1iXCI+PGgzIGNsYXNzTmFtZT1cImZvbnQtc2VtaWJvbGQgdGV4dC1zbVwiPkxlYXZlIEJhbGFuY2VzIOKAlCB7bmV3IERhdGUoKS5nZXRGdWxsWWVhcigpfTwvaDM+PC9kaXY+XHJcbiAgICAgICAgICAgIHtlbXBsb3llZXMubGVuZ3RoID09PSAwID8gKFxyXG4gICAgICAgICAgICAgIDxkaXYgY2xhc3NOYW1lPVwidGV4dC1jZW50ZXIgcHktMTIgdGV4dC1tdXRlZC1mb3JlZ3JvdW5kIHRleHQtc21cIj5ObyBlbXBsb3llZXMuPC9kaXY+XHJcbiAgICAgICAgICAgICkgOiAoXHJcbiAgICAgICAgICAgICAgPGRpdiBjbGFzc05hbWU9XCJvdmVyZmxvdy14LWF1dG9cIj5cclxuICAgICAgICAgICAgICAgIDx0YWJsZSBjbGFzc05hbWU9XCJ3LWZ1bGwgdGV4dC1zbVwiPlxyXG4gICAgICAgICAgICAgICAgICA8dGhlYWQ+XHJcbiAgICAgICAgICAgICAgICAgICAgPHRyIGNsYXNzTmFtZT1cImJvcmRlci1iIGJnLW11dGVkLzQwXCI+XHJcbiAgICAgICAgICAgICAgICAgICAgICA8dGggY2xhc3NOYW1lPVwidGV4dC1sZWZ0IHB4LTQgcHktMi41IHRleHQteHMgZm9udC1zZW1pYm9sZCB0ZXh0LW11dGVkLWZvcmVncm91bmRcIj5FbXBsb3llZTwvdGg+XHJcbiAgICAgICAgICAgICAgICAgICAgICB7TEVBVkVfVFlQRVMuc2xpY2UoMCwgNCkubWFwKHQgPT4gKFxyXG4gICAgICAgICAgICAgICAgICAgICAgICA8dGgga2V5PXt0LnZhbHVlfSBjbGFzc05hbWU9XCJ0ZXh0LWNlbnRlciBweC0zIHB5LTIuNSB0ZXh0LXhzIGZvbnQtc2VtaWJvbGQgdGV4dC1tdXRlZC1mb3JlZ3JvdW5kXCI+e3QubGFiZWx9PC90aD5cclxuICAgICAgICAgICAgICAgICAgICAgICkpfVxyXG4gICAgICAgICAgICAgICAgICAgICAgPHRoIGNsYXNzTmFtZT1cInRleHQtY2VudGVyIHB4LTMgcHktMi41IHRleHQteHMgZm9udC1zZW1pYm9sZCB0ZXh0LW11dGVkLWZvcmVncm91bmRcIj5Ub3RhbCBVc2VkPC90aD5cclxuICAgICAgICAgICAgICAgICAgICA8L3RyPlxyXG4gICAgICAgICAgICAgICAgICA8L3RoZWFkPlxyXG4gICAgICAgICAgICAgICAgICA8dGJvZHk+XHJcbiAgICAgICAgICAgICAgICAgICAge2VtcGxveWVlcy5tYXAoKGVtcDogYW55KSA9PiB7XHJcbiAgICAgICAgICAgICAgICAgICAgICBjb25zdCB0b3RhbFVzZWQgPSBMRUFWRV9UWVBFUy5zbGljZSgwLCA0KS5yZWR1Y2UoKHMsIHQpID0+IHMgKyBnZXRMZWF2ZUJhbGFuY2UoZW1wLmlkLCB0LnZhbHVlKS51c2VkLCAwKTtcclxuICAgICAgICAgICAgICAgICAgICAgIHJldHVybiAoXHJcbiAgICAgICAgICAgICAgICAgICAgICAgIDx0ciBrZXk9e2VtcC5pZH0gY2xhc3NOYW1lPVwiYm9yZGVyLWIgbGFzdDpib3JkZXItMCBob3ZlcjpiZy1tdXRlZC8xMFwiPlxyXG4gICAgICAgICAgICAgICAgICAgICAgICAgIDx0ZCBjbGFzc05hbWU9XCJweC00IHB5LTNcIj5cclxuICAgICAgICAgICAgICAgICAgICAgICAgICAgIDxkaXYgY2xhc3NOYW1lPVwiZmxleCBpdGVtcy1jZW50ZXIgZ2FwLTJcIj48ZGl2IGNsYXNzTmFtZT1cInctNyBoLTcgcm91bmRlZC1mdWxsIGJnLXByaW1hcnkvMTAgZmxleCBpdGVtcy1jZW50ZXIganVzdGlmeS1jZW50ZXIgdGV4dC1bMTBweF0gZm9udC1ib2xkIHRleHQtcHJpbWFyeVwiPntlbXAubmFtZS5jaGFyQXQoMCl9PC9kaXY+PHNwYW4gY2xhc3NOYW1lPVwiZm9udC1tZWRpdW0gdGV4dC1bMTNweF1cIj57ZW1wLm5hbWV9PC9zcGFuPjwvZGl2PlxyXG4gICAgICAgICAgICAgICAgICAgICAgICAgIDwvdGQ+XHJcbiAgICAgICAgICAgICAgICAgICAgICAgICAge0xFQVZFX1RZUEVTLnNsaWNlKDAsIDQpLm1hcCh0ID0+IHtcclxuICAgICAgICAgICAgICAgICAgICAgICAgICAgIGNvbnN0IGJhbCA9IGdldExlYXZlQmFsYW5jZShlbXAuaWQsIHQudmFsdWUpO1xyXG4gICAgICAgICAgICAgICAgICAgICAgICAgICAgY29uc3QgcGN0ID0gKGJhbC51c2VkIC8gYmFsLm1heCkgKiAxMDA7XHJcbiAgICAgICAgICAgICAgICAgICAgICAgICAgICByZXR1cm4gKFxyXG4gICAgICAgICAgICAgICAgICAgICAgICAgICAgICA8dGQga2V5PXt0LnZhbHVlfSBjbGFzc05hbWU9XCJweC0zIHB5LTMgdGV4dC1jZW50ZXJcIj5cclxuICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICA8ZGl2IGNsYXNzTmFtZT1cImZsZXggZmxleC1jb2wgaXRlbXMtY2VudGVyIGdhcC0xXCI+XHJcbiAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICA8c3BhbiBjbGFzc05hbWU9XCJ0ZXh0LVsxMnB4XSBmb250LXNlbWlib2xkXCI+e2JhbC5yZW1haW5pbmd9L3tiYWwubWF4fTwvc3Bhbj5cclxuICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgIDxQcm9ncmVzcyB2YWx1ZT17cGN0fSBjbGFzc05hbWU9XCJoLTEuNSB3LTE2XCIgLz5cclxuICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICA8L2Rpdj5cclxuICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgPC90ZD5cclxuICAgICAgICAgICAgICAgICAgICAgICAgICAgICk7XHJcbiAgICAgICAgICAgICAgICAgICAgICAgICAgfSl9XHJcbiAgICAgICAgICAgICAgICAgICAgICAgICAgPHRkIGNsYXNzTmFtZT1cInB4LTMgcHktMyB0ZXh0LWNlbnRlclwiPjxzcGFuIGNsYXNzTmFtZT1cInRleHQtWzEycHhdIGZvbnQtYm9sZFwiPnt0b3RhbFVzZWR9IGRheXM8L3NwYW4+PC90ZD5cclxuICAgICAgICAgICAgICAgICAgICAgICAgPC90cj5cclxuICAgICAgICAgICAgICAgICAgICAgICk7XHJcbiAgICAgICAgICAgICAgICAgICAgfSl9XHJcbiAgICAgICAgICAgICAgICAgIDwvdGJvZHk+XHJcbiAgICAgICAgICAgICAgICA8L3RhYmxlPlxyXG4gICAgICAgICAgICAgIDwvZGl2PlxyXG4gICAgICAgICAgICApfVxyXG4gICAgICAgICAgPC9DYXJkPlxyXG4gICAgICAgIDwvVGFic0NvbnRlbnQ+XHJcblxyXG4gICAgICAgIHsvKiBIaXN0b3J5ICovfVxyXG4gICAgICAgIDxUYWJzQ29udGVudCB2YWx1ZT1cImhpc3RvcnlcIiBjbGFzc05hbWU9XCJtdC00XCI+XHJcbiAgICAgICAgICA8Q2FyZCBjbGFzc05hbWU9XCJwLTVcIj5cclxuICAgICAgICAgICAgPGRpdiBjbGFzc05hbWU9XCJmbGV4IGl0ZW1zLWNlbnRlciBqdXN0aWZ5LWJldHdlZW4gbWItNFwiPlxyXG4gICAgICAgICAgICAgIDxoMyBjbGFzc05hbWU9XCJmb250LXNlbWlib2xkIHRleHQtc20gZmxleCBpdGVtcy1jZW50ZXIgZ2FwLTJcIj48SGlzdG9yeSBjbGFzc05hbWU9XCJ3LTQgaC00IHRleHQtbXV0ZWQtZm9yZWdyb3VuZFwiIC8+IFJlY2VudCBBdHRlbmRhbmNlIEhpc3Rvcnk8L2gzPlxyXG4gICAgICAgICAgICAgIDxCdXR0b24gdmFyaWFudD1cImdob3N0XCIgc2l6ZT1cInNtXCIgY2xhc3NOYW1lPVwiZ2FwLTEuNSB0ZXh0LXhzXCI+PERvd25sb2FkIGNsYXNzTmFtZT1cInctMy41IGgtMy41XCIgLz4gRXhwb3J0PC9CdXR0b24+XHJcbiAgICAgICAgICAgIDwvZGl2PlxyXG4gICAgICAgICAgICB7YXR0ZW5kYW5jZVJlY29yZHMubGVuZ3RoID09PSAwID8gKFxyXG4gICAgICAgICAgICAgIDxkaXYgY2xhc3NOYW1lPVwidGV4dC1jZW50ZXIgcHktMTAgdGV4dC1tdXRlZC1mb3JlZ3JvdW5kIHRleHQtc21cIj5ObyBhdHRlbmRhbmNlIHJlY29yZHMgeWV0LiBNYXJrIGF0dGVuZGFuY2UgYWJvdmUgdG8gc2VlIGhpc3RvcnkuPC9kaXY+XHJcbiAgICAgICAgICAgICkgOiAoXHJcbiAgICAgICAgICAgICAgPGRpdiBjbGFzc05hbWU9XCJzcGFjZS15LTJcIj5cclxuICAgICAgICAgICAgICAgIHtbLi4uYXR0ZW5kYW5jZVJlY29yZHNdLnJldmVyc2UoKS5zbGljZSgwLCAyMCkubWFwKChyZWMsIGkpID0+IHtcclxuICAgICAgICAgICAgICAgICAgY29uc3Qgc3RhdHVzSW5mbyA9IEFUVEVOREFOQ0VfU1RBVFVTW3JlYy5zdGF0dXNdO1xyXG4gICAgICAgICAgICAgICAgICBjb25zdCBTdGF0dXNJY29uID0gc3RhdHVzSW5mbz8uaWNvbiB8fCBDaGVja0NpcmNsZTI7XHJcbiAgICAgICAgICAgICAgICAgIHJldHVybiAoXHJcbiAgICAgICAgICAgICAgICAgICAgPGRpdiBrZXk9e2l9IGNsYXNzTmFtZT1cImZsZXggaXRlbXMtY2VudGVyIGp1c3RpZnktYmV0d2VlbiBwLTIuNSByb3VuZGVkLWxnIGJnLW11dGVkLzIwXCI+XHJcbiAgICAgICAgICAgICAgICAgICAgICA8ZGl2IGNsYXNzTmFtZT1cImZsZXggaXRlbXMtY2VudGVyIGdhcC0yLjVcIj5cclxuICAgICAgICAgICAgICAgICAgICAgICAgPFN0YXR1c0ljb24gY2xhc3NOYW1lPXtjbihcInctNCBoLTRcIiwgc3RhdHVzSW5mbz8uY29sb3Iuc3BsaXQoXCIgXCIpWzFdKX0gLz5cclxuICAgICAgICAgICAgICAgICAgICAgICAgPHNwYW4gY2xhc3NOYW1lPVwidGV4dC1bMTNweF0gZm9udC1tZWRpdW1cIj57cmVjLmVtcGxveWVlTmFtZX08L3NwYW4+XHJcbiAgICAgICAgICAgICAgICAgICAgICA8L2Rpdj5cclxuICAgICAgICAgICAgICAgICAgICAgIDxkaXYgY2xhc3NOYW1lPVwiZmxleCBpdGVtcy1jZW50ZXIgZ2FwLTJcIj5cclxuICAgICAgICAgICAgICAgICAgICAgICAgPHNwYW4gY2xhc3NOYW1lPVwidGV4dC1bMTFweF0gdGV4dC1tdXRlZC1mb3JlZ3JvdW5kXCI+e3JlYy5kYXRlfTwvc3Bhbj5cclxuICAgICAgICAgICAgICAgICAgICAgICAgPEJhZGdlIGNsYXNzTmFtZT17Y24oXCJ0ZXh0LVsxMHB4XVwiLCBzdGF0dXNJbmZvPy5jb2xvcil9PntzdGF0dXNJbmZvPy5sYWJlbH08L0JhZGdlPlxyXG4gICAgICAgICAgICAgICAgICAgICAgPC9kaXY+XHJcbiAgICAgICAgICAgICAgICAgICAgPC9kaXY+XHJcbiAgICAgICAgICAgICAgICAgICk7XHJcbiAgICAgICAgICAgICAgICB9KX1cclxuICAgICAgICAgICAgICA8L2Rpdj5cclxuICAgICAgICAgICAgKX1cclxuICAgICAgICAgIDwvQ2FyZD5cclxuICAgICAgICA8L1RhYnNDb250ZW50PlxyXG4gICAgICA8L1RhYnM+XHJcblxyXG4gICAgICB7LyogTGVhdmUgUmVxdWVzdCBEaWFsb2cgKi99XHJcbiAgICAgIDxEaWFsb2cgb3Blbj17bGVhdmVEaWFsb2d9IG9uT3BlbkNoYW5nZT17c2V0TGVhdmVEaWFsb2d9PlxyXG4gICAgICAgIDxEaWFsb2dDb250ZW50IGNsYXNzTmFtZT1cIm1heC13LW1kXCI+XHJcbiAgICAgICAgICA8RGlhbG9nSGVhZGVyPjxEaWFsb2dUaXRsZT5OZXcgTGVhdmUgUmVxdWVzdDwvRGlhbG9nVGl0bGU+PC9EaWFsb2dIZWFkZXI+XHJcbiAgICAgICAgICA8ZGl2IGNsYXNzTmFtZT1cInNwYWNlLXktNCBweS0zXCI+XHJcbiAgICAgICAgICAgIDxkaXYgY2xhc3NOYW1lPVwic3BhY2UteS0yXCI+PExhYmVsPkVtcGxveWVlPC9MYWJlbD48U2VsZWN0IHZhbHVlPXtsZWF2ZUZvcm0uZW1wbG95ZWVJZH0gb25WYWx1ZUNoYW5nZT17diA9PiBzZXRMZWF2ZUZvcm0oZiA9PiAoeyAuLi5mLCBlbXBsb3llZUlkOiB2IH0pKX0+PFNlbGVjdFRyaWdnZXI+PFNlbGVjdFZhbHVlIHBsYWNlaG9sZGVyPVwiU2VsZWN0IGVtcGxveWVlXCIgLz48L1NlbGVjdFRyaWdnZXI+PFNlbGVjdENvbnRlbnQ+e2VtcGxveWVlcy5tYXAoKGU6IGFueSkgPT4gPFNlbGVjdEl0ZW0ga2V5PXtlLmlkfSB2YWx1ZT17ZS5pZH0+e2UubmFtZX08L1NlbGVjdEl0ZW0+KX08L1NlbGVjdENvbnRlbnQ+PC9TZWxlY3Q+PC9kaXY+XHJcbiAgICAgICAgICAgIDxkaXYgY2xhc3NOYW1lPVwic3BhY2UteS0yXCI+XHJcbiAgICAgICAgICAgICAgPExhYmVsPkxlYXZlIFR5cGU8L0xhYmVsPlxyXG4gICAgICAgICAgICAgIDxkaXYgY2xhc3NOYW1lPVwiZ3JpZCBncmlkLWNvbHMtMiBnYXAtMlwiPlxyXG4gICAgICAgICAgICAgICAge0xFQVZFX1RZUEVTLm1hcCh0ID0+IHtcclxuICAgICAgICAgICAgICAgICAgY29uc3QgSWNvbiA9IHQuaWNvbjtcclxuICAgICAgICAgICAgICAgICAgcmV0dXJuIChcclxuICAgICAgICAgICAgICAgICAgICA8YnV0dG9uIGtleT17dC52YWx1ZX0gb25DbGljaz17KCkgPT4gc2V0TGVhdmVGb3JtKGYgPT4gKHsgLi4uZiwgdHlwZTogdC52YWx1ZSB9KSl9XHJcbiAgICAgICAgICAgICAgICAgICAgICBjbGFzc05hbWU9e2NuKFwiZmxleCBpdGVtcy1jZW50ZXIgZ2FwLTIgcC0yLjUgcm91bmRlZC14bCBib3JkZXIgdGV4dC1sZWZ0IHRleHQtWzEycHhdIGZvbnQtbWVkaXVtIHRyYW5zaXRpb24tYWxsXCIsXHJcbiAgICAgICAgICAgICAgICAgICAgICAgIGxlYXZlRm9ybS50eXBlID09PSB0LnZhbHVlID8gdC5iZyArIFwiIFwiICsgdC5jb2xvciArIFwiIGJvcmRlci1jdXJyZW50IHNoYWRvdy1zbVwiIDogXCJiZy1tdXRlZC8yMCB0ZXh0LW11dGVkLWZvcmVncm91bmQgYm9yZGVyLXRyYW5zcGFyZW50IGhvdmVyOmJnLW11dGVkXCIpfT5cclxuICAgICAgICAgICAgICAgICAgICAgIDxJY29uIGNsYXNzTmFtZT1cInctNCBoLTQgc2hyaW5rLTBcIiAvPnt0LmxhYmVsfVxyXG4gICAgICAgICAgICAgICAgICAgIDwvYnV0dG9uPlxyXG4gICAgICAgICAgICAgICAgICApO1xyXG4gICAgICAgICAgICAgICAgfSl9XHJcbiAgICAgICAgICAgICAgPC9kaXY+XHJcbiAgICAgICAgICAgIDwvZGl2PlxyXG4gICAgICAgICAgICA8ZGl2IGNsYXNzTmFtZT1cImdyaWQgZ3JpZC1jb2xzLTIgZ2FwLTNcIj5cclxuICAgICAgICAgICAgICA8ZGl2IGNsYXNzTmFtZT1cInNwYWNlLXktMlwiPjxMYWJlbD5TdGFydCBEYXRlPC9MYWJlbD48SW5wdXQgdHlwZT1cImRhdGVcIiB2YWx1ZT17bGVhdmVGb3JtLnN0YXJ0RGF0ZX0gb25DaGFuZ2U9e2UgPT4gc2V0TGVhdmVGb3JtKGYgPT4gKHsgLi4uZiwgc3RhcnREYXRlOiBlLnRhcmdldC52YWx1ZSB9KSl9IC8+PC9kaXY+XHJcbiAgICAgICAgICAgICAgPGRpdiBjbGFzc05hbWU9XCJzcGFjZS15LTJcIj48TGFiZWw+RW5kIERhdGU8L0xhYmVsPjxJbnB1dCB0eXBlPVwiZGF0ZVwiIHZhbHVlPXtsZWF2ZUZvcm0uZW5kRGF0ZX0gb25DaGFuZ2U9e2UgPT4gc2V0TGVhdmVGb3JtKGYgPT4gKHsgLi4uZiwgZW5kRGF0ZTogZS50YXJnZXQudmFsdWUgfSkpfSAvPjwvZGl2PlxyXG4gICAgICAgICAgICA8L2Rpdj5cclxuICAgICAgICAgICAge2xlYXZlRm9ybS5zdGFydERhdGUgJiYgKFxyXG4gICAgICAgICAgICAgIDxkaXYgY2xhc3NOYW1lPVwicC0zIHJvdW5kZWQtbGcgYmctbXV0ZWQvMzAgdGV4dC14cyB0ZXh0LW11dGVkLWZvcmVncm91bmRcIj5cclxuICAgICAgICAgICAgICAgIER1cmF0aW9uOiA8c3BhbiBjbGFzc05hbWU9XCJmb250LXNlbWlib2xkIHRleHQtZm9yZWdyb3VuZFwiPntkaWZmZXJlbmNlSW5EYXlzKG5ldyBEYXRlKGxlYXZlRm9ybS5lbmREYXRlIHx8IGxlYXZlRm9ybS5zdGFydERhdGUpLCBuZXcgRGF0ZShsZWF2ZUZvcm0uc3RhcnREYXRlKSkgKyAxfSBkYXkocyk8L3NwYW4+XHJcbiAgICAgICAgICAgICAgPC9kaXY+XHJcbiAgICAgICAgICAgICl9XHJcbiAgICAgICAgICAgIDxkaXYgY2xhc3NOYW1lPVwic3BhY2UteS0yXCI+PExhYmVsPlJlYXNvbiAob3B0aW9uYWwpPC9MYWJlbD48VGV4dGFyZWEgdmFsdWU9e2xlYXZlRm9ybS5yZWFzb259IG9uQ2hhbmdlPXtlID0+IHNldExlYXZlRm9ybShmID0+ICh7IC4uLmYsIHJlYXNvbjogZS50YXJnZXQudmFsdWUgfSkpfSByb3dzPXsyfSBwbGFjZWhvbGRlcj1cIkJyaWVmIHJlYXNvbi4uLlwiIC8+PC9kaXY+XHJcbiAgICAgICAgICA8L2Rpdj5cclxuICAgICAgICAgIDxEaWFsb2dGb290ZXI+XHJcbiAgICAgICAgICAgIDxCdXR0b24gdmFyaWFudD1cIm91dGxpbmVcIiBvbkNsaWNrPXsoKSA9PiBzZXRMZWF2ZURpYWxvZyhmYWxzZSl9PkNhbmNlbDwvQnV0dG9uPlxyXG4gICAgICAgICAgICA8QnV0dG9uIG9uQ2xpY2s9e3N1Ym1pdExlYXZlfSBkaXNhYmxlZD17IWxlYXZlRm9ybS5lbXBsb3llZUlkIHx8ICFsZWF2ZUZvcm0uc3RhcnREYXRlfT5TdWJtaXQgUmVxdWVzdDwvQnV0dG9uPlxyXG4gICAgICAgICAgPC9EaWFsb2dGb290ZXI+XHJcbiAgICAgICAgPC9EaWFsb2dDb250ZW50PlxyXG4gICAgICA8L0RpYWxvZz5cclxuICAgIDwvZGl2PlxyXG4gICk7XHJcbn1cclxuIl0sIm5hbWVzIjpbInVzZVN0YXRlIiwidXNlUXVlcnkiLCJzdXBhYmFzZSIsIkNhbGVuZGFyQ2hlY2siLCJQbHVzIiwiQ2hlY2tDaXJjbGUyIiwiWENpcmNsZSIsIkNsb2NrIiwiQWxlcnRUcmlhbmdsZSIsIlBhbG10cmVlIiwiVGhlcm1vbWV0ZXIiLCJCYWJ5IiwiQ2FsZW5kYXIiLCJCYXJDaGFydDMiLCJUcmVuZGluZ1VwIiwiRmlsdGVyIiwiRG93bmxvYWQiLCJIaXN0b3J5IiwiRXllIiwiQnV0dG9uIiwiQ2FyZCIsIkJhZGdlIiwiRGlhbG9nIiwiRGlhbG9nQ29udGVudCIsIkRpYWxvZ0hlYWRlciIsIkRpYWxvZ1RpdGxlIiwiRGlhbG9nRm9vdGVyIiwiSW5wdXQiLCJMYWJlbCIsIlRleHRhcmVhIiwiU2VsZWN0IiwiU2VsZWN0Q29udGVudCIsIlNlbGVjdEl0ZW0iLCJTZWxlY3RUcmlnZ2VyIiwiU2VsZWN0VmFsdWUiLCJUYWJzIiwiVGFic0xpc3QiLCJUYWJzVHJpZ2dlciIsIlRhYnNDb250ZW50IiwiUHJvZ3Jlc3MiLCJjbiIsImZvcm1hdCIsImRpZmZlcmVuY2VJbkRheXMiLCJ0b2FzdCIsIkxFQVZFX1RZUEVTIiwidmFsdWUiLCJsYWJlbCIsImljb24iLCJjb2xvciIsImJnIiwibWF4IiwiQVRURU5EQU5DRV9TVEFUVVMiLCJwcmVzZW50IiwiYWJzZW50IiwibGF0ZSIsInJlbW90ZSIsIlN0b3JlQXR0ZW5kYW5jZVNlY3Rpb24iLCJzdG9yZUlkIiwidGFiIiwic2V0VGFiIiwibGVhdmVSZXF1ZXN0cyIsInNldExlYXZlUmVxdWVzdHMiLCJhdHRlbmRhbmNlUmVjb3JkcyIsInNldEF0dGVuZGFuY2VSZWNvcmRzIiwibGVhdmVEaWFsb2ciLCJzZXRMZWF2ZURpYWxvZyIsImxlYXZlRm9ybSIsInNldExlYXZlRm9ybSIsImVtcGxveWVlSWQiLCJ0eXBlIiwic3RhcnREYXRlIiwiZW5kRGF0ZSIsInJlYXNvbiIsImxlYXZlRmlsdGVyIiwic2V0TGVhdmVGaWx0ZXIiLCJidWxrTW9kZSIsInNldEJ1bGtNb2RlIiwiZGF0YSIsImVtcGxveWVlcyIsInF1ZXJ5S2V5IiwicXVlcnlGbiIsImZyb20iLCJzZWxlY3QiLCJlcSIsIm9yZGVyIiwic3VibWl0TGVhdmUiLCJlbXAiLCJmaW5kIiwiZSIsImlkIiwiZW5kIiwiZGF5cyIsIkRhdGUiLCJwcmV2IiwiY3J5cHRvIiwicmFuZG9tVVVJRCIsImVtcGxveWVlTmFtZSIsIm5hbWUiLCJzdGF0dXMiLCJjcmVhdGVkQXQiLCJzdWNjZXNzIiwidXBkYXRlTGVhdmVTdGF0dXMiLCJtYXAiLCJyIiwibWFya0F0dGVuZGFuY2UiLCJ0b2RheSIsImZpbHRlcmVkIiwiZmlsdGVyIiwiZGF0ZSIsIm1hcmtBbGxQcmVzZW50IiwibmV3UmVjb3JkcyIsInRvZGF5U3RyIiwicGVuZGluZ0NvdW50IiwibGVuZ3RoIiwicHJlc2VudFRvZGF5IiwibGF0ZVRvZGF5IiwiYWJzZW50VG9kYXkiLCJyZW1vdGVUb2RheSIsIm1hcmtlZFRvZGF5IiwiYXR0ZW5kYW5jZVJhdGUiLCJmaWx0ZXJlZExlYXZlcyIsImdldExlYXZlQmFsYW5jZSIsInVzZWQiLCJyZWR1Y2UiLCJzIiwidCIsInJlbWFpbmluZyIsImRpdiIsImNsYXNzTmFtZSIsImkiLCJwIiwidG9GaXhlZCIsIm9uVmFsdWVDaGFuZ2UiLCJoMyIsInZhcmlhbnQiLCJzaXplIiwib25DbGljayIsInJlY29yZCIsImNoYXJBdCIsInRvVXBwZXJDYXNlIiwicm9sZSIsIk9iamVjdCIsImVudHJpZXMiLCJrZXkiLCJpc0FjdGl2ZSIsImJ1dHRvbiIsInNvcnQiLCJhIiwiYiIsImdldFRpbWUiLCJyZXEiLCJsZWF2ZVR5cGUiLCJJY29uIiwiZ2V0RnVsbFllYXIiLCJ0YWJsZSIsInRoZWFkIiwidHIiLCJ0aCIsInNsaWNlIiwidGJvZHkiLCJ0b3RhbFVzZWQiLCJ0ZCIsInNwYW4iLCJiYWwiLCJwY3QiLCJyZXZlcnNlIiwicmVjIiwic3RhdHVzSW5mbyIsIlN0YXR1c0ljb24iLCJzcGxpdCIsIm9wZW4iLCJvbk9wZW5DaGFuZ2UiLCJ2IiwiZiIsInBsYWNlaG9sZGVyIiwib25DaGFuZ2UiLCJ0YXJnZXQiLCJyb3dzIiwiZGlzYWJsZWQiXSwibWFwcGluZ3MiOiI7O0FBQUE7O0NBRUMsR0FDRCxTQUFTQSxRQUFRLFFBQWlCLFFBQVE7QUFDMUMsU0FBU0MsUUFBUSxRQUFRLHdCQUF3QjtBQUNqRCxTQUFTQyxRQUFRLFFBQVEsaUNBQWlDO0FBQzFELFNBQ0VDLGFBQWEsRUFBRUMsSUFBSSxFQUFFQyxZQUFZLEVBQUVDLE9BQU8sRUFBRUMsS0FBSyxFQUFFQyxhQUFhLEVBQ2hFQyxRQUFRLEVBQUVDLFdBQVcsRUFBRUMsSUFBSSxFQUFFQyxRQUFRLEVBQUVDLFNBQVMsRUFBRUMsVUFBVSxFQUM1REMsTUFBTSxFQUFFQyxRQUFRLEVBQUVDLE9BQU8sRUFBRUMsR0FBRyxRQUN6QixlQUFlO0FBQ3RCLFNBQVNDLE1BQU0sUUFBUSx5QkFBeUI7QUFDaEQsU0FBU0MsSUFBSSxRQUFRLHVCQUF1QjtBQUM1QyxTQUFTQyxLQUFLLFFBQVEsd0JBQXdCO0FBQzlDLFNBQVNDLE1BQU0sRUFBRUMsYUFBYSxFQUFFQyxZQUFZLEVBQUVDLFdBQVcsRUFBRUMsWUFB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

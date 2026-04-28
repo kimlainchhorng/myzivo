@@ -1,0 +1,307 @@
+import { createHotContext as __vite__createHotContext } from "/@vite/client";import.meta.hot = __vite__createHotContext("/src/components/shared/PWAInstallBanner.tsx");import __vite__cjsImport0_react_jsxDevRuntime from "/node_modules/.vite/deps/react_jsx-dev-runtime.js?v=7fd9520c"; const _jsxDEV = __vite__cjsImport0_react_jsxDevRuntime["jsxDEV"];
+var _s = $RefreshSig$();
+/**
+ * PWA Install Banner - Smart, non-intrusive install prompt for mobile users
+ * Shows contextually after 30s of browsing, respects dismissals
+ */ import __vite__cjsImport1_react from "/node_modules/.vite/deps/react.js?v=7fd9520c"; const useState = __vite__cjsImport1_react["useState"]; const useEffect = __vite__cjsImport1_react["useEffect"]; const useCallback = __vite__cjsImport1_react["useCallback"];
+import { useLocation } from "/node_modules/.vite/deps/react-router-dom.js?v=7fd9520c";
+import { motion, AnimatePresence } from "/node_modules/.vite/deps/framer-motion.js?v=7fd9520c";
+import { X, Download, Smartphone, Zap, Wifi } from "/node_modules/.vite/deps/lucide-react.js?v=7fd9520c";
+import { Button } from "/src/components/ui/button.tsx";
+import { useIsMobile } from "/src/hooks/use-mobile.tsx";
+import { Capacitor } from "/node_modules/.vite/deps/@capacitor_core.js?v=7fd9520c";
+export function PWAInstallBanner() {
+    _s();
+    const location = useLocation();
+    const isMobile = useIsMobile();
+    const [show, setShow] = useState(false);
+    const [deferredPrompt, setDeferredPrompt] = useState(null);
+    useEffect(()=>{
+        // Don't show inside native Capacitor app
+        if (Capacitor.isNativePlatform()) return;
+        // Don't show if already installed (standalone mode)
+        if (window.matchMedia("(display-mode: standalone)").matches) return;
+        // Don't show on desktop
+        if (!isMobile) return;
+        // Don't interrupt full-screen ride booking flows
+        if (location.pathname.startsWith("/rides")) return;
+        // Don't cover chat / call surfaces (they own the bottom of the screen)
+        if (location.pathname.startsWith("/chat")) return;
+        // Never show on auth routes — must not block input focus
+        const authRoutes = [
+            "/login",
+            "/signup",
+            "/verify-email",
+            "/verify-otp",
+            "/verify-new-device",
+            "/forgot-password",
+            "/reset-password",
+            "/setup"
+        ];
+        if (authRoutes.some((r)=>location.pathname.startsWith(r))) return;
+        // Don't show if dismissed recently (7 days)
+        const dismissed = localStorage.getItem("pwa_banner_dismissed");
+        if (dismissed && Date.now() - Number(dismissed) < 7 * 24 * 60 * 60 * 1000) return;
+        const handler = (e)=>{
+            e.preventDefault();
+            setDeferredPrompt(e);
+            // Only show once we actually have an install prompt to offer.
+            // Add a small delay so it doesn't compete with first paint / LCP.
+            setTimeout(()=>setShow(true), 8000);
+        };
+        window.addEventListener("beforeinstallprompt", handler);
+        return ()=>{
+            window.removeEventListener("beforeinstallprompt", handler);
+        };
+    }, [
+        isMobile,
+        location.pathname
+    ]);
+    const handleInstall = useCallback(async ()=>{
+        if (deferredPrompt) {
+            await deferredPrompt.prompt();
+            const { outcome } = await deferredPrompt.userChoice;
+            if (outcome === "accepted") {
+                setShow(false);
+            }
+            setDeferredPrompt(null);
+        }
+    }, [
+        deferredPrompt
+    ]);
+    const handleDismiss = ()=>{
+        setShow(false);
+        localStorage.setItem("pwa_banner_dismissed", String(Date.now()));
+    };
+    // Only show in mobile browsers, never in native Capacitor apps or standalone PWA
+    if (!isMobile || Capacitor.isNativePlatform() || window.matchMedia("(display-mode: standalone)").matches) return null;
+    // Require a real install prompt — avoids a confusing banner that can't install on iOS Safari
+    if (!deferredPrompt) return null;
+    // Never render on auth routes
+    const authRoutes = [
+        "/login",
+        "/signup",
+        "/verify-email",
+        "/verify-otp",
+        "/verify-new-device",
+        "/forgot-password",
+        "/reset-password",
+        "/setup"
+    ];
+    if (authRoutes.some((r)=>location.pathname.startsWith(r))) return null;
+    // Never render over chat or ride flows (they own the bottom of the viewport)
+    if (location.pathname.startsWith("/chat") || location.pathname.startsWith("/rides")) return null;
+    return /*#__PURE__*/ _jsxDEV(AnimatePresence, {
+        children: show && /*#__PURE__*/ _jsxDEV(motion.div, {
+            initial: {
+                y: 100,
+                opacity: 0
+            },
+            animate: {
+                y: 0,
+                opacity: 1
+            },
+            exit: {
+                y: 100,
+                opacity: 0
+            },
+            transition: {
+                type: "spring",
+                damping: 25,
+                stiffness: 300
+            },
+            className: "fixed bottom-20 left-3 right-3 z-50 safe-area-bottom",
+            children: /*#__PURE__*/ _jsxDEV("div", {
+                className: "relative overflow-hidden rounded-2xl bg-card border border-border/50 shadow-xl p-4",
+                children: [
+                    /*#__PURE__*/ _jsxDEV("div", {
+                        className: "absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-primary via-emerald-400 to-primary"
+                    }, void 0, false, {
+                        fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/shared/PWAInstallBanner.tsx",
+                        lineNumber: 94,
+                        columnNumber: 13
+                    }, this),
+                    /*#__PURE__*/ _jsxDEV("button", {
+                        onClick: handleDismiss,
+                        className: "absolute top-3 right-3 w-8 h-8 flex items-center justify-center rounded-full bg-muted/50 text-muted-foreground hover:bg-muted touch-manipulation active:scale-90",
+                        children: /*#__PURE__*/ _jsxDEV(X, {
+                            className: "w-4 h-4"
+                        }, void 0, false, {
+                            fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/shared/PWAInstallBanner.tsx",
+                            lineNumber: 100,
+                            columnNumber: 15
+                        }, this)
+                    }, void 0, false, {
+                        fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/shared/PWAInstallBanner.tsx",
+                        lineNumber: 96,
+                        columnNumber: 13
+                    }, this),
+                    /*#__PURE__*/ _jsxDEV("div", {
+                        className: "flex items-start gap-3.5",
+                        children: [
+                            /*#__PURE__*/ _jsxDEV("div", {
+                                className: "w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center flex-shrink-0",
+                                children: /*#__PURE__*/ _jsxDEV(Smartphone, {
+                                    className: "w-6 h-6 text-primary"
+                                }, void 0, false, {
+                                    fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/shared/PWAInstallBanner.tsx",
+                                    lineNumber: 105,
+                                    columnNumber: 17
+                                }, this)
+                            }, void 0, false, {
+                                fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/shared/PWAInstallBanner.tsx",
+                                lineNumber: 104,
+                                columnNumber: 15
+                            }, this),
+                            /*#__PURE__*/ _jsxDEV("div", {
+                                className: "flex-1 min-w-0 pr-6",
+                                children: [
+                                    /*#__PURE__*/ _jsxDEV("h3", {
+                                        className: "font-bold text-sm text-foreground mb-1",
+                                        children: "Get the ZIVO App"
+                                    }, void 0, false, {
+                                        fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/shared/PWAInstallBanner.tsx",
+                                        lineNumber: 108,
+                                        columnNumber: 17
+                                    }, this),
+                                    /*#__PURE__*/ _jsxDEV("div", {
+                                        className: "flex items-center gap-3 text-xs text-muted-foreground mb-3",
+                                        children: [
+                                            /*#__PURE__*/ _jsxDEV("span", {
+                                                className: "flex items-center gap-1",
+                                                children: [
+                                                    /*#__PURE__*/ _jsxDEV(Zap, {
+                                                        className: "w-3 h-3 text-primary"
+                                                    }, void 0, false, {
+                                                        fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/shared/PWAInstallBanner.tsx",
+                                                        lineNumber: 110,
+                                                        columnNumber: 61
+                                                    }, this),
+                                                    " Faster"
+                                                ]
+                                            }, void 0, true, {
+                                                fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/shared/PWAInstallBanner.tsx",
+                                                lineNumber: 110,
+                                                columnNumber: 19
+                                            }, this),
+                                            /*#__PURE__*/ _jsxDEV("span", {
+                                                className: "flex items-center gap-1",
+                                                children: [
+                                                    /*#__PURE__*/ _jsxDEV(Wifi, {
+                                                        className: "w-3 h-3 text-primary"
+                                                    }, void 0, false, {
+                                                        fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/shared/PWAInstallBanner.tsx",
+                                                        lineNumber: 111,
+                                                        columnNumber: 61
+                                                    }, this),
+                                                    " Offline"
+                                                ]
+                                            }, void 0, true, {
+                                                fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/shared/PWAInstallBanner.tsx",
+                                                lineNumber: 111,
+                                                columnNumber: 19
+                                            }, this),
+                                            /*#__PURE__*/ _jsxDEV("span", {
+                                                className: "flex items-center gap-1",
+                                                children: [
+                                                    /*#__PURE__*/ _jsxDEV(Download, {
+                                                        className: "w-3 h-3 text-primary"
+                                                    }, void 0, false, {
+                                                        fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/shared/PWAInstallBanner.tsx",
+                                                        lineNumber: 112,
+                                                        columnNumber: 61
+                                                    }, this),
+                                                    " Free"
+                                                ]
+                                            }, void 0, true, {
+                                                fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/shared/PWAInstallBanner.tsx",
+                                                lineNumber: 112,
+                                                columnNumber: 19
+                                            }, this)
+                                        ]
+                                    }, void 0, true, {
+                                        fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/shared/PWAInstallBanner.tsx",
+                                        lineNumber: 109,
+                                        columnNumber: 17
+                                    }, this),
+                                    /*#__PURE__*/ _jsxDEV(Button, {
+                                        size: "sm",
+                                        onClick: handleInstall,
+                                        className: "h-9 px-5 rounded-xl text-xs font-semibold glow-green-btn touch-manipulation active:scale-95",
+                                        children: [
+                                            /*#__PURE__*/ _jsxDEV(Download, {
+                                                className: "w-3.5 h-3.5 mr-1.5"
+                                            }, void 0, false, {
+                                                fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/shared/PWAInstallBanner.tsx",
+                                                lineNumber: 119,
+                                                columnNumber: 19
+                                            }, this),
+                                            "Install Now"
+                                        ]
+                                    }, void 0, true, {
+                                        fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/shared/PWAInstallBanner.tsx",
+                                        lineNumber: 114,
+                                        columnNumber: 17
+                                    }, this)
+                                ]
+                            }, void 0, true, {
+                                fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/shared/PWAInstallBanner.tsx",
+                                lineNumber: 107,
+                                columnNumber: 15
+                            }, this)
+                        ]
+                    }, void 0, true, {
+                        fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/shared/PWAInstallBanner.tsx",
+                        lineNumber: 103,
+                        columnNumber: 13
+                    }, this)
+                ]
+            }, void 0, true, {
+                fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/shared/PWAInstallBanner.tsx",
+                lineNumber: 92,
+                columnNumber: 11
+            }, this)
+        }, void 0, false, {
+            fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/shared/PWAInstallBanner.tsx",
+            lineNumber: 85,
+            columnNumber: 9
+        }, this)
+    }, void 0, false, {
+        fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/shared/PWAInstallBanner.tsx",
+        lineNumber: 83,
+        columnNumber: 5
+    }, this);
+}
+_s(PWAInstallBanner, "PgAIVELHxOE9GBuRr9+UuN/cBUw=", false, function() {
+    return [
+        useLocation,
+        useIsMobile
+    ];
+});
+_c = PWAInstallBanner;
+var _c;
+$RefreshReg$(_c, "PWAInstallBanner");
+
+
+import * as RefreshRuntime from "/@react-refresh";
+const inWebWorker = typeof WorkerGlobalScope !== 'undefined' && self instanceof WorkerGlobalScope;
+if (import.meta.hot && !inWebWorker) {
+  if (!window.$RefreshReg$) {
+    throw new Error(
+      "@vitejs/plugin-react-swc can't detect preamble. Something is wrong."
+    );
+  }
+
+  RefreshRuntime.__hmr_import(import.meta.url).then((currentExports) => {
+    RefreshRuntime.registerExportsForReactRefresh("C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/shared/PWAInstallBanner.tsx", currentExports);
+    import.meta.hot.accept((nextExports) => {
+      if (!nextExports) return;
+      const invalidateMessage = RefreshRuntime.validateRefreshBoundaryAndEnqueueUpdate("C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/shared/PWAInstallBanner.tsx", currentExports, nextExports);
+      if (invalidateMessage) import.meta.hot.invalidate(invalidateMessage);
+    });
+  });
+}
+function $RefreshReg$(type, id) { return RefreshRuntime.register(type, "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/shared/PWAInstallBanner.tsx" + ' ' + id) }
+function $RefreshSig$() { return RefreshRuntime.createSignatureFunctionForTransform(); }
+
+//# sourceMappingURL=data:application/json;base64,eyJ2ZXJzaW9uIjozLCJzb3VyY2VzIjpbIlBXQUluc3RhbGxCYW5uZXIudHN4Il0sInNvdXJjZXNDb250ZW50IjpbIi8qKlxyXG4gKiBQV0EgSW5zdGFsbCBCYW5uZXIgLSBTbWFydCwgbm9uLWludHJ1c2l2ZSBpbnN0YWxsIHByb21wdCBmb3IgbW9iaWxlIHVzZXJzXHJcbiAqIFNob3dzIGNvbnRleHR1YWxseSBhZnRlciAzMHMgb2YgYnJvd3NpbmcsIHJlc3BlY3RzIGRpc21pc3NhbHNcclxuICovXHJcbmltcG9ydCB7IHVzZVN0YXRlLCB1c2VFZmZlY3QsIHVzZUNhbGxiYWNrIH0gZnJvbSBcInJlYWN0XCI7XHJcbmltcG9ydCB7IHVzZUxvY2F0aW9uIH0gZnJvbSBcInJlYWN0LXJvdXRlci1kb21cIjtcclxuaW1wb3J0IHsgbW90aW9uLCBBbmltYXRlUHJlc2VuY2UgfSBmcm9tIFwiZnJhbWVyLW1vdGlvblwiO1xyXG5pbXBvcnQgeyBYLCBEb3dubG9hZCwgU21hcnRwaG9uZSwgWmFwLCBXaWZpIH0gZnJvbSBcImx1Y2lkZS1yZWFjdFwiO1xyXG5pbXBvcnQgeyBCdXR0b24gfSBmcm9tIFwiQC9jb21wb25lbnRzL3VpL2J1dHRvblwiO1xyXG5pbXBvcnQgeyB1c2VJc01vYmlsZSB9IGZyb20gXCJAL2hvb2tzL3VzZS1tb2JpbGVcIjtcclxuaW1wb3J0IHsgQ2FwYWNpdG9yIH0gZnJvbSBcIkBjYXBhY2l0b3IvY29yZVwiO1xyXG5cclxuaW50ZXJmYWNlIEJlZm9yZUluc3RhbGxQcm9tcHRFdmVudCBleHRlbmRzIEV2ZW50IHtcclxuICBwcm9tcHQ6ICgpID0+IFByb21pc2U8dm9pZD47XHJcbiAgdXNlckNob2ljZTogUHJvbWlzZTx7IG91dGNvbWU6IFwiYWNjZXB0ZWRcIiB8IFwiZGlzbWlzc2VkXCIgfT47XHJcbn1cclxuXHJcbmV4cG9ydCBmdW5jdGlvbiBQV0FJbnN0YWxsQmFubmVyKCkge1xyXG4gIGNvbnN0IGxvY2F0aW9uID0gdXNlTG9jYXRpb24oKTtcclxuICBjb25zdCBpc01vYmlsZSA9IHVzZUlzTW9iaWxlKCk7XHJcbiAgY29uc3QgW3Nob3csIHNldFNob3ddID0gdXNlU3RhdGUoZmFsc2UpO1xyXG4gIGNvbnN0IFtkZWZlcnJlZFByb21wdCwgc2V0RGVmZXJyZWRQcm9tcHRdID0gdXNlU3RhdGU8QmVmb3JlSW5zdGFsbFByb21wdEV2ZW50IHwgbnVsbD4obnVsbCk7XHJcblxyXG4gIHVzZUVmZmVjdCgoKSA9PiB7XHJcbiAgICAvLyBEb24ndCBzaG93IGluc2lkZSBuYXRpdmUgQ2FwYWNpdG9yIGFwcFxyXG4gICAgaWYgKENhcGFjaXRvci5pc05hdGl2ZVBsYXRmb3JtKCkpIHJldHVybjtcclxuICAgIC8vIERvbid0IHNob3cgaWYgYWxyZWFkeSBpbnN0YWxsZWQgKHN0YW5kYWxvbmUgbW9kZSlcclxuICAgIGlmICh3aW5kb3cubWF0Y2hNZWRpYShcIihkaXNwbGF5LW1vZGU6IHN0YW5kYWxvbmUpXCIpLm1hdGNoZXMpIHJldHVybjtcclxuICAgIC8vIERvbid0IHNob3cgb24gZGVza3RvcFxyXG4gICAgaWYgKCFpc01vYmlsZSkgcmV0dXJuO1xyXG4gICAgLy8gRG9uJ3QgaW50ZXJydXB0IGZ1bGwtc2NyZWVuIHJpZGUgYm9va2luZyBmbG93c1xyXG4gICAgaWYgKGxvY2F0aW9uLnBhdGhuYW1lLnN0YXJ0c1dpdGgoXCIvcmlkZXNcIikpIHJldHVybjtcclxuICAgIC8vIERvbid0IGNvdmVyIGNoYXQgLyBjYWxsIHN1cmZhY2VzICh0aGV5IG93biB0aGUgYm90dG9tIG9mIHRoZSBzY3JlZW4pXHJcbiAgICBpZiAobG9jYXRpb24ucGF0aG5hbWUuc3RhcnRzV2l0aChcIi9jaGF0XCIpKSByZXR1cm47XHJcbiAgICAvLyBOZXZlciBzaG93IG9uIGF1dGggcm91dGVzIOKAlCBtdXN0IG5vdCBibG9jayBpbnB1dCBmb2N1c1xyXG4gICAgY29uc3QgYXV0aFJvdXRlcyA9IFtcIi9sb2dpblwiLCBcIi9zaWdudXBcIiwgXCIvdmVyaWZ5LWVtYWlsXCIsIFwiL3ZlcmlmeS1vdHBcIiwgXCIvdmVyaWZ5LW5ldy1kZXZpY2VcIiwgXCIvZm9yZ290LXBhc3N3b3JkXCIsIFwiL3Jlc2V0LXBhc3N3b3JkXCIsIFwiL3NldHVwXCJdO1xyXG4gICAgaWYgKGF1dGhSb3V0ZXMuc29tZSgocikgPT4gbG9jYXRpb24ucGF0aG5hbWUuc3RhcnRzV2l0aChyKSkpIHJldHVybjtcclxuICAgIC8vIERvbid0IHNob3cgaWYgZGlzbWlzc2VkIHJlY2VudGx5ICg3IGRheXMpXHJcbiAgICBjb25zdCBkaXNtaXNzZWQgPSBsb2NhbFN0b3JhZ2UuZ2V0SXRlbShcInB3YV9iYW5uZXJfZGlzbWlzc2VkXCIpO1xyXG4gICAgaWYgKGRpc21pc3NlZCAmJiBEYXRlLm5vdygpIC0gTnVtYmVyKGRpc21pc3NlZCkgPCA3ICogMjQgKiA2MCAqIDYwICogMTAwMCkgcmV0dXJuO1xyXG5cclxuICAgIGNvbnN0IGhhbmRsZXIgPSAoZTogRXZlbnQpID0+IHtcclxuICAgICAgZS5wcmV2ZW50RGVmYXVsdCgpO1xyXG4gICAgICBzZXREZWZlcnJlZFByb21wdChlIGFzIEJlZm9yZUluc3RhbGxQcm9tcHRFdmVudCk7XHJcbiAgICAgIC8vIE9ubHkgc2hvdyBvbmNlIHdlIGFjdHVhbGx5IGhhdmUgYW4gaW5zdGFsbCBwcm9tcHQgdG8gb2ZmZXIuXHJcbiAgICAgIC8vIEFkZCBhIHNtYWxsIGRlbGF5IHNvIGl0IGRvZXNuJ3QgY29tcGV0ZSB3aXRoIGZpcnN0IHBhaW50IC8gTENQLlxyXG4gICAgICBzZXRUaW1lb3V0KCgpID0+IHNldFNob3codHJ1ZSksIDgwMDApO1xyXG4gICAgfTtcclxuICAgIHdpbmRvdy5hZGRFdmVudExpc3RlbmVyKFwiYmVmb3JlaW5zdGFsbHByb21wdFwiLCBoYW5kbGVyKTtcclxuXHJcbiAgICByZXR1cm4gKCkgPT4ge1xyXG4gICAgICB3aW5kb3cucmVtb3ZlRXZlbnRMaXN0ZW5lcihcImJlZm9yZWluc3RhbGxwcm9tcHRcIiwgaGFuZGxlcik7XHJcbiAgICB9O1xyXG4gIH0sIFtpc01vYmlsZSwgbG9jYXRpb24ucGF0aG5hbWVdKTtcclxuXHJcbiAgY29uc3QgaGFuZGxlSW5zdGFsbCA9IHVzZUNhbGxiYWNrKGFzeW5jICgpID0+IHtcclxuICAgIGlmIChkZWZlcnJlZFByb21wdCkge1xyXG4gICAgICBhd2FpdCBkZWZlcnJlZFByb21wdC5wcm9tcHQoKTtcclxuICAgICAgY29uc3QgeyBvdXRjb21lIH0gPSBhd2FpdCBkZWZlcnJlZFByb21wdC51c2VyQ2hvaWNlO1xyXG4gICAgICBpZiAob3V0Y29tZSA9PT0gXCJhY2NlcHRlZFwiKSB7XHJcbiAgICAgICAgc2V0U2hvdyhmYWxzZSk7XHJcbiAgICAgIH1cclxuICAgICAgc2V0RGVmZXJyZWRQcm9tcHQobnVsbCk7XHJcbiAgICB9XHJcbiAgfSwgW2RlZmVycmVkUHJvbXB0XSk7XHJcblxyXG4gIGNvbnN0IGhhbmRsZURpc21pc3MgPSAoKSA9PiB7XHJcbiAgICBzZXRTaG93KGZhbHNlKTtcclxuICAgIGxvY2FsU3RvcmFnZS5zZXRJdGVtKFwicHdhX2Jhbm5lcl9kaXNtaXNzZWRcIiwgU3RyaW5nKERhdGUubm93KCkpKTtcclxuICB9O1xyXG5cclxuICAvLyBPbmx5IHNob3cgaW4gbW9iaWxlIGJyb3dzZXJzLCBuZXZlciBpbiBuYXRpdmUgQ2FwYWNpdG9yIGFwcHMgb3Igc3RhbmRhbG9uZSBQV0FcclxuICBpZiAoIWlzTW9iaWxlIHx8IENhcGFjaXRvci5pc05hdGl2ZVBsYXRmb3JtKCkgfHwgd2luZG93Lm1hdGNoTWVkaWEoXCIoZGlzcGxheS1tb2RlOiBzdGFuZGFsb25lKVwiKS5tYXRjaGVzKSByZXR1cm4gbnVsbDtcclxuICAvLyBSZXF1aXJlIGEgcmVhbCBpbnN0YWxsIHByb21wdCDigJQgYXZvaWRzIGEgY29uZnVzaW5nIGJhbm5lciB0aGF0IGNhbid0IGluc3RhbGwgb24gaU9TIFNhZmFyaVxyXG4gIGlmICghZGVmZXJyZWRQcm9tcHQpIHJldHVybiBudWxsO1xyXG4gIC8vIE5ldmVyIHJlbmRlciBvbiBhdXRoIHJvdXRlc1xyXG4gIGNvbnN0IGF1dGhSb3V0ZXMgPSBbXCIvbG9naW5cIiwgXCIvc2lnbnVwXCIsIFwiL3ZlcmlmeS1lbWFpbFwiLCBcIi92ZXJpZnktb3RwXCIsIFwiL3ZlcmlmeS1uZXctZGV2aWNlXCIsIFwiL2ZvcmdvdC1wYXNzd29yZFwiLCBcIi9yZXNldC1wYXNzd29yZFwiLCBcIi9zZXR1cFwiXTtcclxuICBpZiAoYXV0aFJvdXRlcy5zb21lKChyKSA9PiBsb2NhdGlvbi5wYXRobmFtZS5zdGFydHNXaXRoKHIpKSkgcmV0dXJuIG51bGw7XHJcbiAgLy8gTmV2ZXIgcmVuZGVyIG92ZXIgY2hhdCBvciByaWRlIGZsb3dzICh0aGV5IG93biB0aGUgYm90dG9tIG9mIHRoZSB2aWV3cG9ydClcclxuICBpZiAobG9jYXRpb24ucGF0aG5hbWUuc3RhcnRzV2l0aChcIi9jaGF0XCIpIHx8IGxvY2F0aW9uLnBhdGhuYW1lLnN0YXJ0c1dpdGgoXCIvcmlkZXNcIikpIHJldHVybiBudWxsO1xyXG5cclxuICByZXR1cm4gKFxyXG4gICAgPEFuaW1hdGVQcmVzZW5jZT5cclxuICAgICAge3Nob3cgJiYgKFxyXG4gICAgICAgIDxtb3Rpb24uZGl2XHJcbiAgICAgICAgICBpbml0aWFsPXt7IHk6IDEwMCwgb3BhY2l0eTogMCB9fVxyXG4gICAgICAgICAgYW5pbWF0ZT17eyB5OiAwLCBvcGFjaXR5OiAxIH19XHJcbiAgICAgICAgICBleGl0PXt7IHk6IDEwMCwgb3BhY2l0eTogMCB9fVxyXG4gICAgICAgICAgdHJhbnNpdGlvbj17eyB0eXBlOiBcInNwcmluZ1wiLCBkYW1waW5nOiAyNSwgc3RpZmZuZXNzOiAzMDAgfX1cclxuICAgICAgICAgIGNsYXNzTmFtZT1cImZpeGVkIGJvdHRvbS0yMCBsZWZ0LTMgcmlnaHQtMyB6LTUwIHNhZmUtYXJlYS1ib3R0b21cIlxyXG4gICAgICAgID5cclxuICAgICAgICAgIDxkaXYgY2xhc3NOYW1lPVwicmVsYXRpdmUgb3ZlcmZsb3ctaGlkZGVuIHJvdW5kZWQtMnhsIGJnLWNhcmQgYm9yZGVyIGJvcmRlci1ib3JkZXIvNTAgc2hhZG93LXhsIHAtNFwiPlxyXG4gICAgICAgICAgICB7LyogR2xvdyBhY2NlbnQgKi99XHJcbiAgICAgICAgICAgIDxkaXYgY2xhc3NOYW1lPVwiYWJzb2x1dGUgdG9wLTAgbGVmdC0wIHJpZ2h0LTAgaC0xIGJnLWdyYWRpZW50LXRvLXIgZnJvbS1wcmltYXJ5IHZpYS1lbWVyYWxkLTQwMCB0by1wcmltYXJ5XCIgLz5cclxuXHJcbiAgICAgICAgICAgIDxidXR0b25cclxuICAgICAgICAgICAgICBvbkNsaWNrPXtoYW5kbGVEaXNtaXNzfVxyXG4gICAgICAgICAgICAgIGNsYXNzTmFtZT1cImFic29sdXRlIHRvcC0zIHJpZ2h0LTMgdy04IGgtOCBmbGV4IGl0ZW1zLWNlbnRlciBqdXN0aWZ5LWNlbnRlciByb3VuZGVkLWZ1bGwgYmctbXV0ZWQvNTAgdGV4dC1tdXRlZC1mb3JlZ3JvdW5kIGhvdmVyOmJnLW11dGVkIHRvdWNoLW1hbmlwdWxhdGlvbiBhY3RpdmU6c2NhbGUtOTBcIlxyXG4gICAgICAgICAgICA+XHJcbiAgICAgICAgICAgICAgPFggY2xhc3NOYW1lPVwidy00IGgtNFwiIC8+XHJcbiAgICAgICAgICAgIDwvYnV0dG9uPlxyXG5cclxuICAgICAgICAgICAgPGRpdiBjbGFzc05hbWU9XCJmbGV4IGl0ZW1zLXN0YXJ0IGdhcC0zLjVcIj5cclxuICAgICAgICAgICAgICA8ZGl2IGNsYXNzTmFtZT1cInctMTIgaC0xMiByb3VuZGVkLXhsIGJnLXByaW1hcnkvMTAgZmxleCBpdGVtcy1jZW50ZXIganVzdGlmeS1jZW50ZXIgZmxleC1zaHJpbmstMFwiPlxyXG4gICAgICAgICAgICAgICAgPFNtYXJ0cGhvbmUgY2xhc3NOYW1lPVwidy02IGgtNiB0ZXh0LXByaW1hcnlcIiAvPlxyXG4gICAgICAgICAgICAgIDwvZGl2PlxyXG4gICAgICAgICAgICAgIDxkaXYgY2xhc3NOYW1lPVwiZmxleC0xIG1pbi13LTAgcHItNlwiPlxyXG4gICAgICAgICAgICAgICAgPGgzIGNsYXNzTmFtZT1cImZvbnQtYm9sZCB0ZXh0LXNtIHRleHQtZm9yZWdyb3VuZCBtYi0xXCI+R2V0IHRoZSBaSVZPIEFwcDwvaDM+XHJcbiAgICAgICAgICAgICAgICA8ZGl2IGNsYXNzTmFtZT1cImZsZXggaXRlbXMtY2VudGVyIGdhcC0zIHRleHQteHMgdGV4dC1tdXRlZC1mb3JlZ3JvdW5kIG1iLTNcIj5cclxuICAgICAgICAgICAgICAgICAgPHNwYW4gY2xhc3NOYW1lPVwiZmxleCBpdGVtcy1jZW50ZXIgZ2FwLTFcIj48WmFwIGNsYXNzTmFtZT1cInctMyBoLTMgdGV4dC1wcmltYXJ5XCIgLz4gRmFzdGVyPC9zcGFuPlxyXG4gICAgICAgICAgICAgICAgICA8c3BhbiBjbGFzc05hbWU9XCJmbGV4IGl0ZW1zLWNlbnRlciBnYXAtMVwiPjxXaWZpIGNsYXNzTmFtZT1cInctMyBoLTMgdGV4dC1wcmltYXJ5XCIgLz4gT2ZmbGluZTwvc3Bhbj5cclxuICAgICAgICAgICAgICAgICAgPHNwYW4gY2xhc3NOYW1lPVwiZmxleCBpdGVtcy1jZW50ZXIgZ2FwLTFcIj48RG93bmxvYWQgY2xhc3NOYW1lPVwidy0zIGgtMyB0ZXh0LXByaW1hcnlcIiAvPiBGcmVlPC9zcGFuPlxyXG4gICAgICAgICAgICAgICAgPC9kaXY+XHJcbiAgICAgICAgICAgICAgICA8QnV0dG9uXHJcbiAgICAgICAgICAgICAgICAgIHNpemU9XCJzbVwiXHJcbiAgICAgICAgICAgICAgICAgIG9uQ2xpY2s9e2hhbmRsZUluc3RhbGx9XHJcbiAgICAgICAgICAgICAgICAgIGNsYXNzTmFtZT1cImgtOSBweC01IHJvdW5kZWQteGwgdGV4dC14cyBmb250LXNlbWlib2xkIGdsb3ctZ3JlZW4tYnRuIHRvdWNoLW1hbmlwdWxhdGlvbiBhY3RpdmU6c2NhbGUtOTVcIlxyXG4gICAgICAgICAgICAgICAgPlxyXG4gICAgICAgICAgICAgICAgICA8RG93bmxvYWQgY2xhc3NOYW1lPVwidy0zLjUgaC0zLjUgbXItMS41XCIgLz5cclxuICAgICAgICAgICAgICAgICAgSW5zdGFsbCBOb3dcclxuICAgICAgICAgICAgICAgIDwvQnV0dG9uPlxyXG4gICAgICAgICAgICAgIDwvZGl2PlxyXG4gICAgICAgICAgICA8L2Rpdj5cclxuICAgICAgICAgIDwvZGl2PlxyXG4gICAgICAgIDwvbW90aW9uLmRpdj5cclxuICAgICAgKX1cclxuICAgIDwvQW5pbWF0ZVByZXNlbmNlPlxyXG4gICk7XHJcbn1cclxuIl0sIm5hbWVzIjpbInVzZVN0YXRlIiwidXNlRWZmZWN0IiwidXNlQ2FsbGJhY2siLCJ1c2VMb2NhdGlvbiIsIm1vdGlvbiIsIkFuaW1hdGVQcmVzZW5jZSIsIlgiLCJEb3dubG9hZCIsIlNtYXJ0cGhvbmUiLCJaYXAiLCJXaWZpIiwiQnV0dG9uIiwidXNlSXNNb2JpbGUiLCJDYXBhY2l0b3IiLCJQV0FJbnN0YWxsQmFubmVyIiwibG9jYXRpb24iLCJpc01vYmlsZSIsInNob3ciLCJzZXRTaG93IiwiZGVmZXJyZWRQcm9tcHQiLCJzZXREZWZlcnJlZFByb21wdCIsImlzTmF0aXZlUGxhdGZvcm0iLCJ3aW5kb3ciLCJtYXRjaE1lZGlhIiwibWF0Y2hlcyIsInBhdGhuYW1lIiwic3RhcnRzV2l0aCIsImF1dGhSb3V0ZXMiLCJzb21lIiwiciIsImRpc21pc3NlZCIsImxvY2FsU3RvcmFnZSIsImdldEl0ZW0iLCJEYXRlIiwibm93IiwiTnVtYmVyIiwiaGFuZGxlciIsImUiLCJwcmV2ZW50RGVmYXVsdCIsInNldFRpbWVvdXQiLCJhZGRFdmVudExpc3RlbmVyIiwicmVtb3ZlRXZlbnRMaXN0ZW5lciIsImhhbmRsZUluc3RhbGwiLCJwcm9tcHQiLCJvdXRjb21lIiwidXNlckNob2ljZSIsImhhbmRsZURpc21pc3MiLCJzZXRJdGVtIiwiU3RyaW5nIiwiZGl2IiwiaW5pdGlhbCIsInkiLCJvcGFjaXR5IiwiYW5pbWF0ZSIsImV4aXQiLCJ0cmFuc2l0aW9uIiwidHlwZSIsImRhbXBpbmciLCJzdGlmZm5lc3MiLCJjbGFzc05hbWUiLCJidXR0b24iLCJvbkNs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

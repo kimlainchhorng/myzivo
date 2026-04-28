@@ -1,0 +1,274 @@
+import { createHotContext as __vite__createHotContext } from "/@vite/client";import.meta.hot = __vite__createHotContext("/src/components/social/SafeCaption.tsx");import __vite__cjsImport0_react_jsxDevRuntime from "/node_modules/.vite/deps/react_jsx-dev-runtime.js?v=7fd9520c"; const _jsxDEV = __vite__cjsImport0_react_jsxDevRuntime["jsxDEV"]; const _Fragment = __vite__cjsImport0_react_jsxDevRuntime["Fragment"];
+var _s = $RefreshSig$();
+/**
+ * SafeCaption — renders post captions with auto-linkified URLs that are
+ * passed through the platform's url-safety heuristics. Suspicious or blocked
+ * links are rendered as non-clickable text with a warning tooltip.
+ */ import __vite__cjsImport1_react from "/node_modules/.vite/deps/react.js?v=7fd9520c"; const useMemo = __vite__cjsImport1_react["useMemo"]; const useState = __vite__cjsImport1_react["useState"];
+import { ShieldAlert, ShieldCheck, ExternalLink } from "/node_modules/.vite/deps/lucide-react.js?v=7fd9520c";
+import { assessLinkSync } from "/src/hooks/useLinkRisk.ts";
+import { openExternalUrl } from "/src/lib/openExternalUrl.ts";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "/src/components/ui/dialog.tsx";
+import { Button } from "/src/components/ui/button.tsx";
+import { cn } from "/src/lib/utils.ts";
+// Match http(s) URLs and bare domains (e.g. t.me/foo, maps.app.goo.gl/abc)
+const URL_REGEX = /\b((?:https?:\/\/|www\.)[^\s<>"]+|(?:[a-z0-9-]+\.)+[a-z]{2,}\/[^\s<>"]*)/gi;
+function tokenize(text) {
+    const segments = [];
+    let lastIdx = 0;
+    for (const match of text.matchAll(URL_REGEX)){
+        const idx = match.index ?? 0;
+        if (idx > lastIdx) {
+            segments.push({
+                type: "text",
+                value: text.slice(lastIdx, idx)
+            });
+        }
+        const raw = match[0];
+        // Strip trailing punctuation that's likely not part of the URL
+        const cleaned = raw.replace(/[.,;:!?)"']+$/g, "");
+        const trail = raw.slice(cleaned.length);
+        const href = cleaned.startsWith("http") ? cleaned : `https://${cleaned}`;
+        const assessment = assessLinkSync(href);
+        segments.push({
+            type: "link",
+            value: cleaned,
+            href,
+            risk: assessment.level,
+            warnings: assessment.warnings
+        });
+        if (trail) segments.push({
+            type: "text",
+            value: trail
+        });
+        lastIdx = idx + raw.length;
+    }
+    if (lastIdx < text.length) {
+        segments.push({
+            type: "text",
+            value: text.slice(lastIdx)
+        });
+    }
+    return segments;
+}
+const LINK_STYLES = {
+    trusted: "text-primary underline decoration-primary/40 hover:decoration-primary",
+    neutral: "text-primary underline decoration-primary/30 hover:decoration-primary",
+    suspicious: "text-amber-600 dark:text-amber-400 underline decoration-dotted decoration-amber-500",
+    blocked: "text-destructive line-through decoration-destructive/60 cursor-not-allowed"
+};
+export default function SafeCaption({ text, className }) {
+    _s();
+    const segments = useMemo(()=>tokenize(text), [
+        text
+    ]);
+    const [pendingLink, setPendingLink] = useState(null);
+    const handleLinkClick = (e, seg)=>{
+        e.stopPropagation();
+        e.preventDefault();
+        if (seg.risk === "blocked") return;
+        if (seg.risk === "suspicious" || seg.risk === "neutral") {
+            setPendingLink(seg);
+            return;
+        }
+        if (seg.href) openExternalUrl(seg.href);
+    };
+    const proceed = ()=>{
+        if (pendingLink?.href) openExternalUrl(pendingLink.href);
+        setPendingLink(null);
+    };
+    return /*#__PURE__*/ _jsxDEV(_Fragment, {
+        children: [
+            /*#__PURE__*/ _jsxDEV("span", {
+                className: cn("whitespace-pre-wrap break-words", className),
+                children: segments.map((seg, i)=>{
+                    if (seg.type === "text") return /*#__PURE__*/ _jsxDEV("span", {
+                        children: seg.value
+                    }, i, false, {
+                        fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/social/SafeCaption.tsx",
+                        lineNumber: 99,
+                        columnNumber: 43
+                    }, this);
+                    const risk = seg.risk ?? "neutral";
+                    return /*#__PURE__*/ _jsxDEV("a", {
+                        href: seg.href,
+                        onClick: (e)=>handleLinkClick(e, seg),
+                        title: seg.warnings?.length ? seg.warnings.join(" · ") : seg.href,
+                        className: cn("inline-flex items-center gap-0.5 break-all", LINK_STYLES[risk]),
+                        "aria-disabled": risk === "blocked",
+                        children: [
+                            risk === "blocked" && /*#__PURE__*/ _jsxDEV(ShieldAlert, {
+                                className: "w-3 h-3 shrink-0",
+                                "aria-hidden": true
+                            }, void 0, false, {
+                                fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/social/SafeCaption.tsx",
+                                lineNumber: 113,
+                                columnNumber: 38
+                            }, this),
+                            risk === "suspicious" && /*#__PURE__*/ _jsxDEV(ShieldAlert, {
+                                className: "w-3 h-3 shrink-0",
+                                "aria-hidden": true
+                            }, void 0, false, {
+                                fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/social/SafeCaption.tsx",
+                                lineNumber: 114,
+                                columnNumber: 41
+                            }, this),
+                            seg.value
+                        ]
+                    }, i, true, {
+                        fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/social/SafeCaption.tsx",
+                        lineNumber: 102,
+                        columnNumber: 13
+                    }, this);
+                })
+            }, void 0, false, {
+                fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/social/SafeCaption.tsx",
+                lineNumber: 97,
+                columnNumber: 7
+            }, this),
+            /*#__PURE__*/ _jsxDEV(Dialog, {
+                open: !!pendingLink,
+                onOpenChange: (o)=>!o && setPendingLink(null),
+                children: /*#__PURE__*/ _jsxDEV(DialogContent, {
+                    className: "max-w-sm",
+                    children: [
+                        /*#__PURE__*/ _jsxDEV(DialogHeader, {
+                            children: [
+                                /*#__PURE__*/ _jsxDEV(DialogTitle, {
+                                    className: "flex items-center gap-2 text-base",
+                                    children: [
+                                        pendingLink?.risk === "suspicious" ? /*#__PURE__*/ _jsxDEV(ShieldAlert, {
+                                            className: "w-5 h-5 text-amber-500"
+                                        }, void 0, false, {
+                                            fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/social/SafeCaption.tsx",
+                                            lineNumber: 126,
+                                            columnNumber: 17
+                                        }, this) : /*#__PURE__*/ _jsxDEV(ShieldCheck, {
+                                            className: "w-5 h-5 text-primary"
+                                        }, void 0, false, {
+                                            fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/social/SafeCaption.tsx",
+                                            lineNumber: 128,
+                                            columnNumber: 17
+                                        }, this),
+                                        pendingLink?.risk === "suspicious" ? "Caution: external link" : "Leaving ZIVO"
+                                    ]
+                                }, void 0, true, {
+                                    fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/social/SafeCaption.tsx",
+                                    lineNumber: 124,
+                                    columnNumber: 13
+                                }, this),
+                                /*#__PURE__*/ _jsxDEV(DialogDescription, {
+                                    className: "text-xs break-all pt-1",
+                                    children: pendingLink?.href
+                                }, void 0, false, {
+                                    fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/social/SafeCaption.tsx",
+                                    lineNumber: 132,
+                                    columnNumber: 13
+                                }, this)
+                            ]
+                        }, void 0, true, {
+                            fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/social/SafeCaption.tsx",
+                            lineNumber: 123,
+                            columnNumber: 11
+                        }, this),
+                        pendingLink?.warnings?.length ? /*#__PURE__*/ _jsxDEV("ul", {
+                            className: "text-[11px] text-amber-600 dark:text-amber-400 space-y-0.5 list-disc pl-4",
+                            children: pendingLink.warnings.map((w, i)=>/*#__PURE__*/ _jsxDEV("li", {
+                                    children: w
+                                }, i, false, {
+                                    fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/social/SafeCaption.tsx",
+                                    lineNumber: 138,
+                                    columnNumber: 51
+                                }, this))
+                        }, void 0, false, {
+                            fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/social/SafeCaption.tsx",
+                            lineNumber: 137,
+                            columnNumber: 13
+                        }, this) : /*#__PURE__*/ _jsxDEV("p", {
+                            className: "text-[11px] text-muted-foreground",
+                            children: "This link goes to a third-party site outside ZIVO. Verify the URL before continuing."
+                        }, void 0, false, {
+                            fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/social/SafeCaption.tsx",
+                            lineNumber: 141,
+                            columnNumber: 13
+                        }, this),
+                        /*#__PURE__*/ _jsxDEV(DialogFooter, {
+                            className: "gap-2 sm:gap-2",
+                            children: [
+                                /*#__PURE__*/ _jsxDEV(Button, {
+                                    variant: "outline",
+                                    size: "sm",
+                                    onClick: ()=>setPendingLink(null),
+                                    children: "Cancel"
+                                }, void 0, false, {
+                                    fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/social/SafeCaption.tsx",
+                                    lineNumber: 146,
+                                    columnNumber: 13
+                                }, this),
+                                /*#__PURE__*/ _jsxDEV(Button, {
+                                    size: "sm",
+                                    onClick: proceed,
+                                    className: "gap-1.5",
+                                    children: [
+                                        /*#__PURE__*/ _jsxDEV(ExternalLink, {
+                                            className: "w-3.5 h-3.5"
+                                        }, void 0, false, {
+                                            fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/social/SafeCaption.tsx",
+                                            lineNumber: 150,
+                                            columnNumber: 15
+                                        }, this),
+                                        " Continue"
+                                    ]
+                                }, void 0, true, {
+                                    fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/social/SafeCaption.tsx",
+                                    lineNumber: 149,
+                                    columnNumber: 13
+                                }, this)
+                            ]
+                        }, void 0, true, {
+                            fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/social/SafeCaption.tsx",
+                            lineNumber: 145,
+                            columnNumber: 11
+                        }, this)
+                    ]
+                }, void 0, true, {
+                    fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/social/SafeCaption.tsx",
+                    lineNumber: 122,
+                    columnNumber: 9
+                }, this)
+            }, void 0, false, {
+                fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/social/SafeCaption.tsx",
+                lineNumber: 121,
+                columnNumber: 7
+            }, this)
+        ]
+    }, void 0, true);
+}
+_s(SafeCaption, "mdhAOkM0233HRU4QNtLonGu3WE0=");
+_c = SafeCaption;
+var _c;
+$RefreshReg$(_c, "SafeCaption");
+
+
+import * as RefreshRuntime from "/@react-refresh";
+const inWebWorker = typeof WorkerGlobalScope !== 'undefined' && self instanceof WorkerGlobalScope;
+if (import.meta.hot && !inWebWorker) {
+  if (!window.$RefreshReg$) {
+    throw new Error(
+      "@vitejs/plugin-react-swc can't detect preamble. Something is wrong."
+    );
+  }
+
+  RefreshRuntime.__hmr_import(import.meta.url).then((currentExports) => {
+    RefreshRuntime.registerExportsForReactRefresh("C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/social/SafeCaption.tsx", currentExports);
+    import.meta.hot.accept((nextExports) => {
+      if (!nextExports) return;
+      const invalidateMessage = RefreshRuntime.validateRefreshBoundaryAndEnqueueUpdate("C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/social/SafeCaption.tsx", currentExports, nextExports);
+      if (invalidateMessage) import.meta.hot.invalidate(invalidateMessage);
+    });
+  });
+}
+function $RefreshReg$(type, id) { return RefreshRuntime.register(type, "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/social/SafeCaption.tsx" + ' ' + id) }
+function $RefreshSig$() { return RefreshRuntime.createSignatureFunctionForTransform(); }
+
+//# sourceMappingURL=data:application/json;base64,eyJ2ZXJzaW9uIjozLCJzb3VyY2VzIjpbIlNhZmVDYXB0aW9uLnRzeCJdLCJzb3VyY2VzQ29udGVudCI6WyIvKipcclxuICogU2FmZUNhcHRpb24g4oCUIHJlbmRlcnMgcG9zdCBjYXB0aW9ucyB3aXRoIGF1dG8tbGlua2lmaWVkIFVSTHMgdGhhdCBhcmVcclxuICogcGFzc2VkIHRocm91Z2ggdGhlIHBsYXRmb3JtJ3MgdXJsLXNhZmV0eSBoZXVyaXN0aWNzLiBTdXNwaWNpb3VzIG9yIGJsb2NrZWRcclxuICogbGlua3MgYXJlIHJlbmRlcmVkIGFzIG5vbi1jbGlja2FibGUgdGV4dCB3aXRoIGEgd2FybmluZyB0b29sdGlwLlxyXG4gKi9cclxuaW1wb3J0IHsgdXNlTWVtbywgdXNlU3RhdGUgfSBmcm9tIFwicmVhY3RcIjtcclxuaW1wb3J0IHsgU2hpZWxkQWxlcnQsIFNoaWVsZENoZWNrLCBFeHRlcm5hbExpbmsgfSBmcm9tIFwibHVjaWRlLXJlYWN0XCI7XHJcbmltcG9ydCB7IGFzc2Vzc0xpbmtTeW5jLCB0eXBlIExpbmtSaXNrTGV2ZWwgfSBmcm9tIFwiQC9ob29rcy91c2VMaW5rUmlza1wiO1xyXG5pbXBvcnQgeyBvcGVuRXh0ZXJuYWxVcmwgfSBmcm9tIFwiQC9saWIvb3BlbkV4dGVybmFsVXJsXCI7XHJcbmltcG9ydCB7XHJcbiAgRGlhbG9nLFxyXG4gIERpYWxvZ0NvbnRlbnQsXHJcbiAgRGlhbG9nSGVhZGVyLFxyXG4gIERpYWxvZ1RpdGxlLFxyXG4gIERpYWxvZ0Rlc2NyaXB0aW9uLFxyXG4gIERpYWxvZ0Zvb3RlcixcclxufSBmcm9tIFwiQC9jb21wb25lbnRzL3VpL2RpYWxvZ1wiO1xyXG5pbXBvcnQgeyBCdXR0b24gfSBmcm9tIFwiQC9jb21wb25lbnRzL3VpL2J1dHRvblwiO1xyXG5pbXBvcnQgeyBjbiB9IGZyb20gXCJAL2xpYi91dGlsc1wiO1xyXG5cclxuaW50ZXJmYWNlIFNhZmVDYXB0aW9uUHJvcHMge1xyXG4gIHRleHQ6IHN0cmluZztcclxuICBjbGFzc05hbWU/OiBzdHJpbmc7XHJcbn1cclxuXHJcbi8vIE1hdGNoIGh0dHAocykgVVJMcyBhbmQgYmFyZSBkb21haW5zIChlLmcuIHQubWUvZm9vLCBtYXBzLmFwcC5nb28uZ2wvYWJjKVxyXG5jb25zdCBVUkxfUkVHRVggPSAvXFxiKCg/Omh0dHBzPzpcXC9cXC98d3d3XFwuKVteXFxzPD5cIl0rfCg/OlthLXowLTktXStcXC4pK1thLXpdezIsfVxcL1teXFxzPD5cIl0qKS9naTtcclxuXHJcbmludGVyZmFjZSBTZWdtZW50IHtcclxuICB0eXBlOiBcInRleHRcIiB8IFwibGlua1wiO1xyXG4gIHZhbHVlOiBzdHJpbmc7XHJcbiAgaHJlZj86IHN0cmluZztcclxuICByaXNrPzogTGlua1Jpc2tMZXZlbDtcclxuICB3YXJuaW5ncz86IHN0cmluZ1tdO1xyXG59XHJcblxyXG5mdW5jdGlvbiB0b2tlbml6ZSh0ZXh0OiBzdHJpbmcpOiBTZWdtZW50W10ge1xyXG4gIGNvbnN0IHNlZ21lbnRzOiBTZWdtZW50W10gPSBbXTtcclxuICBsZXQgbGFzdElkeCA9IDA7XHJcblxyXG4gIGZvciAoY29uc3QgbWF0Y2ggb2YgdGV4dC5tYXRjaEFsbChVUkxfUkVHRVgpKSB7XHJcbiAgICBjb25zdCBpZHggPSBtYXRjaC5pbmRleCA/PyAwO1xyXG4gICAgaWYgKGlkeCA+IGxhc3RJZHgpIHtcclxuICAgICAgc2VnbWVudHMucHVzaCh7IHR5cGU6IFwidGV4dFwiLCB2YWx1ZTogdGV4dC5zbGljZShsYXN0SWR4LCBpZHgpIH0pO1xyXG4gICAgfVxyXG4gICAgY29uc3QgcmF3ID0gbWF0Y2hbMF07XHJcbiAgICAvLyBTdHJpcCB0cmFpbGluZyBwdW5jdHVhdGlvbiB0aGF0J3MgbGlrZWx5IG5vdCBwYXJ0IG9mIHRoZSBVUkxcclxuICAgIGNvbnN0IGNsZWFuZWQgPSByYXcucmVwbGFjZSgvWy4sOzohPylcIiddKyQvZywgXCJcIik7XHJcbiAgICBjb25zdCB0cmFpbCA9IHJhdy5zbGljZShjbGVhbmVkLmxlbmd0aCk7XHJcbiAgICBjb25zdCBocmVmID0gY2xlYW5lZC5zdGFydHNXaXRoKFwiaHR0cFwiKSA/IGNsZWFuZWQgOiBgaHR0cHM6Ly8ke2NsZWFuZWR9YDtcclxuICAgIGNvbnN0IGFzc2Vzc21lbnQgPSBhc3Nlc3NMaW5rU3luYyhocmVmKTtcclxuICAgIHNlZ21lbnRzLnB1c2goe1xyXG4gICAgICB0eXBlOiBcImxpbmtcIixcclxuICAgICAgdmFsdWU6IGNsZWFuZWQsXHJcbiAgICAgIGhyZWYsXHJcbiAgICAgIHJpc2s6IGFzc2Vzc21lbnQubGV2ZWwsXHJcbiAgICAgIHdhcm5pbmdzOiBhc3Nlc3NtZW50Lndhcm5pbmdzLFxyXG4gICAgfSk7XHJcbiAgICBpZiAodHJhaWwpIHNlZ21lbnRzLnB1c2goeyB0eXBlOiBcInRleHRcIiwgdmFsdWU6IHRyYWlsIH0pO1xyXG4gICAgbGFzdElkeCA9IGlkeCArIHJhdy5sZW5ndGg7XHJcbiAgfVxyXG4gIGlmIChsYXN0SWR4IDwgdGV4dC5sZW5ndGgpIHtcclxuICAgIHNlZ21lbnRzLnB1c2goeyB0eXBlOiBcInRleHRcIiwgdmFsdWU6IHRleHQuc2xpY2UobGFzdElkeCkgfSk7XHJcbiAgfVxyXG4gIHJldHVybiBzZWdtZW50cztcclxufVxyXG5cclxuY29uc3QgTElOS19TVFlMRVM6IFJlY29yZDxMaW5rUmlza0xldmVsLCBzdHJpbmc+ID0ge1xyXG4gIHRydXN0ZWQ6IFwidGV4dC1wcmltYXJ5IHVuZGVybGluZSBkZWNvcmF0aW9uLXByaW1hcnkvNDAgaG92ZXI6ZGVjb3JhdGlvbi1wcmltYXJ5XCIsXHJcbiAgbmV1dHJhbDogXCJ0ZXh0LXByaW1hcnkgdW5kZXJsaW5lIGRlY29yYXRpb24tcHJpbWFyeS8zMCBob3ZlcjpkZWNvcmF0aW9uLXByaW1hcnlcIixcclxuICBzdXNwaWNpb3VzOiBcInRleHQtYW1iZXItNjAwIGRhcms6dGV4dC1hbWJlci00MDAgdW5kZXJsaW5lIGRlY29yYXRpb24tZG90dGVkIGRlY29yYXRpb24tYW1iZXItNTAwXCIsXHJcbiAgYmxvY2tlZDogXCJ0ZXh0LWRlc3RydWN0aXZlIGxpbmUtdGhyb3VnaCBkZWNvcmF0aW9uLWRlc3RydWN0aXZlLzYwIGN1cnNvci1ub3QtYWxsb3dlZFwiLFxyXG59O1xyXG5cclxuZXhwb3J0IGRlZmF1bHQgZnVuY3Rpb24gU2FmZUNhcHRpb24oeyB0ZXh0LCBjbGFzc05hbWUgfTogU2FmZUNhcHRpb25Qcm9wcykge1xyXG4gIGNvbnN0IHNlZ21lbnRzID0gdXNlTWVtbygoKSA9PiB0b2tlbml6ZSh0ZXh0KSwgW3RleHRdKTtcclxuICBjb25zdCBbcGVuZGluZ0xpbmssIHNldFBlbmRpbmdMaW5rXSA9IHVzZVN0YXRlPFNlZ21lbnQgfCBudWxsPihudWxsKTtcclxuXHJcbiAgY29uc3QgaGFuZGxlTGlua0NsaWNrID0gKGU6IFJlYWN0Lk1vdXNlRXZlbnQsIHNlZzogU2VnbWVudCkgPT4ge1xyXG4gICAgZS5zdG9wUHJvcGFnYXRpb24oKTtcclxuICAgIGUucHJldmVudERlZmF1bHQoKTtcclxuICAgIGlmIChzZWcucmlzayA9PT0gXCJibG9ja2VkXCIpIHJldHVybjtcclxuICAgIGlmIChzZWcucmlzayA9PT0gXCJzdXNwaWNpb3VzXCIgfHwgc2VnLnJpc2sgPT09IFwibmV1dHJhbFwiKSB7XHJcbiAgICAgIHNldFBlbmRpbmdMaW5rKHNlZyk7XHJcbiAgICAgIHJldHVybjtcclxuICAgIH1cclxuICAgIGlmIChzZWcuaHJlZikgb3BlbkV4dGVybmFsVXJsKHNlZy5ocmVmKTtcclxuICB9O1xyXG5cclxuICBjb25zdCBwcm9jZWVkID0gKCkgPT4ge1xyXG4gICAgaWYgKHBlbmRpbmdMaW5rPy5ocmVmKSBvcGVuRXh0ZXJuYWxVcmwocGVuZGluZ0xpbmsuaHJlZik7XHJcbiAgICBzZXRQZW5kaW5nTGluayhudWxsKTtcclxuICB9O1xyXG5cclxuICByZXR1cm4gKFxyXG4gICAgPD5cclxuICAgICAgPHNwYW4gY2xhc3NOYW1lPXtjbihcIndoaXRlc3BhY2UtcHJlLXdyYXAgYnJlYWstd29yZHNcIiwgY2xhc3NOYW1lKX0+XHJcbiAgICAgICAge3NlZ21lbnRzLm1hcCgoc2VnLCBpKSA9PiB7XHJcbiAgICAgICAgICBpZiAoc2VnLnR5cGUgPT09IFwidGV4dFwiKSByZXR1cm4gPHNwYW4ga2V5PXtpfT57c2VnLnZhbHVlfTwvc3Bhbj47XHJcbiAgICAgICAgICBjb25zdCByaXNrID0gc2VnLnJpc2sgPz8gXCJuZXV0cmFsXCI7XHJcbiAgICAgICAgICByZXR1cm4gKFxyXG4gICAgICAgICAgICA8YVxyXG4gICAgICAgICAgICAgIGtleT17aX1cclxuICAgICAgICAgICAgICBocmVmPXtzZWcuaHJlZn1cclxuICAgICAgICAgICAgICBvbkNsaWNrPXsoZSkgPT4gaGFuZGxlTGlua0NsaWNrKGUsIHNlZyl9XHJcbiAgICAgICAgICAgICAgdGl0bGU9e3NlZy53YXJuaW5ncz8ubGVuZ3RoID8gc2VnLndhcm5pbmdzLmpvaW4oXCIgwrcgXCIpIDogc2VnLmhyZWZ9XHJcbiAgICAgICAgICAgICAgY2xhc3NOYW1lPXtjbihcclxuICAgICAgICAgICAgICAgIFwiaW5saW5lLWZsZXggaXRlbXMtY2VudGVyIGdhcC0wLjUgYnJlYWstYWxsXCIsXHJcbiAgICAgICAgICAgICAgICBMSU5LX1NUWUxFU1tyaXNrXVxyXG4gICAgICAgICAgICAgICl9XHJcbiAgICAgICAgICAgICAgYXJpYS1kaXNhYmxlZD17cmlzayA9PT0gXCJibG9ja2VkXCJ9XHJcbiAgICAgICAgICAgID5cclxuICAgICAgICAgICAgICB7cmlzayA9PT0gXCJibG9ja2VkXCIgJiYgPFNoaWVsZEFsZXJ0IGNsYXNzTmFtZT1cInctMyBoLTMgc2hyaW5rLTBcIiBhcmlhLWhpZGRlbiAvPn1cclxuICAgICAgICAgICAgICB7cmlzayA9PT0gXCJzdXNwaWNpb3VzXCIgJiYgPFNoaWVsZEFsZXJ0IGNsYXNzTmFtZT1cInctMyBoLTMgc2hyaW5rLTBcIiBhcmlhLWhpZGRlbiAvPn1cclxuICAgICAgICAgICAgICB7c2VnLnZhbHVlfVxyXG4gICAgICAgICAgICA8L2E+XHJcbiAgICAgICAgICApO1xyXG4gICAgICAgIH0pfVxyXG4gICAgICA8L3NwYW4+XHJcblxyXG4gICAgICA8RGlhbG9nIG9wZW49eyEhcGVuZGluZ0xpbmt9IG9uT3BlbkNoYW5nZT17KG8pID0+ICFvICYmIHNldFBlbmRpbmdMaW5rKG51bGwpfT5cclxuICAgICAgICA8RGlhbG9nQ29udGVudCBjbGFzc05hbWU9XCJtYXgtdy1zbVwiPlxyXG4gICAgICAgICAgPERpYWxvZ0hlYWRlcj5cclxuICAgICAgICAgICAgPERpYWxvZ1RpdGxlIGNsYXNzTmFtZT1cImZsZXggaXRlbXMtY2VudGVyIGdhcC0yIHRleHQtYmFzZVwiPlxyXG4gICAgICAgICAgICAgIHtwZW5kaW5nTGluaz8ucmlzayA9PT0gXCJzdXNwaWNpb3VzXCIgPyAoXHJcbiAgICAgICAgICAgICAgICA8U2hpZWxkQWxlcnQgY2xhc3NOYW1lPVwidy01IGgtNSB0ZXh0LWFtYmVyLTUwMFwiIC8+XHJcbiAgICAgICAgICAgICAgKSA6IChcclxuICAgICAgICAgICAgICAgIDxTaGllbGRDaGVjayBjbGFzc05hbWU9XCJ3LTUgaC01IHRleHQtcHJpbWFyeVwiIC8+XHJcbiAgICAgICAgICAgICAgKX1cclxuICAgICAgICAgICAgICB7cGVuZGluZ0xpbms/LnJpc2sgPT09IFwic3VzcGljaW91c1wiID8gXCJDYXV0aW9uOiBleHRlcm5hbCBsaW5rXCIgOiBcIkxlYXZpbmcgWklWT1wifVxyXG4gICAgICAgICAgICA8L0RpYWxvZ1RpdGxlPlxyXG4gICAgICAgICAgICA8RGlhbG9nRGVzY3JpcHRpb24gY2xhc3NOYW1lPVwidGV4dC14cyBicmVhay1hbGwgcHQtMVwiPlxyXG4gICAgICAgICAgICAgIHtwZW5kaW5nTGluaz8uaHJlZn1cclxuICAgICAgICAgICAgPC9EaWFsb2dEZXNjcmlwdGlvbj5cclxuICAgICAgICAgIDwvRGlhbG9nSGVhZGVyPlxyXG4gICAgICAgICAge3BlbmRpbmdMaW5rPy53YXJuaW5ncz8ubGVuZ3RoID8gKFxyXG4gICAgICAgICAgICA8dWwgY2xhc3NOYW1lPVwidGV4dC1bMTFweF0gdGV4dC1hbWJlci02MDAgZGFyazp0ZXh0LWFtYmVyLTQwMCBzcGFjZS15LTAuNSBsaXN0LWRpc2MgcGwtNFwiPlxyXG4gICAgICAgICAgICAgIHtwZW5kaW5nTGluay53YXJuaW5ncy5tYXAoKHcsIGkpID0+IDxsaSBrZXk9e2l9Pnt3fTwvbGk+KX1cclxuICAgICAgICAgICAgPC91bD5cclxuICAgICAgICAgICkgOiAoXHJcbiAgICAgICAgICAgIDxwIGNsYXNzTmFtZT1cInRleHQtWzExcHhdIHRleHQtbXV0ZWQtZm9yZWdyb3VuZFwiPlxyXG4gICAgICAgICAgICAgIFRoaXMgbGluayBnb2VzIHRvIGEgdGhpcmQtcGFydHkgc2l0ZSBvdXRzaWRlIFpJVk8uIFZlcmlmeSB0aGUgVVJMIGJlZm9yZSBjb250aW51aW5nLlxyXG4gICAgICAgICAgICA8L3A+XHJcbiAgICAgICAgICApfVxyXG4gICAgICAgICAgPERpYWxvZ0Zvb3RlciBjbGFzc05hbWU9XCJnYXAtMiBzbTpnYXAtMlwiPlxyXG4gICAgICAgICAgICA8QnV0dG9uIHZhcmlhbnQ9XCJvdXRsaW5lXCIgc2l6ZT1cInNtXCIgb25DbGljaz17KCkgPT4gc2V0UGVuZGluZ0xpbmsobnVsbCl9PlxyXG4gICAgICAgICAgICAgIENhbmNlbFxyXG4gICAgICAgICAgICA8L0J1dHRvbj5cclxuICAgICAgICAgICAgPEJ1dHRvbiBzaXplPVwic21cIiBvbkNsaWNrPXtwcm9jZWVkfSBjbGFzc05hbWU9XCJnYXAtMS41XCI+XHJcbiAgICAgICAgICAgICAgPEV4dGVybmFsTGluayBjbGFzc05hbWU9XCJ3LTMuNSBoLTMuNVwiIC8+IENvbnRpbnVlXHJcbiAgICAgICAgICAgIDwvQnV0dG9uPlxyXG4gICAgICAgICAgPC9EaWFsb2dGb290ZXI+XHJcbiAgICAgICAgPC9EaWFsb2dDb250ZW50PlxyXG4gICAgICA8L0RpYWxvZz5cclxuICAgIDwvPlxyXG4gICk7XHJcbn1cclxuIl0sIm5hbWVzIjpbInVzZU1lbW8iLCJ1c2VTdGF0ZSIsIlNoaWVsZEFsZXJ0IiwiU2hpZWxkQ2hlY2siLCJFeHRlcm5hbExpbmsiLCJhc3Nlc3NMaW5rU3luYyIsIm9wZW5FeHRlcm5hbFVybCIsIkRpYWxvZyIsIkRpYWxvZ0NvbnRlbnQiLCJEaWFsb2dIZWFkZXIiLCJEaWFsb2dUaXRsZSIsIkRpYWxvZ0Rlc2NyaXB0aW9uIiwiRGlhbG9nRm9vdGVyIiwiQnV0dG9uIiwiY24iLCJVUkxfUkVHRVgiLCJ0b2tlbml6ZSIsInRleHQiLCJzZWdtZW50cyIsImxhc3RJZHgiLCJtYXRjaCIsIm1hdGNoQWxsIiwiaWR4IiwiaW5kZXgiLCJwdXNoIiwidHlwZSIsInZhbHVlIiwic2xpY2UiLCJyYXciLCJjbGVhbmVkIiwicmVwbGFjZSIsInRyYWlsIiwibGVuZ3RoIiwiaHJlZiIsInN0YXJ0c1dpdGgiLCJhc3Nlc3NtZW50IiwicmlzayIsImxldmVsIiwid2FybmluZ3MiLCJMSU5LX1NUWUxFUyIsInRydXN0ZWQiLCJuZXV0cmFsIiwic3VzcGljaW91cyIsImJsb2NrZWQiLCJTYWZlQ2FwdGlvbiIsImNsYXNzTmFtZSIsInBlbmRpbmdMaW5rIiwic2V0UGVuZGluZ0xpbmsiLCJoYW5kbGVMaW5rQ2xpY2siLCJlIiwic2VnIiwic3RvcFByb3BhZ2F0aW9uIiwicHJldmVudERlZmF1bHQiLCJwcm9jZWVkIiwic3BhbiIsIm1hcCIsImkiLCJhIiwib25DbGljayIsInRpdGxlIiwiam9pbiIsImFyaWEtZGlzYWJsZWQiLCJhcmlhLWhpZGRlbiIsIm9wZW4iLCJvbk9wZW5DaGFuZ2UiLCJvIiwidWwiLCJ3IiwibGkiLCJwIiwidmFyaWFudCIsInNpemUiXSwibWFwcGluZ3MiOiI7O0FBQUE7Ozs7Q0FJQyxHQUNELFNBQVNBLE9BQU8sRUFBRUMsUUFBUSxRQUFRLFFBQVE7QUFDMUMsU0FBU0MsV0FBVyxFQUFFQyxXQUFXLEVBQUVDLFlBQVksUUFBUSxlQUFlO0FBQ3RFLFNBQVNDLGNBQWMsUUFBNEIsc0JBQXNCO0FBQ3pFLFNBQVND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
