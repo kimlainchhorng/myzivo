@@ -306,6 +306,7 @@ const HotelLanding = lazy(() => import("./pages/HotelLanding"));
 // HotelsPage removed
 // HotelDashboard removed
 const HotelResultsPage = lazy(() => import("./pages/HotelResultsPage"));
+const HotelResortDetailPage = lazy(() => import("./pages/lodging/HotelResortDetailPage"));
 
 // Car Rental
 const CarRentalBooking = lazy(() => import("./pages/CarRentalBooking"));
@@ -915,6 +916,7 @@ const App = () => (
 
                 {/* Hotels */}
                 <Route path="/hotels/:city" element={<RouteErrorBoundary section="Hotels"><HotelCityLandingPage /></RouteErrorBoundary>} />
+                <Route path="/hotel/:storeId" element={<RouteErrorBoundary section="HotelDetail"><HotelResortDetailPage /></RouteErrorBoundary>} />
                 {/* /hotels and /hotels/in-:city removed */}
 
                 {/* Car Rental */}
