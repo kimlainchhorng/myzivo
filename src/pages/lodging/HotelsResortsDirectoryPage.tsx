@@ -9,12 +9,12 @@ import { useEffect, useMemo, useState } from "react";
 import { Helmet } from "react-helmet-async";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
-import { ArrowLeft } from "lucide-react/dist/esm/icons/arrow-left";
-import { Hotel } from "lucide-react/dist/esm/icons/hotel";
-import { MapPin } from "lucide-react/dist/esm/icons/map-pin";
-import { Search } from "lucide-react/dist/esm/icons/search";
-import { Star } from "lucide-react/dist/esm/icons/star";
-import { Filter } from "lucide-react/dist/esm/icons/filter";
+import ArrowLeft from "lucide-react/dist/esm/icons/arrow-left";
+import Hotel from "lucide-react/dist/esm/icons/hotel";
+import MapPin from "lucide-react/dist/esm/icons/map-pin";
+import Search from "lucide-react/dist/esm/icons/search";
+import Star from "lucide-react/dist/esm/icons/star";
+import Filter from "lucide-react/dist/esm/icons/filter";
 
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
