@@ -1,45 +1,104 @@
-# Fix: Personal (DM) calls incorrectly use Group Call UI
+# Speed up ZIVO website and mobile app
 
-## Problem
+I checked the live preview on mobile size and confirmed the app is loading too much before users see content.
 
-When you tap voice/video call inside a 1-on-1 chat (PersonalChat), the app currently mounts `GroupCallLauncher` with `roomName={`dm-${conversationId}`}`. That's why you see:
+## What I found
 
-- Header: **"Group Call · 0 in call"** (it's the group lobby/screen)
-- Pre-join screen showing the raw room name `dm-2e0e7bfe-…_80049196-…` (group lobby title fallback)
-- **"Edge Function returned a non-2xx status code"** in the call screen — the LiveKit token edge function is rejecting the request (likely due to room-name length / format or auth)
-- **"Recording unavailable · database error 08P01"** — recording insert fails for a DM room
+Tested routes:
+- `/` website homepage on mobile viewport
+- `/index` mobile app entry route
+- `/feed` main social/feed route
 
-Reference: `src/components/chat/PersonalChat.tsx` line 1601 always launches `GroupCallLauncher` for DM calls, even though there is already a dedicated 1-on-1 call component (`activeCall` flow above it using WebRTC + `CallPiP`).
+Measured issues:
+- Homepage mobile FCP: about **9.4s**
+- Mobile `/index` FCP: about **8.3s**
+- Feed FCP: about **14.3s**
+- Each route loads around **250 resources**
+- Almost all are JavaScript files
+- `src/App.tsx` is large: **1,122 lines**, about **410 lazy route imports**
+- `lucide-react` loads early and is one of the biggest files
+- `@supabase/supabase-js`, `App.tsx`, and `index.css` are also heavy on startup
+- Global providers and listeners mount before the first screen is visible
+- Console shows repeated React warnings from the app tree, adding extra dev-time overhead
 
-## What I'll change
+Main reason it feels slow: the app loads the full super-app shell, many providers, icons, routes, and listeners before showing the first usable screen.
 
-### 1. Route DM calls through the personal call flow (not Group)
-In `src/components/chat/PersonalChat.tsx`:
-- Replace the `launcherCall` → `GroupCallLauncher` block with the existing personal call component (the one already wired to `activeCall`, `CallPiP`, `handleStartCall`).
-- `handleStartCall(type)` already exists and starts a true 1-on-1 WebRTC call — point the call buttons (lines 1449 / 1456) to it instead of `setLauncherCall(...)`.
-- Remove the now-unused `launcherCall` state, the lazy `GroupCallLauncher` import, and the JSX block at 1597–1609.
+## Fix plan
 
-Result: DM voice/video calls show the FaceTime-style personal call UI (matches `mem://features/communications/premium-calling-interface`), not the group lobby.
+### 1. Make first screen load faster
+- Keep only the minimum first-screen components eager.
+- Lazy-load lower homepage sections.
+- Add lightweight skeleton placeholders so the page appears quickly.
+- Remove heavy animation library usage from first-screen homepage/mobile app components where possible and replace with CSS transitions.
 
-### 2. Keep Group Call UI for actual group chats
-`GroupChat.tsx` and `GroupCallEntryPage.tsx` continue to use `GroupCallLauncher` — no change.
+### 2. Reduce startup JavaScript
+- Split the huge route table in `src/App.tsx` into smaller lazy route groups:
+  - admin routes
+  - driver routes
+  - shop/merchant routes
+  - travel routes
+  - social/chat routes
+- This prevents every visitor from paying the parse cost of routes they are not opening.
 
-### 3. Friendlier lobby header (defensive fix)
-In `src/components/chat/call/CallLobby.tsx`, if a room name starts with `dm-`, render a clean title ("Voice call" / "Video call") instead of the raw `dm-<uuid>_<uuid>` string, so even if a DM ever lands here it doesn't look broken.
+### 3. Defer background services
+Move non-critical startup work until after the page is visible:
+- push notification bootstrap
+- verification realtime bridge
+- geofence notifications
+- deletion return dialog
+- story debug panel
+- geo detection
+- page analytics tracking
+- cookie/PWA/global overlays where safe
 
-### 4. Fix recording 08P01 error in lobby
-The `08P01` Postgres error = "wrong number of parameters". Inspect the `call_recordings` insert in `CallLobby.tsx` (the "Record this call" toggle pre-check) and fix the malformed insert / RPC call so recording availability can be evaluated without throwing. If the table genuinely doesn't accept DM-style room names, gate the recording toggle to group rooms only.
+Authenticated users will still get these features, but after the first paint instead of before it.
 
-### 5. Investigate the LiveKit token 2xx error
-Check `supabase/functions/livekit-token/index.ts` to confirm it accepts the room name and returns the token. If it fails on long DM room names or unauthenticated requests, return a proper error message and add the missing CORS headers. (Mostly precautionary — once #1 lands, DM calls won't hit this function anyway.)
+### 4. Fix mobile app route startup
+- Optimize `/index` so the mobile home loads only mobile-home code first.
+- Delay unused homepage/desktop widgets on mobile.
+- Keep safe-area and Capacitor behavior intact.
 
-## Files touched
+### 5. Optimize icon loading
+- Replace above-fold `lucide-react` barrel imports with direct icon imports.
+- Keep Lucide icons, but stop loading the large icon bundle during first paint.
 
-- `src/components/chat/PersonalChat.tsx` — swap launcher → personal call, remove dead state/import
-- `src/components/chat/call/CallLobby.tsx` — friendly title for `dm-` rooms, fix recording precheck
-- `supabase/functions/livekit-token/index.ts` — verify CORS + error responses (read-only audit; edit only if needed)
+### 6. Improve image and asset delivery
+- Preload the main LCP image.
+- Add explicit image sizes to prevent layout shift.
+- Ensure hero/service images use WebP/optimized sources.
+- Keep long-cache rules for hashed assets.
+- Adjust HTML caching safely for faster repeat visits.
 
-## Out of scope
+### 7. Clean console/runtime warnings
+- Fix the React ref warning in the app tree.
+- This will reduce noisy console work and make future performance debugging cleaner.
 
-- Redesign of the group call UI itself
-- Changes to the WebRTC personal call component (already working pre-this regression)
+### 8. Validate after changes
+After implementation, I will run:
+- mobile `/`
+- mobile `/index`
+- mobile `/feed`
+- desktop `/feed`
+- build/type check if available
+
+Target improvement:
+- First visible content under **3–4 seconds** in preview/dev conditions
+- Fewer initial JS resources
+- Lower script/task duration
+- Faster repeat visits
+
+## Files expected to change
+
+- `src/App.tsx`
+- route split files under `src/routes/`
+- `src/pages/Index.tsx`
+- `src/pages/app/AppHome.tsx` if needed
+- `src/components/home/*` first-screen components
+- `src/main.tsx`
+- `index.html`
+- `public/_headers`
+- possibly small utility file for deferred/idle mounting
+
+No database changes are needed.
+
+Approve this and I will implement the speed fixes directly.
