@@ -796,3 +796,158 @@ function Field({ label, value }: { label: string; value: string }) {
     </div>
   );
 }
+
+function UploadDiagnosticsPanel({
+  diag,
+  open,
+  onToggle,
+  onClear,
+}: {
+  diag: DiagnosticsRecord | null;
+  open: boolean;
+  onToggle: () => void;
+  onClear: () => void;
+}) {
+  if (!diag) return null;
+  const lastAttempt = diag.attempts[diag.attempts.length - 1];
+  const succeeded = !!diag.final_receipt_ref;
+  const retried = diag.attempts.length > 1;
+
+  const copy = async () => {
+    try {
+      await navigator.clipboard.writeText(JSON.stringify(diag, null, 2));
+      toast.success("Diagnostics copied");
+    } catch {
+      toast.error("Could not copy");
+    }
+  };
+
+  return (
+    <div className="rounded-md border bg-muted/30">
+      <button
+        type="button"
+        onClick={onToggle}
+        className="w-full flex items-center justify-between gap-2 px-3 py-2 text-left"
+      >
+        <div className="flex items-center gap-2 text-xs">
+          {open ? <ChevronDown className="w-3.5 h-3.5" /> : <ChevronRight className="w-3.5 h-3.5" />}
+          <span className="font-medium">Upload diagnostics</span>
+          {succeeded ? (
+            <span className="inline-flex items-center gap-1 text-emerald-600">
+              <CheckCircle2 className="w-3 h-3" />
+              {diag.used_fallback ? "fallback" : "ok"}
+            </span>
+          ) : (
+            <span className="inline-flex items-center gap-1 text-destructive">
+              <AlertCircle className="w-3 h-3" /> failed
+            </span>
+          )}
+          {retried && (
+            <span className="text-[10px] text-muted-foreground">
+              · {diag.attempts.length} attempts
+            </span>
+          )}
+        </div>
+        <span className="text-[10px] text-muted-foreground">
+          {new Date(diag.at).toLocaleTimeString()}
+        </span>
+      </button>
+
+      {open && (
+        <div className="px-3 pb-3 space-y-2 text-[11px]">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+            <DiagRow label="Bucket" value={diag.bucket} />
+            <DiagRow label="Object path" value={diag.path || "—"} />
+            <DiagRow label="URL" value={diag.url || "—"} />
+            <DiagRow label="Method" value={diag.method} />
+            <DiagRow label="User ID" value={diag.user_id || "—"} />
+            <DiagRow label="Store ID" value={diag.store_id} />
+            <DiagRow
+              label="Used fallback"
+              value={diag.used_fallback ? "yes" : "no"}
+            />
+            <DiagRow
+              label="Final receipt ref"
+              value={diag.final_receipt_ref || "—"}
+            />
+          </div>
+
+          <div>
+            <div className="text-muted-foreground mb-1">Headers (sensitive values redacted)</div>
+            <pre className="rounded bg-background border p-2 overflow-x-auto text-[10px] leading-tight">
+              {JSON.stringify(diag.headers, null, 2)}
+            </pre>
+          </div>
+
+          <div>
+            <div className="text-muted-foreground mb-1">Preflight response</div>
+            <pre className="rounded bg-background border p-2 overflow-x-auto text-[10px] leading-tight">
+              {JSON.stringify(diag.preflight, null, 2)}
+            </pre>
+          </div>
+
+          <div>
+            <div className="text-muted-foreground mb-1">
+              Upload attempts ({diag.attempts.length})
+            </div>
+            <div className="space-y-1">
+              {diag.attempts.map((a) => (
+                <div
+                  key={a.n}
+                  className={`rounded border px-2 py-1 ${a.ok ? "bg-emerald-500/5 border-emerald-500/30" : "bg-destructive/5 border-destructive/30"}`}
+                >
+                  <div className="flex justify-between">
+                    <span>
+                      #{a.n} {a.ok ? "ok" : "error"}
+                      {a.transient && !a.ok ? " · transient" : ""}
+                    </span>
+                    <span className="text-muted-foreground">{a.durationMs}ms</span>
+                  </div>
+                  {!a.ok && (
+                    <div className="text-[10px] text-muted-foreground mt-0.5">
+                      [{a.status ?? "—"}] {a.code ?? ""} {a.message ?? ""}
+                    </div>
+                  )}
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {diag.fallback_response && (
+            <div>
+              <div className="text-muted-foreground mb-1">Fallback response</div>
+              <pre className="rounded bg-background border p-2 overflow-x-auto text-[10px] leading-tight">
+                {JSON.stringify(diag.fallback_response, null, 2)}
+              </pre>
+            </div>
+          )}
+
+          {lastAttempt && !lastAttempt.ok && (
+            <div className="text-[10px] text-muted-foreground">
+              Last error: <span className="font-mono">{lastAttempt.message}</span>
+            </div>
+          )}
+
+          <div className="flex gap-2 pt-1">
+            <Button size="sm" variant="outline" className="h-7 text-[11px]" onClick={copy}>
+              <Copy className="w-3 h-3 mr-1" /> Copy details
+            </Button>
+            <Button size="sm" variant="ghost" className="h-7 text-[11px]" onClick={onClear}>
+              Clear
+            </Button>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+function DiagRow({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="flex flex-col">
+      <span className="text-muted-foreground text-[10px] uppercase tracking-wide">{label}</span>
+      <span className="font-mono break-all">{value}</span>
+    </div>
+  );
+}
+
