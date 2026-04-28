@@ -113,7 +113,11 @@ export default function FinanceExpensesSection({ storeId }: Props) {
   const [filterCat, setFilterCat] = useState<string>("all");
   const [form, setForm] = useState(blankForm());
   const [detailId, setDetailId] = useState<string | null>(null);
+  const [diagnostics, setDiagnostics] = useState<DiagnosticsRecord | null>(null);
+  const [diagOpen, setDiagOpen] = useState(false);
   const fileRef = useRef<HTMLInputElement | null>(null);
+
+  const supaUrl = (import.meta as any).env?.VITE_SUPABASE_URL || "";
 
   const { data: expenses = [] } = useQuery({
     queryKey: ["ar-fin-expenses", storeId],
