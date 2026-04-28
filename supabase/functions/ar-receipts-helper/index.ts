@@ -212,6 +212,53 @@ Deno.serve(async (req) => {
       });
     }
 
+    if (action === "save_expense") {
+      if (!ownsStore) {
+        return jsonResponse({ error: "You don't have permission to save expenses for this store." }, 403);
+      }
+      const expense = (payload.expense && typeof payload.expense === "object") ? payload.expense as Record<string, unknown> : {};
+      const items = Array.isArray(payload.items) ? payload.items as Record<string, unknown>[] : [];
+      const amountCents = toInt(expense.amount_cents);
+      if (amountCents <= 0) return jsonResponse({ error: "Scanned invoice total must be greater than zero" }, 400);
+
+      const { data: inserted, error: insertErr } = await admin.from("ar_expenses").insert({
+        store_id: storeId,
+        category: cleanText(expense.category, 80) || "parts",
+        vendor: cleanText(expense.vendor, 160),
+        description: cleanText(expense.description, 500),
+        amount_cents: amountCents,
+        subtotal_cents: toInt(expense.subtotal_cents),
+        tax_cents: toInt(expense.tax_cents),
+        expense_date: cleanText(expense.expense_date, 10) || new Date().toISOString().slice(0, 10),
+        invoice_time: cleanText(expense.invoice_time, 8),
+        invoice_number: cleanText(expense.invoice_number, 120),
+        payment_method: cleanText(expense.payment_method, 40),
+        notes: cleanText(expense.notes, 2000),
+        receipt_url: cleanText(expense.receipt_url, 1000),
+        created_by: userId,
+      }).select("id").single();
+      if (insertErr) return jsonResponse({ error: "Expense save failed", details: insertErr.message, code: insertErr.code }, 500);
+
+      const expenseId = inserted.id;
+      const rows = items
+        .filter((it) => cleanText(it.name, 500))
+        .map((it, index) => ({
+          expense_id: expenseId,
+          position: toInt(it.position, index),
+          part_number: cleanText(it.part_number, 120),
+          name: cleanText(it.name, 500) || "Scanned line item",
+          quantity: Number(it.quantity) > 0 ? Number(it.quantity) : 1,
+          unit_price_cents: toInt(it.unit_price_cents),
+          line_total_cents: toInt(it.line_total_cents),
+        }));
+      if (rows.length) {
+        const { error: itemErr } = await admin.from("ar_expense_items").insert(rows);
+        if (itemErr) return jsonResponse({ error: "Line item save failed", details: itemErr.message, code: itemErr.code, expense_id: expenseId }, 500);
+      }
+
+      return jsonResponse({ ok: true, expense_id: expenseId, item_count: rows.length });
+    }
+
     return jsonResponse({ error: `Unknown action '${action}'` }, 400);
   } catch (e: any) {
     console.error("ar-receipts-helper error", e);
