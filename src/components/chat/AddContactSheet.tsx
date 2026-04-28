@@ -111,7 +111,7 @@ export default function AddContactSheet({
 
           <div className="grid grid-cols-2 gap-3 pt-2">
             <button
-              onClick={() => { onOpenChange(false); navigate("/chat/qr"); }}
+              onClick={() => { onOpenChange(false); navigate("/qr-profile"); }}
               className="flex flex-col items-center gap-2 p-4 rounded-2xl border bg-card hover:bg-muted active:scale-95 transition"
             >
               <QrCode className="w-6 h-6 text-emerald-500" />

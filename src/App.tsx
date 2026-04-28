@@ -122,6 +122,7 @@ const ContactsPage = lazy(() => import("./pages/chat/ContactsPage"));
 const ContactRequestsPage = lazy(() => import("./pages/chat/ContactRequestsPage"));
 const NearbyChatPage = lazy(() => import("./pages/chat/NearbyChatPage"));
 const FindContactsPage = lazy(() => import("./pages/chat/FindContactsPage"));
+const BlockedUsersPage = lazy(() => import("./pages/chat/BlockedUsersPage"));
 const JoinGroupPage = lazy(() => import("./pages/chat/JoinGroupPage"));
 const PrivacySecurityPage = lazy(() => import("./pages/chat/settings/PrivacySecurityPage"));
 const ActiveSessionsPage = lazy(() => import("./pages/chat/settings/ActiveSessionsPage"));
@@ -748,6 +749,7 @@ const App = () => (
                 <Route path="/chat/contacts/requests" element={<ProtectedRoute><ContactRequestsPage /></ProtectedRoute>} />
                 <Route path="/chat/nearby" element={<ProtectedRoute><NearbyChatPage /></ProtectedRoute>} />
                 <Route path="/chat/find-contacts" element={<ProtectedRoute><FindContactsPage /></ProtectedRoute>} />
+                <Route path="/chat/blocked" element={<ProtectedRoute><BlockedUsersPage /></ProtectedRoute>} />
                 <Route path="/chat/join/:code" element={<JoinGroupPage />} />
                 <Route path="/chat/secret/:partnerId" element={<ProtectedRoute><SecretChatPage /></ProtectedRoute>} />
                 <Route path="/chat/call/group/:roomName" element={<ProtectedRoute><GroupCallEntryPage /></ProtectedRoute>} />

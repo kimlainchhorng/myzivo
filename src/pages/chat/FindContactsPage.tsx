@@ -1,13 +1,14 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useSmartBack } from "@/lib/smartBack";
 import { useNavigate } from "react-router-dom";
-import { ArrowLeft, Search, UserPlus, Loader2, Phone } from "lucide-react";
+import { ArrowLeft, Search, UserPlus, Loader2, Phone, Smartphone } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { toast } from "sonner";
 import { hashPhoneE164 } from "@/lib/phoneHash";
+import { isNativeAvailable, pickAndHashPhones } from "@/lib/nativeContacts";
 
 interface Match {
   user_id: string;
@@ -27,6 +28,41 @@ export default function FindContactsPage() {
   const [scanning, setScanning] = useState(false);
   const [matches, setMatches] = useState<Match[] | null>(null);
   const [adding, setAdding] = useState<string | null>(null);
+  const [nativeReady, setNativeReady] = useState(false);
+  const [syncing, setSyncing] = useState(false);
+
+  useEffect(() => {
+    let alive = true;
+    void isNativeAvailable().then((v) => { if (alive) setNativeReady(v); });
+    return () => { alive = false; };
+  }, []);
+
+  async function nativeSync() {
+    setSyncing(true);
+    try {
+      const r = await pickAndHashPhones();
+      if (!r.ok) {
+        if (r.reason === "denied") toast.error("Permission denied. Enable Contacts in Settings.");
+        else if (r.reason === "empty") toast.message("No phone numbers found in your contacts.");
+        else toast.error("Couldn't read contacts on this device.");
+        return;
+      }
+      const { data, error } = await supabase.functions.invoke("contact-match", { body: { hashes: r.hashes } });
+      if (error) throw error;
+      const results = (data as ContactMatchResponse | null)?.matches ?? [];
+      setMatches(results);
+      toast.success(
+        results.length
+          ? `${results.length} of your ${r.count} contacts are on ZIVO`
+          : `Scanned ${r.count} contacts — no matches yet`
+      );
+    } catch (e: unknown) {
+      const m = e instanceof Error ? e.message : "Sync failed";
+      toast.error(m);
+    } finally {
+      setSyncing(false);
+    }
+  }
 
   const parsePhones = (text: string): string[] => {
     // Extract candidate phone numbers; keep + and digits.
@@ -99,6 +135,22 @@ export default function FindContactsPage() {
       </header>
 
       <div className="space-y-4 p-4">
+        {nativeReady && (
+          <div className="rounded-lg border border-emerald-500/30 bg-emerald-500/5 p-4">
+            <div className="mb-1 flex items-center gap-2 text-sm font-medium">
+              <Smartphone className="h-4 w-4 text-emerald-600" />
+              Sync from your phone
+            </div>
+            <p className="mb-3 text-xs text-muted-foreground">
+              Read contacts directly from this device. Numbers are hashed on-device — only hashes are sent.
+            </p>
+            <Button onClick={nativeSync} disabled={syncing} className="bg-emerald-500 hover:bg-emerald-600 text-white gap-2">
+              {syncing ? <Loader2 className="h-4 w-4 animate-spin" /> : <Smartphone className="h-4 w-4" />}
+              Sync now
+            </Button>
+          </div>
+        )}
+
         <div className="rounded-lg border border-border bg-card p-4">
           <div className="mb-2 flex items-center gap-2 text-sm font-medium">
             <Phone className="h-4 w-4 text-primary" />

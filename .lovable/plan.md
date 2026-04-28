@@ -1,77 +1,77 @@
-# Contacts Page Enhancements
+# Contacts Page — Bug Fixes + Missing Add-Ons
 
-Five focused improvements to the Contacts experience without touching unrelated areas.
+The Contacts page is functional but has one broken link and several gaps that block real usage. This plan fixes the bugs, then layers in the missing must-haves.
 
-## 1. Retry + clearer toasts when adding suggested contacts
+## 1. Bug fixes (must do first)
 
-File: `src/components/chat/SuggestedContactsRow.tsx`
+- **Broken QR route.** Header QR icon and `AddContactSheet → "My QR code"` both navigate to `/chat/qr`, but the actual route registered in `App.tsx` is `/qr-profile`. Update both call sites to `/qr-profile`. Without this, the QR icon does nothing on tap.
+- **"Sync phone" tile is mislabeled.** It currently routes to `/chat/find-contacts`, the same page as "Find by phone". Either remove the duplicate, or wire a real native sync path (see §2).
+- **Realtime not refreshing suggestions.** `useSuggestedContacts` never invalidates when a new follower or DM arrives. Add a lightweight subscription on `follows` (where `following_id = me`) and on `direct_messages` so the cached "People you may know" list re-revalidates instead of going stale for 5 minutes.
+- **Suggestions cache leaks across users.** Memory cache is keyed by user id (good), but on sign-out it isn't cleared. Clear `memCache` and `sessionStorage` `zivo:suggested:*` keys on auth change.
 
-- Wrap `add()` in a small helper that classifies failures:
-  - Rate limit (Postgres `429`, error code `429`, or message includes "rate"/"too many") → toast: "You're going too fast. Try again in a moment." with a **Retry** action.
-  - Network/offline (`!navigator.onLine`, `TypeError: Failed to fetch`, `NetworkError`) → toast: "No connection. Check your network and try again." with **Retry** action.
-  - Duplicate (`23505`) → silently treat as success and refresh.
-  - Other → toast.error with the actual message + **Retry** action.
-- Use `sonner`'s `toast.error(msg, { action: { label: "Retry", onClick: () => onAdd(id) } })`.
-- Add a per-card retry counter (max 2 auto-retries on network errors with 800ms backoff) before surfacing the toast.
+## 2. Real native contacts sync
 
-## 2. Keyboard nav + ARIA on header & quick-action grid
+Right now "Sync phone" just opens a paste-text screen. Add a true native path on iOS/Android via Capacitor:
 
-File: `src/pages/chat/ContactsPage.tsx`
+- Add `@capacitor-community/contacts` as a dependency.
+- New helper `src/lib/nativeContacts.ts`: `isNativeAvailable()`, `requestPermission()`, `pickAndHashPhones()` — pulls phone numbers from device contacts, normalises to E.164 best-effort, hashes locally with the existing `hashPhoneE164` (no raw numbers ever leave the device), then calls the existing `contact-match` edge function.
+- `FindContactsPage.tsx`: when running on native, show a primary "Sync from phone" button that uses the native flow; fall back to the current paste-text UI on web.
+- "Sync phone" tile on Contacts page becomes the entry to this native flow (and gracefully falls back to the paste UI on web).
 
-- Header buttons already use `aria-label`; add `title` for desktop tooltip and ensure `tabIndex` order: Back → Search input → Invite → QR → Add.
-- Wrap quick-action grid in `<nav aria-label="Contact quick actions">` and convert each tile from `<button>` to `<button type="button" aria-label="…">` with descriptive labels: "Find people by phone number", "Sync phone contacts", "View contact requests", "Find people nearby".
-- Add visible `focus-visible:ring-2 focus-visible:ring-emerald-500 focus-visible:outline-none` to header icon buttons and quick-action tiles.
-- Add `role="group"` + `aria-label="Suggested people"` to `SuggestedContactsRow` container.
+## 3. Blocked-users management
 
-## 3. Clearer badge on each suggested profile + deep-link
+`blocked_users` table exists and `useBlockUser` is already used elsewhere, but Contacts has no surface for it. Users blocked on a chat surface have no way to unblock from here.
 
-File: `src/components/chat/SuggestedContactsRow.tsx`
+- Add a 5th quick-action tile (or move "Nearby" to a secondary row) called **"Blocked"** linking to a new page `src/pages/chat/BlockedUsersPage.tsx`.
+- Page lists blocked profiles with avatar + name + Unblock button. Uses `useBlockUser` to list/unblock and the same profile-fetch pattern as `useContacts`.
+- Register route `/chat/blocked` in `App.tsx`.
 
-- Replace plain "Follows you" / "Recent chat" text with a small pill badge (emerald for follower, sky for chat) using `UserCheck` / `MessageCircle` Lucide icons.
-- Make the badge a clickable element:
-  - `reason === "follower"` → navigates to `/u/{username}` (or `/profile/{user_id}` fallback) with `?context=followers`.
-  - `reason === "chat"` → opens the existing chat via the same `navigate("/chat", { state: { openChat: {…} } })` pattern used in `ContactsPage`.
-- Stop click propagation so tapping the badge doesn't trigger the Add button. Add `aria-label="Open profile, follows you"` / `aria-label="Open recent chat with {name}"`.
+## 4. "Search everyone" fallback in contact search
 
-## 4. Cache + fewer round-trips for "People you may know"
+Today the search bar only filters local contacts. If a user types a name that isn't in their list, they hit a dead end.
 
-File: `src/hooks/useSuggestedContacts.ts`
+- When `q.trim().length >= 2` and `filtered.length === 0`, render a "Search everyone on ZIVO" affordance that queries `usernames` + `profiles` (limit 8) and shows results inline with an Add button (reusing `add()` from `useContacts`).
+- Debounce the remote query 300 ms.
 
-- Add an in-memory module-level cache keyed by `user.id` with a 5-minute TTL: `{ data, fetchedAt }`. On mount, return cached data immediately and revalidate in background (stale-while-revalidate).
-- Run the three independent reads in parallel with `Promise.all` instead of sequentially:
-  - `user_contacts` (excludes), `follows` (followers), `direct_messages` (recent partners).
-- Reduce `direct_messages` limit from 60 → 40 and select only `sender_id, receiver_id` (already done) plus add `head: false`.
-- Persist the most recent successful payload to `sessionStorage` under `zivo:suggested:{userId}` so tab revisits skip the network entirely until TTL expires.
-- Expose `isStale` so the row can show a tiny spinner only while revalidating.
+## 5. Contact list sections
 
-## 5. Invite via contact request + Requests-tab status
+The list is a flat dump. Add lightweight sectioning that already maps to existing data:
 
-Files:
-- `src/components/chat/InviteFriendsSheet.tsx`
-- `src/hooks/useContactRequests.ts` (already exists)
-- `src/pages/chat/ContactRequestsPage.tsx` (already shows Sent/Incoming tabs)
+- **Favorites** (rows where `favorite = true`) — pinned at top with star header.
+- **Recently added** (top 5 by `created_at`, last 7 days).
+- **All contacts** A–Z with sticky single-letter headers.
 
-Behavior:
-- Add a new section in `InviteFriendsSheet` titled "Invite an existing ZIVO user" with a `@username` input + **Send request** button.
-- On submit:
-  1. Resolve username via existing `useContacts().findByUsername`.
-  2. If found, call `useContactRequests().send(userId, "Hi! Let's connect on ZIVO.")`.
-  3. Toast success: "Request sent. Track it in Requests → Sent." with action **View** that navigates to `/chat/contacts/requests` with `?tab=out`.
-  4. If username not found → toast: "No ZIVO user with that handle. Share your invite link instead."
-- Update `ContactRequestsPage` to read `?tab=in|out` from `useSearchParams` and set the initial tab accordingly so the toast deep-link lands users on the Sent tab.
-- The existing Sent tab already shows pending/accepted/declined/cancelled status, so no schema changes needed.
+Pure client-side grouping over the existing `useContacts` result; no schema changes.
 
-## Technical notes
+## 6. Request status badge on suggestion cards
 
-- No database migrations needed — `contact_requests` and `user_contacts` already exist with realtime subscriptions.
-- All changes are client-side TS/TSX. No new dependencies.
-- Sonner toasts support `action` for the Retry/View buttons natively.
-- Cache uses module scope + `sessionStorage`; cleared automatically when the user signs out (the hook keys by `user.id` and resets to `[]` when null).
+If you've already sent a request to a suggested person, the "Add" button still says "Add" and a second tap returns a duplicate error. Fix:
 
-## Files modified
+- `SuggestedContactsRow` reads `outgoing` from `useContactRequests`. If a suggestion's `user_id` matches a pending outgoing request, render a disabled "Pending" pill (with link to `/chat/contacts/requests?tab=out`) instead of the green Add button.
+- After a successful `add()`, also remove the user from the local `dismissed`/visible set so the card disappears immediately.
 
-- `src/pages/chat/ContactsPage.tsx` — a11y + focus styling
-- `src/components/chat/SuggestedContactsRow.tsx` — retry logic, badges, deep-links, a11y
-- `src/hooks/useSuggestedContacts.ts` — parallel queries, in-memory + sessionStorage cache, SWR
-- `src/components/chat/InviteFriendsSheet.tsx` — new "Invite existing user" section that sends a contact request
-- `src/pages/chat/ContactRequestsPage.tsx` — honor `?tab=` query param for deep-linking
+## 7. Empty-state polish
+
+The "No contacts yet" empty state only offers "Add contact". Replace with three buttons: **Add by @username**, **Sync phone**, **Invite friends** — mirroring the three real ways to grow the list.
+
+---
+
+## Files to change / create
+
+Edit:
+- `src/pages/chat/ContactsPage.tsx` — fix QR route, sectioned list, search-everyone fallback, Blocked tile, richer empty state.
+- `src/components/chat/AddContactSheet.tsx` — fix `/chat/qr` → `/qr-profile`.
+- `src/components/chat/SuggestedContactsRow.tsx` — Pending badge from outgoing requests; remove added user from list.
+- `src/hooks/useSuggestedContacts.ts` — realtime invalidation on follows/DMs; clear cache on sign-out.
+- `src/pages/chat/FindContactsPage.tsx` — native "Sync from phone" button when available.
+- `src/App.tsx` — register `/chat/blocked` route.
+- `package.json` — add `@capacitor-community/contacts`.
+
+Create:
+- `src/lib/nativeContacts.ts`
+- `src/pages/chat/BlockedUsersPage.tsx`
+- `src/components/chat/SearchEveryoneResults.tsx` (used by ContactsPage search fallback)
+
+No DB migrations required — `blocked_users`, `contact_requests`, `follows`, `user_contacts`, `direct_messages` already exist.
+
+After approval, the user will need to run `npx cap sync` once for the new native contacts plugin to take effect on device.
