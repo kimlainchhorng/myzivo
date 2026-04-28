@@ -1,0 +1,401 @@
+import { createHotContext as __vite__createHotContext } from "/@vite/client";import.meta.hot = __vite__createHotContext("/src/components/admin/store/autorepair/AutoRepairReportsSection.tsx");import __vite__cjsImport0_react_jsxDevRuntime from "/node_modules/.vite/deps/react_jsx-dev-runtime.js?v=7fd9520c"; const _jsxDEV = __vite__cjsImport0_react_jsxDevRuntime["jsxDEV"];
+var _s = $RefreshSig$();
+/**
+ * Auto Repair — Reports & Analytics
+ */ import __vite__cjsImport1_react from "/node_modules/.vite/deps/react.js?v=7fd9520c"; const useMemo = __vite__cjsImport1_react["useMemo"]; const useState = __vite__cjsImport1_react["useState"];
+import { useQuery } from "/node_modules/.vite/deps/@tanstack_react-query.js?v=7fd9520c";
+import { supabase } from "/src/integrations/supabase/client.ts";
+import { Card, CardContent, CardHeader, CardTitle } from "/src/components/ui/card.tsx";
+import { Button } from "/src/components/ui/button.tsx";
+import { Input } from "/src/components/ui/input.tsx";
+import { Label } from "/src/components/ui/label.tsx";
+import { BarChart3, FileDown } from "/node_modules/.vite/deps/lucide-react.js?v=7fd9520c";
+export default function AutoRepairReportsSection({ storeId }) {
+    _s();
+    const [from, setFrom] = useState(()=>new Date(Date.now() - 30 * 86400000).toISOString().slice(0, 10));
+    const [to, setTo] = useState(()=>new Date().toISOString().slice(0, 10));
+    const { data: orders = [] } = useQuery({
+        queryKey: [
+            "ar-reports-orders",
+            storeId,
+            from,
+            to
+        ],
+        queryFn: async ()=>{
+            const { data, error } = await supabase.from("ar_work_orders").select("id,number,status,labor_hours,total_cents,is_comeback,technician_id,created_at,completed_at").eq("store_id", storeId).gte("created_at", from).lte("created_at", `${to}T23:59:59`);
+            if (error) throw error;
+            return data;
+        }
+    });
+    const { data: techs = [] } = useQuery({
+        queryKey: [
+            "ar-technicians",
+            storeId
+        ],
+        queryFn: async ()=>{
+            const { data, error } = await supabase.from("ar_technicians").select("id,name").eq("store_id", storeId);
+            if (error) throw error;
+            return data;
+        }
+    });
+    const stats = useMemo(()=>{
+        const closed = orders.filter((o)=>o.status === "done");
+        const revenue = closed.reduce((s, o)=>s + (o.total_cents ?? 0), 0);
+        const laborHours = orders.reduce((s, o)=>s + Number(o.labor_hours ?? 0), 0);
+        const avg = closed.length ? revenue / closed.length : 0;
+        const comebacks = orders.filter((o)=>o.is_comeback).length;
+        const cbRate = orders.length ? comebacks / orders.length * 100 : 0;
+        const byTech = {};
+        closed.forEach((o)=>{
+            const k = o.technician_id ?? "_unassigned";
+            byTech[k] = byTech[k] ?? {
+                ros: 0,
+                revenue: 0,
+                hours: 0
+            };
+            byTech[k].ros++;
+            byTech[k].revenue += o.total_cents ?? 0;
+            byTech[k].hours += Number(o.labor_hours ?? 0);
+        });
+        return {
+            revenue,
+            closedCount: closed.length,
+            laborHours,
+            avg,
+            cbRate,
+            byTech
+        };
+    }, [
+        orders
+    ]);
+    const exportCsv = ()=>{
+        const rows = [
+            [
+                "Metric",
+                "Value"
+            ],
+            [
+                "Revenue",
+                `$${(stats.revenue / 100).toFixed(2)}`
+            ],
+            [
+                "ROs Closed",
+                String(stats.closedCount)
+            ],
+            [
+                "Avg Ticket",
+                `$${(stats.avg / 100).toFixed(2)}`
+            ],
+            [
+                "Labor Hours",
+                stats.laborHours.toFixed(1)
+            ],
+            [
+                "Comeback Rate",
+                `${stats.cbRate.toFixed(1)}%`
+            ]
+        ];
+        const csv = rows.map((r)=>r.join(",")).join("\n");
+        const blob = new Blob([
+            csv
+        ], {
+            type: "text/csv"
+        });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = `ar-report-${from}-to-${to}.csv`;
+        a.click();
+        URL.revokeObjectURL(url);
+    };
+    return /*#__PURE__*/ _jsxDEV("div", {
+        className: "space-y-4",
+        children: [
+            /*#__PURE__*/ _jsxDEV(Card, {
+                children: [
+                    /*#__PURE__*/ _jsxDEV(CardHeader, {
+                        className: "flex flex-row items-center justify-between",
+                        children: [
+                            /*#__PURE__*/ _jsxDEV(CardTitle, {
+                                className: "text-base flex items-center gap-2",
+                                children: [
+                                    /*#__PURE__*/ _jsxDEV(BarChart3, {
+                                        className: "w-4 h-4"
+                                    }, void 0, false, {
+                                        fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/autorepair/AutoRepairReportsSection.tsx",
+                                        lineNumber: 83,
+                                        columnNumber: 68
+                                    }, this),
+                                    " Reports & Analytics"
+                                ]
+                            }, void 0, true, {
+                                fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/autorepair/AutoRepairReportsSection.tsx",
+                                lineNumber: 83,
+                                columnNumber: 11
+                            }, this),
+                            /*#__PURE__*/ _jsxDEV(Button, {
+                                size: "sm",
+                                variant: "outline",
+                                className: "gap-1.5",
+                                onClick: exportCsv,
+                                children: [
+                                    /*#__PURE__*/ _jsxDEV(FileDown, {
+                                        className: "w-3.5 h-3.5"
+                                    }, void 0, false, {
+                                        fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/autorepair/AutoRepairReportsSection.tsx",
+                                        lineNumber: 85,
+                                        columnNumber: 13
+                                    }, this),
+                                    " Export CSV"
+                                ]
+                            }, void 0, true, {
+                                fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/autorepair/AutoRepairReportsSection.tsx",
+                                lineNumber: 84,
+                                columnNumber: 11
+                            }, this)
+                        ]
+                    }, void 0, true, {
+                        fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/autorepair/AutoRepairReportsSection.tsx",
+                        lineNumber: 82,
+                        columnNumber: 9
+                    }, this),
+                    /*#__PURE__*/ _jsxDEV(CardContent, {
+                        className: "grid grid-cols-2 gap-3",
+                        children: [
+                            /*#__PURE__*/ _jsxDEV("div", {
+                                children: [
+                                    /*#__PURE__*/ _jsxDEV(Label, {
+                                        className: "text-xs",
+                                        children: "From"
+                                    }, void 0, false, {
+                                        fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/autorepair/AutoRepairReportsSection.tsx",
+                                        lineNumber: 90,
+                                        columnNumber: 13
+                                    }, this),
+                                    /*#__PURE__*/ _jsxDEV(Input, {
+                                        type: "date",
+                                        value: from,
+                                        onChange: (e)=>setFrom(e.target.value)
+                                    }, void 0, false, {
+                                        fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/autorepair/AutoRepairReportsSection.tsx",
+                                        lineNumber: 91,
+                                        columnNumber: 13
+                                    }, this)
+                                ]
+                            }, void 0, true, {
+                                fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/autorepair/AutoRepairReportsSection.tsx",
+                                lineNumber: 89,
+                                columnNumber: 11
+                            }, this),
+                            /*#__PURE__*/ _jsxDEV("div", {
+                                children: [
+                                    /*#__PURE__*/ _jsxDEV(Label, {
+                                        className: "text-xs",
+                                        children: "To"
+                                    }, void 0, false, {
+                                        fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/autorepair/AutoRepairReportsSection.tsx",
+                                        lineNumber: 94,
+                                        columnNumber: 13
+                                    }, this),
+                                    /*#__PURE__*/ _jsxDEV(Input, {
+                                        type: "date",
+                                        value: to,
+                                        onChange: (e)=>setTo(e.target.value)
+                                    }, void 0, false, {
+                                        fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/autorepair/AutoRepairReportsSection.tsx",
+                                        lineNumber: 95,
+                                        columnNumber: 13
+                                    }, this)
+                                ]
+                            }, void 0, true, {
+                                fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/autorepair/AutoRepairReportsSection.tsx",
+                                lineNumber: 93,
+                                columnNumber: 11
+                            }, this)
+                        ]
+                    }, void 0, true, {
+                        fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/autorepair/AutoRepairReportsSection.tsx",
+                        lineNumber: 88,
+                        columnNumber: 9
+                    }, this)
+                ]
+            }, void 0, true, {
+                fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/autorepair/AutoRepairReportsSection.tsx",
+                lineNumber: 81,
+                columnNumber: 7
+            }, this),
+            /*#__PURE__*/ _jsxDEV("div", {
+                className: "grid grid-cols-2 md:grid-cols-5 gap-2",
+                children: [
+                    {
+                        label: "Revenue",
+                        value: `$${(stats.revenue / 100).toFixed(2)}`
+                    },
+                    {
+                        label: "ROs Closed",
+                        value: stats.closedCount
+                    },
+                    {
+                        label: "Avg Ticket",
+                        value: `$${(stats.avg / 100).toFixed(2)}`
+                    },
+                    {
+                        label: "Labor Hours",
+                        value: stats.laborHours.toFixed(1)
+                    },
+                    {
+                        label: "Comeback Rate",
+                        value: `${stats.cbRate.toFixed(1)}%`
+                    }
+                ].map((k)=>/*#__PURE__*/ _jsxDEV(Card, {
+                        children: /*#__PURE__*/ _jsxDEV(CardContent, {
+                            className: "p-3",
+                            children: [
+                                /*#__PURE__*/ _jsxDEV("p", {
+                                    className: "text-[11px] uppercase tracking-wide text-muted-foreground",
+                                    children: k.label
+                                }, void 0, false, {
+                                    fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/autorepair/AutoRepairReportsSection.tsx",
+                                    lineNumber: 110,
+                                    columnNumber: 15
+                                }, this),
+                                /*#__PURE__*/ _jsxDEV("p", {
+                                    className: "text-xl font-bold mt-1",
+                                    children: k.value
+                                }, void 0, false, {
+                                    fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/autorepair/AutoRepairReportsSection.tsx",
+                                    lineNumber: 111,
+                                    columnNumber: 15
+                                }, this)
+                            ]
+                        }, void 0, true, {
+                            fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/autorepair/AutoRepairReportsSection.tsx",
+                            lineNumber: 109,
+                            columnNumber: 13
+                        }, this)
+                    }, k.label, false, {
+                        fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/autorepair/AutoRepairReportsSection.tsx",
+                        lineNumber: 108,
+                        columnNumber: 11
+                    }, this))
+            }, void 0, false, {
+                fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/autorepair/AutoRepairReportsSection.tsx",
+                lineNumber: 100,
+                columnNumber: 7
+            }, this),
+            /*#__PURE__*/ _jsxDEV(Card, {
+                children: [
+                    /*#__PURE__*/ _jsxDEV(CardHeader, {
+                        children: /*#__PURE__*/ _jsxDEV(CardTitle, {
+                            className: "text-sm",
+                            children: "Tech Leaderboard"
+                        }, void 0, false, {
+                            fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/autorepair/AutoRepairReportsSection.tsx",
+                            lineNumber: 118,
+                            columnNumber: 21
+                        }, this)
+                    }, void 0, false, {
+                        fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/autorepair/AutoRepairReportsSection.tsx",
+                        lineNumber: 118,
+                        columnNumber: 9
+                    }, this),
+                    /*#__PURE__*/ _jsxDEV(CardContent, {
+                        children: Object.keys(stats.byTech).length === 0 ? /*#__PURE__*/ _jsxDEV("p", {
+                            className: "text-sm text-muted-foreground text-center py-6",
+                            children: "No closed work orders in this period."
+                        }, void 0, false, {
+                            fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/autorepair/AutoRepairReportsSection.tsx",
+                            lineNumber: 121,
+                            columnNumber: 13
+                        }, this) : /*#__PURE__*/ _jsxDEV("div", {
+                            className: "space-y-1.5",
+                            children: Object.entries(stats.byTech).sort((a, b)=>b[1].revenue - a[1].revenue).map(([tid, s])=>{
+                                const name = techs.find((t)=>t.id === tid)?.name ?? "Unassigned";
+                                return /*#__PURE__*/ _jsxDEV("div", {
+                                    className: "flex items-center justify-between border border-border rounded-lg p-3 text-sm",
+                                    children: [
+                                        /*#__PURE__*/ _jsxDEV("span", {
+                                            className: "font-medium",
+                                            children: name
+                                        }, void 0, false, {
+                                            fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/autorepair/AutoRepairReportsSection.tsx",
+                                            lineNumber: 130,
+                                            columnNumber: 23
+                                        }, this),
+                                        /*#__PURE__*/ _jsxDEV("span", {
+                                            className: "text-muted-foreground",
+                                            children: [
+                                                s.ros,
+                                                " ROs · ",
+                                                s.hours.toFixed(1),
+                                                "h · $",
+                                                (s.revenue / 100).toFixed(2)
+                                            ]
+                                        }, void 0, true, {
+                                            fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/autorepair/AutoRepairReportsSection.tsx",
+                                            lineNumber: 131,
+                                            columnNumber: 23
+                                        }, this)
+                                    ]
+                                }, tid, true, {
+                                    fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/autorepair/AutoRepairReportsSection.tsx",
+                                    lineNumber: 129,
+                                    columnNumber: 21
+                                }, this);
+                            })
+                        }, void 0, false, {
+                            fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/autorepair/AutoRepairReportsSection.tsx",
+                            lineNumber: 123,
+                            columnNumber: 13
+                        }, this)
+                    }, void 0, false, {
+                        fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/autorepair/AutoRepairReportsSection.tsx",
+                        lineNumber: 119,
+                        columnNumber: 9
+                    }, this)
+                ]
+            }, void 0, true, {
+                fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/autorepair/AutoRepairReportsSection.tsx",
+                lineNumber: 117,
+                columnNumber: 7
+            }, this)
+        ]
+    }, void 0, true, {
+        fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/autorepair/AutoRepairReportsSection.tsx",
+        lineNumber: 80,
+        columnNumber: 5
+    }, this);
+}
+_s(AutoRepairReportsSection, "tmwrZe9FcrZrcGyHHNXtgdQaq1k=", false, function() {
+    return [
+        useQuery,
+        useQuery
+    ];
+});
+_c = AutoRepairReportsSection;
+var _c;
+$RefreshReg$(_c, "AutoRepairReportsSection");
+
+
+import * as RefreshRuntime from "/@react-refresh";
+const inWebWorker = typeof WorkerGlobalScope !== 'undefined' && self instanceof WorkerGlobalScope;
+if (import.meta.hot && !inWebWorker) {
+  if (!window.$RefreshReg$) {
+    throw new Error(
+      "@vitejs/plugin-react-swc can't detect preamble. Something is wrong."
+    );
+  }
+
+  RefreshRuntime.__hmr_import(import.meta.url).then((currentExports) => {
+    RefreshRuntime.registerExportsForReactRefresh("C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/autorepair/AutoRepairReportsSection.tsx", currentExports);
+    import.meta.hot.accept((nextExports) => {
+      if (!nextExports) return;
+      const invalidateMessage = RefreshRuntime.validateRefreshBoundaryAndEnqueueUpdate("C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/autorepair/AutoRepairReportsSection.tsx", currentExports, nextExports);
+      if (invalidateMessage) import.meta.hot.invalidate(invalidateMessage);
+    });
+  });
+}
+function $RefreshReg$(type, id) { return RefreshRuntime.register(type, "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/autorepair/AutoRepairReportsSection.tsx" + ' ' + id) }
+function $RefreshSig$() { return RefreshRuntime.createSignatureFunctionForTransform(); }
+
+//# sourceMappingURL=data:application/json;base64,eyJ2ZXJzaW9uIjozLCJzb3VyY2VzIjpbIkF1dG9SZXBhaXJSZXBvcnRzU2VjdGlvbi50c3giXSwic291cmNlc0NvbnRlbnQiOlsiLyoqXHJcbiAqIEF1dG8gUmVwYWlyIOKAlCBSZXBvcnRzICYgQW5hbHl0aWNzXHJcbiAqL1xyXG5pbXBvcnQgeyB1c2VNZW1vLCB1c2VTdGF0ZSB9IGZyb20gXCJyZWFjdFwiO1xyXG5pbXBvcnQgeyB1c2VRdWVyeSB9IGZyb20gXCJAdGFuc3RhY2svcmVhY3QtcXVlcnlcIjtcclxuaW1wb3J0IHsgc3VwYWJhc2UgfSBmcm9tIFwiQC9pbnRlZ3JhdGlvbnMvc3VwYWJhc2UvY2xpZW50XCI7XHJcbmltcG9ydCB7IENhcmQsIENhcmRDb250ZW50LCBDYXJkSGVhZGVyLCBDYXJkVGl0bGUgfSBmcm9tIFwiQC9jb21wb25lbnRzL3VpL2NhcmRcIjtcclxuaW1wb3J0IHsgQnV0dG9uIH0gZnJvbSBcIkAvY29tcG9uZW50cy91aS9idXR0b25cIjtcclxuaW1wb3J0IHsgSW5wdXQgfSBmcm9tIFwiQC9jb21wb25lbnRzL3VpL2lucHV0XCI7XHJcbmltcG9ydCB7IExhYmVsIH0gZnJvbSBcIkAvY29tcG9uZW50cy91aS9sYWJlbFwiO1xyXG5pbXBvcnQgeyBCYXJDaGFydDMsIEZpbGVEb3duIH0gZnJvbSBcImx1Y2lkZS1yZWFjdFwiO1xyXG5cclxuaW50ZXJmYWNlIFByb3BzIHsgc3RvcmVJZDogc3RyaW5nIH1cclxuXHJcbmV4cG9ydCBkZWZhdWx0IGZ1bmN0aW9uIEF1dG9SZXBhaXJSZXBvcnRzU2VjdGlvbih7IHN0b3JlSWQgfTogUHJvcHMpIHtcclxuICBjb25zdCBbZnJvbSwgc2V0RnJvbV0gPSB1c2VTdGF0ZSgoKSA9PiBuZXcgRGF0ZShEYXRlLm5vdygpIC0gMzAgKiA4NjQwMDAwMCkudG9JU09TdHJpbmcoKS5zbGljZSgwLCAxMCkpO1xyXG4gIGNvbnN0IFt0bywgc2V0VG9dID0gdXNlU3RhdGUoKCkgPT4gbmV3IERhdGUoKS50b0lTT1N0cmluZygpLnNsaWNlKDAsIDEwKSk7XHJcblxyXG4gIGNvbnN0IHsgZGF0YTogb3JkZXJzID0gW10gfSA9IHVzZVF1ZXJ5KHtcclxuICAgIHF1ZXJ5S2V5OiBbXCJhci1yZXBvcnRzLW9yZGVyc1wiLCBzdG9yZUlkLCBmcm9tLCB0b10sXHJcbiAgICBxdWVyeUZuOiBhc3luYyAoKSA9PiB7XHJcbiAgICAgIGNvbnN0IHsgZGF0YSwgZXJyb3IgfSA9IGF3YWl0IHN1cGFiYXNlXHJcbiAgICAgICAgLmZyb20oXCJhcl93b3JrX29yZGVyc1wiIGFzIGFueSlcclxuICAgICAgICAuc2VsZWN0KFwiaWQsbnVtYmVyLHN0YXR1cyxsYWJvcl9ob3Vycyx0b3RhbF9jZW50cyxpc19jb21lYmFjayx0ZWNobmljaWFuX2lkLGNyZWF0ZWRfYXQsY29tcGxldGVkX2F0XCIpXHJcbiAgICAgICAgLmVxKFwic3RvcmVfaWRcIiwgc3RvcmVJZClcclxuICAgICAgICAuZ3RlKFwiY3JlYXRlZF9hdFwiLCBmcm9tKVxyXG4gICAgICAgIC5sdGUoXCJjcmVhdGVkX2F0XCIsIGAke3RvfVQyMzo1OTo1OWApO1xyXG4gICAgICBpZiAoZXJyb3IpIHRocm93IGVycm9yO1xyXG4gICAgICByZXR1cm4gZGF0YSBhcyBhbnlbXTtcclxuICAgIH0sXHJcbiAgfSk7XHJcblxyXG4gIGNvbnN0IHsgZGF0YTogdGVjaHMgPSBbXSB9ID0gdXNlUXVlcnkoe1xyXG4gICAgcXVlcnlLZXk6IFtcImFyLXRlY2huaWNpYW5zXCIsIHN0b3JlSWRdLFxyXG4gICAgcXVlcnlGbjogYXN5bmMgKCkgPT4ge1xyXG4gICAgICBjb25zdCB7IGRhdGEsIGVycm9yIH0gPSBhd2FpdCBzdXBhYmFzZS5mcm9tKFwiYXJfdGVjaG5pY2lhbnNcIiBhcyBhbnkpLnNlbGVjdChcImlkLG5hbWVcIikuZXEoXCJzdG9yZV9pZFwiLCBzdG9yZUlkKTtcclxuICAgICAgaWYgKGVycm9yKSB0aHJvdyBlcnJvcjtcclxuICAgICAgcmV0dXJuIGRhdGEgYXMgYW55W107XHJcbiAgICB9LFxyXG4gIH0pO1xyXG5cclxuICBjb25zdCBzdGF0cyA9IHVzZU1lbW8oKCkgPT4ge1xyXG4gICAgY29uc3QgY2xvc2VkID0gb3JkZXJzLmZpbHRlcigobzogYW55KSA9PiBvLnN0YXR1cyA9PT0gXCJkb25lXCIpO1xyXG4gICAgY29uc3QgcmV2ZW51ZSA9IGNsb3NlZC5yZWR1Y2UoKHMsIG86IGFueSkgPT4gcyArIChvLnRvdGFsX2NlbnRzID8/IDApLCAwKTtcclxuICAgIGNvbnN0IGxhYm9ySG91cnMgPSBvcmRlcnMucmVkdWNlKChzLCBvOiBhbnkpID0+IHMgKyBOdW1iZXIoby5sYWJvcl9ob3VycyA/PyAwKSwgMCk7XHJcbiAgICBjb25zdCBhdmcgPSBjbG9zZWQubGVuZ3RoID8gcmV2ZW51ZSAvIGNsb3NlZC5sZW5ndGggOiAwO1xyXG4gICAgY29uc3QgY29tZWJhY2tzID0gb3JkZXJzLmZpbHRlcigobzogYW55KSA9PiBvLmlzX2NvbWViYWNrKS5sZW5ndGg7XHJcbiAgICBjb25zdCBjYlJhdGUgPSBvcmRlcnMubGVuZ3RoID8gKGNvbWViYWNrcyAvIG9yZGVycy5sZW5ndGgpICogMTAwIDogMDtcclxuXHJcbiAgICBjb25zdCBieVRlY2g6IFJlY29yZDxzdHJpbmcsIHsgcm9zOiBudW1iZXI7IHJldmVudWU6IG51bWJlcjsgaG91cnM6IG51bWJlciB9PiA9IHt9O1xyXG4gICAgY2xvc2VkLmZvckVhY2goKG86IGFueSkgPT4ge1xyXG4gICAgICBjb25zdCBrID0gby50ZWNobmljaWFuX2lkID8/IFwiX3VuYXNzaWduZWRcIjtcclxuICAgICAgYnlUZWNoW2tdID0gYnlUZWNoW2tdID8/IHsgcm9zOiAwLCByZXZlbnVlOiAwLCBob3VyczogMCB9O1xyXG4gICAgICBieVRlY2hba10ucm9zKys7XHJcbiAgICAgIGJ5VGVjaFtrXS5yZXZlbnVlICs9IG8udG90YWxfY2VudHMgPz8gMDtcclxuICAgICAgYnlUZWNoW2tdLmhvdXJzICs9IE51bWJlcihvLmxhYm9yX2hvdXJzID8/IDApO1xyXG4gICAgfSk7XHJcblxyXG4gICAgcmV0dXJuIHsgcmV2ZW51ZSwgY2xvc2VkQ291bnQ6IGNsb3NlZC5sZW5ndGgsIGxhYm9ySG91cnMsIGF2ZywgY2JSYXRlLCBieVRlY2ggfTtcclxuICB9LCBbb3JkZXJzXSk7XHJcblxyXG4gIGNvbnN0IGV4cG9ydENzdiA9ICgpID0+IHtcclxuICAgIGNvbnN0IHJvd3MgPSBbXHJcbiAgICAgIFtcIk1ldHJpY1wiLCBcIlZhbHVlXCJdLFxyXG4gICAgICBbXCJSZXZlbnVlXCIsIGAkJHsoc3RhdHMucmV2ZW51ZSAvIDEwMCkudG9GaXhlZCgyKX1gXSxcclxuICAgICAgW1wiUk9zIENsb3NlZFwiLCBTdHJpbmcoc3RhdHMuY2xvc2VkQ291bnQpXSxcclxuICAgICAgW1wiQXZnIFRpY2tldFwiLCBgJCR7KHN0YXRzLmF2ZyAvIDEwMCkudG9GaXhlZCgyKX1gXSxcclxuICAgICAgW1wiTGFib3IgSG91cnNcIiwgc3RhdHMubGFib3JIb3Vycy50b0ZpeGVkKDEpXSxcclxuICAgICAgW1wiQ29tZWJhY2sgUmF0ZVwiLCBgJHtzdGF0cy5jYlJhdGUudG9GaXhlZCgxKX0lYF0sXHJcbiAgICBdO1xyXG4gICAgY29uc3QgY3N2ID0gcm93cy5tYXAoKHIpID0+IHIuam9pbihcIixcIikpLmpvaW4oXCJcXG5cIik7XHJcbiAgICBjb25zdCBibG9iID0gbmV3IEJsb2IoW2Nzdl0sIHsgdHlwZTogXCJ0ZXh0L2NzdlwiIH0pO1xyXG4gICAgY29uc3QgdXJsID0gVVJMLmNyZWF0ZU9iamVjdFVSTChibG9iKTtcclxuICAgIGNvbnN0IGEgPSBkb2N1bWVudC5jcmVhdGVFbGVtZW50KFwiYVwiKTtcclxuICAgIGEuaHJlZiA9IHVybDsgYS5kb3dubG9hZCA9IGBhci1yZXBvcnQtJHtmcm9tfS10by0ke3RvfS5jc3ZgOyBhLmNsaWNrKCk7XHJcbiAgICBVUkwucmV2b2tlT2JqZWN0VVJMKHVybCk7XHJcbiAgfTtcclxuXHJcbiAgcmV0dXJuIChcclxuICAgIDxkaXYgY2xhc3NOYW1lPVwic3BhY2UteS00XCI+XHJcbiAgICAgIDxDYXJkPlxyXG4gICAgICAgIDxDYXJkSGVhZGVyIGNsYXNzTmFtZT1cImZsZXggZmxleC1yb3cgaXRlbXMtY2VudGVyIGp1c3RpZnktYmV0d2VlblwiPlxyXG4gICAgICAgICAgPENhcmRUaXRsZSBjbGFzc05hbWU9XCJ0ZXh0LWJhc2UgZmxleCBpdGVtcy1jZW50ZXIgZ2FwLTJcIj48QmFyQ2hhcnQzIGNsYXNzTmFtZT1cInctNCBoLTRcIiAvPiBSZXBvcnRzICYgQW5hbHl0aWNzPC9DYXJkVGl0bGU+XHJcbiAgICAgICAgICA8QnV0dG9uIHNpemU9XCJzbVwiIHZhcmlhbnQ9XCJvdXRsaW5lXCIgY2xhc3NOYW1lPVwiZ2FwLTEuNVwiIG9uQ2xpY2s9e2V4cG9ydENzdn0+XHJcbiAgICAgICAgICAgIDxGaWxlRG93biBjbGFzc05hbWU9XCJ3LTMuNSBoLTMuNVwiIC8+IEV4cG9ydCBDU1ZcclxuICAgICAgICAgIDwvQnV0dG9uPlxyXG4gICAgICAgIDwvQ2FyZEhlYWRlcj5cclxuICAgICAgICA8Q2FyZENvbnRlbnQgY2xhc3NOYW1lPVwiZ3JpZCBncmlkLWNvbHMtMiBnYXAtM1wiPlxyXG4gICAgICAgICAgPGRpdj5cclxuICAgICAgICAgICAgPExhYmVsIGNsYXNzTmFtZT1cInRleHQteHNcIj5Gcm9tPC9MYWJlbD5cclxuICAgICAgICAgICAgPElucHV0IHR5cGU9XCJkYXRlXCIgdmFsdWU9e2Zyb219IG9uQ2hhbmdlPXsoZSkgPT4gc2V0RnJvbShlLnRhcmdldC52YWx1ZSl9IC8+XHJcbiAgICAgICAgICA8L2Rpdj5cclxuICAgICAgICAgIDxkaXY+XHJcbiAgICAgICAgICAgIDxMYWJlbCBjbGFzc05hbWU9XCJ0ZXh0LXhzXCI+VG88L0xhYmVsPlxyXG4gICAgICAgICAgICA8SW5wdXQgdHlwZT1cImRhdGVcIiB2YWx1ZT17dG99IG9uQ2hhbmdlPXsoZSkgPT4gc2V0VG8oZS50YXJnZXQudmFsdWUpfSAvPlxyXG4gICAgICAgICAgPC9kaXY+XHJcbiAgICAgICAgPC9DYXJkQ29udGVudD5cclxuICAgICAgPC9DYXJkPlxyXG5cclxuICAgICAgPGRpdiBjbGFzc05hbWU9XCJncmlkIGdyaWQtY29scy0yIG1kOmdyaWQtY29scy01IGdhcC0yXCI+XHJcbiAgICAgICAge1tcclxuICAgICAgICAgIHsgbGFiZWw6IFwiUmV2ZW51ZVwiLCB2YWx1ZTogYCQkeyhzdGF0cy5yZXZlbnVlIC8gMTAwKS50b0ZpeGVkKDIpfWAgfSxcclxuICAgICAgICAgIHsgbGFiZWw6IFwiUk9zIENsb3NlZFwiLCB2YWx1ZTogc3RhdHMuY2xvc2VkQ291bnQgfSxcclxuICAgICAgICAgIHsgbGFiZWw6IFwiQXZnIFRpY2tldFwiLCB2YWx1ZTogYCQkeyhzdGF0cy5hdmcgLyAxMDApLnRvRml4ZWQoMil9YCB9LFxyXG4gICAgICAgICAgeyBsYWJlbDogXCJMYWJvciBIb3Vyc1wiLCB2YWx1ZTogc3RhdHMubGFib3JIb3Vycy50b0ZpeGVkKDEpIH0sXHJcbiAgICAgICAgICB7IGxhYmVsOiBcIkNvbWViYWNrIFJhdGVcIiwgdmFsdWU6IGAke3N0YXRzLmNiUmF0ZS50b0ZpeGVkKDEpfSVgIH0sXHJcbiAgICAgICAgXS5tYXAoKGspID0+IChcclxuICAgICAgICAgIDxDYXJkIGtleT17ay5sYWJlbH0+XHJcbiAgICAgICAgICAgIDxDYXJkQ29udGVudCBjbGFzc05hbWU9XCJwLTNcIj5cclxuICAgICAgICAgICAgICA8cCBjbGFzc05hbWU9XCJ0ZXh0LVsxMXB4XSB1cHBlcmNhc2UgdHJhY2tpbmctd2lkZSB0ZXh0LW11dGVkLWZvcmVncm91bmRcIj57ay5sYWJlbH08L3A+XHJcbiAgICAgICAgICAgICAgPHAgY2xhc3NOYW1lPVwidGV4dC14bCBmb250LWJvbGQgbXQtMVwiPntrLnZhbHVlfTwvcD5cclxuICAgICAgICAgICAgPC9DYXJkQ29udGVudD5cclxuICAgICAgICAgIDwvQ2FyZD5cclxuICAgICAgICApKX1cclxuICAgICAgPC9kaXY+XHJcblxyXG4gICAgICA8Q2FyZD5cclxuICAgICAgICA8Q2FyZEhlYWRlcj48Q2FyZFRpdGxlIGNsYXNzTmFtZT1cInRleHQtc21cIj5UZWNoIExlYWRlcmJvYXJkPC9DYXJkVGl0bGU+PC9DYXJkSGVhZGVyPlxyXG4gICAgICAgIDxDYXJkQ29udGVudD5cclxuICAgICAgICAgIHtPYmplY3Qua2V5cyhzdGF0cy5ieVRlY2gpLmxlbmd0aCA9PT0gMCA/IChcclxuICAgICAgICAgICAgPHAgY2xhc3NOYW1lPVwidGV4dC1zbSB0ZXh0LW11dGVkLWZvcmVncm91bmQgdGV4dC1jZW50ZXIgcHktNlwiPk5vIGNsb3NlZCB3b3JrIG9yZGVycyBpbiB0aGlzIHBlcmlvZC48L3A+XHJcbiAgICAgICAgICApIDogKFxyXG4gICAgICAgICAgICA8ZGl2IGNsYXNzTmFtZT1cInNwYWNlLXktMS41XCI+XHJcbiAgICAgICAgICAgICAge09iamVjdC5lbnRyaWVzKHN0YXRzLmJ5VGVjaClcclxuICAgICAgICAgICAgICAgIC5zb3J0KChhLCBiKSA9PiBiWzFdLnJldmVudWUgLSBhWzFdLnJldmVudWUpXHJcbiAgICAgICAgICAgICAgICAubWFwKChbdGlkLCBzXSkgPT4ge1xyXG4gICAgICAgICAgICAgICAgICBjb25zdCBuYW1lID0gdGVjaHMuZmluZCgodDogYW55KSA9PiB0LmlkID09PSB0aWQpPy5uYW1lID8/IFwiVW5hc3NpZ25lZFwiO1xyXG4gICAgICAgICAgICAgICAgICByZXR1cm4gKFxyXG4gICAgICAgICAgICAgICAgICAgIDxkaXYga2V5PXt0aWR9IGNsYXNzTmFtZT1cImZsZXggaXRlbXMtY2VudGVyIGp1c3RpZnktYmV0d2VlbiBib3JkZXIgYm9yZGVyLWJvcmRlciByb3VuZGVkLWxnIHAtMyB0ZXh0LXNtXCI+XHJcbiAgICAgICAgICAgICAgICAgICAgICA8c3BhbiBjbGFzc05hbWU9XCJmb250LW1lZGl1bVwiPntuYW1lfTwvc3Bhbj5cclxuICAgICAgICAgICAgICAgICAgICAgIDxzcGFuIGNsYXNzTmFtZT1cInRleHQtbXV0ZWQtZm9yZWdyb3VuZFwiPntzLnJvc30gUk9zIMK3IHtzLmhvdXJzLnRvRml4ZWQoMSl9aCDCtyAkeyhzLnJldmVudWUgLyAxMDApLnRvRml4ZWQoMil9PC9zcGFuPlxyXG4gICAgICAgICAgICAgICAgICAgIDwvZGl2PlxyXG4gICAgICAgICAgICAgICAgICApO1xyXG4gICAgICAgICAgICAgICAgfSl9XHJcbiAgICAgICAgICAgIDwvZGl2PlxyXG4gICAgICAgICAgKX1cclxuICAgICAgICA8L0NhcmRDb250ZW50PlxyXG4gICAgICA8L0NhcmQ+XHJcbiAgICA8L2Rpdj5cclxuICApO1xyXG59XHJcbiJdLCJuYW1lcyI6WyJ1c2VNZW1vIiwidXNlU3RhdGUiLCJ1c2VRdWVyeSIsInN1cGFiYXNlIiwiQ2FyZCIsIkNhcmRDb250ZW50IiwiQ2FyZEhlYWRlciIsIkNhcmRUaXRsZSIsIkJ1dHRvbiIsIklucHV0IiwiTGFiZWwiLCJCYXJDaGFydDMiLCJGaWxlRG93biIsIkF1dG9SZXBhaXJSZXBvcnRzU2VjdGlvbiIsInN0b3JlSWQiLCJmcm9tIiwic2V0RnJvbSIsIkRhdGUiLCJub3ciLCJ0b0lTT1N0cmluZyIsInNsaWNlIiwidG8iLCJzZXRUbyIsImRhdGEiLCJvcmRlcnMiLCJxdWVyeUtleSIsInF1ZXJ5Rm4iLCJlcnJvciIsInNlbGVjdCIsImVxIiwiZ3RlIiwibHRlIiwidGVjaHMiLCJzdGF0cyIsImNsb3NlZCIsImZpbHRlciIsIm8iLCJzdGF0dXMiLCJyZXZlbnVlIiwicmVkdWNlIiwicyIsInRvdGFsX2NlbnRzIiwibGFib3JIb3VycyIsIk51bWJlciIsImxhYm9yX2hvdXJzIiwiYXZnIiwibGVuZ3RoIiwiY29tZWJhY2tzIiwiaXNfY29tZWJhY2siLCJjYlJhdGUiLCJieVRlY2giLCJmb3JFYWNoIiwiayIsInRlY2huaWNpYW5faWQiLCJyb3MiLCJob3VycyIsImNsb3NlZENvdW50IiwiZXhwb3J0Q3N2Iiwicm93cyIsInRvRml4ZWQiLCJTdHJpbmciLCJjc3YiLCJtYXAiLCJyIiwiam9pbiIsImJsb2IiLCJCbG9iIiwidHlwZSIsInVybCIsIlVSTCIsImNyZWF0ZU9iamVjdFVSTCIsImEiLCJkb2N1bWVudCIsImNyZWF0ZUVsZW1lbnQiLCJocmVmIiwiZG93bmxvYWQiLCJjbGljayIsInJldm9rZU9iamVjdFVSTCIsImRpdiIsImNsYXNzTmFtZSIsInNpemUiLCJ2YXJpYW50Iiwib25DbGljayIsInZhbHVlIiwib25DaGFuZ2UiLCJlIiwidGFyZ2V0IiwibGFiZWwiLCJwIiwiT2JqZWN0Iiwia2V5cyIsImVudHJpZXMiLCJzb3J0IiwiYiIsInRpZCIsIm5hbWUiLCJmaW5kIiwidCIsImlkIiwic3BhbiJdLCJtYXBwaW5ncyI6Ijs7QUFBQTs7Q0FFQyxHQUNELFNBQVNBLE9BQU8sRUFBRUMsUUFBUSxRQUFRLFFBQVE7QUFDMUMsU0FBU0MsUUFBUSxRQUFRLHdCQUF3QjtBQUNqRCxTQUFTQyxRQUFRLFFBQVEsaUNBQWlDO0FBQzFELFNBQVNDLElBQUksRUFBRUMsV0FBVyxFQUFFQyxVQUFVLEVBQUVDLFNBQVMsUUFBUSx1QkFBdUI7QUFDaEYsU0FBU0MsTUFBTSxRQUFRLHlCQUF5QjtBQUNoRCxTQUFTQyxLQUFLLFFBQVEsd0JBQXdCO0FBQzlDLFNBQVNDLEtBQUssUUFBUSx3QkFBd0I7QUFDOUMsU0FBU0MsU0FBUyxFQUFFQyxRQUFRLFFBQVEsZUFBZTtBQUluRCxlQUFlLFNBQVNDLHlCQUF5QixFQUFFQyxPQUFPLEVBQVM7O0lBQ2pFLE1BQU0sQ0FBQ0MsTUFBTUMsUUFBUSxHQUFHZixTQUFTLElBQU0sSUFBSWdCLEtBQUtBLEtBQUtDLEdBQUcsS0FBSyxLQUFLLFVBQVVDLFdBQVcsR0FBR0MsS0FBSyxDQUFDLEdBQUc7SUFDbkcsTUFBTSxDQUFDQyxJQUFJQyxNQUFNLEdBQUdyQixTQUFTLElBQU0sSUFBSWdCLE9BQU9FLFdBQVcsR0FBR0MsS0FBSyxDQUFDLEdBQUc7SUFFckUsTUFBTSxFQUFFRyxNQUFNQyxTQUFTLEVBQUUsRUFBRSxHQUFHdEIsU0FBUztRQUNyQ3VCLFVBQVU7WUFBQztZQUFxQlg7WUFB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
