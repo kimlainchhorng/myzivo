@@ -24,10 +24,11 @@ export function useAffiliateAttribution(): AffiliateAttribution {
     queryFn: async () => {
       if (!user?.id) return null;
 
-      const { data, error } = await supabase
-        .from("profiles")
-        .select("affiliate_code, affiliate_partner_name, affiliate_captured_at")
-        .eq("user_id", user.id)
+      // Owner-only RPC: affiliate columns are no longer SELECT-able directly
+      // from profiles (post 2026-04 PII hardening). The RPC returns only the
+      // current user's attribution row.
+      const { data, error } = await (supabase as any)
+        .rpc("get_my_affiliate_attribution")
         .maybeSingle();
 
       if (error) {
