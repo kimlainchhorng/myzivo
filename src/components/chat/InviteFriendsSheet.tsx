@@ -98,19 +98,18 @@ export default function InviteFriendsSheet({
       }
       const r = await sendRequest(prof.user_id, "Hi! Let's connect on ZIVO.");
       if (!r.ok) {
-        const msg = (r.error || "").toLowerCase();
-        if (msg.includes("duplicate") || msg.includes("23505")) {
-          toast.success("You already have a pending request with that user.", {
-            action: { label: "View", onClick: () => navigate("/chat/contacts/requests?tab=out") },
-          });
-        } else {
-          toast.error(r.error || "Couldn't send request");
-        }
+        toast.error(r.error || "Couldn't send request");
         return;
       }
-      toast.success("Request sent. Track it in Requests → Sent.", {
-        action: { label: "View", onClick: () => navigate("/chat/contacts/requests?tab=out") },
-      });
+      if (r.duplicate) {
+        toast.success("You already have a pending request with that user.", {
+          action: { label: "View", onClick: () => navigate("/chat/contacts/requests?tab=out") },
+        });
+      } else {
+        toast.success("Request sent. Track it in Requests → Sent.", {
+          action: { label: "View", onClick: () => navigate("/chat/contacts/requests?tab=out") },
+        });
+      }
       setHandle("");
       onOpenChange(false);
     } finally {
