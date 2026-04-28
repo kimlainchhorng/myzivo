@@ -79,6 +79,29 @@ const formatPrice = (cents: number) => {
   return `$${(cents / 100).toFixed(0)}`;
 };
 
+// Format a phone number nicely. KH local numbers (7–9 digits, no leading +)
+// get +855 prefix and grouped as +855 XX XXX XXX.
+const formatPhone = (raw?: string | null) => {
+  if (!raw) return "";
+  const trimmed = raw.trim();
+  if (trimmed.startsWith("+")) {
+    const digits = trimmed.replace(/[^\d]/g, "");
+    if (digits.length >= 10) {
+      const cc = digits.slice(0, digits.length - 9);
+      return `+${cc} ${digits.slice(-9, -6)} ${digits.slice(-6, -3)} ${digits.slice(-3)}`;
+    }
+    return trimmed;
+  }
+  const local = trimmed.replace(/[^\d]/g, "").replace(/^0+/, "");
+  if (local.length >= 7 && local.length <= 9) {
+    const a = local.slice(0, local.length - 6);
+    const b = local.slice(local.length - 6, local.length - 3);
+    const c = local.slice(local.length - 3);
+    return `+855 ${a} ${b} ${c}`;
+  }
+  return trimmed;
+};
+
 const amenityIconFor = (label: string) => {
   const key = label.toLowerCase().trim();
   return AMENITY_ICON_MAP[key] || CheckCircle2;
@@ -189,6 +212,16 @@ export default function HotelResortDetailPage() {
   const minDeal = useMemo(() => applyPromo(minPriceCents), [minPriceCents, promo]);
 
   const [bookingOpen, setBookingOpen] = useState(false);
+  const [allRoomsOpen, setAllRoomsOpen] = useState(false);
+
+  // Identify the cheapest active room for a deterministic "Top pick" badge
+  const topPickRoomId = useMemo(() => {
+    if (!activeRooms.length) return null;
+    const cheapest = activeRooms
+      .filter((r) => r.base_rate_cents > 0)
+      .sort((a, b) => a.base_rate_cents - b.base_rate_cents)[0];
+    return cheapest?.id || null;
+  }, [activeRooms]);
 
   useEffect(() => {
     window.scrollTo({ top: 0, behavior: "instant" as ScrollBehavior });
@@ -239,7 +272,7 @@ export default function HotelResortDetailPage() {
   }
 
   return (
-    <div className="min-h-dvh bg-background pb-28 md:pb-12">
+    <div className="min-h-dvh bg-background pb-32 md:pb-12">
       <Helmet>
         <title>{store?.name ? `${store.name} — ZIVO` : "Hotel & Resort — ZIVO"}</title>
         <meta
@@ -424,42 +457,51 @@ export default function HotelResortDetailPage() {
         ) : activeRooms.length === 0 ? (
           <p className="text-xs text-muted-foreground">No rooms published yet.</p>
         ) : (
-          <div className="-mx-4 px-4 pr-6 flex gap-3 overflow-x-auto snap-x snap-mandatory pb-1 [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden md:mx-0 md:px-0 md:pr-0 md:overflow-visible md:grid md:grid-cols-2 lg:grid-cols-3 md:gap-3">
-            {activeRooms.slice(0, 8).map((room) => {
-              const photo = room.photos?.[room.cover_photo_index ?? 0] || room.photos?.[0];
-              const deal = applyPromo(room.base_rate_cents);
-              const hasDiscount = deal.pctOff > 0 && deal.discounted < room.base_rate_cents;
-              return (
-                <div
-                  key={room.id}
-                  className="snap-start shrink-0 w-60 md:w-auto rounded-xl border border-border bg-card overflow-hidden"
-                >
-                  <div className="h-28 bg-muted relative">
-                    {photo ? (
-                      <img src={photo} alt={room.name} className="w-full h-full object-cover" loading="lazy" />
-                    ) : (
-                      <div className="w-full h-full flex items-center justify-center">
-                        <Hotel className="w-6 h-6 text-muted-foreground" />
+          <div className="relative">
+            <div className="-mx-4 px-4 pr-10 flex gap-3 overflow-x-auto snap-x snap-mandatory pb-1 [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden md:mx-0 md:px-0 md:pr-0 md:overflow-visible md:grid md:grid-cols-2 lg:grid-cols-3 md:gap-3">
+              {activeRooms.slice(0, 8).map((room) => {
+                const photo = room.photos?.[room.cover_photo_index ?? 0] || room.photos?.[0];
+                const deal = applyPromo(room.base_rate_cents);
+                const hasDiscount = deal.pctOff > 0 && deal.discounted < room.base_rate_cents;
+                const isTopPick = room.id === topPickRoomId;
+                return (
+                  <div
+                    key={room.id}
+                    className="snap-start shrink-0 w-60 md:w-auto rounded-xl border border-border bg-card overflow-hidden"
+                  >
+                    <div className="h-28 bg-muted relative">
+                      {photo ? (
+                        <img src={photo} alt={room.name} className="w-full h-full object-cover" loading="lazy" />
+                      ) : (
+                        <div className="w-full h-full flex items-center justify-center">
+                          <Hotel className="w-6 h-6 text-muted-foreground" />
+                        </div>
+                      )}
+                      {room.breakfast_included && (
+                        <span className="absolute top-1.5 left-1.5 rounded-full bg-background/90 px-2 py-0.5 text-[9px] font-semibold text-primary">
+                          Breakfast
+                        </span>
+                      )}
+                      {hasDiscount && (
+                        <span className="absolute top-1.5 right-1.5 rounded-full bg-red-600 text-white px-1.5 py-0.5 text-[9px] font-bold">
+                          -{deal.pctOff}%
+                        </span>
+                      )}
+                    </div>
+                    <div className="p-2.5">
+                      <div className="flex items-center gap-1.5">
+                        <p className="text-xs font-bold text-foreground truncate flex-1">{room.name}</p>
+                        {isTopPick && (
+                          <span className="shrink-0 inline-flex items-center gap-0.5 rounded-full bg-amber-50 text-amber-700 border border-amber-200 px-1.5 py-0.5 text-[9px] font-bold dark:bg-amber-500/10 dark:text-amber-300 dark:border-amber-500/20">
+                            <Star className="w-2.5 h-2.5 fill-amber-500 text-amber-500" />
+                            Top pick
+                          </span>
+                        )}
                       </div>
-                    )}
-                    {room.breakfast_included && (
-                      <span className="absolute top-1.5 left-1.5 rounded-full bg-background/90 px-2 py-0.5 text-[9px] font-semibold text-primary">
-                        Breakfast
-                      </span>
-                    )}
-                    {hasDiscount && (
-                      <span className="absolute top-1.5 right-1.5 rounded-full bg-red-600 text-white px-1.5 py-0.5 text-[9px] font-bold">
-                        -{deal.pctOff}%
-                      </span>
-                    )}
-                  </div>
-                  <div className="p-2.5">
-                    <p className="text-xs font-bold text-foreground truncate">{room.name}</p>
-                    <p className="mt-0.5 text-[10px] text-muted-foreground truncate">
-                      {room.beds || room.room_type || "Room"} · {room.max_guests} guests
-                    </p>
-                    <div className="mt-1.5 flex items-end justify-between gap-2">
-                      <div className="min-w-0">
+                      <p className="mt-0.5 text-[10px] text-muted-foreground truncate">
+                        {room.beds || room.room_type || "Room"} · {room.max_guests} guests
+                      </p>
+                      <div className="mt-1.5">
                         {hasDiscount ? (
                           <>
                             <span className="text-sm font-bold text-emerald-600">
@@ -477,13 +519,23 @@ export default function HotelResortDetailPage() {
                           </span>
                         )}
                       </div>
-                      <Star className="w-3.5 h-3.5 text-amber-500 fill-amber-500 shrink-0" />
                     </div>
                   </div>
-                </div>
-              );
-            })}
+                );
+              })}
+            </div>
+            {/* Right-edge fade hint (mobile only) */}
+            <div className="md:hidden pointer-events-none absolute top-0 right-0 h-full w-10 bg-gradient-to-l from-background to-transparent" />
           </div>
+        )}
+        {activeRooms.length > 8 && (
+          <button
+            type="button"
+            onClick={() => setAllRoomsOpen(true)}
+            className="mt-3 inline-flex items-center gap-1 rounded-full border border-emerald-200 bg-emerald-50 text-emerald-700 px-3 py-1.5 text-[11px] font-semibold hover:bg-emerald-100 dark:bg-emerald-500/10 dark:text-emerald-300 dark:border-emerald-500/20"
+          >
+            See all {activeRooms.length} rooms <ExternalLink className="w-3 h-3" />
+          </button>
         )}
       </Section>
 
@@ -494,7 +546,7 @@ export default function HotelResortDetailPage() {
             {profile.languages.map((lang) => (
               <span
                 key={lang}
-                className="rounded-full bg-muted px-2.5 py-1 text-[11px] font-medium text-foreground"
+                className="rounded-full bg-emerald-50 text-emerald-700 border border-emerald-100 px-2.5 py-1 text-[11px] font-medium dark:bg-emerald-500/10 dark:text-emerald-300 dark:border-emerald-500/20"
               >
                 {lang}
               </span>
@@ -513,7 +565,7 @@ export default function HotelResortDetailPage() {
                 className="flex items-center gap-3 rounded-xl border border-border bg-card px-3 py-2.5 active:scale-[0.99]"
               >
                 <Phone className="w-4 h-4 text-primary" />
-                <span className="text-sm text-foreground">{profile?.contact?.phone || store?.phone}</span>
+                <span className="text-sm text-foreground">{formatPhone(profile?.contact?.phone || store?.phone)}</span>
               </a>
             )}
             {profile?.contact?.whatsapp && (
@@ -547,7 +599,8 @@ export default function HotelResortDetailPage() {
 
       {/* Owner band */}
       {isOwner && (
-        <Section title="Owner tools">
+        <section className="px-4 mt-5 mb-4">
+          <h2 className="text-sm font-bold text-foreground mb-2">Owner tools</h2>
           <div className="rounded-2xl border border-primary/20 bg-primary/5 p-3 flex items-center gap-3">
             <div className="h-9 w-9 rounded-xl bg-primary/15 flex items-center justify-center text-primary">
               <Settings className="w-4 h-4" />
@@ -563,7 +616,7 @@ export default function HotelResortDetailPage() {
               Admin
             </Button>
           </div>
-        </Section>
+        </section>
       )}
 
       </div>
@@ -634,13 +687,97 @@ export default function HotelResortDetailPage() {
           </motion.div>
         </div>
       )}
+
+      {/* All rooms sheet */}
+      {allRoomsOpen && (
+        <div
+          className="fixed inset-0 z-40 bg-black/40 flex items-end md:items-center justify-center"
+          onClick={() => setAllRoomsOpen(false)}
+        >
+          <motion.div
+            initial={{ y: 60, opacity: 0 }}
+            animate={{ y: 0, opacity: 1 }}
+            className="w-full max-w-md md:max-w-2xl max-h-[85dvh] bg-card rounded-t-3xl md:rounded-3xl shadow-2xl flex flex-col"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="p-5 pb-3 border-b border-border">
+              <div className="mx-auto h-1.5 w-10 rounded-full bg-muted mb-3 md:hidden" />
+              <h3 className="text-base font-bold text-foreground">All rooms · {activeRooms.length}</h3>
+              <p className="text-[11px] text-muted-foreground mt-0.5">{store?.name}</p>
+            </div>
+            <div className="flex-1 overflow-y-auto p-4 grid grid-cols-1 md:grid-cols-2 gap-3 pb-[max(env(safe-area-inset-bottom),16px)]">
+              {activeRooms.map((room) => {
+                const photo = room.photos?.[room.cover_photo_index ?? 0] || room.photos?.[0];
+                const deal = applyPromo(room.base_rate_cents);
+                const hasDiscount = deal.pctOff > 0 && deal.discounted < room.base_rate_cents;
+                const isTopPick = room.id === topPickRoomId;
+                return (
+                  <div key={room.id} className="rounded-xl border border-border bg-card overflow-hidden">
+                    <div className="h-28 bg-muted relative">
+                      {photo ? (
+                        <img src={photo} alt={room.name} className="w-full h-full object-cover" loading="lazy" />
+                      ) : (
+                        <div className="w-full h-full flex items-center justify-center">
+                          <Hotel className="w-6 h-6 text-muted-foreground" />
+                        </div>
+                      )}
+                      {hasDiscount && (
+                        <span className="absolute top-1.5 right-1.5 rounded-full bg-red-600 text-white px-1.5 py-0.5 text-[9px] font-bold">
+                          -{deal.pctOff}%
+                        </span>
+                      )}
+                    </div>
+                    <div className="p-2.5">
+                      <div className="flex items-center gap-1.5">
+                        <p className="text-xs font-bold text-foreground truncate flex-1">{room.name}</p>
+                        {isTopPick && (
+                          <span className="shrink-0 inline-flex items-center gap-0.5 rounded-full bg-amber-50 text-amber-700 border border-amber-200 px-1.5 py-0.5 text-[9px] font-bold dark:bg-amber-500/10 dark:text-amber-300 dark:border-amber-500/20">
+                            <Star className="w-2.5 h-2.5 fill-amber-500 text-amber-500" />
+                            Top pick
+                          </span>
+                        )}
+                      </div>
+                      <p className="mt-0.5 text-[10px] text-muted-foreground truncate">
+                        {room.beds || room.room_type || "Room"} · {room.max_guests} guests
+                      </p>
+                      <div className="mt-1.5">
+                        {hasDiscount ? (
+                          <>
+                            <span className="text-sm font-bold text-emerald-600">
+                              {formatPrice(deal.discounted)}
+                              <span className="text-[10px] font-normal text-muted-foreground"> /night</span>
+                            </span>
+                            <div className="text-[10px] text-muted-foreground line-through leading-none">
+                              {formatPrice(room.base_rate_cents)}
+                            </div>
+                          </>
+                        ) : (
+                          <span className="text-sm font-bold text-primary">
+                            {formatPrice(room.base_rate_cents)}
+                            <span className="text-[10px] font-normal text-muted-foreground"> /night</span>
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+            <div className="p-3 border-t border-border">
+              <Button variant="ghost" className="w-full" onClick={() => setAllRoomsOpen(false)}>
+                Close
+              </Button>
+            </div>
+          </motion.div>
+        </div>
+      )}
     </div>
   );
 }
 
 function Section({ title, children }: { title: string; children: React.ReactNode }) {
   return (
-    <section className="px-4 mt-5">
+    <section className="px-4 mt-5 md:mt-7">
       <h2 className="text-sm font-bold text-foreground mb-2">{title}</h2>
       {children}
     </section>
