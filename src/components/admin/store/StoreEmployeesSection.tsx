@@ -459,6 +459,20 @@ export default function StoreEmployeesSection({ storeId }: Props) {
             <div className="space-y-1.5"><Label>Emergency Contact</Label><Input value={form.emergency_contact} onChange={(e) => setForm({ ...form, emergency_contact: e.target.value })} placeholder="Name — Phone" /></div>
             <div className="space-y-1.5"><Label>Address</Label><Input value={form.address} onChange={(e) => setForm({ ...form, address: e.target.value })} placeholder="Street address" /></div>
             <div className="space-y-1.5"><Label>Notes</Label><Textarea value={form.notes} onChange={(e) => setForm({ ...form, notes: e.target.value })} placeholder="Optional notes..." rows={2} /></div>
+
+            {/* Invite controls */}
+            <div className="rounded-xl border border-border/50 bg-muted/20 p-3 space-y-2">
+              <p className="text-xs font-semibold flex items-center gap-1.5"><Send className="w-3.5 h-3.5 text-emerald-500" /> Send setup invite</p>
+              <p className="text-[11px] text-muted-foreground -mt-1">They'll receive a secure link to claim their employee account.</p>
+              <label className="flex items-center justify-between gap-2 text-xs cursor-pointer">
+                <span className="flex items-center gap-2"><MailCheck className="w-3.5 h-3.5 text-emerald-600" /> Email invite {!form.email && <span className="text-[10px] text-muted-foreground">(needs email)</span>}</span>
+                <Switch checked={form.invite_email && !!form.email} disabled={!form.email} onCheckedChange={(v) => setForm({ ...form, invite_email: v })} />
+              </label>
+              <label className="flex items-center justify-between gap-2 text-xs cursor-pointer">
+                <span className="flex items-center gap-2"><MessageSquare className="w-3.5 h-3.5 text-blue-600" /> SMS invite {!form.phone && <span className="text-[10px] text-muted-foreground">(needs phone)</span>}</span>
+                <Switch checked={form.invite_sms && !!form.phone} disabled={!form.phone} onCheckedChange={(v) => setForm({ ...form, invite_sms: v })} />
+              </label>
+            </div>
           </div>
           <DialogFooter>
             <Button variant="outline" size="sm" onClick={closeDialog}>Cancel</Button>
