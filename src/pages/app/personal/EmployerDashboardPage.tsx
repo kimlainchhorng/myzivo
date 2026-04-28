@@ -1,6 +1,6 @@
 /** Employer dashboard — partner accounts manage their company + post/manage jobs */
 import { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { ArrowLeft, Plus, Building2, Users } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -15,6 +15,8 @@ export default function EmployerDashboardPage() {
   const navigate = useNavigate();
   const goBack = useSmartBack("/personal");
   const { user } = useAuth();
+  const [searchParams] = useSearchParams();
+  const prefillStoreId = searchParams.get("storeId");
   const [company, setCompany] = useState<any>(null);
   const [jobs, setJobs] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
@@ -46,10 +48,20 @@ export default function EmployerDashboardPage() {
       if (co) {
         const { data: js } = await (supabase as any).from("career_jobs").select("*, career_applications(count)").eq("company_id", co.id).order("created_at", { ascending: false });
         setJobs(js ?? []);
+      } else if (prefillStoreId) {
+        const { data: store } = await (supabase as any).from("stores").select("name,category,city,country,logo_url,description,website").eq("id", prefillStoreId).maybeSingle();
+        if (store) {
+          setName(store.name ?? "");
+          setIndustry(store.category ?? "");
+          setLocation([store.city, store.country].filter(Boolean).join(", "));
+          setWebsite(store.website ?? "");
+          setDescription(store.description ?? "");
+          toast.info("Prefilled from your store — review and save.");
+        }
       }
       setLoading(false);
     })();
-  }, [user]);
+  }, [user, prefillStoreId]);
 
   const createCompany = async () => {
     if (!user) return;

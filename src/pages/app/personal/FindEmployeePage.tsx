@@ -1,7 +1,7 @@
 /** Find Company — browse companies and open jobs */
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { ArrowLeft, Search, Building2, Briefcase, MapPin, FileText, Plus } from "lucide-react";
+import { ArrowLeft, Search, Building2, Briefcase, MapPin, FileText, Plus, UserCheck } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -9,6 +9,7 @@ import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { useSmartBack } from "@/lib/smartBack";
+import FindTalentTab from "@/components/careers/FindTalentTab";
 
 type CareerCompany = {
   id: string;
@@ -38,11 +39,12 @@ export default function FindEmployeePage() {
   const navigate = useNavigate();
   const goBack = useSmartBack("/personal/apply-job");
   const { user } = useAuth();
-  const [tab, setTab] = useState<"jobs" | "companies">("jobs");
+  const [tab, setTab] = useState<"jobs" | "companies" | "talent">("jobs");
   const [q, setQ] = useState("");
   const [companies, setCompanies] = useState<CareerCompany[]>([]);
   const [jobs, setJobs] = useState<CareerJob[]>([]);
   const [loading, setLoading] = useState(true);
+  const [isEmployer, setIsEmployer] = useState(false);
 
   useEffect(() => {
     let cancel = false;
@@ -59,6 +61,17 @@ export default function FindEmployeePage() {
     })();
     return () => { cancel = true; };
   }, []);
+
+  useEffect(() => {
+    if (!user) { setIsEmployer(false); return; }
+    (async () => {
+      const [coRes, stRes] = await Promise.all([
+        (supabase as any).from("career_companies").select("id").eq("owner_id", user.id).limit(1),
+        (supabase as any).from("stores").select("id").eq("owner_id", user.id).limit(1),
+      ]);
+      setIsEmployer(((coRes.data?.length ?? 0) + (stRes.data?.length ?? 0)) > 0);
+    })();
+  }, [user]);
 
   const filteredJobs = useMemo(() => {
     const s = q.trim().toLowerCase();
@@ -86,7 +99,7 @@ export default function FindEmployeePage() {
         <Button variant="ghost" size="icon" onClick={goBack} aria-label="Back">
           <ArrowLeft className="h-5 w-5" />
         </Button>
-        <h1 className="text-lg font-bold">Find Company</h1>
+        <h1 className="text-lg font-bold">Careers</h1>
         {user && (
           <Button size="sm" variant="outline" className="ml-auto" onClick={() => navigate("/personal/my-applications")}>
             <FileText className="mr-1 h-4 w-4" /> My Apps
@@ -121,14 +134,24 @@ export default function FindEmployeePage() {
         </Card>
 
         <Tabs value={tab} onValueChange={v => setTab(v as any)}>
-          <TabsList className="grid w-full grid-cols-2">
+          <TabsList className={isEmployer ? "grid w-full grid-cols-3" : "grid w-full grid-cols-2"}>
             <TabsTrigger value="jobs">
-              <Briefcase className="mr-1 h-4 w-4" /> Open Jobs ({filteredJobs.length})
+              <Briefcase className="mr-1 h-4 w-4" /> Jobs ({filteredJobs.length})
             </TabsTrigger>
             <TabsTrigger value="companies">
               <Building2 className="mr-1 h-4 w-4" /> Companies ({filteredCompanies.length})
             </TabsTrigger>
+            {isEmployer && (
+              <TabsTrigger value="talent">
+                <UserCheck className="mr-1 h-4 w-4" /> Talent
+              </TabsTrigger>
+            )}
           </TabsList>
+          {isEmployer && (
+            <TabsContent value="talent" className="mt-3">
+              <FindTalentTab />
+            </TabsContent>
+          )}
 
           <TabsContent value="jobs" className="mt-3 space-y-2">
             {loading && <p className="text-center text-sm text-muted-foreground">Loading…</p>}
