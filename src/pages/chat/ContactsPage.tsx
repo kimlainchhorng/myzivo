@@ -253,13 +253,14 @@ export default function ContactsPage() {
           <button
             type="button"
             onClick={syncPhone}
+            disabled={syncingNative}
             aria-label={nativeReady ? "Sync contacts from your phone" : "Sync contacts (paste numbers)"}
-            className="flex flex-col items-center gap-1.5 p-3 rounded-2xl border bg-card hover:bg-muted/50 active:scale-[0.98] transition focus-visible:ring-2 focus-visible:ring-emerald-500 focus-visible:outline-none"
+            className="flex flex-col items-center gap-1.5 p-3 rounded-2xl border bg-card hover:bg-muted/50 active:scale-[0.98] transition focus-visible:ring-2 focus-visible:ring-emerald-500 focus-visible:outline-none disabled:opacity-60"
           >
             <div className="w-9 h-9 rounded-full bg-violet-500/15 text-violet-600 flex items-center justify-center">
-              <Smartphone className="w-4 h-4" />
+              <Smartphone className={`w-4 h-4 ${syncingNative ? "animate-pulse" : ""}`} />
             </div>
-            <span className="text-[11px] font-medium leading-tight text-center">Sync phone</span>
+            <span className="text-[11px] font-medium leading-tight text-center">{syncingNative ? "Syncing…" : "Sync phone"}</span>
           </button>
           <button
             type="button"
