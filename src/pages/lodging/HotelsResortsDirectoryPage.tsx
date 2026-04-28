@@ -26,9 +26,9 @@ interface DirectoryStore {
   id: string;
   name: string;
   category: string | null;
-  city: string | null;
-  country: string | null;
+  address: string | null;
   logo_url: string | null;
+  banner_url: string | null;
   description: string | null;
   setup_complete: boolean | null;
 }
@@ -53,8 +53,8 @@ export default function HotelsResortsDirectoryPage() {
     queryKey: ["hotels-directory"],
     queryFn: async (): Promise<DirectoryStore[]> => {
       const { data, error } = await (supabase as any)
-        .from("stores")
-        .select("id, name, category, city, country, logo_url, description, setup_complete")
+        .from("store_profiles")
+        .select("id, name, category, address, logo_url, banner_url, description, setup_complete")
         .in("category", LODGING_STORE_CATEGORIES)
         .order("setup_complete", { ascending: false })
         .order("name", { ascending: true })
@@ -72,7 +72,7 @@ export default function HotelsResortsDirectoryPage() {
       const cat = normalizeStoreCategory(store.category);
       if (!matcher(cat)) return false;
       if (!q) return true;
-      const haystack = [store.name, store.city, store.country, store.description]
+      const haystack = [store.name, store.address, store.description]
         .filter(Boolean)
         .join(" ")
         .toLowerCase();
