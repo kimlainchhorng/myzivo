@@ -5,13 +5,15 @@
 import { useMemo, useState } from "react";
 import { useSmartBack } from "@/lib/smartBack";
 import { useNavigate } from "react-router-dom";
-import { ArrowLeft, Search, UserPlus, Star, MoreVertical, MessageCircle, Trash2, AtSign, Phone, Inbox, MapPin, Lock } from "lucide-react";
+import { ArrowLeft, Search, UserPlus, Star, MoreVertical, MessageCircle, Trash2, AtSign, Phone, Inbox, MapPin, Lock, Share2, QrCode, Smartphone } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import AddContactSheet from "@/components/chat/AddContactSheet";
 import UsernameClaimSheet from "@/components/chat/UsernameClaimSheet";
+import InviteFriendsSheet from "@/components/chat/InviteFriendsSheet";
+import SuggestedContactsRow from "@/components/chat/SuggestedContactsRow";
 import { useContacts } from "@/hooks/useContacts";
 import { useUsername } from "@/hooks/useUsername";
 import { toast } from "sonner";
@@ -24,6 +26,7 @@ export default function ContactsPage() {
   const [q, setQ] = useState("");
   const [addOpen, setAddOpen] = useState(false);
   const [usernameOpen, setUsernameOpen] = useState(false);
+  const [inviteOpen, setInviteOpen] = useState(false);
 
   const filtered = useMemo(() => {
     const s = q.trim().toLowerCase();
