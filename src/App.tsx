@@ -12,7 +12,7 @@ import { useVerificationRealtime } from "@/hooks/useVerificationRealtime";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, useLocation, useSearchParams } from "react-router-dom";
 import { ThemeProvider } from "next-themes";
-import { AuthProvider } from "@/contexts/AuthContext";
+import { AuthProvider, useAuth } from "@/contexts/AuthContext";
 import { RemoteConfigProvider } from "@/contexts/RemoteConfigContext";
 import { ZivoPlusProvider } from "@/contexts/ZivoPlusContext";
 import { UTMProvider } from "@/contexts/UTMContext";
@@ -510,7 +510,8 @@ const queryClient = new QueryClient({
   },
 });
 
-const PageLoader = () => (
+const PageLoader = forwardRef<HTMLDivElement>(function PageLoader(_, ref) {
+  return (
   <div className="min-h-screen bg-background flex items-center justify-center">
     <div className="flex flex-col items-center gap-4">
       <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-primary to-teal-400 flex items-center justify-center shadow-lg shadow-primary/20">
@@ -519,7 +520,8 @@ const PageLoader = () => (
       <p className="text-sm text-foreground font-semibold tracking-tight">ZIVO</p>
     </div>
   </div>
-);
+  );
+});
 
 function BrandThemeApplicator() {
   const { brand } = useBrand();
