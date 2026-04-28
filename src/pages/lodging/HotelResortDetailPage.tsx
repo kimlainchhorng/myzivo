@@ -339,7 +339,7 @@ export default function HotelResortDetailPage() {
                           </span>
                         </div>
                         {promo?.name && (
-                          <p className="mt-0.5 text-[9px] text-emerald-700 font-medium truncate max-w-[110px]">
+                          <p className="mt-0.5 text-[9px] text-emerald-700 font-medium truncate max-w-[110px] md:max-w-none">
                             {promo.name}
                           </p>
                         )}
@@ -371,6 +371,19 @@ export default function HotelResortDetailPage() {
         </motion.div>
       </div>
 
+      {/* Body wrapper for tablet/desktop centering */}
+      <div className="mx-auto w-full max-w-3xl lg:max-w-5xl">
+
+      {/* Inline desktop CTA (replaces sticky bar on md+) */}
+      <div className="hidden md:flex items-center gap-2 px-4 mt-4">
+        <Button variant="outline" size="lg" className="flex-1 max-w-[200px]" onClick={handleShare}>
+          <Share2 className="w-4 h-4 mr-1.5" /> Share
+        </Button>
+        <Button size="lg" className="flex-1" onClick={() => setBookingOpen(true)}>
+          <CalendarRange className="w-4 h-4 mr-1.5" /> Check Availability
+        </Button>
+      </div>
+
       {/* Description */}
       {!!store?.description && (
         <Section title="About">
@@ -383,7 +396,7 @@ export default function HotelResortDetailPage() {
       {/* Amenities */}
       {amenities.length > 0 && (
         <Section title="Amenities">
-          <div className="grid grid-cols-2 gap-2">
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2">
             {amenities.map((label) => {
               const Icon = amenityIconFor(label);
               return (
