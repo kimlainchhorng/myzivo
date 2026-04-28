@@ -448,7 +448,7 @@ export default function FinanceExpensesSection({ storeId }: Props) {
       scan_response_summary: null,
     };
 
-    let stage: "preflight" | "read" | "scan" | "attach" = "preflight";
+    let stage: "preflight" | "read" | "scan" | "attach" | "save" = "preflight";
     try {
       // 1. Preflight — verify role + ownership before doing real work.
       const pre = await supabase.functions.invoke("ar-receipts-helper", {
@@ -510,43 +510,26 @@ export default function FinanceExpensesSection({ storeId }: Props) {
       }
       diag.final_receipt_ref = receiptRef;
 
-      // 5. Pre-fill form
-      const t = inv.time ? from24h(inv.time + (inv.time.length === 5 ? ":00" : "")) : { h: "12", m: "00", ap: "PM" as const };
-      setForm({
-        ...blankForm(),
-        category: "parts",
-        vendor: inv.vendor || "",
-        invoice_number: inv.invoice_number || "",
-        description: "",
-        expense_date: inv.date || new Date().toISOString().slice(0, 10),
-        hour: t.h, minute: t.m, ampm: t.ap,
-        payment_method: inv.payment_method || "card",
-        tax: inv.tax_cents != null ? (inv.tax_cents / 100).toFixed(2) : "",
-        receipt_url: receiptRef,
-        items: Array.isArray(inv.items) && inv.items.length
-          ? inv.items.map((it: any) => ({
-              part_number: it.part_number || "",
-              name: it.name || "",
-              quantity: String(it.quantity ?? 1),
-              unit_price: it.unit_price_cents != null ? (it.unit_price_cents / 100).toFixed(2) : "",
-            }))
-          : [emptyItem()],
-        notes: "",
-      });
-      setOpen(true);
-
-      if (receiptRef && !diag.used_fallback) {
-        toast.success("Invoice scanned — review and save");
-      } else if (receiptRef && diag.used_fallback) {
-        toast.success("Invoice scanned (receipt saved via fallback) — review and save");
+      // 5. Normalize scan values, then auto-save if usable.
+      const scannedForm = buildScannedExpenseForm(inv, receiptRef);
+      setForm(scannedForm);
+      if (isAutoSaveReady(scannedForm)) {
+        stage = "save";
+        await saveScannedExpenseViaHelper(scannedForm);
+        setOpen(false);
+        setForm(blankForm());
+        qc.invalidateQueries({ queryKey: ["ar-fin-expenses", storeId] });
+        toast.success(diag.used_fallback ? "Invoice scanned and saved via fallback" : "Invoice scanned and saved");
       } else {
-        toast.success("Invoice scanned — review and save (receipt image not attached)");
+        setOpen(true);
+        toast.success("Invoice scanned — review missing fields before saving");
       }
     } catch (err: any) {
       console.error("scan-invoice flow error", { stage, err, diag });
       const msg = err?.message || String(err);
       if (stage === "preflight") toast.error(`Preflight failed: ${msg}`);
       else if (stage === "read") toast.error(`Could not read image: ${msg}`);
+      else if (stage === "save") toast.error(`Invoice scanned but auto-save failed: ${msg}`);
       else toast.error(`Invoice scan failed: ${msg}`);
     } finally {
       setDiagnostics(diag);
