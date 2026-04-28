@@ -2108,6 +2108,8 @@ export default function ChatHubPage({ embedded = false }: { embedded?: boolean }
           }}
         />
       </Suspense>
+
+      <GlobalChatSearch open={globalSearchOpen} onClose={() => setGlobalSearchOpen(false)} />
     </div>
   );
 
