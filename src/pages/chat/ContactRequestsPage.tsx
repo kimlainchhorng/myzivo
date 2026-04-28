@@ -3,7 +3,7 @@
  */
 import { useState } from "react";
 import { useSmartBack } from "@/lib/smartBack";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import ArrowLeft from "lucide-react/dist/esm/icons/arrow-left";
 import Check from "lucide-react/dist/esm/icons/check";
 import X from "lucide-react/dist/esm/icons/x";
@@ -16,7 +16,9 @@ export default function ContactRequestsPage() {
   const nav = useNavigate();
   const goBack = useSmartBack("/chat");
   const { incoming, outgoing, loading, accept, decline, cancel } = useContactRequests();
-  const [tab, setTab] = useState<"in" | "out">("in");
+  const [params] = useSearchParams();
+  const initialTab: "in" | "out" = params.get("tab") === "out" ? "out" : "in";
+  const [tab, setTab] = useState<"in" | "out">(initialTab);
   const list = tab === "in" ? incoming : outgoing;
 
   return (

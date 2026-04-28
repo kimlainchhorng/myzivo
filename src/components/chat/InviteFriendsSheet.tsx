@@ -1,15 +1,19 @@
 /**
  * InviteFriendsSheet — Share a personal invite link via SMS, email, native share or copy.
+ * Also supports sending a ZIVO contact request to an existing user by @username.
  * Falls back to mailto:/sms: when native share is unavailable.
  */
 import { useMemo, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Share2, MessageSquare, Mail, Copy, Check, Send } from "lucide-react";
+import { Share2, MessageSquare, Mail, Copy, Check, Send, AtSign, UserPlus, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import { useUsername } from "@/hooks/useUsername";
 import { useAuth } from "@/contexts/AuthContext";
+import { useContacts } from "@/hooks/useContacts";
+import { useContactRequests } from "@/hooks/useContactRequests";
 
 export default function InviteFriendsSheet({
   open,
@@ -18,11 +22,16 @@ export default function InviteFriendsSheet({
   open: boolean;
   onOpenChange: (v: boolean) => void;
 }) {
+  const navigate = useNavigate();
   const { username } = useUsername();
   const { user } = useAuth();
+  const { findByUsername } = useContacts();
+  const { send: sendRequest } = useContactRequests();
   const [copied, setCopied] = useState(false);
   const [phone, setPhone] = useState("");
   const [email, setEmail] = useState("");
+  const [handle, setHandle] = useState("");
+  const [sending, setSending] = useState(false);
 
   const inviteLink = useMemo(() => {
     const handle = username ? `@${username}` : (user?.id ? `u/${user.id.slice(0, 8)}` : "join");
