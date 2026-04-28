@@ -534,20 +534,20 @@ function ExpenseDetailSheet({ expenseId, onClose }: { expenseId: string | null; 
               <Field label="Payment" value={exp.payment_method || "—"} />
             </div>
             <div className="border rounded-md">
-              <div className="grid grid-cols-12 gap-2 px-2 py-1.5 text-[11px] font-medium text-muted-foreground bg-muted/40">
-                <div className="col-span-3">Part #</div>
-                <div className="col-span-5">Name</div>
-                <div className="col-span-1 text-right">Qty</div>
-                <div className="col-span-3 text-right">Total</div>
+              <div className="grid grid-cols-[1.2fr_2fr_0.6fr_1.2fr] gap-2 px-3 py-2 text-[11px] font-medium text-muted-foreground bg-muted/40">
+                <div>Part #</div>
+                <div>Name</div>
+                <div className="text-right">Qty</div>
+                <div className="text-right">Total</div>
               </div>
               {data!.items.length === 0 ? (
                 <div className="px-2 py-3 text-xs text-muted-foreground text-center">No line items</div>
               ) : data!.items.map((it: any) => (
-                <div key={it.id} className="grid grid-cols-12 gap-2 px-2 py-1.5 text-xs border-t">
-                  <div className="col-span-3">{it.part_number || "—"}</div>
-                  <div className="col-span-5">{it.name}</div>
-                  <div className="col-span-1 text-right">{it.quantity}</div>
-                  <div className="col-span-3 text-right tabular-nums">{fmt(it.line_total_cents)}</div>
+                <div key={it.id} className="grid grid-cols-[1.2fr_2fr_0.6fr_1.2fr] gap-2 px-3 py-2 text-xs border-t items-center">
+                  <div className="truncate">{it.part_number || "—"}</div>
+                  <div className="truncate">{it.name}</div>
+                  <div className="text-right tabular-nums">{it.quantity}</div>
+                  <div className="text-right tabular-nums font-medium">{fmt(it.line_total_cents)}</div>
                 </div>
               ))}
               <div className="border-t px-2 py-1.5 text-xs space-y-0.5">
