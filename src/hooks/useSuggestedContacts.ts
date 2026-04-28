@@ -157,5 +157,20 @@ export function useSuggestedContacts() {
     } catch { /* ignore */ }
   }, [user]);
 
-  return { items, loading, isStale, refresh };
+  const dismiss = useCallback(async (dismissedId: string) => {
+    if (!user) return;
+    const next = items.filter((i) => i.user_id !== dismissedId);
+    setItems(next);
+    const cur = memCache.get(user.id);
+    if (cur) {
+      const payload = { data: next, fetchedAt: cur.fetchedAt };
+      memCache.set(user.id, payload);
+      writeSession(user.id, payload);
+    }
+    await (supabase as any)
+      .from("suggestion_dismissals")
+      .upsert({ user_id: user.id, dismissed_user_id: dismissedId }, { onConflict: "user_id,dismissed_user_id" });
+  }, [user, items]);
+
+  return { items, loading, isStale, refresh, dismiss };
 }
