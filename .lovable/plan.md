@@ -1,144 +1,87 @@
-## Goal
+# Plan — Scan & Structured Invoices for Expenses & Bills
 
-Make the Auto Repair admin (left sidebar in your screenshot) feel organized and complete: re-group items so related tools sit together, fix the parts that don't actually save data, and add a brand new **Finance** section so you can see income, expenses, and profit.
+Upgrade the Auto Repair → Finance → **Expenses & Bills** dialog so the shop owner can either **snap a photo / upload a receipt** and have it auto‑parsed by AI, OR enter a full invoice manually with structured fields and per‑line items (part number, name, qty, unit price, line total).
 
----
+## What you'll see in the app
 
-## 1. Sidebar reorganization
+- New **"Scan invoice"** button next to **Add expense**.
+  - Opens the camera on mobile (`capture="environment"`) or a file picker on desktop.
+  - Image is uploaded to Supabase Storage and sent to Lovable AI Gateway (Gemini 2.5 Flash, vision) to extract: company name, invoice #, date, time (AM/PM), payment method, subtotal, tax, total, and a list of line items `{part_number, name, qty, unit_price, line_total}`.
+  - Parsed data pre‑fills the **Add Expense** dialog so the owner can review/edit before saving.
+- **Add Expense** dialog redesigned with:
+  - Company / Vendor (e.g. AutoZone, NAPA)
+  - Invoice # • Date • Time (AM/PM picker)
+  - Payment method • Category
+  - **Line items table** — add/remove rows; columns: Part #, Name, Qty, Unit Price, Total (auto). Subtotal/Tax/Total auto‑computed; total syncs to `amount_cents`.
+  - Receipt image preview (if scanned/uploaded) with "Replace" and "Remove".
+  - Notes.
+- Expense list rows now show **vendor • invoice # • date+time** and a small 📎 icon when a receipt image is attached. Click a row → **Invoice details drawer** with full line items and the receipt image.
 
-Current sidebar mixes "Manage" and "Shop Ops" with no clear flow. New grouping (top to bottom):
+## Database changes
 
-```
-MANAGE
-  Profile
-  Bookings
-  Customers
+Extend `ar_expenses` and add a child table for line items:
 
-FRONT DESK
-  Estimates
-  Invoices
-  Vehicles
-  Auto Check (VIN)
+```sql
+ALTER TABLE public.ar_expenses
+  ADD COLUMN invoice_number text,
+  ADD COLUMN invoice_time   time,         -- stored 24h, displayed as AM/PM
+  ADD COLUMN subtotal_cents integer,
+  ADD COLUMN tax_cents      integer,
+  ADD COLUMN receipt_url    text;         -- public URL in ar-receipts bucket
 
-SHOP FLOOR
-  Work Orders
-  Inspections
-  Technicians & Bays
-  Reminders & Recalls
-
-INVENTORY
-  Part Shop
-  Tire Inventory
-
-CUSTOMER CARE
-  Warranty & Comebacks
-  Fleet Accounts
-
-FINANCE   ← NEW
-  Income & Revenue
-  Expenses & Bills
-  Payments Received
-  Profit & Loss
-  Tax & Payouts
-
-INSIGHTS
-  Reports & Analytics
-  Marketing & Ads
-  Live Stream
-
-TEAM
-  Employees / Payroll / Schedule / Time Clock / etc.
-
-SYSTEM
-  Settings / Software & Apps / Back to App / Sign Out
+CREATE TABLE public.ar_expense_items (
+  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  expense_id uuid NOT NULL REFERENCES public.ar_expenses(id) ON DELETE CASCADE,
+  position int NOT NULL DEFAULT 0,
+  part_number text,
+  name text NOT NULL,
+  quantity numeric(10,2) NOT NULL DEFAULT 1,
+  unit_price_cents integer NOT NULL DEFAULT 0,
+  line_total_cents integer NOT NULL DEFAULT 0,
+  created_at timestamptz NOT NULL DEFAULT now()
+);
+ALTER TABLE public.ar_expense_items ENABLE ROW LEVEL SECURITY;
+-- Policies: only store owner/admin can read/insert/update/delete items
+-- (mirroring existing ar_expenses policies via EXISTS subquery on ar_expenses + stores).
 ```
 
-Wider sidebar labels so "Warranty & Comeb…" and similar no longer truncate.
+Storage: create a private bucket `ar-receipts` with RLS allowing the store owner to read/write their own folder `<store_id>/...`.
 
----
+## Edge function
 
-## 2. Fixes for things that don't work
+`supabase/functions/scan-invoice/index.ts`
+- Auth required (verify_jwt = true).
+- Input: `{ image_url }` (public URL from `ar-receipts`) or base64.
+- Calls **Lovable AI Gateway** `google/gemini-2.5-flash` with vision message asking for strict JSON:
+  ```json
+  { "vendor": "...", "invoice_number": "...", "date": "YYYY-MM-DD",
+    "time": "HH:MM", "payment_method": "card|cash|...",
+    "subtotal_cents": 0, "tax_cents": 0, "total_cents": 0,
+    "items": [{ "part_number": "...", "name": "...", "quantity": 1,
+                "unit_price_cents": 0, "line_total_cents": 0 }] }
+  ```
+- Handles 429/402 with friendly messages. Returns parsed object to client.
 
-Found from auditing the code:
+## Files to add / change
 
-- **Invoices tab** — currently keeps invoices only in browser memory. Refresh = data gone. Will create a real `ar_invoices` table and wire create / list / status updates / delete to the database.
-- **Estimates → Convert to Invoice** — today it creates a work order instead of an invoice. Will route conversion into the new `ar_invoices` table and mark the estimate as "converted".
-- **Reports tab** — only counts work orders, ignores invoices and payments, so revenue is wrong. Will pull from invoices + payments for accurate numbers.
-- **Send / Print buttons** on the invoice list — wire up to the existing PDF preview dialog instead of being no-ops.
-- **Status badges** — standardize colors (Draft / Sent / Paid / Overdue / Void) across Estimates and Invoices so they match.
-- **Sidebar deep-link reset** — already fixed last round; will verify the new Finance tab IDs are added to the allow-list so they don't bounce back to Profile.
+- **New** `supabase/functions/scan-invoice/index.ts` (+ `config.toml` entry).
+- **New migration** for columns, `ar_expense_items` table, RLS, and `ar-receipts` storage bucket + policies.
+- **Edit** `src/components/admin/store/autorepair/finance/FinanceExpensesSection.tsx`:
+  - Add Scan button + hidden `<input type="file" accept="image/*" capture="environment">`.
+  - Upload to storage, call `scan-invoice`, prefill form.
+  - New form state: `invoice_number`, `invoice_time` (with AM/PM toggle), `items[]`, `subtotal`, `tax`, `receipt_url`.
+  - Line‑items editor (add row, remove row, auto line total = qty × unit price; total = sum + tax).
+  - On save: insert `ar_expenses` then bulk‑insert `ar_expense_items`.
+  - List row: show vendor • inv# • date `h:mm A` • 📎 icon.
+  - Click row → details Drawer/Sheet with items table + receipt image.
+- **Edit** `FinancePnLSection` (minor): keep using `amount_cents` (already correct, no change needed).
 
----
+## Time AM/PM handling
 
-## 3. New Finance section
+Store `invoice_time` as `time` (24h). UI uses two `Select`s (1–12, 00/15/30/45) + AM/PM toggle, converted on save/load. Display via `format(date, 'h:mm a')` from `date-fns` (already in the project).
 
-Five sub-tabs under Finance:
+## Out of scope
 
-**Income & Revenue**
-- Today / This week / This month / Custom range
-- Cards: Total Revenue, Paid Invoices, Outstanding (unpaid), Avg Ticket
-- Top 5 services by revenue
-- Mini chart: daily revenue last 30 days
-
-**Expenses & Bills**
-- Add expense (category, vendor, amount, date, receipt photo upload)
-- Categories: Parts, Rent, Utilities, Supplies, Tools, Marketing, Insurance, Other
-- List + filter by category/date
-- Monthly total
-
-**Payments Received**
-- Auto-logged when an invoice is marked Paid
-- Manual "Record Payment" for cash / check / card / ABA
-- Filter by method, date, customer
-
-**Profit & Loss**
-- Income − Expenses − Payroll = Net Profit
-- Month-over-month comparison
-- Export to CSV / PDF
-
-**Tax & Payouts**
-- Sales tax collected (auto from invoices)
-- Payout history (from existing Stripe/payment tables)
-- Quarterly tax estimate
-
----
-
-## 4. Database changes (migration)
-
-New tables (all with `store_id`, RLS so only the store owner + admins can access):
-
-- `ar_invoices` — number, customer info, vehicle info, line items (jsonb), subtotal, tax, total, status (draft/sent/paid/overdue/void), paid_at, due_at, estimate_id (link back), created_at
-- `ar_invoice_payments` — invoice_id, amount_cents, method (cash/card/check/aba/other), reference, paid_at, notes
-- `ar_expenses` — category, vendor, amount_cents, expense_date, receipt_url, notes
-- `ar_payouts` — payout_date, amount_cents, source, reference (for tracking what was deposited to bank)
-
-Each gets indexes on `store_id` + date columns for the Finance dashboards.
-
----
-
-## 5. Files that will change
-
-- `src/components/admin/StoreOwnerLayout.tsx` — new sidebar grouping + Finance items
-- `src/lib/admin/storeTabRouting.ts` — add Finance tab IDs to the allow-list
-- `src/pages/admin/AdminStoreEditPage.tsx` — render Finance sections, wire titles
-- `src/components/admin/store/autorepair/AutoRepairInvoicesSection.tsx` — replace local state with Supabase persistence
-- `src/components/admin/store/autorepair/AutoRepairEstimatesSection.tsx` — fix Convert-to-Invoice
-- `src/components/admin/store/autorepair/AutoRepairReportsSection.tsx` — pull from invoices + payments
-- New folder `src/components/admin/store/autorepair/finance/` with:
-  - `FinanceIncomeSection.tsx`
-  - `FinanceExpensesSection.tsx`
-  - `FinancePaymentsSection.tsx`
-  - `FinanceProfitLossSection.tsx`
-  - `FinanceTaxPayoutsSection.tsx`
-- One new Supabase migration creating the 4 tables above + RLS policies
-
----
-
-## What you'll see after approval
-
-1. Sidebar regroups instantly into MANAGE / FRONT DESK / SHOP FLOOR / INVENTORY / CUSTOMER CARE / **FINANCE** / INSIGHTS / TEAM / SYSTEM.
-2. Invoices you create actually save and survive a refresh.
-3. New "Finance" group with Income, Expenses, Payments, P&L, Tax & Payouts.
-4. Reports show real revenue based on paid invoices.
-
-Approve and I'll run the migration first, then ship the UI changes.
+- OCR of handwritten receipts beyond what Gemini vision handles.
+- Multi‑page PDF invoices (image only for v1).
+- Editing line items after save — v1 supports view + delete the whole expense; inline edit can come next.
