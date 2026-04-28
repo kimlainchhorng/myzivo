@@ -230,28 +230,30 @@ export default function FinanceExpensesSection({ storeId }: Props) {
   const { subtotalCents, taxCents, totalCents } = useMemo(() => computeExpenseTotals(form), [form]);
 
   const create = useMutation({
-    mutationFn: async () => {
-      if (totalCents <= 0) throw new Error("Add at least one line item with a price");
+    mutationFn: async (source?: ExpenseFormState) => {
+      const expenseForm = source ?? form;
+      const totals = computeExpenseTotals(expenseForm);
+      if (totals.totalCents <= 0) throw new Error("Add at least one line item with a price");
       const { data: { user } } = await supabase.auth.getUser();
       const { data: inserted, error } = await supabase.from("ar_expenses" as any).insert({
         store_id: storeId,
-        category: form.category,
-        vendor: form.vendor || null,
-        description: form.description || null,
-        amount_cents: totalCents,
-        subtotal_cents: subtotalCents,
-        tax_cents: taxCents,
-        expense_date: form.expense_date,
-        invoice_time: to24h(form.hour, form.minute, form.ampm),
-        invoice_number: form.invoice_number || null,
-        payment_method: form.payment_method,
-        notes: form.notes || null,
-        receipt_url: form.receipt_url || null,
+        category: expenseForm.category,
+        vendor: expenseForm.vendor || null,
+        description: expenseForm.description || null,
+        amount_cents: totals.totalCents,
+        subtotal_cents: totals.subtotalCents,
+        tax_cents: totals.taxCents,
+        expense_date: expenseForm.expense_date,
+        invoice_time: to24h(expenseForm.hour, expenseForm.minute, expenseForm.ampm),
+        invoice_number: expenseForm.invoice_number || null,
+        payment_method: expenseForm.payment_method,
+        notes: expenseForm.notes || null,
+        receipt_url: expenseForm.receipt_url || null,
         created_by: user?.id,
       }).select("id").single();
       if (error) { (error as any)._stage = "expense"; throw error; }
 
-      const items = form.items
+      const items = expenseForm.items
         .filter((it) => it.name.trim())
         .map((it, i) => {
           const q = parseFloat(it.quantity) || 0;
