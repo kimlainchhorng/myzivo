@@ -115,7 +115,7 @@ export default function FinanceExpensesSection({ storeId }: Props) {
         receipt_url: form.receipt_url || null,
         created_by: user?.id,
       }).select("id").single();
-      if (error) throw error;
+      if (error) { (error as any)._stage = "expense"; throw error; }
 
       const items = form.items
         .filter((it) => it.name.trim())
@@ -134,7 +134,7 @@ export default function FinanceExpensesSection({ storeId }: Props) {
         });
       if (items.length) {
         const { error: e2 } = await supabase.from("ar_expense_items" as any).insert(items);
-        if (e2) throw e2;
+        if (e2) { (e2 as any)._stage = "items"; throw e2; }
       }
     },
     onSuccess: () => {
@@ -144,12 +144,16 @@ export default function FinanceExpensesSection({ storeId }: Props) {
       qc.invalidateQueries({ queryKey: ["ar-fin-expenses", storeId] });
     },
     onError: (e: any) => {
+      const stage = e?._stage || "expense";
       const code = e?.code || "";
-      const msg = e?.message || "";
-      if (code === "42501" || /row-level security|permission denied/i.test(msg)) {
-        toast.error("You don't have permission to save expenses for this store.");
+      const msg = e?.message || String(e);
+      const isPerm = code === "42501" || /row-level security|permission denied|new row violates/i.test(msg);
+      if (isPerm) {
+        toast.error(stage === "items"
+          ? "You don't have permission to save line items for this expense."
+          : "You don't have permission to save expenses for this store.");
       } else {
-        toast.error(msg || "Failed to save expense");
+        toast.error(`${stage === "items" ? "Saving line items failed" : "Saving expense failed"}: ${msg}`);
       }
     },
   });
@@ -168,6 +172,19 @@ export default function FinanceExpensesSection({ storeId }: Props) {
   // -------- Scan invoice flow --------
   const handleScanClick = () => fileRef.current?.click();
 
+  // Read a File as base64 (no data URL prefix)
+  const fileToBase64 = (file: File) =>
+    new Promise<string>((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onerror = () => reject(reader.error || new Error("Could not read file"));
+      reader.onload = () => {
+        const result = reader.result as string;
+        const comma = result.indexOf(",");
+        resolve(comma >= 0 ? result.slice(comma + 1) : result);
+      };
+      reader.readAsDataURL(file);
+    });
+
   const onFile = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     e.target.value = "";
@@ -177,25 +194,36 @@ export default function FinanceExpensesSection({ storeId }: Props) {
       return;
     }
     setScanning(true);
+    let stage: "read" | "scan" | "attach" = "read";
     try {
-      // Upload to storage
-      const ext = (file.name.split(".").pop() || "jpg").toLowerCase();
-      const path = `${storeId}/${Date.now()}.${ext}`;
-      const { error: upErr } = await supabase.storage.from("ar-receipts").upload(path, file, {
-        contentType: file.type || "image/jpeg",
-      });
-      if (upErr) throw upErr;
-      const { data: signed } = await supabase.storage.from("ar-receipts").createSignedUrl(path, 60 * 60);
-      const signedUrl = signed?.signedUrl;
-      if (!signedUrl) throw new Error("Could not get image URL");
+      // Read the image directly in the browser (no Storage upload required)
+      const base64 = await fileToBase64(file);
+      const mime = file.type || "image/jpeg";
 
+      // Send to AI edge function for parsing
+      stage = "scan";
       toast.info("Scanning invoice…");
       const { data, error } = await supabase.functions.invoke("scan-invoice", {
-        body: { image_url: signedUrl },
+        body: { image_base64: base64, mime_type: mime },
       });
       if (error) throw error;
       const inv = (data as any)?.invoice;
       if (!inv) throw new Error("Could not parse invoice");
+
+      // Best-effort: try to attach the receipt to Storage. If it fails, continue silently.
+      stage = "attach";
+      let receiptPath: string | null = null;
+      try {
+        const ext = (file.name.split(".").pop() || "jpg").toLowerCase();
+        const path = `${storeId}/${Date.now()}.${ext}`;
+        const { error: upErr } = await supabase.storage
+          .from("ar-receipts")
+          .upload(path, file, { contentType: mime });
+        if (!upErr) receiptPath = path;
+        else console.warn("Receipt attach skipped:", upErr);
+      } catch (attachErr) {
+        console.warn("Receipt attach skipped:", attachErr);
+      }
 
       // Pre-fill form
       const t = inv.time ? from24h(inv.time + (inv.time.length === 5 ? ":00" : "")) : { h: "12", m: "00", ap: "PM" as const };
@@ -209,7 +237,7 @@ export default function FinanceExpensesSection({ storeId }: Props) {
         hour: t.h, minute: t.m, ampm: t.ap,
         payment_method: inv.payment_method || "card",
         tax: inv.tax_cents != null ? (inv.tax_cents / 100).toFixed(2) : "",
-        receipt_url: path, // we'll convert to a re-signed URL on detail view; store path
+        receipt_url: receiptPath, // null if storage attach failed
         items: Array.isArray(inv.items) && inv.items.length
           ? inv.items.map((it: any) => ({
               part_number: it.part_number || "",
@@ -221,17 +249,18 @@ export default function FinanceExpensesSection({ storeId }: Props) {
         notes: "",
       });
       setOpen(true);
-      toast.success("Invoice scanned — review and save");
-    } catch (err: any) {
-      console.error(err);
-      const code = err?.code || err?.statusCode || "";
-      const msg = err?.message || "";
-      if (code === "42501" || /row-level security|permission denied|not authorized/i.test(msg)) {
-        toast.error("You don't have permission to upload receipts for this store.");
-      } else if (/storage|bucket|upload/i.test(msg)) {
-        toast.error(`Receipt upload failed: ${msg}`);
+      if (receiptPath) {
+        toast.success("Invoice scanned — review and save");
       } else {
-        toast.error(msg || "Scan failed");
+        toast.success("Invoice scanned — review and save (receipt image not attached)");
+      }
+    } catch (err: any) {
+      console.error("scan-invoice flow error", { stage, err });
+      const msg = err?.message || String(err);
+      if (stage === "read") {
+        toast.error(`Could not read image: ${msg}`);
+      } else {
+        toast.error(`Invoice scan failed: ${msg}`);
       }
     } finally {
       setScanning(false);
