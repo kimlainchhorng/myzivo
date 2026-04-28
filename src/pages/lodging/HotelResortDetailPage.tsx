@@ -408,12 +408,21 @@ export default function HotelResortDetailPage() {
       <div className="mx-auto w-full max-w-3xl lg:max-w-5xl">
 
       {/* Inline desktop CTA (replaces sticky bar on md+) */}
-      <div className="hidden md:flex items-center gap-2 px-4 mt-4">
-        <Button variant="outline" size="lg" className="flex-1 max-w-[200px]" onClick={handleShare}>
-          <Share2 className="w-4 h-4 mr-1.5" /> Share
+      <div className="hidden md:flex items-stretch gap-2.5 px-4 mt-4">
+        <Button
+          variant="outline"
+          size="lg"
+          className="h-12 rounded-2xl flex-1 max-w-[200px] font-semibold border-border/70 hover:bg-muted/60"
+          onClick={handleShare}
+        >
+          <Share2 className="w-4 h-4 mr-2" /> Share
         </Button>
-        <Button size="lg" className="flex-1" onClick={() => setBookingOpen(true)}>
-          <CalendarRange className="w-4 h-4 mr-1.5" /> Check Availability
+        <Button
+          size="lg"
+          className="h-12 rounded-2xl flex-1 font-semibold bg-gradient-to-r from-emerald-500 to-emerald-600 hover:from-emerald-600 hover:to-emerald-700 text-white shadow-md shadow-emerald-500/20"
+          onClick={() => setBookingOpen(true)}
+        >
+          <CalendarRange className="w-4 h-4 mr-2" /> Check Availability
         </Button>
       </div>
 
@@ -624,21 +633,21 @@ export default function HotelResortDetailPage() {
 
       {/* Sticky CTA — mobile only */}
       <div className="md:hidden fixed bottom-0 left-0 right-0 z-30 bg-background/95 backdrop-blur border-t border-border px-4 py-3 pb-[max(env(safe-area-inset-bottom),12px)]">
-        <div className="mx-auto max-w-2xl flex items-center gap-2">
+        <div className="mx-auto max-w-2xl flex items-stretch gap-2">
           <Button
             variant="outline"
             size="lg"
-            className="flex-1"
+            className="h-12 rounded-2xl flex-1 font-semibold border-border/70"
             onClick={handleShare}
           >
-            <Share2 className="w-4 h-4 mr-1.5" /> Share
+            <Share2 className="w-4 h-4 mr-2" /> Share
           </Button>
           <Button
             size="lg"
-            className="flex-[2]"
+            className="h-12 rounded-2xl flex-[2] font-semibold bg-gradient-to-r from-emerald-500 to-emerald-600 hover:from-emerald-600 hover:to-emerald-700 text-white shadow-md shadow-emerald-500/20"
             onClick={() => setBookingOpen(true)}
           >
-            <CalendarRange className="w-4 h-4 mr-1.5" /> Check Availability
+            <CalendarRange className="w-4 h-4 mr-2" /> Check Availability
           </Button>
         </div>
       </div>
