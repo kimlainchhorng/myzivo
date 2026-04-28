@@ -305,6 +305,48 @@ export default function FinanceExpensesSection({ storeId }: Props) {
     },
   });
 
+  const saveScannedExpenseViaHelper = async (source: ExpenseFormState) => {
+    const totals = computeExpenseTotals(source);
+    const payloadItems = source.items
+      .filter((it) => it.name.trim())
+      .map((it, position) => {
+        const quantity = parseFloat(it.quantity) || 1;
+        const unit_price_cents = Math.round((parseFloat(it.unit_price) || 0) * 100);
+        return {
+          position,
+          part_number: it.part_number || null,
+          name: it.name.trim(),
+          quantity,
+          unit_price_cents,
+          line_total_cents: Math.round(quantity * unit_price_cents),
+        };
+      });
+    const { data, error } = await supabase.functions.invoke("ar-receipts-helper", {
+      body: {
+        action: "save_expense",
+        store_id: storeId,
+        expense: {
+          category: source.category,
+          vendor: source.vendor || null,
+          description: source.description || null,
+          amount_cents: totals.totalCents,
+          subtotal_cents: totals.subtotalCents,
+          tax_cents: totals.taxCents,
+          expense_date: source.expense_date,
+          invoice_time: to24h(source.hour, source.minute, source.ampm),
+          invoice_number: source.invoice_number || null,
+          payment_method: source.payment_method,
+          notes: source.notes || null,
+          receipt_url: source.receipt_url || null,
+        },
+        items: payloadItems,
+      },
+    });
+    if (error) throw error;
+    if (!(data as any)?.ok) throw new Error((data as any)?.error || "Could not save scanned invoice");
+    return data as any;
+  };
+
   // -------- Scan invoice flow --------
   const handleScanClick = () => fileRef.current?.click();
 
