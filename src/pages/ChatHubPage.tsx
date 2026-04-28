@@ -1255,10 +1255,10 @@ export default function ChatHubPage({ embedded = false }: { embedded?: boolean }
                   placeholder="Search conversations..."
                   value={search}
                   onFocus={(e) => {
-                    // Tap-to-open global search (messages / people / media / links)
+                    // Open Telegram-style global search overlay (chats / contacts / channels / messages)
                     if (!search) {
                       e.currentTarget.blur();
-                      navigate('/chat/search');
+                      setGlobalSearchOpen(true);
                     }
                   }}
                   onChange={(e) => setSearch(e.target.value)}
