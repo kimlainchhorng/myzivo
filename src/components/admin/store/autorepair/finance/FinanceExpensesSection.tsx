@@ -717,9 +717,12 @@ function ExpenseDetailSheet({ expenseId, onClose }: { expenseId: string | null; 
   const [imgUrl, setImgUrl] = useState<string | null>(null);
   useEffect(() => {
     setImgUrl(null);
-    const path = data?.exp?.receipt_url;
-    if (!path) return;
-    supabase.storage.from("ar-receipts").createSignedUrl(path, 60 * 60).then(({ data: s }) => {
+    const ref = data?.exp?.receipt_url as string | null | undefined;
+    if (!ref) return;
+    const isFallback = ref.startsWith(FALLBACK_PREFIX);
+    const bucket = isFallback ? FALLBACK_BUCKET : PRIMARY_BUCKET;
+    const path = isFallback ? ref.slice(FALLBACK_PREFIX.length) : ref;
+    supabase.storage.from(bucket).createSignedUrl(path, 60 * 60).then(({ data: s }) => {
       setImgUrl(s?.signedUrl || null);
     });
   }, [data?.exp?.receipt_url]);
