@@ -115,7 +115,7 @@ export default function FinanceExpensesSection({ storeId }: Props) {
         receipt_url: form.receipt_url || null,
         created_by: user?.id,
       }).select("id").single();
-      if (error) throw error;
+      if (error) { (error as any)._stage = "expense"; throw error; }
 
       const items = form.items
         .filter((it) => it.name.trim())
@@ -134,7 +134,7 @@ export default function FinanceExpensesSection({ storeId }: Props) {
         });
       if (items.length) {
         const { error: e2 } = await supabase.from("ar_expense_items" as any).insert(items);
-        if (e2) throw e2;
+        if (e2) { (e2 as any)._stage = "items"; throw e2; }
       }
     },
     onSuccess: () => {
@@ -144,12 +144,16 @@ export default function FinanceExpensesSection({ storeId }: Props) {
       qc.invalidateQueries({ queryKey: ["ar-fin-expenses", storeId] });
     },
     onError: (e: any) => {
+      const stage = e?._stage || "expense";
       const code = e?.code || "";
-      const msg = e?.message || "";
-      if (code === "42501" || /row-level security|permission denied/i.test(msg)) {
-        toast.error("You don't have permission to save expenses for this store.");
+      const msg = e?.message || String(e);
+      const isPerm = code === "42501" || /row-level security|permission denied|new row violates/i.test(msg);
+      if (isPerm) {
+        toast.error(stage === "items"
+          ? "You don't have permission to save line items for this expense."
+          : "You don't have permission to save expenses for this store.");
       } else {
-        toast.error(msg || "Failed to save expense");
+        toast.error(`${stage === "items" ? "Saving line items failed" : "Saving expense failed"}: ${msg}`);
       }
     },
   });
