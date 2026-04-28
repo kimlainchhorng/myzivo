@@ -20,6 +20,13 @@ import X from "lucide-react/dist/esm/icons/x";
 
 const ICONS = ["📁", "⭐", "💼", "🏠", "❤️", "🎮", "📚", "🎵", "✈️", "🛒", "👨‍👩‍👧", "🤖"];
 
+const SUGGESTED_FOLDERS: { name: string; icon: string }[] = [
+  { name: "Unread", icon: "🔴" },
+  { name: "Personal", icon: "👤" },
+  { name: "Groups", icon: "👨‍👩‍👧" },
+  { name: "Channels", icon: "📢" },
+];
+
 type ChatFolderRow = {
   id: string;
   user_id: string;
