@@ -439,6 +439,16 @@ export default function ProfileEditPage() {
                 </div>
                 <Switch checked={!!profile?.hide_from_drivers} onCheckedChange={async (checked) => { try { await updateProfile.mutateAsync({ hide_from_drivers: checked }); } catch {} }} disabled={updateProfile.isPending} />
               </div>
+              <div className="flex items-center justify-between pt-2 border-t border-border/30">
+                <div className="flex items-center gap-3">
+                  <div className="h-9 w-9 rounded-full bg-emerald-500/10 flex items-center justify-center"><Briefcase className="h-4 w-4 text-emerald-500" /></div>
+                  <div>
+                    <p className="text-sm font-semibold">Open to Work</p>
+                    <p className="text-[11px] text-muted-foreground">Let employers find you in the Find Talent directory</p>
+                  </div>
+                </div>
+                <Switch checked={!!(profile as any)?.open_to_work} onCheckedChange={async (checked) => { try { await updateProfile.mutateAsync({ open_to_work: checked } as any); toast.success(checked ? "You're now visible to employers" : "Removed from talent directory"); } catch {} }} disabled={updateProfile.isPending} />
+              </div>
             </div>
 
             {/* Interaction Controls */}
