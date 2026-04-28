@@ -414,6 +414,8 @@ export default function HotelResortDetailPage() {
           <div className="-mx-4 px-4 flex gap-3 overflow-x-auto snap-x snap-mandatory pb-1 [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden">
             {activeRooms.slice(0, 8).map((room) => {
               const photo = room.photos?.[room.cover_photo_index ?? 0] || room.photos?.[0];
+              const deal = applyPromo(room.base_rate_cents);
+              const hasDiscount = deal.pctOff > 0 && deal.discounted < room.base_rate_cents;
               return (
                 <div
                   key={room.id}
@@ -432,18 +434,37 @@ export default function HotelResortDetailPage() {
                         Breakfast
                       </span>
                     )}
+                    {hasDiscount && (
+                      <span className="absolute top-1.5 right-1.5 rounded-full bg-red-600 text-white px-1.5 py-0.5 text-[9px] font-bold">
+                        -{deal.pctOff}%
+                      </span>
+                    )}
                   </div>
                   <div className="p-2.5">
                     <p className="text-xs font-bold text-foreground truncate">{room.name}</p>
                     <p className="mt-0.5 text-[10px] text-muted-foreground truncate">
                       {room.beds || room.room_type || "Room"} · {room.max_guests} guests
                     </p>
-                    <div className="mt-1.5 flex items-end justify-between">
-                      <span className="text-sm font-bold text-primary">
-                        {formatPrice(room.base_rate_cents)}
-                        <span className="text-[10px] font-normal text-muted-foreground"> /night</span>
-                      </span>
-                      <Star className="w-3.5 h-3.5 text-amber-500 fill-amber-500" />
+                    <div className="mt-1.5 flex items-end justify-between gap-2">
+                      <div className="min-w-0">
+                        {hasDiscount ? (
+                          <>
+                            <span className="text-sm font-bold text-emerald-600">
+                              {formatPrice(deal.discounted)}
+                              <span className="text-[10px] font-normal text-muted-foreground"> /night</span>
+                            </span>
+                            <div className="text-[10px] text-muted-foreground line-through leading-none">
+                              {formatPrice(room.base_rate_cents)}
+                            </div>
+                          </>
+                        ) : (
+                          <span className="text-sm font-bold text-primary">
+                            {formatPrice(room.base_rate_cents)}
+                            <span className="text-[10px] font-normal text-muted-foreground"> /night</span>
+                          </span>
+                        )}
+                      </div>
+                      <Star className="w-3.5 h-3.5 text-amber-500 fill-amber-500 shrink-0" />
                     </div>
                   </div>
                 </div>
