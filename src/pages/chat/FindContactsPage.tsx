@@ -1,13 +1,14 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useSmartBack } from "@/lib/smartBack";
 import { useNavigate } from "react-router-dom";
-import { ArrowLeft, Search, UserPlus, Loader2, Phone } from "lucide-react";
+import { ArrowLeft, Search, UserPlus, Loader2, Phone, Smartphone } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { toast } from "sonner";
 import { hashPhoneE164 } from "@/lib/phoneHash";
+import { isNativeAvailable, pickAndHashPhones } from "@/lib/nativeContacts";
 
 interface Match {
   user_id: string;
