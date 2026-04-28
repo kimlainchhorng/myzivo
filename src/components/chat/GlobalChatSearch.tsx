@@ -131,7 +131,9 @@ export default function GlobalChatSearch({ open, onClose }: Props) {
       setMessages((mData ?? []) as MessageHit[]);
 
       // Resolve chat partners → matching profile rows
-      const partnerIds = Array.from(new Set((histData ?? []).map((r: any) => r.partner_id).filter(Boolean)));
+      const partnerIds: string[] = Array.from(
+        new Set((histData ?? []).map((r: any) => String(r.partner_id ?? "")).filter(Boolean)),
+      );
       if (partnerIds.length > 0) {
         const { data: chatProfiles } = await supabase
           .from("profiles")
