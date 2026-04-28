@@ -1,56 +1,63 @@
 ## Goal
 
-When you tap the "Hotel/Resort Admin" card on the Hotels Home tab, open a new **public Hotel & Resort detail page** for that property — like a hotel listing page (cover, name, location, rating, amenities, rooms, rates, contact). The existing operator buttons (Open Ops / Run QA / Operations Hub / View QA Report) stay as quick actions on the card for the owner, but the rest of the card surface becomes a tap-target that opens the public detail page.
+Tapping the **Hotels** pill on Home opens a full Hotels & Resorts landing page (not just the flat list). The landing page features a hero search, popular destinations, featured properties, and the full directory below.
 
-## What changes
+## Changes
 
-### 1. New public page: `src/pages/lodging/HotelResortDetailPage.tsx`
-Route: `/hotel/:storeId`
+### 1. New page: `src/pages/lodging/HotelsLandingPage.tsx`
+Route: `/hotels` (replaces today's `/hotels-list` as the primary entry point; old route stays as alias).
 
-Sections (top → bottom):
-- Cover image (from `lodge_property_profile.cover_url` → fallback `stores.logo_url` → fallback gradient)
-- Property header: name, category badge ("Hotel" / "Resort"), star rating, address line, "Ready" badge if `setup_complete`
-- Quick stats row: rooms count, rate plans count, check-in/out times, languages
-- About / description (`lodge_property_profile.description`)
-- Amenities grid (icons from `lodge_property_profile.amenities`)
-- Rooms preview: horizontal scroll of `lodge_rooms` (photo, name, max guests, nightly price)
-- Rates / packages preview (top 3 active rate plans with "View all rates" link)
-- Location card with map preview (reuse existing map component if available, else static address)
-- Contact / Book actions: "Check Availability" (primary), "Call", "Message", "Share"
-- Owner-only footer band: if `ownerStore?.id === storeId`, show inline "Open Admin Dashboard" button → `/admin/stores/{id}?tab=lodge-overview`
+Sections, top to bottom:
 
-Data fetching: reuse `useLodgePropertyProfile(storeId)` and `useLodgeRooms(storeId)`; add a small `useLodgeRatePlans(storeId)` hook if not already present (check existing hooks first; otherwise inline a simple Supabase query).
-
-States: skeleton on load, NotFound card if store id is invalid or not a lodging store, share button uses Web Share API with branded fallback.
-
-### 2. Update Hotels Home card in `src/pages/app/AppHome.tsx` (around lines 480–501)
-- Add a richer preview before the buttons:
-  - Show **cover image banner** at the top of the card (h-28, rounded-t-2xl, gradient overlay), pulling `lodgingProfile.data?.cover_url || ownerStore.logo_url`
-  - Add a **stats strip** under the name: `{roomsCount} rooms · {ratePlansCount} rates · {pendingRequestsCount} requests` (use existing hooks; missing counts shown as "—")
-- Wrap the **non-button area** (cover + header + stats + progress) in a `<button>` / clickable `<div role="button">` that navigates to `/hotel/{ownerStore.id}`
-- Keep the 4 existing action buttons (Open Ops, Run QA, Operations Hub, View QA Report) as-is, with `e.stopPropagation()` so they don't trigger the card's tap
-- Add `aria-label="Open hotel detail page"` on the tap surface
-
-### 3. Wire route in `src/App.tsx`
-Add lazy import + route inside the customer-app routes section, alongside other `/hotel*` paths:
-```tsx
-const HotelResortDetailPage = lazy(() => import("./pages/lodging/HotelResortDetailPage"));
-// ...
-<Route path="/hotel/:storeId" element={<RouteErrorBoundary section="HotelDetail"><HotelResortDetailPage /></RouteErrorBoundary>} />
+```text
+┌─────────────────────────────────┐
+│  HERO  (gradient + cover image) │
+│  "Find your perfect stay"       │
+│  [ Search city or hotel...   ] │
+├─────────────────────────────────┤
+│  Popular Destinations  →        │
+│  [PP] [Siem Reap] [Sihanoukville]
+│  [Kep] [Kampot] [Battambang]   │
+│  (horizontal scroll cards w/ img)
+├─────────────────────────────────┤
+│  Featured Properties  →         │
+│  (horizontal carousel of top    │
+│   3-6 setup_complete stores)    │
+├─────────────────────────────────┤
+│  All Hotels & Resorts           │
+│  [filter chips: All Hotels ...] │
+│  ▣ property card                │
+│  ▣ property card                │
+└─────────────────────────────────┘
 ```
 
-This does **not** conflict with existing `/hotels/:city` (plural) or `/hotel-admin` routes.
+Behavior:
+- Hero search input is sticky-collapsed when scrolled past (mirror current sticky header pattern).
+- Tapping a destination chip pre-fills the search/filter to that city.
+- Featured carousel pulls from the same `stores` query, filtered to `setup_complete = true`, ordered by name. Tap → `/hotel/:storeId`.
+- "All Hotels & Resorts" reuses the existing `PropertyCard` and filter chips logic from `HotelsResortsDirectoryPage.tsx`.
+
+Imports follow project rule: default imports from `lucide-react/dist/esm/icons/<name>` (no barrel imports).
+
+### 2. Update `src/pages/app/AppHome.tsx`
+- "Hotels" pill: single tap navigates to `/hotels` immediately (skip the second-tap-to-open behavior).
+- `tabSearchRoutes.hotels` → `/hotels`.
+- The Hotel/Resort Admin card stays as-is on the Home Hotels tab (so admins still land there from notifications).
+
+### 3. Routing in `src/App.tsx`
+- Register `/hotels` → `HotelsLandingPage` (lazy + ErrorBoundary, same pattern as existing routes).
+- Keep `/hotels-list` route pointing to the existing `HotelsResortsDirectoryPage` so any old links still resolve.
+
+### 4. Quiet runtime fix
+The current preview shows a Vite cache error: `does not provide an export named 'ArrowLeft'`. Re-saving the file (which the new code will do anyway) resolves the stale Vite optimize-deps cache. No code change needed beyond the touch.
 
 ## Out of scope
-- No real booking flow yet — "Check Availability" opens a sheet that says "Booking opens soon" + share/contact actions (mirrors existing partner-handoff pattern). This can be wired to Hotelbeds/RateHawk later.
-- No changes to `/hotels/:city` SEO landing pages.
-- No schema changes — uses existing `lodge_property_profile`, `lodge_rooms`, `stores` tables.
+- No real booking/availability (still uses the existing contact-modal flow on `HotelResortDetailPage`).
+- No new database tables — popular destinations are a static curated list in code.
+- No changes to admin/Ops pages.
 
 ## Files
 
-**Created**
-- `src/pages/lodging/HotelResortDetailPage.tsx`
-
-**Edited**
-- `src/pages/app/AppHome.tsx` (Hotels card → richer preview + tap-to-open)
-- `src/App.tsx` (add `/hotel/:storeId` route)
+- **Create**: `src/pages/lodging/HotelsLandingPage.tsx`
+- **Edit**: `src/pages/app/AppHome.tsx` (pill onClick + search route)
+- **Edit**: `src/App.tsx` (register `/hotels` route)
