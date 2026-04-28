@@ -44,9 +44,9 @@ const FILTERS: Array<{ id: string; label: string; match: (cat: string) => boolea
 ];
 
 const POPULAR_DESTINATIONS: Array<{ id: string; label: string; city: string; img: string }> = [
-  { id: "pp", label: "Phnom Penh", city: "phnom penh", img: "https://source.unsplash.com/240x160/?phnom-penh,city" },
-  { id: "sr", label: "Siem Reap", city: "siem reap", img: "https://source.unsplash.com/240x160/?siem-reap,angkor" },
-  { id: "sv", label: "Sihanoukville", city: "sihanoukville", img: "https://source.unsplash.com/240x160/?sihanoukville,beach" },
+  { id: "pp", label: "Phnom Penh", city: "phnom penh", img: "https://images.unsplash.com/photo-1569949381669-ecf31ae8e613?w=320&h=200&fit=crop&auto=format&q=70" },
+  { id: "sr", label: "Siem Reap", city: "siem reap", img: "https://images.unsplash.com/photo-1508009603885-50cf7c579365?w=320&h=200&fit=crop&auto=format&q=70" },
+  { id: "sv", label: "Sihanoukville", city: "sihanoukville", img: "https://images.unsplash.com/photo-1540541338287-41700207dee6?w=320&h=200&fit=crop&auto=format&q=70" },
   { id: "kep", label: "Kep", city: "kep", img: "https://source.unsplash.com/240x160/?kep,beach,cambodia" },
   { id: "kampot", label: "Kampot", city: "kampot", img: "https://source.unsplash.com/240x160/?kampot,river,cambodia" },
   { id: "btb", label: "Battambang", city: "battambang", img: "https://source.unsplash.com/240x160/?battambang,cambodia" },
@@ -176,7 +176,7 @@ export default function HotelsLandingPage() {
                   document.getElementById("hotels-all")?.scrollIntoView({ behavior: "smooth", block: "start" });
                 }}
                 className={
-                  "shrink-0 relative w-[120px] h-[80px] rounded-2xl overflow-hidden border transition active:scale-95 " +
+                  "shrink-0 relative w-[140px] h-[88px] rounded-2xl overflow-hidden border transition active:scale-95 " +
                   (active ? "border-primary ring-2 ring-primary/30" : "border-border")
                 }
                 aria-label={`Show hotels in ${dest.label}`}
@@ -185,10 +185,13 @@ export default function HotelsLandingPage() {
                   src={dest.img}
                   alt={dest.label}
                   loading="lazy"
-                  className="absolute inset-0 w-full h-full object-cover"
+                  onError={(e) => {
+                    (e.currentTarget as HTMLImageElement).style.display = "none";
+                  }}
+                  className="absolute inset-0 w-full h-full object-cover bg-muted"
                 />
-                <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/10 to-transparent" />
-                <span className="absolute bottom-1.5 left-2 right-2 text-[11px] font-bold text-white drop-shadow text-left truncate">
+                <div className="absolute inset-0 bg-gradient-to-t from-black/75 via-black/20 to-transparent" />
+                <span className="absolute bottom-1.5 left-2 right-2 text-[11px] font-bold text-white drop-shadow text-left whitespace-nowrap">
                   {dest.label}
                 </span>
               </button>
