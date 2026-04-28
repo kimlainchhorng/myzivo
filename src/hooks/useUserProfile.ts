@@ -44,20 +44,20 @@ export const useUserProfile = () => {
     queryFn: async () => {
       if (!user?.id) return null;
 
+      // Owner-only RPC: bypasses the column-level GRANT restrictions on
+      // profiles.* (PII columns like email/phone are revoked from
+      // authenticated/anon as part of the 2026-04 security hardening).
+      // The RPC runs SECURITY DEFINER and returns the full row only to the
+      // signed-in owner.
       const { data, error } = await supabase
-        .from("profiles")
-        .select("*")
-        .or(`user_id.eq.${user.id},id.eq.${user.id}`)
+        .rpc("get_my_profile")
         .maybeSingle();
 
       if (error) {
-        // Surface the real Postgres error (e.g. column-grant issues) instead of
-        // letting the Profile page hang on an infinite spinner. We log loudly so
-        // the next regression is visible in console immediately.
         console.error("[useUserProfile] profile fetch failed:", error);
         throw error;
       }
-      return data as unknown as UserProfile | null;
+      return (data as unknown as UserProfile) ?? null;
     },
     enabled: !!user?.id,
     staleTime: 10_000,
