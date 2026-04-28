@@ -2019,6 +2019,11 @@ export default function AdminStoreEditPage() {
     "ar-warranty": "Warranty & Comebacks",
     "ar-fleet": "Fleet Accounts",
     "ar-reports": "Reports & Analytics",
+    "ar-fin-income": "Finance — Income & Revenue",
+    "ar-fin-expenses": "Finance — Expenses & Bills",
+    "ar-fin-payments": "Finance — Payments Received",
+    "ar-fin-pnl": "Finance — Profit & Loss",
+    "ar-fin-tax": "Finance — Tax & Payouts",
   };
   const lodgingTitles: Record<string, string> = {
     "lodge-overview": "Hotel Overview",
