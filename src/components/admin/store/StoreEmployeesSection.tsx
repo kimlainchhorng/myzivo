@@ -129,6 +129,7 @@ export default function StoreEmployeesSection({ storeId }: Props) {
       monthly_salary: isSalary ? (emp.hourly_rate?.toString() || "") : "",
       notes: emp.notes || "", department: "General", emergency_contact: "", address: "",
       start_date: format(new Date(emp.created_at), "yyyy-MM-dd"),
+      invite_email: false, invite_sms: false,
     });
     setDialog(true);
   };
