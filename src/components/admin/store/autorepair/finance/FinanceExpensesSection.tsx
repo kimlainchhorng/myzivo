@@ -331,7 +331,7 @@ export default function FinanceExpensesSection({ storeId }: Props) {
 
       {/* Add / Review Expense Dialog */}
       <Dialog open={open} onOpenChange={setOpen}>
-        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+        <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
           <DialogHeader><DialogTitle>Add Expense / Invoice</DialogTitle></DialogHeader>
 
           <div className="grid grid-cols-2 gap-3">
