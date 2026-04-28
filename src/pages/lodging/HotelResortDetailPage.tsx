@@ -424,7 +424,7 @@ export default function HotelResortDetailPage() {
         ) : activeRooms.length === 0 ? (
           <p className="text-xs text-muted-foreground">No rooms published yet.</p>
         ) : (
-          <div className="-mx-4 px-4 flex gap-3 overflow-x-auto snap-x snap-mandatory pb-1 [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden">
+          <div className="-mx-4 px-4 pr-6 flex gap-3 overflow-x-auto snap-x snap-mandatory pb-1 [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden md:mx-0 md:px-0 md:pr-0 md:overflow-visible md:grid md:grid-cols-2 lg:grid-cols-3 md:gap-3">
             {activeRooms.slice(0, 8).map((room) => {
               const photo = room.photos?.[room.cover_photo_index ?? 0] || room.photos?.[0];
               const deal = applyPromo(room.base_rate_cents);
@@ -432,7 +432,7 @@ export default function HotelResortDetailPage() {
               return (
                 <div
                   key={room.id}
-                  className="snap-start shrink-0 w-56 rounded-xl border border-border bg-card overflow-hidden"
+                  className="snap-start shrink-0 w-60 md:w-auto rounded-xl border border-border bg-card overflow-hidden"
                 >
                   <div className="h-28 bg-muted relative">
                     {photo ? (
@@ -566,8 +566,11 @@ export default function HotelResortDetailPage() {
         </Section>
       )}
 
-      {/* Sticky CTA */}
-      <div className="fixed bottom-0 left-0 right-0 z-30 bg-background/95 backdrop-blur border-t border-border px-4 py-3 pb-[max(env(safe-area-inset-bottom),12px)]">
+      </div>
+      {/* /body wrapper */}
+
+      {/* Sticky CTA — mobile only */}
+      <div className="md:hidden fixed bottom-0 left-0 right-0 z-30 bg-background/95 backdrop-blur border-t border-border px-4 py-3 pb-[max(env(safe-area-inset-bottom),12px)]">
         <div className="mx-auto max-w-2xl flex items-center gap-2">
           <Button
             variant="outline"
@@ -646,9 +649,9 @@ function Section({ title, children }: { title: string; children: React.ReactNode
 
 function Stat({ label, value }: { label: string; value: string | number }) {
   return (
-    <div className="rounded-xl bg-muted/50 py-2">
-      <p className="text-sm font-bold text-foreground leading-none">{value}</p>
-      <p className="mt-0.5 text-[10px] text-muted-foreground">{label}</p>
+    <div className="rounded-xl bg-muted/50 py-2 md:py-2.5">
+      <p className="text-sm md:text-lg font-bold text-foreground leading-none">{value}</p>
+      <p className="mt-0.5 text-[10px] md:text-xs text-muted-foreground">{label}</p>
     </div>
   );
 }
