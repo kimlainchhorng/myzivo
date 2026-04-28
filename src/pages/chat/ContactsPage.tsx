@@ -5,13 +5,15 @@
 import { useMemo, useState } from "react";
 import { useSmartBack } from "@/lib/smartBack";
 import { useNavigate } from "react-router-dom";
-import { ArrowLeft, Search, UserPlus, Star, MoreVertical, MessageCircle, Trash2, AtSign, Phone, Inbox, MapPin, Lock } from "lucide-react";
+import { ArrowLeft, Search, UserPlus, Star, MoreVertical, MessageCircle, Trash2, AtSign, Phone, Inbox, MapPin, Lock, Share2, QrCode, Smartphone } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import AddContactSheet from "@/components/chat/AddContactSheet";
 import UsernameClaimSheet from "@/components/chat/UsernameClaimSheet";
+import InviteFriendsSheet from "@/components/chat/InviteFriendsSheet";
+import SuggestedContactsRow from "@/components/chat/SuggestedContactsRow";
 import { useContacts } from "@/hooks/useContacts";
 import { useUsername } from "@/hooks/useUsername";
 import { toast } from "sonner";
@@ -24,6 +26,7 @@ export default function ContactsPage() {
   const [q, setQ] = useState("");
   const [addOpen, setAddOpen] = useState(false);
   const [usernameOpen, setUsernameOpen] = useState(false);
+  const [inviteOpen, setInviteOpen] = useState(false);
 
   const filtered = useMemo(() => {
     const s = q.trim().toLowerCase();
@@ -41,6 +44,12 @@ export default function ContactsPage() {
           <ArrowLeft className="w-5 h-5" />
         </button>
         <h1 className="text-xl font-bold flex-1">Contacts</h1>
+        <Button size="icon" variant="ghost" onClick={() => setInviteOpen(true)} aria-label="Invite friends">
+          <Share2 className="w-5 h-5" />
+        </Button>
+        <Button size="icon" variant="ghost" onClick={() => navigate("/chat/qr")} aria-label="QR code">
+          <QrCode className="w-5 h-5" />
+        </Button>
         <Button size="icon" variant="ghost" onClick={() => setAddOpen(true)} aria-label="Add contact">
           <UserPlus className="w-5 h-5" />
         </Button>
@@ -62,7 +71,7 @@ export default function ContactsPage() {
           </div>
         </button>
 
-        <div className="grid grid-cols-3 gap-2">
+        <div className="grid grid-cols-4 gap-2">
           <button
             onClick={() => navigate("/chat/find-contacts")}
             className="flex flex-col items-center gap-1.5 p-3 rounded-2xl border bg-card hover:bg-muted/50 active:scale-[0.98] transition"
@@ -71,6 +80,15 @@ export default function ContactsPage() {
               <Phone className="w-4 h-4" />
             </div>
             <span className="text-[11px] font-medium leading-tight text-center">Find by phone</span>
+          </button>
+          <button
+            onClick={() => navigate("/chat/find-contacts")}
+            className="flex flex-col items-center gap-1.5 p-3 rounded-2xl border bg-card hover:bg-muted/50 active:scale-[0.98] transition"
+          >
+            <div className="w-9 h-9 rounded-full bg-violet-500/15 text-violet-600 flex items-center justify-center">
+              <Smartphone className="w-4 h-4" />
+            </div>
+            <span className="text-[11px] font-medium leading-tight text-center">Sync phone</span>
           </button>
           <button
             onClick={() => navigate("/chat/contacts/requests")}
@@ -102,6 +120,8 @@ export default function ContactsPage() {
           />
         </div>
       </div>
+
+      {!q.trim() && <SuggestedContactsRow />}
 
       <div className="px-2 pb-24">
         {loading ? (
@@ -191,6 +211,7 @@ export default function ContactsPage() {
 
       <AddContactSheet open={addOpen} onOpenChange={setAddOpen} />
       <UsernameClaimSheet open={usernameOpen} onOpenChange={setUsernameOpen} />
+      <InviteFriendsSheet open={inviteOpen} onOpenChange={setInviteOpen} />
     </div>
   );
 }
