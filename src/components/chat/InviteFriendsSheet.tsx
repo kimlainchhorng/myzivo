@@ -96,7 +96,7 @@ export default function InviteFriendsSheet({
         toast.error("That's you 🙂");
         return;
       }
-      const r = await sendRequest(prof.user_id, "Hi! Let's connect on ZIVO.");
+      const r: any = await sendRequest(prof.user_id, "Hi! Let's connect on ZIVO.");
       if (!r.ok) {
         toast.error(r.error || "Couldn't send request");
         return;
