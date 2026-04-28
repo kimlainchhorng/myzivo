@@ -305,6 +305,34 @@ export default function FinanceExpensesSection({ storeId }: Props) {
     },
   });
 
+  // Call ar-receipts-helper with an explicit bearer token so auth context is reliable.
+  const callHelper = async (body: Record<string, unknown>) => {
+    const { data: sess } = await supabase.auth.getSession();
+    const token = sess?.session?.access_token;
+    if (!token) throw new Error("Not signed in");
+    const url = `${supaUrl}/functions/v1/ar-receipts-helper`;
+    const res = await fetch(url, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+        apikey: (supabase as any)?.supabaseKey || "",
+      },
+      body: JSON.stringify(body),
+    });
+    let data: any = null;
+    try { data = await res.json(); } catch { /* ignore */ }
+    if (!res.ok) {
+      const msg = data?.error || `HTTP ${res.status}`;
+      const err = new Error(msg) as any;
+      err.status = res.status;
+      err.details = data?.details;
+      err.body = data;
+      throw err;
+    }
+    return data;
+  };
+
   const saveScannedExpenseViaHelper = async (source: ExpenseFormState) => {
     const totals = computeExpenseTotals(source);
     const payloadItems = source.items
@@ -321,30 +349,27 @@ export default function FinanceExpensesSection({ storeId }: Props) {
           line_total_cents: Math.round(quantity * unit_price_cents),
         };
       });
-    const { data, error } = await supabase.functions.invoke("ar-receipts-helper", {
-      body: {
-        action: "save_expense",
-        store_id: storeId,
-        expense: {
-          category: source.category,
-          vendor: source.vendor || null,
-          description: source.description || null,
-          amount_cents: totals.totalCents,
-          subtotal_cents: totals.subtotalCents,
-          tax_cents: totals.taxCents,
-          expense_date: source.expense_date,
-          invoice_time: to24h(source.hour, source.minute, source.ampm),
-          invoice_number: source.invoice_number || null,
-          payment_method: source.payment_method,
-          notes: source.notes || null,
-          receipt_url: source.receipt_url || null,
-        },
-        items: payloadItems,
+    const data = await callHelper({
+      action: "save_expense",
+      store_id: storeId,
+      expense: {
+        category: source.category,
+        vendor: source.vendor || null,
+        description: source.description || null,
+        amount_cents: totals.totalCents,
+        subtotal_cents: totals.subtotalCents,
+        tax_cents: totals.taxCents,
+        expense_date: source.expense_date,
+        invoice_time: to24h(source.hour, source.minute, source.ampm),
+        invoice_number: source.invoice_number || null,
+        payment_method: source.payment_method,
+        notes: source.notes || null,
+        receipt_url: source.receipt_url || null,
       },
+      items: payloadItems,
     });
-    if (error) throw error;
-    if (!(data as any)?.ok) throw new Error((data as any)?.error || "Could not save scanned invoice");
-    return data as any;
+    if (!data?.ok) throw new Error(data?.error || "Could not save scanned invoice");
+    return data;
   };
 
   // -------- Scan invoice flow --------
@@ -448,27 +473,20 @@ export default function FinanceExpensesSection({ storeId }: Props) {
       scan_response_summary: null,
     };
 
-    let stage: "preflight" | "read" | "scan" | "attach" | "save" = "preflight";
+    let stage: "read" | "scan" | "attach" | "save" = "read";
+    let scannedForm: ExpenseFormState | null = null;
     try {
-      // 1. Preflight — verify role + ownership before doing real work.
-      const pre = await supabase.functions.invoke("ar-receipts-helper", {
-        body: { action: "preflight", store_id: storeId },
-      });
-      diag.preflight = pre.error ? { error: pre.error.message } : pre.data;
-      if (pre.error) throw new Error(pre.error.message || "Preflight failed");
-      if (!(pre.data as any)?.ok) {
-        const reason = !(pre.data as any)?.store_found
-          ? "Store not found"
-          : "You don't have permission to upload receipts for this store";
-        throw new Error(reason);
-      }
+      // 1. Optional preflight (non-blocking) — only used for diagnostics.
+      callHelper({ action: "preflight", store_id: storeId })
+        .then((d) => { diag.preflight = d; })
+        .catch((e: any) => { diag.preflight = { error: e?.message, details: e?.details }; });
 
       // 2. Read file as base64.
       stage = "read";
       const base64 = await fileToBase64(file);
       const mime = file.type || "image/jpeg";
 
-      // 3. AI scan.
+      // 3. AI scan — this is the only step that MUST succeed.
       stage = "scan";
       toast.info("Scanning invoice…");
       const { data, error } = await supabase.functions.invoke("scan-invoice", {
@@ -482,55 +500,57 @@ export default function FinanceExpensesSection({ storeId }: Props) {
         vendor: inv.vendor ?? null,
       };
 
-      // 4. Attempt the primary upload, with retries; fall back to edge fn.
+      // 4. Best-effort upload (primary with retry → fallback edge fn).
       stage = "attach";
       let receiptRef: string | null = null;
       try {
         const path = await uploadToPrimaryWithRetry(file, mime, diag);
-        receiptRef = path; // stored as-is (no prefix) when primary succeeds
+        receiptRef = path;
       } catch (primaryErr: any) {
         console.warn("Primary upload failed, attempting fallback:", primaryErr);
         try {
-          const fb = await supabase.functions.invoke("ar-receipts-helper", {
-            body: { action: "fallback_upload", store_id: storeId, image_base64: base64, mime_type: mime },
+          const fb = await callHelper({
+            action: "fallback_upload", store_id: storeId, image_base64: base64, mime_type: mime,
           });
-          if (fb.error) {
-            diag.fallback_response = { error: fb.error.message };
-          } else {
-            diag.fallback_response = fb.data;
-            const fbPath = (fb.data as any)?.path;
-            if (fbPath) {
-              receiptRef = `${FALLBACK_PREFIX}${fbPath}`;
-              diag.used_fallback = true;
-            }
-          }
+          diag.fallback_response = fb;
+          const fbPath = fb?.path;
+          if (fbPath) { receiptRef = `${FALLBACK_PREFIX}${fbPath}`; diag.used_fallback = true; }
         } catch (fbErr: any) {
-          diag.fallback_response = { error: fbErr?.message || String(fbErr) };
+          diag.fallback_response = { error: fbErr?.message || String(fbErr), details: fbErr?.details };
         }
       }
       diag.final_receipt_ref = receiptRef;
 
-      // 5. Normalize scan values, then auto-save if usable.
-      const scannedForm = buildScannedExpenseForm(inv, receiptRef);
+      // 5. Normalize then try to auto-save. If save fails, prefill dialog.
+      scannedForm = buildScannedExpenseForm(inv, receiptRef);
       setForm(scannedForm);
       if (isAutoSaveReady(scannedForm)) {
         stage = "save";
-        await saveScannedExpenseViaHelper(scannedForm);
-        setOpen(false);
-        setForm(blankForm());
-        qc.invalidateQueries({ queryKey: ["ar-fin-expenses", storeId] });
-        toast.success(diag.used_fallback ? "Invoice scanned and saved via fallback" : "Invoice scanned and saved");
-      } else {
-        setOpen(true);
-        toast.success("Invoice scanned — review missing fields before saving");
+        try {
+          await saveScannedExpenseViaHelper(scannedForm);
+          setOpen(false);
+          setForm(blankForm());
+          qc.invalidateQueries({ queryKey: ["ar-fin-expenses", storeId] });
+          toast.success(diag.used_fallback ? "Invoice scanned and saved (fallback)" : "Invoice scanned and saved");
+          return;
+        } catch (saveErr: any) {
+          // Auto-save failed — keep extracted data and let user save manually.
+          console.warn("auto-save failed, opening prefilled dialog:", saveErr);
+          setOpen(true);
+          toast.error(`Auto-save failed (${saveErr?.message || "error"}). Review and press Save expense.`);
+          return;
+        }
       }
+      setOpen(true);
+      toast.success("Invoice scanned — review and Save expense");
     } catch (err: any) {
       console.error("scan-invoice flow error", { stage, err, diag });
       const msg = err?.message || String(err);
-      if (stage === "preflight") toast.error(`Preflight failed: ${msg}`);
-      else if (stage === "read") toast.error(`Could not read image: ${msg}`);
-      else if (stage === "save") toast.error(`Invoice scanned but auto-save failed: ${msg}`);
-      else toast.error(`Invoice scan failed: ${msg}`);
+      if (stage === "read") toast.error(`Could not read image: ${msg}`);
+      else if (stage === "scan") toast.error(`Invoice scan failed: ${msg}`);
+      else toast.error(`Scan flow failed: ${msg}`);
+      // If we already parsed something, still show it.
+      if (scannedForm) setOpen(true);
     } finally {
       setDiagnostics(diag);
       setScanning(false);
