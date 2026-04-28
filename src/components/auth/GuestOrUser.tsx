@@ -4,7 +4,7 @@
  * Lets guests browse the page without being kicked out.
  */
 import { useAuth } from "@/contexts/AuthContext";
-import { Loader2 } from "lucide-react";
+import Loader2 from "lucide-react/dist/esm/icons/loader-2";
 
 interface GuestOrUserProps {
   children: React.ReactNode;
