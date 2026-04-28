@@ -7,6 +7,7 @@ import { ChannelPostComposer } from "@/components/channels/ChannelPostComposer";
 
 export default function ChannelPage() {
   const { handle } = useParams<{ handle: string }>();
+  const navigate = useNavigate();
   const { channel, posts, isSubscribed, role, loading, userId, subscribe, unsubscribe, refresh } =
     useChannel(handle);
 
