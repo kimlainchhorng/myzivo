@@ -15,8 +15,51 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
-import { Wallet, Plus, Trash2, ScanLine, Paperclip, Loader2, X } from "lucide-react";
+import { Wallet, Plus, Trash2, ScanLine, Paperclip, Loader2, X, ChevronDown, ChevronRight, Copy, AlertCircle, CheckCircle2 } from "lucide-react";
 import { toast } from "sonner";
+
+// ---------- Receipt-upload diagnostics ----------
+const PRIMARY_BUCKET = "ar-receipts";
+const FALLBACK_BUCKET = "ar-receipts-fallback";
+const FALLBACK_PREFIX = "fallback:";
+
+type AttemptLog = {
+  n: number;
+  started: string;
+  durationMs: number;
+  ok: boolean;
+  status?: number | null;
+  code?: string | null;
+  message?: string | null;
+  transient: boolean;
+};
+
+type DiagnosticsRecord = {
+  at: string;
+  user_id: string | null;
+  store_id: string;
+  bucket: string;
+  path: string | null;
+  url: string | null;
+  method: "POST";
+  headers: Record<string, string>;
+  preflight: any;
+  attempts: AttemptLog[];
+  used_fallback: boolean;
+  fallback_response: any;
+  final_receipt_ref: string | null;
+  scan_response_summary?: { items: number; vendor: string | null } | null;
+};
+
+function isTransientUploadError(err: any, status?: number | null): boolean {
+  if (status && status >= 500 && status < 600) return true;
+  const msg = String(err?.message || err || "");
+  if (/08P01|database error|timeout|ECONNRESET|fetch failed|network|temporarily/i.test(msg)) return true;
+  if (err?.name === "TypeError") return true; // browser network error
+  return false;
+}
+
+const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
 
 interface Props { storeId: string }
 
@@ -70,7 +113,11 @@ export default function FinanceExpensesSection({ storeId }: Props) {
   const [filterCat, setFilterCat] = useState<string>("all");
   const [form, setForm] = useState(blankForm());
   const [detailId, setDetailId] = useState<string | null>(null);
+  const [diagnostics, setDiagnostics] = useState<DiagnosticsRecord | null>(null);
+  const [diagOpen, setDiagOpen] = useState(false);
   const fileRef = useRef<HTMLInputElement | null>(null);
+
+  const supaUrl = (import.meta as any).env?.VITE_SUPABASE_URL || "";
 
   const { data: expenses = [] } = useQuery({
     queryKey: ["ar-fin-expenses", storeId],
@@ -185,6 +232,58 @@ export default function FinanceExpensesSection({ storeId }: Props) {
       reader.readAsDataURL(file);
     });
 
+  // Try the primary bucket up to MAX_ATTEMPTS times. Return signed-relative
+  // path on success, or throw the last error.
+  const uploadToPrimaryWithRetry = async (
+    file: File,
+    mime: string,
+    diag: DiagnosticsRecord,
+  ): Promise<string> => {
+    const MAX_ATTEMPTS = 3;
+    const backoff = [300, 700, 1500];
+    const ext = (file.name.split(".").pop() || "jpg").toLowerCase();
+    const path = `${storeId}/${Date.now()}-${crypto.randomUUID?.() ?? Math.random().toString(36).slice(2)}.${ext}`;
+    diag.path = path;
+    diag.bucket = PRIMARY_BUCKET;
+
+    let lastErr: any = null;
+    for (let n = 1; n <= MAX_ATTEMPTS; n++) {
+      const started = new Date();
+      const t0 = performance.now();
+      try {
+        const { error: upErr } = await supabase.storage
+          .from(PRIMARY_BUCKET)
+          .upload(path, file, { contentType: mime, upsert: false });
+        const durationMs = Math.round(performance.now() - t0);
+        if (!upErr) {
+          diag.attempts.push({ n, started: started.toISOString(), durationMs, ok: true, transient: false });
+          return path;
+        }
+        const status = (upErr as any)?.statusCode ?? (upErr as any)?.status ?? null;
+        const code = (upErr as any)?.error || (upErr as any)?.code || null;
+        const transient = isTransientUploadError(upErr, status);
+        diag.attempts.push({
+          n, started: started.toISOString(), durationMs, ok: false,
+          status, code, message: (upErr as any)?.message || String(upErr), transient,
+        });
+        lastErr = upErr;
+        if (!transient || n === MAX_ATTEMPTS) break;
+        await sleep(backoff[n - 1] ?? 1500);
+      } catch (netErr: any) {
+        const durationMs = Math.round(performance.now() - t0);
+        const transient = isTransientUploadError(netErr);
+        diag.attempts.push({
+          n, started: started.toISOString(), durationMs, ok: false,
+          status: null, code: netErr?.name || null, message: netErr?.message || String(netErr), transient,
+        });
+        lastErr = netErr;
+        if (!transient || n === MAX_ATTEMPTS) break;
+        await sleep(backoff[n - 1] ?? 1500);
+      }
+    }
+    throw lastErr || new Error("Primary upload failed");
+  };
+
   const onFile = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     e.target.value = "";
@@ -194,13 +293,51 @@ export default function FinanceExpensesSection({ storeId }: Props) {
       return;
     }
     setScanning(true);
-    let stage: "read" | "scan" | "attach" = "read";
+
+    const { data: { user } } = await supabase.auth.getUser();
+    const diag: DiagnosticsRecord = {
+      at: new Date().toISOString(),
+      user_id: user?.id ?? null,
+      store_id: storeId,
+      bucket: PRIMARY_BUCKET,
+      path: null,
+      url: supaUrl ? `${supaUrl}/storage/v1/object/${PRIMARY_BUCKET}/<path>` : null,
+      method: "POST",
+      headers: {
+        authorization: "Bearer <redacted>",
+        apikey: "<redacted>",
+        "x-upsert": "false",
+        "content-type": file.type || "image/jpeg",
+      },
+      preflight: null,
+      attempts: [],
+      used_fallback: false,
+      fallback_response: null,
+      final_receipt_ref: null,
+      scan_response_summary: null,
+    };
+
+    let stage: "preflight" | "read" | "scan" | "attach" = "preflight";
     try {
-      // Read the image directly in the browser (no Storage upload required)
+      // 1. Preflight — verify role + ownership before doing real work.
+      const pre = await supabase.functions.invoke("ar-receipts-helper", {
+        body: { action: "preflight", store_id: storeId },
+      });
+      diag.preflight = pre.error ? { error: pre.error.message } : pre.data;
+      if (pre.error) throw new Error(pre.error.message || "Preflight failed");
+      if (!(pre.data as any)?.ok) {
+        const reason = !(pre.data as any)?.store_found
+          ? "Store not found"
+          : "You don't have permission to upload receipts for this store";
+        throw new Error(reason);
+      }
+
+      // 2. Read file as base64.
+      stage = "read";
       const base64 = await fileToBase64(file);
       const mime = file.type || "image/jpeg";
 
-      // Send to AI edge function for parsing
+      // 3. AI scan.
       stage = "scan";
       toast.info("Scanning invoice…");
       const { data, error } = await supabase.functions.invoke("scan-invoice", {
@@ -209,23 +346,40 @@ export default function FinanceExpensesSection({ storeId }: Props) {
       if (error) throw error;
       const inv = (data as any)?.invoice;
       if (!inv) throw new Error("Could not parse invoice");
+      diag.scan_response_summary = {
+        items: Array.isArray(inv.items) ? inv.items.length : 0,
+        vendor: inv.vendor ?? null,
+      };
 
-      // Best-effort: try to attach the receipt to Storage. If it fails, continue silently.
+      // 4. Attempt the primary upload, with retries; fall back to edge fn.
       stage = "attach";
-      let receiptPath: string | null = null;
+      let receiptRef: string | null = null;
       try {
-        const ext = (file.name.split(".").pop() || "jpg").toLowerCase();
-        const path = `${storeId}/${Date.now()}.${ext}`;
-        const { error: upErr } = await supabase.storage
-          .from("ar-receipts")
-          .upload(path, file, { contentType: mime });
-        if (!upErr) receiptPath = path;
-        else console.warn("Receipt attach skipped:", upErr);
-      } catch (attachErr) {
-        console.warn("Receipt attach skipped:", attachErr);
+        const path = await uploadToPrimaryWithRetry(file, mime, diag);
+        receiptRef = path; // stored as-is (no prefix) when primary succeeds
+      } catch (primaryErr: any) {
+        console.warn("Primary upload failed, attempting fallback:", primaryErr);
+        try {
+          const fb = await supabase.functions.invoke("ar-receipts-helper", {
+            body: { action: "fallback_upload", store_id: storeId, image_base64: base64, mime_type: mime },
+          });
+          if (fb.error) {
+            diag.fallback_response = { error: fb.error.message };
+          } else {
+            diag.fallback_response = fb.data;
+            const fbPath = (fb.data as any)?.path;
+            if (fbPath) {
+              receiptRef = `${FALLBACK_PREFIX}${fbPath}`;
+              diag.used_fallback = true;
+            }
+          }
+        } catch (fbErr: any) {
+          diag.fallback_response = { error: fbErr?.message || String(fbErr) };
+        }
       }
+      diag.final_receipt_ref = receiptRef;
 
-      // Pre-fill form
+      // 5. Pre-fill form
       const t = inv.time ? from24h(inv.time + (inv.time.length === 5 ? ":00" : "")) : { h: "12", m: "00", ap: "PM" as const };
       setForm({
         ...blankForm(),
@@ -237,7 +391,7 @@ export default function FinanceExpensesSection({ storeId }: Props) {
         hour: t.h, minute: t.m, ampm: t.ap,
         payment_method: inv.payment_method || "card",
         tax: inv.tax_cents != null ? (inv.tax_cents / 100).toFixed(2) : "",
-        receipt_url: receiptPath, // null if storage attach failed
+        receipt_url: receiptRef,
         items: Array.isArray(inv.items) && inv.items.length
           ? inv.items.map((it: any) => ({
               part_number: it.part_number || "",
@@ -249,23 +403,26 @@ export default function FinanceExpensesSection({ storeId }: Props) {
         notes: "",
       });
       setOpen(true);
-      if (receiptPath) {
+
+      if (receiptRef && !diag.used_fallback) {
         toast.success("Invoice scanned — review and save");
+      } else if (receiptRef && diag.used_fallback) {
+        toast.success("Invoice scanned (receipt saved via fallback) — review and save");
       } else {
         toast.success("Invoice scanned — review and save (receipt image not attached)");
       }
     } catch (err: any) {
-      console.error("scan-invoice flow error", { stage, err });
+      console.error("scan-invoice flow error", { stage, err, diag });
       const msg = err?.message || String(err);
-      if (stage === "read") {
-        toast.error(`Could not read image: ${msg}`);
-      } else {
-        toast.error(`Invoice scan failed: ${msg}`);
-      }
+      if (stage === "preflight") toast.error(`Preflight failed: ${msg}`);
+      else if (stage === "read") toast.error(`Could not read image: ${msg}`);
+      else toast.error(`Invoice scan failed: ${msg}`);
     } finally {
+      setDiagnostics(diag);
       setScanning(false);
     }
   };
+
 
   // -------- List filters & totals --------
   const filtered = useMemo(
@@ -371,6 +528,14 @@ export default function FinanceExpensesSection({ storeId }: Props) {
               ))}
             </ul>
           )}
+
+          {/* Receipt-upload diagnostics panel */}
+          <UploadDiagnosticsPanel
+            diag={diagnostics}
+            open={diagOpen}
+            onToggle={() => setDiagOpen((o) => !o)}
+            onClear={() => setDiagnostics(null)}
+          />
         </CardContent>
       </Card>
 
@@ -552,9 +717,12 @@ function ExpenseDetailSheet({ expenseId, onClose }: { expenseId: string | null; 
   const [imgUrl, setImgUrl] = useState<string | null>(null);
   useEffect(() => {
     setImgUrl(null);
-    const path = data?.exp?.receipt_url;
-    if (!path) return;
-    supabase.storage.from("ar-receipts").createSignedUrl(path, 60 * 60).then(({ data: s }) => {
+    const ref = data?.exp?.receipt_url as string | null | undefined;
+    if (!ref) return;
+    const isFallback = ref.startsWith(FALLBACK_PREFIX);
+    const bucket = isFallback ? FALLBACK_BUCKET : PRIMARY_BUCKET;
+    const path = isFallback ? ref.slice(FALLBACK_PREFIX.length) : ref;
+    supabase.storage.from(bucket).createSignedUrl(path, 60 * 60).then(({ data: s }) => {
       setImgUrl(s?.signedUrl || null);
     });
   }, [data?.exp?.receipt_url]);
@@ -628,3 +796,158 @@ function Field({ label, value }: { label: string; value: string }) {
     </div>
   );
 }
+
+function UploadDiagnosticsPanel({
+  diag,
+  open,
+  onToggle,
+  onClear,
+}: {
+  diag: DiagnosticsRecord | null;
+  open: boolean;
+  onToggle: () => void;
+  onClear: () => void;
+}) {
+  if (!diag) return null;
+  const lastAttempt = diag.attempts[diag.attempts.length - 1];
+  const succeeded = !!diag.final_receipt_ref;
+  const retried = diag.attempts.length > 1;
+
+  const copy = async () => {
+    try {
+      await navigator.clipboard.writeText(JSON.stringify(diag, null, 2));
+      toast.success("Diagnostics copied");
+    } catch {
+      toast.error("Could not copy");
+    }
+  };
+
+  return (
+    <div className="rounded-md border bg-muted/30">
+      <button
+        type="button"
+        onClick={onToggle}
+        className="w-full flex items-center justify-between gap-2 px-3 py-2 text-left"
+      >
+        <div className="flex items-center gap-2 text-xs">
+          {open ? <ChevronDown className="w-3.5 h-3.5" /> : <ChevronRight className="w-3.5 h-3.5" />}
+          <span className="font-medium">Upload diagnostics</span>
+          {succeeded ? (
+            <span className="inline-flex items-center gap-1 text-emerald-600">
+              <CheckCircle2 className="w-3 h-3" />
+              {diag.used_fallback ? "fallback" : "ok"}
+            </span>
+          ) : (
+            <span className="inline-flex items-center gap-1 text-destructive">
+              <AlertCircle className="w-3 h-3" /> failed
+            </span>
+          )}
+          {retried && (
+            <span className="text-[10px] text-muted-foreground">
+              · {diag.attempts.length} attempts
+            </span>
+          )}
+        </div>
+        <span className="text-[10px] text-muted-foreground">
+          {new Date(diag.at).toLocaleTimeString()}
+        </span>
+      </button>
+
+      {open && (
+        <div className="px-3 pb-3 space-y-2 text-[11px]">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+            <DiagRow label="Bucket" value={diag.bucket} />
+            <DiagRow label="Object path" value={diag.path || "—"} />
+            <DiagRow label="URL" value={diag.url || "—"} />
+            <DiagRow label="Method" value={diag.method} />
+            <DiagRow label="User ID" value={diag.user_id || "—"} />
+            <DiagRow label="Store ID" value={diag.store_id} />
+            <DiagRow
+              label="Used fallback"
+              value={diag.used_fallback ? "yes" : "no"}
+            />
+            <DiagRow
+              label="Final receipt ref"
+              value={diag.final_receipt_ref || "—"}
+            />
+          </div>
+
+          <div>
+            <div className="text-muted-foreground mb-1">Headers (sensitive values redacted)</div>
+            <pre className="rounded bg-background border p-2 overflow-x-auto text-[10px] leading-tight">
+              {JSON.stringify(diag.headers, null, 2)}
+            </pre>
+          </div>
+
+          <div>
+            <div className="text-muted-foreground mb-1">Preflight response</div>
+            <pre className="rounded bg-background border p-2 overflow-x-auto text-[10px] leading-tight">
+              {JSON.stringify(diag.preflight, null, 2)}
+            </pre>
+          </div>
+
+          <div>
+            <div className="text-muted-foreground mb-1">
+              Upload attempts ({diag.attempts.length})
+            </div>
+            <div className="space-y-1">
+              {diag.attempts.map((a) => (
+                <div
+                  key={a.n}
+                  className={`rounded border px-2 py-1 ${a.ok ? "bg-emerald-500/5 border-emerald-500/30" : "bg-destructive/5 border-destructive/30"}`}
+                >
+                  <div className="flex justify-between">
+                    <span>
+                      #{a.n} {a.ok ? "ok" : "error"}
+                      {a.transient && !a.ok ? " · transient" : ""}
+                    </span>
+                    <span className="text-muted-foreground">{a.durationMs}ms</span>
+                  </div>
+                  {!a.ok && (
+                    <div className="text-[10px] text-muted-foreground mt-0.5">
+                      [{a.status ?? "—"}] {a.code ?? ""} {a.message ?? ""}
+                    </div>
+                  )}
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {diag.fallback_response && (
+            <div>
+              <div className="text-muted-foreground mb-1">Fallback response</div>
+              <pre className="rounded bg-background border p-2 overflow-x-auto text-[10px] leading-tight">
+                {JSON.stringify(diag.fallback_response, null, 2)}
+              </pre>
+            </div>
+          )}
+
+          {lastAttempt && !lastAttempt.ok && (
+            <div className="text-[10px] text-muted-foreground">
+              Last error: <span className="font-mono">{lastAttempt.message}</span>
+            </div>
+          )}
+
+          <div className="flex gap-2 pt-1">
+            <Button size="sm" variant="outline" className="h-7 text-[11px]" onClick={copy}>
+              <Copy className="w-3 h-3 mr-1" /> Copy details
+            </Button>
+            <Button size="sm" variant="ghost" className="h-7 text-[11px]" onClick={onClear}>
+              Clear
+            </Button>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+function DiagRow({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="flex flex-col">
+      <span className="text-muted-foreground text-[10px] uppercase tracking-wide">{label}</span>
+      <span className="font-mono break-all">{value}</span>
+    </div>
+  );
+}
+
