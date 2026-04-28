@@ -612,8 +612,6 @@ export default function ReelsFeedPage() {
         )];
 
         if (userPostIds.length) {
-          const commentPostIds = [...new Set([...userPostIds, ...userPostIds.map((id) => `u-${id}`)])];
-
           const [{ data: rawLikes }, { data: rawComments }] = await Promise.all([
             (supabase as any)
               .from("post_likes")
@@ -623,7 +621,7 @@ export default function ReelsFeedPage() {
               .from("post_comments")
               .select("post_id")
               .eq("post_source", "user")
-              .in("post_id", commentPostIds),
+              .in("post_id", userPostIds),
           ]);
 
           const likeCounts = new Map<string, number>();
