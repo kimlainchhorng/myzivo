@@ -21,7 +21,9 @@ import SuggestedContactsRow from "@/components/chat/SuggestedContactsRow";
 import SearchEveryoneResults from "@/components/chat/SearchEveryoneResults";
 import { useContacts, type Contact } from "@/hooks/useContacts";
 import { useUsername } from "@/hooks/useUsername";
-import { isNativeAvailable } from "@/lib/nativeContacts";
+import { useContactRequests } from "@/hooks/useContactRequests";
+import { isNativeAvailable, pickAndHashPhones } from "@/lib/nativeContacts";
+import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 
 const SEVEN_DAYS = 7 * 24 * 60 * 60 * 1000;
