@@ -76,9 +76,7 @@ export async function pickAndHashPhones(opts?: { defaultCountryCode?: string }):
   reason?: "no-plugin" | "denied" | "empty" | "error";
 }> {
   try {
-    // @ts-ignore — optional peer dependency
-    const mod: any = await import(/* @vite-ignore */ "@capacitor-community/contacts");
-    const Contacts = mod?.Contacts;
+    const Contacts = await loadContacts();
     if (!Contacts) return { ok: false, hashes: [], count: 0, reason: "no-plugin" };
 
     const granted = await requestPermission();
