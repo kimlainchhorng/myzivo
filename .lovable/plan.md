@@ -1,36 +1,146 @@
-# Fix: Voice notes failing with HTTP 429 after 100% upload
+## Goal
 
-## What's actually happening
+Turn `FinanceProfitLossSection.tsx` from a basic 3-card summary into a full, professional Profit & Loss dashboard — matching what owners expect from QuickBooks / Shop-Ware level reporting.
 
-From the session replay, the bytes upload to Supabase Storage successfully (progress reaches 100%), then the storage server returns:
+Currently the page only shows: From/To dates, CSV button, Income/Expenses/Net cards, and a single category breakdown. We will keep it lightweight but add the missing critical sections.
 
+---
+
+## What gets added
+
+### 1. Smart date controls (top bar)
+Replace the bare From/To inputs with:
+- Quick presets: **Today, This Week, MTD, Last Month, QTD, YTD, Last 12 Months, Custom**
+- A **Compare to** toggle: Previous period / Previous year / None
+- Group-by selector: **Day / Week / Month**
+- Export menu: **CSV, PDF (printable P&L statement), Email to accountant**
+
+### 2. KPI strip (6 cards instead of 3)
+- Revenue (paid)
+- Invoiced (billed but not yet paid) — pulled from `ar_invoices.total_cents` minus `amount_paid_cents`
+- COGS / Parts cost — `ar_expenses` where category in (parts, supplies)
+- Gross Profit + Gross Margin %
+- Operating Expenses (rent, utilities, payroll, marketing, other)
+- **Net Profit + Net Margin %**
+
+Each card shows: value, sparkline, vs-previous-period delta with arrow + colored %.
+
+### 3. Revenue & Expense trend chart
+Stacked bar / line chart (Recharts) over the selected range, grouped by Day/Week/Month:
+- Bars: Revenue vs Expenses
+- Line overlay: Net Profit
+- Hover tooltip with full breakdown
+
+### 4. Income breakdown (new card)
+- By **payment method** (cash, card, ABA, check, other) — from `ar_invoice_payments.method`
+- By **service category** — derived from `ar_invoices.items` jsonb (top services)
+- By **technician** — top earners (joins `ar_work_orders` if available)
+
+### 5. Expense breakdown — upgraded
+Keep the existing horizontal bars but add:
+- Toggle: **By Category** / **By Vendor** / **By Payment Method**
+- Each row clickable → opens a drawer listing the underlying expense rows (date, vendor, amount, receipt link)
+- Show top 5 vendors with logos / initials
+
+### 6. Cash flow mini-section
+- **Cash in** (payments received)
+- **Cash out** (expenses paid + payouts from `ar_payouts`)
+- **Net cash** for the period
+- Running balance line chart
+
+### 7. Accounts Receivable (AR) panel
+Pulled from `ar_invoices` where `status != 'paid'`:
+- Total outstanding $
+- Aging buckets: Current, 1–30, 31–60, 61–90, 90+ days
+- Top 5 unpaid customers with "Send reminder" button (links to existing invoice page)
+
+### 8. Tax estimate strip
+- Sales tax collected (sum of `ar_invoices.tax_cents` paid in period)
+- Estimated income tax owed (configurable rate, default 15%) on Net Profit
+- Quick link to **Tax & Payouts** sub-tab
+
+### 9. P&L statement view (toggle)
+A second view mode "**Statement**" that renders an accountant-style printable P&L:
+
+```text
+Revenue
+  Service revenue ............ $X,XXX
+  Parts revenue .............. $X,XXX
+  Total Revenue .............. $X,XXX
+
+Cost of Goods Sold
+  Parts ...................... ($XXX)
+  Supplies ................... ($XXX)
+  Gross Profit ............... $X,XXX  (XX.X%)
+
+Operating Expenses
+  Rent ....................... ($XXX)
+  Payroll .................... ($XXX)
+  Utilities .................. ($XXX)
+  Marketing .................. ($XXX)
+  Other ...................... ($XXX)
+  Total OpEx ................. ($X,XXX)
+
+Net Operating Income ......... $X,XXX
+Taxes (est.) ................. ($XXX)
+─────────────────────────────────────
+NET PROFIT ................... $X,XXX  (XX.X%)
 ```
-HTTP 429: Too many connections issued to the database
-```
 
-This is Supabase Storage's REST endpoint failing internally when it tries to validate RLS / write the object metadata to Postgres. It's a **transient pool-pressure error**, not a real permission problem.
+Print-friendly layout, includes store name + period header.
 
-The current retry helper marks 429 as retriable, but:
-- Backoff starts at only 600ms × 2.2 → far too short for the DB pool to recover.
-- We don't honor the server's `Retry-After` header.
-- The "Voice note failed" toast fires immediately on the first 429, even though the message is still fully retriable.
+### 10. Empty / loading states
+- Skeleton loaders on first paint
+- Friendly empty state when no data ("Record your first invoice to see your P&L")
+- Error toast if a query fails
 
-## Fix
+### 11. Export upgrades
+- **CSV**: extended (KPIs + daily series + category + vendor + AR aging + tax)
+- **PDF**: uses browser print with a dedicated `@media print` stylesheet
+- "Email to accountant" button (uses existing send-email edge function if available, otherwise mailto: with CSV attached)
 
-### 1. `src/lib/voiceUpload.ts`
-- Parse the `Retry-After` response header on upload failures and attach it to `UploadHttpError` as `retryAfterMs`.
-- In `retryWithBackoff`, when the error is a 429: wait for `max(retryAfterMs, 1.5s × 2^attempt)` instead of the generic backoff. Yields ~1.5s → 3s → 6s.
+---
 
-### 2. `src/components/chat/PersonalChat.tsx` and `src/components/chat/GroupChat.tsx`
-- Bump voice-upload retry from `attempts: 3` to `attempts: 4` so we get one extra attempt past the 6s wait.
-- In the catch block, **don't** flip the bubble to `failed` when the error is a retriable 429 that exhausted attempts — instead show "Reconnecting…" status and auto-retry once more after 8 seconds in the background. Only mark `failed` (with the Resend button) after that final attempt also fails.
+## Technical details
 
-### 3. Toast copy
-- Change the failure toast from "Voice note failed to send" to "Server is busy — tap Resend" specifically for 429 errors so the user understands it's transient.
+**Files to edit**
+- `src/components/admin/store/autorepair/finance/FinanceProfitLossSection.tsx` — main rewrite (keep file, expand)
 
-## Files touched
-- `src/lib/voiceUpload.ts` — retry-after parsing + 429-aware backoff
-- `src/components/chat/PersonalChat.tsx` — bump attempts, smarter catch
-- `src/components/chat/GroupChat.tsx` — same treatment
+**New helper files**
+- `src/components/admin/store/autorepair/finance/pnl/PnLKpiStrip.tsx`
+- `src/components/admin/store/autorepair/finance/pnl/PnLTrendChart.tsx`
+- `src/components/admin/store/autorepair/finance/pnl/PnLIncomeBreakdown.tsx`
+- `src/components/admin/store/autorepair/finance/pnl/PnLExpenseBreakdown.tsx` (with vendor/category/method toggle + drill-down drawer)
+- `src/components/admin/store/autorepair/finance/pnl/PnLCashFlow.tsx`
+- `src/components/admin/store/autorepair/finance/pnl/PnLArAging.tsx`
+- `src/components/admin/store/autorepair/finance/pnl/PnLTaxEstimate.tsx`
+- `src/components/admin/store/autorepair/finance/pnl/PnLStatementView.tsx`
+- `src/components/admin/store/autorepair/finance/pnl/PnLDateRangeBar.tsx` (presets + compare + group-by)
+- `src/lib/admin/pnlCalculations.ts` — pure helpers: `computeKpis`, `groupSeries`, `agingBuckets`, `categorize`, `compareDelta`
+- `src/lib/admin/pnlCsvExport.ts` — extended CSV builder (modeled on existing `performanceCsvExport.ts`)
 
-No DB or edge function changes. No new dependencies.
+**Data sources (existing tables, no DB changes needed)**
+- `ar_invoice_payments` — paid revenue, by method
+- `ar_invoices` — billed revenue, items jsonb, AR aging, sales tax
+- `ar_expenses` — operating expenses, by category/vendor/method
+- `ar_payouts` — cash-out tracking
+- All filtered by `store_id`
+
+**Charting**: use existing `recharts` already in the project (used elsewhere in admin). Bar + line composed chart; small sparklines via `<Sparkline>` from `recharts`.
+
+**State**: keep React Query; add a single `useArFinanceData(storeId, from, to, compareMode)` hook that fans out the parallel queries (mirrors the pattern in `useStoreMarketingOverview.ts`).
+
+**Performance**: parallel `Promise.all` on the 4 queries; memoized aggregations; `staleTime: 30s`; query invalidation when date range changes.
+
+**Styling**: high-density v2026 standard already used elsewhere — `text-[11px/13px]`, `p-2/p-3`, `.zivo-card-organic`, emerald/rose tokens for income/expense, Lucide icons only.
+
+**Print**: scoped `@media print` block in `PnLStatementView.tsx` to hide controls and force black-on-white.
+
+---
+
+## Out of scope (can do later if you want)
+- Multi-store consolidated P&L
+- Budget vs Actual
+- Class/department tagging
+- QuickBooks/Xero sync
+- Locked accounting periods
