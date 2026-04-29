@@ -177,6 +177,8 @@ export default function AutoRepairPartShopSection({ storeId }: Props) {
         </CardContent>
       </Card>
 
+      <SuppliersNetworkCard query={q} />
+
       {isLoading ? (
         <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
           {[0,1,2,3,4,5].map(i => <div key={i} className="h-44 rounded-xl bg-muted animate-pulse" />)}
