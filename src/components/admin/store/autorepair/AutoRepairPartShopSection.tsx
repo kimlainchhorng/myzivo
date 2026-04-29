@@ -17,7 +17,11 @@ import Wrench from "lucide-react/dist/esm/icons/wrench";
 import Pencil from "lucide-react/dist/esm/icons/pencil";
 import Trash2 from "lucide-react/dist/esm/icons/trash-2";
 import Sparkles from "lucide-react/dist/esm/icons/sparkles";
+import Store from "lucide-react/dist/esm/icons/store";
+import ExternalLink from "lucide-react/dist/esm/icons/external-link";
 import { toast } from "sonner";
+import { PARTS_SUPPLIERS, getSupplierSearchUrl, type PartsSupplier } from "@/config/partsSuppliers";
+import PartsSupplierLogo from "./PartsSupplierLogo";
 
 interface Props { storeId: string }
 type Part = {
