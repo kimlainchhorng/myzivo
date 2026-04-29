@@ -235,28 +235,40 @@ Deno.serve(async (req) => {
 
   // ===== Credential autofill =====
   var pendingCreds = null;
+  var applying = false;
   function setVal(el, val){
     try {
       var proto = Object.getPrototypeOf(el);
       var desc = Object.getOwnPropertyDescriptor(proto, 'value');
       var setter = desc && desc.set;
       if (setter) setter.call(el, val); else el.value = val;
+      // Floating-label inputs (AutoZonePro etc.) only lift on focus/blur.
+      try { el.focus({ preventScroll: true }); } catch(_) {}
       el.dispatchEvent(new Event('input', { bubbles: true }));
       el.dispatchEvent(new Event('change', { bubbles: true }));
+      el.dispatchEvent(new Event('keyup', { bubbles: true }));
+      try { el.blur(); } catch(_) {}
     } catch(e) {}
   }
   function applyCreds(creds){
-    if (!creds) return false;
+    if (!creds || applying) return false;
+    applying = true;
     var filled = 0;
-    var inputs = document.querySelectorAll('input');
-    for (var i = 0; i < inputs.length; i++) {
-      var el = inputs[i];
-      if (el.disabled || el.readOnly || el.type === 'hidden') continue;
-      var hint = ((el.name||'') + ' ' + (el.id||'') + ' ' + (el.getAttribute('autocomplete')||'') + ' ' + (el.placeholder||'') + ' ' + (el.type||'')).toLowerCase();
-      if (el.type === 'password' && creds.password) { setVal(el, creds.password); filled++; }
-      else if (creds.username && (el.type === 'email' || /user|email|login|account|signin|userid/.test(hint))) {
-        if (!el.value) { setVal(el, creds.username); filled++; }
+    try {
+      var inputs = document.querySelectorAll('input');
+      for (var i = 0; i < inputs.length; i++) {
+        var el = inputs[i];
+        if (el.disabled || el.readOnly || el.type === 'hidden') continue;
+        var hint = ((el.name||'') + ' ' + (el.id||'') + ' ' + (el.getAttribute('autocomplete')||'') + ' ' + (el.placeholder||'') + ' ' + (el.type||'')).toLowerCase();
+        if (el.type === 'password' && creds.password && el.value !== creds.password) {
+          setVal(el, creds.password); filled++;
+        } else if (creds.username && el.type !== 'password' &&
+                   (el.type === 'email' || /user|email|login|account|signin|userid/.test(hint))) {
+          if (!el.value) { setVal(el, creds.username); filled++; }
+        }
       }
+    } finally {
+      applying = false;
     }
     return filled > 0;
   }
@@ -267,12 +279,20 @@ Deno.serve(async (req) => {
     var ok = applyCreds(pendingCreds);
     parent.postMessage({ type: 'zivo-autofill-result', filled: ok }, '*');
   });
-  // Re-apply on DOM changes (handles 2-step logins where password appears later)
+  // Debounced, additions-only observer for the 2-step password screen.
   try {
-    var mo = new MutationObserver(function(){
-      if (pendingCreds) applyCreds(pendingCreds);
+    var moTimer = null;
+    var mo = new MutationObserver(function(records){
+      if (!pendingCreds || applying) return;
+      var hasAdds = false;
+      for (var i = 0; i < records.length; i++) {
+        if (records[i].addedNodes && records[i].addedNodes.length) { hasAdds = true; break; }
+      }
+      if (!hasAdds) return;
+      if (moTimer) clearTimeout(moTimer);
+      moTimer = setTimeout(function(){ applyCreds(pendingCreds); }, 150);
     });
-    mo.observe(document.documentElement, { childList: true, subtree: true });
+    mo.observe(document.body || document.documentElement, { childList: true, subtree: true });
   } catch(e) {}
 })();
 </script>`;

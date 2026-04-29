@@ -1,71 +1,70 @@
-## Fixes for the Supplier In-App Browser
+## Fix Autofill Issues on AutoZonePro
 
-Based on the AutoZonePro screenshot, the proxy now connects, but several UX and functional issues remain.
+The screenshot shows two real issues with the in-app browser autofill:
 
-### 1. Auto-fill credentials into supplier login form
-Update the script injected by `supabase/functions/supplier-proxy/index.ts` to:
-- Detect login input fields (`input[type=email]`, `input[name*=user]`, `input[name*=email]`, `input[type=password]`).
-- Listen for a `postMessage` from the parent (`zivo-autofill`) carrying `{ username, password }`.
-- Fill the matching fields and dispatch `input` + `change` events so React/Angular forms register the value.
-- Re-run on DOM mutations (handles two-step logins like AutoZonePro where the password field appears after clicking Continue).
+### 1. Username + placeholder overlap ("Kimlain" stacked on "Username *")
+AutoZonePro uses a **floating-label** input. Our autofill sets `el.value` and dispatches `input`/`change`, but the floating label only lifts on `focus` / `blur`. Result: the value renders behind the placeholder text.
 
-In `SupplierBrowserModal.tsx`, after the proxied page loads (or on iframe `load`), post the saved credentials to the iframe. Add a manual "Auto-fill" button next to "Save & open" so the user can re-trigger it on page 2 of the login.
+**Fix:** in the injected `setVal()`, additionally call `el.focus()` → dispatch events → `el.blur()` so the host site's label-lift logic runs. Also dispatch `keyup` for sites that listen to it.
 
-### 2. Mask password by default
-In `SupplierBrowserModal.tsx`, the password input should default to `type="password"` (it currently shows plain text). The eye-toggle stays, but starts in masked state.
+### 2. Console error: `Cannot set property attributeName of MutationRecord (getter only)`
+Our `MutationObserver` re-applies credentials on every DOM change. When AutoZone's own scripts run after our `input`/`change` events, our observer fires again, and the host site's code (which reuses `MutationRecord` objects in some patterns) collides — triggering the read-only setter error and a feedback loop.
 
-### 3. Fix modal layout (cramped supplier content)
-- Collapse the credential bar into a compact single-line strip (~56px) once credentials are saved, with an "Edit credentials" expand toggle.
-- Make the iframe area `flex-1` with `min-height: 0` so it fills remaining space.
-- Remove the black footer bleed by setting `overflow: hidden` on the modal body wrapper.
-
-### 4. Two-step login awareness
-Add a small inline hint under the credential bar for known two-step suppliers (AutoZonePro, NAPA PROLink, etc.):
-> "This supplier uses a 2-step login. Click Auto-fill again after entering your username."
-
-Maintain a list in `src/config/partsSuppliers.ts` with a `loginFlow: "single" | "two-step"` field.
-
-### 5. Visual feedback
-- Toast on "Save & open": "Credentials saved locally."
-- Loading skeleton inside iframe area while `loadProxyPage` is fetching.
-- Toast on autofill success: "Credentials filled."
+**Fix:**
+- Add an `applying` re-entry guard so `applyCreds()` cannot recurse.
+- Skip refilling fields whose value is already correct (avoids redundant events).
+- Only react to mutations that have `addedNodes` (real DOM additions, like the password step appearing) — ignore attribute/character mutations.
+- Debounce the observer callback (150ms) so a burst of mutations triggers one refill, not dozens.
+- Observe `document.body` (not `document.documentElement`) to reduce noise from `<html>`/`<head>` attribute churn.
 
 ### Technical Details
 
-**Files to modify:**
-- `supabase/functions/supplier-proxy/index.ts` — extend injected script with autofill listener + MutationObserver.
-- `src/components/admin/store/autorepair/SupplierBrowserModal.tsx` — collapsible credential bar, default password masking, autofill button, postMessage on iframe load, loading state, toasts.
-- `src/config/partsSuppliers.ts` — add `loginFlow` field for known suppliers.
+**File:** `supabase/functions/supplier-proxy/index.ts` — replace the autofill block (lines ~236–277) with the hardened version:
 
-**Autofill message contract (parent → iframe):**
-```ts
-iframe.contentWindow?.postMessage(
-  { type: "zivo-autofill", username, password },
-  "*"
-);
-```
-
-**Injected handler (iframe side):**
 ```js
-window.addEventListener("message", (e) => {
-  if (e.data?.type !== "zivo-autofill") return;
-  const setVal = (el, val) => {
-    const proto = Object.getPrototypeOf(el);
-    const setter = Object.getOwnPropertyDescriptor(proto, "value")?.set;
-    setter?.call(el, val);
-    el.dispatchEvent(new Event("input", { bubbles: true }));
-    el.dispatchEvent(new Event("change", { bubbles: true }));
-  };
-  document.querySelectorAll("input").forEach((el) => {
-    const n = (el.name + " " + el.id + " " + el.type).toLowerCase();
-    if (/user|email|login/.test(n) && el.type !== "password") setVal(el, e.data.username);
-    if (el.type === "password") setVal(el, e.data.password);
-  });
-});
+var pendingCreds = null;
+var applying = false;
+function setVal(el, val){
+  try {
+    var setter = Object.getOwnPropertyDescriptor(Object.getPrototypeOf(el), 'value')?.set;
+    if (setter) setter.call(el, val); else el.value = val;
+    try { el.focus({ preventScroll: true }); } catch(_){}
+    el.dispatchEvent(new Event('input',  { bubbles: true }));
+    el.dispatchEvent(new Event('change', { bubbles: true }));
+    el.dispatchEvent(new Event('keyup',  { bubbles: true }));
+    try { el.blur(); } catch(_){}
+  } catch(e){}
+}
+function applyCreds(creds){
+  if (!creds || applying) return false;
+  applying = true;
+  var filled = 0;
+  try {
+    document.querySelectorAll('input').forEach(function(el){
+      if (el.disabled || el.readOnly || el.type === 'hidden') return;
+      var hint = ((el.name||'')+' '+(el.id||'')+' '+(el.autocomplete||'')+' '+(el.placeholder||'')+' '+(el.type||'')).toLowerCase();
+      if (el.type === 'password' && creds.password && el.value !== creds.password) {
+        setVal(el, creds.password); filled++;
+      } else if (creds.username && el.type !== 'password' &&
+                 (el.type === 'email' || /user|email|login|account|signin|userid/.test(hint))) {
+        if (!el.value) { setVal(el, creds.username); filled++; }
+      }
+    });
+  } finally { applying = false; }
+  return filled > 0;
+}
+// Debounced, additions-only observer for the 2-step password screen.
+var moTimer = null;
+new MutationObserver(function(records){
+  if (!pendingCreds || applying) return;
+  if (!records.some(function(r){ return r.addedNodes && r.addedNodes.length; })) return;
+  clearTimeout(moTimer);
+  moTimer = setTimeout(function(){ applyCreds(pendingCreds); }, 150);
+}).observe(document.body || document.documentElement, { childList: true, subtree: true });
 ```
 
-A `MutationObserver` re-runs the same logic when new inputs appear (covers AutoZonePro's password step).
+After the change, redeploy the `supplier-proxy` edge function.
 
 ### Out of Scope
-- True SSO / token-based supplier auth (would require partner API agreements).
-- Storing credentials server-side (intentionally kept in `localStorage` per existing security note shown in the bar).
+- Fixing AutoZonePro's own internal scripts (we only control our injected code).
+- Per-supplier custom fill selectors — generic input matching is sufficient for now.
