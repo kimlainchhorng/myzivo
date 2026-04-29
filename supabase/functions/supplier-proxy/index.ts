@@ -17,6 +17,18 @@
  */
 import { corsHeaders } from "https://esm.sh/@supabase/supabase-js@2.95.0/cors";
 
+const getCorsHeaders = (req: Request): Record<string, string> => {
+  const origin = req.headers.get("origin") ?? "*";
+  return {
+    ...corsHeaders,
+    "Access-Control-Allow-Origin": origin,
+    "Access-Control-Allow-Credentials": "true",
+    "Access-Control-Allow-Methods": "GET, POST, PUT, PATCH, DELETE, OPTIONS",
+    "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
+    "Vary": "Origin",
+  };
+};
+
 const ALLOWED_HOSTS = new Set([
   "autozonepro.com", "www.autozonepro.com", "autozone.com", "www.autozone.com",
   "firstcallonline.com", "www.firstcallonline.com", "oreillyauto.com", "www.oreillyauto.com",
@@ -64,25 +76,27 @@ const STRIP_HEADERS = new Set([
 ]);
 
 Deno.serve(async (req) => {
+  const dynamicCorsHeaders = getCorsHeaders(req);
+
   if (req.method === "OPTIONS") {
-    return new Response("ok", { headers: corsHeaders });
+    return new Response("ok", { headers: dynamicCorsHeaders });
   }
 
   const url = new URL(req.url);
   const target = url.searchParams.get("u");
   if (!target) {
-    return new Response("Missing ?u=<url>", { status: 400, headers: corsHeaders });
+    return new Response("Missing ?u=<url>", { status: 400, headers: dynamicCorsHeaders });
   }
 
   let targetUrl: URL;
   try {
     targetUrl = new URL(target);
   } catch {
-    return new Response("Invalid URL", { status: 400, headers: corsHeaders });
+    return new Response("Invalid URL", { status: 400, headers: dynamicCorsHeaders });
   }
 
   if (!/^https?:$/.test(targetUrl.protocol)) {
-    return new Response("Only http(s) supported", { status: 400, headers: corsHeaders });
+    return new Response("Only http(s) supported", { status: 400, headers: dynamicCorsHeaders });
   }
 
   const host = targetUrl.hostname.toLowerCase();
@@ -92,14 +106,14 @@ Deno.serve(async (req) => {
   if (!allowed) {
     return new Response(JSON.stringify({ error: "HOST_NOT_ALLOWED", host }), {
       status: 403,
-      headers: { ...corsHeaders, "Content-Type": "application/json" },
+      headers: { ...dynamicCorsHeaders, "Content-Type": "application/json" },
     });
   }
 
   if (url.searchParams.get("probe") === "1") {
     return new Response(JSON.stringify({ ok: true, host }), {
       status: 200,
-      headers: { ...corsHeaders, "Content-Type": "application/json" },
+      headers: { ...dynamicCorsHeaders, "Content-Type": "application/json" },
     });
   }
 
@@ -126,12 +140,12 @@ Deno.serve(async (req) => {
   } catch (e) {
     return new Response(
       JSON.stringify({ error: "UPSTREAM_FAILED", message: String(e) }),
-      { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } },
+      { status: 200, headers: { ...dynamicCorsHeaders, "Content-Type": "application/json" } },
     );
   }
 
   // Build response headers, stripping frame-blockers
-  const respHeaders = new Headers(corsHeaders);
+  const respHeaders = new Headers(dynamicCorsHeaders);
   upstream.headers.forEach((v, k) => {
     if (STRIP_HEADERS.has(k.toLowerCase())) return;
     if (k.toLowerCase() === "set-cookie") {
