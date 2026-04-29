@@ -270,3 +270,81 @@ export default function AutoRepairPartShopSection({ storeId }: Props) {
     </div>
   );
 }
+
+/* ---------------- Suppliers Network ---------------- */
+
+const SUPPLIER_CATEGORIES = ["All", "Retail Chain", "OE / Dealer", "Wholesale Distributor", "Online Marketplace", "Specialty"] as const;
+
+function SuppliersNetworkCard({ query }: { query: string }) {
+  const [supCat, setSupCat] = useState<(typeof SUPPLIER_CATEGORIES)[number]>("All");
+  const [supQ, setSupQ] = useState("");
+
+  const list = useMemo(() => {
+    const q = supQ.trim().toLowerCase();
+    return PARTS_SUPPLIERS.filter(s =>
+      (supCat === "All" || s.category === supCat) &&
+      (!q || s.name.toLowerCase().includes(q) || (s.shortName?.toLowerCase().includes(q) ?? false))
+    );
+  }, [supCat, supQ]);
+
+  const openSupplier = (s: PartsSupplier) => {
+    const url = (query && getSupplierSearchUrl(s, query)) || (s.domain ? `https://${s.domain}` : null);
+    if (url) window.open(url, "_blank", "noopener,noreferrer");
+  };
+
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle className="text-sm flex items-center gap-2">
+          <Store className="w-4 h-4" /> Parts Suppliers
+          <Badge variant="outline" className="ml-1 text-[10px]">{PARTS_SUPPLIERS.length}</Badge>
+          {query && <Badge variant="secondary" className="ml-1 text-[10px]">Search: {query}</Badge>}
+        </CardTitle>
+      </CardHeader>
+      <CardContent className="space-y-3">
+        <div className="relative">
+          <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground" />
+          <Input
+            className="pl-8 h-9"
+            placeholder="Search suppliers (AutoZone, NAPA, RockAuto...)"
+            value={supQ}
+            onChange={(e) => setSupQ(e.target.value)}
+          />
+        </div>
+        <div className="flex gap-1.5 overflow-x-auto pb-1">
+          {SUPPLIER_CATEGORIES.map(c => (
+            <Button
+              key={c}
+              size="sm"
+              variant={supCat === c ? "default" : "outline"}
+              onClick={() => setSupCat(c)}
+              className="h-7 px-3 text-xs shrink-0"
+            >
+              {c}
+            </Button>
+          ))}
+        </div>
+        <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-1.5 max-h-[320px] overflow-auto">
+          {list.map(s => (
+            <button
+              key={s.id}
+              onClick={() => openSupplier(s)}
+              className="flex items-center gap-2.5 text-left text-[12px] border border-border rounded-md px-2 py-1.5 hover:border-primary hover:bg-primary/5 transition-colors group"
+            >
+              <PartsSupplierLogo supplier={s} size="md" />
+              <div className="min-w-0 flex-1">
+                <p className="font-medium truncate">{s.shortName ?? s.name}</p>
+                <p className="text-[10px] text-muted-foreground truncate">{s.category}</p>
+              </div>
+              <ExternalLink className="w-3 h-3 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity" />
+            </button>
+          ))}
+          {list.length === 0 && (
+            <p className="text-xs text-muted-foreground col-span-full text-center py-4">No suppliers match.</p>
+          )}
+        </div>
+      </CardContent>
+    </Card>
+  );
+}
+
