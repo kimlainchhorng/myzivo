@@ -199,11 +199,7 @@ Deno.serve(async (req) => {
     e.preventDefault();
     parent.postMessage({ type: 'zivo-supplier-navigate', url: rewrite(href), method: 'GET' }, '*');
   }, true);
-  // Rewrite form submissions
-  document.addEventListener('submit', function(e){
-    var f = e.target;
-    if (!f || !f.action) return;
-    e.preventDefault();
+  function submitFormThroughProxy(f){
     var method = (f.method || 'GET').toUpperCase();
     var action = rewrite(f.action);
     var params = new URLSearchParams(new FormData(f));
@@ -212,7 +208,15 @@ Deno.serve(async (req) => {
       return;
     }
     parent.postMessage({ type: 'zivo-supplier-navigate', url: action, method: method, body: params.toString(), contentType: 'application/x-www-form-urlencoded' }, '*');
-  }, true);
+  }
+  // Rewrite form submissions after the supplier app's own handlers have run.
+  document.addEventListener('submit', function(e){
+    var f = e.target;
+    if (!f || !f.action) return;
+    if (e.defaultPrevented) return;
+    e.preventDefault();
+    submitFormThroughProxy(f);
+  }, false);
   var nativeFetch = window.fetch;
   if (nativeFetch) {
     window.fetch = function(input, init){
@@ -261,6 +265,17 @@ Deno.serve(async (req) => {
       if (!label.style.transform) label.style.transform = 'translateY(calc(-1 * (var(--st-unit-5, 20px) + 2.5px)))';
     } catch(e) {}
   }
+  function isVisible(el){
+    try { var r = el.getBoundingClientRect(); return !!(r.width || r.height) && getComputedStyle(el).visibility !== 'hidden'; } catch(e) { return true; }
+  }
+  function enableButton(btn){
+    try { btn.disabled = false; } catch(_) {}
+    try { btn.removeAttribute('disabled'); } catch(_) {}
+    try { btn.removeAttribute('aria-disabled'); } catch(_) {}
+    try { btn.removeAttribute('data-disabled'); } catch(_) {}
+    try { btn.className = String(btn.className || '').replace(/\S*(?:--|_|-)disabled\S*/gi, '').replace(/\bdisabled\b/gi, ''); } catch(_) {}
+    try { btn.style.pointerEvents = 'auto'; btn.style.cursor = 'pointer'; btn.style.opacity = '1'; } catch(_) {}
+  }
   function enableFilledFormControls(){
     try {
       var forms = document.querySelectorAll('form');
@@ -273,25 +288,23 @@ Deno.serve(async (req) => {
           if (input.type !== 'hidden' && input.type !== 'checkbox' && String(input.value || '').trim()) { hasValue = true; break; }
         }
         if (!hasValue) continue;
-        var buttons = form.querySelectorAll('button, [role="button"]');
+        var buttons = form.querySelectorAll('button, [role="button"], input[type="submit"], input[type="button"]');
         for (var b = 0; b < buttons.length; b++) {
           var btn = buttons[b];
-          var text = ((btn.getAttribute('aria-label') || '') + ' ' + (btn.textContent || '')).toLowerCase();
+          var text = ((btn.getAttribute('aria-label') || '') + ' ' + (btn.textContent || '') + ' ' + (btn.value || '')).toLowerCase();
           if (!/continue|sign\s*in|login|log\s*in|submit/.test(text)) continue;
-          try { btn.disabled = false; } catch(_) {}
-          btn.removeAttribute('disabled');
-          btn.removeAttribute('aria-disabled');
-          btn.className = String(btn.className || '').replace(/\S*--disabled\S*/g, '').replace(/\S*_disabled\S*/gi, '');
-          btn.style.pointerEvents = 'auto';
-          btn.style.cursor = 'pointer';
-          btn.style.opacity = '1';
+          enableButton(btn);
         }
       }
     } catch(e) {}
   }
   function setVal(el, val){
     try {
+      try { el.scrollIntoView({ block: 'center', inline: 'nearest' }); } catch(_) {}
+      try { el.click(); } catch(_) {}
       try { el.focus({ preventScroll: true }); } catch(_) {}
+      try { el.dispatchEvent(new FocusEvent('focus', { bubbles: true })); } catch(_) { el.dispatchEvent(new Event('focus', { bubbles: true })); }
+      try { el.dispatchEvent(new FocusEvent('focusin', { bubbles: true })); } catch(_) { el.dispatchEvent(new Event('focusin', { bubbles: true })); }
       var setter = getValueSetter(el);
       if (setter) setter.call(el, val); else el.value = val;
       try { if (el._valueTracker) el._valueTracker.setValue(''); } catch(_) {}
@@ -299,9 +312,11 @@ Deno.serve(async (req) => {
       try { el.dispatchEvent(new InputEvent('beforeinput', { bubbles: true, cancelable: true, inputType: 'insertText', data: val })); } catch(_) {}
       try { el.dispatchEvent(new InputEvent('input', { bubbles: true, cancelable: true, inputType: 'insertText', data: val })); }
       catch(_) { el.dispatchEvent(new Event('input', { bubbles: true })); }
+      try { el.dispatchEvent(new KeyboardEvent('keydown', { bubbles: true, key: 'Tab' })); } catch(_) {}
       el.dispatchEvent(new Event('change', { bubbles: true }));
       el.dispatchEvent(new Event('keyup', { bubbles: true }));
-      el.dispatchEvent(new Event('blur', { bubbles: true }));
+      try { el.dispatchEvent(new FocusEvent('focusout', { bubbles: true })); } catch(_) { el.dispatchEvent(new Event('focusout', { bubbles: true })); }
+      try { el.dispatchEvent(new FocusEvent('blur', { bubbles: true })); } catch(_) { el.dispatchEvent(new Event('blur', { bubbles: true })); }
       try { el.blur(); } catch(_) {}
     } catch(e) {}
   }
@@ -345,6 +360,7 @@ Deno.serve(async (req) => {
     var forms = document.querySelectorAll('form');
     for (var f = 0; f < forms.length; f++) {
       var form = forms[f];
+      if (!isVisible(form)) continue;
       var hasValue = false;
       var inputs = form.querySelectorAll('input');
       for (var i = 0; i < inputs.length; i++) {
@@ -352,32 +368,58 @@ Deno.serve(async (req) => {
         if (inp.type !== 'hidden' && inp.type !== 'checkbox' && String(inp.value || '').trim()) { hasValue = true; break; }
       }
       if (!hasValue) continue;
-      var buttons = form.querySelectorAll('button, [role="button"], input[type="submit"]');
+      var buttons = form.querySelectorAll('button, [role="button"], input[type="submit"], input[type="button"]');
       for (var b = 0; b < buttons.length; b++) {
         var btn = buttons[b];
         var text = ((btn.getAttribute('aria-label') || '') + ' ' + (btn.textContent || '') + ' ' + (btn.value || '')).toLowerCase();
-        if (/continue|sign\s*in|login|log\s*in|next|submit/.test(text)) return { form: form, btn: btn };
+        if (isVisible(btn) && /continue|sign\s*in|login|log\s*in|next|submit/.test(text)) return { form: form, btn: btn };
       }
       return { form: form, btn: null };
     }
+    var allButtons = document.querySelectorAll('button, [role="button"], input[type="submit"], input[type="button"]');
+    for (var j = 0; j < allButtons.length; j++) {
+      var anyBtn = allButtons[j];
+      var anyText = ((anyBtn.getAttribute('aria-label') || '') + ' ' + (anyBtn.textContent || '') + ' ' + (anyBtn.value || '')).toLowerCase();
+      if (isVisible(anyBtn) && /continue|sign\s*in|login|log\s*in|next|submit/.test(anyText)) return { form: anyBtn.closest && anyBtn.closest('form'), btn: anyBtn };
+    }
     return null;
+  }
+  function prepareFieldsForSubmit(target){
+    try {
+      var scope = (target && target.form) || document;
+      var inputs = scope.querySelectorAll('input');
+      for (var i = 0; i < inputs.length; i++) {
+        var el = inputs[i];
+        if (el.disabled || el.readOnly || el.type === 'hidden') continue;
+        if (!String(el.value || '').trim()) continue;
+        try { el.focus({ preventScroll: true }); } catch(_) {}
+        try { el.dispatchEvent(new FocusEvent('focusin', { bubbles: true })); } catch(_) {}
+        try { el.dispatchEvent(new InputEvent('input', { bubbles: true, inputType: 'insertText', data: el.value })); } catch(_) { el.dispatchEvent(new Event('input', { bubbles: true })); }
+        el.dispatchEvent(new Event('change', { bubbles: true }));
+        try { el.dispatchEvent(new FocusEvent('focusout', { bubbles: true })); } catch(_) {}
+        try { el.blur(); } catch(_) {}
+      }
+    } catch(e) {}
   }
   function triggerSubmit(){
     try {
       var target = findSubmitTarget();
       if (!target) return false;
+      prepareFieldsForSubmit(target);
       // Make sure the button is enabled before clicking (host JS may not have re-evaluated yet)
       if (target.btn) {
-        try { target.btn.disabled = false; } catch(_) {}
-        target.btn.removeAttribute('disabled');
-        target.btn.removeAttribute('aria-disabled');
-        target.btn.className = String(target.btn.className || '').replace(/\S*--disabled\S*/g, '').replace(/\S*_disabled\S*/gi, '');
+        enableButton(target.btn);
+        try { target.btn.dispatchEvent(new PointerEvent('pointerdown', { bubbles: true, cancelable: true })); } catch(_) {}
+        try { target.btn.dispatchEvent(new MouseEvent('mousedown', { bubbles: true, cancelable: true })); } catch(_) {}
+        try { target.btn.dispatchEvent(new MouseEvent('mouseup', { bubbles: true, cancelable: true })); } catch(_) {}
         try { target.btn.click(); return true; } catch(_) {}
       }
       // Fall back to form.requestSubmit / submit — our submit interceptor will catch it.
       try {
-        if (typeof target.form.requestSubmit === 'function') target.form.requestSubmit();
-        else target.form.submit();
+        if (target.form) {
+          if (typeof target.form.requestSubmit === 'function') target.form.requestSubmit();
+          else submitFormThroughProxy(target.form);
+        }
         return true;
       } catch(_) {}
     } catch(e) {}
@@ -395,7 +437,7 @@ Deno.serve(async (req) => {
       var submitter = setInterval(function(){
         attempts++;
         var did = triggerSubmit();
-        if (did || attempts >= 6) clearInterval(submitter);
+        if (did || attempts >= 12) clearInterval(submitter);
       }, 250);
     }
     parent.postMessage({ type: 'zivo-autofill-result', filled: ok }, '*');
@@ -412,7 +454,7 @@ Deno.serve(async (req) => {
     const htmlHeaders = new Headers(dynamicCorsHeaders);
     htmlHeaders.set("content-type", "text/html; charset=utf-8");
     htmlHeaders.set("cache-control", upstream.headers.get("cache-control") ?? "no-store");
-    htmlHeaders.set("x-zivo-proxy-version", "html-srcdoc-cors-v4-autosubmit");
+    htmlHeaders.set("x-zivo-proxy-version", "html-srcdoc-cors-v5-autosubmit-click-events");
     upstream.headers.forEach((v, k) => {
       if (k.toLowerCase() === "set-cookie") {
         htmlHeaders.append("Set-Cookie", v.replace(/;\s*Domain=[^;]+/i, "").replace(/;\s*SameSite=[^;]+/i, "; SameSite=None"));
