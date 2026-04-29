@@ -89,12 +89,22 @@ export default function SupplierBrowserModal({ storeId, supplier, query, open, o
     const existing = loadCreds(storeId, supplier.id);
     setEmail(existing?.email ?? "");
     setPassword(existing?.password ?? "");
-    setShowCreds(!!existing);
+    // Keep panel collapsed if creds already exist (cleaner, more space for portal).
+    setShowCreds(!existing);
     setShowPwd(false);
     setBrowserIssue(null);
     setIframeLoading(true);
     setIframeDoc(null);
   }, [open, supplier, storeId]);
+
+  // Push saved creds into the proxied iframe so it can autofill the login form.
+  const sendAutofill = useCallback(() => {
+    const win = iframeRef.current?.contentWindow;
+    if (!win) return false;
+    if (!email && !password) return false;
+    win.postMessage({ type: "zivo-autofill", username: email, password }, "*");
+    return true;
+  }, [email, password]);
 
   const loadProxyPage = useCallback(async (url: string, init?: RequestInit) => {
     setIframeLoading(true);
