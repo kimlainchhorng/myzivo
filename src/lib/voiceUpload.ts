@@ -53,12 +53,15 @@ export class UploadHttpError extends Error {
   url?: string;
   phase?: "preflight" | "upload" | "insert";
   body?: string;
-  constructor(status: number, message: string, url?: string, body?: string) {
+  /** Server-supplied Retry-After in milliseconds (parsed from header). */
+  retryAfterMs?: number;
+  constructor(status: number, message: string, url?: string, body?: string, retryAfterMs?: number) {
     super(message);
     this.name = "UploadHttpError";
     this.status = status;
     this.url = url;
     this.body = body;
+    this.retryAfterMs = retryAfterMs;
     // 408 timeout, 429 rate limit, 5xx — safe to retry
     this.retriable = status === 408 || status === 429 || (status >= 500 && status < 600);
   }
@@ -230,7 +233,18 @@ export async function uploadVoiceWithProgress(opts: UploadVoiceOpts): Promise<Up
         } catch {
           if (body) msg = `${msg}: ${body.slice(0, 160)}`;
         }
-        const err = new UploadHttpError(xhr.status, msg, url, body);
+        // Parse Retry-After header (seconds or HTTP-date) for 429/503.
+        let retryAfterMs: number | undefined;
+        const ra = xhr.getResponseHeader("Retry-After");
+        if (ra) {
+          const asInt = parseInt(ra, 10);
+          if (!Number.isNaN(asInt)) retryAfterMs = asInt * 1000;
+          else {
+            const asDate = Date.parse(ra);
+            if (!Number.isNaN(asDate)) retryAfterMs = Math.max(0, asDate - Date.now());
+          }
+        }
+        const err = new UploadHttpError(xhr.status, msg, url, body, retryAfterMs);
         err.phase = "upload";
         reject(err);
       }
@@ -311,7 +325,15 @@ export async function retryWithBackoff<T>(
       if (err instanceof UploadAbortedError) throw err;
       if (i === attempts - 1 || !isRetriable(err)) throw err;
       const jitter = Math.random() * 200;
-      const delay = base * Math.pow(2.2, i) + jitter;
+      // 429 → respect Retry-After (or use a much longer backoff while the
+      // database recovers from connection pressure): 1.5s → 3s → 6s → 12s.
+      let delay: number;
+      if (err instanceof UploadHttpError && err.status === 429) {
+        const ra = err.retryAfterMs ?? 0;
+        delay = Math.max(ra, 1500 * Math.pow(2, i)) + jitter;
+      } else {
+        delay = base * Math.pow(2.2, i) + jitter;
+      }
       await sleep(delay, opts.signal);
     }
   }

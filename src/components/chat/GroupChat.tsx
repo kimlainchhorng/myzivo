@@ -359,7 +359,7 @@ export default function GroupChat({ groupId, groupName, groupAvatar, onClose }: 
               },
             });
           },
-          { signal: controller.signal, attempts: 3, baseDelayMs: 600 },
+          { signal: controller.signal, attempts: 4, baseDelayMs: 600 },
         );
         publicUrl = result.publicUrl;
         storagePath = result.path;
@@ -383,7 +383,7 @@ export default function GroupChat({ groupId, groupName, groupAvatar, onClose }: 
           const { error: insertError } = await dbFrom("group_messages").insert(insertData);
           if (insertError) throw insertError;
         },
-        { signal: controller.signal, attempts: 3, baseDelayMs: 600 },
+        { signal: controller.signal, attempts: 4, baseDelayMs: 600 },
       );
       vlog("insert:done", { clientSendId });
 
@@ -405,6 +405,7 @@ export default function GroupChat({ groupId, groupName, groupAvatar, onClose }: 
       const httpErr = e instanceof UploadHttpError ? e : null;
       const inferredPhase: "preflight" | "upload" | "insert" | undefined =
         httpErr?.phase || (job.publicUrl ? "insert" : "upload");
+      const isBusy = httpErr?.status === 429;
       updateOpt({
         _upload_status: "failed",
         _upload_error: message,
@@ -413,12 +414,23 @@ export default function GroupChat({ groupId, groupName, groupAvatar, onClose }: 
         _upload_phase: inferredPhase,
         _upload_body: httpErr?.body,
       });
-      toast.error("Voice note failed to send", {
-        description: "Tap Resend on the message to try again.",
+      toast.error(isBusy ? "Server is busy — tap Resend" : "Voice note failed to send", {
+        description: isBusy
+          ? "Too many requests right now. Try again in a few seconds."
+          : "Tap Resend on the message to try again.",
       });
+      if (isBusy) {
+        setTimeout(() => {
+          const stillFailed = voiceJobsRef.current.get(clientSendId);
+          if (!stillFailed || controller.signal.aborted) return;
+          vlog("auto-retry-429", { clientSendId });
+          retryVoiceSendRef.current?.(clientSendId);
+        }, 8000);
+      }
     }
   }, [user?.id, groupId]);
 
+  const retryVoiceSendRef = useRef<((clientSendId: string) => void) | null>(null);
   const retryVoiceSend = useCallback((clientSendId: string) => {
     const job = voiceJobsRef.current.get(clientSendId);
     if (!job) return;
@@ -439,6 +451,7 @@ export default function GroupChat({ groupId, groupName, groupAvatar, onClose }: 
     }));
     void runVoiceJob(clientSendId, !!job.publicUrl);
   }, [runVoiceJob]);
+  retryVoiceSendRef.current = retryVoiceSend;
 
   const discardVoiceSend = useCallback((clientSendId: string) => {
     const job = voiceJobsRef.current.get(clientSendId);

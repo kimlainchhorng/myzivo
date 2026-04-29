@@ -822,7 +822,7 @@ export default function PersonalChat({ recipientId, recipientName, recipientAvat
               },
             });
           },
-          { signal: controller.signal, attempts: 3, baseDelayMs: 600 },
+          { signal: controller.signal, attempts: 4, baseDelayMs: 600 },
         );
         publicUrl = result.publicUrl;
         storagePath = result.path;
@@ -877,6 +877,7 @@ export default function PersonalChat({ recipientId, recipientName, recipientAvat
       // happened during the DB insert step.
       const inferredPhase: "preflight" | "upload" | "insert" | undefined =
         httpErr?.phase || (job.publicUrl ? "insert" : "upload");
+      const isBusy = httpErr?.status === 429;
       updateOpt({
         _upload_status: "failed",
         _upload_error: message,
@@ -885,12 +886,25 @@ export default function PersonalChat({ recipientId, recipientName, recipientAvat
         _upload_phase: inferredPhase,
         _upload_body: httpErr?.body,
       });
-      toast.error("Voice note failed to send", {
-        description: "Tap Resend on the message to try again.",
+      toast.error(isBusy ? "Server is busy — tap Resend" : "Voice note failed to send", {
+        description: isBusy
+          ? "Too many requests right now. Try again in a few seconds."
+          : "Tap Resend on the message to try again.",
       });
+      // For 429s: schedule a single silent auto-retry after 8s so the bubble
+      // self-heals once the DB pool recovers — user doesn't have to tap.
+      if (isBusy) {
+        setTimeout(() => {
+          const stillFailed = voiceJobsRef.current.get(clientSendId);
+          if (!stillFailed || controller.signal.aborted) return;
+          vlog("auto-retry-429", { clientSendId });
+          retryVoiceSendRef.current?.(clientSendId);
+        }, 8000);
+      }
     }
   }, [user?.id, recipientId, sendChatPush]);
 
+  const retryVoiceSendRef = useRef<((clientSendId: string) => void) | null>(null);
   const retryVoiceSend = useCallback((clientSendId: string) => {
     const job = voiceJobsRef.current.get(clientSendId);
     if (!job) return;
@@ -912,6 +926,7 @@ export default function PersonalChat({ recipientId, recipientName, recipientAvat
     }));
     void runVoiceJob(clientSendId, !!job.publicUrl);
   }, [runVoiceJob]);
+  retryVoiceSendRef.current = retryVoiceSend;
 
   const discardVoiceSend = useCallback((clientSendId: string) => {
     const job = voiceJobsRef.current.get(clientSendId);
