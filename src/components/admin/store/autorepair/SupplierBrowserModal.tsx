@@ -22,6 +22,8 @@ import Eye from "lucide-react/dist/esm/icons/eye";
 import EyeOff from "lucide-react/dist/esm/icons/eye-off";
 import Copy from "lucide-react/dist/esm/icons/copy";
 import Check from "lucide-react/dist/esm/icons/check";
+import Wand2 from "lucide-react/dist/esm/icons/wand-2";
+import Info from "lucide-react/dist/esm/icons/info";
 import PartsSupplierLogo from "./PartsSupplierLogo";
 import { type PartsSupplier, getSupplierSearchUrl } from "@/config/partsSuppliers";
 
@@ -87,12 +89,22 @@ export default function SupplierBrowserModal({ storeId, supplier, query, open, o
     const existing = loadCreds(storeId, supplier.id);
     setEmail(existing?.email ?? "");
     setPassword(existing?.password ?? "");
-    setShowCreds(!!existing);
+    // Keep panel collapsed if creds already exist (cleaner, more space for portal).
+    setShowCreds(!existing);
     setShowPwd(false);
     setBrowserIssue(null);
     setIframeLoading(true);
     setIframeDoc(null);
   }, [open, supplier, storeId]);
+
+  // Push saved creds into the proxied iframe so it can autofill the login form.
+  const sendAutofill = useCallback(() => {
+    const win = iframeRef.current?.contentWindow;
+    if (!win) return false;
+    if (!email && !password) return false;
+    win.postMessage({ type: "zivo-autofill", username: email, password }, "*");
+    return true;
+  }, [email, password]);
 
   const loadProxyPage = useCallback(async (url: string, init?: RequestInit) => {
     setIframeLoading(true);
@@ -128,7 +140,18 @@ export default function SupplierBrowserModal({ storeId, supplier, query, open, o
   useEffect(() => {
     if (!open) return;
     const handleMessage = (event: MessageEvent) => {
-      const data = event.data as { type?: string; url?: string; method?: string; body?: string; contentType?: string };
+      const data = event.data as {
+        type?: string;
+        url?: string;
+        method?: string;
+        body?: string;
+        contentType?: string;
+        filled?: boolean;
+      };
+      if (data?.type === "zivo-autofill-result") {
+        if (data.filled) toast.success("Credentials filled");
+        return;
+      }
       if (data?.type !== "zivo-supplier-navigate" || !data.url) return;
       try {
         const next = new URL(data.url);
@@ -160,7 +183,7 @@ export default function SupplierBrowserModal({ storeId, supplier, query, open, o
       password,
       updatedAt: new Date().toISOString(),
     });
-    toast.success(`${supplier.shortName ?? supplier.name} account saved`);
+    toast.success("Credentials saved locally");
     setShowCreds(false);
     if (proxiedUrl) loadProxyPage(proxiedUrl);
   };
@@ -215,6 +238,20 @@ export default function SupplierBrowserModal({ storeId, supplier, query, open, o
                 title="Open public consumer site"
               >
                 Consumer site
+              </Button>
+            )}
+            {(email || password) && (
+              <Button
+                size="sm"
+                variant="outline"
+                className="h-7 gap-1.5 text-xs"
+                onClick={() => {
+                  const ok = sendAutofill();
+                  if (!ok) toast.error("No credentials to fill");
+                }}
+                title="Fill saved credentials into login form"
+              >
+                <Wand2 className="w-3.5 h-3.5" /> Auto-fill
               </Button>
             )}
             <Button
@@ -322,7 +359,17 @@ export default function SupplierBrowserModal({ storeId, supplier, query, open, o
           </div>
         )}
 
-        <div className="flex-1 relative bg-muted/20 min-h-0">
+        {supplier.loginFlow === "two-step" && (email || password) && (
+          <div className="px-4 py-1.5 border-b bg-amber-50 dark:bg-amber-950/30 text-amber-900 dark:text-amber-200 text-[11px] flex items-center gap-2 shrink-0">
+            <Info className="w-3.5 h-3.5 shrink-0" />
+            <span>
+              This supplier uses a <strong>2-step login</strong>. Click{" "}
+              <strong>Auto-fill</strong> again after submitting the username to fill the password.
+            </span>
+          </div>
+        )}
+
+        <div className="flex-1 relative bg-muted/20 min-h-0 overflow-hidden">
           {iframeDoc && !browserIssue && (
             <iframe
               key={frameKey}
@@ -332,7 +379,14 @@ export default function SupplierBrowserModal({ storeId, supplier, query, open, o
               className="absolute inset-0 w-full h-full bg-background"
               sandbox="allow-forms allow-popups allow-same-origin allow-scripts allow-top-navigation-by-user-activation"
               referrerPolicy="no-referrer"
-              onLoad={() => setIframeLoading(false)}
+              onLoad={() => {
+                setIframeLoading(false);
+                // Try autofill once the proxied page is fully loaded.
+                if (email || password) {
+                  // Small delay so the injected script has registered its listener.
+                  window.setTimeout(() => sendAutofill(), 250);
+                }
+              }}
               onError={() => setBrowserIssue("blocked")}
             />
           )}

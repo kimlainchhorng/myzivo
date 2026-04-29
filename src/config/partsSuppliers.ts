@@ -27,6 +27,8 @@ export interface PartsSupplier {
   description?: string;
   /** Optional URL pattern to look up a part by SKU (e.g. site search). */
   searchUrlTemplate?: string;
+  /** Login flow shape — "two-step" suppliers ask username then password on a separate screen. */
+  loginFlow?: "single" | "two-step";
 }
 
 export const PARTS_SUPPLIERS: PartsSupplier[] = [
@@ -41,6 +43,7 @@ export const PARTS_SUPPLIERS: PartsSupplier[] = [
     category: "Retail Chain",
     description: "Trade portal · login required",
     searchUrlTemplate: "https://www.autozonepro.com/azprolanding/searchPage?searchText={q}",
+    loginFlow: "two-step",
   },
   {
     id: "oreilly",
@@ -62,6 +65,7 @@ export const PARTS_SUPPLIERS: PartsSupplier[] = [
     category: "Retail Chain",
     description: "Trade portal · login required",
     searchUrlTemplate: "https://www.napaprolink.com/",
+    loginFlow: "two-step",
   },
   {
     id: "advance",
