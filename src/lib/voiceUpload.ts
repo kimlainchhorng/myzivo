@@ -161,6 +161,11 @@ export async function preflightVoiceBucket(opts: {
       return { ok: true, status: res.status, url };
     }
     const body = await res.text().catch(() => "");
+    // 5xx = transient/server-side issue (e.g. storage DatabaseError 08P01).
+    // Don't block — let the real upload attempt surface the actual outcome.
+    if (res.status >= 500) {
+      return { ok: true, status: res.status, url };
+    }
     let reason = `Storage write blocked (HTTP ${res.status}). RLS or bucket policy denied the upload.`;
     if (res.status === 401) reason = "Not authorized to upload (HTTP 401). Sign in again.";
     if (res.status === 403) reason = `Storage RLS denied write to '${bucket}' (HTTP 403). Check bucket INSERT policy.`;
