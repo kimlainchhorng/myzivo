@@ -178,7 +178,7 @@ export default function AutoRepairPartShopSection({ storeId }: Props) {
         </CardContent>
       </Card>
 
-      <SuppliersNetworkCard query={q} />
+      <SuppliersNetworkCard query={q} storeId={storeId} />
 
       {isLoading ? (
         <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
@@ -276,9 +276,10 @@ export default function AutoRepairPartShopSection({ storeId }: Props) {
 
 const SUPPLIER_CATEGORIES = ["All", "Retail Chain", "OE / Dealer", "Wholesale Distributor", "Online Marketplace", "Specialty"] as const;
 
-function SuppliersNetworkCard({ query }: { query: string }) {
+function SuppliersNetworkCard({ query, storeId }: { query: string; storeId: string }) {
   const [supCat, setSupCat] = useState<(typeof SUPPLIER_CATEGORIES)[number]>("All");
   const [supQ, setSupQ] = useState("");
+  const [activeSupplier, setActiveSupplier] = useState<PartsSupplier | null>(null);
 
   const list = useMemo(() => {
     const q = supQ.trim().toLowerCase();
@@ -287,11 +288,6 @@ function SuppliersNetworkCard({ query }: { query: string }) {
       (!q || s.name.toLowerCase().includes(q) || (s.shortName?.toLowerCase().includes(q) ?? false))
     );
   }, [supCat, supQ]);
-
-  const openSupplier = (s: PartsSupplier) => {
-    const url = (query && getSupplierSearchUrl(s, query)) || (s.domain ? `https://${s.domain}` : null);
-    if (url) window.open(url, "_blank", "noopener,noreferrer");
-  };
 
   return (
     <Card>
@@ -329,7 +325,7 @@ function SuppliersNetworkCard({ query }: { query: string }) {
           {list.map(s => (
             <button
               key={s.id}
-              onClick={() => openSupplier(s)}
+              onClick={() => setActiveSupplier(s)}
               className="flex items-center gap-2.5 text-left text-[12px] border border-border rounded-md px-2 py-1.5 hover:border-primary hover:bg-primary/5 transition-colors group"
             >
               <PartsSupplierLogo supplier={s} size="md" />
@@ -345,6 +341,14 @@ function SuppliersNetworkCard({ query }: { query: string }) {
           )}
         </div>
       </CardContent>
+
+      <SupplierBrowserModal
+        storeId={storeId}
+        supplier={activeSupplier}
+        query={query}
+        open={!!activeSupplier}
+        onOpenChange={(o) => !o && setActiveSupplier(null)}
+      />
     </Card>
   );
 }
