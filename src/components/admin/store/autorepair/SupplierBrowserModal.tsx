@@ -22,6 +22,8 @@ import Eye from "lucide-react/dist/esm/icons/eye";
 import EyeOff from "lucide-react/dist/esm/icons/eye-off";
 import Copy from "lucide-react/dist/esm/icons/copy";
 import Check from "lucide-react/dist/esm/icons/check";
+import Wand2 from "lucide-react/dist/esm/icons/wand-2";
+import Info from "lucide-react/dist/esm/icons/info";
 import PartsSupplierLogo from "./PartsSupplierLogo";
 import { type PartsSupplier, getSupplierSearchUrl } from "@/config/partsSuppliers";
 
