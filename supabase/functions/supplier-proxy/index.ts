@@ -18,28 +18,28 @@
 import { corsHeaders } from "https://esm.sh/@supabase/supabase-js@2.95.0/cors";
 
 const ALLOWED_HOSTS = new Set([
-  "autozone.com", "www.autozone.com",
-  "napaonline.com", "www.napaonline.com",
-  "oreillyauto.com", "www.oreillyauto.com",
-  "advanceautoparts.com", "www.advanceautoparts.com", "shop.advanceautoparts.com",
+  "autozonepro.com", "www.autozonepro.com", "autozone.com", "www.autozone.com",
+  "firstcallonline.com", "www.firstcallonline.com", "oreillyauto.com", "www.oreillyauto.com",
+  "napaprolink.com", "www.napaprolink.com", "prolink.napaonline.com", "proline.napaonline.com", "napaonline.com", "www.napaonline.com",
+  "advancepro.com", "www.advancepro.com", "my.advancepro.com", "advancecommercial.com", "www.advancecommercial.com", "advanceautoparts.com", "www.advanceautoparts.com", "shop.advanceautoparts.com",
   "carquest.com", "www.carquest.com",
   "pepboys.com", "www.pepboys.com",
   "autopartsway.com", "www.autopartsway.com",
-  "worldpac.com", "www.worldpac.com",
+  "speeddial.worldpac.com", "worldpac.com", "www.worldpac.com",
   "partsauthority.com", "www.partsauthority.com",
   "factorymotorparts.com", "www.factorymotorparts.com",
   "uapinc.com", "www.uapinc.com",
-  "keystoneautomotive.com", "www.keystoneautomotive.com",
-  "lkqcorp.com", "www.lkqcorp.com",
+  "ekeystone.com", "www.ekeystone.com", "keystoneautomotive.com", "www.keystoneautomotive.com",
+  "lkqonline.com", "www.lkqonline.com", "lkqcorp.com", "www.lkqcorp.com",
   "fcpeuro.com", "www.fcpeuro.com",
-  "mopar.com", "www.mopar.com",
-  "gmpartsdirect.com", "www.gmpartsdirect.com",
-  "parts.ford.com",
-  "parts.toyota.com",
-  "hondapartsnow.com", "www.hondapartsnow.com",
-  "subarupartsonline.com", "www.subarupartsonline.com",
-  "getbmwparts.com", "www.getbmwparts.com",
-  "parts.vw.com",
+  "moparrepairconnect.com", "www.moparrepairconnect.com", "mopar.com", "www.mopar.com",
+  "acdelcoconnection.com", "www.acdelcoconnection.com", "gmpartsdirect.com", "www.gmpartsdirect.com",
+  "motorcraftservice.com", "www.motorcraftservice.com", "parts.ford.com",
+  "techinfo.toyota.com", "parts.toyota.com",
+  "serviceexpress.honda.com", "hondapartsnow.com", "www.hondapartsnow.com",
+  "techinfo.subaru.com", "subarupartsonline.com", "www.subarupartsonline.com",
+  "tis.bmwgroup.net", "getbmwparts.com", "www.getbmwparts.com",
+  "erwin.volkswagen.de", "parts.vw.com",
   "rockauto.com", "www.rockauto.com",
   "partsgeek.com", "www.partsgeek.com",
   "1aauto.com", "www.1aauto.com",
@@ -90,7 +90,17 @@ Deno.serve(async (req) => {
     ALLOWED_HOSTS.has(host) ||
     [...ALLOWED_HOSTS].some((h) => host === h || host.endsWith(`.${h}`));
   if (!allowed) {
-    return new Response(`Host not allowed: ${host}`, { status: 403, headers: corsHeaders });
+    return new Response(JSON.stringify({ error: "HOST_NOT_ALLOWED", host }), {
+      status: 403,
+      headers: { ...corsHeaders, "Content-Type": "application/json" },
+    });
+  }
+
+  if (url.searchParams.get("probe") === "1") {
+    return new Response(JSON.stringify({ ok: true, host }), {
+      status: 200,
+      headers: { ...corsHeaders, "Content-Type": "application/json" },
+    });
   }
 
   // Forward request
