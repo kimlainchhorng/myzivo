@@ -39,6 +39,32 @@ export interface UploadVoiceResult {
 // some reason they are missing. This avoids env-only fragility.
 const SUPABASE_URL = (CLIENT_SUPABASE_URL || (import.meta.env.VITE_SUPABASE_URL as string) || "").replace(/\/+$/, "");
 const SUPABASE_ANON_KEY = (CLIENT_SUPABASE_KEY || (import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY as string) || "");
+export const MAX_INLINE_VOICE_BYTES = 768 * 1024;
+
+export function shouldInlineVoiceBlob(blob: Blob): boolean {
+  return blob.size > 0 && blob.size <= MAX_INLINE_VOICE_BYTES;
+}
+
+export function blobToDataUrl(blob: Blob, signal?: AbortSignal): Promise<string> {
+  return new Promise((resolve, reject) => {
+    if (signal?.aborted) return reject(new UploadAbortedError());
+    const reader = new FileReader();
+    const onAbort = () => {
+      try { reader.abort(); } catch { /* noop */ }
+      reject(new UploadAbortedError());
+    };
+    signal?.addEventListener("abort", onAbort, { once: true });
+    reader.onload = () => {
+      signal?.removeEventListener("abort", onAbort);
+      resolve(String(reader.result || ""));
+    };
+    reader.onerror = () => {
+      signal?.removeEventListener("abort", onAbort);
+      reject(reader.error || new Error("Could not encode voice note"));
+    };
+    reader.readAsDataURL(blob);
+  });
+}
 
 export class UploadAbortedError extends Error {
   constructor() {
