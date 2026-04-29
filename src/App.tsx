@@ -675,6 +675,7 @@ const App = () => (
                             <Route path="/signup" element={<Signup />} />
                             <Route path="/unsubscribe" element={<Unsubscribe />} />
                             <Route path="/connect/callback" element={<ConnectCallback />} />
+                            <Route path="/d/:token" element={<PublicDocumentView />} />
 
                 {/* App Dashboard */}
                 <Route path="/app" element={<ProtectedRoute><UnifiedDashboard /></ProtectedRoute>} />
