@@ -183,13 +183,21 @@ Deno.serve(async (req) => {
     var href = t.getAttribute('href');
     if (!href || href.startsWith('#') || href.startsWith('javascript:')) return;
     e.preventDefault();
-    window.location.href = rewrite(href);
+    parent.postMessage({ type: 'zivo-supplier-navigate', url: rewrite(href), method: 'GET' }, '*');
   }, true);
   // Rewrite form submissions
   document.addEventListener('submit', function(e){
     var f = e.target;
     if (!f || !f.action) return;
-    f.action = rewrite(f.action);
+    e.preventDefault();
+    var method = (f.method || 'GET').toUpperCase();
+    var action = rewrite(f.action);
+    var params = new URLSearchParams(new FormData(f));
+    if (method === 'GET') {
+      parent.postMessage({ type: 'zivo-supplier-navigate', url: action + (action.indexOf('?') >= 0 ? '&' : '?') + params.toString(), method: 'GET' }, '*');
+      return;
+    }
+    parent.postMessage({ type: 'zivo-supplier-navigate', url: action, method: method, body: params.toString(), contentType: 'application/x-www-form-urlencoded' }, '*');
   }, true);
   var nativeFetch = window.fetch;
   if (nativeFetch) {
