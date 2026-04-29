@@ -61,7 +61,7 @@ export const PARTS_SUPPLIERS: PartsSupplier[] = [
     consumerDomain: "napaonline.com",
     category: "Retail Chain",
     description: "Trade portal · login required",
-    searchUrlTemplate: "https://proline.napaonline.com/search?q={q}",
+    searchUrlTemplate: "https://www.napaprolink.com/",
   },
   {
     id: "advance",
