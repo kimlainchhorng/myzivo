@@ -1,58 +1,35 @@
-## Goal
+I found the current blocker: the proxy allowlist still contains mostly consumer domains, but the supplier registry now opens professional domains like `autozonepro.com` and `firstcallonline.com`. That is why the modal shows `Host not allowed: autozonepro.com`.
 
-Right now the Parts Supplier directory points to consumer sites (autozone.com, oreillyauto.com). For a repair shop, we should point to the **professional / wholesale portals** these brands run for shops — that's where shops have real accounts, see jobber pricing, and place trade orders.
+Plan to make the supplier connection flow work end-to-end:
 
-## Updates to `src/config/partsSuppliers.ts`
+1. Fix pro portal access
+- Add the professional B2B hosts to the `supplier-proxy` allowlist:
+  - `autozonepro.com`, `www.autozonepro.com`
+  - `firstcallonline.com`, `www.firstcallonline.com`
+  - `proline.napaonline.com`
+  - `advancecommercial.com`, `www.advancecommercial.com`
+  - plus other pro/OE hosts already listed in `partsSuppliers.ts`, such as `speeddial.worldpac.com`, `moparrepairconnect.com`, `acdelcoconnection.com`, `motorcraftservice.com`, `techinfo.toyota.com`, etc.
+- Keep consumer domains too, so the Consumer site shortcut still works.
 
-Replace consumer entries with their pro-shop counterparts (keeping `id` stable so existing saved credentials still load), and update `domain` + `searchUrlTemplate` + `name` accordingly:
+2. Improve the in-app browser failure handling
+- Detect proxy responses like `403 Host not allowed` and show a helpful “portal not supported in embedded browser yet” panel instead of rendering raw text in the iframe.
+- Keep the “Open in new tab” button as the reliable path for portals that block reverse proxy/webview access.
+- Update the copy so users understand: “Use Account to save/copy login, then open portal to sign in.”
 
-| id | New name | New domain | Notes |
-|---|---|---|---|
-| `autozone` | AutoZonePro (Commercial) | `autozonepro.com` | B2B shop portal; search via `/ecomm/b2b/search?q={q}` |
-| `oreilly` | FirstCallOnline (O'Reilly Pro) | `firstcallonline.com` | O'Reilly's pro-shop portal |
-| `napa` | NAPA PROLink | `proline.napaonline.com` | Pro-shop portal (login required) |
-| `advance` | Advance Professional (MyAdvantageLink) | `advancecommercial.com` | Pro counterpart to advanceautoparts.com |
-| `carquest` | Carquest Professional | `carquestpro.com` | Worldpac/Advance shop portal |
-| `pepboys` | Pep Boys Fleet | `fleet.pepboys.com` | Trade/fleet portal |
-| `worldpac` | WORLDPAC speedDIAL | `speeddial.worldpac.com` | Already pro — refine domain |
-| `mopar` | Mopar Professional | `moparrepairconnect.com` | Shop-facing |
-| `gm-parts` | GM ACDelco Connection | `acdelcoconnection.com` | Shop portal |
-| `ford-parts` | Ford Motorcraft Service | `motorcraftservice.com` | Pro/shop site |
-| `toyota-parts` | Toyota TIS (techinfo) | `techinfo.toyota.com` | Tech/shop portal |
-| `honda-parts` | Honda ServiceExpress | `serviceexpress.honda.com` | Pro |
+3. Make the account connection flow clearer
+- Change “Save account” to a stronger workflow such as “Save account info” and add a primary “Open & sign in” action after saving.
+- Add a small connected/saved state on supplier cards, e.g. “Account saved” or a key/check indicator, so the shop knows which supplier accounts are ready.
+- Preserve the existing local-only storage behavior for now, since it avoids sending supplier passwords to Zivo servers.
 
-Keep RockAuto, FCP Euro, Amazon, eBay, Summit, JEGS, Snap-on, Matco, Harbor Freight, LKQ, Keystone, Parts Authority, FMP, 1A Auto, PartsGeek as-is (already correct for their audience or no clean pro variant).
+4. Add portal-specific URLs where needed
+- Point AutoZonePro to the correct commercial landing/login URL rather than only the root domain if needed.
+- Make FirstCallOnline and NAPA PROLink open their login/search pages consistently.
 
-Add a small `consumerDomain?: string` field on the entries we converted, so we can offer a "Switch to consumer site" button later if needed (non-breaking — optional field).
-
-Also add a short `description?: string` for each pro portal (e.g. "Trade pricing · login required") so the cards can show it.
-
-## Logo handling
-
-`PartsSupplierLogo.tsx` already does favicon fallback chain (Google S2 → DuckDuckGo → icon.horse → monogram). Pro portals usually share branding with the parent — favicons resolve fine. No changes required to that component.
-
-The Clearbit lookup in `getSupplierLogoUrl` may miss some pro subdomains, so update it to also try the **root brand domain** as a second source:
-
-```ts
-getSupplierLogoUrl(supplier) → 
-  [`logo.clearbit.com/${supplier.domain}`, 
-   `logo.clearbit.com/${rootDomain(supplier.domain)}`]
-```
-
-(`rootDomain` strips the leading subdomain.)
-
-## SupplierBrowserModal
-
-No structural change needed — but since pro portals **all** require login and most block iframe embedding even via our proxy, update the blocked-state copy to be honest:
-
-> "{supplier.name} is a trade portal — open it in a new tab to log in with your shop account. We'll keep your saved credentials here for quick paste-in."
-
-And surface a small "Consumer site" link in the header when `consumerDomain` is set, so the user can fall back to e.g. autozone.com when they just want to look up a part publicly.
-
-## Files touched
-
-- `src/config/partsSuppliers.ts` — update entries, add `consumerDomain` and `description` optional fields, refine `getSupplierLogoUrl`
-- `src/components/admin/store/autorepair/SupplierBrowserModal.tsx` — update blocked-state copy, add optional "Consumer site" header link
-- `src/components/admin/store/autorepair/AutoRepairPartShopSection.tsx` — show `description` under the supplier name on the cards (1 line, muted, text-[10px])
-
-No DB / edge-function changes. Existing saved credentials in localStorage continue to work because supplier `id`s are unchanged.
+Technical notes
+- Files to update:
+  - `supabase/functions/supplier-proxy/index.ts`
+  - `src/components/admin/store/autorepair/SupplierBrowserModal.tsx`
+  - `src/components/admin/store/autorepair/AutoRepairPartShopSection.tsx`
+  - possibly `src/config/partsSuppliers.ts`
+- No database change is needed for this fix.
+- Important limitation: some supplier portals may still block embedded browsing with bot protection, SSO, or JavaScript restrictions. In that case, the best working flow is: save account info in Zivo, copy credentials, then open the pro portal in a new tab.
