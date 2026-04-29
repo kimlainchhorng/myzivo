@@ -65,10 +65,18 @@ export default function SupplierBrowserModal({ storeId, supplier, query, open, o
   const [password, setPassword] = useState("");
   const [copied, setCopied] = useState<"email" | "password" | null>(null);
 
-  const url = useMemo(() => {
+  const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL as string;
+
+  const targetUrl = useMemo(() => {
     if (!supplier?.domain) return null;
     return (query && getSupplierSearchUrl(supplier, query)) || `https://${supplier.domain}`;
   }, [supplier, query]);
+
+  // Route through our edge proxy that strips X-Frame-Options / CSP frame-ancestors
+  const proxiedUrl = useMemo(() => {
+    if (!targetUrl) return null;
+    return `${SUPABASE_URL}/functions/v1/supplier-proxy?u=${encodeURIComponent(targetUrl)}`;
+  }, [targetUrl, SUPABASE_URL]);
 
   // Load saved credentials whenever supplier changes / dialog opens
   useEffect(() => {
@@ -82,18 +90,17 @@ export default function SupplierBrowserModal({ storeId, supplier, query, open, o
     setIframeLoading(true);
   }, [open, supplier, storeId]);
 
-  // Heuristic: if iframe never fires `load` within 4s, assume X-Frame-Options blocked it.
+  // Detect proxy errors via load timeout (15s — proxy can be slow on cold start)
   useEffect(() => {
-    if (!open || !url) return;
+    if (!open || !proxiedUrl) return;
     setIframeLoading(true);
     setIframeBlocked(false);
     const timer = window.setTimeout(() => {
-      // If still loading, assume blocked.
       setIframeBlocked((prev) => prev || iframeLoading);
-    }, 4000);
+    }, 15000);
     return () => window.clearTimeout(timer);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [open, url]);
+  }, [open, proxiedUrl]);
 
   if (!supplier) return null;
 
