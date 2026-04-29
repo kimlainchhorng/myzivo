@@ -153,6 +153,17 @@ export default function SupplierBrowserModal({ storeId, supplier, query, open, o
               </p>
             </div>
             <Badge variant="outline" className="text-[10px]">In-app browser</Badge>
+            {supplier.consumerDomain && (
+              <Button
+                size="sm"
+                variant="ghost"
+                className="h-7 gap-1.5 text-xs"
+                onClick={() => window.open(`https://${supplier.consumerDomain}`, "_blank", "noopener,noreferrer")}
+                title="Open public consumer site"
+              >
+                Consumer site
+              </Button>
+            )}
             <Button
               size="sm"
               variant="outline"
