@@ -34,6 +34,7 @@ interface Props {
 }
 
 type SavedCreds = { email: string; password: string; updatedAt: string };
+type BrowserIssue = "not-allowed" | "blocked" | null;
 
 const credKey = (storeId: string, supplierId: string) =>
   `zivo.supplierCreds.${storeId}.${supplierId}`;
@@ -57,7 +58,7 @@ function clearCreds(storeId: string, supplierId: string) {
 
 export default function SupplierBrowserModal({ storeId, supplier, query, open, onOpenChange }: Props) {
   const iframeRef = useRef<HTMLIFrameElement>(null);
-  const [iframeBlocked, setIframeBlocked] = useState(false);
+  const [browserIssue, setBrowserIssue] = useState<BrowserIssue>(null);
   const [iframeLoading, setIframeLoading] = useState(true);
   const [showCreds, setShowCreds] = useState(false);
   const [showPwd, setShowPwd] = useState(false);
@@ -69,7 +70,7 @@ export default function SupplierBrowserModal({ storeId, supplier, query, open, o
 
   const targetUrl = useMemo(() => {
     if (!supplier?.domain) return null;
-    return (query && getSupplierSearchUrl(supplier, query)) || `https://${supplier.domain}`;
+    return (query && getSupplierSearchUrl(supplier, query)) || supplier.portalUrl || `https://${supplier.domain}`;
   }, [supplier, query]);
 
   // Route through our edge proxy that strips X-Frame-Options / CSP frame-ancestors
@@ -86,17 +87,28 @@ export default function SupplierBrowserModal({ storeId, supplier, query, open, o
     setPassword(existing?.password ?? "");
     setShowCreds(!!existing);
     setShowPwd(false);
-    setIframeBlocked(false);
+    setBrowserIssue(null);
     setIframeLoading(true);
   }, [open, supplier, storeId]);
+
+  useEffect(() => {
+    if (!open || !proxiedUrl) return;
+    let cancelled = false;
+    fetch(`${proxiedUrl}&probe=1`)
+      .then(async (res) => {
+        if (!cancelled && res.status === 403) setBrowserIssue("not-allowed");
+      })
+      .catch(() => undefined);
+    return () => { cancelled = true; };
+  }, [open, proxiedUrl]);
 
   // Detect proxy errors via load timeout (15s — proxy can be slow on cold start)
   useEffect(() => {
     if (!open || !proxiedUrl) return;
     setIframeLoading(true);
-    setIframeBlocked(false);
+    setBrowserIssue(null);
     const timer = window.setTimeout(() => {
-      setIframeBlocked((prev) => prev || iframeLoading);
+      setBrowserIssue((prev) => prev || (iframeLoading ? "blocked" : null));
     }, 15000);
     return () => window.clearTimeout(timer);
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -115,6 +127,7 @@ export default function SupplierBrowserModal({ storeId, supplier, query, open, o
       updatedAt: new Date().toISOString(),
     });
     toast.success(`${supplier.shortName ?? supplier.name} account saved`);
+    if (targetUrl) window.open(targetUrl, "_blank", "noopener,noreferrer");
   };
 
   const handleClearCreds = () => {
@@ -136,9 +149,16 @@ export default function SupplierBrowserModal({ storeId, supplier, query, open, o
 
   const reload = () => {
     setIframeLoading(true);
-    setIframeBlocked(false);
+    setBrowserIssue(null);
     if (iframeRef.current) iframeRef.current.src = proxiedUrl ?? "about:blank";
   };
+
+  const issueTitle = browserIssue === "not-allowed"
+    ? `${supplier.shortName ?? supplier.name} portal needs setup`
+    : `${supplier.name} is a trade portal`;
+  const issueCopy = browserIssue === "not-allowed"
+    ? "This pro portal is not available in the embedded browser yet. Save the shop account here, then open the supplier portal to sign in."
+    : "For security, this supplier may not allow its site to load inside another window. Save the shop account here, then open the portal to sign in.";
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
