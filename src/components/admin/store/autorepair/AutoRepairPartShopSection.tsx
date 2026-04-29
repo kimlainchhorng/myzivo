@@ -20,8 +20,9 @@ import Sparkles from "lucide-react/dist/esm/icons/sparkles";
 import Store from "lucide-react/dist/esm/icons/store";
 import ExternalLink from "lucide-react/dist/esm/icons/external-link";
 import { toast } from "sonner";
-import { PARTS_SUPPLIERS, getSupplierSearchUrl, type PartsSupplier } from "@/config/partsSuppliers";
+import { PARTS_SUPPLIERS, type PartsSupplier } from "@/config/partsSuppliers";
 import PartsSupplierLogo from "./PartsSupplierLogo";
+import SupplierBrowserModal from "./SupplierBrowserModal";
 
 interface Props { storeId: string }
 type Part = {
