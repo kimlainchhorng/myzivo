@@ -233,7 +233,18 @@ export async function uploadVoiceWithProgress(opts: UploadVoiceOpts): Promise<Up
         } catch {
           if (body) msg = `${msg}: ${body.slice(0, 160)}`;
         }
-        const err = new UploadHttpError(xhr.status, msg, url, body);
+        // Parse Retry-After header (seconds or HTTP-date) for 429/503.
+        let retryAfterMs: number | undefined;
+        const ra = xhr.getResponseHeader("Retry-After");
+        if (ra) {
+          const asInt = parseInt(ra, 10);
+          if (!Number.isNaN(asInt)) retryAfterMs = asInt * 1000;
+          else {
+            const asDate = Date.parse(ra);
+            if (!Number.isNaN(asDate)) retryAfterMs = Math.max(0, asDate - Date.now());
+          }
+        }
+        const err = new UploadHttpError(xhr.status, msg, url, body, retryAfterMs);
         err.phase = "upload";
         reject(err);
       }
