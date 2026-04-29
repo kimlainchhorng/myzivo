@@ -137,7 +137,7 @@ export default function SupplierBrowserModal({ storeId, supplier, query, open, o
   const reload = () => {
     setIframeLoading(true);
     setIframeBlocked(false);
-    if (iframeRef.current) iframeRef.current.src = url ?? "about:blank";
+    if (iframeRef.current) iframeRef.current.src = proxiedUrl ?? "about:blank";
   };
 
   return (
@@ -168,7 +168,7 @@ export default function SupplierBrowserModal({ storeId, supplier, query, open, o
               size="sm"
               variant="outline"
               className="h-7 gap-1.5 text-xs"
-              onClick={() => url && window.open(url, "_blank", "noopener,noreferrer")}
+              onClick={() => targetUrl && window.open(targetUrl, "_blank", "noopener,noreferrer")}
             >
               <ExternalLink className="w-3.5 h-3.5" /> New tab
             </Button>
@@ -259,10 +259,10 @@ export default function SupplierBrowserModal({ storeId, supplier, query, open, o
         )}
 
         <div className="flex-1 relative bg-muted/20 min-h-0">
-          {url && !iframeBlocked && (
+          {proxiedUrl && !iframeBlocked && (
             <iframe
               ref={iframeRef}
-              src={url}
+              src={proxiedUrl}
               title={supplier.name}
               className="absolute inset-0 w-full h-full bg-background"
               sandbox="allow-forms allow-popups allow-same-origin allow-scripts allow-top-navigation-by-user-activation"
@@ -295,7 +295,7 @@ export default function SupplierBrowserModal({ storeId, supplier, query, open, o
                 <div className="flex gap-2 justify-center">
                   <Button
                     size="sm"
-                    onClick={() => url && window.open(url, "_blank", "noopener,noreferrer")}
+                    onClick={() => targetUrl && window.open(targetUrl, "_blank", "noopener,noreferrer")}
                     className="gap-1.5"
                   >
                     <ExternalLink className="w-3.5 h-3.5" /> Open {supplier.shortName ?? supplier.name}
