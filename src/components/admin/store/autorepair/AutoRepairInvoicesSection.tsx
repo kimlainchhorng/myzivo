@@ -570,6 +570,11 @@ export default function AutoRepairInvoicesSection({ storeId }: Props) {
               <Button variant="outline" size="sm" onClick={() => setPreviewDoc({ ...draft, customer: `${draft.firstName} ${draft.lastName}`.trim() })} className="gap-1.5"><Eye className="w-3.5 h-3.5" /> Preview</Button>
               <Button variant="outline" size="sm" onClick={saveDraftNow}>Save draft</Button>
               <Button variant="ghost" size="sm" onClick={discardDraft} className="text-destructive hover:text-destructive">Discard</Button>
+              {draft.type === "estimate" && (
+                <Button variant="outline" size="sm" onClick={saveAndConvertToInvoice} className="gap-1.5">
+                  <ArrowRightLeft className="w-3.5 h-3.5" /> Convert to Invoice
+                </Button>
+              )}
               <Button onClick={save} className="gap-1.5">
                 {draft.type === "estimate" ? "Create Estimate" : "Create Invoice"}
               </Button>
