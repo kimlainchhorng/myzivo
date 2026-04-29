@@ -357,7 +357,9 @@ export default function AutoRepairInvoicesSection({ storeId }: Props) {
         status: draft.status === "paid" ? "paid" : draft.status === "sent" ? "sent" : "draft",
       };
 
-      if (editingId) {
+      // Only treat as update if we have a real DB uuid (seed rows use ids like "1").
+      const isRealId = !!editingId && UUID_RE.test(editingId);
+      if (isRealId) {
         const { error } = await supabase.from(tableName as any).update(payload).eq("id", editingId);
         if (error) throw error;
         toast.success(`${draft.type === "invoice" ? "Invoice" : "Estimate"} ${draft.number} updated`);
