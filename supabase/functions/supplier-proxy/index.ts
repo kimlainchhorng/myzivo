@@ -145,11 +145,16 @@ Deno.serve(async (req) => {
   respHeaders.delete("x-frame-options");
 
   const ct = upstream.headers.get("content-type") ?? "";
-  const proxyBase = `${url.origin}${url.pathname}?u=`;
+  const supabaseUrl = Deno.env.get("SUPABASE_URL")?.replace(/\/$/, "");
+  const proxyBase = `${supabaseUrl ?? url.origin}/functions/v1/supplier-proxy?u=`;
 
   // Rewrite HTML so that links/forms continue to flow through the proxy
-  if (ct.includes("text/html")) {
+  if (ct.includes("text/html") || ct.includes("text/plain") || ct.includes("application/xhtml")) {
     let html = await upstream.text();
+    const looksLikeHtml = /<!doctype html|<html[\s>]/i.test(html);
+    if (!looksLikeHtml) {
+      return new Response(html, { status: upstream.status, headers: respHeaders });
+    }
     const baseHref = `${targetUrl.protocol}//${targetUrl.host}`;
 
     // Inject <base> + a small script that rewrites in-page navigation
@@ -186,6 +191,25 @@ Deno.serve(async (req) => {
     if (!f || !f.action) return;
     f.action = rewrite(f.action);
   }, true);
+  var nativeFetch = window.fetch;
+  if (nativeFetch) {
+    window.fetch = function(input, init){
+      var raw = (typeof input === 'string') ? input : (input && input.url);
+      if (!raw) return nativeFetch.apply(this, arguments);
+      var next = rewrite(raw);
+      if (next === raw) return nativeFetch.apply(this, arguments);
+      if (typeof input === 'string') return nativeFetch.call(this, next, init);
+      try { return nativeFetch.call(this, new Request(next, input), init); }
+      catch(e) { return nativeFetch.call(this, next, init); }
+    };
+  }
+  var nativeOpen = XMLHttpRequest && XMLHttpRequest.prototype.open;
+  if (nativeOpen) {
+    XMLHttpRequest.prototype.open = function(method, requestUrl){
+      arguments[1] = rewrite(requestUrl);
+      return nativeOpen.apply(this, arguments);
+    };
+  }
 })();
 </script>`;
 
@@ -196,6 +220,8 @@ Deno.serve(async (req) => {
     }
 
     respHeaders.set("content-type", "text/html; charset=utf-8");
+    respHeaders.delete("content-security-policy");
+    respHeaders.delete("content-security-policy-report-only");
     respHeaders.delete("content-length");
     return new Response(html, { status: upstream.status, headers: respHeaders });
   }
