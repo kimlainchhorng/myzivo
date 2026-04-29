@@ -340,11 +340,64 @@ Deno.serve(async (req) => {
     }, 500);
     return ok;
   }
+  function findSubmitTarget(){
+    // 1. Prefer an explicit Continue / Sign-in button inside any visible form
+    var forms = document.querySelectorAll('form');
+    for (var f = 0; f < forms.length; f++) {
+      var form = forms[f];
+      var hasValue = false;
+      var inputs = form.querySelectorAll('input');
+      for (var i = 0; i < inputs.length; i++) {
+        var inp = inputs[i];
+        if (inp.type !== 'hidden' && inp.type !== 'checkbox' && String(inp.value || '').trim()) { hasValue = true; break; }
+      }
+      if (!hasValue) continue;
+      var buttons = form.querySelectorAll('button, [role="button"], input[type="submit"]');
+      for (var b = 0; b < buttons.length; b++) {
+        var btn = buttons[b];
+        var text = ((btn.getAttribute('aria-label') || '') + ' ' + (btn.textContent || '') + ' ' + (btn.value || '')).toLowerCase();
+        if (/continue|sign\s*in|login|log\s*in|next|submit/.test(text)) return { form: form, btn: btn };
+      }
+      return { form: form, btn: null };
+    }
+    return null;
+  }
+  function triggerSubmit(){
+    try {
+      var target = findSubmitTarget();
+      if (!target) return false;
+      // Make sure the button is enabled before clicking (host JS may not have re-evaluated yet)
+      if (target.btn) {
+        try { target.btn.disabled = false; } catch(_) {}
+        target.btn.removeAttribute('disabled');
+        target.btn.removeAttribute('aria-disabled');
+        target.btn.className = String(target.btn.className || '').replace(/\S*--disabled\S*/g, '').replace(/\S*_disabled\S*/gi, '');
+        try { target.btn.click(); return true; } catch(_) {}
+      }
+      // Fall back to form.requestSubmit / submit — our submit interceptor will catch it.
+      try {
+        if (typeof target.form.requestSubmit === 'function') target.form.requestSubmit();
+        else target.form.submit();
+        return true;
+      } catch(_) {}
+    } catch(e) {}
+    return false;
+  }
   window.addEventListener('message', function(e){
     var data = e.data;
     if (!data || data.type !== 'zivo-autofill') return;
     pendingCreds = { username: data.username || '', password: data.password || '' };
     var ok = startBoundedAutofill(pendingCreds);
+    if (data.autoSubmit) {
+      // Give the host JS one tick to react to the focus/blur/input events,
+      // then click Continue. Try a few times in case it re-disables.
+      var attempts = 0;
+      var submitter = setInterval(function(){
+        attempts++;
+        var did = triggerSubmit();
+        if (did || attempts >= 6) clearInterval(submitter);
+      }, 250);
+    }
     parent.postMessage({ type: 'zivo-autofill-result', filled: ok }, '*');
   });
 })();
