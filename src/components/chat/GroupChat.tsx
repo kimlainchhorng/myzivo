@@ -451,6 +451,7 @@ export default function GroupChat({ groupId, groupName, groupAvatar, onClose }: 
     }));
     void runVoiceJob(clientSendId, !!job.publicUrl);
   }, [runVoiceJob]);
+  retryVoiceSendRef.current = retryVoiceSend;
 
   const discardVoiceSend = useCallback((clientSendId: string) => {
     const job = voiceJobsRef.current.get(clientSendId);
