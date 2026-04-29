@@ -199,11 +199,7 @@ Deno.serve(async (req) => {
     e.preventDefault();
     parent.postMessage({ type: 'zivo-supplier-navigate', url: rewrite(href), method: 'GET' }, '*');
   }, true);
-  // Rewrite form submissions
-  document.addEventListener('submit', function(e){
-    var f = e.target;
-    if (!f || !f.action) return;
-    e.preventDefault();
+  function submitFormThroughProxy(f){
     var method = (f.method || 'GET').toUpperCase();
     var action = rewrite(f.action);
     var params = new URLSearchParams(new FormData(f));
@@ -212,7 +208,15 @@ Deno.serve(async (req) => {
       return;
     }
     parent.postMessage({ type: 'zivo-supplier-navigate', url: action, method: method, body: params.toString(), contentType: 'application/x-www-form-urlencoded' }, '*');
-  }, true);
+  }
+  // Rewrite form submissions after the supplier app's own handlers have run.
+  document.addEventListener('submit', function(e){
+    var f = e.target;
+    if (!f || !f.action) return;
+    if (e.defaultPrevented) return;
+    e.preventDefault();
+    submitFormThroughProxy(f);
+  }, false);
   var nativeFetch = window.fetch;
   if (nativeFetch) {
     window.fetch = function(input, init){
@@ -261,6 +265,17 @@ Deno.serve(async (req) => {
       if (!label.style.transform) label.style.transform = 'translateY(calc(-1 * (var(--st-unit-5, 20px) + 2.5px)))';
     } catch(e) {}
   }
+  function isVisible(el){
+    try { var r = el.getBoundingClientRect(); return !!(r.width || r.height) && getComputedStyle(el).visibility !== 'hidden'; } catch(e) { return true; }
+  }
+  function enableButton(btn){
+    try { btn.disabled = false; } catch(_) {}
+    try { btn.removeAttribute('disabled'); } catch(_) {}
+    try { btn.removeAttribute('aria-disabled'); } catch(_) {}
+    try { btn.removeAttribute('data-disabled'); } catch(_) {}
+    try { btn.className = String(btn.className || '').replace(/\S*(?:--|_|-)disabled\S*/gi, '').replace(/\bdisabled\b/gi, ''); } catch(_) {}
+    try { btn.style.pointerEvents = 'auto'; btn.style.cursor = 'pointer'; btn.style.opacity = '1'; } catch(_) {}
+  }
   function enableFilledFormControls(){
     try {
       var forms = document.querySelectorAll('form');
@@ -273,18 +288,12 @@ Deno.serve(async (req) => {
           if (input.type !== 'hidden' && input.type !== 'checkbox' && String(input.value || '').trim()) { hasValue = true; break; }
         }
         if (!hasValue) continue;
-        var buttons = form.querySelectorAll('button, [role="button"]');
+        var buttons = form.querySelectorAll('button, [role="button"], input[type="submit"], input[type="button"]');
         for (var b = 0; b < buttons.length; b++) {
           var btn = buttons[b];
-          var text = ((btn.getAttribute('aria-label') || '') + ' ' + (btn.textContent || '')).toLowerCase();
+          var text = ((btn.getAttribute('aria-label') || '') + ' ' + (btn.textContent || '') + ' ' + (btn.value || '')).toLowerCase();
           if (!/continue|sign\s*in|login|log\s*in|submit/.test(text)) continue;
-          try { btn.disabled = false; } catch(_) {}
-          btn.removeAttribute('disabled');
-          btn.removeAttribute('aria-disabled');
-          btn.className = String(btn.className || '').replace(/\S*--disabled\S*/g, '').replace(/\S*_disabled\S*/gi, '');
-          btn.style.pointerEvents = 'auto';
-          btn.style.cursor = 'pointer';
-          btn.style.opacity = '1';
+          enableButton(btn);
         }
       }
     } catch(e) {}
