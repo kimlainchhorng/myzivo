@@ -28,11 +28,11 @@ function getSupportedVoiceMimeType() {
 }
 
 async function requestMicrophonePermission(): Promise<boolean> {
-  if (typeof navigator === "undefined" || !navigator.mediaDevices?.query) {
+  if (typeof navigator === "undefined" || !navigator.permissions?.query) {
     return true; // Assume granted if we can't query
   }
   try {
-    const result = await navigator.mediaDevices.query?.({ name: "microphone" } as any);
+    const result = await navigator.permissions.query({ name: "microphone" as PermissionName });
     return result?.state !== "denied";
   } catch {
     return true; // Assume granted if query fails

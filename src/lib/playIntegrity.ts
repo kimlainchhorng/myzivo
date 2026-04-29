@@ -1,5 +1,5 @@
 import { registerPlugin, Capacitor } from '@capacitor/core';
-import { supabase } from './supabase';
+import { supabase } from '@/integrations/supabase/client';
 
 interface PlayIntegrityPlugin {
   requestToken(options: { nonce: string }): Promise<{ token: string }>;
