@@ -1,146 +1,102 @@
-## Goal
-Finish the Finance suite by upgrading the **two remaining basic sub-tabs** — Payments Received and Expenses & Bills — to the same accountant-grade quality as P&L / Income / Tax. Plus three cross-cutting wins that benefit all dashboards.
+# Estimates & Invoices — Upgrade Plan
 
----
+You're right: the current list row only has **Preview / Send / Print** icons that all open the same dialog. There's no edit, no delete, no real "send", no way to mark paid, and no search. Estimates also can't be converted into invoices. Let's fix that.
 
-## Part 1 — Payments Received (full upgrade)
+## What's missing today (from the screenshot + code review)
+1. No **Edit** — once created, you can't change a customer name, line item, or price.
+2. No **Delete** — wrong invoices stay forever.
+3. No **Status actions** — you can't mark Sent, Paid, Void, or record a partial payment.
+4. **Send** button doesn't actually send — it just opens the preview.
+5. No **Convert Estimate → Invoice** (huge for shop workflow).
+6. No **Search / Filter** — finding INV-2032 in a list of 500 is impossible.
+7. No **Duplicate** — repeat customers redo everything by hand.
+8. No **KPI strip** — owner can't see Outstanding $, Paid this month, Overdue count at a glance.
+9. No **PDF download** — only browser print.
+10. **Estimates aren't persisted** to a table (only invoices are saved to `ar_invoices`).
 
-Replace 3-stat + flat list + single dialog with a real cash-in dashboard.
+## What we'll add
 
-### Period bar
-Today / 7d / 30d / 90d / This month / Last month / YTD / Custom + previous-period compare toggle. Same shape as the Income/Tax bars.
+### A. Row actions (per invoice/estimate)
+Replace the 3 ambiguous icon buttons with a clean action set:
+- **View** (eye) → preview dialog
+- **Edit** (pencil) → reopens the create form pre-filled with that doc
+- **Send** (paper plane) → opens a small sheet to send via Email or SMS through an edge function (`send-ar-document`)
+- **Mark Paid** (dollar) → records payment to `ar_invoice_payments`, flips status, feeds Finance dashboards
+- **Duplicate** (copy)
+- **Download PDF** (download) — uses `jspdf` + `jspdf-autotable`
+- **Delete** (trash) with confirm dialog
+- **Convert to Invoice** (estimates only, primary action)
 
-### KPI strip (6 cards w/ sparklines + delta vs previous period)
-1. Total received
-2. Payment count
-3. Avg payment
-4. Largest payment
-5. Unique customers paid
-6. Refunds issued — color-coded
+### B. List header upgrades
+- **Search bar** — by number, customer name, phone, VIN, plate
+- **Status filter pills** — All · Draft · Sent · Paid · Overdue · Void
+- **Sort menu** — Newest, Oldest, Amount high→low, Customer A→Z
+- **KPI strip** above the tabs (4 compact cards):
+  - Outstanding Balance (sum unpaid)
+  - Paid This Month
+  - Overdue (count + amount, red)
+  - Avg Ticket
 
-### Trend chart
-Bar = daily/weekly receipts + Line = cumulative. Day/Week/Month toggle.
+### C. Edit + Delete plumbing
+- New `updateInvoice(id, patch)` writes to `ar_invoices` then updates local state.
+- New `deleteInvoice(id)` soft-deletes (`deleted_at` column) so Finance numbers stay accurate historically — **requires a small migration**: add `deleted_at timestamptz` to `ar_invoices` and `ar_estimates`, and filter `is null` everywhere.
+- Edit reuses the existing create form (already supports all fields), just prefilled with `setDraft(existing)` and a Save button that calls update vs insert.
 
-### Method breakdown
-Donut (Cash / Card / Check / ABA / Other) + per-method totals & counts table.
+### D. Persist Estimates properly
+Currently estimates only live in React state and the seed array — they vanish on refresh outside the seeded ones. We'll:
+- Use the existing `ar_estimates` table (already referenced in your finance layer).
+- Mirror the same insert/select/update/delete pattern as invoices.
 
-### Smart "Record Payment" dialog
-- Outstanding-only invoice filter (toggle).
-- Searchable invoice combobox (number / customer / vehicle / plate).
-- Auto-fills amount with remaining balance when invoice picked.
-- Overpayment confirm prompt.
-- Inline customer summary card after pick (name, vehicle, balance, days outstanding).
+### E. Convert Estimate → Invoice
+One-click button on any estimate:
+1. Inserts a new row into `ar_invoices` with the estimate's customer, vehicle, items.
+2. Generates the next `INV-####` number.
+3. Marks the source estimate `status = 'approved'` and stores `converted_invoice_id`.
+4. Switches the tab to Invoices and highlights the new row.
 
-### Outstanding invoices side panel
-Top 10 unpaid/partial invoices sorted by days-outstanding with a "Apply payment" button that opens the dialog pre-filled.
+### F. Send via Email/SMS
+New edge function `send-ar-document`:
+- Inputs: `docId`, `channel: "email" | "sms"`, `to`
+- Email path uses Resend (already configured) with a branded HTML template and a PDF attachment.
+- SMS path uses Twilio (already configured) with a short message + signed view link.
+- On success, flips status to `sent` and stamps `sent_at`.
 
-### Recent payments table
-Search (reference/customer/invoice #), method filter, sort by date/amount, edit/delete row actions, click-through to linked invoice. "Closed invoice" pill when a payment fully settled it.
+### G. Public view link (so customers can actually open it)
+- New table `ar_document_share_links (token uuid, doc_id, doc_type, expires_at)`.
+- New public page `/d/:token` that renders the same preview, no auth needed.
+- The Send action automatically generates the link and embeds it in the email/SMS.
 
-### Refund action
-Per-row "Refund" → records a negative-amount payment with method = original, reference auto-set to "Refund of {original}".
+## Technical layout
 
-### Export
-CSV (payments in range) + Print + per-customer statement export.
+```text
+src/components/admin/store/autorepair/
+  AutoRepairInvoicesSection.tsx          (refactor: add actions, search, KPI)
+  invoices/
+    InvoiceKpiStrip.tsx                   (NEW)
+    InvoiceListRow.tsx                    (NEW — extracted row + dropdown menu)
+    InvoiceFilterBar.tsx                  (NEW — search + status pills + sort)
+    SendDocumentSheet.tsx                 (NEW — email/SMS picker)
+    RecordInvoicePaymentDialog.tsx        (NEW)
+    DeleteConfirmDialog.tsx               (NEW — shared)
+    ConvertEstimateButton.tsx             (NEW)
+src/lib/admin/
+  invoiceActions.ts                       (NEW — update/delete/duplicate/convert/markPaid)
+  invoicePdf.ts                           (NEW — jsPDF generator)
+src/pages/PublicDocumentView.tsx          (NEW — /d/:token route)
+supabase/functions/send-ar-document/      (NEW edge function)
+```
 
-### Files
-- `src/components/admin/store/autorepair/finance/FinancePaymentsSection.tsx` — refactor to orchestrator (parallel `useQueries`).
-- `src/lib/admin/paymentsCalculations.ts` — new (KPIs, series grouping, method breakdown, customer aggregation).
-- `src/lib/admin/paymentsCsvExport.ts` — new.
-- `src/components/admin/store/autorepair/finance/payments/` — new folder:
-  - `PaymentsPeriodBar.tsx`
-  - `PaymentsKpiStrip.tsx`
-  - `PaymentsTrendChart.tsx`
-  - `PaymentsMethodBreakdown.tsx`
-  - `PaymentsTable.tsx`
-  - `PaymentsOutstandingPanel.tsx`
-  - `RecordPaymentDialog.tsx`
+## DB migration (small)
+- `ALTER TABLE ar_invoices ADD COLUMN deleted_at timestamptz, sent_at timestamptz, converted_from_estimate_id uuid;`
+- `ALTER TABLE ar_estimates ADD COLUMN deleted_at timestamptz, sent_at timestamptz, converted_invoice_id uuid, status text DEFAULT 'draft';`
+- New `ar_document_share_links` table with RLS allowing anon SELECT by token only.
 
----
+## Order of work
+1. Migration + persist estimates to `ar_estimates`.
+2. Row dropdown menu with Edit / Delete / Duplicate / Mark Paid / Download PDF.
+3. Edit flow (reuse create form).
+4. Search + status filters + KPI strip.
+5. Convert Estimate → Invoice.
+6. Send sheet + edge function + public share page.
 
-## Part 2 — Expenses & Bills (focused upgrade)
-
-The current page already has AI receipt scan + add-expense form (1,254 lines — keep that intact). Add an **analytics layer above it**, no rewrite of the existing form/scan code.
-
-### New header strip (above existing scanner card)
-- Period bar (Today / 7d / 30d / 90d / This month / Last month / YTD / Custom + compare toggle).
-- 6 KPI cards w/ sparklines:
-  1. Total spent
-  2. COGS (parts/supplies/materials/inventory)
-  3. OpEx (everything else)
-  4. Expense count
-  5. Avg expense
-  6. Vendor count
-
-### New analytics row (between KPIs and existing list)
-- **Trend chart** — daily/weekly bar + cumulative line.
-- **Top categories** (horizontal bars, top 8) with click-to-filter the existing list.
-- **Top vendors** (horizontal bars, top 8) with click-to-filter the existing list.
-
-### Existing list — small upgrades
-- Tie its filter state to the new period bar (so the list shows only what's in range).
-- Add "Vendor" filter dropdown alongside the existing "Category" filter.
-- Add row click → opens existing edit drawer (already there) — confirm wiring.
-- Add a "Receipt" thumbnail badge when `receipt_url` is set (click opens in new tab).
-
-### Export
-CSV + Print menu added to the period bar (matches the other 4 dashboards).
-
-### Files
-- `src/components/admin/store/autorepair/finance/FinanceExpensesSection.tsx` — wrap the existing content with the new period bar / KPI strip / charts at the top, pass filtered range down to the existing list.
-- `src/lib/admin/expensesCalculations.ts` — new (KPIs, series, category/vendor aggregation, COGS classifier — re-uses logic from pnlCalculations).
-- `src/lib/admin/expensesCsvExport.ts` — new.
-- `src/components/admin/store/autorepair/finance/expenses/` — new folder:
-  - `ExpensesPeriodBar.tsx` (re-skin of the Income period bar)
-  - `ExpensesKpiStrip.tsx`
-  - `ExpensesTrendChart.tsx`
-  - `ExpensesCategoryBars.tsx`
-  - `ExpensesVendorBars.tsx`
-
-**Note**: I will NOT rewrite the existing AI scan / add-expense form / list — only add layers above and tie filters. The 1,254-line file stays mostly intact.
-
----
-
-## Part 3 — Cross-cutting upgrades (all 5 dashboards)
-
-### A) Real PDF export (replaces browser print)
-- Add `jspdf` + `jspdf-autotable`.
-- New utility `src/lib/admin/financePdfExport.ts` that takes the same payloads as the CSV exporters and writes a branded PDF (store name, period, KPI grid, breakdown tables).
-- Wire into the export menus on P&L, Income, Tax, Payments, Expenses alongside CSV.
-
-### B) Email-to-Accountant edge function
-Currently P&L "Email" just opens mailto + downloads CSV. Replace with:
-- New edge function `send-finance-report` that accepts `{ to, subject, message, csvBase64, pdfBase64?, filename }` and sends via Resend.
-- Will check for `RESEND_API_KEY` first — if missing, prompt to add it.
-- Shared `EmailAccountantDialog` component (To, Subject, Message preview, attachment list).
-- Per-store CPA email saved in localStorage `zivo:ar:cpa-email:{storeId}` so it pre-fills next time.
-
-### C) Saved view preferences
-Persist last-used date range, group-by, and compare toggle per dashboard per store in localStorage so refresh / tab switch keeps the same view.
-- Key pattern: `zivo:ar:fin:{section}:{storeId}` → `{ from, to, groupBy, compare }`.
-- New `src/lib/admin/financePrefs.ts` helper.
-
-### Files for Part 3
-- `src/lib/admin/financePdfExport.ts` — new.
-- `src/lib/admin/financePrefs.ts` — new.
-- `src/components/admin/store/autorepair/finance/shared/EmailAccountantDialog.tsx` — new.
-- `supabase/functions/send-finance-report/index.ts` — new edge function.
-- `supabase/config.toml` — register new function (verify_jwt = true).
-- Light edits to all 5 orchestrators to wire in PDF + Email + prefs.
-
----
-
-## Out of scope
-- QuickBooks / Xero formatted exports (separate pass).
-- Stripe / ABA auto-import of payments (requires merchant account + new schema).
-- Rewriting the existing receipt-scan / expense form code.
-
----
-
-## Technical notes
-- No DB migrations needed — uses existing tables.
-- `jspdf` + `jspdf-autotable` are tiny, fully client-side.
-- Edge function uses `RESEND_API_KEY` (will check secrets and ask to add if missing).
-- All money in cents; v2026 high-density styling (text-[11px/13px], p-2/p-3).
-- All charts via `recharts` (already present from earlier upgrades).
-- I will also quietly fix the current `useContext` runtime error.
+Want me to start with **steps 1–4** (the "I can't edit my invoice" pain) and queue Send + Convert as a follow-up, or do all of it in one pass?
