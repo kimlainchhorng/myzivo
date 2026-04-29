@@ -236,7 +236,7 @@ export default function PersonalChat({ recipientId, recipientName, recipientAvat
     };
   }, [recipientId]);
   const [messages, setMessages] = useState<Message[]>([]);
-  const [reactionsMap, setReactionsMap] = useState<Record<string, { emoji: string; count: number; hasMyReaction: boolean }[]>>({});
+  const [reactionsMap, setReactionsMap] = useState<Record<string, { emoji: string; count: number; reactedByMe: boolean }[]>>({});
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(true);
   const [sending, setSending] = useState(false);
@@ -536,14 +536,14 @@ export default function PersonalChat({ recipientId, recipientName, recipientAvat
             .in("message_id", msgIds);
           const reactionsData = (data || []) as MessageReactionRow[];
           if (reactionsData) {
-            const grouped: Record<string, Record<string, { count: number; hasMyReaction: boolean }>> = {};
+            const grouped: Record<string, Record<string, { count: number; reactedByMe: boolean }>> = {};
             for (const r of reactionsData) {
               if (!grouped[r.message_id]) grouped[r.message_id] = {};
-              if (!grouped[r.message_id][r.emoji]) grouped[r.message_id][r.emoji] = { count: 0, hasMyReaction: false };
+              if (!grouped[r.message_id][r.emoji]) grouped[r.message_id][r.emoji] = { count: 0, reactedByMe: false };
               grouped[r.message_id][r.emoji].count++;
-              if (r.user_id === user.id) grouped[r.message_id][r.emoji].hasMyReaction = true;
+              if (r.user_id === user.id) grouped[r.message_id][r.emoji].reactedByMe = true;
             }
-            const map: Record<string, { emoji: string; count: number; hasMyReaction: boolean }[]> = {};
+            const map: Record<string, { emoji: string; count: number; reactedByMe: boolean }[]> = {};
             for (const [msgId, emojis] of Object.entries(grouped)) {
               map[msgId] = Object.entries(emojis).map(([emoji, v]) => ({ emoji, ...v }));
             }
