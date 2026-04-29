@@ -62,6 +62,7 @@ export default function SupplierBrowserModal({ storeId, supplier, query, open, o
   const iframeRef = useRef<HTMLIFrameElement>(null);
   const [browserIssue, setBrowserIssue] = useState<BrowserIssue>(null);
   const [iframeLoading, setIframeLoading] = useState(true);
+  const [iframeUrl, setIframeUrl] = useState<string | null>(null);
   const [iframeDoc, setIframeDoc] = useState<string | null>(null);
   const [frameKey, setFrameKey] = useState(0);
   const [showCreds, setShowCreds] = useState(false);
@@ -94,6 +95,7 @@ export default function SupplierBrowserModal({ storeId, supplier, query, open, o
     setShowPwd(false);
     setBrowserIssue(null);
     setIframeLoading(true);
+    setIframeUrl(null);
     setIframeDoc(null);
   }, [open, supplier, storeId]);
 
@@ -109,6 +111,13 @@ export default function SupplierBrowserModal({ storeId, supplier, query, open, o
   const loadProxyPage = useCallback(async (url: string, init?: RequestInit) => {
     setIframeLoading(true);
     setBrowserIssue(null);
+    const method = init?.method?.toUpperCase() ?? "GET";
+    if (method === "GET") {
+      setIframeDoc(null);
+      setIframeUrl(url);
+      setFrameKey((k) => k + 1);
+      return;
+    }
     try {
       let res: Response;
       try {
@@ -118,13 +127,16 @@ export default function SupplierBrowserModal({ storeId, supplier, query, open, o
       }
       const html = await res.text();
       if (!res.ok) {
+        setIframeUrl(null);
         setIframeDoc(null);
         setBrowserIssue(res.status === 403 ? "not-allowed" : "blocked");
         return;
       }
+      setIframeUrl(null);
       setIframeDoc(html);
       setFrameKey((k) => k + 1);
     } catch {
+      setIframeUrl(null);
       setIframeDoc(null);
       setBrowserIssue("blocked");
     } finally {
