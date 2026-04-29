@@ -242,8 +242,9 @@ Deno.serve(async (req) => {
     }
 
     const htmlHeaders = new Headers(dynamicCorsHeaders);
-    htmlHeaders.set("Content-Type", "text/html; charset=utf-8");
-    htmlHeaders.set("Cache-Control", upstream.headers.get("cache-control") ?? "no-store");
+    htmlHeaders.set("content-type", "text/html; charset=utf-8");
+    htmlHeaders.set("cache-control", upstream.headers.get("cache-control") ?? "no-store");
+    htmlHeaders.set("x-zivo-proxy-version", "html-srcdoc-cors-v2");
     upstream.headers.forEach((v, k) => {
       if (k.toLowerCase() === "set-cookie") {
         htmlHeaders.append("Set-Cookie", v.replace(/;\s*Domain=[^;]+/i, "").replace(/;\s*SameSite=[^;]+/i, "; SameSite=None"));
