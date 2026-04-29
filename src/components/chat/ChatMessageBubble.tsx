@@ -203,7 +203,7 @@ interface ChatMessageBubbleProps {
   /** ISO timestamp of message creation — used to enforce 48h edit window */
   createdAt?: string | null;
   /** Pre-loaded reactions from parent (avoids N+1 queries) */
-  initialReactions?: { emoji: string; count: number; hasMyReaction: boolean }[];
+  initialReactions?: { emoji: string; count: number; reactedByMe: boolean }[];
   onReply: (id: string, message: string, isMe: boolean) => void;
   onDelete: (id: string) => void;
   onForward?: (id: string, message: string) => void;
@@ -228,7 +228,7 @@ const ChatMessageBubble = memo(function ChatMessageBubble({
   const [unlockLoading, setUnlockLoading] = useState(false);
   const unlockPrice = lockedPriceCents && lockedPriceCents > 0 ? lockedPriceCents : 99;
   const unlockPriceLabel = `$${(unlockPrice / 100).toFixed(2)}`;
-  const [reactions, setReactions] = useState<{ emoji: string; count: number; hasMyReaction: boolean }[]>(initialReactions || []);
+  const [reactions, setReactions] = useState<{ emoji: string; count: number; reactedByMe: boolean }[]>(initialReactions || []);
   const [openDown, setOpenDown] = useState(false);
   const [showStickerBurst, setShowStickerBurst] = useState(false);
   const [translation, setTranslation] = useState<{ text: string; sourceLang?: string } | null>(null);
@@ -364,13 +364,13 @@ const ChatMessageBubble = memo(function ChatMessageBubble({
         .eq("message_id", id);
       const reactionRows = (data || []) as MessageReactionRow[];
       if (reactionRows.length > 0) {
-        const grouped = reactionRows.reduce((acc: Record<string, { count: number; hasMyReaction: boolean }>, r) => {
-          if (!acc[r.emoji]) acc[r.emoji] = { count: 0, hasMyReaction: false };
+        const grouped = reactionRows.reduce((acc: Record<string, { count: number; reactedByMe: boolean }>, r) => {
+          if (!acc[r.emoji]) acc[r.emoji] = { count: 0, reactedByMe: false };
           acc[r.emoji].count++;
-          if (r.user_id === user?.id) acc[r.emoji].hasMyReaction = true;
+          if (r.user_id === user?.id) acc[r.emoji].reactedByMe = true;
           return acc;
-        }, {} as Record<string, { count: number; hasMyReaction: boolean }>);
-        setReactions(Object.entries(grouped).map(([emoji, v]) => ({ emoji, count: v.count, hasMyReaction: v.hasMyReaction })));
+        }, {} as Record<string, { count: number; reactedByMe: boolean }>);
+        setReactions(Object.entries(grouped).map(([emoji, v]) => ({ emoji, count: v.count, reactedByMe: v.reactedByMe })));
       }
     };
     load();
@@ -378,12 +378,12 @@ const ChatMessageBubble = memo(function ChatMessageBubble({
 
   const toggleReaction = async (emoji: string) => {
     if (!user?.id || id.startsWith("opt-")) return;
-    const existing = reactions.find((r) => r.emoji === emoji && r.hasMyReaction);
+    const existing = reactions.find((r) => r.emoji === emoji && r.reactedByMe);
     if (existing) {
       await dbFrom("message_reactions").delete()
         .eq("message_id", id).eq("user_id", user.id).eq("emoji", emoji);
       setReactions((prev) =>
-        prev.map((r) => r.emoji === emoji ? { ...r, count: r.count - 1, hasMyReaction: false } : r)
+        prev.map((r) => r.emoji === emoji ? { ...r, count: r.count - 1, reactedByMe: false } : r)
             .filter((r) => r.count > 0)
       );
     } else {
@@ -392,8 +392,8 @@ const ChatMessageBubble = memo(function ChatMessageBubble({
       });
       setReactions((prev) => {
         const found = prev.find((r) => r.emoji === emoji);
-        if (found) return prev.map((r) => r.emoji === emoji ? { ...r, count: r.count + 1, hasMyReaction: true } : r);
-        return [...prev, { emoji, count: 1, hasMyReaction: true }];
+        if (found) return prev.map((r) => r.emoji === emoji ? { ...r, count: r.count + 1, reactedByMe: true } : r);
+        return [...prev, { emoji, count: 1, reactedByMe: true }];
       });
     }
     setShowReactions(false);
