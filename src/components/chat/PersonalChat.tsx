@@ -856,7 +856,9 @@ export default function PersonalChat({ recipientId, recipientName, recipientAvat
       // happened during the DB insert step.
       const inferredPhase: "preflight" | "upload" | "insert" | undefined =
         httpErr?.phase || (job.publicUrl ? "insert" : "upload");
-      const isBusy = httpErr?.status === 429;
+      const isBusy = httpErr?.status === 429 || (
+        !!httpErr && httpErr.status >= 500 && /databaseerror|08p01|too many connections/i.test(httpErr.body || httpErr.message)
+      );
       updateOpt({
         _upload_status: "failed",
         _upload_error: message,
@@ -870,13 +872,13 @@ export default function PersonalChat({ recipientId, recipientName, recipientAvat
           ? "Too many requests right now. Try again in a few seconds."
           : "Tap Resend on the message to try again.",
       });
-      // For 429s: schedule a single silent auto-retry after 8s so the bubble
-      // self-heals once the DB pool recovers — user doesn't have to tap.
+      // For transient storage pressure: schedule a silent auto-retry so the
+      // bubble self-heals once the DB pool recovers — user doesn't have to tap.
       if (isBusy) {
         setTimeout(() => {
           const stillFailed = voiceJobsRef.current.get(clientSendId);
           if (!stillFailed || controller.signal.aborted) return;
-          vlog("auto-retry-429", { clientSendId });
+          vlog("auto-retry-busy", { clientSendId, status: httpErr?.status });
           retryVoiceSendRef.current?.(clientSendId);
         }, 8000);
       }
