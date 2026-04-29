@@ -393,6 +393,79 @@ export default function AutoRepairInvoicesSection({ storeId }: Props) {
   }));
   const removeItem = (id: string) => setDraft(d => ({ ...d, items: d.items.filter(i => i.id !== id) }));
 
+  // ---- Hooks that must run on EVERY render (before any early return) ----
+  // Build display rows from authoritative DB data + seed for the active tab.
+  const dbRowsForTab = tab === "invoice" ? dbInvoices : dbEstimates;
+  const seedForTab = useMemo(
+    () => docs.filter((d) => d.type === tab && ["1","2","3"].includes(d.id) && dbRowsForTab.length === 0),
+    [docs, tab, dbRowsForTab.length]
+  );
+
+  const rows: RowDoc[] = useMemo(() => {
+    const fromDb: RowDoc[] = dbRowsForTab.map((r: any) => {
+      const due = r.due_at ? new Date(r.due_at) : null;
+      const isOverdue = !!(due && r.status !== "paid" && due < new Date());
+      return {
+        id: r.id,
+        type: tab,
+        number: r.number || "",
+        customer: r.customer_name || "",
+        vehicle: r.vehicle_label || "",
+        totalCents: r.total_cents ?? 0,
+        amountPaidCents: r.amount_paid_cents ?? 0,
+        status: r.status || "draft",
+        isOverdue,
+      };
+    });
+    const fromSeed: RowDoc[] = seedForTab.map((d) => ({
+      id: d.id, type: tab, number: d.number, customer: d.customer, vehicle: d.vehicle,
+      totalCents: Math.round(total(d.items) * 100), amountPaidCents: 0, status: d.status,
+    }));
+    let all = [...fromDb, ...fromSeed];
+
+    // Dedupe by id (defensive) AND by number+customer to avoid visual duplicates
+    const seenIds = new Set<string>();
+    const seenKey = new Set<string>();
+    all = all.filter((r) => {
+      if (seenIds.has(r.id)) return false;
+      const key = `${r.number}|${r.customer}`.toLowerCase();
+      if (seenKey.has(key)) return false;
+      seenIds.add(r.id);
+      seenKey.add(key);
+      return true;
+    });
+
+    if (query.trim()) {
+      const q = query.toLowerCase();
+      all = all.filter((r) =>
+        r.number.toLowerCase().includes(q) ||
+        r.customer.toLowerCase().includes(q) ||
+        r.vehicle.toLowerCase().includes(q)
+      );
+    }
+    if (statusFilter !== "all") {
+      all = all.filter((r) => statusFilter === "overdue" ? r.isOverdue : r.status === statusFilter);
+    }
+    all.sort((a, b) => {
+      if (sortKey === "amount_desc") return b.totalCents - a.totalCents;
+      if (sortKey === "customer_asc") return a.customer.localeCompare(b.customer);
+      const aRow = dbRowsForTab.find((r: any) => r.id === a.id);
+      const bRow = dbRowsForTab.find((r: any) => r.id === b.id);
+      const at = aRow ? new Date(aRow.created_at).getTime() : 0;
+      const bt = bRow ? new Date(bRow.created_at).getTime() : 0;
+      return sortKey === "oldest" ? at - bt : bt - at;
+    });
+    return all;
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [dbRowsForTab, seedForTab, tab, query, statusFilter, sortKey]);
+
+  // Read persisted draft (if any) to surface a "Continue editing" banner
+  let savedDraftPreview: Doc | null = null;
+  try {
+    const raw = typeof window !== "undefined" ? localStorage.getItem(draftKey) : null;
+    if (raw) savedDraftPreview = JSON.parse(raw) as Doc;
+  } catch { /* ignore */ }
+
   if (creating) {
     return (
       <div className="space-y-4">
