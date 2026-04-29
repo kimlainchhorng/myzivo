@@ -1,50 +1,58 @@
-## Fix RLS for AutoRepair Estimates/Invoices/Payments
+## Goal
 
-The Create Estimate → Save → Convert to Invoice → Record Payment flow is blocked by RLS policies that check ownership against the wrong table (`restaurants` instead of `store_profiles`).
+Right now the Parts Supplier directory points to consumer sites (autozone.com, oreillyauto.com). For a repair shop, we should point to the **professional / wholesale portals** these brands run for shops — that's where shops have real accounts, see jobber pricing, and place trade orders.
 
-### Step 1 — Apply migration
+## Updates to `src/config/partsSuppliers.ts`
 
-Run the already-prepared migration `supabase/migrations/20260429170000_fix_ar_estimates_invoices_rls.sql` which:
+Replace consumer entries with their pro-shop counterparts (keeping `id` stable so existing saved credentials still load), and update `domain` + `searchUrlTemplate` + `name` accordingly:
 
-1. Drops the existing policies on `ar_estimates`, `ar_invoices`, `ar_invoice_items`, `ar_estimate_items`, and `ar_invoice_payments` that reference `restaurants`.
-2. Recreates them to verify ownership via `store_profiles.owner_id = auth.uid()` for the `store_id` on the row.
-3. Keeps admin override via `has_role(auth.uid(), 'admin')`.
+| id | New name | New domain | Notes |
+|---|---|---|---|
+| `autozone` | AutoZonePro (Commercial) | `autozonepro.com` | B2B shop portal; search via `/ecomm/b2b/search?q={q}` |
+| `oreilly` | FirstCallOnline (O'Reilly Pro) | `firstcallonline.com` | O'Reilly's pro-shop portal |
+| `napa` | NAPA PROLink | `proline.napaonline.com` | Pro-shop portal (login required) |
+| `advance` | Advance Professional (MyAdvantageLink) | `advancecommercial.com` | Pro counterpart to advanceautoparts.com |
+| `carquest` | Carquest Professional | `carquestpro.com` | Worldpac/Advance shop portal |
+| `pepboys` | Pep Boys Fleet | `fleet.pepboys.com` | Trade/fleet portal |
+| `worldpac` | WORLDPAC speedDIAL | `speeddial.worldpac.com` | Already pro — refine domain |
+| `mopar` | Mopar Professional | `moparrepairconnect.com` | Shop-facing |
+| `gm-parts` | GM ACDelco Connection | `acdelcoconnection.com` | Shop portal |
+| `ford-parts` | Ford Motorcraft Service | `motorcraftservice.com` | Pro/shop site |
+| `toyota-parts` | Toyota TIS (techinfo) | `techinfo.toyota.com` | Tech/shop portal |
+| `honda-parts` | Honda ServiceExpress | `serviceexpress.honda.com` | Pro |
 
-### Step 2 — Verify the editor flow works end-to-end
+Keep RockAuto, FCP Euro, Amazon, eBay, Summit, JEGS, Snap-on, Matco, Harbor Freight, LKQ, Keystone, Parts Authority, FMP, 1A Auto, PartsGeek as-is (already correct for their audience or no clean pro variant).
 
-After the migration is applied, manually test in `/admin/stores/.../?tab=ar-invoices`:
+Add a small `consumerDomain?: string` field on the entries we converted, so we can offer a "Switch to consumer site" button later if needed (non-breaking — optional field).
 
-- Create Estimate → Save (insert path with non-UUID seed id, then update path with real UUID).
-- Convert to Invoice (re-inserts seed estimate first if needed, then creates `ar_invoices` row linked via `estimate_id`, switches tab).
-- Record Payment on the new invoice (insert into `ar_invoice_payments`, refresh balance).
-- Send / Public View / PDF / Delete actions remain functional.
+Also add a short `description?: string` for each pro portal (e.g. "Trade pricing · login required") so the cards can show it.
 
-### Step 3 — Small follow-ups (only if issues surface during verify)
+## Logo handling
 
-- If the public document view (`/d/:token`) fails due to RLS, add a permissive `SELECT` policy or RPC for rows accessed via a valid share token.
-- If `ar_invoice_items` / `ar_estimate_items` inserts fail, add matching policies that join through their parent `invoice_id` / `estimate_id` to `store_profiles.owner_id`.
+`PartsSupplierLogo.tsx` already does favicon fallback chain (Google S2 → DuckDuckGo → icon.horse → monogram). Pro portals usually share branding with the parent — favicons resolve fine. No changes required to that component.
 
-### Technical notes
+The Clearbit lookup in `getSupplierLogoUrl` may miss some pro subdomains, so update it to also try the **root brand domain** as a second source:
 
-Policy template used for each table:
-
-```sql
-CREATE POLICY "Store owners manage <table>"
-ON public.<table> FOR ALL TO authenticated
-USING (EXISTS (
-  SELECT 1 FROM public.store_profiles sp
-  WHERE sp.id = <table>.store_id
-    AND sp.owner_id = auth.uid()
-))
-WITH CHECK (EXISTS (
-  SELECT 1 FROM public.store_profiles sp
-  WHERE sp.id = <table>.store_id
-    AND sp.owner_id = auth.uid()
-));
+```ts
+getSupplierLogoUrl(supplier) → 
+  [`logo.clearbit.com/${supplier.domain}`, 
+   `logo.clearbit.com/${rootDomain(supplier.domain)}`]
 ```
 
-For child item tables (`ar_invoice_items`, `ar_estimate_items`, `ar_invoice_payments`) the EXISTS clause joins through the parent doc's `store_id` to `store_profiles.owner_id`.
+(`rootDomain` strips the leading subdomain.)
 
-No frontend code changes are required for Step 1 — the existing `AutoRepairInvoicesSection.tsx` already handles UUID vs seed-id branching correctly.
+## SupplierBrowserModal
 
-Reply to approve and I'll apply the migration.
+No structural change needed — but since pro portals **all** require login and most block iframe embedding even via our proxy, update the blocked-state copy to be honest:
+
+> "{supplier.name} is a trade portal — open it in a new tab to log in with your shop account. We'll keep your saved credentials here for quick paste-in."
+
+And surface a small "Consumer site" link in the header when `consumerDomain` is set, so the user can fall back to e.g. autozone.com when they just want to look up a part publicly.
+
+## Files touched
+
+- `src/config/partsSuppliers.ts` — update entries, add `consumerDomain` and `description` optional fields, refine `getSupplierLogoUrl`
+- `src/components/admin/store/autorepair/SupplierBrowserModal.tsx` — update blocked-state copy, add optional "Consumer site" header link
+- `src/components/admin/store/autorepair/AutoRepairPartShopSection.tsx` — show `description` under the supplier name on the cards (1 line, muted, text-[10px])
+
+No DB / edge-function changes. Existing saved credentials in localStorage continue to work because supplier `id`s are unchanged.
