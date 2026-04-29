@@ -238,15 +238,26 @@ Deno.serve(async (req) => {
   var applying = false;
   function setVal(el, val){
     try {
+      // Focus first so framework form-controls bind, then clear, then set.
+      try { el.focus({ preventScroll: true }); } catch(_) {}
       var proto = Object.getPrototypeOf(el);
       var desc = Object.getOwnPropertyDescriptor(proto, 'value');
       var setter = desc && desc.set;
-      if (setter) setter.call(el, val); else el.value = val;
-      // Floating-label inputs (AutoZonePro etc.) only lift on focus/blur.
-      try { el.focus({ preventScroll: true }); } catch(_) {}
+      // Clear first to flush any stale floating-label state
+      if (setter) setter.call(el, ''); else el.value = '';
       el.dispatchEvent(new Event('input', { bubbles: true }));
+      // Now set the real value
+      if (setter) setter.call(el, val); else el.value = val;
+      // Fire the full event suite that Angular / React / Vue / vanilla all listen for.
+      try { el.dispatchEvent(new Event('beforeinput', { bubbles: true, cancelable: true })); } catch(_) {}
+      try { el.dispatchEvent(new InputEvent('input', { bubbles: true, cancelable: true, inputType: 'insertText', data: val })); }
+      catch(_) { el.dispatchEvent(new Event('input', { bubbles: true })); }
       el.dispatchEvent(new Event('change', { bubbles: true }));
+      el.dispatchEvent(new Event('keydown', { bubbles: true }));
+      el.dispatchEvent(new Event('keypress', { bubbles: true }));
       el.dispatchEvent(new Event('keyup', { bubbles: true }));
+      el.dispatchEvent(new Event('compositionend', { bubbles: true }));
+      // Blur lifts floating labels on Material/AutoZonePro pattern
       try { el.blur(); } catch(_) {}
     } catch(e) {}
   }
