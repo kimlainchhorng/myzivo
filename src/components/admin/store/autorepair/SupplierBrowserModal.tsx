@@ -318,10 +318,11 @@ export default function SupplierBrowserModal({ storeId, supplier, query, open, o
         )}
 
         <div className="flex-1 relative bg-muted/20 min-h-0">
-          {proxiedUrl && !browserIssue && (
+          {iframeDoc && !browserIssue && (
             <iframe
+              key={frameKey}
               ref={iframeRef}
-              src={proxiedUrl}
+              srcDoc={iframeDoc}
               title={supplier.name}
               className="absolute inset-0 w-full h-full bg-background"
               sandbox="allow-forms allow-popups allow-same-origin allow-scripts allow-top-navigation-by-user-activation"
@@ -351,6 +352,9 @@ export default function SupplierBrowserModal({ storeId, supplier, query, open, o
                   </p>
                 </div>
                 <div className="flex gap-2 justify-center">
+                  <Button size="sm" variant="outline" onClick={reload} className="gap-1.5">
+                    <RefreshCw className="w-3.5 h-3.5" /> Reload here
+                  </Button>
                   <Button
                     size="sm"
                     onClick={() => targetUrl && window.open(targetUrl, "_blank", "noopener,noreferrer")}
