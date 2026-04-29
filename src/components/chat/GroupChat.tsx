@@ -386,7 +386,9 @@ export default function GroupChat({ groupId, groupName, groupAvatar, onClose }: 
       const httpErr = e instanceof UploadHttpError ? e : null;
       const inferredPhase: "preflight" | "upload" | "insert" | undefined =
         httpErr?.phase || (job.publicUrl ? "insert" : "upload");
-      const isBusy = httpErr?.status === 429;
+      const isBusy = httpErr?.status === 429 || (
+        !!httpErr && httpErr.status >= 500 && /databaseerror|08p01|too many connections/i.test(httpErr.body || httpErr.message)
+      );
       updateOpt({
         _upload_status: "failed",
         _upload_error: message,
@@ -404,7 +406,7 @@ export default function GroupChat({ groupId, groupName, groupAvatar, onClose }: 
         setTimeout(() => {
           const stillFailed = voiceJobsRef.current.get(clientSendId);
           if (!stillFailed || controller.signal.aborted) return;
-          vlog("auto-retry-429", { clientSendId });
+          vlog("auto-retry-busy", { clientSendId, status: httpErr?.status });
           retryVoiceSendRef.current?.(clientSendId);
         }, 8000);
       }
