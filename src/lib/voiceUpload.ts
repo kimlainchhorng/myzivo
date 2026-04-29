@@ -298,6 +298,10 @@ const defaultIsRetriable = (err: unknown): boolean => {
   const msg = err instanceof Error ? err.message.toLowerCase() : "";
   if (!msg) return false;
   return (
+    msg.includes("databaseerror") ||
+    msg.includes("database error") ||
+    msg.includes("08p01") ||
+    msg.includes("too many connections") ||
     msg.includes("network") ||
     msg.includes("fetch") ||
     msg.includes("timeout") ||
@@ -325,10 +329,14 @@ export async function retryWithBackoff<T>(
       if (err instanceof UploadAbortedError) throw err;
       if (i === attempts - 1 || !isRetriable(err)) throw err;
       const jitter = Math.random() * 200;
-      // 429 → respect Retry-After (or use a much longer backoff while the
-      // database recovers from connection pressure): 1.5s → 3s → 6s → 12s.
+      // Storage/database pressure → respect Retry-After (or use a longer
+      // backoff while the database recovers): 1.5s → 3s → 6s → 12s.
       let delay: number;
-      if (err instanceof UploadHttpError && err.status === 429) {
+      const isStorageBusy = err instanceof UploadHttpError && (
+        err.status === 429 ||
+        (err.status >= 500 && /databaseerror|08p01|too many connections/i.test(err.body || err.message))
+      );
+      if (isStorageBusy) {
         const ra = err.retryAfterMs ?? 0;
         delay = Math.max(ra, 1500 * Math.pow(2, i)) + jitter;
       } else {
