@@ -98,7 +98,12 @@ export default function SupplierBrowserModal({ storeId, supplier, query, open, o
     setIframeLoading(true);
     setBrowserIssue(null);
     try {
-      const res = await fetch(url, { credentials: "include", ...init });
+      let res: Response;
+      try {
+        res = await fetch(url, { credentials: "include", ...init });
+      } catch {
+        res = await fetch(url, { credentials: "omit", ...init });
+      }
       const html = await res.text();
       if (!res.ok) {
         setIframeDoc(null);
