@@ -43,6 +43,7 @@ export const PARTS_SUPPLIERS: PartsSupplier[] = [
     category: "Retail Chain",
     description: "Trade portal · login required",
     searchUrlTemplate: "https://www.autozonepro.com/azprolanding/searchPage?searchText={q}",
+    loginFlow: "two-step",
   },
   {
     id: "oreilly",
@@ -64,6 +65,7 @@ export const PARTS_SUPPLIERS: PartsSupplier[] = [
     category: "Retail Chain",
     description: "Trade portal · login required",
     searchUrlTemplate: "https://www.napaprolink.com/",
+    loginFlow: "two-step",
   },
   {
     id: "advance",
