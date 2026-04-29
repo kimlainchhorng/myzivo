@@ -39,6 +39,32 @@ export interface UploadVoiceResult {
 // some reason they are missing. This avoids env-only fragility.
 const SUPABASE_URL = (CLIENT_SUPABASE_URL || (import.meta.env.VITE_SUPABASE_URL as string) || "").replace(/\/+$/, "");
 const SUPABASE_ANON_KEY = (CLIENT_SUPABASE_KEY || (import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY as string) || "");
+export const MAX_INLINE_VOICE_BYTES = 768 * 1024;
+
+export function shouldInlineVoiceBlob(blob: Blob): boolean {
+  return blob.size > 0 && blob.size <= MAX_INLINE_VOICE_BYTES;
+}
+
+export function blobToDataUrl(blob: Blob, signal?: AbortSignal): Promise<string> {
+  return new Promise((resolve, reject) => {
+    if (signal?.aborted) return reject(new UploadAbortedError());
+    const reader = new FileReader();
+    const onAbort = () => {
+      try { reader.abort(); } catch { /* noop */ }
+      reject(new UploadAbortedError());
+    };
+    signal?.addEventListener("abort", onAbort, { once: true });
+    reader.onload = () => {
+      signal?.removeEventListener("abort", onAbort);
+      resolve(String(reader.result || ""));
+    };
+    reader.onerror = () => {
+      signal?.removeEventListener("abort", onAbort);
+      reject(reader.error || new Error("Could not encode voice note"));
+    };
+    reader.readAsDataURL(blob);
+  });
+}
 
 export class UploadAbortedError extends Error {
   constructor() {
@@ -53,12 +79,15 @@ export class UploadHttpError extends Error {
   url?: string;
   phase?: "preflight" | "upload" | "insert";
   body?: string;
-  constructor(status: number, message: string, url?: string, body?: string) {
+  /** Server-supplied Retry-After in milliseconds (parsed from header). */
+  retryAfterMs?: number;
+  constructor(status: number, message: string, url?: string, body?: string, retryAfterMs?: number) {
     super(message);
     this.name = "UploadHttpError";
     this.status = status;
     this.url = url;
     this.body = body;
+    this.retryAfterMs = retryAfterMs;
     // 408 timeout, 429 rate limit, 5xx — safe to retry
     this.retriable = status === 408 || status === 429 || (status >= 500 && status < 600);
   }
@@ -83,10 +112,27 @@ export interface PreflightResult {
   body?: string;
 }
 
-// Cache successful write-preflight per bucket for the page lifetime — re-checking
-// every voice note is wasteful once we've proven the bucket accepts writes.
-const preflightOkCache = new Map<string, number>();
+// Cache successful write-preflight per bucket — persisted in sessionStorage so
+// HMR hot reloads (which re-execute this module) don't blow away the proof that
+// the bucket allows writes and trigger spurious preflight failures.
+const PREFLIGHT_CACHE_KEY = "_vmp_preflight";
 const PREFLIGHT_TTL_MS = 5 * 60 * 1000;
+
+function _loadPreflightCache(): Map<string, number> {
+  try {
+    const raw = sessionStorage.getItem(PREFLIGHT_CACHE_KEY);
+    if (raw) return new Map(JSON.parse(raw) as [string, number][]);
+  } catch { /* ignore */ }
+  return new Map();
+}
+
+function _savePreflightCache(cache: Map<string, number>) {
+  try {
+    sessionStorage.setItem(PREFLIGHT_CACHE_KEY, JSON.stringify([...cache]));
+  } catch { /* ignore — storage full or private browsing */ }
+}
+
+const preflightOkCache = _loadPreflightCache();
 
 /**
  * Real write-preflight: POSTs a 1-byte probe object into the user's own folder
@@ -138,11 +184,17 @@ export async function preflightVoiceBucket(opts: {
     });
     if (res.ok) {
       preflightOkCache.set(bucket, Date.now());
+      _savePreflightCache(preflightOkCache);
       // Best-effort cleanup of the probe object.
       void supabase.storage.from(bucket).remove([probePath]).catch(() => {});
       return { ok: true, status: res.status, url };
     }
     const body = await res.text().catch(() => "");
+    // 5xx = transient/server-side issue (e.g. storage DatabaseError 08P01).
+    // Don't block — let the real upload attempt surface the actual outcome.
+    if (res.status >= 500) {
+      return { ok: true, status: res.status, url };
+    }
     let reason = `Storage write blocked (HTTP ${res.status}). RLS or bucket policy denied the upload.`;
     if (res.status === 401) reason = "Not authorized to upload (HTTP 401). Sign in again.";
     if (res.status === 403) reason = `Storage RLS denied write to '${bucket}' (HTTP 403). Check bucket INSERT policy.`;
@@ -207,7 +259,18 @@ export async function uploadVoiceWithProgress(opts: UploadVoiceOpts): Promise<Up
         } catch {
           if (body) msg = `${msg}: ${body.slice(0, 160)}`;
         }
-        const err = new UploadHttpError(xhr.status, msg, url, body);
+        // Parse Retry-After header (seconds or HTTP-date) for 429/503.
+        let retryAfterMs: number | undefined;
+        const ra = xhr.getResponseHeader("Retry-After");
+        if (ra) {
+          const asInt = parseInt(ra, 10);
+          if (!Number.isNaN(asInt)) retryAfterMs = asInt * 1000;
+          else {
+            const asDate = Date.parse(ra);
+            if (!Number.isNaN(asDate)) retryAfterMs = Math.max(0, asDate - Date.now());
+          }
+        }
+        const err = new UploadHttpError(xhr.status, msg, url, body, retryAfterMs);
         err.phase = "upload";
         reject(err);
       }
@@ -261,6 +324,10 @@ const defaultIsRetriable = (err: unknown): boolean => {
   const msg = err instanceof Error ? err.message.toLowerCase() : "";
   if (!msg) return false;
   return (
+    msg.includes("databaseerror") ||
+    msg.includes("database error") ||
+    msg.includes("08p01") ||
+    msg.includes("too many connections") ||
     msg.includes("network") ||
     msg.includes("fetch") ||
     msg.includes("timeout") ||
@@ -288,7 +355,19 @@ export async function retryWithBackoff<T>(
       if (err instanceof UploadAbortedError) throw err;
       if (i === attempts - 1 || !isRetriable(err)) throw err;
       const jitter = Math.random() * 200;
-      const delay = base * Math.pow(2.2, i) + jitter;
+      // Storage/database pressure → respect Retry-After (or use a longer
+      // backoff while the database recovers): 1.5s → 3s → 6s → 12s.
+      let delay: number;
+      const isStorageBusy = err instanceof UploadHttpError && (
+        err.status === 429 ||
+        (err.status >= 500 && /databaseerror|08p01|too many connections/i.test(err.body || err.message))
+      );
+      if (isStorageBusy) {
+        const ra = err.retryAfterMs ?? 0;
+        delay = Math.max(ra, 1500 * Math.pow(2, i)) + jitter;
+      } else {
+        delay = base * Math.pow(2.2, i) + jitter;
+      }
       await sleep(delay, opts.signal);
     }
   }

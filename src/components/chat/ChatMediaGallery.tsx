@@ -10,14 +10,15 @@ import { format } from "date-fns";
 import { validateExternalUrl } from "@/lib/urlSafety";
 import { openExternalUrl } from "@/lib/openExternalUrl";
 
+type MediaTab = "photos" | "videos" | "voice" | "files" | "links";
+
 interface ChatMediaGalleryProps {
   open: boolean;
   onClose: () => void;
   recipientId: string;
   recipientName: string;
+  initialTab?: MediaTab;
 }
-
-type MediaTab = "photos" | "videos" | "voice" | "links";
 
 interface MediaItem {
   id: string;
@@ -35,17 +36,27 @@ interface DirectMessageMediaRow {
   voice_url: string | null;
   message_type: string | null;
   message: string | null;
+  file_payload?: {
+    url?: string;
+    filename?: string;
+    mime_type?: string;
+  } | null;
   created_at: string;
   sender_id: string;
 }
 
-export default function ChatMediaGallery({ open, onClose, recipientId, recipientName }: ChatMediaGalleryProps) {
+export default function ChatMediaGallery({ open, onClose, recipientId, recipientName, initialTab = "photos" }: ChatMediaGalleryProps) {
   const { user } = useAuth();
-  const [tab, setTab] = useState<MediaTab>("photos");
+  const [tab, setTab] = useState<MediaTab>(initialTab);
   const [items, setItems] = useState<MediaItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [previewType, setPreviewType] = useState<"image" | "video">("image");
+
+  useEffect(() => {
+    if (!open) return;
+    setTab(initialTab);
+  }, [initialTab, open]);
 
   useEffect(() => {
     if (!open || !user?.id) return;
@@ -53,7 +64,7 @@ export default function ChatMediaGallery({ open, onClose, recipientId, recipient
       setLoading(true);
       const { data } = await (supabase as any)
         .from("direct_messages" as any)
-        .select("id, image_url, video_url, voice_url, message_type, message, created_at, sender_id")
+        .select("id, image_url, video_url, voice_url, message_type, message, file_payload, created_at, sender_id")
         .or(`and(sender_id.eq.${user.id},receiver_id.eq.${recipientId}),and(sender_id.eq.${recipientId},receiver_id.eq.${user.id})`)
         .order("created_at", { ascending: false })
         .limit(500);
@@ -65,6 +76,16 @@ export default function ChatMediaGallery({ open, onClose, recipientId, recipient
           if (msg.image_url) media.push({ id: msg.id, url: msg.image_url, type: "photos", message: msg.message, created_at: msg.created_at, sender_id: msg.sender_id });
           if (msg.video_url) media.push({ id: msg.id, url: msg.video_url, type: "videos", message: msg.message, created_at: msg.created_at, sender_id: msg.sender_id });
           if (msg.voice_url) media.push({ id: msg.id, url: msg.voice_url, type: "voice", message: msg.message, created_at: msg.created_at, sender_id: msg.sender_id });
+          if (msg.file_payload?.url) {
+            media.push({
+              id: `${msg.id}-file`,
+              url: msg.file_payload.url,
+              type: "files",
+              message: msg.file_payload.filename || msg.message || "File",
+              created_at: msg.created_at,
+              sender_id: msg.sender_id,
+            });
+          }
           // Extract links from text messages
           if (msg.message && msg.message_type === "text") {
             const urlRegex = /https?:\/\/[^\s]+/g;
@@ -91,6 +112,7 @@ export default function ChatMediaGallery({ open, onClose, recipientId, recipient
     { id: "photos", label: "Photos", icon: Image, count: items.filter(i => i.type === "photos").length },
     { id: "videos", label: "Videos", icon: Video, count: items.filter(i => i.type === "videos").length },
     { id: "voice", label: "Voice", icon: Mic, count: items.filter(i => i.type === "voice").length },
+    { id: "files", label: "Files", icon: FileText, count: items.filter(i => i.type === "files").length },
     { id: "links", label: "Links", icon: FileText, count: items.filter(i => i.type === "links").length },
   ];
 
@@ -107,7 +129,7 @@ export default function ChatMediaGallery({ open, onClose, recipientId, recipient
       {/* Header */}
       <div className="sticky top-0 z-10 bg-background/95 backdrop-blur-xl border-b border-border/30 safe-area-top">
         <div className="px-4 py-3 flex items-center gap-3">
-          <button onClick={onClose} className="min-h-[44px] min-w-[44px] flex items-center justify-center">
+          <button onClick={onClose} className="min-h-[44px] min-w-[44px] flex items-center justify-center" aria-label="Back" title="Back">
             <ArrowLeft className="h-5 w-5 text-foreground" />
           </button>
           <div className="flex-1">
@@ -158,6 +180,8 @@ export default function ChatMediaGallery({ open, onClose, recipientId, recipient
                 key={item.id}
                 onClick={() => { setPreviewUrl(item.url); setPreviewType("image"); }}
                 className="aspect-square rounded-xl overflow-hidden bg-muted"
+                aria-label="Open photo"
+                title="Open photo"
               >
                 <img src={item.url} alt="" className="w-full h-full object-cover" loading="lazy" />
               </button>
@@ -200,6 +224,29 @@ export default function ChatMediaGallery({ open, onClose, recipientId, recipient
               </div>
             ))}
           </div>
+        ) : tab === "files" ? (
+          <div className="space-y-2">
+            {filtered.map((item) => (
+              <a
+                key={item.id}
+                href={item.url}
+                target="_blank"
+                rel="noreferrer"
+                className="flex items-center gap-3 p-3 rounded-xl bg-muted/40 border border-border/30 hover:bg-muted/60 transition-colors"
+              >
+                <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
+                  <FileText className="w-4 h-4 text-primary" />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="text-xs font-medium text-foreground truncate">{item.message || "File"}</p>
+                  <p className="text-[10px] text-muted-foreground">
+                    {item.sender_id === user?.id ? "You" : recipientName} • {format(new Date(item.created_at), "MMM d, h:mm a")}
+                  </p>
+                </div>
+                <Download className="w-4 h-4 text-muted-foreground" />
+              </a>
+            ))}
+          </div>
         ) : (
           <div className="space-y-2">
             {filtered.map((item) => (
@@ -235,7 +282,7 @@ export default function ChatMediaGallery({ open, onClose, recipientId, recipient
             className="fixed inset-0 z-[99999] bg-black flex items-center justify-center"
             onClick={() => setPreviewUrl(null)}
           >
-            <button className="absolute top-4 right-4 z-10 w-10 h-10 rounded-full bg-white/10 flex items-center justify-center safe-area-top">
+            <button className="absolute top-4 right-4 z-10 w-10 h-10 rounded-full bg-white/10 flex items-center justify-center safe-area-top" aria-label="Close preview" title="Close preview">
               <X className="w-5 h-5 text-white" />
             </button>
             {previewType === "image" ? (

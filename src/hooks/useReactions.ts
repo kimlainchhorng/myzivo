@@ -13,9 +13,14 @@ export interface ReactionAggregate {
   reactedByMe: boolean;
 }
 
-export function useReactions(messageId: string | null) {
+export function useReactions(
+  messageId: string | null,
+  initialState?: { emoji: string; count: number; reactedByMe: boolean }[],
+) {
   const { user } = useAuth();
-  const [reactions, setReactions] = useState<ReactionAggregate[]>([]);
+  const [reactions, setReactions] = useState<ReactionAggregate[]>(() =>
+    initialState ? initialState.map((r) => ({ ...r, users: [] })) : [],
+  );
 
   const load = useCallback(async () => {
     if (!messageId) return;
@@ -39,7 +44,8 @@ export function useReactions(messageId: string | null) {
 
   useEffect(() => {
     if (!messageId) return;
-    load();
+    // Skip initial DB query when parent already provided pre-loaded reactions
+    if (!initialState) load();
     const channel = (supabase as any)
       .channel(`reactions-${messageId}`)
       .on(
@@ -49,6 +55,7 @@ export function useReactions(messageId: string | null) {
       )
       .subscribe();
     return () => { (supabase as any).removeChannel(channel); };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [messageId, load]);
 
   const toggle = useCallback(async (emoji: string) => {

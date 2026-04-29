@@ -9,6 +9,8 @@ import Send from "lucide-react/dist/esm/icons/send";
 import Loader2 from "lucide-react/dist/esm/icons/loader-2";
 import Users from "lucide-react/dist/esm/icons/users";
 import ImagePlus from "lucide-react/dist/esm/icons/image-plus";
+import Plus from "lucide-react/dist/esm/icons/plus";
+import Smile from "lucide-react/dist/esm/icons/smile";
 import X from "lucide-react/dist/esm/icons/x";
 import Mic from "lucide-react/dist/esm/icons/mic";
 import Square from "lucide-react/dist/esm/icons/square";
@@ -22,7 +24,7 @@ import VoiceMessagePlayer from "./VoiceMessagePlayer";
 import VoiceMessageBubble from "./VoiceMessageBubble";
 import HoldToRecordMic from "./HoldToRecordMic";
 import { useVoiceRecorder } from "@/hooks/useVoiceRecorder";
-import { uploadVoiceWithProgress, retryWithBackoff, UploadAbortedError, UploadHttpError, preflightVoiceBucket } from "@/lib/voiceUpload";
+import { blobToDataUrl, shouldInlineVoiceBlob, uploadVoiceWithProgress, retryWithBackoff, UploadAbortedError, UploadHttpError } from "@/lib/voiceUpload";
 import { vlog, vwarn } from "@/lib/voiceDebug";
 import GroupMembersSheet from "./GroupMembersSheet";
 import GroupInviteSheet from "./GroupInviteSheet";
@@ -111,6 +113,7 @@ export default function GroupChat({ groupId, groupName, groupAvatar, onClose }: 
   const [sending, setSending] = useState(false);
   const [replyTo, setReplyTo] = useState<{ id: string; message: string; senderName: string } | null>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
+  const bottomAnchorRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [uploadingImage, setUploadingImage] = useState(false);
@@ -130,7 +133,9 @@ export default function GroupChat({ groupId, groupName, groupAvatar, onClose }: 
   }>>(new Map());
 
   const scrollToBottom = useCallback(() => {
-    setTimeout(() => scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight, behavior: "smooth" }), 50);
+    requestAnimationFrame(() => {
+      bottomAnchorRef.current?.scrollIntoView({ block: "end" });
+    });
   }, []);
 
   // Load members
@@ -297,6 +302,11 @@ export default function GroupChat({ groupId, groupName, groupAvatar, onClose }: 
   const runVoiceJob = useCallback(async (clientSendId: string, startFromInsert = false) => {
     const job = voiceJobsRef.current.get(clientSendId);
     if (!job || !user?.id) return;
+    if (voiceUploadInFlightRef.current) {
+      window.setTimeout(() => retryVoiceSendRef.current?.(clientSendId), 900);
+      return;
+    }
+    voiceUploadInFlightRef.current = true;
     const { controller, blob, durationMs, optimisticId } = job;
 
     const updateOpt = (patch: Partial<GroupMessage>) => {
@@ -310,33 +320,21 @@ export default function GroupChat({ groupId, groupName, groupAvatar, onClose }: 
       let publicUrl = job.publicUrl;
       let storagePath = job.storagePath;
 
-      if (!startFromInsert || !publicUrl) {
-        const contentType = blob.type || "audio/webm";
-        const ext = contentType.includes("mp4") ? "m4a" : "webm";
-        const path = `${user.id}/${Date.now()}-${clientSendId}.${ext}`;
+      const contentType = blob.type || "audio/webm";
+      const canInlineVoice = shouldInlineVoiceBlob(blob);
 
-        const preflight = await preflightVoiceBucket({
-          bucket: "chat-media-files",
-          path,
-          signal: controller.signal,
-        });
-        if (!preflight.ok) {
-          vwarn("preflight:blocked", { clientSendId, status: preflight.status });
-          updateOpt({
-            _upload_status: "failed",
-            _upload_error: preflight.reason || `Preflight blocked (HTTP ${preflight.status})`,
-            _upload_endpoint: preflight.url,
-            _upload_status_code: preflight.status,
-            _upload_phase: "preflight",
-            _upload_body: preflight.body,
-          });
-          toast.error("Voice note blocked by storage permissions");
-          return;
-        }
+      if (canInlineVoice && !publicUrl) {
+        publicUrl = await blobToDataUrl(blob, controller.signal);
+        job.publicUrl = publicUrl;
+        updateOpt({ _upload_progress: 1 });
+        vlog("inline:done", { clientSendId, sizeBytes: blob.size });
+      } else if (!startFromInsert || !publicUrl) {
+        const ext = contentType.includes("mp4") ? "m4a" : "webm";
 
         const result = await retryWithBackoff(
           (attempt) => {
             if (attempt > 0) vlog("upload:retry", { clientSendId, attempt });
+            const path = `${user.id}/${Date.now()}-${clientSendId}-${attempt}.${ext}`;
             return uploadVoiceWithProgress({
               blob,
               bucket: "chat-media-files",
@@ -354,7 +352,7 @@ export default function GroupChat({ groupId, groupName, groupAvatar, onClose }: 
               },
             });
           },
-          { signal: controller.signal, attempts: 3, baseDelayMs: 600 },
+          { signal: controller.signal, attempts: 4, baseDelayMs: 600 },
         );
         publicUrl = result.publicUrl;
         storagePath = result.path;
@@ -370,7 +368,13 @@ export default function GroupChat({ groupId, groupName, groupAvatar, onClose }: 
         message_type: "voice",
         voice_url: publicUrl!,
         reply_to_id: undefined,
-        file_payload: { duration_ms: durationMs, client_send_id: clientSendId } as { duration_ms?: number },
+        file_payload: {
+          duration_ms: durationMs,
+          client_send_id: clientSendId,
+          storage: canInlineVoice ? "inline" : "storage",
+          mime_type: contentType,
+          size: blob.size,
+        } as { duration_ms?: number },
       };
       await retryWithBackoff(
         async (attempt) => {
@@ -378,7 +382,7 @@ export default function GroupChat({ groupId, groupName, groupAvatar, onClose }: 
           const { error: insertError } = await dbFrom("group_messages").insert(insertData);
           if (insertError) throw insertError;
         },
-        { signal: controller.signal, attempts: 3, baseDelayMs: 600 },
+        { signal: controller.signal, attempts: 4, baseDelayMs: 600 },
       );
       vlog("insert:done", { clientSendId });
 
@@ -390,7 +394,9 @@ export default function GroupChat({ groupId, groupName, groupAvatar, onClose }: 
       });
       setTimeout(() => URL.revokeObjectURL(job.localUrl), 30000);
       voiceJobsRef.current.delete(clientSendId);
+      voiceUploadInFlightRef.current = false;
     } catch (e) {
+      voiceUploadInFlightRef.current = false;
       if (e instanceof UploadAbortedError || controller.signal.aborted) {
         vlog("aborted", { clientSendId });
         return;
@@ -400,6 +406,9 @@ export default function GroupChat({ groupId, groupName, groupAvatar, onClose }: 
       const httpErr = e instanceof UploadHttpError ? e : null;
       const inferredPhase: "preflight" | "upload" | "insert" | undefined =
         httpErr?.phase || (job.publicUrl ? "insert" : "upload");
+      const isBusy = httpErr?.status === 429 || (
+        !!httpErr && httpErr.status >= 500 && /databaseerror|08p01|too many connections/i.test(httpErr.body || httpErr.message)
+      );
       updateOpt({
         _upload_status: "failed",
         _upload_error: message,
@@ -408,12 +417,23 @@ export default function GroupChat({ groupId, groupName, groupAvatar, onClose }: 
         _upload_phase: inferredPhase,
         _upload_body: httpErr?.body,
       });
-      toast.error("Voice note failed to send", {
-        description: "Tap Resend on the message to try again.",
+      toast.error(isBusy ? "Server is busy — tap Resend" : "Voice note failed to send", {
+        description: isBusy
+          ? "Too many requests right now. Try again in a few seconds."
+          : "Tap Resend on the message to try again.",
       });
+      if (isBusy) {
+        setTimeout(() => {
+          const stillFailed = voiceJobsRef.current.get(clientSendId);
+          if (!stillFailed || controller.signal.aborted) return;
+          vlog("auto-retry-busy", { clientSendId, status: httpErr?.status });
+          retryVoiceSendRef.current?.(clientSendId);
+        }, 8000);
+      }
     }
   }, [user?.id, groupId]);
 
+  const retryVoiceSendRef = useRef<((clientSendId: string) => void) | null>(null);
   const retryVoiceSend = useCallback((clientSendId: string) => {
     const job = voiceJobsRef.current.get(clientSendId);
     if (!job) return;
@@ -434,6 +454,7 @@ export default function GroupChat({ groupId, groupName, groupAvatar, onClose }: 
     }));
     void runVoiceJob(clientSendId, !!job.publicUrl);
   }, [runVoiceJob]);
+  retryVoiceSendRef.current = retryVoiceSend;
 
   const discardVoiceSend = useCallback((clientSendId: string) => {
     const job = voiceJobsRef.current.get(clientSendId);
@@ -567,7 +588,7 @@ export default function GroupChat({ groupId, groupName, groupAvatar, onClose }: 
       {/* Header */}
       <div className="sticky top-0 z-10 bg-background/95 backdrop-blur-xl border-b border-border/30 safe-area-top">
         <div className="px-3 py-2 flex items-center gap-3">
-          <button onClick={onClose} className="min-h-[44px] min-w-[44px] flex items-center justify-center">
+          <button onClick={onClose} className="min-h-[44px] min-w-[44px] flex items-center justify-center" aria-label="Back" title="Back">
             <ArrowLeft className="h-5 w-5 text-foreground" />
           </button>
           <Avatar className="h-9 w-9 border-2 border-border/30">
@@ -583,7 +604,7 @@ export default function GroupChat({ groupId, groupName, groupAvatar, onClose }: 
           <div className="flex items-center gap-0.5">
             <button
               onClick={() => { void primeCallAudio(); setGroupCall("video"); }}
-              className="h-10 w-10 flex items-center justify-center rounded-full hover:bg-blue-500/10"
+              className="h-11 w-11 flex items-center justify-center rounded-full hover:bg-blue-500/10"
               aria-label="Video call"
               title="Video call"
             >
@@ -591,7 +612,7 @@ export default function GroupChat({ groupId, groupName, groupAvatar, onClose }: 
             </button>
             <button
               onClick={() => { void primeCallAudio(); setGroupCall("audio"); }}
-              className="h-10 w-10 flex items-center justify-center rounded-full hover:bg-emerald-500/10"
+              className="h-11 w-11 flex items-center justify-center rounded-full hover:bg-emerald-500/10"
               aria-label="Voice call"
               title="Voice call"
             >
@@ -619,7 +640,16 @@ export default function GroupChat({ groupId, groupName, groupAvatar, onClose }: 
       </div>
 
       {/* Messages */}
-      <div ref={scrollRef} className="flex-1 overflow-y-auto px-4 py-3 space-y-2">
+      <div
+        ref={scrollRef}
+        className="flex-1 overflow-y-auto overscroll-contain px-4 py-3 space-y-2"
+        style={{
+          WebkitOverflowScrolling: "touch",
+          touchAction: "pan-y",
+          transform: "translateZ(0)",
+          contain: "layout paint" as React.CSSProperties["contain"],
+        }}
+      >
         {loading ? (
           <div className="flex items-center justify-center h-40">
             <Loader2 className="h-5 w-5 animate-spin text-primary" />
@@ -631,7 +661,9 @@ export default function GroupChat({ groupId, groupName, groupAvatar, onClose }: 
             <p className="text-xs mt-1">Say hello to the group!</p>
           </div>
         ) : (
-          messages.map((msg) => {
+          <>
+          <AnimatePresence initial={false}>
+          {messages.map((msg) => {
             const isMe = msg.sender_id === user?.id;
             const senderName = getSenderName(msg.sender_id);
             const senderAvatar = getSenderAvatar(msg.sender_id);
@@ -639,8 +671,11 @@ export default function GroupChat({ groupId, groupName, groupAvatar, onClose }: 
             const isOptimistic = msg.id.startsWith("opt-");
 
             return (
-              <div
+              <motion.div
                 key={msg.id}
+                initial={{ opacity: 0, y: 10, scale: 0.97 }}
+                animate={{ opacity: 1, y: 0, scale: 1 }}
+                transition={{ type: "spring", damping: 22, stiffness: 380, mass: 0.7 }}
                 className={`chat-no-callout flex ${isMe ? "justify-end" : "justify-start"} gap-1.5`}
                 onContextMenu={(e) => e.preventDefault()}
                 style={{ WebkitTouchCallout: "none" } as React.CSSProperties}
@@ -716,9 +751,13 @@ export default function GroupChat({ groupId, groupName, groupAvatar, onClose }: 
                     </div>
                   )}
                 </div>
-              </div>
+              </motion.div>
             );
-          })
+          })}
+          </AnimatePresence>
+          {/* Bottom anchor for instant scroll-to-bottom */}
+          <div ref={bottomAnchorRef} className="h-px shrink-0" aria-hidden />
+          </>
         )}
       </div>
 
@@ -736,7 +775,7 @@ export default function GroupChat({ groupId, groupName, groupAvatar, onClose }: 
               <p className="text-[10px] font-semibold text-primary">{replyTo.senderName}</p>
               <p className="text-xs text-muted-foreground truncate">{replyTo.message}</p>
             </div>
-            <button onClick={() => setReplyTo(null)} className="h-7 w-7 rounded-full flex items-center justify-center">
+            <button onClick={() => setReplyTo(null)} className="h-7 w-7 rounded-full flex items-center justify-center" aria-label="Close reply" title="Close reply">
               <X className="h-3.5 w-3.5 text-muted-foreground" />
             </button>
           </motion.div>
@@ -746,31 +785,46 @@ export default function GroupChat({ groupId, groupName, groupAvatar, onClose }: 
       {/* Voice recording overlay is rendered inside HoldToRecordMic (Round 5) */}
 
       {/* Input */}
-      <div className="bg-background border-t border-border/30 px-3 py-2 flex items-center gap-2 relative" style={{ paddingBottom: "max(env(safe-area-inset-bottom, 0px), 0.5rem)" }}>
+      <div className="bg-background/80 backdrop-blur-2xl border-t border-border/5 px-2.5 py-2 flex items-end gap-1.5 relative" style={{ paddingBottom: "max(env(safe-area-inset-bottom, 0px), 0.5rem)" }}>
+        {/* Attach / image */}
         <button
           onClick={() => fileInputRef.current?.click()}
           disabled={uploadingImage}
-          className="h-10 w-10 rounded-full flex items-center justify-center text-muted-foreground hover:text-primary transition-colors shrink-0"
+          className="h-11 w-11 rounded-full flex items-center justify-center text-muted-foreground/60 hover:bg-muted/50 active:scale-90 transition-all shrink-0"
+          aria-label="Add image"
+          title="Add image"
         >
-          {uploadingImage ? <Loader2 className="h-5 w-5 animate-spin" /> : <ImagePlus className="h-5 w-5" />}
+          {uploadingImage ? <Loader2 className="h-[18px] w-[18px] animate-spin" /> : <Plus className="h-5 w-5" />}
         </button>
-        <input ref={fileInputRef} type="file" accept="image/*" className="hidden" onChange={handleImageSelect} />
+        <input ref={fileInputRef} type="file" accept="image/*" className="hidden" onChange={handleImageSelect} title="Choose image" aria-label="Choose image" />
 
-        <input
-          ref={inputRef}
-          value={input}
-          onChange={(e) => setInput(e.target.value)}
-          onKeyDown={(e) => e.key === "Enter" && !e.shiftKey && handleSend()}
-          placeholder="Type a message..."
-          className="flex-1 h-10 px-4 rounded-full bg-muted/50 border border-border/30 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/30"
-        />
+        {/* Text input with emoji button */}
+        <div className="flex-1 relative">
+          <input
+            ref={inputRef}
+            value={input}
+            onChange={(e) => setInput(e.target.value)}
+            onKeyDown={(e) => e.key === "Enter" && !e.shiftKey && handleSend()}
+            placeholder="Message..."
+            className="w-full h-12 pl-4 pr-14 rounded-full text-[15px] text-foreground placeholder:text-muted-foreground/40 focus:outline-none bg-muted/30 border border-border/10 focus:ring-2 focus:ring-primary/15 focus:border-primary/20 transition-all"
+          />
+          <div className="absolute right-1.5 top-1/2 -translate-y-1/2">
+            <button className="h-9 w-9 rounded-full flex items-center justify-center text-muted-foreground/40 hover:text-muted-foreground transition-colors" aria-label="Emoji" title="Emoji">
+              <Smile className="h-5 w-5" />
+            </button>
+          </div>
+        </div>
+
+        {/* Send or mic */}
         {input.trim() ? (
           <button
             onClick={() => handleSend()}
             disabled={sending}
-            className="h-10 w-10 rounded-full bg-primary text-primary-foreground flex items-center justify-center disabled:opacity-40 active:scale-90 transition-all shrink-0"
+            className="h-12 w-12 rounded-full bg-primary text-primary-foreground flex items-center justify-center disabled:opacity-40 active:scale-90 transition-all shrink-0 shadow-sm"
+            aria-label="Send message"
+            title="Send message"
           >
-            {sending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
+            {sending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-[17px] w-[17px]" />}
           </button>
         ) : (
           <HoldToRecordMic voice={voice} />

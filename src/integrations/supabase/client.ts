@@ -4,13 +4,64 @@ import type { Database } from './types';
 
 export const SUPABASE_URL = "https://slirphzzwcogdbkeicff.supabase.co";
 export const SUPABASE_PUBLISHABLE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNsaXJwaHp6d2NvZ2Ria2VpY2ZmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njk0NDUzMzgsImV4cCI6MjA4NTAyMTMzOH0.44uwdZZxQZYmmHr9yUALGO4Vr6mJVaVfSQW_pzJ0uoI";
+const REMEMBER_ME_KEY = "zivo_remember_me";
+const SUPABASE_PROJECT_REF = "slirphzzwcogdbkeicff";
+const SUPABASE_AUTH_KEY = `sb-${SUPABASE_PROJECT_REF}-auth-token`;
+
+const getPreferredStorage = (): Storage => {
+  try {
+    const remembered = localStorage.getItem(REMEMBER_ME_KEY) !== "false";
+    return remembered ? localStorage : sessionStorage;
+  } catch {
+    return localStorage;
+  }
+};
+
+const authStorage: Storage = {
+  getItem: (key: string) => getPreferredStorage().getItem(key),
+  setItem: (key: string, value: string) => {
+    getPreferredStorage().setItem(key, value);
+  },
+  removeItem: (key: string) => {
+    try { localStorage.removeItem(key); } catch { /* noop */ }
+    try { sessionStorage.removeItem(key); } catch { /* noop */ }
+  },
+  clear: () => {
+    getPreferredStorage().clear();
+  },
+  key: (index: number) => getPreferredStorage().key(index),
+  get length() {
+    return getPreferredStorage().length;
+  },
+};
+
+export function setRememberMePreference(remember: boolean) {
+  try {
+    localStorage.setItem(REMEMBER_ME_KEY, remember ? "true" : "false");
+    if (remember) {
+      const token = sessionStorage.getItem(SUPABASE_AUTH_KEY);
+      if (token) {
+        localStorage.setItem(SUPABASE_AUTH_KEY, token);
+        sessionStorage.removeItem(SUPABASE_AUTH_KEY);
+      }
+    } else {
+      const token = localStorage.getItem(SUPABASE_AUTH_KEY);
+      if (token) {
+        sessionStorage.setItem(SUPABASE_AUTH_KEY, token);
+        localStorage.removeItem(SUPABASE_AUTH_KEY);
+      }
+    }
+  } catch {
+    // Ignore storage failures in private mode or restricted webviews.
+  }
+}
 
 // Import the supabase client like this:
 // import { supabase } from "@/integrations/supabase/client";
 
 export const supabase = createClient<Database>(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY, {
   auth: {
-    storage: localStorage,
+    storage: authStorage,
     persistSession: true,
     autoRefreshToken: true,
   }

@@ -7,7 +7,7 @@
 import { useState, useEffect } from "react";
 import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { Loader2, Mail, Lock, ArrowRight, Eye, EyeOff, ShieldCheck, Sparkles } from "lucide-react";
-import { supabase } from "@/integrations/supabase/client";
+import { supabase, setRememberMePreference } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -23,7 +23,13 @@ const Login = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
-  const [remember, setRemember] = useState(true);
+  const [remember, setRemember] = useState(() => {
+    try {
+      return localStorage.getItem("zivo_remember_me") !== "false";
+    } catch {
+      return true;
+    }
+  });
   const [submitting, setSubmitting] = useState(false);
 
   // If already signed in, leave the login page
@@ -52,6 +58,7 @@ const Login = () => {
       // ignore — fall back to message parsing
     }
 
+    setRememberMePreference(remember);
     const { error } = await signIn(trimmedEmail, password);
     setSubmitting(false);
     if (error) {
