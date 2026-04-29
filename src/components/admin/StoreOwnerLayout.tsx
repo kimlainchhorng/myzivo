@@ -15,8 +15,8 @@ import {
   BedDouble, CalendarRange, CalendarDays, KeyRound, Sparkles, Hotel, LayoutDashboard, Images, Search,
   PackagePlus, Utensils, Palmtree, HeartPulse, MessageSquareText, ListChecks, DollarSign,
   Inbox, BadgeCheck, Star, Building2, Tag, Tv, Briefcase, BookOpen, UserCog, Banknote, Download,
-  Moon, ScrollText, Receipt, TrendingUp, Bell, Zap, Package,
-  UtensilsCrossed, Gift, Car, AlarmClock, WashingMachine, MessageCircleWarning,
+  Moon, ScrollText, Receipt, TrendingUp, Bell, Zap,
+  UtensilsCrossed, Gift, AlarmClock, WashingMachine, MessageCircleWarning,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";

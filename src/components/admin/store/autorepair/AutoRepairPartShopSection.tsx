@@ -3,12 +3,7 @@
  * Wired to ar_parts: store-owned catalog with search/filter and full CRUD.
  * Includes the Parts Suppliers connection panel below the catalog.
  */
-<<<<<<< HEAD
-import { useState, useMemo } from "react";
-import AutoRepairPartSuppliersSection from "./AutoRepairPartSuppliersSection";
-=======
 import { useState, useMemo, useEffect } from "react";
->>>>>>> 7fc631230b66bbe8705013d4ad8766e86ff2af57
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -235,8 +230,6 @@ export default function AutoRepairPartShopSection({ storeId }: Props) {
           ))}
         </div>
       )}
-
-      <AutoRepairPartSuppliersSection storeId={storeId} />
 
       <Dialog open={open} onOpenChange={setOpen}>
         <DialogContent className="max-w-md">

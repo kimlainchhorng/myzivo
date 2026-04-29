@@ -63,13 +63,8 @@ export default function SmartSearchPage() {
         .select("id, name, member_count, description")
         .ilike("name", term)
         .limit(8),
-<<<<<<< HEAD
       (supabase as any).from("store_products")
         .select("id, name, price_khr, price_usd, condition")
-=======
-      supabase.from("store_products")
-        .select("id, name, price, price_khr")
->>>>>>> 7fc631230b66bbe8705013d4ad8766e86ff2af57
         .ilike("name", term)
         .limit(8),
     ]);
@@ -96,11 +91,7 @@ export default function SmartSearchPage() {
       marketplace: (mktRes.data ?? []).map((m: any) => ({
         id: m.id,
         title: m.name ?? "Item",
-<<<<<<< HEAD
         price: m.price_usd ? `$${m.price_usd}` : m.price_khr ? `${m.price_khr} KHR` : "—",
-=======
-        price: m.price ? `$${m.price}` : m.price_khr ? `${m.price_khr} KHR` : "—",
->>>>>>> 7fc631230b66bbe8705013d4ad8766e86ff2af57
         condition: m.condition,
       })),
     });

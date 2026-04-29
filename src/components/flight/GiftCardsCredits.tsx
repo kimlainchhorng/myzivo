@@ -70,21 +70,12 @@ export const GiftCardsCredits = ({
           originalAmount: g.initial_balance, expiresAt: g.expires_at ?? "", type: "gift" as const,
         })));
       });
-<<<<<<< HEAD
     (supabase as any).from("promo_codes").select("code, discount_value, discount_type, min_order_amount")
       .eq("is_active", true).then(({ data }: { data: any[] | null }) => {
         if (data) setPromoCodes(data.map((p: any) => ({
           code: p.code, discount: p.discount_value ?? 0,
           type: (p.discount_type === "percent" ? "percent" : "fixed") as "percent" | "fixed",
           description: `${p.discount_value}${p.discount_type === "percent" ? "% off" : "$ off"}`, minPurchase: p.min_order_amount ?? undefined,
-=======
-    supabase.from("promo_codes").select("code, discount_value, discount_type, min_fare")
-      .eq("is_active", true).then(({ data }) => {
-        if (data) setPromoCodes((data as any[]).map((p: any) => ({
-          code: p.code, discount: p.discount_value ?? 0,
-          type: (p.discount_type === "percent" ? "percent" : "fixed") as "percent" | "fixed",
-          description: "", minPurchase: p.min_fare ?? undefined,
->>>>>>> 7fc631230b66bbe8705013d4ad8766e86ff2af57
         })));
       });
   }, [user]);
@@ -245,7 +236,6 @@ export const GiftCardsCredits = ({
               </motion.div>
             )}
 
-<<<<<<< HEAD
             {/* Suggested Codes from Supabase */}
             {promoCodes.length > 0 && (
               <div>
@@ -262,22 +252,6 @@ export const GiftCardsCredits = ({
                     </Badge>
                   ))}
                 </div>
-=======
-            {/* Suggested Codes */}
-            <div>
-              <p className="text-sm text-muted-foreground mb-2">Try these codes:</p>
-              <div className="flex flex-wrap gap-2">
-                {promoCodes.map(code => (
-                  <Badge
-                    key={code.code}
-                    variant="outline"
-                    className="cursor-pointer hover:bg-muted"
-                    onClick={() => setPromoCode(code.code)}
-                  >
-                    {code.code}
-                  </Badge>
-                ))}
->>>>>>> 7fc631230b66bbe8705013d4ad8766e86ff2af57
               </div>
             )}
           </TabsContent>
