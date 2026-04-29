@@ -557,7 +557,26 @@ const FlightLanding = () => {
 
   return (
     <div className="min-h-screen bg-background relative overflow-hidden">
-      <SEOHead title="Search Flights – ZIVO" description="Search and compare flights from 500+ airlines. Find the best deals." />
+      <SEOHead
+        title="Search Flights – ZIVO | Compare 500+ Airlines"
+        description="Find the best flight deals from 500+ airlines worldwide. Compare prices, book flights, and track price drops — all on ZIVO."
+        canonical="/flights"
+        ogImage="/og-flights.jpg"
+        appLink="zivo://flights"
+        structuredData={{
+          "@context": "https://schema.org",
+          "@type": "WebPage",
+          "name": "Search Flights – ZIVO",
+          "description": "Find the best flight deals from 500+ airlines worldwide.",
+          "url": "https://hizivo.com/flights",
+          "isPartOf": { "@type": "WebSite", "url": "https://hizivo.com", "name": "ZIVO" },
+          "potentialAction": {
+            "@type": "SearchAction",
+            "target": "https://hizivo.com/flights/results?origin={origin}&destination={destination}&date={date}",
+            "query-input": "required name=origin required name=destination required name=date"
+          }
+        }}
+      />
       <Header />
       <main className="pt-16 sm:pt-20">
         <DesktopCinematicHero />

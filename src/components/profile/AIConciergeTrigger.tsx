@@ -2,10 +2,12 @@
  * AIConciergeTrigger Component
  * Premium 2026-era floating AI concierge with context awareness
  */
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { X, Send, Bot, User } from "lucide-react";
 import { useMyTrips } from "@/hooks/useMyTrips";
+import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/contexts/AuthContext";
 
 const ChatIcon = ({ className }: { className?: string }) => (
   <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -27,29 +29,38 @@ export function AIConciergeTrigger() {
   ]);
   const [input, setInput] = useState("");
 
+  const { user } = useAuth();
   const { data: upcomingTrips } = useMyTrips("upcoming");
   const hasUpcomingTrips = upcomingTrips && upcomingTrips.length > 0;
+  const [alertCount, setAlertCount] = useState(0);
 
-  // TODO: Load real alert count from notifications table
-  const alertCount = 0;
+  useEffect(() => {
+    if (!user) return;
+    supabase.from("notifications").select("id", { count: "exact", head: true })
+      .eq("user_id", user.id).eq("is_read", false).then(({ count }) => {
+        if (count) setAlertCount(count);
+      });
+  }, [user]);
 
-  const sendMessage = (text: string) => {
+  const sendMessage = async (text: string) => {
     if (!text.trim()) return;
-
-    setMessages((prev) => [
-      ...prev,
-      { id: Date.now(), type: "user", text },
-    ]);
+    setMessages((prev) => [...prev, { id: Date.now(), type: "user", text }]);
     setInput("");
 
-    // TODO: Connect to real AI/support backend
-    setTimeout(() => {
-      const response = "Thanks for your message! A support agent will assist you shortly. Average wait time: 2 mins.";
+    if (user) {
+      await supabase.from("feedback_submissions").insert({
+        category: "concierge_message",
+        subject: "Concierge Chat",
+        message: text,
+        user_id: user.id,
+      });
+    }
 
-      setMessages((prev) => [
-        ...prev,
-        { id: Date.now() + 1, type: "bot", text: response },
-      ]);
+    setTimeout(() => {
+      const response = hasUpcomingTrips
+        ? "Thanks for your message! A support agent will assist you shortly. Average wait time: 2 mins."
+        : "Thanks for reaching out! Our team will get back to you soon. For faster help, check our Help Center.";
+      setMessages((prev) => [...prev, { id: Date.now() + 1, type: "bot", text: response }]);
     }, 1000);
   };
 

@@ -1,10 +1,14 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { ArrowLeft, Heart, MessageCircle, UserPlus, Star, ShoppingBag, Award, Zap } from "lucide-react";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
+import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/contexts/AuthContext";
+import { formatDistanceToNow } from "date-fns";
+import SEOHead from "@/components/SEOHead";
 
 interface Activity {
   id: string;
@@ -16,18 +20,15 @@ interface Activity {
   preview?: string;
 }
 
-const MOCK_ACTIVITY: Activity[] = [
-  { id: "1", type: "like", user: "Alex Morgan", action: "liked your photo", time: "2m ago", preview: "Sunset in Bali" },
-  { id: "2", type: "comment", user: "Sarah Kim", action: "commented on your reel", time: "15m ago", preview: "Amazing content! 🔥" },
-  { id: "3", type: "follow", user: "Mike Ross", action: "started following you", time: "30m ago" },
-  { id: "4", type: "follow", user: "Luna, DJ Nova", action: "started following you", time: "1h ago" },
-  { id: "5", type: "review", user: "Tom L.", action: "left a 5★ review on your listing", time: "2h ago", target: "Vintage Camera" },
-  { id: "6", type: "purchase", user: "Nina P.", action: "purchased your item", time: "3h ago", target: "Travel Backpack" },
-  { id: "7", type: "achievement", user: "You", action: "earned a new badge", time: "5h ago", target: "Top Creator 🏆" },
-  { id: "8", type: "like", user: "Carlos D. and 12 others", action: "liked your post", time: "8h ago" },
-  { id: "9", type: "post", user: "Priya S.", action: "mentioned you in a post", time: "1d ago" },
-  { id: "10", type: "follow", user: "Amy W.", action: "started following you", time: "1d ago" },
-];
+function categoryToType(category: string): Activity["type"] {
+  if (category.includes("like") || category.includes("heart")) return "like";
+  if (category.includes("comment") || category.includes("reply")) return "comment";
+  if (category.includes("follow") || category.includes("friend")) return "follow";
+  if (category.includes("review") || category.includes("rating")) return "review";
+  if (category.includes("purchase") || category.includes("order") || category.includes("payment")) return "purchase";
+  if (category.includes("badge") || category.includes("achievement") || category.includes("reward")) return "achievement";
+  return "post";
+}
 
 const ICON_MAP: Record<string, any> = {
   like: Heart,
@@ -51,7 +52,34 @@ const COLOR_MAP: Record<string, string> = {
 
 export default function ActivityFeedPage() {
   const navigate = useNavigate();
+  const { user } = useAuth();
   const [filter, setFilter] = useState<string>("all");
+  const [activities, setActivities] = useState<Activity[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const load = async () => {
+      if (!user) { setLoading(false); return; }
+      const { data } = await supabase
+        .from("notifications")
+        .select("id, title, body, category, created_at, is_read")
+        .eq("user_id", user.id)
+        .order("created_at", { ascending: false })
+        .limit(50);
+
+      if (data && data.length > 0) {
+        setActivities(data.map(n => ({
+          id: n.id,
+          type: categoryToType(n.category ?? ""),
+          user: n.title,
+          action: n.body,
+          time: formatDistanceToNow(new Date(n.created_at), { addSuffix: true }),
+        })));
+      }
+      setLoading(false);
+    };
+    load();
+  }, [user]);
 
   const filters = ["all", "likes", "comments", "follows", "sales"];
   const filterTypeMap: Record<string, string[]> = {
@@ -62,14 +90,20 @@ export default function ActivityFeedPage() {
     sales: ["purchase", "review"],
   };
 
-  const filtered = filter === "all" ? MOCK_ACTIVITY : MOCK_ACTIVITY.filter(a => filterTypeMap[filter]?.includes(a.type));
+  const filtered = filter === "all" ? activities : activities.filter(a => filterTypeMap[filter]?.includes(a.type));
 
-  // Group by time period
-  const today = filtered.filter(a => a.time.includes("m ago") || a.time.includes("h ago"));
-  const earlier = filtered.filter(a => a.time.includes("d ago"));
+  // Group by time period (notifications within last 24h vs earlier)
+  const today = filtered.filter(a => !a.time.includes("day") && !a.time.includes("month") && !a.time.includes("year"));
+  const earlier = filtered.filter(a => a.time.includes("day") || a.time.includes("month") || a.time.includes("year"));
 
   return (
     <div className="min-h-screen bg-background pb-20">
+      <SEOHead
+        title="Activity Feed – ZIVO"
+        description="See your latest activity, likes, comments, and follows on ZIVO."
+        canonical="/activity"
+        noIndex
+      />
       <div className="sticky top-0 safe-area-top z-10 bg-background/95 backdrop-blur-sm border-b border-border p-4">
         <div className="flex items-center gap-2 mb-3">
           <Button variant="ghost" size="icon" onClick={() => navigate(-1)}>
@@ -88,27 +122,43 @@ export default function ActivityFeedPage() {
       </div>
 
       <div className="divide-y divide-border">
-        {today.length > 0 && (
-          <>
-            <p className="text-xs font-semibold text-muted-foreground px-4 py-2 bg-muted/50">Today</p>
-            {today.map((activity, i) => (
-              <ActivityRow key={activity.id} activity={activity} index={i} />
+        {loading ? (
+          <div className="space-y-0">
+            {[1,2,3,4].map(i => (
+              <div key={i} className="flex items-center gap-3 px-4 py-3 animate-pulse">
+                <div className="h-10 w-10 rounded-full bg-muted shrink-0" />
+                <div className="flex-1 space-y-1.5">
+                  <div className="h-3 bg-muted rounded w-3/4" />
+                  <div className="h-2.5 bg-muted rounded w-1/2" />
+                </div>
+              </div>
             ))}
-          </>
-        )}
-        {earlier.length > 0 && (
-          <>
-            <p className="text-xs font-semibold text-muted-foreground px-4 py-2 bg-muted/50">Earlier</p>
-            {earlier.map((activity, i) => (
-              <ActivityRow key={activity.id} activity={activity} index={i} />
-            ))}
-          </>
-        )}
-        {filtered.length === 0 && (
-          <div className="text-center py-16">
-            <Zap className="h-12 w-12 text-muted-foreground mx-auto mb-3" />
-            <p className="text-muted-foreground">No activity yet</p>
           </div>
+        ) : (
+          <>
+            {today.length > 0 && (
+              <>
+                <p className="text-xs font-semibold text-muted-foreground px-4 py-2 bg-muted/50">Today</p>
+                {today.map((activity, i) => (
+                  <ActivityRow key={activity.id} activity={activity} index={i} />
+                ))}
+              </>
+            )}
+            {earlier.length > 0 && (
+              <>
+                <p className="text-xs font-semibold text-muted-foreground px-4 py-2 bg-muted/50">Earlier</p>
+                {earlier.map((activity, i) => (
+                  <ActivityRow key={activity.id} activity={activity} index={i} />
+                ))}
+              </>
+            )}
+            {filtered.length === 0 && (
+              <div className="text-center py-16">
+                <Zap className="h-12 w-12 text-muted-foreground mx-auto mb-3" />
+                <p className="text-muted-foreground">No activity yet</p>
+              </div>
+            )}
+          </>
         )}
       </div>
     </div>

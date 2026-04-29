@@ -58,6 +58,7 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { format, isToday, isYesterday } from "date-fns";
 import { toast } from "sonner";
 import PullToRefresh from "@/components/shared/PullToRefresh";
+import SEOHead from "@/components/SEOHead";
 import { useCallback } from "react";
 import { assessChatMessageRisk, sanitizeOutgoingMessage } from "@/lib/security/chatContentSafety";
 import { validateExternalUrl } from "@/lib/urlSafety";
@@ -2114,6 +2115,12 @@ export default function ChatHubPage({ embedded = false }: { embedded?: boolean }
 
   return (
     <PullToRefresh onRefresh={handlePullRefresh} enabled={!hasOverlayChatOpen} className="min-h-screen bg-background pb-24 overscroll-none">
+      <SEOHead
+        title="Messages – ZIVO | Chat with Friends & Businesses"
+        description="Send messages, share photos, video call, and chat with friends and businesses on ZIVO."
+        canonical="/chat"
+        noIndex
+      />
       {shell}
     </PullToRefresh>
   );

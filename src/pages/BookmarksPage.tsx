@@ -12,6 +12,7 @@ import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 import { motion, AnimatePresence } from "framer-motion";
 import ZivoMobileNav from "@/components/app/ZivoMobileNav";
+import SEOHead from "@/components/SEOHead";
 
 type BookmarkTab = "all" | "post" | "flight" | "restaurant";
 
@@ -52,6 +53,7 @@ export default function BookmarksPage() {
 
   return (
     <div className="min-h-screen bg-background pb-20">
+      <SEOHead title="Bookmarks – ZIVO" description="Your saved flights, restaurants, and content on ZIVO." canonical="/bookmarks" noIndex />
       <div className="sticky top-0 z-40 bg-background/80 backdrop-blur-md border-b border-border/50 safe-area-top">
         <div className="flex items-center gap-3 px-4 py-3">
           <Button variant="ghost" size="icon" className="h-10 w-10 rounded-full" onClick={() => navigate(-1)}>

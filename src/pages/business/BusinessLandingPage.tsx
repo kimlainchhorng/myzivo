@@ -42,6 +42,7 @@ import NavBar from "@/components/home/NavBar";
 import Footer from "@/components/Footer";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
+import { supabase } from "@/integrations/supabase/client";
 import {
   BUSINESS_FEATURES,
   HIGH_VALUE_ROUTES,
@@ -79,20 +80,21 @@ export default function BusinessLandingPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsSubmitting(true);
-
-    // TODO: Submit to backend API
-
-    toast.success("Thank you! Our business team will contact you within 24 hours.");
-    setIsSubmitting(false);
-    setFormData({
-      companyName: "",
-      contactName: "",
-      email: "",
-      phone: "",
-      companySize: "",
-      industry: "",
-      message: "",
-    });
+    try {
+      const message = `Company: ${formData.companyName}\nContact: ${formData.contactName}\nEmail: ${formData.email}\nPhone: ${formData.phone}\nSize: ${formData.companySize}\nIndustry: ${formData.industry}\nMessage: ${formData.message}`;
+      const { error } = await supabase.from("feedback_submissions").insert({
+        category: "business_inquiry",
+        subject: `Business Inquiry - ${formData.companyName}`,
+        message,
+      });
+      if (error) throw error;
+      toast.success("Thank you! Our business team will contact you within 24 hours.");
+      setFormData({ companyName: "", contactName: "", email: "", phone: "", companySize: "", industry: "", message: "" });
+    } catch {
+      toast.error("Failed to submit. Please try again.");
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (

@@ -1,12 +1,16 @@
-import { useState } from "react";
+import { useState, useCallback, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Progress } from "@/components/ui/progress";
-import { ArrowLeft, Send, Plus, Trash2, BarChart3, HelpCircle, CheckCircle } from "lucide-react";
+import { ArrowLeft, Send, Plus, Trash2, BarChart3, HelpCircle, CheckCircle, Loader2 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
+import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/contexts/AuthContext";
+import { toast } from "sonner";
+import { formatDistanceToNow } from "date-fns";
 
 interface PollOption { id: string; text: string; votes: number; }
 interface QuizOption { id: string; text: string; isCorrect: boolean; }
@@ -20,32 +24,45 @@ interface StoryPoll {
   active: boolean;
 }
 
-const MOCK_POLLS: StoryPoll[] = [
-  {
-    id: "1", type: "poll", question: "Best travel destination for 2026?",
-    options: [
-      { id: "a", text: "Japan 🇯🇵", votes: 142 },
-      { id: "b", text: "Iceland 🇮🇸", votes: 89 },
-      { id: "c", text: "Colombia 🇨🇴", votes: 67 },
-      { id: "d", text: "New Zealand 🇳🇿", votes: 102 },
-    ],
-    totalVotes: 400, createdAt: "2h ago", active: true,
-  },
-  {
-    id: "2", type: "quiz", question: "Which city is the capital of Australia?",
-    options: [
-      { id: "a", text: "Sydney", isCorrect: false },
-      { id: "b", text: "Melbourne", isCorrect: false },
-      { id: "c", text: "Canberra", isCorrect: true },
-      { id: "d", text: "Brisbane", isCorrect: false },
-    ],
-    totalVotes: 250, createdAt: "5h ago", active: true,
-  },
-];
-
 export default function StoryPollsPage() {
   const navigate = useNavigate();
-  const [polls, setPolls] = useState(MOCK_POLLS);
+  const { user } = useAuth();
+  const [polls, setPolls] = useState<StoryPoll[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  const loadPolls = useCallback(async () => {
+    if (!user) { setLoading(false); return; }
+    const { data } = await supabase
+      .from("feedback_submissions")
+      .select("id, subject, message, created_at")
+      .eq("category", "story_poll")
+      .eq("user_id", user.id)
+      .order("created_at", { ascending: false })
+      .limit(20);
+
+    if (data) {
+      const parsed: StoryPoll[] = data.flatMap(row => {
+        try {
+          const parsed = JSON.parse(row.message ?? "{}");
+          return [{
+            id: row.id,
+            type: parsed.type ?? "poll",
+            question: row.subject ?? "",
+            options: parsed.options ?? [],
+            totalVotes: parsed.totalVotes ?? 0,
+            createdAt: formatDistanceToNow(new Date(row.created_at!), { addSuffix: true }),
+            active: true,
+          }];
+        } catch {
+          return [];
+        }
+      });
+      setPolls(parsed);
+    }
+    setLoading(false);
+  }, [user]);
+
+  useEffect(() => { loadPolls(); }, [loadPolls]);
   const [showCreate, setShowCreate] = useState(false);
   const [createType, setCreateType] = useState<"poll" | "quiz">("poll");
   const [question, setQuestion] = useState("");
@@ -56,15 +73,33 @@ export default function StoryPollsPage() {
   const removeOption = (i: number) => { if (options.length > 2) setOptions(options.filter((_, idx) => idx !== i)); };
   const updateOption = (i: number, val: string) => { const o = [...options]; o[i] = val; setOptions(o); };
 
-  const handleCreate = () => {
+  const handleCreate = async () => {
     if (!question.trim() || options.some(o => !o.trim())) return;
+    if (!user) { toast.error("Sign in to create polls"); return; }
+
+    const pollOptions = options.map((text, i) => createType === "quiz"
+      ? { id: String(i), text, isCorrect: i === correctIndex }
+      : { id: String(i), text, votes: 0 });
+
+    const payload = { type: createType, options: pollOptions, totalVotes: 0 };
+    const { data, error } = await supabase
+      .from("feedback_submissions")
+      .insert({
+        category: "story_poll",
+        subject: question.trim(),
+        message: JSON.stringify(payload),
+        user_id: user.id,
+      })
+      .select("id, created_at")
+      .single();
+
+    if (error) { toast.error("Failed to save poll"); return; }
+
     const newPoll: StoryPoll = {
-      id: Date.now().toString(),
+      id: data.id,
       type: createType,
       question,
-      options: options.map((text, i) => createType === "quiz"
-        ? { id: String(i), text, isCorrect: i === correctIndex }
-        : { id: String(i), text, votes: 0 }),
+      options: pollOptions,
       totalVotes: 0,
       createdAt: "Just now",
       active: true,
@@ -73,6 +108,7 @@ export default function StoryPollsPage() {
     setQuestion("");
     setOptions(["", ""]);
     setShowCreate(false);
+    toast.success("Poll created!");
   };
 
   return (
@@ -133,7 +169,17 @@ export default function StoryPollsPage() {
       </AnimatePresence>
 
       <div className="p-4 space-y-4">
-        {polls.map((poll, i) => (
+        {loading && (
+          <div className="flex justify-center py-12"><Loader2 className="h-6 w-6 animate-spin text-muted-foreground" /></div>
+        )}
+        {!loading && polls.length === 0 && (
+          <div className="text-center py-16">
+            <BarChart3 className="h-12 w-12 text-muted-foreground/20 mx-auto mb-3" />
+            <p className="text-sm text-muted-foreground">No polls yet</p>
+            <Button size="sm" className="mt-3" onClick={() => setShowCreate(true)}>Create your first poll</Button>
+          </div>
+        )}
+        {!loading && polls.map((poll, i) => (
           <motion.div key={poll.id} initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.05 }}>
             <Card className="p-4">
               <div className="flex items-center gap-2 mb-3">

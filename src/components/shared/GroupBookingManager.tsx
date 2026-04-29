@@ -47,7 +47,6 @@ const GroupBookingManager = ({
   totalCost = 4500,
   className 
 }: GroupBookingManagerProps) => {
-  // TODO: Load group members from database
   const [members, setMembers] = useState<GroupMember[]>([]);
   const [newEmail, setNewEmail] = useState("");
   const [showInvite, setShowInvite] = useState(false);

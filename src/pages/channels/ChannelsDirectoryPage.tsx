@@ -5,6 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { ChevronLeft, Plus, Search, Users } from "lucide-react";
+import SEOHead from "@/components/SEOHead";
 
 export default function ChannelsDirectoryPage() {
   const navigate = useNavigate();
@@ -32,6 +33,11 @@ export default function ChannelsDirectoryPage() {
 
   return (
     <div className="min-h-screen bg-background">
+      <SEOHead
+        title="Channels – ZIVO | Follow Topics & Communities"
+        description="Browse and join channels on ZIVO. Follow your interests in travel, tech, food, wellness, and more."
+        canonical="/channels"
+      />
       <header className="sticky top-0 z-10 bg-background/85 backdrop-blur-xl border-b border-border/40 pt-safe px-3 py-3 flex items-center gap-2">
         <button
           onClick={() => (window.history.length > 1 ? navigate(-1) : navigate("/feed"))}

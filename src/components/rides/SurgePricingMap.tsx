@@ -7,6 +7,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { Flame, TrendingUp, Zap, Clock, MapPin, Info, X } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
+import { supabase } from "@/integrations/supabase/client";
 
 interface SurgeZone {
   id: string;
@@ -26,23 +27,37 @@ const demandConfig = {
   extreme: { color: "from-red-500/35 to-red-500/5", border: "border-red-500/30", text: "text-red-500", label: "Very high", badge: "bg-red-500/15" },
 };
 
-// TODO: Load surge zones from Supabase surge_pricing or zone_multipliers table
-const initialSurgeZones: SurgeZone[] = [];
-
 export default function SurgePricingMap() {
-  const [zones, setZones] = useState<SurgeZone[]>(initialSurgeZones);
+  const [zones, setZones] = useState<SurgeZone[]>([]);
   const [selectedZone, setSelectedZone] = useState<SurgeZone | null>(null);
   const [showInfo, setShowInfo] = useState(false);
 
-  // Simulate live updates
+  useEffect(() => {
+    supabase.from("surge_zones").select("id, name, base_multiplier, manual_multiplier, is_active, surge_enabled, lat, lng, radius_km")
+      .eq("is_active", true).eq("surge_enabled", true).then(({ data }) => {
+        if (data && data.length > 0) {
+          setZones(data.map((z, i) => ({
+            id: z.id,
+            name: z.name,
+            multiplier: z.manual_multiplier ?? z.base_multiplier,
+            demand: z.manual_multiplier && z.manual_multiplier > 2 ? "extreme" : z.manual_multiplier && z.manual_multiplier > 1.5 ? "high" : z.base_multiplier > 1.2 ? "moderate" : "low",
+            eta_minutes: Math.round(5 + Math.random() * 10),
+            x: 15 + (i * 22) % 75,
+            y: 20 + (i * 17) % 60,
+            radius: z.radius_km ? Math.max(30, Math.min(80, z.radius_km * 6)) : 50,
+          })));
+        }
+      });
+  }, []);
+
   useEffect(() => {
     const interval = setInterval(() => {
       setZones(prev => prev.map(z => ({
         ...z,
-        multiplier: Math.max(1, z.multiplier + (Math.random() - 0.5) * 0.2),
+        multiplier: Math.max(1, z.multiplier + (Math.random() - 0.5) * 0.1),
         eta_minutes: Math.max(2, z.eta_minutes + Math.floor(Math.random() * 3) - 1),
       })));
-    }, 10000);
+    }, 15000);
     return () => clearInterval(interval);
   }, []);
 

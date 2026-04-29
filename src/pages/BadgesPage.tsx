@@ -8,6 +8,7 @@ import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { ArrowLeft, Award, Star, Flame, Target, Lock, CheckCircle, Trophy, Zap, Heart, MessageCircle, Users } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
+import SEOHead from "@/components/SEOHead";
 
 interface BadgeDef {
   id: string;
@@ -43,6 +44,11 @@ export default function BadgesPage() {
 
   return (
     <div className="min-h-screen bg-background pb-20">
+      <SEOHead
+        title="Badges & Achievements – ZIVO"
+        description="Earn badges and unlock achievements on ZIVO. Show off your loyalty, engagement, and explorer status."
+        canonical="/badges"
+      />
       <div className="bg-gradient-to-b from-primary/20 to-background p-4 pt-6 safe-area-top">
         <div className="flex items-center gap-2 mb-6">
           <Button variant="ghost" size="icon" onClick={() => navigate(-1)}>

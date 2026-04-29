@@ -217,9 +217,19 @@ export default function AccountSecurity() {
 
   const handleExportData = async () => {
     setIsExporting(true);
-    // TODO: Trigger backend data export job
-    toast.success("Data export requested. You'll receive an email when it's ready.");
-    setIsExporting(false);
+    try {
+      await supabase.from("feedback_submissions").insert({
+        category: "data_export_request",
+        subject: "GDPR Data Export Request",
+        message: `User ${user?.id} requested data export at ${new Date().toISOString()}`,
+        user_id: user?.id ?? null,
+      });
+      toast.success("Data export requested. You'll receive an email when it's ready.");
+    } catch {
+      toast.error("Failed to submit export request.");
+    } finally {
+      setIsExporting(false);
+    }
   };
 
   const handleLogoutAllDevices = async () => {

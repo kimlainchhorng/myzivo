@@ -237,7 +237,15 @@ export default function AiCreativeSuite() {
                   </div>
 
                   <div className="flex gap-2 pt-1">
-                    <Button variant="outline" className="flex-1 rounded-xl gap-1.5" onClick={() => toast.info("Draft export is coming soon") }>
+                    <Button variant="outline" className="flex-1 rounded-xl gap-1.5" onClick={() => {
+                      const data = JSON.stringify({ draftId, vibe: chosenVibe.label, prompt: prompt || DEFAULT_PROMPTS[chosenVibe.id], createdAt: new Date().toISOString() }, null, 2);
+                      const blob = new Blob([data], { type: "application/json" });
+                      const url = URL.createObjectURL(blob);
+                      const a = document.createElement("a");
+                      a.href = url; a.download = `zivo-draft-${draftId}.json`; a.click();
+                      URL.revokeObjectURL(url);
+                      toast.success("Draft saved!");
+                    }}>
                       <Download className="h-4 w-4" /> Save Draft
                     </Button>
                     <Button className="flex-1 rounded-xl gap-1.5" onClick={() => { navigate("/create-post"); toast.success("Opening Reel composer"); }}>

@@ -37,6 +37,7 @@ import { cn } from "@/lib/utils";
 import { format } from "date-fns";
 import NavBar from "@/components/home/NavBar";
 import Footer from "@/components/Footer";
+import SEOHead from "@/components/SEOHead";
 
 const interestOptions = [
   { id: "beach", label: "Beach & Relaxation", icon: Sun },
@@ -413,6 +414,18 @@ const AITripPlanner = () => {
 
   return (
     <div className="min-h-screen bg-background">
+      <SEOHead
+        title="AI Trip Planner – ZIVO | Plan Your Perfect Trip"
+        description="Use ZIVO's AI to discover personalized travel destinations, plan itineraries, and book everything in one place."
+        canonical="/ai-trip-planner"
+        structuredData={{
+          "@context": "https://schema.org",
+          "@type": "WebApplication",
+          "name": "ZIVO AI Trip Planner",
+          "description": "AI-powered travel planning",
+          "applicationCategory": "TravelApplication"
+        }}
+      />
       <NavBar />
       
       <main className="pt-24 pb-16">

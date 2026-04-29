@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -20,6 +20,8 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
+import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/contexts/AuthContext";
 
 interface GiftCard {
   id: string;
@@ -44,23 +46,39 @@ interface GiftCardsCreditsProps {
   zivoCredits?: number;
 }
 
-// TODO: Load gift cards from Supabase user_gift_cards table
-const MOCK_GIFT_CARDS: GiftCard[] = [];
-
-// TODO: Load promo codes from Supabase promo_codes table
-const VALID_PROMO_CODES: PromoCode[] = [];
-
-export const GiftCardsCredits = ({ 
-  className, 
+export const GiftCardsCredits = ({
+  className,
   totalAmount = 649,
   zivoCredits = 75.50
 }: GiftCardsCreditsProps) => {
+  const { user } = useAuth();
   const [activeTab, setActiveTab] = useState('apply');
   const [promoCode, setPromoCode] = useState('');
   const [giftCardCode, setGiftCardCode] = useState('');
   const [appliedGiftCards, setAppliedGiftCards] = useState<GiftCard[]>([]);
   const [appliedPromo, setAppliedPromo] = useState<PromoCode | null>(null);
   const [useCredits, setUseCredits] = useState(false);
+  const [userGiftCards, setUserGiftCards] = useState<GiftCard[]>([]);
+  const [promoCodes, setPromoCodes] = useState<PromoCode[]>([]);
+
+  useEffect(() => {
+    if (!user) return;
+    supabase.from("gift_cards").select("id, code, current_balance, initial_balance, expires_at, is_active")
+      .eq("purchaser_user_id", user.id).eq("is_active", true).then(({ data }) => {
+        if (data) setUserGiftCards(data.map(g => ({
+          id: g.id, code: g.code, balance: g.current_balance,
+          originalAmount: g.initial_balance, expiresAt: g.expires_at ?? "", type: "gift" as const,
+        })));
+      });
+    supabase.from("promo_codes").select("code, discount_value, discount_type, description, min_order_amount")
+      .eq("is_active", true).then(({ data }) => {
+        if (data) setPromoCodes(data.map(p => ({
+          code: p.code, discount: p.discount_value ?? 0,
+          type: (p.discount_type === "percent" ? "percent" : "fixed") as "percent" | "fixed",
+          description: p.description ?? "", minPurchase: p.min_order_amount ?? undefined,
+        })));
+      });
+  }, [user]);
 
   const giftCardTotal = appliedGiftCards.reduce((sum, gc) => sum + Math.min(gc.balance, totalAmount - sum), 0);
   const promoDiscount = appliedPromo 
@@ -72,7 +90,7 @@ export const GiftCardsCredits = ({
   const finalAmount = Math.max(0, totalAmount - giftCardTotal - promoDiscount - creditsApplied);
 
   const applyPromoCode = () => {
-    const promo = VALID_PROMO_CODES.find(p => p.code.toLowerCase() === promoCode.toLowerCase());
+    const promo = promoCodes.find(p => p.code.toLowerCase() === promoCode.toLowerCase());
     if (promo) {
       if (promo.minPurchase && totalAmount < promo.minPurchase) {
         toast.error(`Minimum purchase of $${promo.minPurchase} required`);
@@ -86,8 +104,12 @@ export const GiftCardsCredits = ({
     }
   };
 
-  const applyGiftCard = () => {
-    const existingCard = MOCK_GIFT_CARDS.find(gc => gc.code.toLowerCase() === giftCardCode.toLowerCase());
+  const applyGiftCard = async () => {
+    let existingCard = userGiftCards.find(gc => gc.code.toLowerCase() === giftCardCode.toLowerCase());
+    if (!existingCard) {
+      const { data } = await supabase.from("gift_cards").select("id, code, current_balance, initial_balance, expires_at").eq("code", giftCardCode.toUpperCase()).eq("is_active", true).single();
+      if (data) existingCard = { id: data.id, code: data.code, balance: data.current_balance, originalAmount: data.initial_balance, expiresAt: data.expires_at ?? "", type: "gift" as const };
+    }
     if (existingCard && !appliedGiftCards.find(gc => gc.id === existingCard.id)) {
       setAppliedGiftCards([...appliedGiftCards, existingCard]);
       setGiftCardCode('');

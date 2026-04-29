@@ -336,10 +336,7 @@ export default function EatsTrackingPage() {
             Back to Eats
           </Button>
           {!isDelivered && !isCancelled && (
-            <Button variant="outline" onClick={() => {
-              // Could open chat or call support
-              toast.info("Support feature coming soon");
-            }} className="flex-1 rounded-xl font-bold gap-1.5">
+            <Button variant="outline" onClick={() => navigate("/chat")} className="flex-1 rounded-xl font-bold gap-1.5">
               <MessageSquare className="w-4 h-4" /> Help
             </Button>
           )}

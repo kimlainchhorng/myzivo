@@ -20,6 +20,7 @@ import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import SEOHead from "@/components/SEOHead";
 import { toast } from "sonner";
+import { supabase } from "@/integrations/supabase/client";
 
 const inScopeItems = [
   "Authentication and session management",
@@ -71,10 +72,21 @@ export default function SecurityReport() {
     }
 
     setIsSubmitting(true);
-    // TODO: Submit to secure reporting endpoint
-    setSubmitted(true);
-    toast.success("Report submitted successfully");
-    setIsSubmitting(false);
+    try {
+      const message = `Severity: ${form.severity}\nTitle: ${form.title}\nDescription: ${form.description}\nSteps: ${form.steps}\nImpact: ${form.impact}\nReporter: ${form.name} <${form.email}>`;
+      const { error } = await supabase.from("feedback_submissions").insert({
+        category: "security_report",
+        subject: form.title || "Security Vulnerability Report",
+        message,
+      });
+      if (error) throw error;
+      setSubmitted(true);
+      toast.success("Report submitted successfully");
+    } catch {
+      toast.error("Failed to submit. Please try again.");
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   if (submitted) {

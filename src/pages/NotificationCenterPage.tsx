@@ -1,11 +1,15 @@
-import { useState } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { ArrowLeft, Heart, MessageCircle, UserPlus, ShoppingBag, Bell, Check, Trash2, Settings } from "lucide-react";
+import { ArrowLeft, Heart, MessageCircle, UserPlus, ShoppingBag, Bell, Check, Trash2 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
+import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/contexts/AuthContext";
+import { formatDistanceToNow } from "date-fns";
+import { toast } from "sonner";
 
 interface Notification {
   id: string;
@@ -14,27 +18,12 @@ interface Notification {
   message: string;
   time: string;
   isRead: boolean;
-  avatar?: string;
+  action_url?: string | null;
 }
 
-const MOCK_NOTIFICATIONS: Notification[] = [
-  { id: "1", type: "like", title: "New Like", message: "Alex Morgan liked your post", time: "2m ago", isRead: false },
-  { id: "2", type: "comment", title: "New Comment", message: "Sarah Kim commented: 'Great shot! 📸'", time: "15m ago", isRead: false },
-  { id: "3", type: "follow", title: "New Follower", message: "Mike Ross started following you", time: "1h ago", isRead: false },
-  { id: "4", type: "order", title: "Order Update", message: "Your marketplace order has shipped!", time: "2h ago", isRead: true },
-  { id: "5", type: "mention", title: "Mentioned You", message: "DJ Nova mentioned you in a Space", time: "3h ago", isRead: true },
-  { id: "6", type: "system", title: "Welcome!", message: "Complete your profile to get discovered", time: "1d ago", isRead: true },
-  { id: "7", type: "like", title: "New Like", message: "Priya S. liked your reel", time: "1d ago", isRead: true },
-  { id: "8", type: "follow", title: "New Follower", message: "Tom L. started following you", time: "2d ago", isRead: true },
-];
-
 const ICON_MAP = {
-  like: Heart,
-  comment: MessageCircle,
-  follow: UserPlus,
-  order: ShoppingBag,
-  mention: MessageCircle,
-  system: Bell,
+  like: Heart, comment: MessageCircle, follow: UserPlus,
+  order: ShoppingBag, mention: MessageCircle, system: Bell,
 };
 
 const COLOR_MAP = {
@@ -46,88 +35,153 @@ const COLOR_MAP = {
   system: "text-muted-foreground bg-muted",
 };
 
+function categoryToType(category: string): Notification["type"] {
+  if (category.includes("like") || category.includes("heart")) return "like";
+  if (category.includes("comment") || category.includes("reply")) return "comment";
+  if (category.includes("follow") || category.includes("friend")) return "follow";
+  if (category.includes("order") || category.includes("purchase") || category.includes("payment")) return "order";
+  if (category.includes("mention") || category.includes("tag")) return "mention";
+  return "system";
+}
+
 export default function NotificationCenterPage() {
   const navigate = useNavigate();
-  const [notifications, setNotifications] = useState(MOCK_NOTIFICATIONS);
+  const { user } = useAuth();
+  const [notifications, setNotifications] = useState<Notification[]>([]);
+  const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState("all");
+
+  const load = useCallback(async () => {
+    if (!user) { setLoading(false); return; }
+    const { data } = await supabase
+      .from("notifications")
+      .select("id, title, body, category, is_read, created_at, action_url")
+      .eq("user_id", user.id)
+      .order("created_at", { ascending: false })
+      .limit(60);
+
+    if (data) {
+      setNotifications(data.map(n => ({
+        id: n.id,
+        type: categoryToType(n.category ?? ""),
+        title: n.title,
+        message: n.body,
+        time: formatDistanceToNow(new Date(n.created_at), { addSuffix: true }),
+        isRead: n.is_read ?? false,
+        action_url: n.action_url,
+      })));
+    }
+    setLoading(false);
+  }, [user]);
+
+  useEffect(() => { load(); }, [load]);
 
   const unreadCount = notifications.filter(n => !n.isRead).length;
 
-  const markAllRead = () => setNotifications(prev => prev.map(n => ({ ...n, isRead: true })));
-  const markRead = (id: string) => setNotifications(prev => prev.map(n => n.id === id ? { ...n, isRead: true } : n));
-  const deleteNotification = (id: string) => setNotifications(prev => prev.filter(n => n.id !== id));
+  const markAllRead = async () => {
+    if (!user) return;
+    await supabase.from("notifications").update({ is_read: true }).eq("user_id", user.id).eq("is_read", false);
+    setNotifications(prev => prev.map(n => ({ ...n, isRead: true })));
+  };
 
-  const filtered = activeTab === "all" ? notifications :
-    activeTab === "unread" ? notifications.filter(n => !n.isRead) :
-    notifications.filter(n => n.type === activeTab);
+  const markRead = async (id: string) => {
+    await supabase.from("notifications").update({ is_read: true }).eq("id", id);
+    setNotifications(prev => prev.map(n => n.id === id ? { ...n, isRead: true } : n));
+  };
+
+  const deleteNotification = async (id: string) => {
+    await supabase.from("notifications").delete().eq("id", id);
+    setNotifications(prev => prev.filter(n => n.id !== id));
+  };
+
+  const TAB_TYPES: Record<string, string[]> = {
+    all: [],
+    social: ["like", "comment", "follow", "mention"],
+    orders: ["order"],
+    system: ["system"],
+  };
+
+  const filtered = activeTab === "all"
+    ? notifications
+    : notifications.filter(n => TAB_TYPES[activeTab]?.includes(n.type));
 
   return (
     <div className="min-h-screen bg-background pb-20">
       <div className="sticky top-0 safe-area-top z-10 bg-background/95 backdrop-blur-sm border-b border-border p-4">
         <div className="flex items-center justify-between mb-3">
           <div className="flex items-center gap-2">
-            <Button variant="ghost" size="icon" onClick={() => navigate(-1)}>
-              <ArrowLeft className="h-5 w-5" />
-            </Button>
-            <h1 className="text-xl font-bold text-foreground">Notifications</h1>
-            {unreadCount > 0 && <Badge variant="destructive" className="text-xs">{unreadCount}</Badge>}
+            <Button variant="ghost" size="icon" onClick={() => navigate(-1)}><ArrowLeft className="h-5 w-5" /></Button>
+            <h1 className="text-xl font-bold">Notifications</h1>
+            {unreadCount > 0 && <Badge className="bg-primary text-primary-foreground">{unreadCount}</Badge>}
           </div>
-          <div className="flex gap-1">
-            {unreadCount > 0 && (
-              <Button variant="ghost" size="sm" className="text-xs" onClick={markAllRead}>
-                <Check className="h-3 w-3 mr-1" /> Read all
-              </Button>
-            )}
-            <Button variant="ghost" size="icon" onClick={() => navigate("/account/privacy")}>
-              <Settings className="h-4 w-4" />
+          {unreadCount > 0 && (
+            <Button variant="ghost" size="sm" className="text-xs gap-1" onClick={markAllRead}>
+              <Check className="h-3 w-3" /> Mark all read
             </Button>
-          </div>
+          )}
         </div>
-
         <Tabs value={activeTab} onValueChange={setActiveTab}>
-          <TabsList className="w-full justify-start bg-transparent border-b-0 overflow-x-auto no-scrollbar">
-            <TabsTrigger value="all" className="text-xs">All</TabsTrigger>
-            <TabsTrigger value="unread" className="text-xs">Unread</TabsTrigger>
-            <TabsTrigger value="like" className="text-xs">Likes</TabsTrigger>
-            <TabsTrigger value="comment" className="text-xs">Comments</TabsTrigger>
-            <TabsTrigger value="follow" className="text-xs">Follows</TabsTrigger>
-            <TabsTrigger value="order" className="text-xs">Orders</TabsTrigger>
+          <TabsList className="grid grid-cols-4 w-full">
+            <TabsTrigger value="all">All</TabsTrigger>
+            <TabsTrigger value="social">Social</TabsTrigger>
+            <TabsTrigger value="orders">Orders</TabsTrigger>
+            <TabsTrigger value="system">System</TabsTrigger>
           </TabsList>
         </Tabs>
       </div>
 
       <div className="divide-y divide-border">
-        {filtered.length === 0 ? (
+        {loading && (
+          <div className="space-y-0">
+            {[1,2,3,4,5].map(i => (
+              <div key={i} className="flex items-center gap-3 px-4 py-3 animate-pulse">
+                <div className="h-10 w-10 rounded-full bg-muted shrink-0" />
+                <div className="flex-1 space-y-1.5">
+                  <div className="h-3 bg-muted rounded w-1/2" />
+                  <div className="h-2.5 bg-muted rounded w-3/4" />
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+
+        {!loading && filtered.length === 0 && (
           <div className="text-center py-16">
-            <Bell className="h-12 w-12 text-muted-foreground mx-auto mb-3" />
+            <Bell className="h-12 w-12 text-muted-foreground/20 mx-auto mb-3" />
             <p className="text-muted-foreground">No notifications yet</p>
           </div>
-        ) : (
-          filtered.map((notif, i) => {
-            const Icon = ICON_MAP[notif.type];
-            const colorClass = COLOR_MAP[notif.type];
-            return (
-              <motion.div key={notif.id} initial={{ opacity: 0, x: -10 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: i * 0.03 }}
-                className={`flex items-start gap-3 p-4 cursor-pointer transition-colors hover:bg-accent/50 ${!notif.isRead ? "bg-primary/5" : ""}`}
-                onClick={() => markRead(notif.id)}>
-                <div className={`h-10 w-10 rounded-full flex items-center justify-center shrink-0 ${colorClass}`}>
-                  <Icon className="h-5 w-5" />
-                </div>
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-center gap-2">
-                    <p className={`text-sm ${!notif.isRead ? "font-semibold text-foreground" : "text-foreground"}`}>{notif.title}</p>
-                    {!notif.isRead && <div className="h-2 w-2 rounded-full bg-primary shrink-0" />}
-                  </div>
-                  <p className="text-sm text-muted-foreground truncate">{notif.message}</p>
-                  <p className="text-xs text-muted-foreground mt-0.5">{notif.time}</p>
-                </div>
-                <Button variant="ghost" size="icon" className="shrink-0 h-8 w-8" onClick={(e) => { e.stopPropagation(); deleteNotification(notif.id); }}>
-                  <Trash2 className="h-3 w-3 text-muted-foreground" />
-                </Button>
-              </motion.div>
-            );
-          })
         )}
+
+        {!loading && filtered.map((notif, i) => {
+          const Icon = ICON_MAP[notif.type];
+          const colorClass = COLOR_MAP[notif.type];
+          return (
+            <motion.div key={notif.id}
+              initial={{ opacity: 0, x: -8 }} animate={{ opacity: 1, x: 0 }}
+              transition={{ delay: i * 0.02 }}
+              onClick={() => {
+                markRead(notif.id);
+                if (notif.action_url) navigate(notif.action_url);
+              }}
+              className={`flex items-start gap-3 px-4 py-3 cursor-pointer transition-colors hover:bg-accent/50 ${!notif.isRead ? "bg-primary/5" : ""}`}>
+              <div className={`h-10 w-10 rounded-full flex items-center justify-center shrink-0 ${colorClass}`}>
+                <Icon className="h-5 w-5" />
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="text-sm font-semibold text-foreground">{notif.title}</p>
+                <p className="text-xs text-muted-foreground mt-0.5 line-clamp-2">{notif.message}</p>
+                <p className="text-[10px] text-muted-foreground mt-1">{notif.time}</p>
+              </div>
+              <div className="flex items-center gap-1 shrink-0">
+                {!notif.isRead && <div className="w-2 h-2 rounded-full bg-primary" />}
+                <button onClick={e => { e.stopPropagation(); deleteNotification(notif.id); }}
+                  className="p-1 rounded hover:bg-destructive/10 transition-colors opacity-0 group-hover:opacity-100">
+                  <Trash2 className="h-3.5 w-3.5 text-muted-foreground hover:text-destructive" />
+                </button>
+              </div>
+            </motion.div>
+          );
+        })}
       </div>
     </div>
   );

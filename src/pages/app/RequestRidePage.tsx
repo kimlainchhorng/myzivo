@@ -1628,7 +1628,7 @@ export default function RequestRidePage() {
                           </div>
                         </div>
                       ))}
-                      <Button variant="outline" size="sm" onClick={() => toast.info("Ride Pass subscription coming soon!")} className="w-full rounded-xl text-xs font-bold">
+                      <Button variant="outline" size="sm" onClick={() => navigate("/membership")} className="w-full rounded-xl text-xs font-bold">
                         Learn More
                       </Button>
                     </motion.div>

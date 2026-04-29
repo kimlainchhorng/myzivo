@@ -86,8 +86,6 @@ const PaymentMethodsPage = () => {
     }
 
     setIsSubmitting(true);
-    // TODO: Submit card via Stripe API
-
     const cleanedNumber = cardNumber.replace(/\s/g, "");
     const parsedExpiry = parseExpiry(expiry)!;
 

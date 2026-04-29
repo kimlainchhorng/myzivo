@@ -13,6 +13,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 import ZivoMobileNav from "@/components/app/ZivoMobileNav";
+import SEOHead from "@/components/SEOHead";
 import { useStoreProfile, useStoreProducts, useStoreProductCategories, type StoreProductItem } from "@/hooks/useStoreProfile";
 import { useGroceryCart } from "@/hooks/useGroceryCart";
 import { GroceryCheckoutDrawer } from "@/components/grocery/GroceryCheckoutDrawer";
@@ -262,6 +263,22 @@ export default function StoreProfilePage() {
 
   return (
     <div className="min-h-screen pb-24 relative overflow-hidden">
+      <SEOHead
+        title={store ? `${store.name} – ZIVO` : "Store – ZIVO"}
+        description={store?.description || `Shop at ${store?.name || "this store"} on ZIVO. Browse products and order for delivery or pickup.`}
+        ogImage={store?.banner_url || store?.logo_url || undefined}
+        canonical={store ? `/s/${store.slug}` : undefined}
+        structuredData={store ? {
+          "@context": "https://schema.org",
+          "@type": "Store",
+          "name": store.name,
+          "description": store.description || undefined,
+          "image": store.logo_url || undefined,
+          "url": `https://zivo.app/s/${store.slug}`,
+          "telephone": (store as any).phone || undefined,
+          "address": store.address ? { "@type": "PostalAddress", "streetAddress": store.address } : undefined,
+        } : undefined}
+      />
       {/* ── Immersive Animated Background ── */}
       <div className="fixed inset-0 -z-10">
         <div className="absolute inset-0 bg-gradient-to-b from-background via-background to-background" />

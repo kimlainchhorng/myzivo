@@ -14,7 +14,10 @@ import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
 import { useEatsNotifications } from "@/hooks/useEatsNotifications";
 import ZivoMobileNav from "@/components/app/ZivoMobileNav";
+import SEOHead from "@/components/SEOHead";
 import RideMap from "@/components/maps/RideMap";
+import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/contexts/AuthContext";
 
 const packageSizes = [
   { id: "envelope", name: "Envelope", description: "Documents, letters", icon: "📄", maxWeight: "0.5 lb", price: 5.99 },
@@ -172,6 +175,7 @@ function PriceEstimate({ basePrice, speed, fragile, signature, insurance, packag
 export default function DeliveryPage() {
   const navigate = useNavigate();
   const { notify: notifyEats } = useEatsNotifications();
+  const { user } = useAuth();
   const [step, setStep] = useState<"address" | "package" | "review" | "confirmation">("address");
 
   // Address
@@ -390,9 +394,22 @@ export default function DeliveryPage() {
     setStep("review");
   };
 
-  const handlePlaceOrder = () => {
-    notifyEats("order_placed");
-    setStep("confirmation");
+  const handlePlaceOrder = async () => {
+    if (!user) { toast.error("Please sign in to place a delivery"); return; }
+    try {
+      const { error } = await supabase.from("deliveries").insert({
+        customer_user_id: user.id,
+        pickup_location: { address: pickupAddress, name: senderName, phone: senderPhone },
+        dropoff_location: { address: dropoffAddress, name: recipientName, phone: recipientPhone },
+        delivery_fee: totalPrice,
+        status: "pending",
+      });
+      if (error) throw error;
+      notifyEats("order_placed");
+      setStep("confirmation");
+    } catch {
+      toast.error("Failed to place order. Please try again.");
+    }
   };
 
   const handleApplyPromo = () => {
@@ -430,6 +447,21 @@ export default function DeliveryPage() {
 
   return (
     <div className="min-h-screen bg-background flex flex-col">
+      <SEOHead
+        title="Package Delivery – ZIVO | Same-Day & Scheduled Delivery"
+        description="Send packages across town or schedule a delivery with ZIVO. Real-time tracking, secure delivery, and fast couriers available 24/7."
+        canonical="/delivery"
+        ogImage="/og-delivery.jpg"
+        structuredData={{
+          "@context": "https://schema.org",
+          "@type": "Service",
+          "name": "ZIVO Package Delivery",
+          "description": "Same-day and scheduled package delivery service",
+          "provider": { "@type": "Organization", "name": "ZIVO" },
+          "areaServed": "Worldwide",
+          "serviceType": "Package Delivery",
+        }}
+      />
       {/* Map Preview */}
       {step === "address" && (
         <div className="relative h-[25vh] min-h-[180px]">

@@ -29,6 +29,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import { useToast } from "@/hooks/use-toast";
+import { supabase } from "@/integrations/supabase/client";
 
 const apiFeatures = [
   {
@@ -107,17 +108,21 @@ export default function APIPartners() {
   const handleWaitlistSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsSubmitting(true);
-
-    // TODO: Submit waitlist to backend API
-
-    toast({
-      title: "You're on the list!",
-      description: "We'll notify you when our API becomes available.",
-    });
-
-    setEmail("");
-    setCompany("");
-    setIsSubmitting(false);
+    try {
+      const { error } = await supabase.from("feedback_submissions").insert({
+        category: "api_waitlist",
+        subject: "API Partner Waitlist",
+        message: `Email: ${email}\nCompany: ${company}`,
+      });
+      if (error) throw error;
+      toast({ title: "You're on the list!", description: "We'll notify you when our API becomes available." });
+      setEmail("");
+      setCompany("");
+    } catch {
+      toast({ title: "Failed to join waitlist", description: "Please try again.", variant: "destructive" });
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (

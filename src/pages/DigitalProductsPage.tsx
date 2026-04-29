@@ -5,15 +5,18 @@ import { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import {
   ArrowLeft, PenTool, BookOpen, Video, FileText, Image, Music,
   Download, DollarSign, Plus, ChevronRight, Star, Users, Eye,
-  TrendingUp, Package, Zap, Lock, Globe, BarChart3, Palette, Sparkles,
+  TrendingUp, Package, Zap, Lock, Globe, BarChart3, Palette, Sparkles, X, Check,
 } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import ZivoMobileNav from "@/components/app/ZivoMobileNav";
 import SEOHead from "@/components/SEOHead";
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
+import { Textarea } from "@/components/ui/textarea";
 import { toast } from "sonner";
 
 const productTypes = [
@@ -38,6 +41,40 @@ export default function DigitalProductsPage() {
   const navigate = useNavigate();
   const { user } = useAuth();
   const [activeTab, setActiveTab] = useState(0);
+  const [selectedType, setSelectedType] = useState<typeof productTypes[number] | null>(null);
+  const [productTitle, setProductTitle] = useState("");
+  const [productDesc, setProductDesc] = useState("");
+  const [productPrice, setProductPrice] = useState("");
+  const [submitting, setSubmitting] = useState(false);
+  const [submitted, setSubmitted] = useState(false);
+
+  const handleCreateProduct = async () => {
+    if (!productTitle.trim() || !selectedType) return;
+    setSubmitting(true);
+    try {
+      const { error } = await supabase.from("feedback_submissions").insert({
+        category: "digital_product",
+        subject: `New ${selectedType.title}: ${productTitle}`,
+        message: `Type: ${selectedType.title}\nTitle: ${productTitle}\nDescription: ${productDesc}\nPrice: $${productPrice || "0"}`,
+        user_id: user?.id ?? null,
+      });
+      if (error) throw error;
+      setSubmitted(true);
+      toast.success("Product submitted for review!");
+      setTimeout(() => {
+        setSelectedType(null);
+        setProductTitle("");
+        setProductDesc("");
+        setProductPrice("");
+        setSubmitted(false);
+        setActiveTab(0);
+      }, 1800);
+    } catch {
+      toast.error("Failed to submit product. Please try again.");
+    } finally {
+      setSubmitting(false);
+    }
+  };
   const tabs = ["My Products", "Create New", "Analytics"];
 
   // Real creator data
@@ -137,30 +174,78 @@ export default function DigitalProductsPage() {
 
         {activeTab === 1 && (
           <div>
-            <h2 className="font-bold text-[15px] mb-3 flex items-center gap-2">
-              <Sparkles className="w-4 h-4 text-primary" /> Choose Product Type
-            </h2>
-            <div className="space-y-1.5">
-              {productTypes.map((type, i) => (
-                <motion.button
-                  key={type.title}
-                  initial={{ opacity: 0, y: 10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: i * 0.04 }}
-                  onClick={() => toast.info(`${type.title} creation coming soon!`)}
-                  className="w-full zivo-card-organic flex items-start gap-3 p-3.5 text-left touch-manipulation"
-                >
-                  <div className="zivo-icon-pill w-10 h-10 rounded-xl shrink-0" style={{ color: type.accent, background: `${type.accent}15` }}>
-                    <type.icon className="w-5 h-5" style={{ color: type.accent }} />
+            <AnimatePresence mode="wait">
+              {!selectedType ? (
+                <motion.div key="type-list" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
+                  <h2 className="font-bold text-[15px] mb-3 flex items-center gap-2">
+                    <Sparkles className="w-4 h-4 text-primary" /> Choose Product Type
+                  </h2>
+                  <div className="space-y-1.5">
+                    {productTypes.map((type, i) => (
+                      <motion.button
+                        key={type.title}
+                        initial={{ opacity: 0, y: 10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ delay: i * 0.04 }}
+                        onClick={() => setSelectedType(type)}
+                        className="w-full zivo-card-organic flex items-start gap-3 p-3.5 text-left touch-manipulation"
+                      >
+                        <div className="zivo-icon-pill w-10 h-10 rounded-xl shrink-0" style={{ color: type.accent, background: `${type.accent}15` }}>
+                          <type.icon className="w-5 h-5" style={{ color: type.accent }} />
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <p className="font-bold text-[13px]">{type.title}</p>
+                          <p className="text-[11px] text-muted-foreground leading-relaxed">{type.desc}</p>
+                        </div>
+                        <ChevronRight className="w-4 h-4 text-muted-foreground/30 shrink-0 mt-2" />
+                      </motion.button>
+                    ))}
                   </div>
-                  <div className="flex-1 min-w-0">
-                    <p className="font-bold text-[13px]">{type.title}</p>
-                    <p className="text-[11px] text-muted-foreground leading-relaxed">{type.desc}</p>
+                </motion.div>
+              ) : (
+                <motion.div key="create-form" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }} className="space-y-4">
+                  <div className="flex items-center gap-3">
+                    <button onClick={() => setSelectedType(null)} className="p-2 rounded-full hover:bg-muted/50 touch-manipulation">
+                      <ArrowLeft className="w-4 h-4" />
+                    </button>
+                    <div className="flex items-center gap-2 flex-1">
+                      <div className="w-8 h-8 rounded-lg shrink-0 flex items-center justify-center" style={{ color: selectedType.accent, background: `${selectedType.accent}15` }}>
+                        <selectedType.icon className="w-4 h-4" />
+                      </div>
+                      <h2 className="font-bold text-[15px]">Create {selectedType.title}</h2>
+                    </div>
                   </div>
-                  <ChevronRight className="w-4 h-4 text-muted-foreground/30 shrink-0 mt-2" />
-                </motion.button>
-              ))}
-            </div>
+
+                  {submitted ? (
+                    <div className="zivo-card-organic p-8 text-center">
+                      <div className="w-14 h-14 rounded-full bg-emerald-500/10 flex items-center justify-center mx-auto mb-3">
+                        <Check className="w-7 h-7 text-emerald-500" />
+                      </div>
+                      <p className="font-bold text-sm">Submitted for review!</p>
+                      <p className="text-xs text-muted-foreground mt-1">Your product will be live after review.</p>
+                    </div>
+                  ) : (
+                    <div className="zivo-card-organic p-4 space-y-3">
+                      <div>
+                        <label className="text-[11px] font-semibold text-muted-foreground mb-1 block">Product Title *</label>
+                        <Input value={productTitle} onChange={e => setProductTitle(e.target.value)} placeholder={`e.g. "Complete ${selectedType.title} Bundle"`} className="text-sm" />
+                      </div>
+                      <div>
+                        <label className="text-[11px] font-semibold text-muted-foreground mb-1 block">Description</label>
+                        <Textarea value={productDesc} onChange={e => setProductDesc(e.target.value)} placeholder="What's included? Who is it for?" className="text-sm min-h-[80px]" />
+                      </div>
+                      <div>
+                        <label className="text-[11px] font-semibold text-muted-foreground mb-1 block">Price (USD)</label>
+                        <Input type="number" min="0" step="0.01" value={productPrice} onChange={e => setProductPrice(e.target.value)} placeholder="9.99" className="text-sm" />
+                      </div>
+                      <Button className="w-full" onClick={handleCreateProduct} disabled={submitting || !productTitle.trim()}>
+                        {submitting ? "Submitting…" : "Submit Product"}
+                      </Button>
+                    </div>
+                  )}
+                </motion.div>
+              )}
+            </AnimatePresence>
           </div>
         )}
 

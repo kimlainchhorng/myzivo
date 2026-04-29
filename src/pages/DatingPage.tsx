@@ -13,6 +13,7 @@ import { motion, AnimatePresence, useMotionValue, useTransform, PanInfo } from "
 import { useState, useCallback } from "react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { toast } from "sonner";
+import SEOHead from "@/components/SEOHead";
 
 export default function DatingPage() {
   const navigate = useNavigate();
@@ -63,6 +64,12 @@ export default function DatingPage() {
 
   return (
     <div className="min-h-dvh bg-background pb-24">
+      <SEOHead
+        title="Meet People – ZIVO | Connect & Date Nearby"
+        description="Meet new people, make friends, and find connections near you on ZIVO. Swipe, match, and chat in one place."
+        canonical="/dating"
+        ogImage="/og-dating.jpg"
+      />
       {/* Header */}
       <div className="sticky top-0 safe-area-top z-30 bg-background/80 backdrop-blur-xl border-b border-border/30">
         <div className="flex items-center gap-3 px-4 py-3">

@@ -13,6 +13,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { cn } from "@/lib/utils";
 import { normalizeStorePostMediaUrl } from "@/utils/normalizeStorePostMediaUrl";
 import ZivoMobileNav from "@/components/app/ZivoMobileNav";
+import SEOHead from "@/components/SEOHead";
 import PullToRefresh from "@/components/shared/PullToRefresh";
 import VerifiedBadge from "@/components/VerifiedBadge";
 import { isBlueVerified } from "@/lib/verification";
@@ -74,6 +75,18 @@ export default function ExplorePage() {
 
   return (
     <div className="min-h-screen bg-background pb-20">
+      <SEOHead
+        title="Explore – ZIVO | Discover People, Places & Trending Content"
+        description="Explore trending posts, discover new people, browse hashtags, and find places near you on ZIVO."
+        canonical="/explore"
+        ogImage="/og-explore.jpg"
+        structuredData={{
+          "@context": "https://schema.org",
+          "@type": "WebPage",
+          "name": "Explore ZIVO",
+          "description": "Discover people, trending content, and places on ZIVO",
+        }}
+      />
       {/* Header */}
       <div className="sticky top-0 z-40 bg-background/80 backdrop-blur-md border-b border-border/50 safe-area-top">
         <div className="px-4 pt-3 pb-2">

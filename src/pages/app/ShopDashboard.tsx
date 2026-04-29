@@ -3,6 +3,7 @@
  */
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { useQuery } from "@tanstack/react-query";
 import { motion } from "framer-motion";
 import { toast } from "sonner";
 import {
@@ -11,6 +12,7 @@ import {
   CalendarCheck, GraduationCap, Star, FolderOpen, TestTube, Rocket,
 } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
+import { supabase } from "@/integrations/supabase/client";
 import AppLayout from "@/components/app/AppLayout";
 import { cn } from "@/lib/utils";
 
@@ -33,6 +35,12 @@ const IMPLEMENTED_SHOP_ROUTES = new Set<string>([
   "/shop-dashboard/ai-content",
   "/shop-dashboard/wallet",
   "/shop-dashboard/tax-reports",
+  "/shop-dashboard/products",
+  "/shop-dashboard/orders",
+  "/shop-dashboard/settings",
+  "/shop-dashboard/promotions",
+  "/shop-dashboard/analytics",
+  "/shop-dashboard/delivery",
 ]);
 
 const safeNavigate = (
@@ -53,16 +61,43 @@ const ShopDashboard = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
 
+  const { data: store } = useQuery({
+    queryKey: ["my-store", user?.id],
+    queryFn: async () => {
+      const { data } = await supabase.from("store_profiles").select("id, name").eq("owner_id", user!.id).maybeSingle();
+      return data;
+    },
+    enabled: !!user,
+  });
+
+  const { data: storeStats } = useQuery({
+    queryKey: ["shop-dashboard-stats", store?.id],
+    queryFn: async () => {
+      const [ordersRes, productsRes, revenueRes] = await Promise.all([
+        supabase.from("store_orders").select("id", { count: "exact", head: true }).eq("store_id", store!.id),
+        supabase.from("store_products").select("id", { count: "exact", head: true }).eq("store_id", store!.id),
+        supabase.from("store_orders").select("total_cents").eq("store_id", store!.id).eq("status", "delivered"),
+      ]);
+      const revenue = (revenueRes.data ?? []).reduce((sum, o) => sum + (o.total_cents ?? 0), 0) / 100;
+      return {
+        orders: ordersRes.count ?? 0,
+        products: productsRes.count ?? 0,
+        revenue,
+      };
+    },
+    enabled: !!store?.id,
+  });
+
   const stats = [
-    { icon: ShoppingBag, label: "Orders", value: "0", color: "text-blue-500", bg: "bg-blue-500/10" },
-    { icon: DollarSign, label: "Revenue", value: "$0", color: "text-emerald-500", bg: "bg-emerald-500/10" },
+    { icon: ShoppingBag, label: "Orders", value: String(storeStats?.orders ?? 0), color: "text-blue-500", bg: "bg-blue-500/10" },
+    { icon: DollarSign, label: "Revenue", value: `$${(storeStats?.revenue ?? 0).toFixed(0)}`, color: "text-emerald-500", bg: "bg-emerald-500/10" },
     { icon: TrendingUp, label: "Views", value: "0", color: "text-amber-500", bg: "bg-amber-500/10" },
-    { icon: Box, label: "Products", value: "0", color: "text-purple-500", bg: "bg-purple-500/10" },
+    { icon: Box, label: "Products", value: String(storeStats?.products ?? 0), color: "text-purple-500", bg: "bg-purple-500/10" },
   ];
 
   const actions = [
-    { icon: Package, label: "Products", description: "Manage your inventory", color: "from-blue-500 to-blue-600", onClick: () => safeNavigate(navigate, "/shop-dashboard/products", "Products") },
-    { icon: ShoppingBag, label: "Orders", description: "View & manage orders", color: "from-orange-500 to-amber-500", onClick: () => safeNavigate(navigate, "/shop-dashboard/orders", "Orders") },
+    { icon: Package, label: "Products", description: "Manage your inventory", color: "from-blue-500 to-blue-600", onClick: () => navigate("/shop-dashboard/products") },
+    { icon: ShoppingBag, label: "Orders", description: "View & manage orders", color: "from-orange-500 to-amber-500", onClick: () => navigate("/shop-dashboard/orders") },
     { icon: Tag, label: "Promotions", description: "Discounts & deals", color: "from-rose-500 to-pink-500", onClick: () => safeNavigate(navigate, "/shop-dashboard/promotions", "Promotions") },
     { icon: Truck, label: "Delivery", description: "Shipping settings", color: "from-emerald-500 to-green-500", onClick: () => safeNavigate(navigate, "/shop-dashboard/delivery", "Delivery") },
     { icon: BarChart3, label: "Analytics", description: "Sales & performance", color: "from-purple-500 to-purple-600", onClick: () => safeNavigate(navigate, "/shop-dashboard/analytics", "Analytics") },
@@ -71,7 +106,7 @@ const ShopDashboard = () => {
     { icon: Truck, label: "Truck Dashboard", description: "GPS inventory & sales", color: "from-teal-500 to-cyan-500", onClick: () => safeNavigate(navigate, "/shop-dashboard/truck", "Truck Dashboard") },
     { icon: TestTube, label: "Sandbox Mode", description: "Test transactions & CAPI", color: "from-yellow-500 to-amber-500", onClick: () => safeNavigate(navigate, "/shop-dashboard/sandbox", "Sandbox Mode") },
     { icon: Users, label: "Refer a Shop", description: "Invite shops, both get boosted", color: "from-pink-500 to-rose-500", onClick: () => safeNavigate(navigate, "/shop-dashboard/refer", "Refer a Shop") },
-    { icon: Settings, label: "Shop Settings", description: "Store profile & config", color: "from-slate-500 to-slate-600", onClick: () => safeNavigate(navigate, "/shop-dashboard/settings", "Shop Settings") },
+    { icon: Settings, label: "Shop Settings", description: "Store profile & config", color: "from-slate-500 to-slate-600", onClick: () => navigate("/shop-dashboard/settings") },
   ];
 
   const employeeActions = [

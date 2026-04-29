@@ -66,6 +66,7 @@ import bgCafe from "@/assets/bg-cafe.jpg";
 import bgCity from "@/assets/bg-city.jpg";
 import bgStudio from "@/assets/bg-studio.jpg";
 import bgNature from "@/assets/bg-nature.jpg";
+import SEOHead from "@/components/SEOHead";
 
 type BgPreset = { id: string; kind: "off" | "blur" | "image"; url?: string; label: string };
 const BG_PRESETS: BgPreset[] = [
@@ -737,6 +738,12 @@ export default function GoLivePage() {
   if (phase === "setup" || phase === "countdown") {
     return (
       <div className="fixed inset-0 z-50 bg-black flex flex-col">
+        <SEOHead
+          title="Go Live – ZIVO"
+          description="Start a live stream on ZIVO and connect with your audience in real time."
+          canonical="/go-live"
+          noIndex
+        />
         <video ref={videoRef} autoPlay muted playsInline className={cn("absolute inset-0 w-full h-full object-cover", facingMode === "user" && "scale-x-[-1]")} />
         {cameraError && (
           <div className="absolute inset-0 flex items-center justify-center bg-black">

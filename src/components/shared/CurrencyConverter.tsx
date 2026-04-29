@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -15,22 +15,18 @@ const currencies = [
   { code: "CHF", name: "Swiss Franc", symbol: "Fr", flag: "CH" },
   { code: "CNY", name: "Chinese Yuan", symbol: "¥", flag: "CN" },
   { code: "MXN", name: "Mexican Peso", symbol: "$", flag: "MX" },
-  { code: "INR", name: "Indian Rupee", symbol: "₹", flag: "IN" }
+  { code: "INR", name: "Indian Rupee", symbol: "₹", flag: "IN" },
+  { code: "KHR", name: "Cambodian Riel", symbol: "៛", flag: "KH" },
+  { code: "SGD", name: "Singapore Dollar", symbol: "S$", flag: "SG" },
+  { code: "THB", name: "Thai Baht", symbol: "฿", flag: "TH" },
+  { code: "VND", name: "Vietnamese Dong", symbol: "₫", flag: "VN" },
+  { code: "KRW", name: "South Korean Won", symbol: "₩", flag: "KR" },
 ];
 
-// TODO: Fetch live exchange rates from API (e.g., Open Exchange Rates)
-// Fallback static rates used until API integration
-const rates: Record<string, number> = {
-  USD: 1,
-  EUR: 0.92,
-  GBP: 0.79,
-  JPY: 149.50,
-  AUD: 1.53,
-  CAD: 1.36,
-  CHF: 0.88,
-  CNY: 7.24,
-  MXN: 17.15,
-  INR: 83.12
+const FALLBACK_RATES: Record<string, number> = {
+  USD: 1, EUR: 0.92, GBP: 0.79, JPY: 149.50, AUD: 1.53, CAD: 1.36,
+  CHF: 0.88, CNY: 7.24, MXN: 17.15, INR: 83.12, KHR: 4100, SGD: 1.35,
+  THB: 36.1, VND: 25000, KRW: 1340,
 };
 
 export default function CurrencyConverter() {
@@ -39,26 +35,42 @@ export default function CurrencyConverter() {
   const [toCurrency, setToCurrency] = useState("EUR");
   const [result, setResult] = useState(0);
   const [isUpdating, setIsUpdating] = useState(false);
+  const [rates, setRates] = useState<Record<string, number>>(FALLBACK_RATES);
+  const [lastUpdated, setLastUpdated] = useState<string>("cached");
+
+  const fetchRates = useCallback(async () => {
+    setIsUpdating(true);
+    try {
+      const res = await fetch(`https://api.frankfurter.app/latest?from=USD&to=${currencies.map(c => c.code).filter(c => c !== "USD").join(",")}`);
+      if (res.ok) {
+        const data = await res.json();
+        setRates({ USD: 1, ...data.rates });
+        setLastUpdated(new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }));
+      }
+    } catch {
+      // use fallback silently
+    } finally {
+      setIsUpdating(false);
+    }
+  }, []);
+
+  useEffect(() => { fetchRates(); }, [fetchRates]);
 
   useEffect(() => {
     const numAmount = parseFloat(amount) || 0;
-    const fromRate = rates[fromCurrency];
-    const toRate = rates[toCurrency];
+    const fromRate = rates[fromCurrency] ?? 1;
+    const toRate = rates[toCurrency] ?? 1;
     setResult((numAmount / fromRate) * toRate);
-  }, [amount, fromCurrency, toCurrency]);
+  }, [amount, fromCurrency, toCurrency, rates]);
 
   const handleSwap = () => {
     setFromCurrency(toCurrency);
     setToCurrency(fromCurrency);
   };
 
-  const handleRefresh = () => {
-    setIsUpdating(true);
-    setTimeout(() => setIsUpdating(false), 1000);
-  };
+  const handleRefresh = () => { fetchRates(); };
 
-  const rate = rates[toCurrency] / rates[fromCurrency];
-  // TODO: Determine trend from historical rate data
+  const rate = (rates[toCurrency] ?? 1) / (rates[fromCurrency] ?? 1);
   const isRateUp = rate >= 1;
 
   return (
@@ -165,7 +177,7 @@ export default function CurrencyConverter() {
             </div>
           </div>
           <p className="text-xs text-muted-foreground mt-1">
-            Last updated: Just now
+            {lastUpdated === "cached" ? "Using cached rates" : `Updated: ${lastUpdated}`}
           </p>
         </div>
       </CardContent>

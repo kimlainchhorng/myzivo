@@ -5,6 +5,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import ZivoMobileNav from "@/components/app/ZivoMobileNav";
+import SEOHead from "@/components/SEOHead";
 import { ArrowLeft, Plus, Calendar, MapPin, Users, Clock, Ticket, Globe, Search, Filter } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
@@ -95,6 +96,11 @@ export default function EventsPage() {
 
   return (
     <div className="min-h-dvh bg-background pb-24">
+      <SEOHead
+        title="Events – ZIVO | Discover Local & Online Events"
+        description="Find and join events near you on ZIVO. Discover meetups, concerts, food festivals, and more."
+        canonical="/events"
+      />
       {/* Header */}
       <div className="sticky top-0 safe-area-top z-30 bg-background/80 backdrop-blur-xl border-b border-border/30">
         <div className="flex items-center gap-3 px-4 py-3">

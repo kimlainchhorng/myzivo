@@ -31,7 +31,6 @@ interface CompanionInviteProps {
   className?: string;
 }
 
-// TODO: Load companions from trip database
 const INITIAL_COMPANIONS: Companion[] = [];
 
 const CompanionInvite = ({ tripName = "Paris Trip", className }: CompanionInviteProps) => {

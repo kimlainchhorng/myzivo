@@ -10,6 +10,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { getPublicOrigin, getProfileShareUrl } from "@/lib/getPublicOrigin";
 import ZivoMobileNav from "@/components/app/ZivoMobileNav";
+import SEOHead from "@/components/SEOHead";
 import NavBar from "@/components/home/NavBar";
 import VerifiedBadge from "@/components/VerifiedBadge";
 import { formatCount } from "@/lib/social/formatCount";
@@ -803,8 +804,23 @@ export default function PublicProfilePage() {
     );
   };
 
+  const profileName = resolvedProfile?.full_name || resolvedProfile?.username || "Profile";
+  const profileBio = resolvedProfile?.bio || `Follow ${profileName} on ZIVO for travel, lifestyle, and more.`;
+  const profileAvatar = resolvedProfile?.avatar_url || undefined;
+
   return (
     <PullToRefresh onRefresh={handlePullRefresh} className="min-h-screen bg-background pb-20">
+      <SEOHead
+        title={`${profileName} – ZIVO`}
+        description={profileBio}
+        ogImage={profileAvatar}
+        structuredData={{
+          "@context": "https://schema.org",
+          "@type": "ProfilePage",
+          "name": profileName,
+          "description": profileBio,
+        }}
+      />
       {/* Desktop NavBar */}
       <div className="hidden lg:block sticky top-0 z-[1200]">
         <NavBar />

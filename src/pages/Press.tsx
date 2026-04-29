@@ -388,7 +388,34 @@ const Press = () => {
 
             {/* Press Kit Tab */}
             <TabsContent value="assets">
-              <p className="text-muted-foreground text-center py-8">Press kit assets coming soon.</p>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {[
+                  { label: "ZIVO Logo Pack", desc: "SVG + PNG in light/dark variants", icon: "🎨", size: "2.4 MB" },
+                  { label: "Brand Guidelines", desc: "Colors, typography, and usage rules", icon: "📐", size: "1.1 MB" },
+                  { label: "App Screenshots", desc: "iOS & Android — 6.7\" and 6.1\" sizes", icon: "📱", size: "18 MB" },
+                  { label: "Founder Photos", desc: "High-res press photos, 300 DPI", icon: "👤", size: "8.2 MB" },
+                  { label: "Product One-Pager", desc: "Key stats, mission, and product overview", icon: "📄", size: "540 KB" },
+                  { label: "Fact Sheet 2026", desc: "Users, markets, funding, milestones", icon: "📊", size: "320 KB" },
+                ].map(asset => (
+                  <Card key={asset.label} className="flex items-center gap-4 p-4">
+                    <div className="text-3xl">{asset.icon}</div>
+                    <div className="flex-1">
+                      <p className="font-semibold">{asset.label}</p>
+                      <p className="text-sm text-muted-foreground">{asset.desc}</p>
+                      <p className="text-xs text-muted-foreground mt-0.5">{asset.size}</p>
+                    </div>
+                    <Button size="sm" variant="outline" className="gap-1 shrink-0"
+                      onClick={() => window.open("mailto:press@hizivo.com?subject=Press Kit Request: " + asset.label)}>
+                      <Download className="w-3 h-3" /> Request
+                    </Button>
+                  </Card>
+                ))}
+                <Card className="col-span-full p-4 text-center bg-muted/30">
+                  <p className="text-sm text-muted-foreground">
+                    Need a custom asset or higher resolution? Email <a href="mailto:press@hizivo.com" className="text-primary underline">press@hizivo.com</a>
+                  </p>
+                </Card>
+              </div>
             </TabsContent>
           </Tabs>
         </div>
