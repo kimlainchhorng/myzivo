@@ -81,6 +81,7 @@
     "html2canvas": "^1.4.1",
     "input-otp": "^1.4.2",
     "jspdf": "^4.2.1",
+    "jspdf-autotable": "^5.0.7",
     "jsqr": "^1.4.0",
     "livekit-client": "^2.18.6",
     "lucide-react": "^0.462.0",
