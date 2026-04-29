@@ -1,161 +1,160 @@
 /**
- * Auto Repair Finance — Income & Revenue
- * Reads from ar_invoices + ar_invoice_payments to show real revenue.
+ * Auto Repair Finance — Income & Revenue (full dashboard).
+ * Period bar, KPI strip with sparklines, trend chart, breakdowns, invoice table.
  */
 import { useMemo, useState } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useQueries } from "@tanstack/react-query";
+import { useSearchParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { DollarSign, Receipt, AlertCircle, TrendingUp } from "lucide-react";
+import { TrendingUp } from "lucide-react";
+import { toast } from "sonner";
 
-interface Props { storeId: string }
+import {
+  computeIncomeKpis,
+  groupIncomeSeries,
+  revenueByService,
+  revenueByMethod,
+  topCustomers,
+  incomePresetRange,
+  previousIncomeRange,
+  type GroupBy,
+  type IncomePreset,
+  type IncomeInvoiceRow,
+  type IncomePaymentRow,
+} from "@/lib/admin/incomeCalculations";
+import { exportIncomeCsv, downloadCsv } from "@/lib/admin/incomeCsvExport";
 
-const fmt = (cents: number) =>
-  `$${((cents ?? 0) / 100).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+import IncomePeriodBar from "./income/IncomePeriodBar";
+import IncomeKpiStrip from "./income/IncomeKpiStrip";
+import IncomeTrendChart from "./income/IncomeTrendChart";
+import IncomeServiceBreakdown from "./income/IncomeServiceBreakdown";
+import IncomeMethodDonut from "./income/IncomeMethodDonut";
+import IncomeTopCustomers from "./income/IncomeTopCustomers";
+import IncomeInvoiceTable from "./income/IncomeInvoiceTable";
 
-const presetRange = (key: "today" | "week" | "month" | "ytd") => {
-  const now = new Date();
-  const to = now.toISOString().slice(0, 10);
-  const from = new Date(now);
-  if (key === "today") {/* same */}
-  else if (key === "week") from.setDate(from.getDate() - 6);
-  else if (key === "month") from.setDate(from.getDate() - 29);
-  else from.setMonth(0, 1);
-  return { from: from.toISOString().slice(0, 10), to };
-};
+interface Props { storeId: string; storeName?: string }
 
-export default function FinanceIncomeSection({ storeId }: Props) {
-  const [range, setRange] = useState(() => presetRange("month"));
+function fetchInvoices(storeId: string, from: string, to: string) {
+  return supabase
+    .from("ar_invoices" as any)
+    .select("id,number,total_cents,amount_paid_cents,subtotal_cents,tax_cents,status,paid_at,created_at,customer_name,vehicle_label,items")
+    .eq("store_id", storeId)
+    .gte("created_at", from)
+    .lte("created_at", `${to}T23:59:59`)
+    .order("created_at", { ascending: false })
+    .then(({ data, error }) => { if (error) throw error; return (data ?? []) as unknown as IncomeInvoiceRow[]; });
+}
 
-  const { data: invoices = [], isLoading } = useQuery({
-    queryKey: ["ar-fin-income-invoices", storeId, range.from, range.to],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from("ar_invoices" as any)
-        .select("id,number,total_cents,amount_paid_cents,status,created_at,customer_name,vehicle_label,items")
-        .eq("store_id", storeId)
-        .gte("created_at", range.from)
-        .lte("created_at", `${range.to}T23:59:59`)
-        .order("created_at", { ascending: false });
-      if (error) throw error;
-      return data as any[];
-    },
+function fetchPayments(storeId: string, from: string, to: string) {
+  return supabase
+    .from("ar_invoice_payments" as any)
+    .select("amount_cents,paid_at,method,invoice_id")
+    .eq("store_id", storeId)
+    .gte("paid_at", from)
+    .lte("paid_at", `${to}T23:59:59`)
+    .then(({ data, error }) => { if (error) throw error; return (data ?? []) as unknown as IncomePaymentRow[]; });
+}
+
+export default function FinanceIncomeSection({ storeId, storeName }: Props) {
+  const [, setSearchParams] = useSearchParams();
+  const initial = useMemo(() => incomePresetRange("month"), []);
+  const [from, setFrom] = useState(initial.from);
+  const [to, setTo] = useState(initial.to);
+  const [groupByMode, setGroupByMode] = useState<GroupBy>("day");
+  const [compare, setCompare] = useState(false);
+  const [, setPreset] = useState<IncomePreset>("month");
+
+  const prevRange = useMemo(() => compare ? previousIncomeRange(from, to) : null, [compare, from, to]);
+
+  const queries = useQueries({
+    queries: [
+      { queryKey: ["ar-income-invoices", storeId, from, to], queryFn: () => fetchInvoices(storeId, from, to), staleTime: 30_000 },
+      { queryKey: ["ar-income-payments", storeId, from, to], queryFn: () => fetchPayments(storeId, from, to), staleTime: 30_000 },
+      ...(prevRange ? [
+        { queryKey: ["ar-income-invoices", storeId, prevRange.from, prevRange.to], queryFn: () => fetchInvoices(storeId, prevRange.from, prevRange.to), staleTime: 60_000 },
+        { queryKey: ["ar-income-payments", storeId, prevRange.from, prevRange.to], queryFn: () => fetchPayments(storeId, prevRange.from, prevRange.to), staleTime: 60_000 },
+      ] : []),
+    ],
   });
 
-  const stats = useMemo(() => {
-    const totalRevenue = invoices.reduce((s, i) => s + (i.amount_paid_cents ?? 0), 0);
-    const billed = invoices.reduce((s, i) => s + (i.total_cents ?? 0), 0);
-    const outstanding = billed - totalRevenue;
-    const paidCount = invoices.filter((i: any) => i.status === "paid").length;
-    const avgTicket = paidCount ? totalRevenue / paidCount : 0;
+  const loading = queries.slice(0, 2).some((q) => q.isLoading);
+  const invoices = (queries[0].data ?? []) as IncomeInvoiceRow[];
+  const payments = (queries[1].data ?? []) as IncomePaymentRow[];
+  const prevInvoices = (prevRange ? (queries[2]?.data ?? []) : []) as IncomeInvoiceRow[];
+  const prevPayments = (prevRange ? (queries[3]?.data ?? []) : []) as IncomePaymentRow[];
 
-    const serviceTotals: Record<string, number> = {};
-    invoices.forEach((inv: any) => {
-      const items = Array.isArray(inv.items) ? inv.items : [];
-      items.forEach((it: any) => {
-        const key = (it.description || it.name || "Untitled").trim() || "Untitled";
-        const amt =
-          it.category === "labor" ? (Number(it.hours) || 0) * (Number(it.price) || 0) * 100 :
-          it.category === "part" ? (Number(it.qty) || 0) * (Number(it.price) || 0) * 100 :
-          (Number(it.price) || 0) * 100;
-        serviceTotals[key] = (serviceTotals[key] || 0) + amt;
-      });
+  const kpis = useMemo(() => computeIncomeKpis(payments, invoices), [payments, invoices]);
+  const prevKpis = useMemo(() => prevRange ? computeIncomeKpis(prevPayments, prevInvoices) : null, [prevRange, prevPayments, prevInvoices]);
+  const series = useMemo(() => groupIncomeSeries(payments, groupByMode), [payments, groupByMode]);
+  const services = useMemo(() => revenueByService(invoices), [invoices]);
+  const methods = useMemo(() => revenueByMethod(payments), [payments]);
+  const customers = useMemo(() => topCustomers(invoices), [invoices]);
+
+  const openInvoice = (id: string) => {
+    setSearchParams((sp) => { sp.set("tab", "ar-invoices"); sp.set("invoice", id); return sp; });
+  };
+
+  const onExportCsv = () => {
+    const csv = exportIncomeCsv({
+      storeName, from, to, kpis, prev: prevKpis,
+      series, services, methods, customers, invoices,
     });
-    const topServices = Object.entries(serviceTotals)
-      .sort(([, a], [, b]) => b - a)
-      .slice(0, 5);
+    const safe = (storeName || "store").replace(/[^a-z0-9]+/gi, "-").toLowerCase();
+    downloadCsv(`income-${safe}-${from}-to-${to}.csv`, csv);
+    toast.success("CSV exported");
+  };
+  const onPrint = () => window.print();
 
-    return { totalRevenue, billed, outstanding, paidCount, avgTicket, topServices };
-  }, [invoices]);
+  const empty = !loading && invoices.length === 0 && payments.length === 0;
 
   return (
-    <div className="space-y-4">
-      <Card>
-        <CardHeader className="pb-3">
+    <div className="space-y-3 print:space-y-2">
+      <Card className="print:hidden">
+        <CardHeader className="pb-2">
           <CardTitle className="text-base flex items-center gap-2">
             <TrendingUp className="w-4 h-4 text-primary" /> Income & Revenue
           </CardTitle>
         </CardHeader>
-        <CardContent className="space-y-3">
-          <div className="flex flex-wrap gap-2">
-            <Button size="sm" variant="outline" onClick={() => setRange(presetRange("today"))}>Today</Button>
-            <Button size="sm" variant="outline" onClick={() => setRange(presetRange("week"))}>Last 7d</Button>
-            <Button size="sm" variant="outline" onClick={() => setRange(presetRange("month"))}>Last 30d</Button>
-            <Button size="sm" variant="outline" onClick={() => setRange(presetRange("ytd"))}>YTD</Button>
-            <div className="flex items-center gap-2 ml-auto">
-              <Label className="text-xs">From</Label>
-              <Input type="date" value={range.from} onChange={(e) => setRange({ ...range, from: e.target.value })} className="h-8 w-36" />
-              <Label className="text-xs">To</Label>
-              <Input type="date" value={range.to} onChange={(e) => setRange({ ...range, to: e.target.value })} className="h-8 w-36" />
+        <CardContent>
+          <IncomePeriodBar
+            from={from} to={to} groupBy={groupByMode} compare={compare}
+            onFrom={setFrom} onTo={setTo} onPreset={setPreset}
+            onGroupBy={setGroupByMode} onCompare={setCompare}
+            onExportCsv={onExportCsv} onPrint={onPrint}
+          />
+        </CardContent>
+      </Card>
+
+      {empty ? (
+        <Card>
+          <CardContent className="py-12 text-center space-y-2">
+            <TrendingUp className="w-10 h-10 mx-auto text-muted-foreground/50" />
+            <h3 className="text-sm font-medium">No revenue activity yet</h3>
+            <p className="text-xs text-muted-foreground">Create an invoice and record a payment to see your revenue analytics.</p>
+          </CardContent>
+        </Card>
+      ) : (
+        <>
+          <IncomeKpiStrip kpis={kpis} prev={prevKpis} series={series} loading={loading} />
+
+          <IncomeTrendChart series={series} />
+
+          <div className="grid grid-cols-1 xl:grid-cols-3 gap-3">
+            <div className="xl:col-span-2">
+              <IncomeServiceBreakdown services={services} invoices={invoices} onOpenInvoice={openInvoice} />
+            </div>
+            <IncomeMethodDonut methods={methods} />
+          </div>
+
+          <div className="grid grid-cols-1 xl:grid-cols-3 gap-3">
+            <IncomeTopCustomers customers={customers} />
+            <div className="xl:col-span-2">
+              <IncomeInvoiceTable invoices={invoices} onOpenInvoice={openInvoice} />
             </div>
           </div>
-        </CardContent>
-      </Card>
-
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-        <StatCard icon={<DollarSign className="w-4 h-4 text-emerald-600" />} label="Revenue (paid)" value={fmt(stats.totalRevenue)} />
-        <StatCard icon={<Receipt className="w-4 h-4 text-blue-600" />} label="Billed" value={fmt(stats.billed)} />
-        <StatCard icon={<AlertCircle className="w-4 h-4 text-amber-600" />} label="Outstanding" value={fmt(stats.outstanding)} />
-        <StatCard icon={<TrendingUp className="w-4 h-4 text-violet-600" />} label="Avg ticket" value={fmt(stats.avgTicket)} />
-      </div>
-
-      <Card>
-        <CardHeader className="pb-2"><CardTitle className="text-sm">Top services by revenue</CardTitle></CardHeader>
-        <CardContent>
-          {isLoading ? (
-            <p className="text-sm text-muted-foreground">Loading…</p>
-          ) : stats.topServices.length === 0 ? (
-            <p className="text-sm text-muted-foreground">No revenue in this period yet.</p>
-          ) : (
-            <ul className="space-y-2">
-              {stats.topServices.map(([name, amt]) => (
-                <li key={name} className="flex justify-between text-sm">
-                  <span className="truncate pr-3">{name}</span>
-                  <span className="font-medium tabular-nums">{fmt(amt)}</span>
-                </li>
-              ))}
-            </ul>
-          )}
-        </CardContent>
-      </Card>
-
-      <Card>
-        <CardHeader className="pb-2"><CardTitle className="text-sm">Recent invoices in range</CardTitle></CardHeader>
-        <CardContent>
-          {invoices.length === 0 ? (
-            <p className="text-sm text-muted-foreground">No invoices yet — create one in the Invoices tab.</p>
-          ) : (
-            <ul className="divide-y">
-              {invoices.slice(0, 10).map((inv: any) => (
-                <li key={inv.id} className="py-2 flex justify-between gap-3 text-sm">
-                  <div className="min-w-0">
-                    <div className="font-medium">{inv.number}</div>
-                    <div className="text-xs text-muted-foreground truncate">{inv.customer_name || "—"} · {inv.vehicle_label || "—"}</div>
-                  </div>
-                  <div className="text-right whitespace-nowrap">
-                    <div className="font-medium">{fmt(inv.total_cents)}</div>
-                    <div className="text-[11px] uppercase text-muted-foreground">{inv.status}</div>
-                  </div>
-                </li>
-              ))}
-            </ul>
-          )}
-        </CardContent>
-      </Card>
+        </>
+      )}
     </div>
-  );
-}
-
-function StatCard({ icon, label, value }: { icon: React.ReactNode; label: string; value: string }) {
-  return (
-    <Card>
-      <CardContent className="p-3">
-        <div className="flex items-center gap-2 text-xs text-muted-foreground mb-1">{icon}{label}</div>
-        <div className="text-xl font-semibold tabular-nums">{value}</div>
-      </CardContent>
-    </Card>
   );
 }
