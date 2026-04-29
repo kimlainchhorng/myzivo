@@ -236,75 +236,117 @@ Deno.serve(async (req) => {
   // ===== Credential autofill =====
   var pendingCreds = null;
   var applying = false;
+  var pollTimer = null;
+  function getValueSetter(el){
+    var proto = el instanceof HTMLTextAreaElement ? HTMLTextAreaElement.prototype : HTMLInputElement.prototype;
+    var desc = Object.getOwnPropertyDescriptor(proto, 'value');
+    return desc && desc.set;
+  }
+  function liftFloatingLabel(el){
+    try {
+      var label = null;
+      if (el.id) {
+        var safeId = window.CSS && CSS.escape ? CSS.escape(el.id) : el.id.replace(/"/g, '\\"');
+        label = document.querySelector('label[for="' + safeId + '"]');
+      }
+      if (!label) {
+        var wrap = el.closest && el.closest('[class*="TextField_input-container"], [data-testid="st-formcontrol"]');
+        label = wrap && wrap.querySelector('label');
+      }
+      if (!label) return;
+      label.classList.add('Label_--shifted__ugQTr', 'TextField_--shifted__oAJ_K');
+      el.classList.add('TextField_--shifted__oAJ_K');
+      label.style.backgroundColor = 'var(--st-color-background, #fff)';
+      label.style.padding = '0 var(--st-unit-1, 4px)';
+      if (!label.style.transform) label.style.transform = 'translateY(calc(-1 * (var(--st-unit-5, 20px) + 2.5px)))';
+    } catch(e) {}
+  }
+  function enableFilledFormControls(){
+    try {
+      var forms = document.querySelectorAll('form');
+      for (var f = 0; f < forms.length; f++) {
+        var form = forms[f];
+        var hasValue = false;
+        var inputs = form.querySelectorAll('input');
+        for (var i = 0; i < inputs.length; i++) {
+          var input = inputs[i];
+          if (input.type !== 'hidden' && input.type !== 'checkbox' && String(input.value || '').trim()) { hasValue = true; break; }
+        }
+        if (!hasValue) continue;
+        var buttons = form.querySelectorAll('button, [role="button"]');
+        for (var b = 0; b < buttons.length; b++) {
+          var btn = buttons[b];
+          var text = ((btn.getAttribute('aria-label') || '') + ' ' + (btn.textContent || '')).toLowerCase();
+          if (!/continue|sign\s*in|login|log\s*in|submit/.test(text)) continue;
+          try { btn.disabled = false; } catch(_) {}
+          btn.removeAttribute('disabled');
+          btn.removeAttribute('aria-disabled');
+          btn.className = String(btn.className || '').replace(/\S*--disabled\S*/g, '').replace(/\S*_disabled\S*/gi, '');
+          btn.style.pointerEvents = 'auto';
+          btn.style.cursor = 'pointer';
+          btn.style.opacity = '1';
+        }
+      }
+    } catch(e) {}
+  }
   function setVal(el, val){
     try {
-      // Focus first so framework form-controls bind, then clear, then set.
       try { el.focus({ preventScroll: true }); } catch(_) {}
-      var proto = Object.getPrototypeOf(el);
-      var desc = Object.getOwnPropertyDescriptor(proto, 'value');
-      var setter = desc && desc.set;
-      // Clear first to flush any stale floating-label state
-      if (setter) setter.call(el, ''); else el.value = '';
-      el.dispatchEvent(new Event('input', { bubbles: true }));
-      // Now set the real value
+      var setter = getValueSetter(el);
       if (setter) setter.call(el, val); else el.value = val;
-      // Fire the full event suite that Angular / React / Vue / vanilla all listen for.
-      try { el.dispatchEvent(new Event('beforeinput', { bubbles: true, cancelable: true })); } catch(_) {}
+      try { if (el._valueTracker) el._valueTracker.setValue(''); } catch(_) {}
+      liftFloatingLabel(el);
+      try { el.dispatchEvent(new InputEvent('beforeinput', { bubbles: true, cancelable: true, inputType: 'insertText', data: val })); } catch(_) {}
       try { el.dispatchEvent(new InputEvent('input', { bubbles: true, cancelable: true, inputType: 'insertText', data: val })); }
       catch(_) { el.dispatchEvent(new Event('input', { bubbles: true })); }
       el.dispatchEvent(new Event('change', { bubbles: true }));
-      el.dispatchEvent(new Event('keydown', { bubbles: true }));
-      el.dispatchEvent(new Event('keypress', { bubbles: true }));
       el.dispatchEvent(new Event('keyup', { bubbles: true }));
-      el.dispatchEvent(new Event('compositionend', { bubbles: true }));
-      // Blur lifts floating labels on Material/AutoZonePro pattern
+      el.dispatchEvent(new Event('blur', { bubbles: true }));
       try { el.blur(); } catch(_) {}
     } catch(e) {}
   }
   function applyCreds(creds){
     if (!creds || applying) return false;
     applying = true;
-    var filled = 0;
+    var touched = false;
     try {
       var inputs = document.querySelectorAll('input');
       for (var i = 0; i < inputs.length; i++) {
         var el = inputs[i];
         if (el.disabled || el.readOnly || el.type === 'hidden') continue;
         var hint = ((el.name||'') + ' ' + (el.id||'') + ' ' + (el.getAttribute('autocomplete')||'') + ' ' + (el.placeholder||'') + ' ' + (el.type||'')).toLowerCase();
-        if (el.type === 'password' && creds.password && el.value !== creds.password) {
-          setVal(el, creds.password); filled++;
+        if (el.type === 'password' && creds.password) {
+          if (el.value !== creds.password) setVal(el, creds.password); else liftFloatingLabel(el);
+          touched = true;
         } else if (creds.username && el.type !== 'password' &&
                    (el.type === 'email' || /user|email|login|account|signin|userid/.test(hint))) {
-          if (!el.value) { setVal(el, creds.username); filled++; }
+          if (el.value !== creds.username) setVal(el, creds.username); else liftFloatingLabel(el);
+          touched = true;
         }
       }
+      enableFilledFormControls();
     } finally {
       applying = false;
     }
-    return filled > 0;
+    return touched;
+  }
+  function startBoundedAutofill(creds){
+    if (pollTimer) clearInterval(pollTimer);
+    var until = Date.now() + 10000;
+    var ok = applyCreds(creds);
+    pollTimer = setInterval(function(){
+      applyCreds(creds);
+      if (Date.now() > until) { clearInterval(pollTimer); pollTimer = null; }
+    }, 500);
+    return ok;
   }
   window.addEventListener('message', function(e){
     var data = e.data;
     if (!data || data.type !== 'zivo-autofill') return;
     pendingCreds = { username: data.username || '', password: data.password || '' };
-    var ok = applyCreds(pendingCreds);
+    var ok = startBoundedAutofill(pendingCreds);
     parent.postMessage({ type: 'zivo-autofill-result', filled: ok }, '*');
   });
-  // Debounced, additions-only observer for the 2-step password screen.
-  try {
-    var moTimer = null;
-    var mo = new MutationObserver(function(records){
-      if (!pendingCreds || applying) return;
-      var hasAdds = false;
-      for (var i = 0; i < records.length; i++) {
-        if (records[i].addedNodes && records[i].addedNodes.length) { hasAdds = true; break; }
-      }
-      if (!hasAdds) return;
-      if (moTimer) clearTimeout(moTimer);
-      moTimer = setTimeout(function(){ applyCreds(pendingCreds); }, 150);
-    });
-    mo.observe(document.body || document.documentElement, { childList: true, subtree: true });
-  } catch(e) {}
 })();
 </script>`;
 
