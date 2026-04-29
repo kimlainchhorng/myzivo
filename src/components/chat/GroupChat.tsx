@@ -302,6 +302,11 @@ export default function GroupChat({ groupId, groupName, groupAvatar, onClose }: 
   const runVoiceJob = useCallback(async (clientSendId: string, startFromInsert = false) => {
     const job = voiceJobsRef.current.get(clientSendId);
     if (!job || !user?.id) return;
+    if (voiceUploadInFlightRef.current) {
+      window.setTimeout(() => retryVoiceSendRef.current?.(clientSendId), 900);
+      return;
+    }
+    voiceUploadInFlightRef.current = true;
     const { controller, blob, durationMs, optimisticId } = job;
 
     const updateOpt = (patch: Partial<GroupMessage>) => {
@@ -389,7 +394,9 @@ export default function GroupChat({ groupId, groupName, groupAvatar, onClose }: 
       });
       setTimeout(() => URL.revokeObjectURL(job.localUrl), 30000);
       voiceJobsRef.current.delete(clientSendId);
+      voiceUploadInFlightRef.current = false;
     } catch (e) {
+      voiceUploadInFlightRef.current = false;
       if (e instanceof UploadAbortedError || controller.signal.aborted) {
         vlog("aborted", { clientSendId });
         return;
