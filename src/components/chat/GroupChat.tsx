@@ -24,7 +24,7 @@ import VoiceMessagePlayer from "./VoiceMessagePlayer";
 import VoiceMessageBubble from "./VoiceMessageBubble";
 import HoldToRecordMic from "./HoldToRecordMic";
 import { useVoiceRecorder } from "@/hooks/useVoiceRecorder";
-import { uploadVoiceWithProgress, retryWithBackoff, UploadAbortedError, UploadHttpError } from "@/lib/voiceUpload";
+import { blobToDataUrl, shouldInlineVoiceBlob, uploadVoiceWithProgress, retryWithBackoff, UploadAbortedError, UploadHttpError } from "@/lib/voiceUpload";
 import { vlog, vwarn } from "@/lib/voiceDebug";
 import GroupMembersSheet from "./GroupMembersSheet";
 import GroupInviteSheet from "./GroupInviteSheet";
@@ -315,8 +315,15 @@ export default function GroupChat({ groupId, groupName, groupAvatar, onClose }: 
       let publicUrl = job.publicUrl;
       let storagePath = job.storagePath;
 
-      if (!startFromInsert || !publicUrl) {
-        const contentType = blob.type || "audio/webm";
+      const contentType = blob.type || "audio/webm";
+      const canInlineVoice = shouldInlineVoiceBlob(blob);
+
+      if (canInlineVoice && !publicUrl) {
+        publicUrl = await blobToDataUrl(blob, controller.signal);
+        job.publicUrl = publicUrl;
+        updateOpt({ _upload_progress: 1 });
+        vlog("inline:done", { clientSendId, sizeBytes: blob.size });
+      } else if (!startFromInsert || !publicUrl) {
         const ext = contentType.includes("mp4") ? "m4a" : "webm";
 
         const result = await retryWithBackoff(
@@ -356,7 +363,13 @@ export default function GroupChat({ groupId, groupName, groupAvatar, onClose }: 
         message_type: "voice",
         voice_url: publicUrl!,
         reply_to_id: undefined,
-        file_payload: { duration_ms: durationMs, client_send_id: clientSendId } as { duration_ms?: number },
+        file_payload: {
+          duration_ms: durationMs,
+          client_send_id: clientSendId,
+          storage: canInlineVoice ? "inline" : "storage",
+          mime_type: contentType,
+          size: blob.size,
+        } as { duration_ms?: number },
       };
       await retryWithBackoff(
         async (attempt) => {
