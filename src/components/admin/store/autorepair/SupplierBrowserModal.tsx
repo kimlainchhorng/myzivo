@@ -297,10 +297,11 @@ export default function SupplierBrowserModal({ storeId, supplier, query, open, o
               <div className="max-w-md w-full text-center space-y-4 bg-background border rounded-2xl p-6 shadow-sm">
                 <div className="mx-auto"><PartsSupplierLogo supplier={supplier} size="lg" /></div>
                 <div>
-                  <h3 className="text-base font-semibold">{supplier.name} blocks embedding</h3>
+                  <h3 className="text-base font-semibold">{supplier.name} is a trade portal</h3>
                   <p className="text-xs text-muted-foreground mt-1">
                     For security, this supplier doesn't allow its site to load inside another window.
-                    Open it in a new tab — we'll keep your saved account here for quick paste-in.
+                    Open it in a new tab to log in with your shop account — we'll keep your saved
+                    credentials here for quick paste-in.
                   </p>
                 </div>
                 <div className="flex gap-2 justify-center">
