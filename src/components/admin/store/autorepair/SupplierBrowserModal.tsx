@@ -7,7 +7,7 @@
  * "Open in new tab" panel. We also offer optional credential storage per
  * (store, supplier) so users can keep their account info handy.
  */
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -60,6 +60,8 @@ export default function SupplierBrowserModal({ storeId, supplier, query, open, o
   const iframeRef = useRef<HTMLIFrameElement>(null);
   const [browserIssue, setBrowserIssue] = useState<BrowserIssue>(null);
   const [iframeLoading, setIframeLoading] = useState(true);
+  const [iframeDoc, setIframeDoc] = useState<string | null>(null);
+  const [frameKey, setFrameKey] = useState(0);
   const [showCreds, setShowCreds] = useState(false);
   const [showPwd, setShowPwd] = useState(false);
   const [email, setEmail] = useState("");
@@ -89,30 +91,57 @@ export default function SupplierBrowserModal({ storeId, supplier, query, open, o
     setShowPwd(false);
     setBrowserIssue(null);
     setIframeLoading(true);
+    setIframeDoc(null);
   }, [open, supplier, storeId]);
 
-  useEffect(() => {
-    if (!open || !proxiedUrl) return;
-    let cancelled = false;
-    fetch(`${proxiedUrl}&probe=1`)
-      .then(async (res) => {
-        if (!cancelled && res.status === 403) setBrowserIssue("not-allowed");
-      })
-      .catch(() => undefined);
-    return () => { cancelled = true; };
-  }, [open, proxiedUrl]);
-
-  // Detect proxy errors via load timeout (15s — proxy can be slow on cold start)
-  useEffect(() => {
-    if (!open || !proxiedUrl) return;
+  const loadProxyPage = useCallback(async (url: string, init?: RequestInit) => {
     setIframeLoading(true);
     setBrowserIssue(null);
-    const timer = window.setTimeout(() => {
-      setBrowserIssue((prev) => prev || (iframeLoading ? "blocked" : null));
-    }, 15000);
-    return () => window.clearTimeout(timer);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [open, proxiedUrl]);
+    try {
+      const res = await fetch(url, { credentials: "include", ...init });
+      const html = await res.text();
+      if (!res.ok) {
+        setIframeDoc(null);
+        setBrowserIssue(res.status === 403 ? "not-allowed" : "blocked");
+        return;
+      }
+      setIframeDoc(html);
+      setFrameKey((k) => k + 1);
+    } catch {
+      setIframeDoc(null);
+      setBrowserIssue("blocked");
+    } finally {
+      setIframeLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    if (!open || !proxiedUrl) return;
+    loadProxyPage(proxiedUrl);
+  }, [open, proxiedUrl, loadProxyPage]);
+
+  useEffect(() => {
+    if (!open) return;
+    const handleMessage = (event: MessageEvent) => {
+      const data = event.data as { type?: string; url?: string; method?: string; body?: string; contentType?: string };
+      if (data?.type !== "zivo-supplier-navigate" || !data.url) return;
+      try {
+        const next = new URL(data.url);
+        const allowedProxy = new URL(`${SUPABASE_URL}/functions/v1/supplier-proxy`);
+        if (next.host !== allowedProxy.host || next.pathname !== allowedProxy.pathname) return;
+        const method = data.method?.toUpperCase() || "GET";
+        loadProxyPage(data.url, method === "GET" ? undefined : {
+          method,
+          headers: { "Content-Type": data.contentType || "application/x-www-form-urlencoded" },
+          body: data.body || "",
+        });
+      } catch {
+        // Ignore messages from non-supplier frames.
+      }
+    };
+    window.addEventListener("message", handleMessage);
+    return () => window.removeEventListener("message", handleMessage);
+  }, [open, SUPABASE_URL, loadProxyPage]);
 
   if (!supplier) return null;
 
@@ -127,7 +156,8 @@ export default function SupplierBrowserModal({ storeId, supplier, query, open, o
       updatedAt: new Date().toISOString(),
     });
     toast.success(`${supplier.shortName ?? supplier.name} account saved`);
-    if (targetUrl) window.open(targetUrl, "_blank", "noopener,noreferrer");
+    setShowCreds(false);
+    if (proxiedUrl) loadProxyPage(proxiedUrl);
   };
 
   const handleClearCreds = () => {
@@ -148,17 +178,15 @@ export default function SupplierBrowserModal({ storeId, supplier, query, open, o
   };
 
   const reload = () => {
-    setIframeLoading(true);
-    setBrowserIssue(null);
-    if (iframeRef.current) iframeRef.current.src = proxiedUrl ?? "about:blank";
+    if (proxiedUrl) loadProxyPage(proxiedUrl);
   };
 
   const issueTitle = browserIssue === "not-allowed"
     ? `${supplier.shortName ?? supplier.name} portal needs setup`
     : `${supplier.name} is a trade portal`;
   const issueCopy = browserIssue === "not-allowed"
-    ? "This pro portal is not available in the embedded browser yet. Save the shop account here, then open the supplier portal to sign in."
-    : "For security, this supplier may not allow its site to load inside another window. Save the shop account here, then open the portal to sign in.";
+    ? "This portal URL is not allowlisted for the embedded browser yet. You can still open the supplier portal in a new tab."
+    : "This supplier blocked the embedded session. Try reload, or use New tab if the supplier requires a full browser session.";
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
