@@ -1,6 +1,8 @@
 import {
   KeyRound, CalendarRange, Sparkles, BellRing, Inbox, Search,
-  Hotel, CalendarDays, Users, BedDouble, Tags, BarChart3, Building2,
+  Hotel, CalendarDays, Users, BedDouble, Tags, BarChart3, Building2, Moon, FileText,
+  Receipt, TrendingUp, Bell, Zap, Package,
+  UtensilsCrossed, Gift, Car, AlarmClock, WashingMachine, MessageCircleWarning,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -20,6 +22,20 @@ const CHIPS = [
   { id: "lodge-reports", label: "Reports", icon: BarChart3 },
   { id: "lodge-property", label: "Property", icon: Building2 },
   { id: "lodge-lostfound", label: "Lost & Found", icon: Search },
+  { id: "lodge-nightaudit", label: "Night Audit", icon: Moon },
+  { id: "lodge-handover", label: "Shift Handover", icon: FileText },
+  { id: "lodge-folio", label: "Guest Folio", icon: Receipt },
+  { id: "lodge-groupbooking", label: "Group Bookings", icon: Users },
+  { id: "lodge-revenue", label: "Revenue Mgmt", icon: TrendingUp },
+  { id: "lodge-notifications", label: "Notifications", icon: Bell },
+  { id: "lodge-yield", label: "Pricing Rules", icon: Zap },
+  { id: "lodge-inventory", label: "Inventory", icon: Package },
+  { id: "lodge-roomservice", label: "Room Service", icon: UtensilsCrossed },
+  { id: "lodge-vouchers", label: "Gift Vouchers", icon: Gift },
+  { id: "lodge-parking", label: "Parking", icon: Car },
+  { id: "lodge-wakeup", label: "Wake-up Calls", icon: AlarmClock },
+  { id: "lodge-laundry", label: "Laundry", icon: WashingMachine },
+  { id: "lodge-complaints", label: "Complaints", icon: MessageCircleWarning },
 ];
 
 export default function LodgingQuickJump({ active }: { active: string }) {

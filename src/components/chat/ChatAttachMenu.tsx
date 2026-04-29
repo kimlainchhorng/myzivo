@@ -73,18 +73,14 @@ export default function ChatAttachMenu({
     switch (id) {
       case "gift": onSendGift?.(); break;
       case "money": onOpenWallet?.(); break;
-<<<<<<< HEAD
       case "scan":
         if (onScanDocument) {
           onScanDocument();
         } else {
-          // Fall back to image picker which works as a document scanner on mobile
           onImageSelect();
         }
         break;
-=======
       case "file": onFileSelect?.(); break;
->>>>>>> 358eb50e7a05453042f2e49bb28c606b243a8969
       case "image": onImageSelect(); break;
       case "video": onVideoSelect(); break;
       case "location": onLocationShare(); break;

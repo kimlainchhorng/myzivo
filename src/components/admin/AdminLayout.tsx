@@ -13,7 +13,7 @@ import {
   Headphones, MessageSquare, UserPlus, Wallet, Car, Map, UserCheck, UserX,
   PhoneOff, Megaphone, Globe, BarChart2, Film, Flag, ShieldAlert, MessageCircle,
   ShieldCheck, Lock, UserCog, Sliders, Rocket, Smartphone, Monitor, CheckCircle,
-  Package, RotateCcw, Zap, Eye,
+  Package, RotateCcw, Zap, Eye, Radio, TrendingUp, Inbox,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -66,10 +66,16 @@ const adminNavEntries: NavEntry[] = [
     ],
   },
 
-  { label: "Stores & Eats", icon: Store, path: "/admin/stores" },
+  {
+    label: "Stores & Eats", icon: Store, children: [
+      { label: "All Stores", icon: Store, path: "/admin/stores" },
+      { label: "Verification", icon: ShieldCheck, path: "/admin/stores/verification" },
+    ],
+  },
 
   {
     label: "Finance", icon: Wallet, children: [
+      { label: "GMV Summary", icon: TrendingUp, path: "/admin/finance/summary" },
       { label: "Wallet", icon: Wallet, path: "/admin/wallet" },
       { label: "Pricing", icon: DollarSign, path: "/admin/pricing" },
     ],
@@ -77,6 +83,9 @@ const adminNavEntries: NavEntry[] = [
 
   {
     label: "Marketing & Ads", icon: Megaphone, children: [
+      { label: "Campaigns", icon: Megaphone, path: "/admin/marketing/campaigns" },
+      { label: "Promo Codes", icon: Zap, path: "/admin/marketing/promo-codes" },
+      { label: "Broadcast", icon: Radio, path: "/admin/marketing/broadcast" },
       { label: "Google Ads", icon: Globe, path: "/admin/ads/google" },
       { label: "Meta Ads", icon: Globe, path: "/admin/ads/meta" },
       { label: "Ads Analytics", icon: BarChart2, path: "/admin/ads/analytics" },
@@ -101,7 +110,13 @@ const adminNavEntries: NavEntry[] = [
   },
 
   { label: "Employees", icon: UserCog, path: "/admin/employees" },
-  { label: "Support", icon: Headphones, path: "/admin/support" },
+
+  {
+    label: "Support", icon: Headphones, children: [
+      { label: "Support Home", icon: Headphones, path: "/admin/support" },
+      { label: "Feedback Inbox", icon: Inbox, path: "/admin/feedback" },
+    ],
+  },
 
   {
     label: "Platform", icon: Server, children: [

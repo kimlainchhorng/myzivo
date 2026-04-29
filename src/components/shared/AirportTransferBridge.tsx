@@ -1,9 +1,9 @@
 import { useState } from "react";
-import { 
-  Plane, 
-  Car, 
-  ArrowRight, 
-  MapPin, 
+import {
+  Plane,
+  Car,
+  ArrowRight,
+  MapPin,
   Clock,
   Users,
   Luggage,
@@ -13,6 +13,9 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
+import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
+import { useNavigate } from "react-router-dom";
 
 interface AirportTransferBridgeProps {
   airport?: string;
@@ -49,18 +52,34 @@ const transferOptions = [
   },
 ];
 
-const AirportTransferBridge = ({ 
+const AirportTransferBridge = ({
   airport = "CDG Airport",
   destination = "Paris City Center",
   arrivalTime = "2:30 PM",
   passengers = 2,
-  className 
+  className
 }: AirportTransferBridgeProps) => {
   const [selectedTransfer, setSelectedTransfer] = useState<string | null>(null);
+  const [booking, setBooking] = useState(false);
+  const navigate = useNavigate();
 
-  const handleBook = () => {
-    if (selectedTransfer) {
-      // TODO: integrate with partner transfer API
+  const handleBook = async () => {
+    if (!selectedTransfer) return;
+    const option = transferOptions.find(o => o.id === selectedTransfer);
+    if (!option) return;
+    setBooking(true);
+    try {
+      await supabase.from("feedback_submissions" as any).insert({
+        category: "transfer_request",
+        message: JSON.stringify({ airport, destination, arrivalTime, passengers, transferType: option.name, priceUsd: option.price }),
+        status: "pending",
+      });
+      toast.success(`${option.name} booked! We'll confirm your transfer shortly.`);
+      navigate("/request-ride");
+    } catch {
+      toast.error("Failed to book transfer. Please try again.");
+    } finally {
+      setBooking(false);
     }
   };
 
@@ -176,7 +195,7 @@ const AirportTransferBridge = ({
           <Button
             className="flex-1 bg-gradient-to-r from-sky-500 to-blue-500"
             onClick={handleBook}
-            disabled={!selectedTransfer}
+            disabled={!selectedTransfer || booking}
           >
             Add Transfer
             <ArrowRight className="w-4 h-4 ml-2" />

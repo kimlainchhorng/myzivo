@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import AppLayout from "@/components/app/AppLayout";
+import AdminLayout from "@/components/admin/AdminLayout";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -82,10 +82,10 @@ export default function AdminRefundsPage() {
   };
 
   return (
-    <AppLayout title="Refund Requests">
-      <div className="p-6 max-w-6xl mx-auto space-y-6">
+    <AdminLayout title="Refund Requests">
+      <div className="max-w-6xl space-y-6">
         <div>
-          <h1 className="text-2xl font-bold">Ride refund requests</h1>
+          <h2 className="text-2xl font-bold">Ride refund requests</h2>
           <p className="text-sm text-muted-foreground">Review, approve, or deny rider-initiated refunds. Approvals trigger a real Stripe refund.</p>
         </div>
 
@@ -181,6 +181,6 @@ export default function AdminRefundsPage() {
           )}
         </SheetContent>
       </Sheet>
-    </AppLayout>
+    </AdminLayout>
   );
 }

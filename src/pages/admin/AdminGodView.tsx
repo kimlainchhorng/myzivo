@@ -409,7 +409,7 @@ export default function AdminGodView() {
               variant="outline"
               size="sm"
               className="w-full mt-2 text-xs"
-              onClick={() => window.location.assign("/admin/system-health")}
+              onClick={() => location.assign("/admin/system-health")}
             >
               View Live Health Monitor →
             </Button>

@@ -2,7 +2,7 @@
  * Admin Wallet Management — View customer wallets & withdrawal requests
  */
 import { useState } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import AdminLayout from "@/components/admin/AdminLayout";
 import { Badge } from "@/components/ui/badge";
@@ -11,13 +11,33 @@ import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   Wallet, ArrowDownLeft, Search, DollarSign, Users, Clock, CheckCircle2,
-  Banknote, Building2
+  Banknote, Building2, Loader2, XCircle,
 } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
+import { toast } from "sonner";
 
 export default function AdminWalletPage() {
+  const qc = useQueryClient();
   const [search, setSearch] = useState("");
   const [tab, setTab] = useState<"withdrawals" | "wallets">("withdrawals");
+  const [actingId, setActingId] = useState<string | null>(null);
+
+  const processWithdrawal = async (id: string, approve: boolean) => {
+    setActingId(id);
+    try {
+      const { error } = await (supabase as any)
+        .from("customer_wallet_transactions")
+        .update({ is_redeemed: approve, redeemed_at: approve ? new Date().toISOString() : null })
+        .eq("id", id);
+      if (error) throw error;
+      qc.invalidateQueries({ queryKey: ["admin-withdrawals"] });
+      toast.success(approve ? "Withdrawal marked as processed" : "Withdrawal denied");
+    } catch (e: any) {
+      toast.error(e.message || "Action failed");
+    } finally {
+      setActingId(null);
+    }
+  };
 
   // Fetch all withdrawal transactions
   const { data: withdrawals = [], isLoading: wLoading } = useQuery({
@@ -25,7 +45,7 @@ export default function AdminWalletPage() {
     queryFn: async () => {
       const { data, error } = await (supabase as any)
         .from("customer_wallet_transactions")
-        .select("id, user_id, amount_cents, balance_after_cents, type, description, created_at")
+        .select("id, user_id, amount_cents, balance_after_cents, type, description, created_at, is_redeemed, redeemed_at")
         .eq("type", "withdrawal")
         .order("created_at", { ascending: false })
         .limit(100);
@@ -171,9 +191,35 @@ export default function AdminWalletPage() {
                         <p className="text-sm font-bold text-orange-500">
                           -${(Math.abs(w.amount_cents) / 100).toFixed(2)}
                         </p>
-                        <Badge variant="outline" className="text-[10px]">
-                          <Clock className="w-2.5 h-2.5 mr-1" /> Pending
-                        </Badge>
+                        {w.is_redeemed ? (
+                          <Badge className="text-[10px] bg-emerald-500/10 text-emerald-600 border-emerald-500/20">
+                            <CheckCircle2 className="w-2.5 h-2.5 mr-1" /> Processed
+                          </Badge>
+                        ) : (
+                          <div className="flex gap-1">
+                            <Badge variant="outline" className="text-[10px]">
+                              <Clock className="w-2.5 h-2.5 mr-1" /> Pending
+                            </Badge>
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              className="h-6 px-2 text-[10px] text-emerald-600 hover:text-emerald-700"
+                              disabled={actingId === w.id}
+                              onClick={() => processWithdrawal(w.id, true)}
+                            >
+                              {actingId === w.id ? <Loader2 className="h-3 w-3 animate-spin" /> : <CheckCircle2 className="h-3 w-3" />}
+                            </Button>
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              className="h-6 px-2 text-[10px] text-destructive hover:text-destructive"
+                              disabled={actingId === w.id}
+                              onClick={() => processWithdrawal(w.id, false)}
+                            >
+                              <XCircle className="h-3 w-3" />
+                            </Button>
+                          </div>
+                        )}
                       </div>
                     </div>
                   );

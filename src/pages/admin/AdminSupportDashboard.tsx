@@ -6,22 +6,25 @@ import { useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { useUserAccess } from "@/hooks/useUserAccess";
 import { supabase } from "@/integrations/supabase/client";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   MessageSquare, AlertTriangle, CheckCircle2,
-  Clock, Users, Search,
+  Clock, Users, Search, Loader2,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
 import AdminLayout from "@/components/admin/AdminLayout";
+import { toast } from "sonner";
 
 export default function AdminSupportDashboard() {
   const navigate = useNavigate();
   const location = useLocation();
   const { user } = useAuth();
   const { data: access } = useUserAccess(user?.id);
+  const qc = useQueryClient();
   const [searchQuery, setSearchQuery] = useState("");
+  const [resolvingId, setResolvingId] = useState<string | null>(null);
 
   useEffect(() => {
     const sectionId = location.hash.slice(1);
@@ -81,6 +84,23 @@ export default function AdminSupportDashboard() {
     enabled: isAuthorized,
   });
 
+  const resolveAlert = async (id: string) => {
+    setResolvingId(id);
+    try {
+      const { error } = await supabase
+        .from("admin_security_alerts")
+        .update({ is_resolved: true, resolved_at: new Date().toISOString(), resolved_by: user?.id })
+        .eq("id", id);
+      if (error) throw error;
+      qc.invalidateQueries({ queryKey: ["support-security-alerts"] });
+      toast.success("Alert resolved");
+    } catch (e: any) {
+      toast.error(e.message || "Failed to resolve");
+    } finally {
+      setResolvingId(null);
+    }
+  };
+
   if (!isAuthorized) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background">
@@ -98,6 +118,20 @@ export default function AdminSupportDashboard() {
   const escalatedCount = aiConversations?.filter(c => c.escalated)?.length || 0;
   const resolvedCount = aiConversations?.filter(c => c.satisfaction_rating && c.satisfaction_rating >= 4)?.length || 0;
   const openAlerts = securityAlerts?.length || 0;
+
+  const filteredConversations = searchQuery
+    ? aiConversations?.filter(c =>
+        c.question?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        c.answer?.toLowerCase().includes(searchQuery.toLowerCase())
+      )
+    : aiConversations;
+
+  const filteredActivity = searchQuery
+    ? recentActivity?.filter(a =>
+        a.description?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        a.action_type?.toLowerCase().includes(searchQuery.toLowerCase())
+      )
+    : recentActivity;
 
   const stats = [
     { label: "Total Conversations", value: totalConversations, icon: MessageSquare, color: "text-blue-500", bg: "bg-blue-500/10" },
@@ -143,7 +177,7 @@ export default function AdminSupportDashboard() {
               Recent AI Conversations
             </h2>
             <div className="space-y-3 max-h-96 overflow-y-auto">
-              {aiConversations?.slice(0, 10).map((conv) => (
+              {filteredConversations?.slice(0, 10).map((conv) => (
                 <div key={conv.id} className="p-3 rounded-xl bg-muted/30 hover:bg-muted/50 transition-colors space-y-1">
                   <p className="text-sm font-medium text-foreground line-clamp-1">{conv.question || "No question"}</p>
                   <div className="flex items-center gap-2">
@@ -163,8 +197,8 @@ export default function AdminSupportDashboard() {
                   </div>
                 </div>
               ))}
-              {(!aiConversations || aiConversations.length === 0) && (
-                <p className="text-sm text-muted-foreground text-center py-8">No conversations yet</p>
+              {(!filteredConversations || filteredConversations.length === 0) && (
+                <p className="text-sm text-muted-foreground text-center py-8">No conversations found</p>
               )}
             </div>
           </div>
@@ -178,7 +212,20 @@ export default function AdminSupportDashboard() {
             <div className="space-y-3 max-h-96 overflow-y-auto">
               {securityAlerts?.map((alert) => (
                 <div key={alert.id} className="p-3 rounded-xl bg-muted/30 hover:bg-muted/50 transition-colors space-y-1">
-                  <p className="text-sm font-medium text-foreground">{alert.title}</p>
+                  <div className="flex items-start justify-between gap-2">
+                    <p className="text-sm font-medium text-foreground">{alert.title}</p>
+                    <Button
+                      size="sm"
+                      variant="ghost"
+                      className="h-6 px-2 text-[10px] text-emerald-600 hover:text-emerald-700 shrink-0"
+                      disabled={resolvingId === alert.id}
+                      onClick={() => resolveAlert(alert.id)}
+                    >
+                      {resolvingId === alert.id
+                        ? <Loader2 className="h-3 w-3 animate-spin" />
+                        : <><CheckCircle2 className="h-3 w-3 mr-1" />Resolve</>}
+                    </Button>
+                  </div>
                   <div className="flex items-center gap-2">
                     <span className={cn(
                       "text-[10px] px-1.5 py-0.5 rounded-full font-medium",
@@ -207,7 +254,7 @@ export default function AdminSupportDashboard() {
               Recent Account Activity
             </h2>
             <div className="space-y-2 max-h-64 overflow-y-auto">
-              {recentActivity?.map((activity) => (
+              {filteredActivity?.map((activity) => (
                 <div key={activity.id} className="flex items-center gap-3 p-2.5 rounded-lg hover:bg-muted/30 transition-colors">
                   <div className="h-8 w-8 rounded-full bg-muted/50 flex items-center justify-center shrink-0">
                     <Users className="h-3.5 w-3.5 text-muted-foreground" />

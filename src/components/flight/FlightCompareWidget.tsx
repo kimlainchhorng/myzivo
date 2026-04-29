@@ -16,7 +16,6 @@ interface CompareFlight {
 }
 
 const FlightCompareWidget = () => {
-  // TODO: Populate from user's selected flights
   const [compareList, setCompareList] = useState<CompareFlight[]>([]);
 
   const removeFromCompare = (id: string) => {
@@ -40,6 +39,14 @@ const FlightCompareWidget = () => {
             Compare Flights Side by Side
           </h2>
         </div>
+
+        {compareList.length === 0 && (
+          <div className="text-center py-14 text-muted-foreground">
+            <Scale className="w-10 h-10 mx-auto mb-3 opacity-20" />
+            <p className="font-medium text-sm">No flights selected to compare</p>
+            <p className="text-xs mt-1 max-w-xs mx-auto">Search for flights and tap <strong>Compare</strong> on up to 3 results to compare them here side by side.</p>
+          </div>
+        )}
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           {compareList.map((flight, index) => (

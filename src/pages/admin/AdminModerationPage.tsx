@@ -386,8 +386,8 @@ export default function AdminModerationPage() {
                               <span className="text-sm font-semibold text-foreground capitalize">
                                 {(item.category || "feedback").replace(/_/g, " ")}
                               </span>
-                              <Badge variant="outline" className="text-[10px] bg-orange-500/10 text-orange-600 border-orange-500/20">
-                                Flagged
+                              <Badge variant="outline" className={item.status === "resolved" ? "text-[10px] bg-green-500/10 text-green-600 border-green-500/20" : "text-[10px] bg-orange-500/10 text-orange-600 border-orange-500/20"}>
+                                {item.status === "resolved" ? "Resolved" : "Flagged"}
                               </Badge>
                             </div>
                             <p className="text-sm text-muted-foreground line-clamp-2">{item.message || "No message"}</p>
@@ -396,6 +396,26 @@ export default function AdminModerationPage() {
                               <span><Clock className="w-3 h-3 inline mr-1" />{new Date(item.created_at).toLocaleString()}</span>
                             </div>
                           </div>
+                          {item.status !== "resolved" && (
+                            <div className="flex gap-1 shrink-0">
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                className="text-xs h-7 gap-1 text-green-600 border-green-500/30 hover:bg-green-500/10"
+                                onClick={() => (supabase as any).from("feedback_submissions").update({ status: "resolved" }).eq("id", item.id).then(() => queryClient.invalidateQueries({ queryKey: ["admin-feedback-flags"] }))}
+                              >
+                                <CheckCircle className="w-3 h-3" /> Resolve
+                              </Button>
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                className="text-xs h-7 gap-1 text-muted-foreground hover:text-foreground"
+                                onClick={() => (supabase as any).from("feedback_submissions").update({ status: "dismissed" }).eq("id", item.id).then(() => queryClient.invalidateQueries({ queryKey: ["admin-feedback-flags"] }))}
+                              >
+                                <XCircle className="w-3 h-3" /> Dismiss
+                              </Button>
+                            </div>
+                          )}
                         </div>
                       </div>
                     ))}

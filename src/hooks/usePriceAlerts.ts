@@ -1,5 +1,6 @@
 import { useState, useCallback, useEffect } from 'react';
 import { toast } from 'sonner';
+import { supabase } from '@/integrations/supabase/client';
 
 export interface PriceAlert {
   id: string;
@@ -97,30 +98,40 @@ export function usePriceAlerts() {
     ));
   }, []);
 
-  // Check price alerts using indicative price simulation
-  // Note: Real price alerts would require user to check partner sites
+  // Sync triggered state from Supabase price_alerts table, then fall back to local state
   const checkAlerts = useCallback(async () => {
     if (alerts.length === 0) return;
-    
-    const updatedAlerts = alerts.map((alert) => {
-      // Skip already triggered alerts
-      if (alert.triggered) return alert;
-      
-      // TODO: Check real price from partner API
-      // Price alerts disabled until real pricing API is integrated
-      const newPrice = alert.currentPrice;
-      const isTriggered = newPrice <= alert.targetPrice;
 
-      return {
-        ...alert,
-        currentPrice: Math.round(newPrice),
-        lastCheckedAt: new Date(),
-        triggered: isTriggered,
-        triggeredPrice: isTriggered ? Math.round(newPrice) : undefined,
-      };
-    });
+    // Pull any server-side triggered rows for matching routes
+    const routePairs = alerts.filter(a => !a.triggered).map(a => a.route.fromCode + "_" + a.route.toCode);
+    if (routePairs.length > 0) {
+      const { data: dbRows } = await supabase
+        .from("price_alerts")
+        .select("origin_code, destination_code, current_price, target_price")
+        .in("origin_code", alerts.map(a => a.route.fromCode))
+        .eq("is_active", true);
 
-    setAlerts(updatedAlerts);
+      const updatedAlerts = alerts.map((alert) => {
+        if (alert.triggered) return alert;
+        const dbRow = (dbRows ?? []).find(
+          (r: any) => r.origin_code === alert.route.fromCode && r.destination_code === alert.route.toCode
+        );
+        const newPrice = dbRow ? dbRow.current_price : alert.currentPrice;
+        const isTriggered = newPrice <= alert.targetPrice;
+        if (isTriggered) {
+          toast.success(`Price alert! ${alert.route.fromCode} → ${alert.route.toCode} dropped to $${newPrice}`);
+        }
+        return {
+          ...alert,
+          currentPrice: Math.round(newPrice),
+          lastCheckedAt: new Date(),
+          triggered: isTriggered,
+          triggeredPrice: isTriggered ? Math.round(newPrice) : undefined,
+        };
+      });
+
+      setAlerts(updatedAlerts);
+    }
   }, [alerts]);
 
   const getAlertForRoute = useCallback((fromCode: string, toCode: string): PriceAlert | undefined => {

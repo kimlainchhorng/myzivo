@@ -253,6 +253,12 @@ const DriverPayoutsPage = lazy(() => import("./pages/driver/DriverPayoutsPage"))
 const AdminGoogleAdsPage = lazy(() => import("./pages/admin/AdminGoogleAdsPage"));
 const AdminMetaAdsPage = lazy(() => import("./pages/admin/AdminMetaAdsPage"));
 const AdminAdsAnalyticsPage = lazy(() => import("./pages/admin/AdminAdsAnalyticsPage"));
+const AdminMarketingCampaignsPage = lazy(() => import("./pages/admin/AdminMarketingCampaignsPage"));
+const AdminPromoCodesPage = lazy(() => import("./pages/admin/AdminPromoCodesPage"));
+const AdminBroadcastPage = lazy(() => import("./pages/admin/AdminBroadcastPage"));
+const AdminFeedbackReplyPage = lazy(() => import("./pages/admin/AdminFeedbackReplyPage"));
+const AdminStoreVerificationPage = lazy(() => import("./pages/admin/AdminStoreVerificationPage"));
+const AdminFinanceSummaryPage = lazy(() => import("./pages/admin/AdminFinanceSummaryPage"));
 const AdminWebhookStatusPage = lazy(() => import("./pages/admin/AdminWebhookStatusPage"));
 const AdminDriverVerificationPage = lazy(() => import("./pages/admin/AdminDriverVerificationPage"));
 const DriverOnboardingDocumentsPage = lazy(() => import("./pages/driver/DriverOnboardingDocumentsPage"));
@@ -852,6 +858,12 @@ const App = () => (
                 <Route path="/admin/ads/google" element={<ProtectedRoute><AdminGoogleAdsPage /></ProtectedRoute>} />
                 <Route path="/admin/ads/meta" element={<ProtectedRoute><AdminMetaAdsPage /></ProtectedRoute>} />
                 <Route path="/admin/ads/analytics" element={<ProtectedRoute><AdminAdsAnalyticsPage /></ProtectedRoute>} />
+                <Route path="/admin/marketing/campaigns" element={<ProtectedRoute><AdminMarketingCampaignsPage /></ProtectedRoute>} />
+                <Route path="/admin/marketing/promo-codes" element={<ProtectedRoute><AdminPromoCodesPage /></ProtectedRoute>} />
+                <Route path="/admin/marketing/broadcast" element={<ProtectedRoute><AdminBroadcastPage /></ProtectedRoute>} />
+                <Route path="/admin/feedback" element={<ProtectedRoute><AdminFeedbackReplyPage /></ProtectedRoute>} />
+                <Route path="/admin/stores/verification" element={<ProtectedRoute><AdminStoreVerificationPage /></ProtectedRoute>} />
+                <Route path="/admin/finance/summary" element={<ProtectedRoute><AdminFinanceSummaryPage /></ProtectedRoute>} />
                 <Route path="/admin/payments/webhook-status" element={<ProtectedRoute><AdminWebhookStatusPage /></ProtectedRoute>} />
                 <Route path="/admin/drivers/verification" element={<ProtectedRoute><AdminDriverVerificationPage /></ProtectedRoute>} />
                 <Route path="/admin/drivers/moderation" element={<ProtectedRoute><AdminDriverModerationPage /></ProtectedRoute>} />

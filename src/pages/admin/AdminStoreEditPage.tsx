@@ -99,6 +99,20 @@ import LodgingStaffSection from "@/components/admin/store/lodging/LodgingStaffSe
 import LodgingConciergeTasksSection from "@/components/admin/store/lodging/LodgingConciergeTasksSection";
 import LodgingLostFoundSection from "@/components/admin/store/lodging/LodgingLostFoundSection";
 import LodgingGallerySection from "@/components/admin/store/lodging/LodgingGallerySection";
+import LodgingNightAuditSection from "@/components/admin/store/lodging/LodgingNightAuditSection";
+import LodgingShiftHandoverSection from "@/components/admin/store/lodging/LodgingShiftHandoverSection";
+import LodgingFolioSection from "@/components/admin/store/lodging/LodgingFolioSection";
+import LodgingGroupBookingSection from "@/components/admin/store/lodging/LodgingGroupBookingSection";
+import LodgingRevenueSection from "@/components/admin/store/lodging/LodgingRevenueSection";
+import LodgingNotificationsSection from "@/components/admin/store/lodging/LodgingNotificationsSection";
+import LodgingYieldRulesSection from "@/components/admin/store/lodging/LodgingYieldRulesSection";
+import LodgingInventorySection from "@/components/admin/store/lodging/LodgingInventorySection";
+import LodgingRoomServiceSection from "@/components/admin/store/lodging/LodgingRoomServiceSection";
+import LodgingGiftVouchersSection from "@/components/admin/store/lodging/LodgingGiftVouchersSection";
+import LodgingParkingSection from "@/components/admin/store/lodging/LodgingParkingSection";
+import LodgingWakeupCallsSection from "@/components/admin/store/lodging/LodgingWakeupCallsSection";
+import LodgingLaundrySection from "@/components/admin/store/lodging/LodgingLaundrySection";
+import LodgingComplaintsSection from "@/components/admin/store/lodging/LodgingComplaintsSection";
 import SoftwareDownloadsSection from "@/components/admin/store/SoftwareDownloadsSection";
 import { getLodgingCompletion } from "@/lib/lodging/lodgingCompletion";
 import { LODGING_TAB_IDS, resolveStoreTab, resolveStoreTabFromSearch } from "@/lib/admin/storeTabRouting";
@@ -2051,6 +2065,20 @@ export default function AdminStoreEditPage() {
     "lodge-payouts": "Payouts & Finance",
     "lodge-inbox": "Guest Inbox",
     "lodge-staff": "Hotel Staff",
+    "lodge-handover": "Shift Handover",
+    "lodge-nightaudit": "Night Audit",
+    "lodge-folio": "Guest Folio",
+    "lodge-groupbooking": "Group Bookings",
+    "lodge-revenue": "Revenue Management",
+    "lodge-notifications": "Guest Notifications",
+    "lodge-yield": "Dynamic Pricing",
+    "lodge-inventory": "Inventory & Supplies",
+    "lodge-roomservice": "Room Service",
+    "lodge-vouchers": "Gift Vouchers",
+    "lodge-parking": "Parking",
+    "lodge-wakeup": "Wake-up Calls",
+    "lodge-laundry": "Laundry & Dry Cleaning",
+    "lodge-complaints": "Guest Complaints",
     "lodge-concierge": "Concierge Tasks",
     "lodge-lostfound": "Lost & Found",
     "lodge-gallery": "Photos & Gallery",
@@ -3778,6 +3806,20 @@ export default function AdminStoreEditPage() {
               <TabsContent value="lodge-payouts" data-testid="lodging-tab-lodge-payouts"><LodgingPayoutsSection storeId={storeId!} /></TabsContent>
               <TabsContent value="lodge-inbox" data-testid="lodging-tab-lodge-inbox"><LodgingInboxSection storeId={storeId!} /></TabsContent>
               <TabsContent value="lodge-staff" data-testid="lodging-tab-lodge-staff"><LodgingStaffSection storeId={storeId!} /></TabsContent>
+              <TabsContent value="lodge-handover" data-testid="lodging-tab-lodge-handover"><LodgingShiftHandoverSection storeId={storeId!} /></TabsContent>
+              <TabsContent value="lodge-nightaudit" data-testid="lodging-tab-lodge-nightaudit"><LodgingNightAuditSection storeId={storeId!} /></TabsContent>
+              <TabsContent value="lodge-folio" data-testid="lodging-tab-lodge-folio"><LodgingFolioSection storeId={storeId!} /></TabsContent>
+              <TabsContent value="lodge-groupbooking" data-testid="lodging-tab-lodge-groupbooking"><LodgingGroupBookingSection storeId={storeId!} /></TabsContent>
+              <TabsContent value="lodge-revenue" data-testid="lodging-tab-lodge-revenue"><LodgingRevenueSection storeId={storeId!} /></TabsContent>
+              <TabsContent value="lodge-notifications" data-testid="lodging-tab-lodge-notifications"><LodgingNotificationsSection storeId={storeId!} /></TabsContent>
+              <TabsContent value="lodge-yield" data-testid="lodging-tab-lodge-yield"><LodgingYieldRulesSection storeId={storeId!} /></TabsContent>
+              <TabsContent value="lodge-inventory" data-testid="lodging-tab-lodge-inventory"><LodgingInventorySection storeId={storeId!} /></TabsContent>
+              <TabsContent value="lodge-roomservice" data-testid="lodging-tab-lodge-roomservice"><LodgingRoomServiceSection storeId={storeId!} /></TabsContent>
+              <TabsContent value="lodge-vouchers" data-testid="lodging-tab-lodge-vouchers"><LodgingGiftVouchersSection storeId={storeId!} /></TabsContent>
+              <TabsContent value="lodge-parking" data-testid="lodging-tab-lodge-parking"><LodgingParkingSection storeId={storeId!} /></TabsContent>
+              <TabsContent value="lodge-wakeup" data-testid="lodging-tab-lodge-wakeup"><LodgingWakeupCallsSection storeId={storeId!} /></TabsContent>
+              <TabsContent value="lodge-laundry" data-testid="lodging-tab-lodge-laundry"><LodgingLaundrySection storeId={storeId!} /></TabsContent>
+              <TabsContent value="lodge-complaints" data-testid="lodging-tab-lodge-complaints"><LodgingComplaintsSection storeId={storeId!} /></TabsContent>
               <TabsContent value="lodge-concierge" data-testid="lodging-tab-lodge-concierge"><LodgingConciergeTasksSection storeId={storeId!} /></TabsContent>
               <TabsContent value="lodge-lostfound" data-testid="lodging-tab-lodge-lostfound"><LodgingLostFoundSection storeId={storeId!} /></TabsContent>
               <TabsContent value="lodge-gallery" data-testid="lodging-tab-lodge-gallery"><LodgingGallerySection storeId={storeId!} /></TabsContent>
