@@ -145,12 +145,8 @@ Deno.serve(async (req) => {
   respHeaders.delete("x-frame-options");
 
   const ct = upstream.headers.get("content-type") ?? "";
-  const publicHost = req.headers.get("x-forwarded-host") ?? req.headers.get("host") ?? url.host;
-  const publicProto = req.headers.get("x-forwarded-proto") ?? "https";
-  const publicPath = url.pathname.includes("/functions/v1/")
-    ? url.pathname
-    : `/functions/v1${url.pathname.startsWith("/") ? url.pathname : `/${url.pathname}`}`;
-  const proxyBase = `${publicProto}://${publicHost}${publicPath}?u=`;
+  const supabaseUrl = Deno.env.get("SUPABASE_URL")?.replace(/\/$/, "");
+  const proxyBase = `${supabaseUrl ?? url.origin}/functions/v1/supplier-proxy?u=`;
 
   // Rewrite HTML so that links/forms continue to flow through the proxy
   if (ct.includes("text/html") || ct.includes("text/plain") || ct.includes("application/xhtml")) {
