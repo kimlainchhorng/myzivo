@@ -760,6 +760,97 @@ export default function AutoRepairInvoicesSection({ storeId }: Props) {
     setDocs(d => [...d]);
   };
 
+  // Build display rows from authoritative DB data + seed for the active tab
+  const dbRowsForTab = tab === "invoice" ? dbInvoices : dbEstimates;
+  const seedForTab = docs.filter((d) => d.type === tab && ["1","2","3"].includes(d.id) && dbRowsForTab.length === 0);
+
+  const rows: RowDoc[] = useMemo(() => {
+    const fromDb: RowDoc[] = dbRowsForTab.map((r: any) => {
+      const due = r.due_at ? new Date(r.due_at) : null;
+      const isOverdue = !!(due && r.status !== "paid" && due < new Date());
+      return {
+        id: r.id,
+        type: tab,
+        number: r.number || "",
+        customer: r.customer_name || "",
+        vehicle: r.vehicle_label || "",
+        totalCents: r.total_cents ?? 0,
+        amountPaidCents: r.amount_paid_cents ?? 0,
+        status: r.status || "draft",
+        isOverdue,
+      };
+    });
+    const fromSeed: RowDoc[] = seedForTab.map((d) => ({
+      id: d.id, type: tab, number: d.number, customer: d.customer, vehicle: d.vehicle,
+      totalCents: Math.round(total(d.items) * 100), amountPaidCents: 0, status: d.status,
+    }));
+    let all = [...fromDb, ...fromSeed];
+
+    // Search
+    if (query.trim()) {
+      const q = query.toLowerCase();
+      all = all.filter((r) =>
+        r.number.toLowerCase().includes(q) ||
+        r.customer.toLowerCase().includes(q) ||
+        r.vehicle.toLowerCase().includes(q)
+      );
+    }
+    // Status filter
+    if (statusFilter !== "all") {
+      all = all.filter((r) => statusFilter === "overdue" ? r.isOverdue : r.status === statusFilter);
+    }
+    // Sort
+    all.sort((a, b) => {
+      if (sortKey === "amount_desc") return b.totalCents - a.totalCents;
+      if (sortKey === "customer_asc") return a.customer.localeCompare(b.customer);
+      const aRow = dbRowsForTab.find((r: any) => r.id === a.id);
+      const bRow = dbRowsForTab.find((r: any) => r.id === b.id);
+      const at = aRow ? new Date(aRow.created_at).getTime() : 0;
+      const bt = bRow ? new Date(bRow.created_at).getTime() : 0;
+      return sortKey === "oldest" ? at - bt : bt - at;
+    });
+    return all;
+  }, [dbRowsForTab, seedForTab, tab, query, statusFilter, sortKey]);
+
+  const findFullDoc = (id: string): Doc | undefined => docs.find((d) => d.id === id);
+
+  const handleDownloadPdf = (id: string) => {
+    const d = findFullDoc(id);
+    if (!d) return;
+    const pdfDoc: PdfDoc = {
+      type: d.type, number: d.number, customer: d.customer, phone: d.phone, email: d.email,
+      address: d.address, vehicle: d.vehicle, vin: d.vin, items: d.items as any, status: d.status,
+      createdAt: d.createdAt,
+    };
+    const blob = generateDocumentPdf({ doc: pdfDoc, storeName: storeInfo.name, storeAddress: storeInfo.address, storePhone: storeInfo.phone });
+    downloadPdf(blob, `${d.type}-${d.number}.pdf`);
+  };
+
+  const handleConvertEstimate = async (id: string) => {
+    const est = findFullDoc(id);
+    if (!est) return;
+    try {
+      const number = nextDocNumber("invoice");
+      const subtotalCents = Math.round(total(est.items) * 100);
+      const { data: { user } } = await supabase.auth.getUser();
+      const { error } = await supabase.from("ar_invoices" as any).insert({
+        store_id: storeId, number, estimate_id: est.id,
+        customer_name: est.customer, customer_phone: est.phone || null, customer_email: est.email || null,
+        customer_address: est.address || null, vehicle_label: est.vehicle || null, vin: est.vin || null,
+        vehicle_year: est.year || null, vehicle_make: est.make || null, vehicle_model: est.model || null,
+        items: est.items as any, subtotal_cents: subtotalCents, total_cents: subtotalCents,
+        status: "draft", created_by: user?.id,
+      });
+      if (error) throw error;
+      await updateDocument("estimate", id, { status: "approved" });
+      toast.success(`Converted to invoice ${number}`);
+      setTab("invoice");
+      reloadAll();
+    } catch (e: any) {
+      toast.error(`Conversion failed: ${e?.message || "unknown error"}`);
+    }
+  };
+
   return (
     <Card>
       <CardHeader className="flex flex-row items-center justify-between">
@@ -795,42 +886,85 @@ export default function AutoRepairInvoicesSection({ storeId }: Props) {
             </div>
           </div>
         )}
+
+        {tab === "invoice" && <InvoiceKpiStrip invoices={dbInvoices} />}
+
         <Tabs value={tab} onValueChange={(v) => setTab(v as any)}>
-          <TabsList className="grid w-full max-w-sm grid-cols-2 mb-4">
+          <TabsList className="grid w-full max-w-sm grid-cols-2 mb-3">
             <TabsTrigger value="estimate">Estimates</TabsTrigger>
             <TabsTrigger value="invoice">Invoices</TabsTrigger>
           </TabsList>
 
           <TabsContent value={tab} className="space-y-2">
-            {filtered.length === 0 && (
+            <InvoiceFilterBar
+              query={query} onQuery={setQuery}
+              status={statusFilter} onStatus={setStatusFilter}
+              sort={sortKey} onSort={setSortKey}
+              showOverdue={tab === "invoice"}
+            />
+
+            {rows.length === 0 && (
               <div className="text-center py-12 text-muted-foreground">
                 <FileText className="w-8 h-8 mx-auto mb-2 opacity-40" />
-                <p className="text-sm">No {tab}s yet</p>
+                <p className="text-sm">No {tab}s match your filters</p>
               </div>
             )}
-            {filtered.map(d => (
-              <div key={d.id} className="flex items-center justify-between p-3 rounded-xl border border-border hover:bg-muted/40 transition">
-                <div className="min-w-0 flex-1">
-                  <div className="flex items-center gap-2 mb-0.5">
-                    <span className="font-semibold text-sm">{d.number}</span>
-                    <Badge variant={d.status === "paid" ? "default" : d.status === "sent" ? "secondary" : "outline"} className="text-[10px] capitalize">{d.status}</Badge>
-                  </div>
-                  <p className="text-xs text-muted-foreground truncate">{d.customer} · {d.vehicle}</p>
-                </div>
-                <div className="text-right shrink-0 ml-3">
-                  <p className="font-bold text-sm">${total(d.items).toFixed(2)}</p>
-                  <div className="flex gap-1 mt-1">
-                    <Button size="icon" variant="ghost" className="h-7 w-7" onClick={() => setPreviewDoc(d)} title="Preview"><Eye className="w-3.5 h-3.5" /></Button>
-                    <Button size="icon" variant="ghost" className="h-7 w-7" onClick={() => setPreviewDoc(d)} title="Send"><Send className="w-3.5 h-3.5" /></Button>
-                    <Button size="icon" variant="ghost" className="h-7 w-7" onClick={() => setPreviewDoc(d)} title="Print"><Printer className="w-3.5 h-3.5" /></Button>
-                  </div>
-                </div>
-              </div>
-            ))}
+
+            {rows.map((r) => {
+              const full = findFullDoc(r.id);
+              return (
+                <InvoiceListRow
+                  key={r.id}
+                  doc={r}
+                  onView={() => full && setPreviewDoc(full)}
+                  onEdit={() => full && startEdit(full)}
+                  onSend={() => setSendDoc({ id: r.id, type: r.type, number: r.number, customer: r.customer, email: full?.email, phone: full?.phone })}
+                  onMarkPaid={r.type === "invoice" ? () => setPaymentDoc({ id: r.id, number: r.number, customer: r.customer, totalCents: r.totalCents, amountPaidCents: r.amountPaidCents }) : undefined}
+                  onDuplicate={() => full && startDuplicate(full)}
+                  onDownloadPdf={() => handleDownloadPdf(r.id)}
+                  onDelete={() => setDeleteDoc({ id: r.id, type: r.type, number: r.number })}
+                  onConvert={r.type === "estimate" ? () => handleConvertEstimate(r.id) : undefined}
+                />
+              );
+            })}
           </TabsContent>
         </Tabs>
       </CardContent>
+
       <AutoRepairDocPreviewDialog open={!!previewDoc} onOpenChange={(v) => !v && setPreviewDoc(null)} doc={previewDoc} storeName={storeInfo.name} storeAddress={storeInfo.address} storePhone={storeInfo.phone} />
+
+      <RecordInvoicePaymentDialog
+        open={!!paymentDoc}
+        onOpenChange={(v) => !v && setPaymentDoc(null)}
+        storeId={storeId}
+        invoice={paymentDoc}
+        onSaved={reloadAll}
+      />
+
+      <SendDocumentSheet
+        open={!!sendDoc}
+        onOpenChange={(v) => !v && setSendDoc(null)}
+        storeId={storeId}
+        doc={sendDoc}
+        onSent={reloadAll}
+      />
+
+      <DeleteConfirmDialog
+        open={!!deleteDoc}
+        onOpenChange={(v) => !v && setDeleteDoc(null)}
+        title={`Delete ${deleteDoc?.number ?? ""}?`}
+        onConfirm={async () => {
+          if (!deleteDoc) return;
+          try {
+            await softDeleteDocument(deleteDoc.type, deleteDoc.id);
+            toast.success("Deleted");
+            setDeleteDoc(null);
+            reloadAll();
+          } catch (e: any) {
+            toast.error(`Delete failed: ${e?.message || "unknown error"}`);
+          }
+        }}
+      />
     </Card>
   );
 }
