@@ -71,6 +71,9 @@ const emptyDraft = (): Doc => ({
   status: "draft", createdAt: new Date().toISOString(),
 });
 
+// True if the id looks like a real Postgres uuid (vs a seed/local id like "1").
+const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
 // Compute the dollar amount for a single line item
 const lineAmount = (i: LineItem): number => {
   const gross =
@@ -357,7 +360,9 @@ export default function AutoRepairInvoicesSection({ storeId }: Props) {
         status: draft.status === "paid" ? "paid" : draft.status === "sent" ? "sent" : "draft",
       };
 
-      if (editingId) {
+      // Only treat as update if we have a real DB uuid (seed rows use ids like "1").
+      const isRealId = !!editingId && UUID_RE.test(editingId);
+      if (isRealId) {
         const { error } = await supabase.from(tableName as any).update(payload).eq("id", editingId);
         if (error) throw error;
         toast.success(`${draft.type === "invoice" ? "Invoice" : "Estimate"} ${draft.number} updated`);
@@ -405,9 +410,10 @@ export default function AutoRepairInvoicesSection({ storeId }: Props) {
         total_cents: subtotalCents,
       };
 
-      // 1. Persist the estimate (insert if new, update if editing) and mark approved.
+      // 1. Persist the estimate (insert if new/seed, update if editing a real DB row).
       let estimateId = editingId;
-      if (estimateId) {
+      const isRealEstimateId = !!estimateId && UUID_RE.test(estimateId);
+      if (isRealEstimateId) {
         const { error } = await supabase
           .from("ar_estimates" as any)
           .update({ ...basePayload, number: draft.number, status: "approved" })
