@@ -14,6 +14,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { ShieldAlert, Plus, Network, Search } from "lucide-react";
 import { toast } from "sonner";
 import { WARRANTY_NETWORKS, getWarrantyNetwork } from "@/config/warrantyNetworks";
+import WarrantyNetworkLogo from "./WarrantyNetworkLogo";
 
 interface Props { storeId: string }
 
@@ -162,17 +163,18 @@ export default function AutoRepairWarrantySection({ storeId }: Props) {
                 const claim = extractClaim(w.notes);
                 return (
                   <div key={w.id} className="flex items-center justify-between border border-border rounded-lg p-3">
-                    <div className="min-w-0">
-                      <p className="font-semibold text-sm truncate">{w.service_name}</p>
-                      <p className="text-xs text-muted-foreground">
-                        {w.period_days}d · {w.mileage_limit?.toLocaleString()} mi
-                        {claim ? ` · Claim #${claim}` : ""}
-                      </p>
+                    <div className="flex items-center gap-2.5 min-w-0">
+                      {net && <WarrantyNetworkLogo network={net} size="md" />}
+                      <div className="min-w-0">
+                        <p className="font-semibold text-sm truncate">{w.service_name}</p>
+                        <p className="text-xs text-muted-foreground truncate">
+                          {net ? `${net.shortName ?? net.name} · ` : ""}
+                          {w.period_days}d · {w.mileage_limit?.toLocaleString()} mi
+                          {claim ? ` · Claim #${claim}` : ""}
+                        </p>
+                      </div>
                     </div>
-                    <div className="flex items-center gap-2 shrink-0">
-                      {net && <Badge variant="secondary" className="text-[11px]">{net.shortName ?? net.name}</Badge>}
-                      <Badge variant="outline">{w.expires_at ?? "—"}</Badge>
-                    </div>
+                    <Badge variant="outline" className="shrink-0">{w.expires_at ?? "—"}</Badge>
                   </div>
                 );
               })}
@@ -224,10 +226,13 @@ export default function AutoRepairWarrantySection({ storeId }: Props) {
               <button
                 key={n.id}
                 onClick={() => { setForm((f) => ({ ...f, network_id: n.id })); setOpen(true); }}
-                className="text-left text-[12px] border border-border rounded-md px-2 py-1.5 hover:border-primary hover:bg-primary/5 transition-colors"
+                className="flex items-center gap-2.5 text-left text-[12px] border border-border rounded-md px-2 py-1.5 hover:border-primary hover:bg-primary/5 transition-colors"
               >
-                <p className="font-medium truncate">{n.shortName ?? n.name}</p>
-                {n.category && <p className="text-[10px] text-muted-foreground">{n.category}</p>}
+                <WarrantyNetworkLogo network={n} size="md" />
+                <div className="min-w-0">
+                  <p className="font-medium truncate">{n.shortName ?? n.name}</p>
+                  {n.category && <p className="text-[10px] text-muted-foreground">{n.category}</p>}
+                </div>
               </button>
             ))}
             {filteredNetworks.length === 0 && (
