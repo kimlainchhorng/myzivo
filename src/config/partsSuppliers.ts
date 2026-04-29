@@ -18,6 +18,8 @@ export interface PartsSupplier {
   shortName?: string;
   /** Primary domain shop opens — usually the pro / B2B portal. */
   domain?: string;
+  /** Optional exact portal/login URL when the root domain is not the best entry. */
+  portalUrl?: string;
   /** Public consumer site, when different from the pro portal. */
   consumerDomain?: string;
   category: "Retail Chain" | "OE / Dealer" | "Wholesale Distributor" | "Online Marketplace" | "Specialty";
@@ -34,6 +36,7 @@ export const PARTS_SUPPLIERS: PartsSupplier[] = [
     name: "AutoZonePro (Commercial)",
     shortName: "AutoZonePro",
     domain: "autozonepro.com",
+    portalUrl: "https://www.autozonepro.com/ui/login",
     consumerDomain: "autozone.com",
     category: "Retail Chain",
     description: "Trade portal · login required",
@@ -53,7 +56,8 @@ export const PARTS_SUPPLIERS: PartsSupplier[] = [
     id: "napa",
     name: "NAPA PROLink",
     shortName: "PROLink",
-    domain: "proline.napaonline.com",
+    domain: "napaprolink.com",
+    portalUrl: "https://www.napaprolink.com/",
     consumerDomain: "napaonline.com",
     category: "Retail Chain",
     description: "Trade portal · login required",
@@ -63,11 +67,12 @@ export const PARTS_SUPPLIERS: PartsSupplier[] = [
     id: "advance",
     name: "Advance Professional",
     shortName: "Advance Pro",
-    domain: "advancecommercial.com",
+    domain: "advancepro.com",
+    portalUrl: "https://www.advancepro.com/",
     consumerDomain: "advanceautoparts.com",
     category: "Retail Chain",
-    description: "MyAdvantageLink B2B",
-    searchUrlTemplate: "https://www.advancecommercial.com/search?q={q}",
+    description: "AdvancePro B2B",
+    searchUrlTemplate: "https://www.advancepro.com/search?q={q}",
   },
   {
     id: "carquest",
