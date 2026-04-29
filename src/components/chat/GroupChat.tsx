@@ -9,6 +9,8 @@ import Send from "lucide-react/dist/esm/icons/send";
 import Loader2 from "lucide-react/dist/esm/icons/loader-2";
 import Users from "lucide-react/dist/esm/icons/users";
 import ImagePlus from "lucide-react/dist/esm/icons/image-plus";
+import Plus from "lucide-react/dist/esm/icons/plus";
+import Smile from "lucide-react/dist/esm/icons/smile";
 import X from "lucide-react/dist/esm/icons/x";
 import Mic from "lucide-react/dist/esm/icons/mic";
 import Square from "lucide-react/dist/esm/icons/square";
@@ -111,6 +113,7 @@ export default function GroupChat({ groupId, groupName, groupAvatar, onClose }: 
   const [sending, setSending] = useState(false);
   const [replyTo, setReplyTo] = useState<{ id: string; message: string; senderName: string } | null>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
+  const bottomAnchorRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [uploadingImage, setUploadingImage] = useState(false);
@@ -130,7 +133,9 @@ export default function GroupChat({ groupId, groupName, groupAvatar, onClose }: 
   }>>(new Map());
 
   const scrollToBottom = useCallback(() => {
-    setTimeout(() => scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight, behavior: "smooth" }), 50);
+    requestAnimationFrame(() => {
+      bottomAnchorRef.current?.scrollIntoView({ block: "end" });
+    });
   }, []);
 
   // Load members
@@ -619,7 +624,16 @@ export default function GroupChat({ groupId, groupName, groupAvatar, onClose }: 
       </div>
 
       {/* Messages */}
-      <div ref={scrollRef} className="flex-1 overflow-y-auto px-4 py-3 space-y-2">
+      <div
+        ref={scrollRef}
+        className="flex-1 overflow-y-auto overscroll-contain px-4 py-3 space-y-2"
+        style={{
+          WebkitOverflowScrolling: "touch",
+          touchAction: "pan-y",
+          transform: "translateZ(0)",
+          contain: "layout paint" as React.CSSProperties["contain"],
+        }}
+      >
         {loading ? (
           <div className="flex items-center justify-center h-40">
             <Loader2 className="h-5 w-5 animate-spin text-primary" />
@@ -631,7 +645,9 @@ export default function GroupChat({ groupId, groupName, groupAvatar, onClose }: 
             <p className="text-xs mt-1">Say hello to the group!</p>
           </div>
         ) : (
-          messages.map((msg) => {
+          <>
+          <AnimatePresence initial={false}>
+          {messages.map((msg) => {
             const isMe = msg.sender_id === user?.id;
             const senderName = getSenderName(msg.sender_id);
             const senderAvatar = getSenderAvatar(msg.sender_id);
@@ -639,8 +655,11 @@ export default function GroupChat({ groupId, groupName, groupAvatar, onClose }: 
             const isOptimistic = msg.id.startsWith("opt-");
 
             return (
-              <div
+              <motion.div
                 key={msg.id}
+                initial={{ opacity: 0, y: 10, scale: 0.97 }}
+                animate={{ opacity: 1, y: 0, scale: 1 }}
+                transition={{ type: "spring", damping: 22, stiffness: 380, mass: 0.7 }}
                 className={`chat-no-callout flex ${isMe ? "justify-end" : "justify-start"} gap-1.5`}
                 onContextMenu={(e) => e.preventDefault()}
                 style={{ WebkitTouchCallout: "none" } as React.CSSProperties}
@@ -716,9 +735,13 @@ export default function GroupChat({ groupId, groupName, groupAvatar, onClose }: 
                     </div>
                   )}
                 </div>
-              </div>
+              </motion.div>
             );
-          })
+          })}
+          </AnimatePresence>
+          {/* Bottom anchor for instant scroll-to-bottom */}
+          <div ref={bottomAnchorRef} className="h-px shrink-0" aria-hidden />
+          </>
         )}
       </div>
 
@@ -746,31 +769,42 @@ export default function GroupChat({ groupId, groupName, groupAvatar, onClose }: 
       {/* Voice recording overlay is rendered inside HoldToRecordMic (Round 5) */}
 
       {/* Input */}
-      <div className="bg-background border-t border-border/30 px-3 py-2 flex items-center gap-2 relative" style={{ paddingBottom: "max(env(safe-area-inset-bottom, 0px), 0.5rem)" }}>
+      <div className="bg-background/80 backdrop-blur-2xl border-t border-border/5 px-2.5 py-2 flex items-end gap-1.5 relative" style={{ paddingBottom: "max(env(safe-area-inset-bottom, 0px), 0.5rem)" }}>
+        {/* Attach / image */}
         <button
           onClick={() => fileInputRef.current?.click()}
           disabled={uploadingImage}
-          className="h-10 w-10 rounded-full flex items-center justify-center text-muted-foreground hover:text-primary transition-colors shrink-0"
+          className="h-10 w-10 rounded-full flex items-center justify-center text-muted-foreground/60 hover:bg-muted/50 active:scale-90 transition-all shrink-0"
         >
-          {uploadingImage ? <Loader2 className="h-5 w-5 animate-spin" /> : <ImagePlus className="h-5 w-5" />}
+          {uploadingImage ? <Loader2 className="h-[18px] w-[18px] animate-spin" /> : <Plus className="h-5 w-5" />}
         </button>
         <input ref={fileInputRef} type="file" accept="image/*" className="hidden" onChange={handleImageSelect} />
 
-        <input
-          ref={inputRef}
-          value={input}
-          onChange={(e) => setInput(e.target.value)}
-          onKeyDown={(e) => e.key === "Enter" && !e.shiftKey && handleSend()}
-          placeholder="Type a message..."
-          className="flex-1 h-10 px-4 rounded-full bg-muted/50 border border-border/30 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/30"
-        />
+        {/* Text input with emoji button */}
+        <div className="flex-1 relative">
+          <input
+            ref={inputRef}
+            value={input}
+            onChange={(e) => setInput(e.target.value)}
+            onKeyDown={(e) => e.key === "Enter" && !e.shiftKey && handleSend()}
+            placeholder="Message..."
+            className="w-full h-11 pl-4 pr-12 rounded-full text-[14.5px] text-foreground placeholder:text-muted-foreground/40 focus:outline-none bg-muted/30 border border-border/10 focus:ring-2 focus:ring-primary/15 focus:border-primary/20 transition-all"
+          />
+          <div className="absolute right-1.5 top-1/2 -translate-y-1/2">
+            <button className="h-8 w-8 rounded-full flex items-center justify-center text-muted-foreground/40 hover:text-muted-foreground transition-colors">
+              <Smile className="h-5 w-5" />
+            </button>
+          </div>
+        </div>
+
+        {/* Send or mic */}
         {input.trim() ? (
           <button
             onClick={() => handleSend()}
             disabled={sending}
-            className="h-10 w-10 rounded-full bg-primary text-primary-foreground flex items-center justify-center disabled:opacity-40 active:scale-90 transition-all shrink-0"
+            className="h-11 w-11 rounded-full bg-primary text-primary-foreground flex items-center justify-center disabled:opacity-40 active:scale-90 transition-all shrink-0 shadow-sm"
           >
-            {sending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
+            {sending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-[17px] w-[17px]" />}
           </button>
         ) : (
           <HoldToRecordMic voice={voice} />

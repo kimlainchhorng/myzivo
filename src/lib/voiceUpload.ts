@@ -83,10 +83,27 @@ export interface PreflightResult {
   body?: string;
 }
 
-// Cache successful write-preflight per bucket for the page lifetime — re-checking
-// every voice note is wasteful once we've proven the bucket accepts writes.
-const preflightOkCache = new Map<string, number>();
+// Cache successful write-preflight per bucket — persisted in sessionStorage so
+// HMR hot reloads (which re-execute this module) don't blow away the proof that
+// the bucket allows writes and trigger spurious preflight failures.
+const PREFLIGHT_CACHE_KEY = "_vmp_preflight";
 const PREFLIGHT_TTL_MS = 5 * 60 * 1000;
+
+function _loadPreflightCache(): Map<string, number> {
+  try {
+    const raw = sessionStorage.getItem(PREFLIGHT_CACHE_KEY);
+    if (raw) return new Map(JSON.parse(raw) as [string, number][]);
+  } catch { /* ignore */ }
+  return new Map();
+}
+
+function _savePreflightCache(cache: Map<string, number>) {
+  try {
+    sessionStorage.setItem(PREFLIGHT_CACHE_KEY, JSON.stringify([...cache]));
+  } catch { /* ignore — storage full or private browsing */ }
+}
+
+const preflightOkCache = _loadPreflightCache();
 
 /**
  * Real write-preflight: POSTs a 1-byte probe object into the user's own folder
@@ -138,6 +155,7 @@ export async function preflightVoiceBucket(opts: {
     });
     if (res.ok) {
       preflightOkCache.set(bucket, Date.now());
+      _savePreflightCache(preflightOkCache);
       // Best-effort cleanup of the probe object.
       void supabase.storage.from(bucket).remove([probePath]).catch(() => {});
       return { ok: true, status: res.status, url };

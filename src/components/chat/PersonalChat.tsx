@@ -291,6 +291,7 @@ export default function PersonalChat({ recipientId, recipientName, recipientAvat
     storagePath?: string;
   }>>(new Map());
   const handleSendRef = useRef<((opts?: SendMessageOptions) => Promise<void>) | null>(null);
+  const filePickerTriggerRef = useRef<(() => void) | null>(null);
   const messageRefs = useRef<Map<string, HTMLDivElement>>(new Map());
   const timelineRef = useRef<HTMLDivElement>(null);
   const expandingTimelineRef = useRef(false);
@@ -343,24 +344,17 @@ export default function PersonalChat({ recipientId, recipientName, recipientAvat
   }, [user?.id, recipientId]);
 
   const isNearBottomRef = useRef(true);
+  const bottomAnchorRef = useRef<HTMLDivElement>(null);
 
   const scrollToBottom = useCallback((force?: boolean) => {
     if (!force && !isNearBottomRef.current) return;
-    // Use multiple attempts to ensure DOM is rendered
-    const doScroll = () => {
-      if (scrollRef.current) {
-        scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
-      }
-    };
-    // Immediate + deferred to catch both fast and slow renders
     requestAnimationFrame(() => {
-      doScroll();
-      setTimeout(doScroll, 100);
-      setTimeout(doScroll, 300);
+      bottomAnchorRef.current?.scrollIntoView({ block: "end" });
     });
   }, []);
 
   const timelineLengthRef = useRef(0);
+  const visibleTimelineCountRef = useRef(INITIAL_VISIBLE_TIMELINE_ITEMS);
 
   const handleScroll = useCallback(() => {
     const el = scrollRef.current;
@@ -369,14 +363,18 @@ export default function PersonalChat({ recipientId, recipientName, recipientAvat
     isNearBottomRef.current = distanceFromBottom < 150;
     setShowJumpToLatest(distanceFromBottom > 360);
 
-    if (el.scrollTop < 120 && timelineLengthRef.current > visibleTimelineCount && !expandingTimelineRef.current) {
+    if (el.scrollTop < 120 && timelineLengthRef.current > visibleTimelineCountRef.current && !expandingTimelineRef.current) {
       expandingTimelineRef.current = true;
-      setVisibleTimelineCount((prev) => Math.min(prev + VISIBLE_TIMELINE_STEP, timelineLengthRef.current));
+      setVisibleTimelineCount((prev) => {
+        const next = Math.min(prev + VISIBLE_TIMELINE_STEP, timelineLengthRef.current);
+        visibleTimelineCountRef.current = next;
+        return next;
+      });
       requestAnimationFrame(() => {
         expandingTimelineRef.current = false;
       });
     }
-  }, [visibleTimelineCount]);
+  }, []);
 
   const resizeObserverRef = useRef<ResizeObserver | null>(null);
   useEffect(() => {
@@ -1431,7 +1429,12 @@ export default function PersonalChat({ recipientId, recipientName, recipientAvat
             </p>
             <p className="text-[11px] text-muted-foreground/70 leading-tight mt-0.5">
               {recipientTyping ? (
-                <span className="text-primary font-medium animate-pulse">typing...</span>
+                <span className="inline-flex items-center gap-[3px] text-primary font-medium">
+                  typing
+                  {[0,1,2].map(i => (
+                    <span key={i} className="inline-block w-1 h-1 rounded-full bg-primary animate-bounce" style={{ animationDelay: `${i * 0.15}s`, animationDuration: "0.8s" }} />
+                  ))}
+                </span>
               ) : recipientOnline ? (
                 <span className="text-emerald-500 font-medium">Online</span>
               ) : disappearingMode ? (
@@ -1648,6 +1651,8 @@ export default function PersonalChat({ recipientId, recipientName, recipientAvat
           ...getWallpaperStyle(chatStyle.wallpaper),
           WebkitOverflowScrolling: "touch",
           touchAction: "pan-y",
+          transform: "translateZ(0)",
+          contain: "layout paint" as React.CSSProperties["contain"],
         }}
       >
         {loading ? (
@@ -1671,21 +1676,28 @@ export default function PersonalChat({ recipientId, recipientName, recipientAvat
                 </button>
               </div>
             )}
+            <AnimatePresence initial={false}>
             {visibleTimeline.map((item) => {
                 if (isCallEvent(item)) {
                   return (
-                    <CallEventBubble
+                    <motion.div
                       key={`call-${item.id}`}
-                      id={item.id}
-                      callType={item.call_type as "voice" | "video"}
-                      status={item.status}
-                      isOutgoing={item.caller_id === user?.id}
-                      durationSeconds={item.duration_seconds}
-                      createdAt={item.created_at}
-                      onCallback={handleStartCall.bind(null, item.call_type as "voice" | "video")}
-                      onDelete={handleCallDelete}
-                      onDeleteAll={handleCallDeleteAll}
-                    />
+                      initial={{ opacity: 0, y: 10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ type: "spring", damping: 22, stiffness: 380, mass: 0.7 }}
+                    >
+                      <CallEventBubble
+                        id={item.id}
+                        callType={item.call_type as "voice" | "video"}
+                        status={item.status}
+                        isOutgoing={item.caller_id === user?.id}
+                        durationSeconds={item.duration_seconds}
+                        createdAt={item.created_at}
+                        onCallback={handleStartCall.bind(null, item.call_type as "voice" | "video")}
+                        onDelete={handleCallDelete}
+                        onDeleteAll={handleCallDeleteAll}
+                      />
+                    </motion.div>
                   );
                 }
 
@@ -1695,9 +1707,12 @@ export default function PersonalChat({ recipientId, recipientName, recipientAvat
                 const isHighlighted = highlightedMsgId === msg.id;
 
                 return (
-                  <div
+                  <motion.div
                     key={msg.id}
-                    ref={(el) => { if (el) messageRefs.current.set(msg.id, el); }}
+                    ref={(el) => { if (el) messageRefs.current.set(msg.id, el as HTMLDivElement); }}
+                    initial={{ opacity: 0, y: 12, scale: 0.97 }}
+                    animate={{ opacity: 1, y: 0, scale: 1 }}
+                    transition={{ type: "spring", damping: 22, stiffness: 380, mass: 0.7 }}
                     className={`chat-no-callout transition-colors duration-500 rounded-xl ${isHighlighted ? "bg-primary/10" : ""}`}
                     onContextMenu={(e) => e.preventDefault()}
                     style={{ WebkitTouchCallout: "none" } as React.CSSProperties}
@@ -1727,13 +1742,15 @@ export default function PersonalChat({ recipientId, recipientName, recipientAvat
                         </Suspense>
                       </div>
                     ) : msg.message_type === "location" && msg.location_lat != null && msg.location_lng != null ? (
-                      <LocationShareBubble
-                        lat={msg.location_lat}
-                        lng={msg.location_lng}
-                        label={msg.location_label || undefined}
-                        isMe={isMe}
-                        time={formatMsgTime(msg.created_at)}
-                      />
+                      <Suspense fallback={null}>
+                        <LocationShareBubble
+                          lat={msg.location_lat}
+                          lng={msg.location_lng}
+                          label={msg.location_label || undefined}
+                          isMe={isMe}
+                          time={formatMsgTime(msg.created_at)}
+                        />
+                      </Suspense>
                     ) : msg.message_type === "voice" && msg.voice_url ? (
                       (() => {
                         const csid = (msg.file_payload as { client_send_id?: string } | null)?.client_send_id;
@@ -1798,13 +1815,18 @@ export default function PersonalChat({ recipientId, recipientName, recipientAvat
                       />
                     )}
 
-                    {/* Aggregated emoji reactions chip row */}
+                    {/* Aggregated emoji reactions chip row — pre-loaded to avoid N+1 queries */}
                     {!msg.id.startsWith("opt-") && (
-                      <MessageReactionsBar messageId={msg.id} align={isMe ? "right" : "left"} />
+                      <MessageReactionsBar
+                        messageId={msg.id}
+                        align={isMe ? "right" : "left"}
+                        initialReactions={reactionsMap[msg.id]}
+                      />
                     )}
-                  </div>
+                  </motion.div>
                 );
             })}
+            </AnimatePresence>
 
             {/* Typing indicator — 2026 style */}
             {recipientTyping && (
@@ -1819,6 +1841,8 @@ export default function PersonalChat({ recipientId, recipientName, recipientAvat
                 </div>
               </div>
             )}
+            {/* Bottom anchor — scrollToBottom targets this for instant, jank-free scrolling */}
+            <div ref={bottomAnchorRef} className="h-px shrink-0" aria-hidden />
           </div>
         )}
       </div>
@@ -1887,8 +1911,8 @@ export default function PersonalChat({ recipientId, recipientName, recipientAvat
 
       <div className="bg-background/80 backdrop-blur-2xl border-t border-border/5 px-2.5 py-2 relative" style={{ paddingBottom: "max(env(safe-area-inset-bottom, 0px), 0.5rem)" }}>
           <div className="flex items-end gap-1.5">
-            {/* Scrollable action group — keeps every utility button reachable on narrow viewports */}
-            <div className="flex items-end gap-1 overflow-x-auto no-scrollbar shrink min-w-0 max-w-[44%] sm:max-w-[55%]">
+            {/* Action buttons — attach + emoji picker; extra tools accessible via attach menu */}
+            <div className="flex items-end gap-0.5 shrink-0">
               {/* Attach */}
               <div className="relative shrink-0">
                 <button
@@ -1916,6 +1940,7 @@ export default function PersonalChat({ recipientId, recipientName, recipientAvat
                   onSendGift={() => setShowGiftPanel(true)}
                   onOpenWallet={() => setShowWalletSheet(true)}
                   onScanDocument={() => setShowScanner(true)}
+                  onFileSelect={() => filePickerTriggerRef.current?.()}
                 />
               </div>
 
@@ -1934,47 +1959,35 @@ export default function PersonalChat({ recipientId, recipientName, recipientAvat
                 </Suspense>
               )}
 
-              {/* Document upload */}
-              <ChatMediaUploader
-                recipientId={recipientId}
-                onMediaSent={(opts) => {
-                  if (opts.imageUrl) handleSend({ imageUrl: opts.imageUrl });
-                  else if (opts.videoUrl) handleSend({ videoUrl: opts.videoUrl });
-                  else if (opts.fileUrl) {
-                    handleSend({
-                      filePayload: {
-                        url: opts.fileUrl,
-                        filename: opts.fileName || "file",
-                        mime_type: opts.fileType || "application/octet-stream",
-                        size: opts.fileSize,
-                        source: "upload",
-                      },
-                    });
-                  }
-                }}
-                renderTrigger={(openFilePicker) => (
-                  <button onClick={openFilePicker} className="h-10 w-10 rounded-full flex items-center justify-center text-muted-foreground/60 hover:bg-muted/50 active:scale-90 transition-all shrink-0">
-                    <FileText className="h-[18px] w-[18px]" />
-                  </button>
-                )}
-              />
-
-              {/* Self-destruct flame picker */}
+              {/* Self-destruct picker — always visible so user can toggle timer */}
               <div className="shrink-0">
                 <SelfDestructPicker value={selfDestructSec} onChange={setSelfDestructSec} />
               </div>
-
-              {/* Scheduled messages queue */}
-              <button
-                type="button"
-                onClick={() => setShowScheduledSheet(true)}
-                className="h-10 w-10 rounded-full flex items-center justify-center text-muted-foreground/60 hover:bg-muted/50 active:scale-90 transition-all shrink-0"
-                aria-label="Scheduled messages"
-                title="Scheduled messages"
-              >
-                <Clock className="h-[18px] w-[18px]" />
-              </button>
             </div>
+
+            {/* Document/file upload — trigger stored in ref, opened via attach menu */}
+            <ChatMediaUploader
+              recipientId={recipientId}
+              onMediaSent={(opts) => {
+                if (opts.imageUrl) handleSend({ imageUrl: opts.imageUrl });
+                else if (opts.videoUrl) handleSend({ videoUrl: opts.videoUrl });
+                else if (opts.fileUrl) {
+                  handleSend({
+                    filePayload: {
+                      url: opts.fileUrl,
+                      filename: opts.fileName || "file",
+                      mime_type: opts.fileType || "application/octet-stream",
+                      size: opts.fileSize,
+                      source: "upload",
+                    },
+                  });
+                }
+              }}
+              renderTrigger={(open) => {
+                filePickerTriggerRef.current = open;
+                return <></>;
+              }}
+            />
 
             {/* Input field */}
             <div className="flex-1 relative">

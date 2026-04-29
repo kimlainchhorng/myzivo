@@ -241,10 +241,10 @@ export default function VoiceMessagePlayer({
       return (
         <div
           key={i}
-          className={`relative flex-1 min-w-[1.5px] rounded-full ${unfilledClass}`}
+          className={`relative flex-1 min-w-[2px] rounded-full ${unfilledClass}`}
           style={{
-            height: `${h * 100}%`,
-            minHeight: "3px",
+            height: `${Math.max(0.22, h) * 100}%`,
+            minHeight: "4px",
           }}
         >
           {/* Foreground "filled" overlay — width driven by container CSS var */}
@@ -300,7 +300,7 @@ export default function VoiceMessagePlayer({
 
   return (
     <div
-      className={`chat-no-callout relative min-w-[200px] max-w-[260px] ${debugOn || showAnonKeyWarning ? "flex flex-col gap-1.5" : ""} ${isFailed ? "ring-1 ring-destructive/60 rounded-xl -mx-1 px-1 py-0.5" : ""}`}
+      className={`chat-no-callout relative min-w-[200px] max-w-[260px] ${debugOn || showAnonKeyWarning ? "flex flex-col gap-1.5" : ""} ${isFailed ? "ring-1 ring-orange-400/50 rounded-xl -mx-1 px-1 py-0.5" : ""}`}
       style={{
         WebkitUserSelect: "none",
         userSelect: "none",
@@ -321,7 +321,7 @@ export default function VoiceMessagePlayer({
         disabled={interactionDisabled}
         className={`w-10 h-10 rounded-full flex items-center justify-center shrink-0 shadow-sm transition-opacity ${
           isFailed
-            ? "bg-destructive/15 text-destructive"
+            ? "bg-orange-500/15 text-orange-500"
             : isMe
               ? "bg-primary-foreground/20 hover:bg-primary-foreground/30 text-primary-foreground"
               : "bg-primary/15 hover:bg-primary/25 text-primary"
@@ -344,7 +344,7 @@ export default function VoiceMessagePlayer({
         <div className="relative">
           <div
             ref={waveContainerRef}
-            className={`flex items-center gap-[1px] h-7 touch-none ${interactionDisabled ? "opacity-60 pointer-events-none" : "cursor-pointer"}`}
+            className={`flex items-center gap-[2px] h-8 touch-none ${interactionDisabled ? "opacity-60 pointer-events-none" : "cursor-pointer"}`}
             style={{ ["--p" as any]: 0 }}
             onPointerDown={(e) => {
               if (interactionDisabled) return;
@@ -402,21 +402,21 @@ export default function VoiceMessagePlayer({
             )}
             {isFailed && (
               <span
-                className="text-[10px] leading-none text-destructive truncate cursor-help select-none"
+                className="text-[10px] leading-none text-orange-500 truncate cursor-help select-none"
                 title={uploadError}
                 onPointerDown={onFailedLabelPointerDown}
                 onPointerUp={onFailedLabelPointerEnd}
                 onPointerLeave={onFailedLabelPointerEnd}
                 onPointerCancel={onFailedLabelPointerEnd}
               >
-                Failed to send
+                Not sent
               </span>
             )}
             {isFailed && uploadError && (
               <button
                 type="button"
                 onClick={copyError}
-                className="h-4 w-4 rounded-full text-destructive/80 hover:text-destructive flex items-center justify-center shrink-0"
+                className="h-4 w-4 rounded-full text-orange-500/80 hover:text-orange-500 flex items-center justify-center shrink-0"
                 aria-label="Copy error reason"
                 title="Copy error reason"
               >
@@ -431,7 +431,7 @@ export default function VoiceMessagePlayer({
                 <button
                   type="button"
                   onClick={onRetry}
-                  className="h-6 px-2 rounded-full bg-destructive/15 text-destructive text-[10px] font-semibold flex items-center gap-1 active:scale-90 transition-transform"
+                  className="h-6 px-2 rounded-full bg-orange-500/15 text-orange-500 text-[10px] font-semibold flex items-center gap-1 active:scale-90 transition-transform"
                   aria-label="Resend voice note"
                   title="Resend voice"
                 >

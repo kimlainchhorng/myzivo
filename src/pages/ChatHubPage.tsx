@@ -172,10 +172,11 @@ function parseRichMessagePreview(message: string): string {
 }
 
 function getMessagePreviewIcon(message: string) {
-  if (message === "📷 Image" || message.includes("[image]")) return <ImageIcon className="w-3.5 h-3.5 text-muted-foreground inline mr-1" />;
-  if (message.includes("[voice]") || message.includes("🎤")) return <Mic className="w-3.5 h-3.5 text-muted-foreground inline mr-1" />;
-  if (message.includes("[location]") || message.includes("📍")) return <MapPin className="w-3.5 h-3.5 text-muted-foreground inline mr-1" />;
-  if (message.includes("[video]")) return <Video className="w-3.5 h-3.5 text-muted-foreground inline mr-1" />;
+  if (message === "📷 Image" || message.includes("[image]")) return <ImageIcon className="w-3.5 h-3.5 text-muted-foreground inline mr-1 shrink-0" />;
+  if (message.includes("[voice]") || message.startsWith("🎤")) return <Mic className="w-3.5 h-3.5 text-muted-foreground inline mr-1 shrink-0" />;
+  if (message.includes("[location]") || message.startsWith("📍")) return <MapPin className="w-3.5 h-3.5 text-muted-foreground inline mr-1 shrink-0" />;
+  if (message.includes("[video]") || message.startsWith("🎥")) return <Video className="w-3.5 h-3.5 text-muted-foreground inline mr-1 shrink-0" />;
+  if (message.startsWith("📎")) return null;
   return null;
 }
 
@@ -547,7 +548,11 @@ export default function ChatHubPage({ embedded = false }: { embedded?: boolean }
           name: profile?.full_name || "User",
           avatar: profile?.avatar_url || null,
           isVerified: profile?.is_verified === true,
-          lastMessage: entry.lastMsg.message || "📷 Image",
+          lastMessage: entry.lastMsg.message_type === "voice"
+            ? "🎤 Voice message"
+            : entry.lastMsg.message_type === "file"
+            ? "📎 File"
+            : entry.lastMsg.message || (entry.lastMsg.image_url ? "📷 Image" : entry.lastMsg.video_url ? "🎥 Video" : ""),
           lastTime: entry.lastMsg.created_at,
           unread: entry.unread,
           isOnline,
@@ -593,7 +598,9 @@ export default function ChatHubPage({ embedded = false }: { embedded?: boolean }
             id: g.id,
             name: g.name,
             avatar: g.avatar_url,
-            lastMessage: lastMsg?.message || "Group created",
+            lastMessage: lastMsg?.message_type === "voice"
+            ? "🎤 Voice message"
+            : lastMsg?.message || "Group created",
             lastTime: lastMsg?.created_at || g.created_at,
             unread: 0,
             isGroup: true,
@@ -1437,14 +1444,14 @@ export default function ChatHubPage({ embedded = false }: { embedded?: boolean }
                     )}
                   </div>
                 ) : (
-                  <div className={cn("space-y-2 px-1", embedded && "space-y-1.5 px-1") }>
+                  <div className={cn("divide-y divide-border/20", embedded && "px-1")}>
                     {/* Archived chats row */}
                     {!search && archivedList.length > 0 && active === "personal" && (
                       <button
                         onClick={() => setShowArchived((v) => !v)}
-                        className="w-full flex items-center gap-3 p-3 rounded-2xl bg-card border border-border/40 shadow-sm active:scale-[0.98] transition-all"
+                        className="w-full flex items-center gap-3 px-4 py-3 active:bg-muted/50 transition-colors"
                       >
-                        <div className="w-10 h-10 rounded-full bg-muted flex items-center justify-center">
+                        <div className="w-[52px] h-[52px] rounded-full bg-muted flex items-center justify-center flex-shrink-0">
                           <Archive className="w-4 h-4 text-muted-foreground" />
                         </div>
                         <div className="flex-1 text-left">
@@ -1469,9 +1476,9 @@ export default function ChatHubPage({ embedded = false }: { embedded?: boolean }
                     {!search && active === "personal" && user && (
                       <button
                         onClick={() => setOpenPersonalChat({ id: user.id, name: "Saved Messages", avatar: null, isVerified: false })}
-                        className="w-full flex items-center gap-3 p-3 rounded-2xl bg-card border border-border/40 shadow-sm hover:shadow-md hover:border-border/60 active:scale-[0.98] transition-all"
+                        className="w-full flex items-center gap-3 px-4 py-3 active:bg-muted/50 transition-colors"
                       >
-                        <div className="w-[50px] h-[50px] rounded-2xl bg-primary/10 flex items-center justify-center ring-2 ring-border/30">
+                        <div className="w-[52px] h-[52px] rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
                           <Bookmark className="w-5 h-5 text-primary" />
                         </div>
                         <div className="flex-1 min-w-0 text-left">
@@ -1558,12 +1565,10 @@ export default function ChatHubPage({ embedded = false }: { embedded?: boolean }
                             >
                               <button
                                 className={cn(
-                                  "w-full flex items-center gap-3 text-left transition-all",
-                                  embedded
-                                    ? "p-2.5 rounded-2xl bg-card border border-border/30 hover:border-border/50 hover:bg-card/90 gap-2.5"
-                                    : "p-3 rounded-2xl bg-card border border-border/40 shadow-sm hover:shadow-md hover:border-border/60",
-                                  "active:scale-[0.98] active:shadow-none",
-                                  chat.unread > 0 && !muted && "border-primary/20 bg-primary/[0.02] shadow-primary/5"
+                                  "w-full flex items-center gap-3 text-left transition-colors",
+                                  embedded ? "px-3 py-2.5" : "px-4 py-3",
+                                  "active:bg-muted/50",
+                                  chat.unread > 0 && !muted && "bg-primary/[0.02]"
                                 )}
                                 onClick={() => {
                                   if (selectionMode && active === "personal") {
@@ -1598,8 +1603,8 @@ export default function ChatHubPage({ embedded = false }: { embedded?: boolean }
                                     </span>
                                   )}
                                   <div className={cn(
-                                    "flex items-center justify-center overflow-hidden ring-2 ring-border/30",
-                                    embedded ? "h-[44px] w-[44px] rounded-xl" : "w-[50px] h-[50px] rounded-2xl",
+                                    "flex items-center justify-center overflow-hidden rounded-full",
+                                    embedded ? "h-[44px] w-[44px]" : "w-[52px] h-[52px]",
                                     (chat as any).isGroup ? "bg-primary/10" : "bg-muted"
                                   )}>
                                     {chat.avatar ? (
@@ -1619,7 +1624,7 @@ export default function ChatHubPage({ embedded = false }: { embedded?: boolean }
                                     )}
                                   </div>
                                   {liveOnline && (
-                                    <span className="absolute -bottom-0.5 -right-0.5 h-3.5 w-3.5 rounded-full bg-emerald-500 border-[2.5px] border-card" />
+                                    <span className="absolute -bottom-0.5 -right-0.5 h-3.5 w-3.5 rounded-full bg-emerald-500 border-[2.5px] border-background" />
                                   )}
                                 </div>
 
@@ -1685,8 +1690,13 @@ export default function ChatHubPage({ embedded = false }: { embedded?: boolean }
                                           return (
                                             <span className={cn(
                                               embedded ? "text-[12px]" : "text-[13px]",
-                                              "truncate leading-snug text-primary font-medium animate-pulse"
-                                            )}>typing…</span>
+                                              "inline-flex items-center gap-[3px] leading-snug text-primary font-medium"
+                                            )}>
+                                              typing
+                                              {[0,1,2].map(i => (
+                                                <span key={i} className="inline-block w-1 h-1 rounded-full bg-primary animate-bounce" style={{ animationDelay: `${i*0.15}s`, animationDuration: "0.8s" }} />
+                                              ))}
+                                            </span>
                                           );
                                         }
                                         const stickerPreview = parseStickerPreview(chat.lastMessage || "");

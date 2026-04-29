@@ -278,6 +278,7 @@ const ChatMessageBubble = memo(function ChatMessageBubble({
   const didLongPress = useRef(false);
   const hasMoved = useRef(false);
   const bubbleRef = useRef<HTMLDivElement>(null);
+  const lastTapTime = useRef(0);
   const parsedSticker = useMemo(() => parseStickerMessage(message || "", messageType), [message, messageType]);
   const parsedGif = useMemo(() => parseGifMessage(message || "", messageType), [message, messageType]);
 
@@ -433,8 +434,15 @@ const ChatMessageBubble = memo(function ChatMessageBubble({
 
   const handleTap = useCallback(() => {
     if (didLongPress.current || hasMoved.current) return;
-    if (showActions) { setShowActions(false); setShowReactions(false); }
-  }, [showActions]);
+    if (showActions) { setShowActions(false); setShowReactions(false); return; }
+    // Double-tap = ❤️ reaction (Telegram/Instagram style)
+    const now = Date.now();
+    if (now - lastTapTime.current < 320 && !id.startsWith("opt-")) {
+      toggleReaction("❤️");
+      if (navigator.vibrate) navigator.vibrate([10, 40, 10]);
+    }
+    lastTapTime.current = now;
+  }, [showActions, id, toggleReaction]);
 
   const handleCopy = () => {
     if (message) {
@@ -777,23 +785,6 @@ const ChatMessageBubble = memo(function ChatMessageBubble({
           );
         })()}
 
-        {/* Reactions */}
-        {reactions.length > 0 && (
-          <div className={`flex gap-1 mt-1 ${isMe ? "justify-end" : "justify-start"}`}>
-            {reactions.map((r) => (
-              <button
-                key={r.emoji}
-                onClick={(e) => { e.stopPropagation(); toggleReaction(r.emoji); }}
-                className={`flex items-center gap-0.5 px-2 py-0.5 rounded-full text-xs border shadow-sm transition-all active:scale-90 ${
-                  r.hasMyReaction ? "border-primary/30 bg-primary/10" : "border-border/40 bg-background"
-                }`}
-              >
-                <span className="text-[13px]">{r.emoji}</span>
-                {r.count > 1 && <span className="text-[10px] font-medium text-muted-foreground">{r.count}</span>}
-              </button>
-            ))}
-          </div>
-        )}
       </motion.div>
 
       {/* Long-press popup */}
