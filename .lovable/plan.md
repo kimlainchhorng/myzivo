@@ -1,146 +1,108 @@
 ## Goal
-
-Turn `FinanceProfitLossSection.tsx` from a basic 3-card summary into a full, professional Profit & Loss dashboard — matching what owners expect from QuickBooks / Shop-Ware level reporting.
-
-Currently the page only shows: From/To dates, CSV button, Income/Expenses/Net cards, and a single category breakdown. We will keep it lightweight but add the missing critical sections.
+Upgrade both **Tax & Payouts** and **Income & Revenue** to the same accountant-grade quality as the new Profit & Loss dashboard. Reuse existing tables (`ar_invoices`, `ar_invoice_payments`, `ar_payouts`, `ar_expenses`) — **no schema changes needed**.
 
 ---
 
-## What gets added
+## Part 1 — Tax & Payouts (full upgrade)
 
-### 1. Smart date controls (top bar)
-Replace the bare From/To inputs with:
-- Quick presets: **Today, This Week, MTD, Last Month, QTD, YTD, Last 12 Months, Custom**
-- A **Compare to** toggle: Previous period / Previous year / None
-- Group-by selector: **Day / Week / Month**
-- Export menu: **CSV, PDF (printable P&L statement), Email to accountant**
+Replace the basic 3-stat card + flat payout list with a real tax management dashboard.
 
-### 2. KPI strip (6 cards instead of 3)
-- Revenue (paid)
-- Invoiced (billed but not yet paid) — pulled from `ar_invoices.total_cents` minus `amount_paid_cents`
-- COGS / Parts cost — `ar_expenses` where category in (parts, supplies)
-- Gross Profit + Gross Margin %
-- Operating Expenses (rent, utilities, payroll, marketing, other)
-- **Net Profit + Net Margin %**
+### Period bar
+- Quarter selector (Q1–Q4) + year picker, plus presets: This Quarter, Last Quarter, YTD, Custom range.
+- Export menu: CSV + Print/PDF.
 
-Each card shows: value, sparkline, vs-previous-period delta with arrow + colored %.
+### Tax KPI strip (6 cards)
+1. Sales tax **collected** (paid invoices in period)
+2. Sales tax **remitted** (payouts tagged "Tax Payment")
+3. Sales tax **owed** (collected − remitted) — color-coded
+4. Quarterly revenue (paid)
+5. Estimated income tax — configurable rate (default 27%, editable, stored in localStorage)
+6. Net after tax (revenue − est. tax)
 
-### 3. Revenue & Expense trend chart
-Stacked bar / line chart (Recharts) over the selected range, grouped by Day/Week/Month:
-- Bars: Revenue vs Expenses
-- Line overlay: Net Profit
-- Hover tooltip with full breakdown
+### Quarterly filing tracker
+Timeline component listing the 4 IRS estimated-tax due dates for the current year:
+- Q1 → Apr 15, Q2 → Jun 15, Q3 → Sep 15, Q4 → Jan 15 (next year)
+- Each row: status badge (Upcoming / Due Soon / Overdue / Paid), estimated amount due, "Mark as Paid" button (records a payout with source = "Tax Payment").
 
-### 4. Income breakdown (new card)
-- By **payment method** (cash, card, ABA, check, other) — from `ar_invoice_payments.method`
-- By **service category** — derived from `ar_invoices.items` jsonb (top services)
-- By **technician** — top earners (joins `ar_work_orders` if available)
+### Sales tax breakdown
+Group paid invoices by tax rate (derived from `tax_cents / (total_cents − tax_cents)`) and show subtotal, tax, count per rate band.
 
-### 5. Expense breakdown — upgraded
-Keep the existing horizontal bars but add:
-- Toggle: **By Category** / **By Vendor** / **By Payment Method**
-- Each row clickable → opens a drawer listing the underlying expense rows (date, vendor, amount, receipt link)
-- Show top 5 vendors with logos / initials
+### Upgraded payout history
+- Source dropdown with categories: Bank Deposit, Stripe, Tax Payment, Owner Draw, Other.
+- Inline edit of amount/source/reference/date.
+- Search by reference, filter by source and date range.
+- Receipt URL field (optional).
+- CSV export of payouts in range.
 
-### 6. Cash flow mini-section
-- **Cash in** (payments received)
-- **Cash out** (expenses paid + payouts from `ar_payouts`)
-- **Net cash** for the period
-- Running balance line chart
+### 1099-NEC prep list
+Aggregate `ar_expenses` by vendor for the calendar year; flag any vendor paid > $600 as 1099-eligible. Export CSV with vendor, total paid, expense count.
 
-### 7. Accounts Receivable (AR) panel
-Pulled from `ar_invoices` where `status != 'paid'`:
-- Total outstanding $
-- Aging buckets: Current, 1–30, 31–60, 61–90, 90+ days
-- Top 5 unpaid customers with "Send reminder" button (links to existing invoice page)
-
-### 8. Tax estimate strip
-- Sales tax collected (sum of `ar_invoices.tax_cents` paid in period)
-- Estimated income tax owed (configurable rate, default 15%) on Net Profit
-- Quick link to **Tax & Payouts** sub-tab
-
-### 9. P&L statement view (toggle)
-A second view mode "**Statement**" that renders an accountant-style printable P&L:
-
-```text
-Revenue
-  Service revenue ............ $X,XXX
-  Parts revenue .............. $X,XXX
-  Total Revenue .............. $X,XXX
-
-Cost of Goods Sold
-  Parts ...................... ($XXX)
-  Supplies ................... ($XXX)
-  Gross Profit ............... $X,XXX  (XX.X%)
-
-Operating Expenses
-  Rent ....................... ($XXX)
-  Payroll .................... ($XXX)
-  Utilities .................. ($XXX)
-  Marketing .................. ($XXX)
-  Other ...................... ($XXX)
-  Total OpEx ................. ($X,XXX)
-
-Net Operating Income ......... $X,XXX
-Taxes (est.) ................. ($XXX)
-─────────────────────────────────────
-NET PROFIT ................... $X,XXX  (XX.X%)
-```
-
-Print-friendly layout, includes store name + period header.
-
-### 10. Empty / loading states
-- Skeleton loaders on first paint
-- Friendly empty state when no data ("Record your first invoice to see your P&L")
-- Error toast if a query fails
-
-### 11. Export upgrades
-- **CSV**: extended (KPIs + daily series + category + vendor + AR aging + tax)
-- **PDF**: uses browser print with a dedicated `@media print` stylesheet
-- "Email to accountant" button (uses existing send-email edge function if available, otherwise mailto: with CSV attached)
+### Files
+- `src/components/admin/store/autorepair/finance/FinanceTaxPayoutsSection.tsx` — refactor to orchestrator (parallel `useQueries`).
+- `src/lib/admin/taxCalculations.ts` — new (IRS due dates, sales tax math, quarter helpers, 1099 aggregation).
+- `src/lib/admin/taxCsvExport.ts` — new.
+- `src/components/admin/store/autorepair/finance/tax/` — new folder with:
+  - `TaxPeriodBar.tsx`
+  - `TaxKpiStrip.tsx`
+  - `TaxQuarterlyTracker.tsx`
+  - `TaxSalesBreakdown.tsx`
+  - `TaxPayoutHistory.tsx`
+  - `Tax1099Prep.tsx`
 
 ---
 
-## Technical details
+## Part 2 — Income & Revenue (full upgrade)
 
-**Files to edit**
-- `src/components/admin/store/autorepair/finance/FinanceProfitLossSection.tsx` — main rewrite (keep file, expand)
+Replace the 4-stat + top-services list with a true revenue analytics view.
 
-**New helper files**
-- `src/components/admin/store/autorepair/finance/pnl/PnLKpiStrip.tsx`
-- `src/components/admin/store/autorepair/finance/pnl/PnLTrendChart.tsx`
-- `src/components/admin/store/autorepair/finance/pnl/PnLIncomeBreakdown.tsx`
-- `src/components/admin/store/autorepair/finance/pnl/PnLExpenseBreakdown.tsx` (with vendor/category/method toggle + drill-down drawer)
-- `src/components/admin/store/autorepair/finance/pnl/PnLCashFlow.tsx`
-- `src/components/admin/store/autorepair/finance/pnl/PnLArAging.tsx`
-- `src/components/admin/store/autorepair/finance/pnl/PnLTaxEstimate.tsx`
-- `src/components/admin/store/autorepair/finance/pnl/PnLStatementView.tsx`
-- `src/components/admin/store/autorepair/finance/pnl/PnLDateRangeBar.tsx` (presets + compare + group-by)
-- `src/lib/admin/pnlCalculations.ts` — pure helpers: `computeKpis`, `groupSeries`, `agingBuckets`, `categorize`, `compareDelta`
-- `src/lib/admin/pnlCsvExport.ts` — extended CSV builder (modeled on existing `performanceCsvExport.ts`)
+### Period bar
+Today / 7d / 30d / 90d / This Month / Last Month / YTD / Custom + previous-period comparison toggle.
 
-**Data sources (existing tables, no DB changes needed)**
-- `ar_invoice_payments` — paid revenue, by method
-- `ar_invoices` — billed revenue, items jsonb, AR aging, sales tax
-- `ar_expenses` — operating expenses, by category/vendor/method
-- `ar_payouts` — cash-out tracking
-- All filtered by `store_id`
+### KPI strip with sparklines (6 cards)
+Revenue (paid), Billed, Outstanding, Avg ticket, Invoice count, Collection rate (paid ÷ billed %). Each shows delta vs previous period and a 14-point sparkline.
 
-**Charting**: use existing `recharts` already in the project (used elsewhere in admin). Bar + line composed chart; small sparklines via `<Sparkline>` from `recharts`.
+### Revenue trend chart (recharts)
+Bar = daily/weekly revenue, Line = cumulative. Toggle Day/Week/Month grouping.
 
-**State**: keep React Query; add a single `useArFinanceData(storeId, from, to, compareMode)` hook that fans out the parallel queries (mirrors the pattern in `useStoreMarketingOverview.ts`).
+### Breakdown panels
+- **Revenue by service** (top 10, horizontal bar) — click to drawer with the invoices that contributed.
+- **Revenue by payment method** (donut) — pulled from `ar_invoice_payments.method`.
+- **Top customers** (top 10 by paid revenue, with invoice count and last visit).
+- **Revenue by technician** if `items[].technician_id` exists; otherwise hide gracefully.
 
-**Performance**: parallel `Promise.all` on the 4 queries; memoized aggregations; `staleTime: 30s`; query invalidation when date range changes.
+### Recent invoices table
+Search, status filter (paid/partial/sent/overdue), sort by total/date, click-through to invoice detail drawer.
 
-**Styling**: high-density v2026 standard already used elsewhere — `text-[11px/13px]`, `p-2/p-3`, `.zivo-card-organic`, emerald/rose tokens for income/expense, Lucide icons only.
+### Export
+CSV (invoices in range) + Print view.
 
-**Print**: scoped `@media print` block in `PnLStatementView.tsx` to hide controls and force black-on-white.
+### Files
+- `src/components/admin/store/autorepair/finance/FinanceIncomeSection.tsx` — refactor to orchestrator.
+- `src/lib/admin/incomeCalculations.ts` — new (period grouping, breakdowns, comparisons).
+- `src/lib/admin/incomeCsvExport.ts` — new.
+- `src/components/admin/store/autorepair/finance/income/` — new folder with:
+  - `IncomePeriodBar.tsx`
+  - `IncomeKpiStrip.tsx`
+  - `IncomeTrendChart.tsx`
+  - `IncomeServiceBreakdown.tsx`
+  - `IncomeMethodDonut.tsx`
+  - `IncomeTopCustomers.tsx`
+  - `IncomeInvoiceTable.tsx`
+  - `IncomeInvoiceDrawer.tsx`
 
 ---
 
-## Out of scope (can do later if you want)
-- Multi-store consolidated P&L
-- Budget vs Actual
-- Class/department tagging
-- QuickBooks/Xero sync
-- Locked accounting periods
+## Shared technical notes
+- Parallel data fetching with `useQueries` (current + previous period) — same pattern as P&L.
+- All money in cents; reuse existing `fmt()` helper convention.
+- All charts via `recharts` (already installed for P&L).
+- Tax rate + estimated income tax % persisted in `localStorage` per store (`zivo:ar:tax-rate:{storeId}`).
+- No DB migrations. No edge functions. No new dependencies.
+
+---
+
+## Out of scope (will offer after)
+- Real PDF (jsPDF) instead of print
+- Email-to-accountant edge function
+- QuickBooks/Xero formatted exports
+- Expenses & Bills upgrade (already 1,254 lines — needs separate planning pass)
