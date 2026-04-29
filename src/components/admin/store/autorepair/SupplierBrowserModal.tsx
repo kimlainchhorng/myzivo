@@ -98,11 +98,11 @@ export default function SupplierBrowserModal({ storeId, supplier, query, open, o
   }, [open, supplier, storeId]);
 
   // Push saved creds into the proxied iframe so it can autofill the login form.
-  const sendAutofill = useCallback(() => {
+  const sendAutofill = useCallback((autoSubmit = true) => {
     const win = iframeRef.current?.contentWindow;
     if (!win) return false;
     if (!email && !password) return false;
-    win.postMessage({ type: "zivo-autofill", username: email, password }, "*");
+    win.postMessage({ type: "zivo-autofill", username: email, password, autoSubmit }, "*");
     return true;
   }, [email, password]);
 
