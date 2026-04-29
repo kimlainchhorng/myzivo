@@ -11,15 +11,26 @@ import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { ShieldAlert, Plus } from "lucide-react";
+import { ShieldAlert, Plus, Network, Search } from "lucide-react";
 import { toast } from "sonner";
+import { WARRANTY_NETWORKS, getWarrantyNetwork } from "@/config/warrantyNetworks";
 
 interface Props { storeId: string }
 
 export default function AutoRepairWarrantySection({ storeId }: Props) {
   const qc = useQueryClient();
   const [open, setOpen] = useState(false);
-  const [form, setForm] = useState({ workorder_id: "", service_name: "", period_days: 90, mileage_limit: 6000, notes: "" });
+  const [networkFilter, setNetworkFilter] = useState<string>("all");
+  const [networkQuery, setNetworkQuery] = useState("");
+  const [form, setForm] = useState({
+    workorder_id: "",
+    service_name: "",
+    period_days: 90,
+    mileage_limit: 6000,
+    notes: "",
+    network_id: "",
+    claim_number: "",
+  });
 
   const { data: warranties = [] } = useQuery({
     queryKey: ["ar-warranties", storeId],
@@ -46,13 +57,38 @@ export default function AutoRepairWarrantySection({ storeId }: Props) {
     return { total, comebacks, rate };
   }, [orders]);
 
+  const filteredWarranties = useMemo(() => {
+    if (networkFilter === "all") return warranties;
+    return warranties.filter((w: any) => (w.notes ?? "").includes(`[network:${networkFilter}]`));
+  }, [warranties, networkFilter]);
+
+  const filteredNetworks = useMemo(() => {
+    const q = networkQuery.trim().toLowerCase();
+    if (!q) return WARRANTY_NETWORKS;
+    return WARRANTY_NETWORKS.filter((n) =>
+      n.name.toLowerCase().includes(q) || (n.shortName?.toLowerCase().includes(q) ?? false)
+    );
+  }, [networkQuery]);
+
   const create = useMutation({
     mutationFn: async () => {
       const expires_at = form.period_days
         ? new Date(Date.now() + form.period_days * 86400000).toISOString().slice(0, 10)
         : null;
+      // Encode network + claim into notes (no schema change needed)
+      const tags = [
+        form.network_id ? `[network:${form.network_id}]` : "",
+        form.claim_number ? `[claim:${form.claim_number}]` : "",
+      ].filter(Boolean).join(" ");
+      const notes = [tags, form.notes].filter(Boolean).join("\n");
       const { error } = await supabase.from("ar_warranties" as any).insert({
-        store_id: storeId, ...form, expires_at,
+        store_id: storeId,
+        workorder_id: form.workorder_id,
+        service_name: form.service_name,
+        period_days: form.period_days,
+        mileage_limit: form.mileage_limit,
+        notes,
+        expires_at,
       });
       if (error) throw error;
     },
@@ -60,7 +96,7 @@ export default function AutoRepairWarrantySection({ storeId }: Props) {
       toast.success("Warranty added");
       qc.invalidateQueries({ queryKey: ["ar-warranties", storeId] });
       setOpen(false);
-      setForm({ workorder_id: "", service_name: "", period_days: 90, mileage_limit: 6000, notes: "" });
+      setForm({ workorder_id: "", service_name: "", period_days: 90, mileage_limit: 6000, notes: "", network_id: "", claim_number: "" });
     },
     onError: (e: any) => toast.error(e.message ?? "Failed"),
   });
@@ -72,6 +108,12 @@ export default function AutoRepairWarrantySection({ storeId }: Props) {
     },
     onSuccess: () => qc.invalidateQueries({ queryKey: ["ar-work-orders", storeId] }),
   });
+
+  const extractNetwork = (notes?: string) => {
+    const m = notes?.match(/\[network:([^\]]+)\]/);
+    return m ? getWarrantyNetwork(m[1]) : undefined;
+  };
+  const extractClaim = (notes?: string) => notes?.match(/\[claim:([^\]]+)\]/)?.[1];
 
   return (
     <div className="space-y-4">
@@ -95,26 +137,45 @@ export default function AutoRepairWarrantySection({ storeId }: Props) {
         </CardContent>
       </Card>
 
-      <div className="flex justify-end">
+      <div className="flex items-center justify-between gap-2 flex-wrap">
+        <Select value={networkFilter} onValueChange={setNetworkFilter}>
+          <SelectTrigger className="h-9 w-[260px]"><SelectValue placeholder="Filter by network" /></SelectTrigger>
+          <SelectContent className="max-h-[320px]">
+            <SelectItem value="all">All warranty networks</SelectItem>
+            {WARRANTY_NETWORKS.map((n) => (
+              <SelectItem key={n.id} value={n.id}>{n.shortName ?? n.name}</SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
         <Button size="sm" className="gap-1.5" onClick={() => setOpen(true)}><Plus className="w-3.5 h-3.5" /> Add Warranty</Button>
       </div>
 
       <Card>
         <CardHeader><CardTitle className="text-sm">Active Warranties</CardTitle></CardHeader>
         <CardContent>
-          {warranties.length === 0 ? (
+          {filteredWarranties.length === 0 ? (
             <p className="text-sm text-muted-foreground text-center py-6">No warranties on file.</p>
           ) : (
             <div className="space-y-2">
-              {warranties.map((w: any) => (
-                <div key={w.id} className="flex items-center justify-between border border-border rounded-lg p-3">
-                  <div>
-                    <p className="font-semibold text-sm">{w.service_name}</p>
-                    <p className="text-xs text-muted-foreground">{w.period_days}d · {w.mileage_limit?.toLocaleString()} mi</p>
+              {filteredWarranties.map((w: any) => {
+                const net = extractNetwork(w.notes);
+                const claim = extractClaim(w.notes);
+                return (
+                  <div key={w.id} className="flex items-center justify-between border border-border rounded-lg p-3">
+                    <div className="min-w-0">
+                      <p className="font-semibold text-sm truncate">{w.service_name}</p>
+                      <p className="text-xs text-muted-foreground">
+                        {w.period_days}d · {w.mileage_limit?.toLocaleString()} mi
+                        {claim ? ` · Claim #${claim}` : ""}
+                      </p>
+                    </div>
+                    <div className="flex items-center gap-2 shrink-0">
+                      {net && <Badge variant="secondary" className="text-[11px]">{net.shortName ?? net.name}</Badge>}
+                      <Badge variant="outline">{w.expires_at ?? "—"}</Badge>
+                    </div>
                   </div>
-                  <Badge variant="outline">{w.expires_at ?? "—"}</Badge>
-                </div>
-              ))}
+                );
+              })}
             </div>
           )}
         </CardContent>
@@ -141,6 +202,41 @@ export default function AutoRepairWarrantySection({ storeId }: Props) {
         </CardContent>
       </Card>
 
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-sm flex items-center gap-2">
+            <Network className="w-4 h-4" /> Warranty Networks
+            <Badge variant="outline" className="ml-1 text-[10px]">{WARRANTY_NETWORKS.length}</Badge>
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-3">
+          <div className="relative">
+            <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground" />
+            <Input
+              className="pl-8 h-9"
+              placeholder="Search providers (Endurance, NAC, AGWS...)"
+              value={networkQuery}
+              onChange={(e) => setNetworkQuery(e.target.value)}
+            />
+          </div>
+          <div className="grid grid-cols-2 md:grid-cols-3 gap-1.5 max-h-[280px] overflow-auto">
+            {filteredNetworks.map((n) => (
+              <button
+                key={n.id}
+                onClick={() => { setForm((f) => ({ ...f, network_id: n.id })); setOpen(true); }}
+                className="text-left text-[12px] border border-border rounded-md px-2 py-1.5 hover:border-primary hover:bg-primary/5 transition-colors"
+              >
+                <p className="font-medium truncate">{n.shortName ?? n.name}</p>
+                {n.category && <p className="text-[10px] text-muted-foreground">{n.category}</p>}
+              </button>
+            ))}
+            {filteredNetworks.length === 0 && (
+              <p className="text-xs text-muted-foreground col-span-full text-center py-4">No providers match.</p>
+            )}
+          </div>
+        </CardContent>
+      </Card>
+
       <Dialog open={open} onOpenChange={setOpen}>
         <DialogContent className="max-w-md">
           <DialogHeader><DialogTitle>Add Warranty</DialogTitle></DialogHeader>
@@ -154,6 +250,16 @@ export default function AutoRepairWarrantySection({ storeId }: Props) {
               <Input type="number" placeholder="Days" value={form.period_days} onChange={(e) => setForm({ ...form, period_days: Number(e.target.value) || 0 })} />
               <Input type="number" placeholder="Mileage limit" value={form.mileage_limit} onChange={(e) => setForm({ ...form, mileage_limit: Number(e.target.value) || 0 })} />
             </div>
+            <Select value={form.network_id || "none"} onValueChange={(v) => setForm({ ...form, network_id: v === "none" ? "" : v })}>
+              <SelectTrigger><SelectValue placeholder="Warranty network (optional)" /></SelectTrigger>
+              <SelectContent className="max-h-[280px]">
+                <SelectItem value="none">In-house (no third-party)</SelectItem>
+                {WARRANTY_NETWORKS.map((n) => (
+                  <SelectItem key={n.id} value={n.id}>{n.shortName ?? n.name}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <Input placeholder="Claim / contract # (optional)" value={form.claim_number} onChange={(e) => setForm({ ...form, claim_number: e.target.value })} />
             <Textarea placeholder="Notes" value={form.notes} onChange={(e) => setForm({ ...form, notes: e.target.value })} />
           </div>
           <DialogFooter>
