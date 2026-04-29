@@ -80,7 +80,7 @@ const MessageEffects = lazy(() => import("./MessageEffects"));
 import { toast } from "sonner";
 import { useChatPresence } from "@/hooks/useChatPresence";
 import { useVoiceRecorder } from "@/hooks/useVoiceRecorder";
-import { uploadVoiceWithProgress, retryWithBackoff, UploadAbortedError, UploadHttpError, preflightVoiceBucket } from "@/lib/voiceUpload";
+import { uploadVoiceWithProgress, retryWithBackoff, UploadAbortedError, UploadHttpError } from "@/lib/voiceUpload";
 import { vlog, vwarn } from "@/lib/voiceDebug";
 import { useChatDraft } from "@/hooks/useChatDraft";
 import VerifiedBadge from "@/components/VerifiedBadge";
@@ -779,32 +779,11 @@ export default function PersonalChat({ recipientId, recipientName, recipientAvat
       if (!startFromInsert || !publicUrl) {
         const contentType = blob.type || "audio/webm";
         const ext = contentType.includes("mp4") ? "m4a" : "webm";
-        const path = `${user.id}/${Date.now()}-${clientSendId}.${ext}`;
-
-        // Preflight: surface RLS / bucket issues immediately instead of
-        // burning all retry attempts on a guaranteed failure.
-        const preflight = await preflightVoiceBucket({
-          bucket: "chat-media-files",
-          path,
-          signal: controller.signal,
-        });
-        if (!preflight.ok) {
-          vwarn("preflight:blocked", { clientSendId, status: preflight.status });
-          updateOpt({
-            _upload_status: "failed",
-            _upload_error: preflight.reason || `Preflight blocked (HTTP ${preflight.status})`,
-            _upload_endpoint: preflight.url,
-            _upload_status_code: preflight.status,
-            _upload_phase: "preflight",
-            _upload_body: preflight.body,
-          });
-          toast.error("Voice note blocked by storage permissions");
-          return;
-        }
 
         const result = await retryWithBackoff(
           (attempt) => {
             if (attempt > 0) vlog("upload:retry", { clientSendId, attempt });
+            const path = `${user.id}/${Date.now()}-${clientSendId}-${attempt}.${ext}`;
             return uploadVoiceWithProgress({
               blob,
               bucket: "chat-media-files",
@@ -877,7 +856,9 @@ export default function PersonalChat({ recipientId, recipientName, recipientAvat
       // happened during the DB insert step.
       const inferredPhase: "preflight" | "upload" | "insert" | undefined =
         httpErr?.phase || (job.publicUrl ? "insert" : "upload");
-      const isBusy = httpErr?.status === 429;
+      const isBusy = httpErr?.status === 429 || (
+        !!httpErr && httpErr.status >= 500 && /databaseerror|08p01|too many connections/i.test(httpErr.body || httpErr.message)
+      );
       updateOpt({
         _upload_status: "failed",
         _upload_error: message,
@@ -891,13 +872,13 @@ export default function PersonalChat({ recipientId, recipientName, recipientAvat
           ? "Too many requests right now. Try again in a few seconds."
           : "Tap Resend on the message to try again.",
       });
-      // For 429s: schedule a single silent auto-retry after 8s so the bubble
-      // self-heals once the DB pool recovers — user doesn't have to tap.
+      // For transient storage pressure: schedule a silent auto-retry so the
+      // bubble self-heals once the DB pool recovers — user doesn't have to tap.
       if (isBusy) {
         setTimeout(() => {
           const stillFailed = voiceJobsRef.current.get(clientSendId);
           if (!stillFailed || controller.signal.aborted) return;
-          vlog("auto-retry-429", { clientSendId });
+          vlog("auto-retry-busy", { clientSendId, status: httpErr?.status });
           retryVoiceSendRef.current?.(clientSendId);
         }, 8000);
       }
