@@ -6,7 +6,7 @@ import { createElement, useState, useEffect, useCallback, useRef } from "react";
 import { Capacitor } from "@capacitor/core";
 import { App as CapacitorApp } from "@capacitor/app";
 import { PushNotifications, Token, PushNotificationSchema, ActionPerformed } from "@capacitor/push-notifications";
-import { supabase, SUPABASE_PUBLISHABLE_KEY, SUPABASE_URL } from "@/integrations/supabase/client";
+import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
 import ChatNotificationToast from "@/components/chat/ChatNotificationToast";
@@ -247,54 +247,34 @@ export const usePushNotifications = () => {
       setState(prev => ({ ...prev, isRegistered: true, token }));
 
       const now = new Date().toISOString();
-      const response = await fetch(`${SUPABASE_URL}/rest/v1/device_tokens?on_conflict=user_id,token`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          apikey: SUPABASE_PUBLISHABLE_KEY,
-          Authorization: `Bearer ${activeSession.access_token}`,
-          Prefer: "resolution=merge-duplicates,return=representation",
-        },
-        body: JSON.stringify({
-          user_id: user.id,
-          token,
-          platform,
-          is_active: true,
-          last_used_at: now,
-          updated_at: now,
-        }),
-      });
+      const payload = {
+        user_id: user.id,
+        token,
+        platform,
+        is_active: true,
+        last_used_at: now,
+        updated_at: now,
+      } as const;
 
-      const rawText = await response.text();
-      let responseBody: unknown = null;
+      // Prefer typed Supabase upsert to avoid REST header/on_conflict edge cases.
+      const { error: upsertError } = await (supabase as any)
+        .from("device_tokens")
+        .upsert(payload, { onConflict: "user_id,token" });
 
-      try {
-        responseBody = rawText ? JSON.parse(rawText) : null;
-      } catch {
-        responseBody = rawText;
-      }
-
-      if (!response.ok) {
-        const errorMessage = typeof responseBody === "string"
-          ? responseBody
-          : JSON.stringify(responseBody);
-
-        console.error("[Push] Error saving token to server:", {
-          status: response.status,
-          body: responseBody,
-        });
-
-        const msg = `${response.status} ${errorMessage}`.toLowerCase();
-        if ((msg.includes("401") || msg.includes("invalid") || msg.includes("expired")) && saveAttempt < 2) {
+      if (upsertError) {
+        const msg = String(upsertError.message || "").toLowerCase();
+        console.error("[Push] Error saving token to server:", upsertError);
+        if ((msg.includes("jwt") || msg.includes("auth") || msg.includes("expired") || msg.includes("401")) && saveAttempt < 2) {
           setTimeout(() => {
             void saveToken(token, saveAttempt + 1);
           }, 800);
         }
-      } else {
-        delete tokenRetryAttemptsRef.current[token];
-        pendingNativeTokenRef.current = null;
-        console.log(`[Push] ${platform} token registered successfully`);
+        return;
       }
+
+      delete tokenRetryAttemptsRef.current[token];
+      pendingNativeTokenRef.current = null;
+      console.log(`[Push] ${platform} token registered successfully`);
     } catch (error) {
       console.error("[Push] Error saving token:", error);
     }
@@ -407,6 +387,13 @@ export const usePushNotifications = () => {
       }
     );
 
+    const appResumeListener = CapacitorApp.addListener("appStateChange", ({ isActive }) => {
+      if (!isActive || !user?.id) return;
+      // iOS can rotate APNs tokens and background lifecycle can drop listeners.
+      // Re-register on resume to keep device_tokens fresh.
+      void register();
+    });
+
     // Auto-register if user is logged in
     if (user?.id) {
       register();
@@ -421,6 +408,7 @@ export const usePushNotifications = () => {
       registrationErrorListener.then(l => l.remove());
       notificationReceivedListener.then(l => l.remove());
       notificationActionListener.then(l => l.remove());
+      appResumeListener.then(l => l.remove());
     };
   }, [user?.id, checkSupport, register, saveToken, showChatToast]);
 

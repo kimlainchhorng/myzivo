@@ -167,13 +167,31 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       const normalizedEmail = email.trim().toLowerCase();
       const deviceFingerprint = `${navigator.userAgent}|${Intl.DateTimeFormat().resolvedOptions().timeZone}|${navigator.language}`;
 
+      const isTransientPrecheckError = (message: string) => {
+        const msg = message.toLowerCase();
+        return (
+          msg.includes("upstream connect") ||
+          msg.includes("transport failure") ||
+          msg.includes("delayed connect") ||
+          msg.includes("failed to fetch") ||
+          msg.includes("network") ||
+          msg.includes("timeout")
+        );
+      };
+
       const { data: precheckData, error: precheckError } = await (supabase as any).rpc("auth_precheck_login", {
         _identifier: normalizedEmail,
         _device_fingerprint: deviceFingerprint,
       });
 
       if (precheckError) {
-        return { error: new Error(precheckError.message || "Security precheck failed") };
+        const message = precheckError.message || "Security precheck failed";
+        if (!isTransientPrecheckError(message)) {
+          return { error: new Error(message) };
+        }
+        console.warn("[Auth] Precheck unavailable, continuing with direct sign-in", {
+          message,
+        });
       }
 
       const precheck = Array.isArray(precheckData) ? precheckData[0] : precheckData;

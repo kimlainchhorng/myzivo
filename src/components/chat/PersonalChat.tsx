@@ -15,6 +15,7 @@ type SendMessageOptions = {
  */
 import { useState, useEffect, useRef, useCallback, useMemo, lazy, Suspense } from "react";
 import { createPortal } from "react-dom";
+import { App as CapacitorApp } from "@capacitor/app";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import ArrowLeft from "lucide-react/dist/esm/icons/arrow-left";
@@ -356,6 +357,13 @@ export default function PersonalChat({ recipientId, recipientName, recipientAvat
 
   const timelineLengthRef = useRef(0);
   const visibleTimelineCountRef = useRef(INITIAL_VISIBLE_TIMELINE_ITEMS);
+  const latestMessageCreatedAtRef = useRef<string | null>(null);
+
+  useEffect(() => {
+    latestMessageCreatedAtRef.current = messages.length > 0
+      ? messages[messages.length - 1].created_at
+      : null;
+  }, [messages]);
 
   const handleScroll = useCallback(() => {
     const el = scrollRef.current;
@@ -632,6 +640,75 @@ export default function PersonalChat({ recipientId, recipientName, recipientAvat
     return () => { supabase.removeChannel(channel); };
   }, [user?.id, recipientId, scrollToBottom]);
 
+  // Fallback refresh: if websocket/realtime misses events (common on mobile
+  // app background/foreground transitions), poll for new rows and merge.
+  useEffect(() => {
+    if (!user?.id || !recipientId) return;
+
+    const msgColumns = "id,sender_id,receiver_id,message,image_url,video_url,voice_url,message_type,delivered_at,reply_to_id,location_lat,location_lng,location_label,is_pinned,expires_at,created_at,is_read,locked_price_cents,edited_at,file_payload,gift_payload";
+
+    const tick = async () => {
+      const latestCreatedAt = latestMessageCreatedAtRef.current;
+      let query = dbFrom("direct_messages")
+        .select(msgColumns)
+        .or(`and(sender_id.eq.${user.id},receiver_id.eq.${recipientId}),and(sender_id.eq.${recipientId},receiver_id.eq.${user.id})`)
+        .order("created_at", { ascending: true })
+        .limit(30);
+
+      if (latestCreatedAt) {
+        query = query.gt("created_at", latestCreatedAt);
+      }
+
+      const { data } = await query;
+      const rows = (data || []) as Message[];
+      if (rows.length === 0) return;
+
+      setMessages((prev) => {
+        const existing = new Set(prev.map((m) => m.id));
+        const incoming = rows.filter((m) => !existing.has(m.id));
+        if (incoming.length === 0) return prev;
+        return [...prev, ...incoming];
+      });
+
+      const unreadIds = rows
+        .filter((m) => m.receiver_id === user.id && !m.is_read)
+        .map((m) => m.id);
+      if (unreadIds.length > 0) {
+        void dbFrom("direct_messages")
+          .update({ is_read: true, delivered_at: new Date().toISOString() })
+          .in("id", unreadIds);
+      }
+
+      scrollToBottom();
+    };
+
+    // Run once immediately so newly arrived rows appear without waiting.
+    void tick();
+
+    const id = window.setInterval(() => {
+      void tick();
+    }, 2000);
+
+    const onVisibility = () => {
+      if (document.visibilityState === "visible") {
+        void tick();
+      }
+    };
+    document.addEventListener("visibilitychange", onVisibility);
+
+    const appResumeListener = CapacitorApp.addListener("appStateChange", ({ isActive }) => {
+      if (isActive) {
+        void tick();
+      }
+    });
+
+    return () => {
+      window.clearInterval(id);
+      document.removeEventListener("visibilitychange", onVisibility);
+      appResumeListener.then((l) => l.remove());
+    };
+  }, [recipientId, scrollToBottom, user?.id]);
+
   useEffect(() => {
     if (!user?.id) return;
 
@@ -664,7 +741,8 @@ export default function PersonalChat({ recipientId, recipientName, recipientAvat
     const text = input.trim();
     const { imageUrl, voiceUrl, videoUrl, locationLat, locationLng, locationLabel, filePayload } = opts || {};
     if (!text && !imageUrl && !voiceUrl && !videoUrl && !filePayload && locationLat == null) return;
-    if (!user?.id || sending) return;
+    const isComplexSend = Boolean(imageUrl || voiceUrl || videoUrl || filePayload || locationLat != null);
+    if (!user?.id || (sending && isComplexSend)) return;
 
     const msgType = voiceUrl
       ? "voice"
@@ -680,7 +758,7 @@ export default function PersonalChat({ recipientId, recipientName, recipientAvat
     setReplyTo(null);
     const burnSec = selfDestructSec;
     if (selfDestructSec) setSelfDestructSec(null);
-    setSending(true);
+    if (isComplexSend) setSending(true);
 
     const optimisticId = `opt-${Date.now()}`;
     const optimisticMsg: Message = {
@@ -749,7 +827,7 @@ export default function PersonalChat({ recipientId, recipientName, recipientAvat
       setMessages((prev) => prev.filter((m) => m.id !== optimisticId));
       toast.error("Failed to send message");
     }
-    setSending(false);
+    if (isComplexSend) setSending(false);
     inputRef.current?.focus();
   };
   handleSendRef.current = handleSend;
