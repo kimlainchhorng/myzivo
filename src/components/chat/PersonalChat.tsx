@@ -904,6 +904,7 @@ export default function PersonalChat({ recipientId, recipientName, recipientAvat
     }
   }, [user?.id, recipientId, sendChatPush]);
 
+  const retryVoiceSendRef = useRef<((clientSendId: string) => void) | null>(null);
   const retryVoiceSend = useCallback((clientSendId: string) => {
     const job = voiceJobsRef.current.get(clientSendId);
     if (!job) return;
@@ -925,6 +926,7 @@ export default function PersonalChat({ recipientId, recipientName, recipientAvat
     }));
     void runVoiceJob(clientSendId, !!job.publicUrl);
   }, [runVoiceJob]);
+  retryVoiceSendRef.current = retryVoiceSend;
 
   const discardVoiceSend = useCallback((clientSendId: string) => {
     const job = voiceJobsRef.current.get(clientSendId);
