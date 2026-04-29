@@ -71,6 +71,9 @@ const emptyDraft = (): Doc => ({
   status: "draft", createdAt: new Date().toISOString(),
 });
 
+// True if the id looks like a real Postgres uuid (vs a seed/local id like "1").
+const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
 // Compute the dollar amount for a single line item
 const lineAmount = (i: LineItem): number => {
   const gross =
