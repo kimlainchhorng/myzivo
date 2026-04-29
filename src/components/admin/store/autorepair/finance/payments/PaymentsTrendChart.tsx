@@ -1,25 +1,25 @@
 /**
- * Revenue trend chart — bar (period) + line (cumulative).
+ * Payments trend chart — bar (received) + line (cumulative).
  */
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ComposedChart, Bar, Line, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid, Legend } from "recharts";
 import { TrendingUp } from "lucide-react";
-import { fmtMoney, type IncomeSeriesPoint } from "@/lib/admin/incomeCalculations";
+import { fmtMoney, type PaymentsSeriesPoint } from "@/lib/admin/paymentsCalculations";
 
-interface Props { series: IncomeSeriesPoint[] }
+interface Props { series: PaymentsSeriesPoint[] }
 
-export default function IncomeTrendChart({ series }: Props) {
-  const data = series.map((s) => ({ ...s, revenueDollars: s.revenue / 100, cumulativeDollars: s.cumulative / 100 }));
+export default function PaymentsTrendChart({ series }: Props) {
+  const data = series.map((s) => ({ ...s, receivedDollars: s.received / 100, cumulativeDollars: s.cumulative / 100 }));
   return (
     <Card>
       <CardHeader className="pb-2">
         <CardTitle className="text-sm flex items-center gap-2">
-          <TrendingUp className="w-4 h-4 text-primary" /> Revenue trend
+          <TrendingUp className="w-4 h-4 text-primary" /> Receipts trend
         </CardTitle>
       </CardHeader>
       <CardContent>
         {series.length === 0 ? (
-          <p className="text-xs text-muted-foreground py-8 text-center">No revenue data in this period.</p>
+          <p className="text-xs text-muted-foreground py-8 text-center">No payments in this period.</p>
         ) : (
           <div className="h-64">
             <ResponsiveContainer width="100%" height="100%">
@@ -32,7 +32,7 @@ export default function IncomeTrendChart({ series }: Props) {
                   contentStyle={{ background: "hsl(var(--popover))", border: "1px solid hsl(var(--border))", fontSize: 11 }}
                 />
                 <Legend wrapperStyle={{ fontSize: 11 }} />
-                <Bar dataKey="revenueDollars" name="Revenue" fill="hsl(var(--primary))" radius={[4, 4, 0, 0]} />
+                <Bar dataKey="receivedDollars" name="Received" fill="hsl(var(--primary))" radius={[4, 4, 0, 0]} />
                 <Line type="monotone" dataKey="cumulativeDollars" name="Cumulative" stroke="hsl(var(--accent-foreground))" strokeWidth={2} dot={false} />
               </ComposedChart>
             </ResponsiveContainer>

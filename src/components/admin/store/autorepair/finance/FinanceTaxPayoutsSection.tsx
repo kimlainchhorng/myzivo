@@ -1,199 +1,176 @@
 /**
- * Auto Repair Finance — Tax & Payouts (full dashboard).
- * Period bar, KPI strip, quarterly tracker, sales tax breakdown, payouts, 1099 prep.
+ * Auto Repair Finance — Tax & Payouts
  */
-import { useMemo, useState, useEffect } from "react";
-import { useQueries, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useMemo, useState } from "react";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Building2 } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
+import { Building2, Plus, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 
-import {
-  computeSalesTax,
-  breakdownByRate,
-  aggregateVendorsForYear,
-  quarterRange,
-  currentQuarter,
-  loadTaxRate,
-  estimateIncomeTax,
-  type QuarterKey,
-  type TaxInvoiceRow,
-  type TaxPayoutRow,
-  type TaxExpenseRow,
-} from "@/lib/admin/taxCalculations";
-import { exportTaxCsv, export1099Csv, downloadCsv } from "@/lib/admin/taxCsvExport";
+interface Props { storeId: string }
+const fmt = (cents: number) => `$${((cents ?? 0) / 100).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
 
-import TaxPeriodBar from "./tax/TaxPeriodBar";
-import TaxKpiStrip from "./tax/TaxKpiStrip";
-import TaxQuarterlyTracker from "./tax/TaxQuarterlyTracker";
-import TaxSalesBreakdown from "./tax/TaxSalesBreakdown";
-import TaxPayoutHistory from "./tax/TaxPayoutHistory";
-import Tax1099Prep from "./tax/Tax1099Prep";
-
-interface Props { storeId: string; storeName?: string }
-
-function fetchInvoices(storeId: string, from: string, to: string) {
-  return supabase
-    .from("ar_invoices" as any)
-    .select("id,total_cents,subtotal_cents,tax_cents,amount_paid_cents,status,paid_at,created_at,customer_name")
-    .eq("store_id", storeId)
-    .gte("created_at", from)
-    .lte("created_at", `${to}T23:59:59`)
-    .then(({ data, error }) => { if (error) throw error; return (data ?? []) as unknown as TaxInvoiceRow[]; });
-}
-function fetchPayouts(storeId: string, from: string, to: string) {
-  return supabase
-    .from("ar_payouts" as any)
-    .select("id,amount_cents,payout_date,source,reference,receipt_url")
-    .eq("store_id", storeId)
-    .gte("payout_date", from)
-    .lte("payout_date", to)
-    .order("payout_date", { ascending: false })
-    .then(({ data, error }) => { if (error) throw error; return (data ?? []) as unknown as TaxPayoutRow[]; });
-}
-function fetchYearVendors(storeId: string, year: number) {
-  return supabase
-    .from("ar_expenses" as any)
-    .select("id,amount_cents,vendor,expense_date,category")
-    .eq("store_id", storeId)
-    .gte("expense_date", `${year}-01-01`)
-    .lte("expense_date", `${year}-12-31`)
-    .then(({ data, error }) => { if (error) throw error; return (data ?? []) as unknown as TaxExpenseRow[]; });
-}
-
-export default function FinanceTaxPayoutsSection({ storeId, storeName }: Props) {
+export default function FinanceTaxPayoutsSection({ storeId }: Props) {
   const qc = useQueryClient();
-  const cur = useMemo(() => currentQuarter(), []);
-  const [year, setYear] = useState<number>(cur.year);
-  const [quarter, setQuarter] = useState<QuarterKey>(cur.quarter);
-  const initial = useMemo(() => quarterRange(cur.year, cur.quarter), [cur.year, cur.quarter]);
-  const [from, setFrom] = useState(initial.from);
-  const [to, setTo] = useState(initial.to);
+  const [open, setOpen] = useState(false);
+  const [form, setForm] = useState({ payout_date: new Date().toISOString().slice(0, 10), amount: "", source: "Bank deposit", reference: "" });
 
-  const applyQuarter = () => {
-    const r = quarterRange(year, quarter);
-    setFrom(r.from); setTo(r.to);
-  };
-
-  const queries = useQueries({
-    queries: [
-      { queryKey: ["ar-tax-invoices", storeId, from, to], queryFn: () => fetchInvoices(storeId, from, to), staleTime: 30_000 },
-      { queryKey: ["ar-tax-payouts", storeId, from, to], queryFn: () => fetchPayouts(storeId, from, to), staleTime: 30_000 },
-      { queryKey: ["ar-tax-payouts-year", storeId, year], queryFn: () => fetchPayouts(storeId, `${year}-01-01`, `${year}-12-31`), staleTime: 60_000 },
-      { queryKey: ["ar-tax-vendors-year", storeId, year], queryFn: () => fetchYearVendors(storeId, year), staleTime: 60_000 },
-      { queryKey: ["ar-tax-invoices-year", storeId, year], queryFn: () => fetchInvoices(storeId, `${year}-01-01`, `${year}-12-31`), staleTime: 60_000 },
-    ],
+  const { data: invoices = [] } = useQuery({
+    queryKey: ["ar-fin-tax-invoices", storeId],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("ar_invoices" as any).select("tax_cents,total_cents,status,created_at").eq("store_id", storeId);
+      if (error) throw error;
+      return data as any[];
+    },
   });
 
-  const loading = queries.some((q) => q.isLoading);
-  const invoices    = (queries[0].data ?? []) as TaxInvoiceRow[];
-  const payouts     = (queries[1].data ?? []) as TaxPayoutRow[];
-  const yearPayouts = (queries[2].data ?? []) as TaxPayoutRow[];
-  const yearVendors = (queries[3].data ?? []) as TaxExpenseRow[];
-  const yearInvoices = (queries[4].data ?? []) as TaxInvoiceRow[];
+  const { data: payouts = [] } = useQuery({
+    queryKey: ["ar-fin-payouts", storeId],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("ar_payouts" as any).select("*").eq("store_id", storeId).order("payout_date", { ascending: false });
+      if (error) throw error;
+      return data as any[];
+    },
+  });
 
-  const stats = useMemo(() => computeSalesTax(invoices, payouts, from, to), [invoices, payouts, from, to]);
-  const buckets = useMemo(() => breakdownByRate(invoices), [invoices]);
-  const vendors1099 = useMemo(() => aggregateVendorsForYear(yearVendors, year), [yearVendors, year]);
-
-  // Yearly est. income tax for the quarterly tracker
-  const yearStats = useMemo(
-    () => computeSalesTax(yearInvoices, yearPayouts, `${year}-01-01`, `${year}-12-31`),
-    [yearInvoices, yearPayouts, year]
-  );
-  const [taxRateTick, setTaxRateTick] = useState(0);
-  useEffect(() => {
-    // listen to localStorage updates from KPI strip
-    const onStorage = (e: StorageEvent) => {
-      if (e.key?.includes(`tax-rate:${storeId}`)) setTaxRateTick((t) => t + 1);
-    };
-    window.addEventListener("storage", onStorage);
-    return () => window.removeEventListener("storage", onStorage);
-  }, [storeId]);
-  const ratePct = useMemo(() => loadTaxRate(storeId), [storeId, taxRateTick]);
-  const yearlyEstTax = useMemo(() => estimateIncomeTax(yearStats.paidRevenue, ratePct), [yearStats.paidRevenue, ratePct]);
-  const estPerQuarter = Math.round(yearlyEstTax / 4);
-
-  const markPaid = useMutation({
-    mutationFn: async ({ label, amountCents, dueDate }: { label: string; amountCents: number; dueDate: string }) => {
+  const create = useMutation({
+    mutationFn: async () => {
+      const cents = Math.round((parseFloat(form.amount) || 0) * 100);
+      if (cents <= 0) throw new Error("Amount must be greater than zero");
       const { data: { user } } = await supabase.auth.getUser();
       const { error } = await supabase.from("ar_payouts" as any).insert({
         store_id: storeId,
-        payout_date: new Date().toISOString().slice(0, 10),
-        amount_cents: amountCents,
-        source: "Tax Payment",
-        reference: `${label} (due ${dueDate})`,
+        payout_date: form.payout_date,
+        amount_cents: cents,
+        source: form.source || null,
+        reference: form.reference || null,
         created_by: user?.id,
       });
       if (error) throw error;
     },
     onSuccess: () => {
-      toast.success("Quarterly tax payment recorded");
-      qc.invalidateQueries({ queryKey: ["ar-tax-payouts", storeId] });
-      qc.invalidateQueries({ queryKey: ["ar-tax-payouts-year", storeId, year] });
+      toast.success("Payout recorded");
+      setOpen(false);
+      setForm({ ...form, amount: "", reference: "" });
+      qc.invalidateQueries({ queryKey: ["ar-fin-payouts", storeId] });
     },
     onError: (e: any) => toast.error(e.message || "Failed"),
   });
 
-  const onExportCsv = () => {
-    const csv = exportTaxCsv({
-      storeName, from, to, stats, ratePct,
-      estIncomeTax: estimateIncomeTax(stats.paidRevenue, ratePct),
-      rateBuckets: buckets, payouts,
-    });
-    const safe = (storeName || "store").replace(/[^a-z0-9]+/gi, "-").toLowerCase();
-    downloadCsv(`tax-${safe}-${from}-to-${to}.csv`, csv);
-    toast.success("Tax CSV exported");
-  };
-  const onExport1099 = () => {
-    const csv = export1099Csv(year, vendors1099);
-    const safe = (storeName || "store").replace(/[^a-z0-9]+/gi, "-").toLowerCase();
-    downloadCsv(`1099-${safe}-${year}.csv`, csv);
-    toast.success("1099 CSV exported");
-  };
-  const onPrint = () => window.print();
+  const remove = useMutation({
+    mutationFn: async (id: string) => {
+      const { error } = await supabase.from("ar_payouts" as any).delete().eq("id", id);
+      if (error) throw error;
+    },
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["ar-fin-payouts", storeId] }),
+  });
+
+  const stats = useMemo(() => {
+    const taxCollected = invoices.filter((i: any) => i.status === "paid").reduce((s, i: any) => s + (i.tax_cents ?? 0), 0);
+    const yearStart = new Date(new Date().getFullYear(), 0, 1).toISOString();
+    const ytdRevenue = invoices
+      .filter((i: any) => i.status === "paid" && i.created_at >= yearStart)
+      .reduce((s, i: any) => s + (i.total_cents ?? 0), 0);
+    // Rough self-employment quarterly tax estimate (15.3% SE + 12% federal effective = ~27%)
+    const quarterlyTaxEst = Math.round(ytdRevenue * 0.27 / 4);
+    return { taxCollected, ytdRevenue, quarterlyTaxEst };
+  }, [invoices]);
+
+  const totalPayouts = payouts.reduce((s, p: any) => s + (p.amount_cents ?? 0), 0);
 
   return (
-    <div className="space-y-3 print:space-y-2">
-      <Card className="print:hidden">
-        <CardHeader className="pb-2">
+    <div className="space-y-4">
+      <Card>
+        <CardHeader className="pb-3">
           <CardTitle className="text-base flex items-center gap-2">
             <Building2 className="w-4 h-4 text-primary" /> Tax & Payouts
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <TaxPeriodBar
-            year={year} quarter={quarter} from={from} to={to}
-            onYear={setYear} onQuarter={setQuarter}
-            onFrom={setFrom} onTo={setTo}
-            onApplyQuarter={applyQuarter}
-            onExportCsv={onExportCsv} onPrint={onPrint} onExport1099={onExport1099}
-          />
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+            <div className="rounded-md border p-3">
+              <div className="text-xs text-muted-foreground">Sales tax collected (paid invoices)</div>
+              <div className="text-xl font-semibold">{fmt(stats.taxCollected)}</div>
+            </div>
+            <div className="rounded-md border p-3">
+              <div className="text-xs text-muted-foreground">YTD revenue</div>
+              <div className="text-xl font-semibold">{fmt(stats.ytdRevenue)}</div>
+            </div>
+            <div className="rounded-md border p-3">
+              <div className="text-xs text-muted-foreground">Est. quarterly tax (≈27%)</div>
+              <div className="text-xl font-semibold">{fmt(stats.quarterlyTaxEst)}</div>
+            </div>
+          </div>
+          <p className="text-[11px] text-muted-foreground mt-3">
+            Tax estimate is a rough rule of thumb. Always confirm with your CPA — actual rates depend on your state, deductions, and entity type.
+          </p>
         </CardContent>
       </Card>
 
-      <TaxKpiStrip storeId={storeId} stats={stats} loading={loading} />
+      <Card>
+        <CardHeader className="pb-3 flex flex-row items-center justify-between">
+          <CardTitle className="text-sm">Payout history</CardTitle>
+          <Button size="sm" onClick={() => setOpen(true)}><Plus className="w-4 h-4 mr-1" /> Record payout</Button>
+        </CardHeader>
+        <CardContent>
+          <div className="text-xs text-muted-foreground mb-2">Total: <span className="font-medium text-foreground">{fmt(totalPayouts)}</span></div>
+          {payouts.length === 0 ? (
+            <p className="text-sm text-muted-foreground py-6 text-center">No payouts recorded yet.</p>
+          ) : (
+            <ul className="divide-y">
+              {payouts.map((p: any) => (
+                <li key={p.id} className="py-2 flex justify-between gap-3 text-sm">
+                  <div>
+                    <div className="font-medium">{p.source || "Payout"}</div>
+                    <div className="text-xs text-muted-foreground">{p.payout_date} {p.reference && `· ${p.reference}`}</div>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <span className="font-medium tabular-nums">{fmt(p.amount_cents)}</span>
+                    <Button size="icon" variant="ghost" className="h-7 w-7" onClick={() => remove.mutate(p.id)}>
+                      <Trash2 className="w-3.5 h-3.5 text-destructive" />
+                    </Button>
+                  </div>
+                </li>
+              ))}
+            </ul>
+          )}
+        </CardContent>
+      </Card>
 
-      <div className="grid grid-cols-1 xl:grid-cols-3 gap-3">
-        <div className="xl:col-span-2 space-y-3">
-          <TaxQuarterlyTracker
-            year={year}
-            payouts={yearPayouts}
-            estTaxPerQuarter={estPerQuarter}
-            onMarkPaid={(label, amt, due) => markPaid.mutate({ label, amountCents: amt, dueDate: due })}
-          />
-          <TaxSalesBreakdown buckets={buckets} />
-        </div>
-        <div className="space-y-3">
-          <TaxPayoutHistory storeId={storeId} payouts={payouts} />
-          <Tax1099Prep year={year} vendors={vendors1099} />
-        </div>
-      </div>
-
-      <p className="text-[10px] text-muted-foreground text-center">
-        Tax estimates are guidance only. Always confirm filings, deductions, and entity-specific rules with your CPA.
-      </p>
+      <Dialog open={open} onOpenChange={setOpen}>
+        <DialogContent>
+          <DialogHeader><DialogTitle>Record Payout</DialogTitle></DialogHeader>
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <Label className="text-xs">Date</Label>
+              <Input type="date" value={form.payout_date} onChange={(e) => setForm({ ...form, payout_date: e.target.value })} />
+            </div>
+            <div>
+              <Label className="text-xs">Amount (USD)</Label>
+              <Input type="number" step="0.01" value={form.amount} onChange={(e) => setForm({ ...form, amount: e.target.value })} />
+            </div>
+            <div className="col-span-2">
+              <Label className="text-xs">Source</Label>
+              <Input value={form.source} onChange={(e) => setForm({ ...form, source: e.target.value })} placeholder="e.g. Bank deposit, Stripe" />
+            </div>
+            <div className="col-span-2">
+              <Label className="text-xs">Reference</Label>
+              <Input value={form.reference} onChange={(e) => setForm({ ...form, reference: e.target.value })} />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setOpen(false)}>Cancel</Button>
+            <Button onClick={() => create.mutate()} disabled={create.isPending}>Record</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
