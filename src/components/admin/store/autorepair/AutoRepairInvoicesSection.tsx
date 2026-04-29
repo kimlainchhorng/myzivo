@@ -885,8 +885,13 @@ export default function AutoRepairInvoicesSection({ storeId }: Props) {
               <span className="text-2xl font-bold flex items-center"><DollarSign className="w-5 h-5" />{total(draft.items).toFixed(2)}</span>
             </div>
 
-            <div className="flex justify-end gap-2 pt-2">
+            <div className="flex justify-end gap-2 pt-2 flex-wrap">
               <Button variant="outline" onClick={() => setCreating(false)}>Cancel</Button>
+              {draft.type === "estimate" && (
+                <Button variant="outline" onClick={saveAndConvertToInvoice} className="gap-1.5">
+                  <ArrowRightLeft className="w-4 h-4" /> Convert to Invoice
+                </Button>
+              )}
               <Button onClick={save}>{draft.type === "estimate" ? "Create Estimate" : "Create Invoice"}</Button>
             </div>
           </CardContent>
