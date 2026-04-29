@@ -219,6 +219,7 @@ export default function StoreProfilePage() {
     setSearchParams(sp, { replace: true });
   };
   const [bookingRoom, setBookingRoom] = useState<LodgeRoom | null>(null);
+  const [bookingPlan, setBookingPlan] = useState<{ rateCents: number; label: string; breakfastIncluded: boolean } | null>(null);
 
   const handleAddToCart = (product: StoreProductItem, sizeVariant?: { size: string; price_khr: number; price_usd: number }) => {
     const displayName = localizedName(product.name, currentLanguage);
@@ -854,7 +855,10 @@ export default function StoreProfilePage() {
                   cancellationPolicy={r.cancellation_policy}
                   checkInTime={r.check_in_time}
                   checkOutTime={r.check_out_time}
-                  onReserve={() => setBookingRoom(r)}
+                  breakfastRateCents={r.breakfast_rate_cents ?? undefined}
+                  originalRateCents={r.original_rate_cents ?? undefined}
+                  badges={r.badges || []}
+                  onReserve={(plan) => { setBookingRoom(r); setBookingPlan(plan); }}
                 />
               ))}
             </div>
@@ -1328,13 +1332,14 @@ export default function StoreProfilePage() {
       {bookingRoom && store && (
         <LodgingBookingDrawer
           open={!!bookingRoom}
-          onClose={() => setBookingRoom(null)}
+          onClose={() => { setBookingRoom(null); setBookingPlan(null); }}
           storeId={store.id}
           storeName={store.name}
           storePhone={(store as any).phone}
           roomId={bookingRoom.id}
           roomName={bookingRoom.name}
-          baseRateCents={bookingRoom.base_rate_cents}
+          ratePlanLabel={bookingPlan?.label}
+          baseRateCents={bookingPlan?.rateCents ?? bookingRoom.base_rate_cents}
           weekendRateCents={bookingRoom.weekend_rate_cents}
           weeklyDiscountPct={bookingRoom.weekly_discount_pct}
           monthlyDiscountPct={bookingRoom.monthly_discount_pct}

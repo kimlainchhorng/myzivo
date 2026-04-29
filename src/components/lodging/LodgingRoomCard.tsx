@@ -6,7 +6,7 @@
  */
 import { useState } from "react";
 import { motion } from "framer-motion";
-import { BedDouble, ChevronRight, Wifi, Snowflake, Tv, ShieldCheck, Coffee, Plus } from "lucide-react";
+import { BedDouble, ChevronRight, Coffee, Plus, CheckCircle2, Tag } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { LodgingRoomDetailsModal } from "@/components/lodging/LodgingRoomDetailsModal";
 import { getAmenityIcon } from "@/components/lodging/amenityIcons";
@@ -35,7 +35,10 @@ interface Props {
   cancellationPolicy?: string | null;
   checkInTime?: string | null;
   checkOutTime?: string | null;
-  onReserve: () => void;
+  breakfastRateCents?: number;
+  originalRateCents?: number;
+  badges?: string[];
+  onReserve: (plan: { rateCents: number; label: string; breakfastIncluded: boolean }) => void;
 }
 
 /** Tiny floral ornament divider — vector, no asset dependency */
@@ -57,7 +60,8 @@ export function LodgingRoomCard({
   weekendRateCents, weeklyDiscountPct = 0, monthlyDiscountPct = 0,
   amenities = [], breakfastIncluded, imageUrl,
   description, addonsCount = 0, photos, coverIndex, sizeSqm, addons, cancellationPolicy,
-  checkInTime, checkOutTime, onReserve,
+  checkInTime, checkOutTime, breakfastRateCents, originalRateCents, badges = [],
+  onReserve,
 }: Props) {
   // Derive bed label: prefer old text field, fall back to structured bed_config
   const bedLabel = beds || (bedConfig && bedConfig.length > 0 ? bedConfigSummary(bedConfig) : null);
@@ -241,9 +245,9 @@ export function LodgingRoomCard({
           </div>
         </button>
 
-        {/* ── Footer: View details + price + Reserve ── */}
-        <div className="flex items-end justify-between gap-3 px-4 pb-4 pt-2">
-          <div>
+        {/* ── Rate plan options — each row is its own Reserve CTA ── */}
+        <div className="px-4 pb-1 pt-2 space-y-2">
+          <div className="flex items-center justify-between mb-1">
             <button
               type="button"
               onClick={() => setDetailsOpen(true)}
@@ -251,45 +255,110 @@ export function LodgingRoomCard({
             >
               View details <ChevronRight className="h-3 w-3" />
             </button>
-            {(() => {
-              const price = baseRateCents / 100;
-              const rack = Math.round(price * 1.25); // 20% off rack rate
-              const discountPct = Math.round(((rack - price) / rack) * 100);
-              return (
-                <>
-                  <div className="flex items-baseline gap-1.5 mt-0.5 leading-none">
-                    <span className="text-xl font-extrabold text-foreground">${price.toFixed(0)}</span>
-                    <span className="text-[11px] font-medium text-muted-foreground">/night</span>
-                  </div>
-                  <div className="flex items-baseline gap-1.5 mt-1 leading-none">
-                    <span className="text-[12px] font-semibold text-red-600 dark:text-red-400 line-through">${rack}</span>
-                    <span className="text-[12px] font-bold text-foreground">${price.toFixed(0)}</span>
-                  </div>
-                  <div className="flex flex-wrap gap-1 mt-1.5">
-                    <span className="text-[10px] px-2 py-0.5 rounded-md bg-emerald-600 text-white font-bold">
-                      {discountPct}% off
-                    </span>
-                    <span className="text-[10px] px-2 py-0.5 rounded-md bg-emerald-600 text-white font-bold">
-                      Getaway Deal
-                    </span>
-                  </div>
-                  {(weeklyDiscountPct > 0 || monthlyDiscountPct > 0) && (
-                    <p className="text-[10px] text-muted-foreground mt-1.5 leading-tight">
-                      {weeklyDiscountPct > 0 && <>−{weeklyDiscountPct}% for 7+ nights</>}
-                      {weeklyDiscountPct > 0 && monthlyDiscountPct > 0 && " · "}
-                      {monthlyDiscountPct > 0 && <>−{monthlyDiscountPct}% for 28+ nights</>}
-                    </p>
-                  )}
-                </>
-              );
-            })()}
+            <span className="text-[10px] text-muted-foreground font-medium">Your options</span>
           </div>
-          <Button
-            onClick={onReserve}
-            className="font-bold rounded-full px-6 h-10 bg-emerald-500 hover:bg-emerald-600 text-white shadow-md shadow-emerald-500/25"
-          >
-            Reserve
-          </Button>
+
+          {/* Option 1: Room Only */}
+          {(() => {
+            const price = baseRateCents / 100;
+            const hasGetaway = badges.includes("Getaway Deal") && originalRateCents;
+            const original = originalRateCents ? originalRateCents / 100 : null;
+            const discountPct = hasGetaway && original ? Math.round(((original - price) / original) * 100) : 0;
+            return (
+              <div className="rounded-xl border border-border/60 bg-muted/30 p-3">
+                <div className="flex items-start justify-between gap-2 mb-2">
+                  <div className="flex-1 min-w-0">
+                    <p className="text-[11px] font-bold text-foreground">Room Only</p>
+                    <p className="text-[10px] text-muted-foreground mt-0.5 flex items-center gap-1">
+                      <CheckCircle2 className="h-2.5 w-2.5 text-emerald-500 shrink-0" />
+                      Free cancellation · Pay in advance
+                    </p>
+                  </div>
+                  <div className="text-right shrink-0">
+                    {hasGetaway && original && (
+                      <p className="text-[10px] text-red-500 line-through leading-none">${original.toFixed(0)}</p>
+                    )}
+                    <p className="text-[15px] font-extrabold text-foreground leading-tight">${price.toFixed(0)}</p>
+                    <p className="text-[9px] text-muted-foreground">/night</p>
+                  </div>
+                </div>
+                {hasGetaway && (
+                  <div className="flex gap-1 mb-2">
+                    <span className="text-[9px] px-1.5 py-0.5 rounded bg-emerald-600 text-white font-bold">{discountPct}% off</span>
+                    <span className="text-[9px] px-1.5 py-0.5 rounded bg-emerald-600 text-white font-bold flex items-center gap-0.5">
+                      <Tag className="h-2 w-2" /> Getaway Deal
+                    </span>
+                  </div>
+                )}
+                <Button
+                  size="sm"
+                  className="w-full h-8 rounded-full bg-emerald-500 hover:bg-emerald-600 text-white font-bold text-[12px]"
+                  onClick={() => onReserve({ rateCents: baseRateCents, label: "Room Only", breakfastIncluded: false })}
+                >
+                  Reserve · ${price.toFixed(0)}/night
+                </Button>
+              </div>
+            );
+          })()}
+
+          {/* Option 2: Breakfast Included */}
+          {breakfastRateCents && (() => {
+            const bfPrice = breakfastRateCents / 100;
+            const hasGetaway = badges.includes("Getaway Deal") && originalRateCents;
+            const bfOriginal = hasGetaway && originalRateCents ? Math.round(originalRateCents / 100 * (breakfastRateCents / baseRateCents)) : null;
+            const discountPct = bfOriginal ? Math.round(((bfOriginal - bfPrice) / bfOriginal) * 100) : 0;
+            return (
+              <div className="rounded-xl border border-amber-200/60 bg-amber-50/30 dark:border-amber-500/20 dark:bg-amber-500/5 p-3">
+                <div className="flex items-start justify-between gap-2 mb-1.5">
+                  <div className="flex-1 min-w-0">
+                    <p className="text-[11px] font-bold text-foreground flex items-center gap-1">
+                      <Coffee className="h-3 w-3 text-amber-500" /> Breakfast Included
+                    </p>
+                    <p className="text-[10px] text-muted-foreground mt-0.5 flex items-center gap-1">
+                      <CheckCircle2 className="h-2.5 w-2.5 text-emerald-500 shrink-0" />
+                      Includes 15% off food &amp; drinks
+                    </p>
+                    <p className="text-[10px] text-muted-foreground flex items-center gap-1">
+                      <CheckCircle2 className="h-2.5 w-2.5 text-emerald-500 shrink-0" />
+                      Free cancellation · No prepayment
+                    </p>
+                  </div>
+                  <div className="text-right shrink-0">
+                    {bfOriginal && (
+                      <p className="text-[10px] text-red-500 line-through leading-none">${bfOriginal}</p>
+                    )}
+                    <p className="text-[15px] font-extrabold text-foreground leading-tight">${bfPrice.toFixed(0)}</p>
+                    <p className="text-[9px] text-muted-foreground">/night</p>
+                  </div>
+                </div>
+                {hasGetaway && discountPct > 0 && (
+                  <div className="flex gap-1 mb-2">
+                    <span className="text-[9px] px-1.5 py-0.5 rounded bg-emerald-600 text-white font-bold">{discountPct}% off</span>
+                    <span className="text-[9px] px-1.5 py-0.5 rounded bg-emerald-600 text-white font-bold flex items-center gap-0.5">
+                      <Tag className="h-2 w-2" /> Getaway Deal
+                    </span>
+                  </div>
+                )}
+                <Button
+                  size="sm"
+                  className="w-full h-8 rounded-full bg-amber-500 hover:bg-amber-600 text-white font-bold text-[12px]"
+                  onClick={() => onReserve({ rateCents: breakfastRateCents, label: "Breakfast Included", breakfastIncluded: true })}
+                >
+                  Reserve · ${bfPrice.toFixed(0)}/night
+                </Button>
+              </div>
+            );
+          })()}
+        </div>
+
+        <div className="px-4 pb-4 pt-1">
+          {(weeklyDiscountPct > 0 || monthlyDiscountPct > 0) && (
+            <p className="text-[10px] text-muted-foreground text-center leading-tight">
+              {weeklyDiscountPct > 0 && <>−{weeklyDiscountPct}% for 7+ nights</>}
+              {weeklyDiscountPct > 0 && monthlyDiscountPct > 0 && " · "}
+              {monthlyDiscountPct > 0 && <>−{monthlyDiscountPct}% for 28+ nights</>}
+            </p>
+          )}
         </div>
       </motion.div>
 

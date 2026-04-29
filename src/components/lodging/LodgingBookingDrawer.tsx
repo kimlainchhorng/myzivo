@@ -44,6 +44,7 @@ interface Props {
   storePhone?: string | null;
   roomId: string;
   roomName: string;
+  ratePlanLabel?: string;
   baseRateCents: number;
   weekendRateCents?: number;
   weeklyDiscountPct?: number;
@@ -80,7 +81,7 @@ const PAY_METHODS: { id: PayMethod; label: string; sub: string; icon: typeof Wal
 ];
 
 export function LodgingBookingDrawer({
-  open, onClose, storeId, storeName, storePhone, roomId, roomName,
+  open, onClose, storeId, storeName, storePhone, roomId, roomName, ratePlanLabel,
   baseRateCents, weekendRateCents, weeklyDiscountPct = 0, monthlyDiscountPct = 0,
   cancellationPolicy, addons = [], fees, childPolicy,
   minStay = 1, maxStay, noArrivalWeekdays = [],
@@ -425,8 +426,8 @@ export function LodgingBookingDrawer({
     <ResponsiveModal
       open={open}
       onOpenChange={(v) => !v && handleClose()}
-      title={step === "success" ? "🎉 Booking submitted" : `Reserve ${roomName}`}
-      description={stepLabel}
+      title={step === "success" ? "🎉 Booking submitted" : `Reserve · ${roomName}`}
+      description={step !== "success" ? (ratePlanLabel ? `${ratePlanLabel} · ${stepLabel}` : stepLabel) : undefined}
       footer={
         step === "success" ? (
           <ResponsiveModalFooter>
@@ -632,6 +633,11 @@ export function LodgingBookingDrawer({
                 <div className="min-w-0">
                   <p className="font-bold text-base text-foreground">{roomName}</p>
                   <p className="text-muted-foreground truncate">{storeName}</p>
+                  {ratePlanLabel && (
+                    <span className="inline-flex items-center gap-1 text-[10px] font-semibold text-amber-600 dark:text-amber-400 mt-0.5">
+                      <Coffee className="h-2.5 w-2.5" /> {ratePlanLabel}
+                    </span>
+                  )}
                 </div>
                 <span className="shrink-0 px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 text-[10px] font-bold uppercase tracking-wider">Hold</span>
               </div>

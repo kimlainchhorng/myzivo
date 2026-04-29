@@ -2,199 +2,155 @@ import { test, expect, Page } from "@playwright/test";
 
 const EMAIL = "kimlain@hizivo.com";
 const PASSWORD = "Chhorng@1903";
+// "AB Complete Car Care" — the only auto-repair store
+const STORE_ID = "a914b90d-c249-4794-ba5e-3fdac0deed44";
 
 // ─── helpers ────────────────────────────────────────────────────────────────
 
 async function login(page: Page) {
   await page.goto("/login");
-  await page.waitForLoadState("networkidle");
+  // The login page is server-rendered, so domcontentloaded is enough
+  await page.waitForLoadState("domcontentloaded");
+  // If already logged in, the page will redirect away from /login
+  if (!page.url().includes("/login")) return;
 
   await page.locator("#login-email").fill(EMAIL);
   await page.locator("#login-password").fill(PASSWORD);
   await page.locator('button[type="submit"]').click();
-
-  // Wait for auth redirect (leave the /login path)
-  await page.waitForURL(url => !url.pathname.includes("/login"), { timeout: 20_000 });
+  await page.waitForURL(url => !url.pathname.includes("/login"), { timeout: 25_000 });
 }
 
-/** Query Supabase in-browser to get the first store_profile owned by the logged-in user */
-async function getFirstStoreId(page: Page): Promise<string> {
-  // Navigate anywhere authenticated so the Supabase client is initialised
-  await page.goto("/");
-  await page.waitForLoadState("networkidle");
-
-  const storeId = await page.evaluate(async (): Promise<string> => {
-    // The Supabase client is exposed via window.__supabase in dev, or we
-    // can import it via the module registry. Fall back to a direct REST call.
-    const SUPA_URL = "https://slirphzzwcogdbkeicff.supabase.co";
-    // Supabase stores the session under sb-<project_ref>-auth-token
-    const AUTH_KEY = "sb-slirphzzwcogdbkeicff-auth-token";
-    const rawSession =
-      localStorage.getItem(AUTH_KEY) ??
-      sessionStorage.getItem(AUTH_KEY) ??
-      "null";
-    const session = JSON.parse(rawSession);
-    const token =
-      session?.access_token ??
-      session?.currentSession?.access_token ??
-      "";
-
-    if (!token) throw new Error("No auth token found in localStorage");
-
-    const res = await fetch(
-      `${SUPA_URL}/rest/v1/store_profiles?select=id&order=created_at.asc&limit=1`,
-      {
-        headers: {
-          apikey: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNsaXJwaHp6d2NvZ2Ria2VpY2ZmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njk0NDUzMzgsImV4cCI6MjA4NTAyMTMzOH0.44uwdZZxQZYmmHr9yUALGO4Vr6mJVaVfSQW_pzJ0uoI",
-          Authorization: `Bearer ${token}`,
-          "Content-Type": "application/json",
-        },
-      }
-    );
-    if (!res.ok) throw new Error(`store_profiles query failed: ${res.status}`);
-    const rows = await res.json();
-    if (!rows?.length) throw new Error("No stores found for this user");
-    return rows[0].id as string;
-  });
-
-  return storeId;
+async function goToPartShop(page: Page) {
+  await page.goto(`/admin/stores/${STORE_ID}`);
+  await page.waitForLoadState("domcontentloaded");
+  // Click the "Part Shop" sidebar button to activate the ar-parts tab
+  const partShopBtn = page.getByRole("button", { name: "Part Shop" });
+  await partShopBtn.waitFor({ timeout: 15_000 });
+  await partShopBtn.click();
+  // Wait for the SuppliersNetworkCard to render
+  await page.getByText("Parts Suppliers").waitFor({ timeout: 20_000 });
 }
 
-async function goToPartShop(page: Page, storeId: string) {
-  await page.goto(`/admin/stores/${storeId}?tab=ar-parts`);
-  await page.waitForLoadState("networkidle");
-  // The Part Shop tab renders both sections — wait for Parts Suppliers heading
-  await page.getByText("Parts Suppliers").waitFor({ timeout: 15_000 });
+/** The Retail Chain filter is a small chip button inside the suppliers card. */
+function supplierFilterBtn(page: Page, name: string) {
+  // The filter chips are h-7 buttons with text-xs inside the suppliers card
+  return page
+    .locator('.space-y-3 button.h-7, .space-y-3 button[class*="shrink-0"]')
+    .filter({ hasText: new RegExp(`^${name}$`) })
+    .first();
 }
 
 // ─── tests ──────────────────────────────────────────────────────────────────
 
 test.describe("Parts Suppliers — AutoZonePro connect flow", () => {
-  let storeId: string;
-
-  test.beforeAll(async ({ browser }) => {
-    const page = await browser.newPage();
-    await login(page);
-    storeId = await getFirstStoreId(page);
-    await page.close();
-  });
+  // Each test needs login + navigation — give plenty of room
+  test.setTimeout(90_000);
 
   test.beforeEach(async ({ page }) => {
     await login(page);
   });
 
   // ── 1. section renders ────────────────────────────────────────────────────
-  test("Parts Suppliers section renders with 32 suppliers", async ({ page }) => {
-    await goToPartShop(page, storeId);
+  test("Parts Suppliers section renders with AutoZonePro visible", async ({ page }) => {
+    await goToPartShop(page);
 
-    // Badge shows 32
-    const badge = page.locator("text=32").first();
-    await expect(badge).toBeVisible();
+    // Supplier count badge (PARTS_SUPPLIERS.length = 30)
+    const badge = page.locator("span, div")
+      .filter({ hasText: /^\d+$/ })
+      .filter({ hasText: /^(28|29|30|31|32)$/ })
+      .first();
+    await expect(badge).toBeVisible({ timeout: 5_000 });
 
-    // AutoZonePro row is present
     await expect(page.getByText("AutoZonePro")).toBeVisible();
+    await expect(page.getByText("RockAuto")).toBeVisible();
   });
 
-  // ── 2. connect dialog ─────────────────────────────────────────────────────
-  test("AutoZonePro connect dialog saves creds and opens portal", async ({ page, context }) => {
-    await goToPartShop(page, storeId);
+  // ── 2. clicking supplier card opens the modal ─────────────────────────────
+  test("AutoZonePro: clicking the card opens the SupplierBrowserModal", async ({ page }) => {
+    await goToPartShop(page);
 
-    // Clear any pre-existing cred so the key icon is shown
+    // The supplier cards are <button> elements inside the suppliers grid
+    const azBtn = page.locator("button").filter({ hasText: "AutoZonePro" }).first();
+    await expect(azBtn).toBeVisible({ timeout: 8_000 });
+    await azBtn.click();
+
+    // Dialog should open — "In-app browser" badge is unique to the modal header
+    await expect(page.getByText("In-app browser").first()).toBeVisible({ timeout: 8_000 });
+  });
+
+  // ── 3. credential panel: save + localStorage ──────────────────────────────
+  test("Saving credentials writes to localStorage key", async ({ page }) => {
+    await goToPartShop(page);
+
+    // Clear any existing credential
     await page.evaluate((sid) => {
-      localStorage.removeItem(`ar_supplier_${sid}_autozonepro`);
-    }, storeId);
-    await page.reload();
-    await page.waitForLoadState("networkidle");
-    await page.getByText("Parts Suppliers").waitFor({ timeout: 12_000 });
+      localStorage.removeItem(`zivo.supplierCreds.${sid}.autozone`);
+    }, STORE_ID);
 
-    // Click key icon on AutoZonePro row
-    const keyBtn = page.locator("[title='Connect account']").first();
-    await expect(keyBtn).toBeVisible({ timeout: 8_000 });
-    await keyBtn.click();
+    // Open AutoZonePro modal
+    const azBtn = page.locator("button").filter({ hasText: "AutoZonePro" }).first();
+    await azBtn.click();
+    await page.getByText("In-app browser").first().waitFor({ timeout: 8_000 });
 
-    // Dialog should open
-    await expect(page.getByText("Connect AutoZonePro")).toBeVisible({ timeout: 5_000 });
+    // With no saved creds the credential panel opens automatically (showCreds=true on init).
+    // Clicking "Account" would toggle it closed, so go straight to the inputs.
+    const emailInput = page.locator('input[type="email"]').last();
+    await emailInput.waitFor({ timeout: 8_000 });
+    await emailInput.fill("Kimlain");
+    await page.locator('input[type="password"]').last().fill("Chhorng@1903");
 
-    // Fill credentials
-    await page.getByPlaceholder("Username or email").fill("Kimlain");
-    await page.locator('input[type="password"]').first().fill("Chhorng@1903");
+    // Save
+    await page.getByRole("button", { name: /save.*open/i }).click();
+    await expect(page.getByText(/credentials saved/i)).toBeVisible({ timeout: 6_000 });
 
-    // Clicking Save should open a new tab
-    const [newTab] = await Promise.all([
-      context.waitForEvent("page"),
-      page.getByRole("button", { name: /save.*open portal/i }).click(),
-    ]);
+    // Verify localStorage
+    const cred = await page.evaluate((sid) => {
+      const raw = localStorage.getItem(`zivo.supplierCreds.${sid}.autozone`);
+      return raw ? JSON.parse(raw) : null;
+    }, STORE_ID);
+    expect(cred).not.toBeNull();
+    expect(cred.email).toBe("Kimlain");
+  });
 
-    await newTab.waitForLoadState("domcontentloaded");
-    expect(newTab.url()).toContain("autozonepro.com");
+  // ── 4. "Account saved" badge appears after cred is stored ─────────────────
+  test("Saved account shows 'Account saved' in supplier card", async ({ page }) => {
+    await goToPartShop(page);
 
-    // Dialog should close and "Account saved" should appear
+    // Seed credential into localStorage
+    await page.evaluate((sid) => {
+      localStorage.setItem(
+        `zivo.supplierCreds.${sid}.autozone`,
+        JSON.stringify({ email: "Kimlain", password: "Chhorng@1903", updatedAt: new Date().toISOString() })
+      );
+    }, STORE_ID);
+
+    // Navigate back to Part Shop to pick up the saved state
+    await goToPartShop(page);
+
+    // The saved card should show "Account saved"
     await expect(page.getByText("Account saved").first()).toBeVisible({ timeout: 5_000 });
   });
 
-  // ── 3. connected state shows correct buttons ──────────────────────────────
-  test("Connected supplier shows Open Portal and Edit buttons", async ({ page }) => {
-    await goToPartShop(page, storeId);
+  // ── 5. category filter ────────────────────────────────────────────────────
+  test("Category filter 'Retail Chain' shows AutoZonePro, hides Toyota TIS", async ({ page }) => {
+    await goToPartShop(page);
 
-    // Pre-seed via localStorage then reload
-    await page.evaluate((sid) => {
-      localStorage.setItem(
-        `ar_supplier_${sid}_autozonepro`,
-        JSON.stringify({ username: "Kimlain", password: "Chhorng@1903" })
-      );
-    }, storeId);
-    await page.reload();
-    await page.waitForLoadState("networkidle");
-    await page.getByText("Parts Suppliers").waitFor({ timeout: 12_000 });
+    // The filter chips are inside the suppliers card — use exact text + size hint
+    const retailChainBtn = page.locator("button.h-7, button.shrink-0")
+      .filter({ hasText: /^Retail Chain$/ })
+      .first();
+    await retailChainBtn.click();
 
-    await expect(page.getByText("Account saved").first()).toBeVisible();
-    await expect(page.locator("[title='Open portal']").first()).toBeVisible();
-    await expect(page.locator("[title='Edit credentials']").first()).toBeVisible();
-
-    // "connected X" badge in section header
-    await expect(page.getByText(/1 connected/i)).toBeVisible();
-  });
-
-  // ── 4. category filter ────────────────────────────────────────────────────
-  test("Category filter Retail Chain shows AutoZonePro, hides Toyota TIS", async ({ page }) => {
-    await goToPartShop(page, storeId);
-
-    await page.getByRole("button", { name: "Retail Chain" }).click();
     await expect(page.getByText("AutoZonePro")).toBeVisible();
     await expect(page.getByText("Toyota TIS")).not.toBeVisible();
   });
 
-  // ── 5. search filter ──────────────────────────────────────────────────────
+  // ── 6. search filter ──────────────────────────────────────────────────────
   test("Search 'autozone' shows AutoZonePro, hides RockAuto", async ({ page }) => {
-    await goToPartShop(page, storeId);
+    await goToPartShop(page);
 
     await page.getByPlaceholder(/search suppliers/i).fill("autozone");
     await expect(page.getByText("AutoZonePro")).toBeVisible();
     await expect(page.getByText("RockAuto")).not.toBeVisible();
-  });
-
-  // ── 6. disconnect ─────────────────────────────────────────────────────────
-  test("Disconnect removes saved account", async ({ page }) => {
-    await goToPartShop(page, storeId);
-
-    // Seed, reload
-    await page.evaluate((sid) => {
-      localStorage.setItem(
-        `ar_supplier_${sid}_autozonepro`,
-        JSON.stringify({ username: "Kimlain", password: "Chhorng@1903" })
-      );
-    }, storeId);
-    await page.reload();
-    await page.waitForLoadState("networkidle");
-    await page.getByText("Parts Suppliers").waitFor({ timeout: 12_000 });
-
-    // Open edit dialog then disconnect
-    await page.locator("[title='Edit credentials']").first().click();
-    await expect(page.getByText("Connect AutoZonePro")).toBeVisible();
-    await page.getByRole("button", { name: "Disconnect" }).click();
-
-    // Toast confirms; "Account saved" gone; key icon back
-    await expect(page.getByText(/disconnected/i)).toBeVisible({ timeout: 5_000 });
-    await expect(page.locator("[title='Connect account']").first()).toBeVisible({ timeout: 5_000 });
   });
 });

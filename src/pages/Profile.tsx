@@ -345,6 +345,7 @@ const Profile = () => {
   const [friendCount, setFriendCount] = useState(0);
   const [followerCount, setFollowerCount] = useState(0);
   const [followingCount, setFollowingCount] = useState(0);
+  const [postsCount, setPostsCount] = useState(0);
   const [socialModal, setSocialModal] = useState<{ open: boolean; tab: "friends" | "followers" | "following" }>({ open: false, tab: "friends" });
   const [shareOpen, setShareOpen] = useState(false);
   const [modeOpen, setModeOpen] = useState(false);
@@ -399,6 +400,13 @@ const Profile = () => {
         .select("*", { count: "exact", head: true })
         .eq("follower_id", user.id);
       setFollowingCount(fgc || 0);
+
+      // Posts count
+      const { count: pc } = await (supabase as any)
+        .from("user_posts")
+        .select("*", { count: "exact", head: true })
+        .eq("user_id", user.id);
+      setPostsCount(pc || 0);
 
       // Check own friendship status (for own profile it stays "none" — used when viewing others)
       // Check if currently following self (shouldn't happen but keeps state correct)
@@ -1239,6 +1247,11 @@ const Profile = () => {
                           <span className="font-bold text-foreground">{formatCount(followingCount) ?? "0"}</span>
                           <span className="font-medium text-muted-foreground">following</span>
                         </button>
+                        <span aria-hidden="true" className="text-muted-foreground/70">·</span>
+                        <span className="inline-flex items-baseline gap-1">
+                          <span className="font-bold text-foreground">{formatCount(postsCount) ?? "0"}</span>
+                          <span className="font-medium text-muted-foreground">posts</span>
+                        </span>
                         <span aria-hidden="true" className="text-muted-foreground/70">·</span>
                         <button
                           type="button"
