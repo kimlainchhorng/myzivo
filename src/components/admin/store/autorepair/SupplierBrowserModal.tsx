@@ -183,7 +183,7 @@ export default function SupplierBrowserModal({ storeId, supplier, query, open, o
       password,
       updatedAt: new Date().toISOString(),
     });
-    toast.success(`${supplier.shortName ?? supplier.name} account saved`);
+    toast.success("Credentials saved locally");
     setShowCreds(false);
     if (proxiedUrl) loadProxyPage(proxiedUrl);
   };
@@ -238,6 +238,20 @@ export default function SupplierBrowserModal({ storeId, supplier, query, open, o
                 title="Open public consumer site"
               >
                 Consumer site
+              </Button>
+            )}
+            {(email || password) && (
+              <Button
+                size="sm"
+                variant="outline"
+                className="h-7 gap-1.5 text-xs"
+                onClick={() => {
+                  const ok = sendAutofill();
+                  if (!ok) toast.error("No credentials to fill");
+                }}
+                title="Fill saved credentials into login form"
+              >
+                <Wand2 className="w-3.5 h-3.5" /> Auto-fill
               </Button>
             )}
             <Button
