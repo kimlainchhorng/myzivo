@@ -331,7 +331,9 @@ function SuppliersNetworkCard({ query, storeId }: { query: string; storeId: stri
               <PartsSupplierLogo supplier={s} size="md" />
               <div className="min-w-0 flex-1">
                 <p className="font-medium truncate">{s.shortName ?? s.name}</p>
-                <p className="text-[10px] text-muted-foreground truncate">{s.category}</p>
+                <p className="text-[10px] text-muted-foreground truncate">
+                  {s.description ?? s.category}
+                </p>
               </div>
               <ExternalLink className="w-3 h-3 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity" />
             </button>

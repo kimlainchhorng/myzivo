@@ -153,6 +153,17 @@ export default function SupplierBrowserModal({ storeId, supplier, query, open, o
               </p>
             </div>
             <Badge variant="outline" className="text-[10px]">In-app browser</Badge>
+            {supplier.consumerDomain && (
+              <Button
+                size="sm"
+                variant="ghost"
+                className="h-7 gap-1.5 text-xs"
+                onClick={() => window.open(`https://${supplier.consumerDomain}`, "_blank", "noopener,noreferrer")}
+                title="Open public consumer site"
+              >
+                Consumer site
+              </Button>
+            )}
             <Button
               size="sm"
               variant="outline"
@@ -286,10 +297,11 @@ export default function SupplierBrowserModal({ storeId, supplier, query, open, o
               <div className="max-w-md w-full text-center space-y-4 bg-background border rounded-2xl p-6 shadow-sm">
                 <div className="mx-auto"><PartsSupplierLogo supplier={supplier} size="lg" /></div>
                 <div>
-                  <h3 className="text-base font-semibold">{supplier.name} blocks embedding</h3>
+                  <h3 className="text-base font-semibold">{supplier.name} is a trade portal</h3>
                   <p className="text-xs text-muted-foreground mt-1">
                     For security, this supplier doesn't allow its site to load inside another window.
-                    Open it in a new tab — we'll keep your saved account here for quick paste-in.
+                    Open it in a new tab to log in with your shop account — we'll keep your saved
+                    credentials here for quick paste-in.
                   </p>
                 </div>
                 <div className="flex gap-2 justify-center">
@@ -300,6 +312,16 @@ export default function SupplierBrowserModal({ storeId, supplier, query, open, o
                   >
                     <ExternalLink className="w-3.5 h-3.5" /> Open {supplier.shortName ?? supplier.name}
                   </Button>
+                  {supplier.consumerDomain && (
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={() => window.open(`https://${supplier.consumerDomain}`, "_blank", "noopener,noreferrer")}
+                      className="gap-1.5"
+                    >
+                      <ExternalLink className="w-3.5 h-3.5" /> Consumer site
+                    </Button>
+                  )}
                   <Button size="sm" variant="outline" onClick={() => setShowCreds(true)} className="gap-1.5">
                     <KeyRound className="w-3.5 h-3.5" /> Manage account
                   </Button>
