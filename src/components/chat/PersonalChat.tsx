@@ -763,6 +763,11 @@ export default function PersonalChat({ recipientId, recipientName, recipientAvat
   const runVoiceJob = useCallback(async (clientSendId: string, startFromInsert = false) => {
     const job = voiceJobsRef.current.get(clientSendId);
     if (!job || !user?.id) return;
+    if (voiceUploadInFlightRef.current) {
+      window.setTimeout(() => retryVoiceSendRef.current?.(clientSendId), 900);
+      return;
+    }
+    voiceUploadInFlightRef.current = true;
     const { controller, blob, durationMs, optimisticId } = job;
 
     const updateOpt = (patch: Partial<Message>) => {
@@ -857,7 +862,9 @@ export default function PersonalChat({ recipientId, recipientName, recipientAvat
       if (pendingVoiceOptimisticIdRef.current === optimisticId) {
         pendingVoiceOptimisticIdRef.current = null;
       }
+      voiceUploadInFlightRef.current = false;
     } catch (e) {
+      voiceUploadInFlightRef.current = false;
       if (e instanceof UploadAbortedError || controller.signal.aborted) {
         vlog("aborted", { clientSendId });
         return;
