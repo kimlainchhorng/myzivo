@@ -359,7 +359,17 @@ export default function SupplierBrowserModal({ storeId, supplier, query, open, o
           </div>
         )}
 
-        <div className="flex-1 relative bg-muted/20 min-h-0">
+        {supplier.loginFlow === "two-step" && (email || password) && (
+          <div className="px-4 py-1.5 border-b bg-amber-50 dark:bg-amber-950/30 text-amber-900 dark:text-amber-200 text-[11px] flex items-center gap-2 shrink-0">
+            <Info className="w-3.5 h-3.5 shrink-0" />
+            <span>
+              This supplier uses a <strong>2-step login</strong>. Click{" "}
+              <strong>Auto-fill</strong> again after submitting the username to fill the password.
+            </span>
+          </div>
+        )}
+
+        <div className="flex-1 relative bg-muted/20 min-h-0 overflow-hidden">
           {iframeDoc && !browserIssue && (
             <iframe
               key={frameKey}
@@ -369,7 +379,14 @@ export default function SupplierBrowserModal({ storeId, supplier, query, open, o
               className="absolute inset-0 w-full h-full bg-background"
               sandbox="allow-forms allow-popups allow-same-origin allow-scripts allow-top-navigation-by-user-activation"
               referrerPolicy="no-referrer"
-              onLoad={() => setIframeLoading(false)}
+              onLoad={() => {
+                setIframeLoading(false);
+                // Try autofill once the proxied page is fully loaded.
+                if (email || password) {
+                  // Small delay so the injected script has registered its listener.
+                  window.setTimeout(() => sendAutofill(), 250);
+                }
+              }}
               onError={() => setBrowserIssue("blocked")}
             />
           )}
