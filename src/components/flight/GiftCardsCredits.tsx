@@ -70,12 +70,12 @@ export const GiftCardsCredits = ({
           originalAmount: g.initial_balance, expiresAt: g.expires_at ?? "", type: "gift" as const,
         })));
       });
-    supabase.from("promo_codes").select("code, discount_value, discount_type, description, min_order_amount")
+    supabase.from("promo_codes").select("code, discount_value, discount_type, min_fare")
       .eq("is_active", true).then(({ data }) => {
-        if (data) setPromoCodes(data.map(p => ({
+        if (data) setPromoCodes((data as any[]).map((p: any) => ({
           code: p.code, discount: p.discount_value ?? 0,
           type: (p.discount_type === "percent" ? "percent" : "fixed") as "percent" | "fixed",
-          description: p.description ?? "", minPurchase: p.min_order_amount ?? undefined,
+          description: "", minPurchase: p.min_fare ?? undefined,
         })));
       });
   }, [user]);
@@ -240,7 +240,7 @@ export const GiftCardsCredits = ({
             <div>
               <p className="text-sm text-muted-foreground mb-2">Try these codes:</p>
               <div className="flex flex-wrap gap-2">
-                {VALID_PROMO_CODES.map(code => (
+                {promoCodes.map(code => (
                   <Badge
                     key={code.code}
                     variant="outline"
@@ -302,7 +302,7 @@ export const GiftCardsCredits = ({
             <div>
               <p className="text-sm text-muted-foreground mb-2">Your gift cards:</p>
               <div className="space-y-2">
-                {MOCK_GIFT_CARDS.filter(gc => !appliedGiftCards.find(a => a.id === gc.id)).map(gc => (
+                {userGiftCards.filter(gc => !appliedGiftCards.find(a => a.id === gc.id)).map(gc => (
                   <button
                     key={gc.id}
                     onClick={() => {
