@@ -140,7 +140,18 @@ export default function SupplierBrowserModal({ storeId, supplier, query, open, o
   useEffect(() => {
     if (!open) return;
     const handleMessage = (event: MessageEvent) => {
-      const data = event.data as { type?: string; url?: string; method?: string; body?: string; contentType?: string };
+      const data = event.data as {
+        type?: string;
+        url?: string;
+        method?: string;
+        body?: string;
+        contentType?: string;
+        filled?: boolean;
+      };
+      if (data?.type === "zivo-autofill-result") {
+        if (data.filled) toast.success("Credentials filled");
+        return;
+      }
       if (data?.type !== "zivo-supplier-navigate" || !data.url) return;
       try {
         const next = new URL(data.url);
