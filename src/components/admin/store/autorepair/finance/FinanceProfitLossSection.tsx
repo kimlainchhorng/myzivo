@@ -5,7 +5,7 @@
  */
 import { useMemo, useState } from "react";
 import { useQueries } from "@tanstack/react-query";
-import { useNavigate, useSearchParams } from "react-router-dom";
+import { useSearchParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
@@ -86,7 +86,6 @@ function fetchPayouts(storeId: string, from: string, to: string) {
 }
 
 export default function FinanceProfitLossSection({ storeId, storeName }: Props) {
-  const navigate = useNavigate();
   const [, setSearchParams] = useSearchParams();
   const [preset, setPreset] = useState<Preset>("custom");
   const initial = useMemo(() => {
