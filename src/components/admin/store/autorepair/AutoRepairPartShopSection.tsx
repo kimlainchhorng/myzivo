@@ -2,7 +2,7 @@
  * Auto Repair — Part Shop
  * Wired to ar_parts: store-owned catalog with search/filter and full CRUD.
  */
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -19,6 +19,7 @@ import Trash2 from "lucide-react/dist/esm/icons/trash-2";
 import Sparkles from "lucide-react/dist/esm/icons/sparkles";
 import Store from "lucide-react/dist/esm/icons/store";
 import ExternalLink from "lucide-react/dist/esm/icons/external-link";
+import KeyRound from "lucide-react/dist/esm/icons/key-round";
 import { toast } from "sonner";
 import { PARTS_SUPPLIERS, type PartsSupplier } from "@/config/partsSuppliers";
 import PartsSupplierLogo from "./PartsSupplierLogo";
@@ -280,6 +281,24 @@ function SuppliersNetworkCard({ query, storeId }: { query: string; storeId: stri
   const [supCat, setSupCat] = useState<(typeof SUPPLIER_CATEGORIES)[number]>("All");
   const [supQ, setSupQ] = useState("");
   const [activeSupplier, setActiveSupplier] = useState<PartsSupplier | null>(null);
+  const [savedSupplierIds, setSavedSupplierIds] = useState<Set<string>>(() => new Set());
+
+  const refreshSaved = () => {
+    setSavedSupplierIds(new Set(PARTS_SUPPLIERS.filter((s) => {
+      try { return !!localStorage.getItem(`zivo.supplierCreds.${storeId}.${s.id}`); }
+      catch { return false; }
+    }).map((s) => s.id)));
+  };
+
+  useEffect(() => {
+    refreshSaved();
+    window.addEventListener("focus", refreshSaved);
+    window.addEventListener("storage", refreshSaved);
+    return () => {
+      window.removeEventListener("focus", refreshSaved);
+      window.removeEventListener("storage", refreshSaved);
+    };
+  }, [storeId]);
 
   const list = useMemo(() => {
     const q = supQ.trim().toLowerCase();
@@ -332,10 +351,14 @@ function SuppliersNetworkCard({ query, storeId }: { query: string; storeId: stri
               <div className="min-w-0 flex-1">
                 <p className="font-medium truncate">{s.shortName ?? s.name}</p>
                 <p className="text-[10px] text-muted-foreground truncate">
-                  {s.description ?? s.category}
+                  {savedSupplierIds.has(s.id) ? "Account saved" : (s.description ?? s.category)}
                 </p>
               </div>
-              <ExternalLink className="w-3 h-3 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity" />
+              {savedSupplierIds.has(s.id) ? (
+                <KeyRound className="w-3 h-3 text-primary" />
+              ) : (
+                <ExternalLink className="w-3 h-3 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity" />
+              )}
             </button>
           ))}
           {list.length === 0 && (
@@ -349,7 +372,12 @@ function SuppliersNetworkCard({ query, storeId }: { query: string; storeId: stri
         supplier={activeSupplier}
         query={query}
         open={!!activeSupplier}
-        onOpenChange={(o) => !o && setActiveSupplier(null)}
+        onOpenChange={(o) => {
+          if (!o) {
+            refreshSaved();
+            setActiveSupplier(null);
+          }
+        }}
       />
     </Card>
   );

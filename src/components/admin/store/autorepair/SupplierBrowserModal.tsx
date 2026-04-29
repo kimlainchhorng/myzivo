@@ -34,6 +34,7 @@ interface Props {
 }
 
 type SavedCreds = { email: string; password: string; updatedAt: string };
+type BrowserIssue = "not-allowed" | "blocked" | null;
 
 const credKey = (storeId: string, supplierId: string) =>
   `zivo.supplierCreds.${storeId}.${supplierId}`;
@@ -57,7 +58,7 @@ function clearCreds(storeId: string, supplierId: string) {
 
 export default function SupplierBrowserModal({ storeId, supplier, query, open, onOpenChange }: Props) {
   const iframeRef = useRef<HTMLIFrameElement>(null);
-  const [iframeBlocked, setIframeBlocked] = useState(false);
+  const [browserIssue, setBrowserIssue] = useState<BrowserIssue>(null);
   const [iframeLoading, setIframeLoading] = useState(true);
   const [showCreds, setShowCreds] = useState(false);
   const [showPwd, setShowPwd] = useState(false);
@@ -69,7 +70,7 @@ export default function SupplierBrowserModal({ storeId, supplier, query, open, o
 
   const targetUrl = useMemo(() => {
     if (!supplier?.domain) return null;
-    return (query && getSupplierSearchUrl(supplier, query)) || `https://${supplier.domain}`;
+    return (query && getSupplierSearchUrl(supplier, query)) || supplier.portalUrl || `https://${supplier.domain}`;
   }, [supplier, query]);
 
   // Route through our edge proxy that strips X-Frame-Options / CSP frame-ancestors
@@ -86,17 +87,28 @@ export default function SupplierBrowserModal({ storeId, supplier, query, open, o
     setPassword(existing?.password ?? "");
     setShowCreds(!!existing);
     setShowPwd(false);
-    setIframeBlocked(false);
+    setBrowserIssue(null);
     setIframeLoading(true);
   }, [open, supplier, storeId]);
+
+  useEffect(() => {
+    if (!open || !proxiedUrl) return;
+    let cancelled = false;
+    fetch(`${proxiedUrl}&probe=1`)
+      .then(async (res) => {
+        if (!cancelled && res.status === 403) setBrowserIssue("not-allowed");
+      })
+      .catch(() => undefined);
+    return () => { cancelled = true; };
+  }, [open, proxiedUrl]);
 
   // Detect proxy errors via load timeout (15s — proxy can be slow on cold start)
   useEffect(() => {
     if (!open || !proxiedUrl) return;
     setIframeLoading(true);
-    setIframeBlocked(false);
+    setBrowserIssue(null);
     const timer = window.setTimeout(() => {
-      setIframeBlocked((prev) => prev || iframeLoading);
+      setBrowserIssue((prev) => prev || (iframeLoading ? "blocked" : null));
     }, 15000);
     return () => window.clearTimeout(timer);
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -115,6 +127,7 @@ export default function SupplierBrowserModal({ storeId, supplier, query, open, o
       updatedAt: new Date().toISOString(),
     });
     toast.success(`${supplier.shortName ?? supplier.name} account saved`);
+    if (targetUrl) window.open(targetUrl, "_blank", "noopener,noreferrer");
   };
 
   const handleClearCreds = () => {
@@ -136,9 +149,16 @@ export default function SupplierBrowserModal({ storeId, supplier, query, open, o
 
   const reload = () => {
     setIframeLoading(true);
-    setIframeBlocked(false);
+    setBrowserIssue(null);
     if (iframeRef.current) iframeRef.current.src = proxiedUrl ?? "about:blank";
   };
+
+  const issueTitle = browserIssue === "not-allowed"
+    ? `${supplier.shortName ?? supplier.name} portal needs setup`
+    : `${supplier.name} is a trade portal`;
+  const issueCopy = browserIssue === "not-allowed"
+    ? "This pro portal is not available in the embedded browser yet. Save the shop account here, then open the supplier portal to sign in."
+    : "For security, this supplier may not allow its site to load inside another window. Save the shop account here, then open the portal to sign in.";
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -262,7 +282,7 @@ export default function SupplierBrowserModal({ storeId, supplier, query, open, o
                   Clear
                 </Button>
                 <Button size="sm" className="h-7 text-xs" onClick={handleSaveCreds}>
-                  Save account
+                  Save & open
                 </Button>
               </div>
             </div>
@@ -270,7 +290,7 @@ export default function SupplierBrowserModal({ storeId, supplier, query, open, o
         )}
 
         <div className="flex-1 relative bg-muted/20 min-h-0">
-          {proxiedUrl && !iframeBlocked && (
+          {proxiedUrl && !browserIssue && (
             <iframe
               ref={iframeRef}
               src={proxiedUrl}
@@ -279,11 +299,11 @@ export default function SupplierBrowserModal({ storeId, supplier, query, open, o
               sandbox="allow-forms allow-popups allow-same-origin allow-scripts allow-top-navigation-by-user-activation"
               referrerPolicy="no-referrer"
               onLoad={() => setIframeLoading(false)}
-              onError={() => setIframeBlocked(true)}
+              onError={() => setBrowserIssue("blocked")}
             />
           )}
 
-          {iframeLoading && !iframeBlocked && (
+          {iframeLoading && !browserIssue && (
             <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
               <div className="flex items-center gap-2 text-xs text-muted-foreground bg-background/80 px-3 py-1.5 rounded-full border">
                 <RefreshCw className="w-3.5 h-3.5 animate-spin" />
@@ -292,16 +312,14 @@ export default function SupplierBrowserModal({ storeId, supplier, query, open, o
             </div>
           )}
 
-          {iframeBlocked && (
+          {browserIssue && (
             <div className="absolute inset-0 flex items-center justify-center p-6">
               <div className="max-w-md w-full text-center space-y-4 bg-background border rounded-2xl p-6 shadow-sm">
                 <div className="mx-auto"><PartsSupplierLogo supplier={supplier} size="lg" /></div>
                 <div>
-                  <h3 className="text-base font-semibold">{supplier.name} is a trade portal</h3>
+                  <h3 className="text-base font-semibold">{issueTitle}</h3>
                   <p className="text-xs text-muted-foreground mt-1">
-                    For security, this supplier doesn't allow its site to load inside another window.
-                    Open it in a new tab to log in with your shop account — we'll keep your saved
-                    credentials here for quick paste-in.
+                    {issueCopy}
                   </p>
                 </div>
                 <div className="flex gap-2 justify-center">
