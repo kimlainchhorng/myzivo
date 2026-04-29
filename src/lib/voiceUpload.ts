@@ -325,7 +325,15 @@ export async function retryWithBackoff<T>(
       if (err instanceof UploadAbortedError) throw err;
       if (i === attempts - 1 || !isRetriable(err)) throw err;
       const jitter = Math.random() * 200;
-      const delay = base * Math.pow(2.2, i) + jitter;
+      // 429 → respect Retry-After (or use a much longer backoff while the
+      // database recovers from connection pressure): 1.5s → 3s → 6s → 12s.
+      let delay: number;
+      if (err instanceof UploadHttpError && err.status === 429) {
+        const ra = err.retryAfterMs ?? 0;
+        delay = Math.max(ra, 1500 * Math.pow(2, i)) + jitter;
+      } else {
+        delay = base * Math.pow(2.2, i) + jitter;
+      }
       await sleep(delay, opts.signal);
     }
   }
