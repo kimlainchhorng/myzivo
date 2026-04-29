@@ -53,6 +53,7 @@ import { usePushNotifications } from "@/hooks/usePushNotifications";
 const Login = lazy(() => import("./pages/Login"));
 const Signup = lazy(() => import("./pages/Signup"));
 const ConnectCallback = lazy(() => import("./pages/ConnectCallback"));
+const PublicDocumentView = lazy(() => import("./pages/PublicDocumentView"));
 const PairPage = lazy(() => lazyRetry(() => import("./pages/PairPage")));
 
 const Index = lazy(() => lazyRetry(() => import("./pages/Index")));
@@ -675,6 +676,7 @@ const App = () => (
                             <Route path="/signup" element={<Signup />} />
                             <Route path="/unsubscribe" element={<Unsubscribe />} />
                             <Route path="/connect/callback" element={<ConnectCallback />} />
+                            <Route path="/d/:token" element={<PublicDocumentView />} />
 
                 {/* App Dashboard */}
                 <Route path="/app" element={<ProtectedRoute><UnifiedDashboard /></ProtectedRoute>} />
