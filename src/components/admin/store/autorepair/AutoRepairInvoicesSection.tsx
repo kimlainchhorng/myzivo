@@ -241,6 +241,7 @@ export default function AutoRepairInvoicesSection({ storeId }: Props) {
         const saved = JSON.parse(raw) as Doc;
         if (saved && saved.type === type) {
           skipNextSave.current = true;
+          setEditingId(null);
           setDraft(saved);
           setLastSaved(new Date());
           setSaveState("saved");
@@ -250,13 +251,31 @@ export default function AutoRepairInvoicesSection({ storeId }: Props) {
         }
       }
     } catch {}
-    const prefix = type === "estimate" ? "EST-" : "INV-";
-    const num = `${prefix}${Math.floor(1000 + Math.random() * 9000)}`;
     skipNextSave.current = true;
-    setDraft({ ...emptyDraft(), id: crypto.randomUUID(), type, number: num });
+    setEditingId(null);
+    setDraft({ ...emptyDraft(), id: crypto.randomUUID(), type, number: nextDocNumber(type) });
     setLastSaved(null);
     setSaveState("idle");
     setCreating(true);
+  };
+
+  const startEdit = (doc: Doc) => {
+    skipNextSave.current = true;
+    setEditingId(doc.id);
+    setDraft(doc);
+    setLastSaved(null);
+    setSaveState("idle");
+    setCreating(true);
+  };
+
+  const startDuplicate = (doc: Doc) => {
+    skipNextSave.current = true;
+    setEditingId(null);
+    setDraft({ ...doc, id: crypto.randomUUID(), number: nextDocNumber(doc.type), status: "draft", createdAt: new Date().toISOString() });
+    setLastSaved(null);
+    setSaveState("idle");
+    setCreating(true);
+    toast.info("Duplicated — review and save");
   };
 
   const discardDraft = () => {
