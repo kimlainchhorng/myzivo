@@ -95,14 +95,28 @@ interface Props { storeId: string }
 
 export default function AutoRepairInvoicesSection({ storeId }: Props) {
   const [docs, setDocs] = useState<Doc[]>(seed);
+  // Authoritative DB rows for invoices and estimates (drives KPIs + status badges).
+  const [dbInvoices, setDbInvoices] = useState<any[]>([]);
+  const [dbEstimates, setDbEstimates] = useState<any[]>([]);
   const [tab, setTab] = useState<"estimate" | "invoice">("estimate");
   const [creating, setCreating] = useState(false);
+  const [editingId, setEditingId] = useState<string | null>(null); // null = new doc
   const [draft, setDraft] = useState<Doc>(emptyDraft());
   const [vinLoading, setVinLoading] = useState(false);
   const [saveState, setSaveState] = useState<"idle" | "saving" | "saved">("idle");
   const [lastSaved, setLastSaved] = useState<Date | null>(null);
   const [previewDoc, setPreviewDoc] = useState<Doc | null>(null);
   const [storeInfo, setStoreInfo] = useState<{ name?: string; address?: string; phone?: string }>({});
+
+  // List filters
+  const [query, setQuery] = useState("");
+  const [statusFilter, setStatusFilter] = useState<StatusFilter>("all");
+  const [sortKey, setSortKey] = useState<SortKey>("newest");
+
+  // Action dialogs
+  const [paymentDoc, setPaymentDoc] = useState<{ id: string; number: string; customer: string; totalCents: number; amountPaidCents: number } | null>(null);
+  const [sendDoc, setSendDoc] = useState<{ id: string; type: DocType; number: string; customer: string; email?: string; phone?: string } | null>(null);
+  const [deleteDoc, setDeleteDoc] = useState<{ id: string; type: DocType; number: string } | null>(null);
 
   useEffect(() => {
     if (!storeId) return;
@@ -116,45 +130,76 @@ export default function AutoRepairInvoicesSection({ storeId }: Props) {
     })();
   }, [storeId]);
 
-  // Load persisted invoices from ar_invoices and merge with seed (so the user's
-  // saved invoices survive a page refresh — fixes the "data disappears" bug).
-  useEffect(() => {
+  // Load invoices + estimates from DB. Both filter out soft-deleted rows.
+  const reloadAll = async () => {
     if (!storeId) return;
-    (async () => {
-      const { data, error } = await supabase
-        .from("ar_invoices" as any)
-        .select("*")
-        .eq("store_id", storeId)
-        .order("created_at", { ascending: false });
-      if (error || !data) return;
-      const persisted: Doc[] = (data as any[]).map((row) => ({
-        id: row.id,
-        type: "invoice" as const,
-        number: row.number || "",
-        customer: row.customer_name || "",
-        firstName: (row.customer_name || "").split(" ")[0] || "",
-        lastName: (row.customer_name || "").split(" ").slice(1).join(" ") || "",
-        phone: row.customer_phone || "",
-        email: row.customer_email || "",
-        address: row.customer_address || "",
-        vin: row.vin || "",
-        year: row.vehicle_year || "",
-        make: row.vehicle_make || "",
-        model: row.vehicle_model || "",
-        trim: "", engine: "", transmission: "", driveType: "", bodyClass: "", doors: "", fuel: "", plant: "",
-        vehicle: row.vehicle_label || "",
-        items: Array.isArray(row.items) ? row.items : [],
-        status: (row.status === "paid" ? "paid" : row.status === "sent" ? "sent" : "draft") as Doc["status"],
-        createdAt: row.created_at,
-      }));
-      setDocs((prev) => {
-        // Keep seed estimates + non-persisted invoices, replace any with same id
-        const persistedIds = new Set(persisted.map((p) => p.id));
-        const kept = prev.filter((d) => d.type === "estimate" || !persistedIds.has(d.id));
-        return [...persisted, ...kept];
-      });
-    })();
-  }, [storeId]);
+    const [invRes, estRes] = await Promise.all([
+      supabase.from("ar_invoices" as any).select("*").eq("store_id", storeId).is("deleted_at", null).order("created_at", { ascending: false }),
+      supabase.from("ar_estimates" as any).select("*").eq("store_id", storeId).is("deleted_at", null).order("created_at", { ascending: false }),
+    ]);
+    if (!invRes.error && invRes.data) setDbInvoices(invRes.data as any[]);
+    if (!estRes.error && estRes.data) setDbEstimates(estRes.data as any[]);
+
+    const persisted: Doc[] = [];
+    if (!invRes.error && invRes.data) {
+      for (const row of invRes.data as any[]) {
+        persisted.push({
+          id: row.id,
+          type: "invoice",
+          number: row.number || "",
+          customer: row.customer_name || "",
+          firstName: (row.customer_name || "").split(" ")[0] || "",
+          lastName: (row.customer_name || "").split(" ").slice(1).join(" ") || "",
+          phone: row.customer_phone || "",
+          email: row.customer_email || "",
+          address: row.customer_address || "",
+          vin: row.vin || "",
+          year: row.vehicle_year || "",
+          make: row.vehicle_make || "",
+          model: row.vehicle_model || "",
+          trim: "", engine: "", transmission: "", driveType: "", bodyClass: "", doors: "", fuel: "", plant: "",
+          vehicle: row.vehicle_label || "",
+          items: Array.isArray(row.items) ? row.items : [],
+          status: (row.status === "paid" ? "paid" : row.status === "sent" ? "sent" : "draft") as Doc["status"],
+          createdAt: row.created_at,
+        });
+      }
+    }
+    if (!estRes.error && estRes.data) {
+      for (const row of estRes.data as any[]) {
+        persisted.push({
+          id: row.id,
+          type: "estimate",
+          number: row.number || "",
+          customer: row.customer_name || "",
+          firstName: (row.customer_name || "").split(" ")[0] || "",
+          lastName: (row.customer_name || "").split(" ").slice(1).join(" ") || "",
+          phone: row.customer_phone || "",
+          email: row.customer_email || "",
+          address: row.customer_address || "",
+          vin: row.vin || "",
+          year: row.vehicle_year || "",
+          make: row.vehicle_make || "",
+          model: row.vehicle_model || "",
+          trim: "", engine: "", transmission: "", driveType: "", bodyClass: "", doors: "", fuel: "", plant: "",
+          vehicle: row.vehicle_label || "",
+          items: Array.isArray(row.items) ? row.items : Array.isArray(row.line_items) ? row.line_items : [],
+          status: (row.status === "approved" ? "approved" : row.status === "sent" ? "sent" : "draft") as Doc["status"],
+          createdAt: row.created_at,
+        });
+      }
+    }
+    setDocs((prev) => {
+      // Replace any rows that are now persisted, keep seed entries that aren't
+      const persistedIds = new Set(persisted.map((p) => p.id));
+      const kept = prev.filter((d) => !persistedIds.has(d.id) && !["1","2","3"].includes(d.id) ? true : ["1","2","3"].includes(d.id) ? !persisted.length : false);
+      // Always keep the demo seed rows when nothing persisted yet so the UI isn't empty on first load
+      const keepSeed = persisted.length === 0 ? prev.filter((d) => ["1","2","3"].includes(d.id)) : [];
+      return [...persisted, ...kept, ...keepSeed];
+    });
+  };
+
+  useEffect(() => { reloadAll(); /* eslint-disable-next-line react-hooks/exhaustive-deps */ }, [storeId]);
   const draftKey = useMemo(() => `autorepair:invoice-draft:${storeId}`, [storeId]);
   const saveTimer = useRef<number | null>(null);
   const skipNextSave = useRef(true);
