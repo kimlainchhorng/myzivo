@@ -282,7 +282,7 @@ export default function SupplierBrowserModal({ storeId, supplier, query, open, o
                   Clear
                 </Button>
                 <Button size="sm" className="h-7 text-xs" onClick={handleSaveCreds}>
-                  Save account
+                  Save & open
                 </Button>
               </div>
             </div>
@@ -290,7 +290,7 @@ export default function SupplierBrowserModal({ storeId, supplier, query, open, o
         )}
 
         <div className="flex-1 relative bg-muted/20 min-h-0">
-          {proxiedUrl && !iframeBlocked && (
+          {proxiedUrl && !browserIssue && (
             <iframe
               ref={iframeRef}
               src={proxiedUrl}
@@ -299,11 +299,11 @@ export default function SupplierBrowserModal({ storeId, supplier, query, open, o
               sandbox="allow-forms allow-popups allow-same-origin allow-scripts allow-top-navigation-by-user-activation"
               referrerPolicy="no-referrer"
               onLoad={() => setIframeLoading(false)}
-              onError={() => setIframeBlocked(true)}
+              onError={() => setBrowserIssue("blocked")}
             />
           )}
 
-          {iframeLoading && !iframeBlocked && (
+          {iframeLoading && !browserIssue && (
             <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
               <div className="flex items-center gap-2 text-xs text-muted-foreground bg-background/80 px-3 py-1.5 rounded-full border">
                 <RefreshCw className="w-3.5 h-3.5 animate-spin" />
@@ -312,16 +312,14 @@ export default function SupplierBrowserModal({ storeId, supplier, query, open, o
             </div>
           )}
 
-          {iframeBlocked && (
+          {browserIssue && (
             <div className="absolute inset-0 flex items-center justify-center p-6">
               <div className="max-w-md w-full text-center space-y-4 bg-background border rounded-2xl p-6 shadow-sm">
                 <div className="mx-auto"><PartsSupplierLogo supplier={supplier} size="lg" /></div>
                 <div>
-                  <h3 className="text-base font-semibold">{supplier.name} is a trade portal</h3>
+                  <h3 className="text-base font-semibold">{issueTitle}</h3>
                   <p className="text-xs text-muted-foreground mt-1">
-                    For security, this supplier doesn't allow its site to load inside another window.
-                    Open it in a new tab to log in with your shop account — we'll keep your saved
-                    credentials here for quick paste-in.
+                    {issueCopy}
                   </p>
                 </div>
                 <div className="flex gap-2 justify-center">
