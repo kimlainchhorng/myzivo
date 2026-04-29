@@ -334,47 +334,46 @@ export default function AutoRepairInvoicesSection({ storeId }: Props) {
   const save = async () => {
     if (!draft.firstName || !draft.lastName || !draft.vehicle) { toast.error("First name, last name, and vehicle are required"); return; }
     const customer = `${draft.firstName} ${draft.lastName}`.trim();
+    const subtotalCents = Math.round(total(draft.items) * 100);
+    const tableName = draft.type === "invoice" ? "ar_invoices" : "ar_estimates";
 
-    // Persist invoices to ar_invoices so they survive refresh and feed the Finance dashboards.
-    if (draft.type === "invoice") {
-      try {
-        const subtotalCents = Math.round(total(draft.items) * 100);
-        const { data: { user } } = await supabase.auth.getUser();
-        const { data: inserted, error } = await supabase
-          .from("ar_invoices" as any)
-          .insert({
-            store_id: storeId,
-            number: draft.number,
-            customer_name: customer,
-            customer_phone: draft.phone || null,
-            customer_email: draft.email || null,
-            customer_address: draft.address || null,
-            vehicle_label: draft.vehicle || null,
-            vin: draft.vin || null,
-            vehicle_year: draft.year || null,
-            vehicle_make: draft.make || null,
-            vehicle_model: draft.model || null,
-            items: draft.items as any,
-            subtotal_cents: subtotalCents,
-            total_cents: subtotalCents,
-            status: draft.status === "paid" ? "paid" : "draft",
-            created_by: user?.id,
-          })
-          .select("id,created_at")
-          .single();
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      const payload: any = {
+        store_id: storeId,
+        number: draft.number,
+        customer_name: customer,
+        customer_phone: draft.phone || null,
+        customer_email: draft.email || null,
+        customer_address: draft.address || null,
+        vehicle_label: draft.vehicle || null,
+        vin: draft.vin || null,
+        vehicle_year: draft.year || null,
+        vehicle_make: draft.make || null,
+        vehicle_model: draft.model || null,
+        items: draft.items as any,
+        subtotal_cents: subtotalCents,
+        total_cents: subtotalCents,
+        status: draft.status === "paid" ? "paid" : draft.status === "sent" ? "sent" : "draft",
+      };
+
+      if (editingId) {
+        const { error } = await supabase.from(tableName as any).update(payload).eq("id", editingId);
         if (error) throw error;
-        setDocs(d => [{ ...draft, id: (inserted as any).id, customer, createdAt: (inserted as any).created_at }, ...d]);
-        toast.success(`Invoice ${draft.number} saved`);
-      } catch (e: any) {
-        toast.error(`Could not save invoice: ${e.message || "unknown error"}`);
-        return;
+        toast.success(`${draft.type === "invoice" ? "Invoice" : "Estimate"} ${draft.number} updated`);
+      } else {
+        payload.created_by = user?.id;
+        const { error } = await supabase.from(tableName as any).insert(payload);
+        if (error) throw error;
+        toast.success(`${draft.type === "invoice" ? "Invoice" : "Estimate"} ${draft.number} saved`);
       }
-    } else {
-      // Estimates remain in local state here; managed in the dedicated Estimates tab via ar_estimates.
-      setDocs(d => [{ ...draft, customer }, ...d]);
-      toast.success(`Estimate ${draft.number} created`);
+      await reloadAll();
+    } catch (e: any) {
+      toast.error(`Could not save: ${e?.message || "unknown error"}`);
+      return;
     }
     clearDraft();
+    setEditingId(null);
     setCreating(false);
   };
 
