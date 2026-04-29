@@ -10,7 +10,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { supabase } from "@/integrations/supabase/client";
-import { FileText, Plus, DollarSign, Trash2, Receipt, ClipboardList, ArrowLeft, ScanSearch, Loader2, Check, CloudUpload, Wrench, Package, Stethoscope, Truck, KeyRound, Car, LogOut, Eye } from "lucide-react";
+import { FileText, Plus, DollarSign, Trash2, Receipt, ClipboardList, ArrowLeft, ScanSearch, Loader2, Check, CloudUpload, Wrench, Package, Stethoscope, Truck, KeyRound, Car, LogOut, Eye, ArrowRightLeft } from "lucide-react";
 import { toast } from "sonner";
 import AutoRepairDocPreviewDialog from "./AutoRepairDocPreviewDialog";
 import InvoiceKpiStrip from "./invoices/InvoiceKpiStrip";
@@ -377,6 +377,87 @@ export default function AutoRepairInvoicesSection({ storeId }: Props) {
     setCreating(false);
   };
 
+  // Save the current estimate draft, then convert it into an invoice and open it for edit.
+  const saveAndConvertToInvoice = async () => {
+    if (draft.type !== "estimate") return;
+    if (!draft.firstName || !draft.lastName || !draft.vehicle) {
+      toast.error("First name, last name, and vehicle are required");
+      return;
+    }
+    const customer = `${draft.firstName} ${draft.lastName}`.trim();
+    const subtotalCents = Math.round(total(draft.items) * 100);
+
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      const basePayload: any = {
+        store_id: storeId,
+        customer_name: customer,
+        customer_phone: draft.phone || null,
+        customer_email: draft.email || null,
+        customer_address: draft.address || null,
+        vehicle_label: draft.vehicle || null,
+        vin: draft.vin || null,
+        vehicle_year: draft.year || null,
+        vehicle_make: draft.make || null,
+        vehicle_model: draft.model || null,
+        items: draft.items as any,
+        subtotal_cents: subtotalCents,
+        total_cents: subtotalCents,
+      };
+
+      // 1. Persist the estimate (insert if new, update if editing) and mark approved.
+      let estimateId = editingId;
+      if (estimateId) {
+        const { error } = await supabase
+          .from("ar_estimates" as any)
+          .update({ ...basePayload, number: draft.number, status: "approved" })
+          .eq("id", estimateId);
+        if (error) throw error;
+      } else {
+        const { data, error } = await supabase
+          .from("ar_estimates" as any)
+          .insert({ ...basePayload, number: draft.number, status: "approved", created_by: user?.id })
+          .select("id")
+          .single();
+        if (error) throw error;
+        estimateId = (data as any).id;
+      }
+
+      // 2. Create the invoice from this estimate.
+      const invoiceNumber = nextDocNumber("invoice");
+      const { data: invRow, error: invErr } = await supabase
+        .from("ar_invoices" as any)
+        .insert({
+          ...basePayload,
+          number: invoiceNumber,
+          status: "draft",
+          estimate_id: estimateId,
+          created_by: user?.id,
+        })
+        .select("id")
+        .single();
+      if (invErr) throw invErr;
+
+      toast.success(`Converted to invoice ${invoiceNumber}`);
+      clearDraft();
+      await reloadAll();
+
+      // 3. Open the newly created invoice so the user can review/send/charge.
+      setTab("invoice");
+      setEditingId((invRow as any).id);
+      setDraft({
+        ...draft,
+        id: (invRow as any).id,
+        type: "invoice",
+        number: invoiceNumber,
+        status: "draft",
+      });
+      setCreating(true);
+    } catch (e: any) {
+      toast.error(`Conversion failed: ${e?.message || "unknown error"}`);
+    }
+  };
+
   const updateItem = (id: string, patch: Partial<LineItem>) =>
     setDraft(d => ({ ...d, items: d.items.map(i => i.id === id ? { ...i, ...patch } : i) }));
 
@@ -489,6 +570,11 @@ export default function AutoRepairInvoicesSection({ storeId }: Props) {
               <Button variant="outline" size="sm" onClick={() => setPreviewDoc({ ...draft, customer: `${draft.firstName} ${draft.lastName}`.trim() })} className="gap-1.5"><Eye className="w-3.5 h-3.5" /> Preview</Button>
               <Button variant="outline" size="sm" onClick={saveDraftNow}>Save draft</Button>
               <Button variant="ghost" size="sm" onClick={discardDraft} className="text-destructive hover:text-destructive">Discard</Button>
+              {draft.type === "estimate" && (
+                <Button variant="outline" size="sm" onClick={saveAndConvertToInvoice} className="gap-1.5">
+                  <ArrowRightLeft className="w-3.5 h-3.5" /> Convert to Invoice
+                </Button>
+              )}
               <Button onClick={save} className="gap-1.5">
                 {draft.type === "estimate" ? "Create Estimate" : "Create Invoice"}
               </Button>
@@ -799,8 +885,13 @@ export default function AutoRepairInvoicesSection({ storeId }: Props) {
               <span className="text-2xl font-bold flex items-center"><DollarSign className="w-5 h-5" />{total(draft.items).toFixed(2)}</span>
             </div>
 
-            <div className="flex justify-end gap-2 pt-2">
+            <div className="flex justify-end gap-2 pt-2 flex-wrap">
               <Button variant="outline" onClick={() => setCreating(false)}>Cancel</Button>
+              {draft.type === "estimate" && (
+                <Button variant="outline" onClick={saveAndConvertToInvoice} className="gap-1.5">
+                  <ArrowRightLeft className="w-4 h-4" /> Convert to Invoice
+                </Button>
+              )}
               <Button onClick={save}>{draft.type === "estimate" ? "Create Estimate" : "Create Invoice"}</Button>
             </div>
           </CardContent>
