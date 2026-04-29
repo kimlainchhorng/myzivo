@@ -312,6 +312,16 @@ export default function SupplierBrowserModal({ storeId, supplier, query, open, o
                   >
                     <ExternalLink className="w-3.5 h-3.5" /> Open {supplier.shortName ?? supplier.name}
                   </Button>
+                  {supplier.consumerDomain && (
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={() => window.open(`https://${supplier.consumerDomain}`, "_blank", "noopener,noreferrer")}
+                      className="gap-1.5"
+                    >
+                      <ExternalLink className="w-3.5 h-3.5" /> Consumer site
+                    </Button>
+                  )}
                   <Button size="sm" variant="outline" onClick={() => setShowCreds(true)} className="gap-1.5">
                     <KeyRound className="w-3.5 h-3.5" /> Manage account
                   </Button>
