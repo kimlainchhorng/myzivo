@@ -300,7 +300,11 @@ Deno.serve(async (req) => {
   }
   function setVal(el, val){
     try {
+      try { el.scrollIntoView({ block: 'center', inline: 'nearest' }); } catch(_) {}
+      try { el.click(); } catch(_) {}
       try { el.focus({ preventScroll: true }); } catch(_) {}
+      try { el.dispatchEvent(new FocusEvent('focus', { bubbles: true })); } catch(_) { el.dispatchEvent(new Event('focus', { bubbles: true })); }
+      try { el.dispatchEvent(new FocusEvent('focusin', { bubbles: true })); } catch(_) { el.dispatchEvent(new Event('focusin', { bubbles: true })); }
       var setter = getValueSetter(el);
       if (setter) setter.call(el, val); else el.value = val;
       try { if (el._valueTracker) el._valueTracker.setValue(''); } catch(_) {}
@@ -308,9 +312,11 @@ Deno.serve(async (req) => {
       try { el.dispatchEvent(new InputEvent('beforeinput', { bubbles: true, cancelable: true, inputType: 'insertText', data: val })); } catch(_) {}
       try { el.dispatchEvent(new InputEvent('input', { bubbles: true, cancelable: true, inputType: 'insertText', data: val })); }
       catch(_) { el.dispatchEvent(new Event('input', { bubbles: true })); }
+      try { el.dispatchEvent(new KeyboardEvent('keydown', { bubbles: true, key: 'Tab' })); } catch(_) {}
       el.dispatchEvent(new Event('change', { bubbles: true }));
       el.dispatchEvent(new Event('keyup', { bubbles: true }));
-      el.dispatchEvent(new Event('blur', { bubbles: true }));
+      try { el.dispatchEvent(new FocusEvent('focusout', { bubbles: true })); } catch(_) { el.dispatchEvent(new Event('focusout', { bubbles: true })); }
+      try { el.dispatchEvent(new FocusEvent('blur', { bubbles: true })); } catch(_) { el.dispatchEvent(new Event('blur', { bubbles: true })); }
       try { el.blur(); } catch(_) {}
     } catch(e) {}
   }
