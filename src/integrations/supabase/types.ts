@@ -3977,19 +3977,60 @@ export type Database = {
         }
         Relationships: []
       }
+      ar_document_share_links: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          doc_id: string
+          doc_type: string
+          expires_at: string
+          revoked_at: string | null
+          store_id: string
+          token: string
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          doc_id: string
+          doc_type: string
+          expires_at?: string
+          revoked_at?: string | null
+          store_id: string
+          token?: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          doc_id?: string
+          doc_type?: string
+          expires_at?: string
+          revoked_at?: string | null
+          store_id?: string
+          token?: string
+        }
+        Relationships: []
+      }
       ar_estimates: {
         Row: {
+          converted_invoice_id: string | null
           converted_workorder_id: string | null
           created_at: string
+          created_by: string | null
+          customer_address: string | null
           customer_email: string | null
           customer_id: string | null
           customer_name: string | null
+          customer_notes: string | null
           customer_phone: string | null
+          deleted_at: string | null
+          diagnosis_notes: string | null
           expires_at: string | null
           id: string
+          items: Json | null
           line_items: Json
           notes: string | null
           number: string
+          sent_at: string | null
           status: string
           store_id: string
           subtotal_cents: number
@@ -3998,19 +4039,31 @@ export type Database = {
           updated_at: string
           vehicle_id: string | null
           vehicle_label: string | null
+          vehicle_make: string | null
+          vehicle_model: string | null
+          vehicle_year: string | null
+          vin: string | null
         }
         Insert: {
+          converted_invoice_id?: string | null
           converted_workorder_id?: string | null
           created_at?: string
+          created_by?: string | null
+          customer_address?: string | null
           customer_email?: string | null
           customer_id?: string | null
           customer_name?: string | null
+          customer_notes?: string | null
           customer_phone?: string | null
+          deleted_at?: string | null
+          diagnosis_notes?: string | null
           expires_at?: string | null
           id?: string
+          items?: Json | null
           line_items?: Json
           notes?: string | null
           number: string
+          sent_at?: string | null
           status?: string
           store_id: string
           subtotal_cents?: number
@@ -4019,19 +4072,31 @@ export type Database = {
           updated_at?: string
           vehicle_id?: string | null
           vehicle_label?: string | null
+          vehicle_make?: string | null
+          vehicle_model?: string | null
+          vehicle_year?: string | null
+          vin?: string | null
         }
         Update: {
+          converted_invoice_id?: string | null
           converted_workorder_id?: string | null
           created_at?: string
+          created_by?: string | null
+          customer_address?: string | null
           customer_email?: string | null
           customer_id?: string | null
           customer_name?: string | null
+          customer_notes?: string | null
           customer_phone?: string | null
+          deleted_at?: string | null
+          diagnosis_notes?: string | null
           expires_at?: string | null
           id?: string
+          items?: Json | null
           line_items?: Json
           notes?: string | null
           number?: string
+          sent_at?: string | null
           status?: string
           store_id?: string
           subtotal_cents?: number
@@ -4040,6 +4105,10 @@ export type Database = {
           updated_at?: string
           vehicle_id?: string | null
           vehicle_label?: string | null
+          vehicle_make?: string | null
+          vehicle_model?: string | null
+          vehicle_year?: string | null
+          vin?: string | null
         }
         Relationships: []
       }
@@ -4345,6 +4414,7 @@ export type Database = {
           customer_email: string | null
           customer_name: string | null
           customer_phone: string | null
+          deleted_at: string | null
           discount_cents: number
           due_at: string | null
           estimate_id: string | null
@@ -4374,6 +4444,7 @@ export type Database = {
           customer_email?: string | null
           customer_name?: string | null
           customer_phone?: string | null
+          deleted_at?: string | null
           discount_cents?: number
           due_at?: string | null
           estimate_id?: string | null
@@ -4403,6 +4474,7 @@ export type Database = {
           customer_email?: string | null
           customer_name?: string | null
           customer_phone?: string | null
+          deleted_at?: string | null
           discount_cents?: number
           due_at?: string | null
           estimate_id?: string | null
@@ -63759,6 +63831,7 @@ export type Database = {
         }
         Returns: Json
       }
+      get_shared_document: { Args: { _token: string }; Returns: Json }
       get_sla_by_driver: {
         Args: {
           p_date_from?: string
