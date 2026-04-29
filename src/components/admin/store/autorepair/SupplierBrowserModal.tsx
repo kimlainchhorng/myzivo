@@ -370,11 +370,12 @@ export default function SupplierBrowserModal({ storeId, supplier, query, open, o
         )}
 
         <div className="flex-1 relative bg-muted/20 min-h-0 overflow-hidden">
-          {iframeDoc && !browserIssue && (
+          {(iframeUrl || iframeDoc) && !browserIssue && (
             <iframe
               key={frameKey}
               ref={iframeRef}
-              srcDoc={iframeDoc}
+              src={iframeUrl ?? undefined}
+              srcDoc={iframeDoc ?? undefined}
               title={supplier.name}
               className="absolute inset-0 w-full h-full bg-background"
               sandbox="allow-forms allow-popups allow-same-origin allow-scripts allow-top-navigation-by-user-activation"
