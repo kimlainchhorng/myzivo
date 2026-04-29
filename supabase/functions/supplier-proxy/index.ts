@@ -232,6 +232,48 @@ Deno.serve(async (req) => {
       return nativeOpen.apply(this, arguments);
     };
   }
+
+  // ===== Credential autofill =====
+  var pendingCreds = null;
+  function setVal(el, val){
+    try {
+      var proto = Object.getPrototypeOf(el);
+      var desc = Object.getOwnPropertyDescriptor(proto, 'value');
+      var setter = desc && desc.set;
+      if (setter) setter.call(el, val); else el.value = val;
+      el.dispatchEvent(new Event('input', { bubbles: true }));
+      el.dispatchEvent(new Event('change', { bubbles: true }));
+    } catch(e) {}
+  }
+  function applyCreds(creds){
+    if (!creds) return false;
+    var filled = 0;
+    var inputs = document.querySelectorAll('input');
+    for (var i = 0; i < inputs.length; i++) {
+      var el = inputs[i];
+      if (el.disabled || el.readOnly || el.type === 'hidden') continue;
+      var hint = ((el.name||'') + ' ' + (el.id||'') + ' ' + (el.getAttribute('autocomplete')||'') + ' ' + (el.placeholder||'') + ' ' + (el.type||'')).toLowerCase();
+      if (el.type === 'password' && creds.password) { setVal(el, creds.password); filled++; }
+      else if (creds.username && (el.type === 'email' || /user|email|login|account|signin|userid/.test(hint))) {
+        if (!el.value) { setVal(el, creds.username); filled++; }
+      }
+    }
+    return filled > 0;
+  }
+  window.addEventListener('message', function(e){
+    var data = e.data;
+    if (!data || data.type !== 'zivo-autofill') return;
+    pendingCreds = { username: data.username || '', password: data.password || '' };
+    var ok = applyCreds(pendingCreds);
+    parent.postMessage({ type: 'zivo-autofill-result', filled: ok }, '*');
+  });
+  // Re-apply on DOM changes (handles 2-step logins where password appears later)
+  try {
+    var mo = new MutationObserver(function(){
+      if (pendingCreds) applyCreds(pendingCreds);
+    });
+    mo.observe(document.documentElement, { childList: true, subtree: true });
+  } catch(e) {}
 })();
 </script>`;
 
