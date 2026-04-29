@@ -1,102 +1,50 @@
-# Estimates & Invoices — Upgrade Plan
+## Fix RLS for AutoRepair Estimates/Invoices/Payments
 
-You're right: the current list row only has **Preview / Send / Print** icons that all open the same dialog. There's no edit, no delete, no real "send", no way to mark paid, and no search. Estimates also can't be converted into invoices. Let's fix that.
+The Create Estimate → Save → Convert to Invoice → Record Payment flow is blocked by RLS policies that check ownership against the wrong table (`restaurants` instead of `store_profiles`).
 
-## What's missing today (from the screenshot + code review)
-1. No **Edit** — once created, you can't change a customer name, line item, or price.
-2. No **Delete** — wrong invoices stay forever.
-3. No **Status actions** — you can't mark Sent, Paid, Void, or record a partial payment.
-4. **Send** button doesn't actually send — it just opens the preview.
-5. No **Convert Estimate → Invoice** (huge for shop workflow).
-6. No **Search / Filter** — finding INV-2032 in a list of 500 is impossible.
-7. No **Duplicate** — repeat customers redo everything by hand.
-8. No **KPI strip** — owner can't see Outstanding $, Paid this month, Overdue count at a glance.
-9. No **PDF download** — only browser print.
-10. **Estimates aren't persisted** to a table (only invoices are saved to `ar_invoices`).
+### Step 1 — Apply migration
 
-## What we'll add
+Run the already-prepared migration `supabase/migrations/20260429170000_fix_ar_estimates_invoices_rls.sql` which:
 
-### A. Row actions (per invoice/estimate)
-Replace the 3 ambiguous icon buttons with a clean action set:
-- **View** (eye) → preview dialog
-- **Edit** (pencil) → reopens the create form pre-filled with that doc
-- **Send** (paper plane) → opens a small sheet to send via Email or SMS through an edge function (`send-ar-document`)
-- **Mark Paid** (dollar) → records payment to `ar_invoice_payments`, flips status, feeds Finance dashboards
-- **Duplicate** (copy)
-- **Download PDF** (download) — uses `jspdf` + `jspdf-autotable`
-- **Delete** (trash) with confirm dialog
-- **Convert to Invoice** (estimates only, primary action)
+1. Drops the existing policies on `ar_estimates`, `ar_invoices`, `ar_invoice_items`, `ar_estimate_items`, and `ar_invoice_payments` that reference `restaurants`.
+2. Recreates them to verify ownership via `store_profiles.owner_id = auth.uid()` for the `store_id` on the row.
+3. Keeps admin override via `has_role(auth.uid(), 'admin')`.
 
-### B. List header upgrades
-- **Search bar** — by number, customer name, phone, VIN, plate
-- **Status filter pills** — All · Draft · Sent · Paid · Overdue · Void
-- **Sort menu** — Newest, Oldest, Amount high→low, Customer A→Z
-- **KPI strip** above the tabs (4 compact cards):
-  - Outstanding Balance (sum unpaid)
-  - Paid This Month
-  - Overdue (count + amount, red)
-  - Avg Ticket
+### Step 2 — Verify the editor flow works end-to-end
 
-### C. Edit + Delete plumbing
-- New `updateInvoice(id, patch)` writes to `ar_invoices` then updates local state.
-- New `deleteInvoice(id)` soft-deletes (`deleted_at` column) so Finance numbers stay accurate historically — **requires a small migration**: add `deleted_at timestamptz` to `ar_invoices` and `ar_estimates`, and filter `is null` everywhere.
-- Edit reuses the existing create form (already supports all fields), just prefilled with `setDraft(existing)` and a Save button that calls update vs insert.
+After the migration is applied, manually test in `/admin/stores/.../?tab=ar-invoices`:
 
-### D. Persist Estimates properly
-Currently estimates only live in React state and the seed array — they vanish on refresh outside the seeded ones. We'll:
-- Use the existing `ar_estimates` table (already referenced in your finance layer).
-- Mirror the same insert/select/update/delete pattern as invoices.
+- Create Estimate → Save (insert path with non-UUID seed id, then update path with real UUID).
+- Convert to Invoice (re-inserts seed estimate first if needed, then creates `ar_invoices` row linked via `estimate_id`, switches tab).
+- Record Payment on the new invoice (insert into `ar_invoice_payments`, refresh balance).
+- Send / Public View / PDF / Delete actions remain functional.
 
-### E. Convert Estimate → Invoice
-One-click button on any estimate:
-1. Inserts a new row into `ar_invoices` with the estimate's customer, vehicle, items.
-2. Generates the next `INV-####` number.
-3. Marks the source estimate `status = 'approved'` and stores `converted_invoice_id`.
-4. Switches the tab to Invoices and highlights the new row.
+### Step 3 — Small follow-ups (only if issues surface during verify)
 
-### F. Send via Email/SMS
-New edge function `send-ar-document`:
-- Inputs: `docId`, `channel: "email" | "sms"`, `to`
-- Email path uses Resend (already configured) with a branded HTML template and a PDF attachment.
-- SMS path uses Twilio (already configured) with a short message + signed view link.
-- On success, flips status to `sent` and stamps `sent_at`.
+- If the public document view (`/d/:token`) fails due to RLS, add a permissive `SELECT` policy or RPC for rows accessed via a valid share token.
+- If `ar_invoice_items` / `ar_estimate_items` inserts fail, add matching policies that join through their parent `invoice_id` / `estimate_id` to `store_profiles.owner_id`.
 
-### G. Public view link (so customers can actually open it)
-- New table `ar_document_share_links (token uuid, doc_id, doc_type, expires_at)`.
-- New public page `/d/:token` that renders the same preview, no auth needed.
-- The Send action automatically generates the link and embeds it in the email/SMS.
+### Technical notes
 
-## Technical layout
+Policy template used for each table:
 
-```text
-src/components/admin/store/autorepair/
-  AutoRepairInvoicesSection.tsx          (refactor: add actions, search, KPI)
-  invoices/
-    InvoiceKpiStrip.tsx                   (NEW)
-    InvoiceListRow.tsx                    (NEW — extracted row + dropdown menu)
-    InvoiceFilterBar.tsx                  (NEW — search + status pills + sort)
-    SendDocumentSheet.tsx                 (NEW — email/SMS picker)
-    RecordInvoicePaymentDialog.tsx        (NEW)
-    DeleteConfirmDialog.tsx               (NEW — shared)
-    ConvertEstimateButton.tsx             (NEW)
-src/lib/admin/
-  invoiceActions.ts                       (NEW — update/delete/duplicate/convert/markPaid)
-  invoicePdf.ts                           (NEW — jsPDF generator)
-src/pages/PublicDocumentView.tsx          (NEW — /d/:token route)
-supabase/functions/send-ar-document/      (NEW edge function)
+```sql
+CREATE POLICY "Store owners manage <table>"
+ON public.<table> FOR ALL TO authenticated
+USING (EXISTS (
+  SELECT 1 FROM public.store_profiles sp
+  WHERE sp.id = <table>.store_id
+    AND sp.owner_id = auth.uid()
+))
+WITH CHECK (EXISTS (
+  SELECT 1 FROM public.store_profiles sp
+  WHERE sp.id = <table>.store_id
+    AND sp.owner_id = auth.uid()
+));
 ```
 
-## DB migration (small)
-- `ALTER TABLE ar_invoices ADD COLUMN deleted_at timestamptz, sent_at timestamptz, converted_from_estimate_id uuid;`
-- `ALTER TABLE ar_estimates ADD COLUMN deleted_at timestamptz, sent_at timestamptz, converted_invoice_id uuid, status text DEFAULT 'draft';`
-- New `ar_document_share_links` table with RLS allowing anon SELECT by token only.
+For child item tables (`ar_invoice_items`, `ar_estimate_items`, `ar_invoice_payments`) the EXISTS clause joins through the parent doc's `store_id` to `store_profiles.owner_id`.
 
-## Order of work
-1. Migration + persist estimates to `ar_estimates`.
-2. Row dropdown menu with Edit / Delete / Duplicate / Mark Paid / Download PDF.
-3. Edit flow (reuse create form).
-4. Search + status filters + KPI strip.
-5. Convert Estimate → Invoice.
-6. Send sheet + edge function + public share page.
+No frontend code changes are required for Step 1 — the existing `AutoRepairInvoicesSection.tsx` already handles UUID vs seed-id branching correctly.
 
-Want me to start with **steps 1–4** (the "I can't edit my invoice" pain) and queue Send + Convert as a follow-up, or do all of it in one pass?
+Reply to approve and I'll apply the migration.
