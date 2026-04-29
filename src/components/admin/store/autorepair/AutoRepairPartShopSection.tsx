@@ -3,8 +3,12 @@
  * Wired to ar_parts: store-owned catalog with search/filter and full CRUD.
  * Includes the Parts Suppliers connection panel below the catalog.
  */
+<<<<<<< HEAD
 import { useState, useMemo } from "react";
 import AutoRepairPartSuppliersSection from "./AutoRepairPartSuppliersSection";
+=======
+import { useState, useMemo, useEffect } from "react";
+>>>>>>> 7fc631230b66bbe8705013d4ad8766e86ff2af57
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -19,7 +23,13 @@ import Wrench from "lucide-react/dist/esm/icons/wrench";
 import Pencil from "lucide-react/dist/esm/icons/pencil";
 import Trash2 from "lucide-react/dist/esm/icons/trash-2";
 import Sparkles from "lucide-react/dist/esm/icons/sparkles";
+import Store from "lucide-react/dist/esm/icons/store";
+import ExternalLink from "lucide-react/dist/esm/icons/external-link";
+import KeyRound from "lucide-react/dist/esm/icons/key-round";
 import { toast } from "sonner";
+import { PARTS_SUPPLIERS, type PartsSupplier } from "@/config/partsSuppliers";
+import PartsSupplierLogo from "./PartsSupplierLogo";
+import SupplierBrowserModal from "./SupplierBrowserModal";
 
 interface Props { storeId: string }
 type Part = {
@@ -175,6 +185,8 @@ export default function AutoRepairPartShopSection({ storeId }: Props) {
         </CardContent>
       </Card>
 
+      <SuppliersNetworkCard query={q} storeId={storeId} />
+
       {isLoading ? (
         <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
           {[0,1,2,3,4,5].map(i => <div key={i} className="h-44 rounded-xl bg-muted animate-pulse" />)}
@@ -268,3 +280,114 @@ export default function AutoRepairPartShopSection({ storeId }: Props) {
     </div>
   );
 }
+
+/* ---------------- Suppliers Network ---------------- */
+
+const SUPPLIER_CATEGORIES = ["All", "Retail Chain", "OE / Dealer", "Wholesale Distributor", "Online Marketplace", "Specialty"] as const;
+
+function SuppliersNetworkCard({ query, storeId }: { query: string; storeId: string }) {
+  const [supCat, setSupCat] = useState<(typeof SUPPLIER_CATEGORIES)[number]>("All");
+  const [supQ, setSupQ] = useState("");
+  const [activeSupplier, setActiveSupplier] = useState<PartsSupplier | null>(null);
+  const [savedSupplierIds, setSavedSupplierIds] = useState<Set<string>>(() => new Set());
+
+  const refreshSaved = () => {
+    setSavedSupplierIds(new Set(PARTS_SUPPLIERS.filter((s) => {
+      try { return !!localStorage.getItem(`zivo.supplierCreds.${storeId}.${s.id}`); }
+      catch { return false; }
+    }).map((s) => s.id)));
+  };
+
+  useEffect(() => {
+    refreshSaved();
+    window.addEventListener("focus", refreshSaved);
+    window.addEventListener("storage", refreshSaved);
+    return () => {
+      window.removeEventListener("focus", refreshSaved);
+      window.removeEventListener("storage", refreshSaved);
+    };
+  }, [storeId]);
+
+  const list = useMemo(() => {
+    const q = supQ.trim().toLowerCase();
+    return PARTS_SUPPLIERS.filter(s =>
+      (supCat === "All" || s.category === supCat) &&
+      (!q || s.name.toLowerCase().includes(q) || (s.shortName?.toLowerCase().includes(q) ?? false))
+    );
+  }, [supCat, supQ]);
+
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle className="text-sm flex items-center gap-2">
+          <Store className="w-4 h-4" /> Parts Suppliers
+          <Badge variant="outline" className="ml-1 text-[10px]">{PARTS_SUPPLIERS.length}</Badge>
+          {query && <Badge variant="secondary" className="ml-1 text-[10px]">Search: {query}</Badge>}
+        </CardTitle>
+      </CardHeader>
+      <CardContent className="space-y-3">
+        <div className="relative">
+          <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground" />
+          <Input
+            className="pl-8 h-9"
+            placeholder="Search suppliers (AutoZone, NAPA, RockAuto...)"
+            value={supQ}
+            onChange={(e) => setSupQ(e.target.value)}
+          />
+        </div>
+        <div className="flex gap-1.5 overflow-x-auto pb-1">
+          {SUPPLIER_CATEGORIES.map(c => (
+            <Button
+              key={c}
+              size="sm"
+              variant={supCat === c ? "default" : "outline"}
+              onClick={() => setSupCat(c)}
+              className="h-7 px-3 text-xs shrink-0"
+            >
+              {c}
+            </Button>
+          ))}
+        </div>
+        <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-1.5 max-h-[320px] overflow-auto">
+          {list.map(s => (
+            <button
+              key={s.id}
+              onClick={() => setActiveSupplier(s)}
+              className="flex items-center gap-2.5 text-left text-[12px] border border-border rounded-md px-2 py-1.5 hover:border-primary hover:bg-primary/5 transition-colors group"
+            >
+              <PartsSupplierLogo supplier={s} size="md" />
+              <div className="min-w-0 flex-1">
+                <p className="font-medium truncate">{s.shortName ?? s.name}</p>
+                <p className="text-[10px] text-muted-foreground truncate">
+                  {savedSupplierIds.has(s.id) ? "Account saved" : (s.description ?? s.category)}
+                </p>
+              </div>
+              {savedSupplierIds.has(s.id) ? (
+                <KeyRound className="w-3 h-3 text-primary" />
+              ) : (
+                <ExternalLink className="w-3 h-3 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity" />
+              )}
+            </button>
+          ))}
+          {list.length === 0 && (
+            <p className="text-xs text-muted-foreground col-span-full text-center py-4">No suppliers match.</p>
+          )}
+        </div>
+      </CardContent>
+
+      <SupplierBrowserModal
+        storeId={storeId}
+        supplier={activeSupplier}
+        query={query}
+        open={!!activeSupplier}
+        onOpenChange={(o) => {
+          if (!o) {
+            refreshSaved();
+            setActiveSupplier(null);
+          }
+        }}
+      />
+    </Card>
+  );
+}
+

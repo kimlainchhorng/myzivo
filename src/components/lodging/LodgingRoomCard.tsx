@@ -10,12 +10,14 @@ import { BedDouble, ChevronRight, Wifi, Snowflake, Tv, ShieldCheck, Coffee, Plus
 import { Button } from "@/components/ui/button";
 import { LodgingRoomDetailsModal } from "@/components/lodging/LodgingRoomDetailsModal";
 import { getAmenityIcon } from "@/components/lodging/amenityIcons";
-import type { LodgeAddon } from "@/hooks/lodging/useLodgeRooms";
+import type { LodgeAddon, BedSlot } from "@/hooks/lodging/useLodgeRooms";
+import { bedConfigSummary } from "@/components/lodging/BedConfigBuilder";
 
 interface Props {
   name: string;
   type?: string | null;
   beds?: string | null;
+  bedConfig?: BedSlot[];
   maxGuests: number;
   baseRateCents: number;
   weekendRateCents?: number;
@@ -51,12 +53,16 @@ function OrnamentDivider() {
 }
 
 export function LodgingRoomCard({
-  name, type, beds, maxGuests, baseRateCents,
+  name, type, beds, bedConfig, maxGuests, baseRateCents,
   weekendRateCents, weeklyDiscountPct = 0, monthlyDiscountPct = 0,
   amenities = [], breakfastIncluded, imageUrl,
   description, addonsCount = 0, photos, coverIndex, sizeSqm, addons, cancellationPolicy,
   checkInTime, checkOutTime, onReserve,
 }: Props) {
+  // Derive bed label: prefer old text field, fall back to structured bed_config
+  const bedLabel = beds || (bedConfig && bedConfig.length > 0 ? bedConfigSummary(bedConfig) : null);
+  // Strip Postgres seconds suffix from time strings e.g. "14:00:00" → "14:00"
+  const fmtTime = (t?: string | null) => t ? t.slice(0, 5) : t;
   const [detailsOpen, setDetailsOpen] = useState(false);
 
   const allPhotos = photos && photos.length > 0 ? photos : (imageUrl ? [imageUrl] : []);
@@ -123,10 +129,10 @@ export function LodgingRoomCard({
                       <p className="text-[12px] font-extrabold leading-tight mt-1 line-clamp-2 drop-shadow-md tracking-wide uppercase">{name}</p>
                     </div>
                   )}
-                  {beds && (
+                  {bedLabel && (
                     <div>
                       <p className="text-[8px] uppercase tracking-[0.14em] font-bold text-white/65 leading-none">Size of bed</p>
-                      <p className="text-[11px] font-bold leading-tight mt-1 drop-shadow-md">{beds}</p>
+                      <p className="text-[11px] font-bold leading-tight mt-1 drop-shadow-md">{bedLabel}</p>
                     </div>
                   )}
                   <div>
@@ -187,9 +193,9 @@ export function LodgingRoomCard({
           <div className="px-1 pt-3 pb-1 space-y-2">
             <p className="font-extrabold text-base leading-tight tracking-tight uppercase">{name}</p>
             <div className="flex items-center gap-3 text-[11px] text-muted-foreground flex-wrap">
-              {beds && (
+              {bedLabel && (
                 <span className="flex items-center gap-1">
-                  <BedDouble className="h-3 w-3" /> {beds}
+                  <BedDouble className="h-3 w-3" /> {bedLabel}
                 </span>
               )}
               <span className="flex items-center gap-1">
@@ -292,7 +298,7 @@ export function LodgingRoomCard({
         onOpenChange={setDetailsOpen}
         name={name}
         type={type}
-        beds={beds}
+        beds={bedLabel}
         maxGuests={maxGuests}
         sizeSqm={sizeSqm}
         baseRateCents={baseRateCents}
@@ -303,8 +309,8 @@ export function LodgingRoomCard({
         coverIndex={coverIndex}
         addons={addons}
         cancellationPolicy={cancellationPolicy}
-        checkInTime={checkInTime}
-        checkOutTime={checkOutTime}
+        checkInTime={fmtTime(checkInTime)}
+        checkOutTime={fmtTime(checkOutTime)}
         onReserve={onReserve}
       />
     </>

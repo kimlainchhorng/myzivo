@@ -10,9 +10,17 @@ import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { supabase } from "@/integrations/supabase/client";
-import { FileText, Plus, Send, Printer, DollarSign, Trash2, Receipt, ClipboardList, ArrowLeft, ScanSearch, Loader2, Check, CloudUpload, Wrench, Package, Stethoscope, Eye, Truck, KeyRound, Car, LogOut } from "lucide-react";
+import { FileText, Plus, DollarSign, Trash2, Receipt, ClipboardList, ArrowLeft, ScanSearch, Loader2, Check, CloudUpload, Wrench, Package, Stethoscope, Truck, KeyRound, Car, LogOut, Eye, ArrowRightLeft } from "lucide-react";
 import { toast } from "sonner";
 import AutoRepairDocPreviewDialog from "./AutoRepairDocPreviewDialog";
+import InvoiceKpiStrip from "./invoices/InvoiceKpiStrip";
+import InvoiceFilterBar, { type StatusFilter, type SortKey } from "./invoices/InvoiceFilterBar";
+import InvoiceListRow, { type RowDoc } from "./invoices/InvoiceListRow";
+import RecordInvoicePaymentDialog from "./invoices/RecordInvoicePaymentDialog";
+import SendDocumentSheet from "./invoices/SendDocumentSheet";
+import DeleteConfirmDialog from "./invoices/DeleteConfirmDialog";
+import { softDeleteDocument, updateDocument, nextDocNumber, type DocType } from "@/lib/admin/invoiceActions";
+import { generateDocumentPdf, downloadPdf, type PdfDoc } from "@/lib/admin/invoicePdf";
 
 type LineCategory = "labor" | "part" | "diagnosis";
 type LineItem = {
@@ -63,6 +71,9 @@ const emptyDraft = (): Doc => ({
   status: "draft", createdAt: new Date().toISOString(),
 });
 
+// True if the id looks like a real Postgres uuid (vs a seed/local id like "1").
+const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
 // Compute the dollar amount for a single line item
 const lineAmount = (i: LineItem): number => {
   const gross =
@@ -87,14 +98,28 @@ interface Props { storeId: string }
 
 export default function AutoRepairInvoicesSection({ storeId }: Props) {
   const [docs, setDocs] = useState<Doc[]>(seed);
+  // Authoritative DB rows for invoices and estimates (drives KPIs + status badges).
+  const [dbInvoices, setDbInvoices] = useState<any[]>([]);
+  const [dbEstimates, setDbEstimates] = useState<any[]>([]);
   const [tab, setTab] = useState<"estimate" | "invoice">("estimate");
   const [creating, setCreating] = useState(false);
+  const [editingId, setEditingId] = useState<string | null>(null); // null = new doc
   const [draft, setDraft] = useState<Doc>(emptyDraft());
   const [vinLoading, setVinLoading] = useState(false);
   const [saveState, setSaveState] = useState<"idle" | "saving" | "saved">("idle");
   const [lastSaved, setLastSaved] = useState<Date | null>(null);
   const [previewDoc, setPreviewDoc] = useState<Doc | null>(null);
   const [storeInfo, setStoreInfo] = useState<{ name?: string; address?: string; phone?: string }>({});
+
+  // List filters
+  const [query, setQuery] = useState("");
+  const [statusFilter, setStatusFilter] = useState<StatusFilter>("all");
+  const [sortKey, setSortKey] = useState<SortKey>("newest");
+
+  // Action dialogs
+  const [paymentDoc, setPaymentDoc] = useState<{ id: string; number: string; customer: string; totalCents: number; amountPaidCents: number } | null>(null);
+  const [sendDoc, setSendDoc] = useState<{ id: string; type: DocType; number: string; customer: string; email?: string; phone?: string } | null>(null);
+  const [deleteDoc, setDeleteDoc] = useState<{ id: string; type: DocType; number: string } | null>(null);
 
   useEffect(() => {
     if (!storeId) return;
@@ -108,45 +133,76 @@ export default function AutoRepairInvoicesSection({ storeId }: Props) {
     })();
   }, [storeId]);
 
-  // Load persisted invoices from ar_invoices and merge with seed (so the user's
-  // saved invoices survive a page refresh — fixes the "data disappears" bug).
-  useEffect(() => {
+  // Load invoices + estimates from DB. Both filter out soft-deleted rows.
+  const reloadAll = async () => {
     if (!storeId) return;
-    (async () => {
-      const { data, error } = await supabase
-        .from("ar_invoices" as any)
-        .select("*")
-        .eq("store_id", storeId)
-        .order("created_at", { ascending: false });
-      if (error || !data) return;
-      const persisted: Doc[] = (data as any[]).map((row) => ({
-        id: row.id,
-        type: "invoice" as const,
-        number: row.number || "",
-        customer: row.customer_name || "",
-        firstName: (row.customer_name || "").split(" ")[0] || "",
-        lastName: (row.customer_name || "").split(" ").slice(1).join(" ") || "",
-        phone: row.customer_phone || "",
-        email: row.customer_email || "",
-        address: row.customer_address || "",
-        vin: row.vin || "",
-        year: row.vehicle_year || "",
-        make: row.vehicle_make || "",
-        model: row.vehicle_model || "",
-        trim: "", engine: "", transmission: "", driveType: "", bodyClass: "", doors: "", fuel: "", plant: "",
-        vehicle: row.vehicle_label || "",
-        items: Array.isArray(row.items) ? row.items : [],
-        status: (row.status === "paid" ? "paid" : row.status === "sent" ? "sent" : "draft") as Doc["status"],
-        createdAt: row.created_at,
-      }));
-      setDocs((prev) => {
-        // Keep seed estimates + non-persisted invoices, replace any with same id
-        const persistedIds = new Set(persisted.map((p) => p.id));
-        const kept = prev.filter((d) => d.type === "estimate" || !persistedIds.has(d.id));
-        return [...persisted, ...kept];
-      });
-    })();
-  }, [storeId]);
+    const [invRes, estRes] = await Promise.all([
+      supabase.from("ar_invoices" as any).select("*").eq("store_id", storeId).is("deleted_at", null).order("created_at", { ascending: false }),
+      supabase.from("ar_estimates" as any).select("*").eq("store_id", storeId).is("deleted_at", null).order("created_at", { ascending: false }),
+    ]);
+    if (!invRes.error && invRes.data) setDbInvoices(invRes.data as any[]);
+    if (!estRes.error && estRes.data) setDbEstimates(estRes.data as any[]);
+
+    const persisted: Doc[] = [];
+    if (!invRes.error && invRes.data) {
+      for (const row of invRes.data as any[]) {
+        persisted.push({
+          id: row.id,
+          type: "invoice",
+          number: row.number || "",
+          customer: row.customer_name || "",
+          firstName: (row.customer_name || "").split(" ")[0] || "",
+          lastName: (row.customer_name || "").split(" ").slice(1).join(" ") || "",
+          phone: row.customer_phone || "",
+          email: row.customer_email || "",
+          address: row.customer_address || "",
+          vin: row.vin || "",
+          year: row.vehicle_year || "",
+          make: row.vehicle_make || "",
+          model: row.vehicle_model || "",
+          trim: "", engine: "", transmission: "", driveType: "", bodyClass: "", doors: "", fuel: "", plant: "",
+          vehicle: row.vehicle_label || "",
+          items: Array.isArray(row.items) ? row.items : [],
+          status: (row.status === "paid" ? "paid" : row.status === "sent" ? "sent" : "draft") as Doc["status"],
+          createdAt: row.created_at,
+        });
+      }
+    }
+    if (!estRes.error && estRes.data) {
+      for (const row of estRes.data as any[]) {
+        persisted.push({
+          id: row.id,
+          type: "estimate",
+          number: row.number || "",
+          customer: row.customer_name || "",
+          firstName: (row.customer_name || "").split(" ")[0] || "",
+          lastName: (row.customer_name || "").split(" ").slice(1).join(" ") || "",
+          phone: row.customer_phone || "",
+          email: row.customer_email || "",
+          address: row.customer_address || "",
+          vin: row.vin || "",
+          year: row.vehicle_year || "",
+          make: row.vehicle_make || "",
+          model: row.vehicle_model || "",
+          trim: "", engine: "", transmission: "", driveType: "", bodyClass: "", doors: "", fuel: "", plant: "",
+          vehicle: row.vehicle_label || "",
+          items: Array.isArray(row.items) ? row.items : Array.isArray(row.line_items) ? row.line_items : [],
+          status: (row.status === "approved" ? "approved" : row.status === "sent" ? "sent" : "draft") as Doc["status"],
+          createdAt: row.created_at,
+        });
+      }
+    }
+    setDocs((prev) => {
+      // Replace any rows that are now persisted, keep seed entries that aren't
+      const persistedIds = new Set(persisted.map((p) => p.id));
+      const kept = prev.filter((d) => !persistedIds.has(d.id) && !["1","2","3"].includes(d.id) ? true : ["1","2","3"].includes(d.id) ? !persisted.length : false);
+      // Always keep the demo seed rows when nothing persisted yet so the UI isn't empty on first load
+      const keepSeed = persisted.length === 0 ? prev.filter((d) => ["1","2","3"].includes(d.id)) : [];
+      return [...persisted, ...kept, ...keepSeed];
+    });
+  };
+
+  useEffect(() => { reloadAll(); /* eslint-disable-next-line react-hooks/exhaustive-deps */ }, [storeId]);
   const draftKey = useMemo(() => `autorepair:invoice-draft:${storeId}`, [storeId]);
   const saveTimer = useRef<number | null>(null);
   const skipNextSave = useRef(true);
@@ -188,6 +244,7 @@ export default function AutoRepairInvoicesSection({ storeId }: Props) {
         const saved = JSON.parse(raw) as Doc;
         if (saved && saved.type === type) {
           skipNextSave.current = true;
+          setEditingId(null);
           setDraft(saved);
           setLastSaved(new Date());
           setSaveState("saved");
@@ -197,13 +254,31 @@ export default function AutoRepairInvoicesSection({ storeId }: Props) {
         }
       }
     } catch {}
-    const prefix = type === "estimate" ? "EST-" : "INV-";
-    const num = `${prefix}${Math.floor(1000 + Math.random() * 9000)}`;
     skipNextSave.current = true;
-    setDraft({ ...emptyDraft(), id: crypto.randomUUID(), type, number: num });
+    setEditingId(null);
+    setDraft({ ...emptyDraft(), id: crypto.randomUUID(), type, number: nextDocNumber(type) });
     setLastSaved(null);
     setSaveState("idle");
     setCreating(true);
+  };
+
+  const startEdit = (doc: Doc) => {
+    skipNextSave.current = true;
+    setEditingId(doc.id);
+    setDraft(doc);
+    setLastSaved(null);
+    setSaveState("idle");
+    setCreating(true);
+  };
+
+  const startDuplicate = (doc: Doc) => {
+    skipNextSave.current = true;
+    setEditingId(null);
+    setDraft({ ...doc, id: crypto.randomUUID(), number: nextDocNumber(doc.type), status: "draft", createdAt: new Date().toISOString() });
+    setLastSaved(null);
+    setSaveState("idle");
+    setCreating(true);
+    toast.info("Duplicated — review and save");
   };
 
   const discardDraft = () => {
@@ -262,48 +337,131 @@ export default function AutoRepairInvoicesSection({ storeId }: Props) {
   const save = async () => {
     if (!draft.firstName || !draft.lastName || !draft.vehicle) { toast.error("First name, last name, and vehicle are required"); return; }
     const customer = `${draft.firstName} ${draft.lastName}`.trim();
+    const subtotalCents = Math.round(total(draft.items) * 100);
+    const tableName = draft.type === "invoice" ? "ar_invoices" : "ar_estimates";
 
-    // Persist invoices to ar_invoices so they survive refresh and feed the Finance dashboards.
-    if (draft.type === "invoice") {
-      try {
-        const subtotalCents = Math.round(total(draft.items) * 100);
-        const { data: { user } } = await supabase.auth.getUser();
-        const { data: inserted, error } = await supabase
-          .from("ar_invoices" as any)
-          .insert({
-            store_id: storeId,
-            number: draft.number,
-            customer_name: customer,
-            customer_phone: draft.phone || null,
-            customer_email: draft.email || null,
-            customer_address: draft.address || null,
-            vehicle_label: draft.vehicle || null,
-            vin: draft.vin || null,
-            vehicle_year: draft.year || null,
-            vehicle_make: draft.make || null,
-            vehicle_model: draft.model || null,
-            items: draft.items as any,
-            subtotal_cents: subtotalCents,
-            total_cents: subtotalCents,
-            status: draft.status === "paid" ? "paid" : "draft",
-            created_by: user?.id,
-          })
-          .select("id,created_at")
-          .single();
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      const payload: any = {
+        store_id: storeId,
+        number: draft.number,
+        customer_name: customer,
+        customer_phone: draft.phone || null,
+        customer_email: draft.email || null,
+        customer_address: draft.address || null,
+        vehicle_label: draft.vehicle || null,
+        vin: draft.vin || null,
+        vehicle_year: draft.year || null,
+        vehicle_make: draft.make || null,
+        vehicle_model: draft.model || null,
+        items: draft.items as any,
+        subtotal_cents: subtotalCents,
+        total_cents: subtotalCents,
+        status: draft.status === "paid" ? "paid" : draft.status === "sent" ? "sent" : "draft",
+      };
+
+      // Only treat as update if we have a real DB uuid (seed rows use ids like "1").
+      const isRealId = !!editingId && UUID_RE.test(editingId);
+      if (isRealId) {
+        const { error } = await supabase.from(tableName as any).update(payload).eq("id", editingId);
         if (error) throw error;
-        setDocs(d => [{ ...draft, id: (inserted as any).id, customer, createdAt: (inserted as any).created_at }, ...d]);
-        toast.success(`Invoice ${draft.number} saved`);
-      } catch (e: any) {
-        toast.error(`Could not save invoice: ${e.message || "unknown error"}`);
-        return;
+        toast.success(`${draft.type === "invoice" ? "Invoice" : "Estimate"} ${draft.number} updated`);
+      } else {
+        payload.created_by = user?.id;
+        const { error } = await supabase.from(tableName as any).insert(payload);
+        if (error) throw error;
+        toast.success(`${draft.type === "invoice" ? "Invoice" : "Estimate"} ${draft.number} saved`);
       }
-    } else {
-      // Estimates remain in local state here; managed in the dedicated Estimates tab via ar_estimates.
-      setDocs(d => [{ ...draft, customer }, ...d]);
-      toast.success(`Estimate ${draft.number} created`);
+      await reloadAll();
+    } catch (e: any) {
+      toast.error(`Could not save: ${e?.message || "unknown error"}`);
+      return;
     }
     clearDraft();
+    setEditingId(null);
     setCreating(false);
+  };
+
+  // Save the current estimate draft, then convert it into an invoice and open it for edit.
+  const saveAndConvertToInvoice = async () => {
+    if (draft.type !== "estimate") return;
+    if (!draft.firstName || !draft.lastName || !draft.vehicle) {
+      toast.error("First name, last name, and vehicle are required");
+      return;
+    }
+    const customer = `${draft.firstName} ${draft.lastName}`.trim();
+    const subtotalCents = Math.round(total(draft.items) * 100);
+
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      const basePayload: any = {
+        store_id: storeId,
+        customer_name: customer,
+        customer_phone: draft.phone || null,
+        customer_email: draft.email || null,
+        customer_address: draft.address || null,
+        vehicle_label: draft.vehicle || null,
+        vin: draft.vin || null,
+        vehicle_year: draft.year || null,
+        vehicle_make: draft.make || null,
+        vehicle_model: draft.model || null,
+        items: draft.items as any,
+        subtotal_cents: subtotalCents,
+        total_cents: subtotalCents,
+      };
+
+      // 1. Persist the estimate (insert if new/seed, update if editing a real DB row).
+      let estimateId = editingId;
+      const isRealEstimateId = !!estimateId && UUID_RE.test(estimateId);
+      if (isRealEstimateId) {
+        const { error } = await supabase
+          .from("ar_estimates" as any)
+          .update({ ...basePayload, number: draft.number, status: "approved" })
+          .eq("id", estimateId);
+        if (error) throw error;
+      } else {
+        const { data, error } = await supabase
+          .from("ar_estimates" as any)
+          .insert({ ...basePayload, number: draft.number, status: "approved", created_by: user?.id })
+          .select("id")
+          .single();
+        if (error) throw error;
+        estimateId = (data as any).id;
+      }
+
+      // 2. Create the invoice from this estimate.
+      const invoiceNumber = nextDocNumber("invoice");
+      const { data: invRow, error: invErr } = await supabase
+        .from("ar_invoices" as any)
+        .insert({
+          ...basePayload,
+          number: invoiceNumber,
+          status: "draft",
+          estimate_id: estimateId,
+          created_by: user?.id,
+        })
+        .select("id")
+        .single();
+      if (invErr) throw invErr;
+
+      toast.success(`Converted to invoice ${invoiceNumber}`);
+      clearDraft();
+      await reloadAll();
+
+      // 3. Open the newly created invoice so the user can review/send/charge.
+      setTab("invoice");
+      setEditingId((invRow as any).id);
+      setDraft({
+        ...draft,
+        id: (invRow as any).id,
+        type: "invoice",
+        number: invoiceNumber,
+        status: "draft",
+      });
+      setCreating(true);
+    } catch (e: any) {
+      toast.error(`Conversion failed: ${e?.message || "unknown error"}`);
+    }
   };
 
   const updateItem = (id: string, patch: Partial<LineItem>) =>
@@ -321,6 +479,79 @@ export default function AutoRepairInvoicesSection({ storeId }: Props) {
     ],
   }));
   const removeItem = (id: string) => setDraft(d => ({ ...d, items: d.items.filter(i => i.id !== id) }));
+
+  // ---- Hooks that must run on EVERY render (before any early return) ----
+  // Build display rows from authoritative DB data + seed for the active tab.
+  const dbRowsForTab = tab === "invoice" ? dbInvoices : dbEstimates;
+  const seedForTab = useMemo(
+    () => docs.filter((d) => d.type === tab && ["1","2","3"].includes(d.id) && dbRowsForTab.length === 0),
+    [docs, tab, dbRowsForTab.length]
+  );
+
+  const rows: RowDoc[] = useMemo(() => {
+    const fromDb: RowDoc[] = dbRowsForTab.map((r: any) => {
+      const due = r.due_at ? new Date(r.due_at) : null;
+      const isOverdue = !!(due && r.status !== "paid" && due < new Date());
+      return {
+        id: r.id,
+        type: tab,
+        number: r.number || "",
+        customer: r.customer_name || "",
+        vehicle: r.vehicle_label || "",
+        totalCents: r.total_cents ?? 0,
+        amountPaidCents: r.amount_paid_cents ?? 0,
+        status: r.status || "draft",
+        isOverdue,
+      };
+    });
+    const fromSeed: RowDoc[] = seedForTab.map((d) => ({
+      id: d.id, type: tab, number: d.number, customer: d.customer, vehicle: d.vehicle,
+      totalCents: Math.round(total(d.items) * 100), amountPaidCents: 0, status: d.status,
+    }));
+    let all = [...fromDb, ...fromSeed];
+
+    // Dedupe by id (defensive) AND by number+customer to avoid visual duplicates
+    const seenIds = new Set<string>();
+    const seenKey = new Set<string>();
+    all = all.filter((r) => {
+      if (seenIds.has(r.id)) return false;
+      const key = `${r.number}|${r.customer}`.toLowerCase();
+      if (seenKey.has(key)) return false;
+      seenIds.add(r.id);
+      seenKey.add(key);
+      return true;
+    });
+
+    if (query.trim()) {
+      const q = query.toLowerCase();
+      all = all.filter((r) =>
+        r.number.toLowerCase().includes(q) ||
+        r.customer.toLowerCase().includes(q) ||
+        r.vehicle.toLowerCase().includes(q)
+      );
+    }
+    if (statusFilter !== "all") {
+      all = all.filter((r) => statusFilter === "overdue" ? r.isOverdue : r.status === statusFilter);
+    }
+    all.sort((a, b) => {
+      if (sortKey === "amount_desc") return b.totalCents - a.totalCents;
+      if (sortKey === "customer_asc") return a.customer.localeCompare(b.customer);
+      const aRow = dbRowsForTab.find((r: any) => r.id === a.id);
+      const bRow = dbRowsForTab.find((r: any) => r.id === b.id);
+      const at = aRow ? new Date(aRow.created_at).getTime() : 0;
+      const bt = bRow ? new Date(bRow.created_at).getTime() : 0;
+      return sortKey === "oldest" ? at - bt : bt - at;
+    });
+    return all;
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [dbRowsForTab, seedForTab, tab, query, statusFilter, sortKey]);
+
+  // Read persisted draft (if any) to surface a "Continue editing" banner
+  let savedDraftPreview: Doc | null = null;
+  try {
+    const raw = typeof window !== "undefined" ? localStorage.getItem(draftKey) : null;
+    if (raw) savedDraftPreview = JSON.parse(raw) as Doc;
+  } catch { /* ignore */ }
 
   if (creating) {
     return (
@@ -345,6 +576,11 @@ export default function AutoRepairInvoicesSection({ storeId }: Props) {
               <Button variant="outline" size="sm" onClick={() => setPreviewDoc({ ...draft, customer: `${draft.firstName} ${draft.lastName}`.trim() })} className="gap-1.5"><Eye className="w-3.5 h-3.5" /> Preview</Button>
               <Button variant="outline" size="sm" onClick={saveDraftNow}>Save draft</Button>
               <Button variant="ghost" size="sm" onClick={discardDraft} className="text-destructive hover:text-destructive">Discard</Button>
+              {draft.type === "estimate" && (
+                <Button variant="outline" size="sm" onClick={saveAndConvertToInvoice} className="gap-1.5">
+                  <ArrowRightLeft className="w-3.5 h-3.5" /> Convert to Invoice
+                </Button>
+              )}
               <Button onClick={save} className="gap-1.5">
                 {draft.type === "estimate" ? "Create Estimate" : "Create Invoice"}
               </Button>
@@ -655,8 +891,13 @@ export default function AutoRepairInvoicesSection({ storeId }: Props) {
               <span className="text-2xl font-bold flex items-center"><DollarSign className="w-5 h-5" />{total(draft.items).toFixed(2)}</span>
             </div>
 
-            <div className="flex justify-end gap-2 pt-2">
+            <div className="flex justify-end gap-2 pt-2 flex-wrap">
               <Button variant="outline" onClick={() => setCreating(false)}>Cancel</Button>
+              {draft.type === "estimate" && (
+                <Button variant="outline" onClick={saveAndConvertToInvoice} className="gap-1.5">
+                  <ArrowRightLeft className="w-4 h-4" /> Convert to Invoice
+                </Button>
+              )}
               <Button onClick={save}>{draft.type === "estimate" ? "Create Estimate" : "Create Invoice"}</Button>
             </div>
           </CardContent>
@@ -665,13 +906,6 @@ export default function AutoRepairInvoicesSection({ storeId }: Props) {
       </div>
     );
   }
-
-  // Read persisted draft (if any) to surface a "Continue editing" banner
-  let savedDraftPreview: Doc | null = null;
-  try {
-    const raw = typeof window !== "undefined" ? localStorage.getItem(draftKey) : null;
-    if (raw) savedDraftPreview = JSON.parse(raw) as Doc;
-  } catch { /* ignore */ }
 
   const continueDraft = () => {
     if (!savedDraftPreview) return;
@@ -687,6 +921,45 @@ export default function AutoRepairInvoicesSection({ storeId }: Props) {
     toast.success("Saved draft removed");
     // force rerender
     setDocs(d => [...d]);
+  };
+
+  const findFullDoc = (id: string): Doc | undefined => docs.find((d) => d.id === id);
+
+  const handleDownloadPdf = (id: string) => {
+    const d = findFullDoc(id);
+    if (!d) return;
+    const pdfDoc: PdfDoc = {
+      type: d.type, number: d.number, customer: d.customer, phone: d.phone, email: d.email,
+      address: d.address, vehicle: d.vehicle, vin: d.vin, items: d.items as any, status: d.status,
+      createdAt: d.createdAt,
+    };
+    const blob = generateDocumentPdf({ doc: pdfDoc, storeName: storeInfo.name, storeAddress: storeInfo.address, storePhone: storeInfo.phone });
+    downloadPdf(blob, `${d.type}-${d.number}.pdf`);
+  };
+
+  const handleConvertEstimate = async (id: string) => {
+    const est = findFullDoc(id);
+    if (!est) return;
+    try {
+      const number = nextDocNumber("invoice");
+      const subtotalCents = Math.round(total(est.items) * 100);
+      const { data: { user } } = await supabase.auth.getUser();
+      const { error } = await supabase.from("ar_invoices" as any).insert({
+        store_id: storeId, number, estimate_id: est.id,
+        customer_name: est.customer, customer_phone: est.phone || null, customer_email: est.email || null,
+        customer_address: est.address || null, vehicle_label: est.vehicle || null, vin: est.vin || null,
+        vehicle_year: est.year || null, vehicle_make: est.make || null, vehicle_model: est.model || null,
+        items: est.items as any, subtotal_cents: subtotalCents, total_cents: subtotalCents,
+        status: "draft", created_by: user?.id,
+      });
+      if (error) throw error;
+      await updateDocument("estimate", id, { status: "approved" });
+      toast.success(`Converted to invoice ${number}`);
+      setTab("invoice");
+      reloadAll();
+    } catch (e: any) {
+      toast.error(`Conversion failed: ${e?.message || "unknown error"}`);
+    }
   };
 
   return (
@@ -724,42 +997,85 @@ export default function AutoRepairInvoicesSection({ storeId }: Props) {
             </div>
           </div>
         )}
+
+        {tab === "invoice" && <InvoiceKpiStrip invoices={dbInvoices} />}
+
         <Tabs value={tab} onValueChange={(v) => setTab(v as any)}>
-          <TabsList className="grid w-full max-w-sm grid-cols-2 mb-4">
+          <TabsList className="grid w-full max-w-sm grid-cols-2 mb-3">
             <TabsTrigger value="estimate">Estimates</TabsTrigger>
             <TabsTrigger value="invoice">Invoices</TabsTrigger>
           </TabsList>
 
           <TabsContent value={tab} className="space-y-2">
-            {filtered.length === 0 && (
+            <InvoiceFilterBar
+              query={query} onQuery={setQuery}
+              status={statusFilter} onStatus={setStatusFilter}
+              sort={sortKey} onSort={setSortKey}
+              showOverdue={tab === "invoice"}
+            />
+
+            {rows.length === 0 && (
               <div className="text-center py-12 text-muted-foreground">
                 <FileText className="w-8 h-8 mx-auto mb-2 opacity-40" />
-                <p className="text-sm">No {tab}s yet</p>
+                <p className="text-sm">No {tab}s match your filters</p>
               </div>
             )}
-            {filtered.map(d => (
-              <div key={d.id} className="flex items-center justify-between p-3 rounded-xl border border-border hover:bg-muted/40 transition">
-                <div className="min-w-0 flex-1">
-                  <div className="flex items-center gap-2 mb-0.5">
-                    <span className="font-semibold text-sm">{d.number}</span>
-                    <Badge variant={d.status === "paid" ? "default" : d.status === "sent" ? "secondary" : "outline"} className="text-[10px] capitalize">{d.status}</Badge>
-                  </div>
-                  <p className="text-xs text-muted-foreground truncate">{d.customer} · {d.vehicle}</p>
-                </div>
-                <div className="text-right shrink-0 ml-3">
-                  <p className="font-bold text-sm">${total(d.items).toFixed(2)}</p>
-                  <div className="flex gap-1 mt-1">
-                    <Button size="icon" variant="ghost" className="h-7 w-7" onClick={() => setPreviewDoc(d)} title="Preview"><Eye className="w-3.5 h-3.5" /></Button>
-                    <Button size="icon" variant="ghost" className="h-7 w-7" onClick={() => setPreviewDoc(d)} title="Send"><Send className="w-3.5 h-3.5" /></Button>
-                    <Button size="icon" variant="ghost" className="h-7 w-7" onClick={() => setPreviewDoc(d)} title="Print"><Printer className="w-3.5 h-3.5" /></Button>
-                  </div>
-                </div>
-              </div>
-            ))}
+
+            {rows.map((r) => {
+              const full = findFullDoc(r.id);
+              return (
+                <InvoiceListRow
+                  key={r.id}
+                  doc={r}
+                  onView={() => full && setPreviewDoc(full)}
+                  onEdit={() => full && startEdit(full)}
+                  onSend={() => setSendDoc({ id: r.id, type: r.type, number: r.number, customer: r.customer, email: full?.email, phone: full?.phone })}
+                  onMarkPaid={r.type === "invoice" ? () => setPaymentDoc({ id: r.id, number: r.number, customer: r.customer, totalCents: r.totalCents, amountPaidCents: r.amountPaidCents }) : undefined}
+                  onDuplicate={() => full && startDuplicate(full)}
+                  onDownloadPdf={() => handleDownloadPdf(r.id)}
+                  onDelete={() => setDeleteDoc({ id: r.id, type: r.type, number: r.number })}
+                  onConvert={r.type === "estimate" ? () => handleConvertEstimate(r.id) : undefined}
+                />
+              );
+            })}
           </TabsContent>
         </Tabs>
       </CardContent>
+
       <AutoRepairDocPreviewDialog open={!!previewDoc} onOpenChange={(v) => !v && setPreviewDoc(null)} doc={previewDoc} storeName={storeInfo.name} storeAddress={storeInfo.address} storePhone={storeInfo.phone} />
+
+      <RecordInvoicePaymentDialog
+        open={!!paymentDoc}
+        onOpenChange={(v) => !v && setPaymentDoc(null)}
+        storeId={storeId}
+        invoice={paymentDoc}
+        onSaved={reloadAll}
+      />
+
+      <SendDocumentSheet
+        open={!!sendDoc}
+        onOpenChange={(v) => !v && setSendDoc(null)}
+        storeId={storeId}
+        doc={sendDoc}
+        onSent={reloadAll}
+      />
+
+      <DeleteConfirmDialog
+        open={!!deleteDoc}
+        onOpenChange={(v) => !v && setDeleteDoc(null)}
+        title={`Delete ${deleteDoc?.number ?? ""}?`}
+        onConfirm={async () => {
+          if (!deleteDoc) return;
+          try {
+            await softDeleteDocument(deleteDoc.type, deleteDoc.id);
+            toast.success("Deleted");
+            setDeleteDoc(null);
+            reloadAll();
+          } catch (e: any) {
+            toast.error(`Delete failed: ${e?.message || "unknown error"}`);
+          }
+        }}
+      />
     </Card>
   );
 }

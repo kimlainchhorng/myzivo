@@ -1,204 +1,174 @@
 /**
- * Auto Repair Finance — Payments Received
- * Shows ar_invoice_payments rows + manual record-payment.
+ * Auto Repair Finance — Payments Received (full dashboard).
+ * Period bar, KPI strip, trend chart, method breakdown, outstanding panel,
+ * smart record-payment dialog, payments table with edit/refund/delete.
  */
 import { useMemo, useState } from "react";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useQueries } from "@tanstack/react-query";
+import { useSearchParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Banknote, Plus } from "lucide-react";
 import { toast } from "sonner";
 
-interface Props { storeId: string }
-const fmt = (cents: number) => `$${((cents ?? 0) / 100).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+import {
+  computePaymentsKpis,
+  groupPaymentsSeries,
+  methodBreakdown,
+  outstandingInvoices,
+  paymentsPresetRange,
+  previousPaymentsRange,
+  type GroupBy,
+  type PaymentsPreset,
+  type PaymentRowFull,
+  type PaymentInvoiceLite,
+} from "@/lib/admin/paymentsCalculations";
+import { exportPaymentsCsv, downloadCsv } from "@/lib/admin/paymentsCsvExport";
 
-export default function FinancePaymentsSection({ storeId }: Props) {
-  const qc = useQueryClient();
-  const [open, setOpen] = useState(false);
-  const [methodFilter, setMethodFilter] = useState("all");
-  const [form, setForm] = useState({ invoice_id: "", amount: "", method: "cash", reference: "", notes: "" });
+import PaymentsPeriodBar from "./payments/PaymentsPeriodBar";
+import PaymentsKpiStrip from "./payments/PaymentsKpiStrip";
+import PaymentsTrendChart from "./payments/PaymentsTrendChart";
+import PaymentsMethodBreakdown from "./payments/PaymentsMethodBreakdown";
+import PaymentsOutstandingPanel from "./payments/PaymentsOutstandingPanel";
+import PaymentsTable from "./payments/PaymentsTable";
+import RecordPaymentDialog from "./payments/RecordPaymentDialog";
 
-  const { data: payments = [] } = useQuery({
-    queryKey: ["ar-fin-payments", storeId],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from("ar_invoice_payments" as any)
-        .select("id,amount_cents,method,reference,notes,paid_at,invoice_id")
-        .eq("store_id", storeId)
-        .order("paid_at", { ascending: false });
-      if (error) throw error;
-      return data as any[];
-    },
+interface Props { storeId: string; storeName?: string }
+
+function fetchPayments(storeId: string, from: string, to: string) {
+  return supabase
+    .from("ar_invoice_payments" as any)
+    .select("id,amount_cents,method,reference,notes,paid_at,invoice_id")
+    .eq("store_id", storeId)
+    .gte("paid_at", from)
+    .lte("paid_at", `${to}T23:59:59`)
+    .order("paid_at", { ascending: false })
+    .then(({ data, error }) => { if (error) throw error; return (data ?? []) as unknown as PaymentRowFull[]; });
+}
+function fetchInvoices(storeId: string) {
+  return supabase
+    .from("ar_invoices" as any)
+    .select("id,number,customer_name,vehicle_label,total_cents,amount_paid_cents,status,created_at,due_at")
+    .eq("store_id", storeId)
+    .neq("status", "void")
+    .order("created_at", { ascending: false })
+    .then(({ data, error }) => { if (error) throw error; return (data ?? []) as unknown as PaymentInvoiceLite[]; });
+}
+
+export default function FinancePaymentsSection({ storeId, storeName }: Props) {
+  const [, setSearchParams] = useSearchParams();
+  const initial = useMemo(() => paymentsPresetRange("month"), []);
+  const [from, setFrom] = useState(initial.from);
+  const [to, setTo] = useState(initial.to);
+  const [groupByMode, setGroupByMode] = useState<GroupBy>("day");
+  const [compare, setCompare] = useState(false);
+  const [, setPreset] = useState<PaymentsPreset>("month");
+  const [dialogOpen, setDialogOpen] = useState(false);
+  const [presetInvoiceId, setPresetInvoiceId] = useState<string | null>(null);
+
+  const prevRange = useMemo(() => compare ? previousPaymentsRange(from, to) : null, [compare, from, to]);
+
+  const queries = useQueries({
+    queries: [
+      { queryKey: ["ar-payments-list", storeId, from, to], queryFn: () => fetchPayments(storeId, from, to), staleTime: 30_000 },
+      { queryKey: ["ar-payments-invoices", storeId], queryFn: () => fetchInvoices(storeId), staleTime: 30_000 },
+      ...(prevRange ? [
+        { queryKey: ["ar-payments-list", storeId, prevRange.from, prevRange.to], queryFn: () => fetchPayments(storeId, prevRange.from, prevRange.to), staleTime: 60_000 },
+      ] : []),
+    ],
   });
 
-  const { data: invoices = [] } = useQuery({
-    queryKey: ["ar-fin-payments-invoices", storeId],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from("ar_invoices" as any)
-        .select("id,number,total_cents,amount_paid_cents,customer_name")
-        .eq("store_id", storeId)
-        .neq("status", "void")
-        .order("created_at", { ascending: false });
-      if (error) throw error;
-      return data as any[];
-    },
-  });
+  const loading = queries.slice(0, 2).some((q) => q.isLoading);
+  const payments = (queries[0].data ?? []) as PaymentRowFull[];
+  const invoices = (queries[1].data ?? []) as PaymentInvoiceLite[];
+  const prevPayments = (prevRange ? (queries[2]?.data ?? []) : []) as PaymentRowFull[];
 
-  const create = useMutation({
-    mutationFn: async () => {
-      const cents = Math.round((parseFloat(form.amount) || 0) * 100);
-      if (!form.invoice_id) throw new Error("Pick an invoice");
-      if (cents <= 0) throw new Error("Amount must be greater than zero");
-      const { data: { user } } = await supabase.auth.getUser();
-      const { error } = await supabase.from("ar_invoice_payments" as any).insert({
-        store_id: storeId,
-        invoice_id: form.invoice_id,
-        amount_cents: cents,
-        method: form.method,
-        reference: form.reference || null,
-        notes: form.notes || null,
-        created_by: user?.id,
-      });
-      if (error) throw error;
-    },
-    onSuccess: () => {
-      toast.success("Payment recorded");
-      setOpen(false);
-      setForm({ invoice_id: "", amount: "", method: "cash", reference: "", notes: "" });
-      qc.invalidateQueries({ queryKey: ["ar-fin-payments", storeId] });
-      qc.invalidateQueries({ queryKey: ["ar-fin-payments-invoices", storeId] });
-    },
-    onError: (e: any) => toast.error(e.message || "Failed"),
-  });
+  const kpis = useMemo(() => computePaymentsKpis(payments, invoices), [payments, invoices]);
+  const prevKpis = useMemo(() => prevRange ? computePaymentsKpis(prevPayments, invoices) : null, [prevRange, prevPayments, invoices]);
+  const series = useMemo(() => groupPaymentsSeries(payments, groupByMode), [payments, groupByMode]);
+  const methods = useMemo(() => methodBreakdown(payments), [payments]);
+  const outstanding = useMemo(() => outstandingInvoices(invoices), [invoices]);
 
-  const filtered = useMemo(
-    () => methodFilter === "all" ? payments : payments.filter((p: any) => p.method === methodFilter),
-    [payments, methodFilter]
-  );
-  const total = filtered.reduce((s, p: any) => s + (p.amount_cents ?? 0), 0);
-  const invoiceMap = useMemo(() => {
-    const m = new Map<string, any>();
-    invoices.forEach((i: any) => m.set(i.id, i));
-    return m;
-  }, [invoices]);
+  const openInvoice = (id: string) => {
+    setSearchParams((sp) => { sp.set("tab", "ar-invoices"); sp.set("invoice", id); return sp; });
+  };
+  const openDialogFor = (invoiceId?: string) => {
+    setPresetInvoiceId(invoiceId ?? null);
+    setDialogOpen(true);
+  };
+
+  const onExportCsv = () => {
+    const csv = exportPaymentsCsv({ storeName, from, to, kpis, prev: prevKpis, series, methods, payments, invoices });
+    const safe = (storeName || "store").replace(/[^a-z0-9]+/gi, "-").toLowerCase();
+    downloadCsv(`payments-${safe}-${from}-to-${to}.csv`, csv);
+    toast.success("CSV exported");
+  };
+  const onPrint = () => window.print();
+
+  const empty = !loading && payments.length === 0 && outstanding.length === 0;
 
   return (
-    <div className="space-y-4">
-      <Card>
-        <CardHeader className="pb-3 flex flex-row items-center justify-between">
+    <div className="space-y-3 print:space-y-2">
+      <Card className="print:hidden">
+        <CardHeader className="pb-2 flex flex-row items-center justify-between gap-2">
           <CardTitle className="text-base flex items-center gap-2">
             <Banknote className="w-4 h-4 text-primary" /> Payments Received
           </CardTitle>
-          <Button size="sm" onClick={() => setOpen(true)}><Plus className="w-4 h-4 mr-1" /> Record payment</Button>
+          <Button size="sm" className="h-8 text-xs" onClick={() => openDialogFor()}>
+            <Plus className="w-3.5 h-3.5 mr-1" /> Record payment
+          </Button>
         </CardHeader>
-        <CardContent className="space-y-3">
-          <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
-            <div className="rounded-md border p-3">
-              <div className="text-xs text-muted-foreground">Filtered total</div>
-              <div className="text-xl font-semibold">{fmt(total)}</div>
-            </div>
-            <div className="rounded-md border p-3">
-              <div className="text-xs text-muted-foreground">Payment count</div>
-              <div className="text-xl font-semibold">{filtered.length}</div>
-            </div>
-            <div className="rounded-md border p-3">
-              <div className="text-xs text-muted-foreground">Avg payment</div>
-              <div className="text-xl font-semibold">{fmt(filtered.length ? total / filtered.length : 0)}</div>
-            </div>
-          </div>
-          <div className="flex items-center gap-2">
-            <Label className="text-xs">Method</Label>
-            <Select value={methodFilter} onValueChange={setMethodFilter}>
-              <SelectTrigger className="h-8 w-40"><SelectValue /></SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All methods</SelectItem>
-                <SelectItem value="cash">Cash</SelectItem>
-                <SelectItem value="card">Card</SelectItem>
-                <SelectItem value="check">Check</SelectItem>
-                <SelectItem value="aba">ABA</SelectItem>
-                <SelectItem value="other">Other</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-          {filtered.length === 0 ? (
-            <p className="text-sm text-muted-foreground py-6 text-center">No payments recorded yet.</p>
-          ) : (
-            <ul className="divide-y">
-              {filtered.map((p: any) => {
-                const inv = invoiceMap.get(p.invoice_id);
-                return (
-                  <li key={p.id} className="py-2 flex justify-between gap-3 text-sm">
-                    <div className="min-w-0">
-                      <div className="font-medium">{inv?.number ?? "(invoice removed)"} · {inv?.customer_name || "—"}</div>
-                      <div className="text-xs text-muted-foreground">
-                        {p.method.toUpperCase()} · {new Date(p.paid_at).toLocaleString()} {p.reference && `· ${p.reference}`}
-                      </div>
-                    </div>
-                    <div className="font-medium tabular-nums">{fmt(p.amount_cents)}</div>
-                  </li>
-                );
-              })}
-            </ul>
-          )}
+        <CardContent>
+          <PaymentsPeriodBar
+            from={from} to={to} groupBy={groupByMode} compare={compare}
+            onFrom={setFrom} onTo={setTo} onPreset={setPreset}
+            onGroupBy={setGroupByMode} onCompare={setCompare}
+            onExportCsv={onExportCsv} onPrint={onPrint}
+          />
         </CardContent>
       </Card>
 
-      <Dialog open={open} onOpenChange={setOpen}>
-        <DialogContent>
-          <DialogHeader><DialogTitle>Record Payment</DialogTitle></DialogHeader>
-          <div className="space-y-3">
-            <div>
-              <Label className="text-xs">Invoice</Label>
-              <Select value={form.invoice_id} onValueChange={(v) => setForm({ ...form, invoice_id: v })}>
-                <SelectTrigger><SelectValue placeholder="Select invoice" /></SelectTrigger>
-                <SelectContent>
-                  {invoices.map((i: any) => {
-                    const balance = (i.total_cents ?? 0) - (i.amount_paid_cents ?? 0);
-                    return (
-                      <SelectItem key={i.id} value={i.id}>
-                        {i.number} — {i.customer_name || "—"} ({fmt(balance)} due)
-                      </SelectItem>
-                    );
-                  })}
-                </SelectContent>
-              </Select>
+      {empty ? (
+        <Card>
+          <CardContent className="py-12 text-center space-y-2">
+            <Banknote className="w-10 h-10 mx-auto text-muted-foreground/50" />
+            <h3 className="text-sm font-medium">No payments yet</h3>
+            <p className="text-xs text-muted-foreground">Record your first payment to see analytics here.</p>
+            <Button size="sm" className="mt-2" onClick={() => openDialogFor()}>
+              <Plus className="w-3.5 h-3.5 mr-1" /> Record payment
+            </Button>
+          </CardContent>
+        </Card>
+      ) : (
+        <>
+          <PaymentsKpiStrip kpis={kpis} prev={prevKpis} series={series} loading={loading} />
+
+          <div className="grid grid-cols-1 xl:grid-cols-3 gap-3">
+            <div className="xl:col-span-2 space-y-3">
+              <PaymentsTrendChart series={series} />
+              <PaymentsMethodBreakdown methods={methods} />
             </div>
-            <div className="grid grid-cols-2 gap-3">
-              <div>
-                <Label className="text-xs">Amount (USD)</Label>
-                <Input type="number" step="0.01" value={form.amount} onChange={(e) => setForm({ ...form, amount: e.target.value })} />
-              </div>
-              <div>
-                <Label className="text-xs">Method</Label>
-                <Select value={form.method} onValueChange={(v) => setForm({ ...form, method: v })}>
-                  <SelectTrigger><SelectValue /></SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="cash">Cash</SelectItem>
-                    <SelectItem value="card">Card</SelectItem>
-                    <SelectItem value="check">Check</SelectItem>
-                    <SelectItem value="aba">ABA</SelectItem>
-                    <SelectItem value="other">Other</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-            </div>
-            <div>
-              <Label className="text-xs">Reference (optional)</Label>
-              <Input value={form.reference} onChange={(e) => setForm({ ...form, reference: e.target.value })} placeholder="Check #, txn ID, etc" />
+            <div className="space-y-3">
+              <PaymentsOutstandingPanel
+                items={outstanding}
+                onApply={(id) => openDialogFor(id)}
+                onOpenInvoice={openInvoice}
+              />
             </div>
           </div>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setOpen(false)}>Cancel</Button>
-            <Button onClick={() => create.mutate()} disabled={create.isPending}>Record</Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+
+          <PaymentsTable storeId={storeId} payments={payments} invoices={invoices} onOpenInvoice={openInvoice} />
+        </>
+      )}
+
+      <RecordPaymentDialog
+        storeId={storeId}
+        open={dialogOpen}
+        onOpenChange={setDialogOpen}
+        invoices={invoices}
+        presetInvoiceId={presetInvoiceId}
+      />
     </div>
   );
 }

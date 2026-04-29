@@ -84,7 +84,11 @@ export default function ContentSchedulerPage() {
       // Create a store profile if none exists
       const { data: newStore } = await supabase
         .from("store_profiles")
+<<<<<<< HEAD
         .insert({ owner_id: user.id, name: "My Store", slug: `store-${user.id.slice(0, 8)}`, is_active: true } as any)
+=======
+        .insert({ owner_id: user.id, name: "My Store", slug: `store-${user.id.slice(0, 8)}-${Date.now()}`, is_active: true })
+>>>>>>> 7fc631230b66bbe8705013d4ad8766e86ff2af57
         .select("id")
         .single();
       sid = newStore?.id ?? null;

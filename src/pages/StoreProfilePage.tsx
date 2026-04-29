@@ -838,6 +838,7 @@ export default function StoreProfilePage() {
                   name={r.name}
                   type={r.room_type}
                   beds={r.beds}
+                  bedConfig={r.bed_config}
                   maxGuests={r.max_guests}
                   baseRateCents={r.base_rate_cents}
                   weekendRateCents={r.weekend_rate_cents}

@@ -107,6 +107,8 @@ export function LodgingRoomDetailsModal({
   addons = [], cancellationPolicy, checkInTime, checkOutTime, onReserve,
 }: Props) {
   const { format } = useCurrency();
+  // Strip Postgres seconds suffix from time strings e.g. "14:00:00" → "14:00"
+  const fmtTime = (t?: string | null) => t ? t.slice(0, 5) : t;
 
   // Reorder so cover is first
   const orderedPhotos = photos.length > 0
@@ -484,9 +486,9 @@ export function LodgingRoomDetailsModal({
               <p className="flex items-start gap-1.5">
                 <Clock className="h-3.5 w-3.5 mt-0.5 shrink-0" />
                 <span>
-                  {checkInTime && <>Check-in from <span className="font-semibold text-foreground">{checkInTime}</span></>}
+                  {checkInTime && <>Check-in from <span className="font-semibold text-foreground">{fmtTime(checkInTime)}</span></>}
                   {checkInTime && checkOutTime && " · "}
-                  {checkOutTime && <>Check-out by <span className="font-semibold text-foreground">{checkOutTime}</span></>}
+                  {checkOutTime && <>Check-out by <span className="font-semibold text-foreground">{fmtTime(checkOutTime)}</span></>}
                 </span>
               </p>
             )}
