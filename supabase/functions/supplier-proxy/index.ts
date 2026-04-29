@@ -241,11 +241,15 @@ Deno.serve(async (req) => {
       html = injection + html;
     }
 
-    respHeaders.set("content-type", "text/html; charset=utf-8");
-    respHeaders.delete("content-security-policy");
-    respHeaders.delete("content-security-policy-report-only");
-    respHeaders.delete("content-length");
-    return new Response(html, { status: upstream.status, headers: respHeaders });
+    const htmlHeaders = new Headers(dynamicCorsHeaders);
+    htmlHeaders.set("Content-Type", "text/html; charset=utf-8");
+    htmlHeaders.set("Cache-Control", upstream.headers.get("cache-control") ?? "no-store");
+    upstream.headers.forEach((v, k) => {
+      if (k.toLowerCase() === "set-cookie") {
+        htmlHeaders.append("Set-Cookie", v.replace(/;\s*Domain=[^;]+/i, "").replace(/;\s*SameSite=[^;]+/i, "; SameSite=None"));
+      }
+    });
+    return new Response(html, { status: upstream.status, headers: htmlHeaders });
   }
 
   return new Response(upstream.body, { status: upstream.status, headers: respHeaders });
