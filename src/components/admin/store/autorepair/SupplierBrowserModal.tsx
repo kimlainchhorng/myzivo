@@ -65,10 +65,18 @@ export default function SupplierBrowserModal({ storeId, supplier, query, open, o
   const [password, setPassword] = useState("");
   const [copied, setCopied] = useState<"email" | "password" | null>(null);
 
-  const url = useMemo(() => {
+  const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL as string;
+
+  const targetUrl = useMemo(() => {
     if (!supplier?.domain) return null;
     return (query && getSupplierSearchUrl(supplier, query)) || `https://${supplier.domain}`;
   }, [supplier, query]);
+
+  // Route through our edge proxy that strips X-Frame-Options / CSP frame-ancestors
+  const proxiedUrl = useMemo(() => {
+    if (!targetUrl) return null;
+    return `${SUPABASE_URL}/functions/v1/supplier-proxy?u=${encodeURIComponent(targetUrl)}`;
+  }, [targetUrl, SUPABASE_URL]);
 
   // Load saved credentials whenever supplier changes / dialog opens
   useEffect(() => {
@@ -82,18 +90,17 @@ export default function SupplierBrowserModal({ storeId, supplier, query, open, o
     setIframeLoading(true);
   }, [open, supplier, storeId]);
 
-  // Heuristic: if iframe never fires `load` within 4s, assume X-Frame-Options blocked it.
+  // Detect proxy errors via load timeout (15s — proxy can be slow on cold start)
   useEffect(() => {
-    if (!open || !url) return;
+    if (!open || !proxiedUrl) return;
     setIframeLoading(true);
     setIframeBlocked(false);
     const timer = window.setTimeout(() => {
-      // If still loading, assume blocked.
       setIframeBlocked((prev) => prev || iframeLoading);
-    }, 4000);
+    }, 15000);
     return () => window.clearTimeout(timer);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [open, url]);
+  }, [open, proxiedUrl]);
 
   if (!supplier) return null;
 
@@ -130,7 +137,7 @@ export default function SupplierBrowserModal({ storeId, supplier, query, open, o
   const reload = () => {
     setIframeLoading(true);
     setIframeBlocked(false);
-    if (iframeRef.current) iframeRef.current.src = url ?? "about:blank";
+    if (iframeRef.current) iframeRef.current.src = proxiedUrl ?? "about:blank";
   };
 
   return (
@@ -161,7 +168,7 @@ export default function SupplierBrowserModal({ storeId, supplier, query, open, o
               size="sm"
               variant="outline"
               className="h-7 gap-1.5 text-xs"
-              onClick={() => url && window.open(url, "_blank", "noopener,noreferrer")}
+              onClick={() => targetUrl && window.open(targetUrl, "_blank", "noopener,noreferrer")}
             >
               <ExternalLink className="w-3.5 h-3.5" /> New tab
             </Button>
@@ -252,10 +259,10 @@ export default function SupplierBrowserModal({ storeId, supplier, query, open, o
         )}
 
         <div className="flex-1 relative bg-muted/20 min-h-0">
-          {url && !iframeBlocked && (
+          {proxiedUrl && !iframeBlocked && (
             <iframe
               ref={iframeRef}
-              src={url}
+              src={proxiedUrl}
               title={supplier.name}
               className="absolute inset-0 w-full h-full bg-background"
               sandbox="allow-forms allow-popups allow-same-origin allow-scripts allow-top-navigation-by-user-activation"
@@ -288,7 +295,7 @@ export default function SupplierBrowserModal({ storeId, supplier, query, open, o
                 <div className="flex gap-2 justify-center">
                   <Button
                     size="sm"
-                    onClick={() => url && window.open(url, "_blank", "noopener,noreferrer")}
+                    onClick={() => targetUrl && window.open(targetUrl, "_blank", "noopener,noreferrer")}
                     className="gap-1.5"
                   >
                     <ExternalLink className="w-3.5 h-3.5" /> Open {supplier.shortName ?? supplier.name}
