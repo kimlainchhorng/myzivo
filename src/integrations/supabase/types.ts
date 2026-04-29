@@ -28106,6 +28106,183 @@ export type Database = {
         }
         Relationships: []
       }
+      lodge_complaints: {
+        Row: {
+          assigned_to: string | null
+          category: string
+          created_at: string
+          description: string
+          guest_name: string | null
+          id: string
+          priority: string
+          reservation_id: string | null
+          resolution_notes: string | null
+          resolved_at: string | null
+          room_number: string | null
+          status: string
+          store_id: string
+          updated_at: string
+        }
+        Insert: {
+          assigned_to?: string | null
+          category?: string
+          created_at?: string
+          description: string
+          guest_name?: string | null
+          id?: string
+          priority?: string
+          reservation_id?: string | null
+          resolution_notes?: string | null
+          resolved_at?: string | null
+          room_number?: string | null
+          status?: string
+          store_id: string
+          updated_at?: string
+        }
+        Update: {
+          assigned_to?: string | null
+          category?: string
+          created_at?: string
+          description?: string
+          guest_name?: string | null
+          id?: string
+          priority?: string
+          reservation_id?: string | null
+          resolution_notes?: string | null
+          resolved_at?: string | null
+          room_number?: string | null
+          status?: string
+          store_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "lodge_complaints_store_id_fkey"
+            columns: ["store_id"]
+            isOneToOne: false
+            referencedRelation: "store_profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      lodge_gift_vouchers: {
+        Row: {
+          balance_cents: number
+          code: string
+          created_at: string
+          expires_at: string | null
+          id: string
+          message: string | null
+          purchaser_name: string | null
+          recipient_email: string | null
+          recipient_name: string | null
+          status: string
+          store_id: string
+          value_cents: number
+        }
+        Insert: {
+          balance_cents?: number
+          code: string
+          created_at?: string
+          expires_at?: string | null
+          id?: string
+          message?: string | null
+          purchaser_name?: string | null
+          recipient_email?: string | null
+          recipient_name?: string | null
+          status?: string
+          store_id: string
+          value_cents?: number
+        }
+        Update: {
+          balance_cents?: number
+          code?: string
+          created_at?: string
+          expires_at?: string | null
+          id?: string
+          message?: string | null
+          purchaser_name?: string | null
+          recipient_email?: string | null
+          recipient_name?: string | null
+          status?: string
+          store_id?: string
+          value_cents?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "lodge_gift_vouchers_store_id_fkey"
+            columns: ["store_id"]
+            isOneToOne: false
+            referencedRelation: "store_profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      lodge_group_bookings: {
+        Row: {
+          check_in: string
+          check_out: string
+          created_at: string
+          deposit_cents: number
+          event_type: string
+          group_name: string
+          id: string
+          negotiated_rate_cents: number
+          notes: string | null
+          organizer_email: string | null
+          organizer_name: string | null
+          organizer_phone: string | null
+          room_count: number
+          status: string
+          store_id: string
+          updated_at: string
+        }
+        Insert: {
+          check_in: string
+          check_out: string
+          created_at?: string
+          deposit_cents?: number
+          event_type?: string
+          group_name: string
+          id?: string
+          negotiated_rate_cents?: number
+          notes?: string | null
+          organizer_email?: string | null
+          organizer_name?: string | null
+          organizer_phone?: string | null
+          room_count?: number
+          status?: string
+          store_id: string
+          updated_at?: string
+        }
+        Update: {
+          check_in?: string
+          check_out?: string
+          created_at?: string
+          deposit_cents?: number
+          event_type?: string
+          group_name?: string
+          id?: string
+          negotiated_rate_cents?: number
+          notes?: string | null
+          organizer_email?: string | null
+          organizer_name?: string | null
+          organizer_phone?: string | null
+          room_count?: number
+          status?: string
+          store_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "lodge_group_bookings_store_id_fkey"
+            columns: ["store_id"]
+            isOneToOne: false
+            referencedRelation: "store_profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       lodge_guests: {
         Row: {
           country: string | null
@@ -28154,6 +28331,50 @@ export type Database = {
         }
         Relationships: []
       }
+      lodge_handover_notes: {
+        Row: {
+          author_name: string | null
+          body: string
+          created_at: string
+          id: string
+          note_date: string
+          priority: string
+          resolved: boolean
+          shift: string
+          store_id: string
+        }
+        Insert: {
+          author_name?: string | null
+          body: string
+          created_at?: string
+          id?: string
+          note_date?: string
+          priority?: string
+          resolved?: boolean
+          shift?: string
+          store_id: string
+        }
+        Update: {
+          author_name?: string | null
+          body?: string
+          created_at?: string
+          id?: string
+          note_date?: string
+          priority?: string
+          resolved?: boolean
+          shift?: string
+          store_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "lodge_handover_notes_store_id_fkey"
+            columns: ["store_id"]
+            isOneToOne: false
+            referencedRelation: "store_profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       lodge_housekeeping: {
         Row: {
           assignee_id: string | null
@@ -28189,6 +28410,124 @@ export type Database = {
           updated_at?: string
         }
         Relationships: []
+      }
+      lodge_inventory_items: {
+        Row: {
+          category: string
+          created_at: string
+          id: string
+          last_restocked_at: string | null
+          name: string
+          notes: string | null
+          quantity_in_stock: number
+          reorder_threshold: number
+          store_id: string
+          supplier: string | null
+          unit: string
+          unit_cost_cents: number
+          updated_at: string
+        }
+        Insert: {
+          category?: string
+          created_at?: string
+          id?: string
+          last_restocked_at?: string | null
+          name: string
+          notes?: string | null
+          quantity_in_stock?: number
+          reorder_threshold?: number
+          store_id: string
+          supplier?: string | null
+          unit?: string
+          unit_cost_cents?: number
+          updated_at?: string
+        }
+        Update: {
+          category?: string
+          created_at?: string
+          id?: string
+          last_restocked_at?: string | null
+          name?: string
+          notes?: string | null
+          quantity_in_stock?: number
+          reorder_threshold?: number
+          store_id?: string
+          supplier?: string | null
+          unit?: string
+          unit_cost_cents?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "lodge_inventory_items_store_id_fkey"
+            columns: ["store_id"]
+            isOneToOne: false
+            referencedRelation: "store_profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      lodge_laundry_orders: {
+        Row: {
+          bag_count: number
+          collected_at: string
+          created_at: string
+          delivered_at: string | null
+          guest_name: string | null
+          id: string
+          items_desc: string | null
+          notes: string | null
+          ready_by: string | null
+          room_number: string
+          service_type: string
+          status: string
+          store_id: string
+          total_cents: number
+          updated_at: string
+        }
+        Insert: {
+          bag_count?: number
+          collected_at?: string
+          created_at?: string
+          delivered_at?: string | null
+          guest_name?: string | null
+          id?: string
+          items_desc?: string | null
+          notes?: string | null
+          ready_by?: string | null
+          room_number: string
+          service_type?: string
+          status?: string
+          store_id: string
+          total_cents?: number
+          updated_at?: string
+        }
+        Update: {
+          bag_count?: number
+          collected_at?: string
+          created_at?: string
+          delivered_at?: string | null
+          guest_name?: string | null
+          id?: string
+          items_desc?: string | null
+          notes?: string | null
+          ready_by?: string | null
+          room_number?: string
+          service_type?: string
+          status?: string
+          store_id?: string
+          total_cents?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "lodge_laundry_orders_store_id_fkey"
+            columns: ["store_id"]
+            isOneToOne: false
+            referencedRelation: "store_profiles"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       lodge_maintenance: {
         Row: {
@@ -28252,6 +28591,118 @@ export type Database = {
           updated_at?: string
         }
         Relationships: []
+      }
+      lodge_notification_templates: {
+        Row: {
+          body: string
+          channel: string
+          created_at: string
+          id: string
+          is_active: boolean
+          send_hours_before: number | null
+          store_id: string
+          subject: string | null
+          trigger_type: string
+          updated_at: string
+        }
+        Insert: {
+          body?: string
+          channel?: string
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          send_hours_before?: number | null
+          store_id: string
+          subject?: string | null
+          trigger_type?: string
+          updated_at?: string
+        }
+        Update: {
+          body?: string
+          channel?: string
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          send_hours_before?: number | null
+          store_id?: string
+          subject?: string | null
+          trigger_type?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "lodge_notification_templates_store_id_fkey"
+            columns: ["store_id"]
+            isOneToOne: false
+            referencedRelation: "store_profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      lodge_parking_slots: {
+        Row: {
+          created_at: string
+          expected_out: string | null
+          fee_per_day_cents: number
+          guest_name: string | null
+          id: string
+          notes: string | null
+          parked_at: string | null
+          reservation_id: string | null
+          slot_number: string
+          slot_type: string
+          status: string
+          store_id: string
+          updated_at: string
+          vehicle_color: string | null
+          vehicle_model: string | null
+          vehicle_plate: string | null
+        }
+        Insert: {
+          created_at?: string
+          expected_out?: string | null
+          fee_per_day_cents?: number
+          guest_name?: string | null
+          id?: string
+          notes?: string | null
+          parked_at?: string | null
+          reservation_id?: string | null
+          slot_number: string
+          slot_type?: string
+          status?: string
+          store_id: string
+          updated_at?: string
+          vehicle_color?: string | null
+          vehicle_model?: string | null
+          vehicle_plate?: string | null
+        }
+        Update: {
+          created_at?: string
+          expected_out?: string | null
+          fee_per_day_cents?: number
+          guest_name?: string | null
+          id?: string
+          notes?: string | null
+          parked_at?: string | null
+          reservation_id?: string | null
+          slot_number?: string
+          slot_type?: string
+          status?: string
+          store_id?: string
+          updated_at?: string
+          vehicle_color?: string | null
+          vehicle_model?: string | null
+          vehicle_plate?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "lodge_parking_slots_store_id_fkey"
+            columns: ["store_id"]
+            isOneToOne: false
+            referencedRelation: "store_profiles"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       lodge_payout_requests: {
         Row: {
@@ -28956,6 +29407,62 @@ export type Database = {
         }
         Relationships: []
       }
+      lodge_room_service_orders: {
+        Row: {
+          created_at: string
+          delivered_at: string | null
+          guest_name: string | null
+          id: string
+          items: string
+          notes: string | null
+          reservation_id: string | null
+          room_number: string
+          runner_name: string | null
+          status: string
+          store_id: string
+          total_cents: number
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          delivered_at?: string | null
+          guest_name?: string | null
+          id?: string
+          items: string
+          notes?: string | null
+          reservation_id?: string | null
+          room_number: string
+          runner_name?: string | null
+          status?: string
+          store_id: string
+          total_cents?: number
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          delivered_at?: string | null
+          guest_name?: string | null
+          id?: string
+          items?: string
+          notes?: string | null
+          reservation_id?: string | null
+          room_number?: string
+          runner_name?: string | null
+          status?: string
+          store_id?: string
+          total_cents?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "lodge_room_service_orders_store_id_fkey"
+            columns: ["store_id"]
+            isOneToOne: false
+            referencedRelation: "store_profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       lodge_rooms: {
         Row: {
           addons: Json
@@ -29075,6 +29582,103 @@ export type Database = {
           wing?: string | null
         }
         Relationships: []
+      }
+      lodge_wakeup_calls: {
+        Row: {
+          call_date: string
+          call_time: string
+          created_at: string
+          guest_name: string | null
+          id: string
+          notes: string | null
+          repeat_daily: boolean
+          room_number: string
+          status: string
+          store_id: string
+        }
+        Insert: {
+          call_date?: string
+          call_time: string
+          created_at?: string
+          guest_name?: string | null
+          id?: string
+          notes?: string | null
+          repeat_daily?: boolean
+          room_number: string
+          status?: string
+          store_id: string
+        }
+        Update: {
+          call_date?: string
+          call_time?: string
+          created_at?: string
+          guest_name?: string | null
+          id?: string
+          notes?: string | null
+          repeat_daily?: boolean
+          room_number?: string
+          status?: string
+          store_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "lodge_wakeup_calls_store_id_fkey"
+            columns: ["store_id"]
+            isOneToOne: false
+            referencedRelation: "store_profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      lodge_yield_rules: {
+        Row: {
+          adjustment_type: string
+          adjustment_value: number
+          applies_to: string
+          created_at: string
+          id: string
+          is_active: boolean
+          rule_name: string
+          sort_order: number
+          store_id: string
+          trigger_type: string
+          trigger_value: string
+        }
+        Insert: {
+          adjustment_type?: string
+          adjustment_value?: number
+          applies_to?: string
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          rule_name: string
+          sort_order?: number
+          store_id: string
+          trigger_type?: string
+          trigger_value?: string
+        }
+        Update: {
+          adjustment_type?: string
+          adjustment_value?: number
+          applies_to?: string
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          rule_name?: string
+          sort_order?: number
+          store_id?: string
+          trigger_type?: string
+          trigger_value?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "lodge_yield_rules_store_id_fkey"
+            columns: ["store_id"]
+            isOneToOne: false
+            referencedRelation: "store_profiles"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       lodging_channel_connections: {
         Row: {
