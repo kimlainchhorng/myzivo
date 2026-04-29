@@ -64,7 +64,7 @@ export default function SmartSearchPage() {
         .ilike("name", term)
         .limit(8),
       supabase.from("store_products")
-        .select("id, name, price_khr, price_usd, condition")
+        .select("id, name, price, price_khr")
         .ilike("name", term)
         .limit(8),
     ]);
@@ -88,11 +88,11 @@ export default function SmartSearchPage() {
         members: c.member_count ?? 0,
         description: c.description,
       })),
-      marketplace: (mktRes.data ?? []).map(m => ({
+      marketplace: (mktRes.data ?? []).map((m: any) => ({
         id: m.id,
-        title: (m as any).name ?? "Item",
-        price: m.price_usd ? `$${m.price_usd}` : m.price_khr ? `${m.price_khr} KHR` : "—",
-        condition: (m as any).condition,
+        title: m.name ?? "Item",
+        price: m.price ? `$${m.price}` : m.price_khr ? `${m.price_khr} KHR` : "—",
+        condition: m.condition,
       })),
     });
 
