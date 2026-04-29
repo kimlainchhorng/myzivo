@@ -1,17 +1,26 @@
 /**
- * Renders a parts supplier's real logo via Clearbit, with monogram fallback.
+ * Renders a parts supplier's real brand logo.
+ * Uses a fallback chain: Google S2 favicons → DuckDuckGo icons → icon.horse → monogram.
  */
 import { useState } from "react";
 import { cn } from "@/lib/utils";
-import { getSupplierLogoUrl, type PartsSupplier } from "@/config/partsSuppliers";
+import type { PartsSupplier } from "@/config/partsSuppliers";
 
 type Size = "sm" | "md" | "lg";
 
 const SIZE_MAP: Record<Size, { box: string; text: string; px: number }> = {
-  sm: { box: "w-5 h-5", text: "text-[9px]", px: 40 },
+  sm: { box: "w-5 h-5", text: "text-[9px]", px: 32 },
   md: { box: "w-8 h-8", text: "text-[11px]", px: 64 },
-  lg: { box: "w-12 h-12", text: "text-sm", px: 96 },
+  lg: { box: "w-12 h-12", text: "text-sm", px: 128 },
 };
+
+function buildSources(domain: string, px: number): string[] {
+  return [
+    `https://www.google.com/s2/favicons?domain=${domain}&sz=${Math.max(px, 64)}`,
+    `https://icons.duckduckgo.com/ip3/${domain}.ico`,
+    `https://icon.horse/icon/${domain}`,
+  ];
+}
 
 interface Props {
   supplier: PartsSupplier;
@@ -20,9 +29,9 @@ interface Props {
 }
 
 export default function PartsSupplierLogo({ supplier, size = "md", className }: Props) {
-  const [errored, setErrored] = useState(false);
   const dims = SIZE_MAP[size];
-  const url = getSupplierLogoUrl(supplier, dims.px * 2);
+  const sources = supplier.domain ? buildSources(supplier.domain, dims.px) : [];
+  const [idx, setIdx] = useState(0);
 
   const monogram =
     (supplier.shortName ?? supplier.name)
@@ -33,7 +42,9 @@ export default function PartsSupplierLogo({ supplier, size = "md", className }: 
       .map((w) => w[0]?.toUpperCase() ?? "")
       .join("") || "?";
 
-  if (!url || errored) {
+  const exhausted = idx >= sources.length;
+
+  if (exhausted) {
     return (
       <div
         className={cn(
@@ -58,11 +69,11 @@ export default function PartsSupplierLogo({ supplier, size = "md", className }: 
       )}
     >
       <img
-        src={url}
+        src={sources[idx]}
         alt={supplier.name}
         loading="lazy"
         decoding="async"
-        onError={() => setErrored(true)}
+        onError={() => setIdx((i) => i + 1)}
         className="w-full h-full object-contain"
       />
     </div>

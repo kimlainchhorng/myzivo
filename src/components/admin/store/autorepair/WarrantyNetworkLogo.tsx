@@ -1,17 +1,26 @@
 /**
- * Renders a warranty provider's real logo via Clearbit, with monogram fallback.
+ * Renders a warranty provider's real brand logo.
+ * Fallback chain: Google S2 favicons → DuckDuckGo icons → icon.horse → monogram.
  */
 import { useState } from "react";
 import { cn } from "@/lib/utils";
-import { getNetworkLogoUrl, type WarrantyNetwork } from "@/config/warrantyNetworks";
+import type { WarrantyNetwork } from "@/config/warrantyNetworks";
 
 type Size = "sm" | "md" | "lg";
 
 const SIZE_MAP: Record<Size, { box: string; text: string; px: number }> = {
-  sm: { box: "w-5 h-5", text: "text-[9px]", px: 40 },
+  sm: { box: "w-5 h-5", text: "text-[9px]", px: 32 },
   md: { box: "w-8 h-8", text: "text-[11px]", px: 64 },
-  lg: { box: "w-12 h-12", text: "text-sm", px: 96 },
+  lg: { box: "w-12 h-12", text: "text-sm", px: 128 },
 };
+
+function buildSources(domain: string, px: number): string[] {
+  return [
+    `https://www.google.com/s2/favicons?domain=${domain}&sz=${Math.max(px, 64)}`,
+    `https://icons.duckduckgo.com/ip3/${domain}.ico`,
+    `https://icon.horse/icon/${domain}`,
+  ];
+}
 
 interface Props {
   network: WarrantyNetwork;
@@ -20,9 +29,9 @@ interface Props {
 }
 
 export default function WarrantyNetworkLogo({ network, size = "md", className }: Props) {
-  const [errored, setErrored] = useState(false);
   const dims = SIZE_MAP[size];
-  const url = getNetworkLogoUrl(network, dims.px * 2);
+  const sources = network.domain ? buildSources(network.domain, dims.px) : [];
+  const [idx, setIdx] = useState(0);
 
   const monogram =
     (network.shortName ?? network.name)
@@ -33,7 +42,9 @@ export default function WarrantyNetworkLogo({ network, size = "md", className }:
       .map((w) => w[0]?.toUpperCase() ?? "")
       .join("") || "?";
 
-  if (!url || errored) {
+  const exhausted = idx >= sources.length;
+
+  if (exhausted) {
     return (
       <div
         className={cn(
@@ -58,11 +69,11 @@ export default function WarrantyNetworkLogo({ network, size = "md", className }:
       )}
     >
       <img
-        src={url}
+        src={sources[idx]}
         alt={network.name}
         loading="lazy"
         decoding="async"
-        onError={() => setErrored(true)}
+        onError={() => setIdx((i) => i + 1)}
         className="w-full h-full object-contain"
       />
     </div>
