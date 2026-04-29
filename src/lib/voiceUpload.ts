@@ -53,12 +53,15 @@ export class UploadHttpError extends Error {
   url?: string;
   phase?: "preflight" | "upload" | "insert";
   body?: string;
-  constructor(status: number, message: string, url?: string, body?: string) {
+  /** Server-supplied Retry-After in milliseconds (parsed from header). */
+  retryAfterMs?: number;
+  constructor(status: number, message: string, url?: string, body?: string, retryAfterMs?: number) {
     super(message);
     this.name = "UploadHttpError";
     this.status = status;
     this.url = url;
     this.body = body;
+    this.retryAfterMs = retryAfterMs;
     // 408 timeout, 429 rate limit, 5xx — safe to retry
     this.retriable = status === 408 || status === 429 || (status >= 500 && status < 600);
   }
