@@ -20,6 +20,8 @@ const voiceMimeCandidates = [
   "audio/ogg",
 ] as const;
 
+const VOICE_AUDIO_BITS_PER_SECOND = 32_000;
+
 function getSupportedVoiceMimeType() {
   if (typeof MediaRecorder === "undefined") return null;
   const isTypeSupported = MediaRecorder.isTypeSupported?.bind(MediaRecorder);
@@ -95,8 +97,8 @@ export function useVoiceRecorder() {
       const mimeType = getSupportedVoiceMimeType();
       console.log("[useVoiceRecorder] Using MIME type:", mimeType);
       const rec = mimeType
-        ? new MediaRecorder(s, { mimeType })
-        : new MediaRecorder(s);
+        ? new MediaRecorder(s, { mimeType, audioBitsPerSecond: VOICE_AUDIO_BITS_PER_SECOND })
+        : new MediaRecorder(s, { audioBitsPerSecond: VOICE_AUDIO_BITS_PER_SECOND });
       recorder.current = rec;
       rec.ondataavailable = (e) => { if (e.data.size > 0) chunks.current.push(e.data); };
       rec.start(100);
