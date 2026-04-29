@@ -410,9 +410,10 @@ export default function AutoRepairInvoicesSection({ storeId }: Props) {
         total_cents: subtotalCents,
       };
 
-      // 1. Persist the estimate (insert if new, update if editing) and mark approved.
+      // 1. Persist the estimate (insert if new/seed, update if editing a real DB row).
       let estimateId = editingId;
-      if (estimateId) {
+      const isRealEstimateId = !!estimateId && UUID_RE.test(estimateId);
+      if (isRealEstimateId) {
         const { error } = await supabase
           .from("ar_estimates" as any)
           .update({ ...basePayload, number: draft.number, status: "approved" })
