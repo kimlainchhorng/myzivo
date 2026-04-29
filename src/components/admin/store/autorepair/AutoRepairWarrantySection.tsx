@@ -14,6 +14,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { ShieldAlert, Plus, Network, Search } from "lucide-react";
 import { toast } from "sonner";
 import { WARRANTY_NETWORKS, getWarrantyNetwork } from "@/config/warrantyNetworks";
+import WarrantyNetworkLogo from "./WarrantyNetworkLogo";
 
 interface Props { storeId: string }
 
