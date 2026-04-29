@@ -21,6 +21,8 @@ import { ChatBellPopover } from "@/components/notifications/ChatBellPopover";
 import Users from "lucide-react/dist/esm/icons/users";
 import Plus from "lucide-react/dist/esm/icons/plus";
 import UserPlus from "lucide-react/dist/esm/icons/user-plus";
+import Radar from "lucide-react/dist/esm/icons/radar";
+import Radio from "lucide-react/dist/esm/icons/radio";
 import Settings from "lucide-react/dist/esm/icons/settings";
 import CheckSquare from "lucide-react/dist/esm/icons/check-square";
 import Square from "lucide-react/dist/esm/icons/square";
@@ -40,6 +42,7 @@ import Share2 from "lucide-react/dist/esm/icons/share-2";
 import MapPinned from "lucide-react/dist/esm/icons/map-pinned";
 import Bookmark from "lucide-react/dist/esm/icons/bookmark";
 import MoreVertical from "lucide-react/dist/esm/icons/more-vertical";
+import HardDrive from "lucide-react/dist/esm/icons/hard-drive";
 import SwipeableRow from "@/components/chat/SwipeableRow";
 import ChatRowActionsSheet, { type ChatRowActionsTarget } from "@/components/chat/ChatRowActionsSheet";
 import NewChatFab from "@/components/chat/NewChatFab";
@@ -57,6 +60,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { format, isToday, isYesterday } from "date-fns";
 import { toast } from "sonner";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import PullToRefresh from "@/components/shared/PullToRefresh";
 import { useCallback } from "react";
 import { assessChatMessageRisk, sanitizeOutgoingMessage } from "@/lib/security/chatContentSafety";
@@ -121,6 +125,12 @@ const builtInFolders: FolderTab[] = [
 ];
 
 const FOLDER_STORAGE_KEY = "zivo:chat-folder";
+const LAST_OPEN_CHAT_KEY = "zivo:last-open-chat";
+
+type PersistedOpenChat =
+  | { kind: "personal"; id: string; name: string; avatar?: string | null; isVerified?: boolean }
+  | { kind: "group"; id: string; name: string; avatar?: string | null }
+  | { kind: "shop"; storeId: string; name: string; logo?: string | null };
 
 function formatChatTime(dateStr: string) {
   const d = new Date(dateStr);
@@ -197,6 +207,18 @@ function detectPreviewType(message: string): { hasMedia: boolean; hasLink: boole
     /\.(pdf|docx?|xlsx?|pptx?|zip|rar|txt)(\?|#|$)/i.test(lower);
   return { hasMedia, hasLink, hasFile };
 }
+
+const personalHubMenu = [
+  { label: "Contacts", icon: UserPlus, action: "contacts" },
+  { label: "Find Contacts", icon: Search, action: "find-contacts" },
+  { label: "Contact Requests", icon: Users, action: "contact-requests" },
+  { label: "People Nearby", icon: Radar, action: "nearby" },
+  { label: "Broadcast Lists", icon: Radio, action: "broadcasts" },
+  { label: "Folders", icon: Settings, action: "folders" },
+  { label: "Privacy & Security", icon: Settings, action: "privacy" },
+  { label: "Active Sessions", icon: Bell, action: "sessions" },
+  { label: "Storage & Cache", icon: HardDrive, action: "storage" },
+] as const;
 
 export default function ChatHubPage({ embedded = false }: { embedded?: boolean } = {}) {
   const [folder, setFolderState] = useState<string>(() => {
@@ -314,6 +336,7 @@ export default function ChatHubPage({ embedded = false }: { embedded?: boolean }
 
   // Handle deep-link from profile page chat button OR share-to-chat OR start call
   const [pendingCall, setPendingCall] = useState<"voice" | "video" | null>(null);
+  const hasRestoredLastChatRef = useRef(false);
   useEffect(() => {
     const state = location.state as {
       openChat?: { recipientId: string; recipientName: string; recipientAvatar?: string | null };
@@ -334,6 +357,75 @@ export default function ChatHubPage({ embedded = false }: { embedded?: boolean }
       window.history.replaceState({}, document.title);
     }
   }, [location.state]);
+
+  useEffect(() => {
+    if (hasRestoredLastChatRef.current || !user?.id) return;
+    hasRestoredLastChatRef.current = true;
+
+    const routeState = location.state as {
+      openChat?: { recipientId: string; recipientName: string; recipientAvatar?: string | null };
+      startCall?: "voice" | "video";
+      shareUrl?: string;
+      shareText?: string;
+    } | null;
+
+    if (searchParams.get("with") || searchParams.get("unlocked") || routeState?.openChat || routeState?.shareUrl) return;
+
+    try {
+      const raw = localStorage.getItem(`${LAST_OPEN_CHAT_KEY}:${user.id}`);
+      if (!raw) return;
+      const persisted = JSON.parse(raw) as PersistedOpenChat;
+      if (persisted.kind === "personal") {
+        setActive("personal");
+        setOpenPersonalChat({ id: persisted.id, name: persisted.name, avatar: persisted.avatar || null, isVerified: persisted.isVerified === true });
+      } else if (persisted.kind === "group") {
+        setActive("personal");
+        setOpenGroupChat({ id: persisted.id, name: persisted.name, avatar: persisted.avatar || null });
+      } else if (persisted.kind === "shop") {
+        setActive("shop");
+        setOpenShopChat({ storeId: persisted.storeId, name: persisted.name, logo: persisted.logo || null });
+      }
+    } catch {}
+  }, [location.state, searchParams, user?.id]);
+
+  useEffect(() => {
+    if (!user?.id || !hasRestoredLastChatRef.current) return;
+    const storageKey = `${LAST_OPEN_CHAT_KEY}:${user.id}`;
+    try {
+      if (openPersonalChat) {
+        const payload: PersistedOpenChat = {
+          kind: "personal",
+          id: openPersonalChat.id,
+          name: openPersonalChat.name,
+          avatar: openPersonalChat.avatar || null,
+          isVerified: openPersonalChat.isVerified === true,
+        };
+        localStorage.setItem(storageKey, JSON.stringify(payload));
+        return;
+      }
+      if (openGroupChat) {
+        const payload: PersistedOpenChat = {
+          kind: "group",
+          id: openGroupChat.id,
+          name: openGroupChat.name,
+          avatar: openGroupChat.avatar || null,
+        };
+        localStorage.setItem(storageKey, JSON.stringify(payload));
+        return;
+      }
+      if (openShopChat) {
+        const payload: PersistedOpenChat = {
+          kind: "shop",
+          storeId: openShopChat.storeId,
+          name: openShopChat.name,
+          logo: openShopChat.logo || null,
+        };
+        localStorage.setItem(storageKey, JSON.stringify(payload));
+        return;
+      }
+      localStorage.removeItem(storageKey);
+    } catch {}
+  }, [openGroupChat, openPersonalChat, openShopChat, user?.id]);
 
   useEffect(() => {
     if (!user?.id || !openPersonalChat?.id) return;
@@ -862,6 +954,38 @@ export default function ChatHubPage({ embedded = false }: { embedded?: boolean }
 
   const canDelete = active === "personal";
 
+  const handlePersonalHubMenuAction = useCallback((action: (typeof personalHubMenu)[number]["action"]) => {
+    switch (action) {
+      case "contacts":
+        navigate("/chat/contacts");
+        break;
+      case "find-contacts":
+        navigate("/chat/find-contacts");
+        break;
+      case "contact-requests":
+        navigate("/chat/contacts/requests");
+        break;
+      case "nearby":
+        navigate("/chat/nearby");
+        break;
+      case "broadcasts":
+        navigate("/chat/broadcasts");
+        break;
+      case "folders":
+        navigate("/chat/folders");
+        break;
+      case "privacy":
+        navigate("/chat/settings/privacy-hub");
+        break;
+      case "sessions":
+        navigate("/chat/settings/sessions");
+        break;
+      case "storage":
+        navigate("/chat/settings/storage");
+        break;
+    }
+  }, [navigate]);
+
   const handleDeleteChat = async (chatId: string, category: ChatCategory) => {
     try {
       if (category === "shop") {
@@ -1176,6 +1300,8 @@ export default function ChatHubPage({ embedded = false }: { embedded?: boolean }
                     <button
                       onClick={() => navigate('/')}
                       className="w-9 h-9 flex items-center justify-center rounded-full hover:bg-muted active:scale-90 transition-all"
+                      aria-label="Back"
+                      title="Back"
                     >
                       <ArrowLeft className="w-5 h-5 text-foreground" />
                     </button>
@@ -1217,13 +1343,39 @@ export default function ChatHubPage({ embedded = false }: { embedded?: boolean }
                     </button>
                   )}
                   {active === "personal" && (
-                    <button
-                      onClick={() => navigate('/chat/settings/privacy-hub')}
-                      className="relative w-9 h-9 flex items-center justify-center rounded-full hover:bg-muted active:scale-90 transition-all"
-                      aria-label="Privacy & Notifications"
-                    >
-                      <Settings className="w-5 h-5 text-muted-foreground" />
-                    </button>
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <button
+                          className="relative w-9 h-9 flex items-center justify-center rounded-full hover:bg-muted active:scale-90 transition-all"
+                          aria-label="Chat tools"
+                          title="Chat tools"
+                        >
+                          <MoreVertical className="w-5 h-5 text-muted-foreground" />
+                        </button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="end" className="w-56">
+                        {personalHubMenu.slice(0, 3).map((item) => (
+                          <DropdownMenuItem key={item.action} onClick={() => handlePersonalHubMenuAction(item.action)} className="gap-2">
+                            <item.icon className="h-4 w-4" />
+                            <span>{item.label}</span>
+                          </DropdownMenuItem>
+                        ))}
+                        <DropdownMenuSeparator />
+                        {personalHubMenu.slice(3, 6).map((item) => (
+                          <DropdownMenuItem key={item.action} onClick={() => handlePersonalHubMenuAction(item.action)} className="gap-2">
+                            <item.icon className="h-4 w-4" />
+                            <span>{item.label}</span>
+                          </DropdownMenuItem>
+                        ))}
+                        <DropdownMenuSeparator />
+                        {personalHubMenu.slice(6).map((item) => (
+                          <DropdownMenuItem key={item.action} onClick={() => handlePersonalHubMenuAction(item.action)} className="gap-2">
+                            <item.icon className="h-4 w-4" />
+                            <span>{item.label}</span>
+                          </DropdownMenuItem>
+                        ))}
+                      </DropdownMenuContent>
+                    </DropdownMenu>
                   )}
                   {active === "personal" && (
                     <button
@@ -1271,7 +1423,7 @@ export default function ChatHubPage({ embedded = false }: { embedded?: boolean }
                   )}
                 />
                 {search && (
-                  <button onClick={() => setSearch("")} className="absolute right-3 top-1/2 -translate-y-1/2">
+                  <button onClick={() => setSearch("")} className="absolute right-3 top-1/2 -translate-y-1/2" aria-label="Clear search" title="Clear search">
                     <X className="w-3.5 h-3.5 text-muted-foreground" />
                   </button>
                 )}
@@ -1358,6 +1510,8 @@ export default function ChatHubPage({ embedded = false }: { embedded?: boolean }
                 <button
                   onClick={() => setSharePayload(null)}
                   className="w-8 h-8 rounded-full bg-muted flex items-center justify-center flex-shrink-0 active:scale-90 transition-transform"
+                  aria-label="Cancel share"
+                  title="Cancel share"
                 >
                   <X className="w-4 h-4 text-muted-foreground" />
                 </button>
@@ -1423,7 +1577,7 @@ export default function ChatHubPage({ embedded = false }: { embedded?: boolean }
                           <span className="text-[11px] font-semibold text-foreground leading-tight">Invite friends</span>
                         </button>
                         <button
-                          onClick={() => navigate("/nearby")}
+                          onClick={() => navigate("/chat/nearby")}
                           className="flex flex-col items-center justify-center gap-1.5 p-3 rounded-2xl bg-card border border-border/40 shadow-sm active:scale-95 transition-transform"
                         >
                           <div className="w-9 h-9 rounded-full bg-primary/10 flex items-center justify-center">
@@ -1785,6 +1939,7 @@ export default function ChatHubPage({ embedded = false }: { embedded?: boolean }
                               onClick={(e) => { e.stopPropagation(); toggleArchive(chat.id); toast.success("Unarchived"); }}
                               className="w-8 h-8 rounded-full bg-muted flex items-center justify-center active:scale-90"
                               aria-label="Unarchive"
+                              title="Unarchive"
                             >
                               <ArchiveRestore className="w-4 h-4 text-muted-foreground" />
                             </button>
@@ -1934,6 +2089,8 @@ export default function ChatHubPage({ embedded = false }: { embedded?: boolean }
           }}
           onNewGroup={() => setShowCreateGroup(true)}
           onNewContact={() => setShowAddContact(true)}
+          onBroadcast={() => navigate("/chat/broadcasts")}
+          onNearby={() => navigate("/chat/nearby")}
         />
       )}
 

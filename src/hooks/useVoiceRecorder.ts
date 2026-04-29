@@ -11,6 +11,34 @@ export interface VoiceRecording {
   mimeType: string;
 }
 
+const voiceMimeCandidates = [
+  "audio/mp4;codecs=mp4a.40.2",
+  "audio/mp4",
+  "audio/webm;codecs=opus",
+  "audio/webm",
+  "audio/ogg;codecs=opus",
+  "audio/ogg",
+] as const;
+
+function getSupportedVoiceMimeType() {
+  if (typeof MediaRecorder === "undefined") return null;
+  const isTypeSupported = MediaRecorder.isTypeSupported?.bind(MediaRecorder);
+  if (!isTypeSupported) return null;
+  return voiceMimeCandidates.find((candidate) => isTypeSupported(candidate)) ?? null;
+}
+
+async function requestMicrophonePermission(): Promise<boolean> {
+  if (typeof navigator === "undefined" || !navigator.mediaDevices?.query) {
+    return true; // Assume granted if we can't query
+  }
+  try {
+    const result = await navigator.mediaDevices.query?.({ name: "microphone" } as any);
+    return result?.state !== "denied";
+  } catch {
+    return true; // Assume granted if query fails
+  }
+}
+
 export function useVoiceRecorder() {
   const [isRecording, setIsRecording] = useState(false);
   const [audioBlob, setAudioBlob] = useState<Blob | null>(null);
@@ -42,19 +70,38 @@ export function useVoiceRecorder() {
 
   const start = useCallback(async () => {
     try {
+      if (typeof navigator === "undefined" || !navigator.mediaDevices?.getUserMedia) {
+        const msg = "Microphone recording is not supported on this device";
+        console.error("[useVoiceRecorder]", msg);
+        toast.error(msg);
+        return;
+      }
+      if (typeof MediaRecorder === "undefined") {
+        const msg = "Voice notes are not supported on this device";
+        console.error("[useVoiceRecorder]", msg);
+        toast.error(msg);
+        return;
+      }
+
+      console.log("[useVoiceRecorder] Requesting microphone access...");
+
       cancelled.current = false;
       chunks.current = [];
       samples.current = [];
       const s = await navigator.mediaDevices.getUserMedia({ audio: true });
+      console.log("[useVoiceRecorder] Microphone access granted");
       stream.current = s;
 
-      const mimeType = MediaRecorder.isTypeSupported("audio/webm;codecs=opus")
-        ? "audio/webm;codecs=opus"
-        : "audio/webm";
-      const rec = new MediaRecorder(s, { mimeType });
+      const mimeType = getSupportedVoiceMimeType();
+      console.log("[useVoiceRecorder] Using MIME type:", mimeType);
+      const rec = mimeType
+        ? new MediaRecorder(s, { mimeType })
+        : new MediaRecorder(s);
       recorder.current = rec;
       rec.ondataavailable = (e) => { if (e.data.size > 0) chunks.current.push(e.data); };
       rec.start(100);
+
+      console.log("[useVoiceRecorder] Recording started, listening to audio stream");
 
       // Waveform sampling
       const ctx = new AudioContext();
@@ -86,7 +133,22 @@ export function useVoiceRecorder() {
       };
       rafId.current = requestAnimationFrame(tick);
     } catch (e) {
-      toast.error("Microphone permission denied");
+      const name = e instanceof DOMException ? e.name : "";
+      const code = (e as any)?.code;
+      console.error("[useVoiceRecorder] error:", { name, code, error: e });
+      
+      let message = "Could not start voice recording";
+      if (name === "NotAllowedError" || name === "PermissionDeniedError" || code === "permission-denied") {
+        message = "Microphone permission denied. Go to Settings app → Privacy → Microphone and enable Zivo";
+      } else if (name === "NotFoundError" || code === "no-microphone") {
+        message = "No microphone found on this device";
+      } else if (name === "NotReadableError" || code === "device-not-readable") {
+        message = "Microphone is unavailable or blocked by another app";
+      } else if (name === "SecurityError") {
+        message = "Microphone access blocked by browser security policy";
+      }
+      
+      toast.error(message);
       stopAll();
     }
   }, [stopAll]);
@@ -102,7 +164,7 @@ export function useVoiceRecorder() {
       }
       rec.onstop = () => {
         const duration = Date.now() - startedAt.current;
-        const mimeType = rec.mimeType;
+        const mimeType = rec.mimeType || getSupportedVoiceMimeType() || "audio/webm";
         const blob = new Blob(chunks.current, { type: mimeType });
         // Downsample waveform to 64 bins
         const src = samples.current;

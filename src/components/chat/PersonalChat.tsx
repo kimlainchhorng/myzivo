@@ -254,6 +254,7 @@ export default function PersonalChat({ recipientId, recipientName, recipientAvat
   const [disappearingMode, setDisappearingMode] = useState(false);
   const [showNotifSettings, setShowNotifSettings] = useState(false);
   const [showMediaGallery, setShowMediaGallery] = useState(false);
+  const [mediaGalleryTab, setMediaGalleryTab] = useState<"photos" | "videos" | "voice" | "files" | "links">("photos");
   const [showStickerKeyboard, setShowStickerKeyboard] = useState(false);
   const [showPersonalization, setShowPersonalization] = useState(false);
   const [showMiniApps, setShowMiniApps] = useState(false);
@@ -1410,11 +1411,11 @@ export default function PersonalChat({ recipientId, recipientName, recipientAvat
       {/* Header */}
       <div className="sticky top-0 z-10 bg-background/80 backdrop-blur-2xl border-b border-border/5 safe-area-top">
         <div className="px-2 py-2.5 flex items-center gap-3">
-          <button onClick={onClose} className="min-h-[44px] min-w-[36px] flex items-center justify-center -ml-1 active:scale-90 transition-transform">
+          <button onClick={onClose} className="min-h-[44px] min-w-[44px] flex items-center justify-center active:scale-90 transition-transform rounded-full hover:bg-muted/50" aria-label="Back" title="Back">
             <ArrowLeft className="h-5 w-5 text-foreground" />
           </button>
           <div className="relative shrink-0">
-            <Avatar className="h-[42px] w-[42px] ring-2 ring-border/10">
+            <Avatar className="h-11 w-11 ring-2 ring-border/10">
               <AvatarImage src={recipientAvatar || undefined} />
               <AvatarFallback className="text-xs font-bold bg-primary/8 text-primary">{initials}</AvatarFallback>
             </Avatar>
@@ -1450,21 +1451,25 @@ export default function PersonalChat({ recipientId, recipientName, recipientAvat
             <motion.button
               whileTap={{ scale: 0.85 }}
               onClick={() => { void primeCallAudio(); void handleStartCall("video"); }}
-              className="h-10 w-10 rounded-full flex items-center justify-center hover:bg-blue-500/10 active:bg-blue-500/15 transition-colors"
+              className="h-11 w-11 rounded-full flex items-center justify-center hover:bg-blue-500/10 active:bg-blue-500/15 transition-colors"
+              aria-label="Video call"
+              title="Video call"
             >
               <Video className="h-5 w-5 text-blue-500" />
             </motion.button>
             <motion.button
               whileTap={{ scale: 0.85 }}
               onClick={() => { void primeCallAudio(); void handleStartCall("voice"); }}
-              className="h-10 w-10 rounded-full flex items-center justify-center hover:bg-emerald-500/10 active:bg-emerald-500/15 transition-colors"
+              className="h-11 w-11 rounded-full flex items-center justify-center hover:bg-emerald-500/10 active:bg-emerald-500/15 transition-colors"
+              aria-label="Voice call"
+              title="Voice call"
             >
               <Phone className="h-[19px] w-[19px] text-emerald-500" />
             </motion.button>
 
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <button className="h-10 w-10 rounded-full flex items-center justify-center hover:bg-muted/50 active:scale-90 transition-all -mr-1">
+                <button className="h-11 w-11 rounded-full flex items-center justify-center hover:bg-muted/50 active:scale-90 transition-all" aria-label="More chat options" title="More chat options">
                   <MoreVertical className="h-5 w-5 text-foreground/50" />
                 </button>
             </DropdownMenuTrigger>
@@ -1861,7 +1866,7 @@ export default function PersonalChat({ recipientId, recipientName, recipientAvat
               <p className="text-[10px] font-semibold text-amber-600 dark:text-amber-400">Editing message</p>
               <p className="text-xs text-muted-foreground truncate">Press send to save · 48h limit</p>
             </div>
-            <button onClick={handleCancelEdit} className="h-7 w-7 rounded-full flex items-center justify-center">
+            <button onClick={handleCancelEdit} className="h-7 w-7 rounded-full flex items-center justify-center" aria-label="Cancel edit" title="Cancel edit">
               <X className="h-3.5 w-3.5 text-muted-foreground" />
             </button>
           </motion.div>
@@ -1882,7 +1887,7 @@ export default function PersonalChat({ recipientId, recipientName, recipientAvat
               <p className="text-[10px] font-semibold text-primary">{replyTo.isMe ? "You" : recipientName}</p>
               <p className="text-xs text-muted-foreground truncate">{replyTo.message}</p>
             </div>
-            <button onClick={() => setReplyTo(null)} className="h-7 w-7 rounded-full flex items-center justify-center">
+            <button onClick={() => setReplyTo(null)} className="h-7 w-7 rounded-full flex items-center justify-center" aria-label="Close reply" title="Close reply">
               <X className="h-3.5 w-3.5 text-muted-foreground" />
             </button>
           </motion.div>
@@ -1919,9 +1924,11 @@ export default function PersonalChat({ recipientId, recipientName, recipientAvat
                   data-attach-trigger
                   onClick={() => setShowAttachMenu(!showAttachMenu)}
                   disabled={uploadingMedia}
-                  className={`h-10 w-10 rounded-full flex items-center justify-center transition-all shrink-0 ${
+                  className={`h-11 w-11 rounded-full flex items-center justify-center transition-all shrink-0 ${
                     showAttachMenu ? "bg-primary text-primary-foreground rotate-45" : "text-muted-foreground/60 hover:bg-muted/50"
                   }`}
+                  aria-label="Attachments"
+                  title="Attachments"
                 >
                   {uploadingMedia ? <Loader2 className="h-[18px] w-[18px] animate-spin" /> : <Plus className="h-5 w-5" />}
                 </button>
@@ -1944,9 +1951,9 @@ export default function PersonalChat({ recipientId, recipientName, recipientAvat
                 />
               </div>
 
-              <input ref={fileInputRef} type="file" accept="image/*" className="hidden" onChange={handleImageSelect} />
-              <input ref={videoInputRef} type="file" accept="video/*,.gif" className="hidden" onChange={handleVideoSelect} />
-              <input ref={lockedImageInputRef} type="file" accept="image/*,video/*" className="hidden" onChange={handleLockedMediaSelect} />
+              <input ref={fileInputRef} type="file" accept="image/*" className="hidden" onChange={handleImageSelect} title="Choose image" aria-label="Choose image" />
+              <input ref={videoInputRef} type="file" accept="video/*,.gif" className="hidden" onChange={handleVideoSelect} title="Choose video" aria-label="Choose video" />
+              <input ref={lockedImageInputRef} type="file" accept="image/*,video/*" className="hidden" onChange={handleLockedMediaSelect} title="Choose locked media" aria-label="Choose locked media" />
 
               {/* Locked media price picker */}
               {showLockedPricePicker && (
@@ -1997,7 +2004,7 @@ export default function PersonalChat({ recipientId, recipientName, recipientAvat
                 onChange={handleInputChange}
                 onKeyDown={(e) => e.key === "Enter" && !e.shiftKey && (editingId ? handleSaveEdit() : handleSend())}
                 placeholder={disappearingMode ? "Disappearing message..." : "Message..."}
-                className={`w-full h-11 pl-4 pr-12 rounded-full text-[14.5px] text-foreground placeholder:text-muted-foreground/40 focus:outline-none transition-all ${
+                className={`w-full h-12 pl-4 pr-14 rounded-full text-[15px] text-foreground placeholder:text-muted-foreground/40 focus:outline-none transition-all ${
                   disappearingMode
                     ? "bg-amber-500/5 border border-amber-500/15 focus:ring-2 focus:ring-amber-500/10"
                     : "bg-muted/30 border border-border/10 focus:ring-2 focus:ring-primary/15 focus:border-primary/20"
@@ -2006,9 +2013,11 @@ export default function PersonalChat({ recipientId, recipientName, recipientAvat
               <div className="absolute right-1.5 top-1/2 -translate-y-1/2 flex items-center">
                 <button
                   onClick={() => setShowStickerKeyboard(!showStickerKeyboard)}
-                  className={`h-8 w-8 rounded-full flex items-center justify-center transition-all active:scale-90 ${
+                  className={`h-9 w-9 rounded-full flex items-center justify-center transition-all active:scale-90 ${
                     showStickerKeyboard ? "text-primary bg-primary/10" : "text-muted-foreground/40 hover:text-muted-foreground"
                   }`}
+                  aria-label="Open stickers"
+                  title="Open stickers"
                 >
                   <Smile className="h-5 w-5" />
                 </button>
@@ -2021,8 +2030,9 @@ export default function PersonalChat({ recipientId, recipientName, recipientAvat
                 onClick={() => editingId ? handleSaveEdit() : handleSend()}
                 onContextMenu={(e) => { e.preventDefault(); setShowScheduler(true); }}
                 disabled={sending}
-                className="h-11 w-11 rounded-full bg-primary text-primary-foreground flex items-center justify-center disabled:opacity-40 active:scale-90 transition-all shrink-0 shadow-sm"
+                className="h-12 w-12 rounded-full bg-primary text-primary-foreground flex items-center justify-center disabled:opacity-40 active:scale-90 transition-all shrink-0 shadow-sm"
                 title="Long press to schedule"
+                aria-label={editingId ? "Save edit" : "Send message"}
               >
                 {sending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-[17px] w-[17px]" />}
               </button>
@@ -2067,6 +2077,7 @@ export default function PersonalChat({ recipientId, recipientName, recipientAvat
             onClose={() => setShowMediaGallery(false)}
             recipientId={recipientId}
             recipientName={recipientName}
+            initialTab={mediaGalleryTab}
           />
         </Suspense>
       )}
@@ -2133,13 +2144,15 @@ export default function PersonalChat({ recipientId, recipientName, recipientAvat
             lastSeen={recipientLastSeen}
             onClose={() => setShowContactInfo(false)}
             onStartCall={(type) => { setShowContactInfo(false); void handleStartCall(type); }}
-            onOpenMediaGallery={() => { setShowContactInfo(false); setShowMediaGallery(true); }}
+            onOpenMediaGallery={() => { setMediaGalleryTab("photos"); setShowContactInfo(false); setShowMediaGallery(true); }}
             onOpenSearch={() => { setShowContactInfo(false); setShowSearch(true); }}
             onOpenCallHistory={() => { setShowContactInfo(false); setShowCallHistory(true); }}
             onOpenPersonalization={() => { setShowContactInfo(false); setShowPersonalization(true); }}
             onOpenSecurity={() => { setShowContactInfo(false); setShowSecurity(true); }}
             onOpenMiniApps={() => { setShowContactInfo(false); setShowMiniApps(true); }}
             onOpenNotifSettings={() => { setShowContactInfo(false); setShowNotifSettings(true); }}
+            onOpenFiles={() => { setMediaGalleryTab("files"); setShowContactInfo(false); setShowMediaGallery(true); }}
+            onOpenLinks={() => { setMediaGalleryTab("links"); setShowContactInfo(false); setShowMediaGallery(true); }}
           />
         </Suspense>
       )}

@@ -572,7 +572,7 @@ export default function GroupChat({ groupId, groupName, groupAvatar, onClose }: 
       {/* Header */}
       <div className="sticky top-0 z-10 bg-background/95 backdrop-blur-xl border-b border-border/30 safe-area-top">
         <div className="px-3 py-2 flex items-center gap-3">
-          <button onClick={onClose} className="min-h-[44px] min-w-[44px] flex items-center justify-center">
+          <button onClick={onClose} className="min-h-[44px] min-w-[44px] flex items-center justify-center" aria-label="Back" title="Back">
             <ArrowLeft className="h-5 w-5 text-foreground" />
           </button>
           <Avatar className="h-9 w-9 border-2 border-border/30">
@@ -588,7 +588,7 @@ export default function GroupChat({ groupId, groupName, groupAvatar, onClose }: 
           <div className="flex items-center gap-0.5">
             <button
               onClick={() => { void primeCallAudio(); setGroupCall("video"); }}
-              className="h-10 w-10 flex items-center justify-center rounded-full hover:bg-blue-500/10"
+              className="h-11 w-11 flex items-center justify-center rounded-full hover:bg-blue-500/10"
               aria-label="Video call"
               title="Video call"
             >
@@ -596,7 +596,7 @@ export default function GroupChat({ groupId, groupName, groupAvatar, onClose }: 
             </button>
             <button
               onClick={() => { void primeCallAudio(); setGroupCall("audio"); }}
-              className="h-10 w-10 flex items-center justify-center rounded-full hover:bg-emerald-500/10"
+              className="h-11 w-11 flex items-center justify-center rounded-full hover:bg-emerald-500/10"
               aria-label="Voice call"
               title="Voice call"
             >
@@ -759,7 +759,7 @@ export default function GroupChat({ groupId, groupName, groupAvatar, onClose }: 
               <p className="text-[10px] font-semibold text-primary">{replyTo.senderName}</p>
               <p className="text-xs text-muted-foreground truncate">{replyTo.message}</p>
             </div>
-            <button onClick={() => setReplyTo(null)} className="h-7 w-7 rounded-full flex items-center justify-center">
+            <button onClick={() => setReplyTo(null)} className="h-7 w-7 rounded-full flex items-center justify-center" aria-label="Close reply" title="Close reply">
               <X className="h-3.5 w-3.5 text-muted-foreground" />
             </button>
           </motion.div>
@@ -774,11 +774,13 @@ export default function GroupChat({ groupId, groupName, groupAvatar, onClose }: 
         <button
           onClick={() => fileInputRef.current?.click()}
           disabled={uploadingImage}
-          className="h-10 w-10 rounded-full flex items-center justify-center text-muted-foreground/60 hover:bg-muted/50 active:scale-90 transition-all shrink-0"
+          className="h-11 w-11 rounded-full flex items-center justify-center text-muted-foreground/60 hover:bg-muted/50 active:scale-90 transition-all shrink-0"
+          aria-label="Add image"
+          title="Add image"
         >
           {uploadingImage ? <Loader2 className="h-[18px] w-[18px] animate-spin" /> : <Plus className="h-5 w-5" />}
         </button>
-        <input ref={fileInputRef} type="file" accept="image/*" className="hidden" onChange={handleImageSelect} />
+        <input ref={fileInputRef} type="file" accept="image/*" className="hidden" onChange={handleImageSelect} title="Choose image" aria-label="Choose image" />
 
         {/* Text input with emoji button */}
         <div className="flex-1 relative">
@@ -788,10 +790,10 @@ export default function GroupChat({ groupId, groupName, groupAvatar, onClose }: 
             onChange={(e) => setInput(e.target.value)}
             onKeyDown={(e) => e.key === "Enter" && !e.shiftKey && handleSend()}
             placeholder="Message..."
-            className="w-full h-11 pl-4 pr-12 rounded-full text-[14.5px] text-foreground placeholder:text-muted-foreground/40 focus:outline-none bg-muted/30 border border-border/10 focus:ring-2 focus:ring-primary/15 focus:border-primary/20 transition-all"
+            className="w-full h-12 pl-4 pr-14 rounded-full text-[15px] text-foreground placeholder:text-muted-foreground/40 focus:outline-none bg-muted/30 border border-border/10 focus:ring-2 focus:ring-primary/15 focus:border-primary/20 transition-all"
           />
           <div className="absolute right-1.5 top-1/2 -translate-y-1/2">
-            <button className="h-8 w-8 rounded-full flex items-center justify-center text-muted-foreground/40 hover:text-muted-foreground transition-colors">
+            <button className="h-9 w-9 rounded-full flex items-center justify-center text-muted-foreground/40 hover:text-muted-foreground transition-colors" aria-label="Emoji" title="Emoji">
               <Smile className="h-5 w-5" />
             </button>
           </div>
@@ -802,7 +804,9 @@ export default function GroupChat({ groupId, groupName, groupAvatar, onClose }: 
           <button
             onClick={() => handleSend()}
             disabled={sending}
-            className="h-11 w-11 rounded-full bg-primary text-primary-foreground flex items-center justify-center disabled:opacity-40 active:scale-90 transition-all shrink-0 shadow-sm"
+            className="h-12 w-12 rounded-full bg-primary text-primary-foreground flex items-center justify-center disabled:opacity-40 active:scale-90 transition-all shrink-0 shadow-sm"
+            aria-label="Send message"
+            title="Send message"
           >
             {sending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-[17px] w-[17px]" />}
           </button>

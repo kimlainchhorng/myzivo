@@ -93,6 +93,8 @@ interface ChatContactInfoProps {
   onOpenSecurity?: () => void;
   onOpenMiniApps?: () => void;
   onOpenNotifSettings?: () => void;
+  onOpenFiles?: () => void;
+  onOpenLinks?: () => void;
 }
 
 export default function ChatContactInfo({
@@ -110,6 +112,8 @@ export default function ChatContactInfo({
   onOpenSecurity,
   onOpenMiniApps,
   onOpenNotifSettings,
+  onOpenFiles,
+  onOpenLinks,
 }: ChatContactInfoProps) {
   const [muteNotifs, setMuteNotifs] = useState(false);
   const [isFavorite, setIsFavorite] = useState(false);
@@ -198,13 +202,41 @@ export default function ChatContactInfo({
 
   const handleBlock = () => {
     toast.info(`Block ${recipientName}?`, {
-      action: { label: "Block", onClick: () => toast.success(`${recipientName} blocked`) },
+      action: {
+        label: "Block",
+        onClick: async () => {
+          if (!user?.id) return;
+          const { error } = await dbFrom("blocked_users")
+            .insert({ blocker_id: user.id, blocked_id: recipientId });
+          if (error) {
+            toast.error("Could not block");
+            return;
+          }
+          toast.success(`${recipientName} blocked`);
+        },
+      },
     });
   };
 
   const handleReport = () => {
     toast.info(`Report ${recipientName}?`, {
-      action: { label: "Report", onClick: () => toast.success("Report submitted") },
+      action: {
+        label: "Report",
+        onClick: async () => {
+          if (!user?.id) return;
+          const { error } = await dbFrom("user_reports").insert({
+            reporter_id: user.id,
+            reported_id: recipientId,
+            reason: "chat_profile",
+            details: `Reported from chat contact info for ${recipientName}`,
+          });
+          if (error) {
+            toast.error("Could not submit report");
+            return;
+          }
+          toast.success("Report submitted");
+        },
+      },
     });
   };
 
@@ -212,7 +244,15 @@ export default function ChatContactInfo({
     toast.info("Delete this entire conversation?", {
       action: {
         label: "Delete",
-        onClick: () => {
+        onClick: async () => {
+          if (!user?.id) return;
+          const { error } = await dbFrom("direct_messages")
+            .delete()
+            .or(`and(sender_id.eq.${user.id},receiver_id.eq.${recipientId}),and(sender_id.eq.${recipientId},receiver_id.eq.${user.id})`);
+          if (error) {
+            toast.error("Could not delete conversation");
+            return;
+          }
           toast.success("Conversation deleted");
           onClose();
         },
@@ -258,6 +298,8 @@ export default function ChatContactInfo({
           <button
             onClick={onClose}
             className="min-h-[44px] min-w-[44px] flex items-center justify-center active:scale-90 transition-transform rounded-full hover:bg-muted/50"
+            aria-label="Back"
+            title="Back"
           >
             <ArrowLeft className="h-[22px] w-[22px] text-foreground" />
           </button>
@@ -266,6 +308,8 @@ export default function ChatContactInfo({
           <button
             onClick={handleCopyProfile}
             className="min-h-[44px] min-w-[44px] flex items-center justify-center active:scale-90 transition-transform rounded-full hover:bg-muted/50"
+            aria-label="Copy profile link"
+            title="Copy profile link"
           >
             <ExternalLink className="h-[18px] w-[18px] text-muted-foreground" />
           </button>
@@ -335,6 +379,8 @@ export default function ChatContactInfo({
               key={label}
               onClick={action}
               className="flex flex-col items-center gap-1.5 min-w-[52px] group"
+              aria-label={label}
+              title={label}
             >
               <div className="h-11 w-11 rounded-full bg-muted/60 flex items-center justify-center active:scale-90 transition-all group-hover:bg-muted/80">
                 <Icon className="h-[18px] w-[18px] text-foreground/80" />
@@ -430,8 +476,8 @@ export default function ChatContactInfo({
             <>
               <Section title="Media, Files & Links">
                 <SectionButton icon={ImageIcon} label="Media" chevron onClick={onOpenMediaGallery} />
-                <SectionButton icon={FileText} label="Files" chevron onClick={() => toast.info("No files shared yet")} />
-                <SectionButton icon={Link2} label="Links" chevron onClick={() => toast.info("No links shared yet")} />
+                <SectionButton icon={FileText} label="Files" chevron onClick={onOpenFiles} />
+                <SectionButton icon={Link2} label="Links" chevron onClick={onOpenLinks} />
               </Section>
               <div className="h-[6px] bg-muted/30" />
             </>
@@ -453,7 +499,7 @@ export default function ChatContactInfo({
           <Section title="Notifications">
             <div className="flex items-center justify-between px-4 py-3.5">
               <div className="flex items-center gap-3.5">
-                <div className="h-8 w-8 rounded-full bg-muted/50 flex items-center justify-center">
+                <div className="h-10 w-10 rounded-full bg-muted/50 flex items-center justify-center">
                   {muteNotifs ? (
                     <BellOff className="h-[16px] w-[16px] text-muted-foreground" />
                   ) : (
@@ -503,7 +549,7 @@ export default function ChatContactInfo({
               onClick={handleDeleteConversation}
               className="w-full flex items-center gap-3.5 px-4 py-3.5 active:bg-destructive/5 transition-colors"
             >
-              <div className="h-8 w-8 rounded-full bg-destructive/8 flex items-center justify-center">
+              <div className="h-10 w-10 rounded-full bg-destructive/8 flex items-center justify-center">
                 <Trash2 className="h-[16px] w-[16px] text-destructive" />
               </div>
               <span className="text-[14.5px] font-medium text-destructive">
@@ -548,7 +594,7 @@ function SectionButton({
       onClick={onClick}
       className="w-full flex items-center gap-3.5 px-4 py-3.5 active:bg-muted/40 transition-colors"
     >
-      <div className={`h-8 w-8 rounded-full flex items-center justify-center ${className ? "bg-destructive/8" : "bg-muted/50"}`}>
+      <div className={`h-10 w-10 rounded-full flex items-center justify-center ${className ? "bg-destructive/8" : "bg-muted/50"}`}>
         <Icon className={`h-[16px] w-[16px] ${className || "text-muted-foreground"}`} />
       </div>
       <span className={`text-[14.5px] font-medium flex-1 text-left ${className || "text-foreground"}`}>

@@ -5,6 +5,7 @@ import MessageCircle from "lucide-react/dist/esm/icons/message-circle";
 import Users from "lucide-react/dist/esm/icons/users";
 import Radio from "lucide-react/dist/esm/icons/radio";
 import UserPlus from "lucide-react/dist/esm/icons/user-plus";
+import Radar from "lucide-react/dist/esm/icons/radar";
 import X from "lucide-react/dist/esm/icons/x";
 import { useNavigate } from "react-router-dom";
 import { cn } from "@/lib/utils";
@@ -13,17 +14,21 @@ interface Props {
   onNewChat: () => void;
   onNewGroup: () => void;
   onNewContact: () => void;
+  onBroadcast?: () => void;
+  onNearby?: () => void;
 }
 
-export default function NewChatFab({ onNewChat, onNewGroup, onNewContact }: Props) {
+export default function NewChatFab({ onNewChat, onNewGroup, onNewContact, onBroadcast, onNearby }: Props) {
   const [open, setOpen] = useState(false);
   const navigate = useNavigate();
 
   const items = [
     { key: "chat", label: "New Chat", icon: MessageCircle, onClick: onNewChat },
     { key: "group", label: "New Group", icon: Users, onClick: onNewGroup },
+    ...(onBroadcast ? [{ key: "broadcast", label: "Broadcast List", icon: Radio, onClick: onBroadcast }] : []),
     { key: "channel", label: "New Channel", icon: Radio, onClick: () => navigate("/channels/new") },
     { key: "contact", label: "New Contact", icon: UserPlus, onClick: onNewContact },
+    ...(onNearby ? [{ key: "nearby", label: "People Nearby", icon: Radar, onClick: onNearby }] : []),
   ];
 
   return (

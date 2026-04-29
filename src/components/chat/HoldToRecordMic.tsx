@@ -100,22 +100,32 @@ export default function HoldToRecordMic({ voice, className }: Props) {
 
   const onPointerDown = (e: React.PointerEvent) => {
     e.preventDefault();
-    (e.target as HTMLElement).setPointerCapture?.(e.pointerId);
+    try {
+      (e.target as HTMLElement).setPointerCapture?.(e.pointerId);
+    } catch {
+      // iOS may not support setPointerCapture, continue anyway
+    }
     startPos.current = { x: e.clientX, y: e.clientY };
     startTime.current = Date.now();
     pendingStart.current = true;
     recordingStarted.current = false;
     clearGuard();
-    guardTimer.current = setTimeout(() => {
+    guardTimer.current = setTimeout(async () => {
       if (!pendingStart.current) return;
       haptic(15);
-      startPromise.current = voice.startRecording().then(() => {
+      console.log("[HoldToRecordMic] Starting voice recording after hold guard");
+      try {
+        await voice.startRecording();
         recordingStarted.current = true;
         recordingBeganAt.current = Date.now();
-      }).catch(() => {
+        startPromise.current = Promise.resolve();
+        console.log("[HoldToRecordMic] Recording started successfully");
+      } catch (err) {
+        console.error("[HoldToRecordMic] Recording start failed:", err);
         recordingStarted.current = false;
         recordingBeganAt.current = 0;
-      });
+        startPromise.current = Promise.resolve();
+      }
     }, HOLD_GUARD_MS);
   };
 
@@ -215,13 +225,23 @@ export default function HoldToRecordMic({ voice, className }: Props) {
         onPointerMove={onPointerMove}
         onPointerUp={onPointerUp}
         onPointerCancel={onPointerUp}
+        onTouchStart={(e) => {
+          const touch = e.touches[0];
+          if (touch) onPointerDown(e as any as React.PointerEvent);
+        }}
+        onTouchMove={(e) => {
+          const touch = e.touches[0];
+          if (touch) onPointerMove(e as any as React.PointerEvent);
+        }}
+        onTouchEnd={() => { void onPointerUp(); }}
+        onTouchCancel={() => { void onPointerUp(); }}
         animate={{
           scale: isRecording && !locked ? 1.15 : 1,
           x: isRecording && !locked ? dragX : 0,
           y: isRecording && !locked ? dragY : 0,
         }}
         transition={{ type: "spring", stiffness: 400, damping: 32 }}
-        className={`relative h-11 w-11 rounded-full flex items-center justify-center shrink-0 select-none touch-none transition-colors ${
+        className={`relative h-12 w-12 rounded-full flex items-center justify-center shrink-0 select-none touch-none transition-colors ${
           isRecording
             ? willCancel
               ? "bg-destructive text-destructive-foreground"
