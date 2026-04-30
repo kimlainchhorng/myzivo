@@ -4,6 +4,7 @@
 import { createClient } from "../_shared/deps.ts";
 import { getCorsHeaders } from "../_shared/cors.ts";
 import Stripe from "../_shared/stripe.ts";
+import { scanContentForLinks } from "../_shared/contentLinkValidation.ts";
 
 Deno.serve(async (req) => {
   const cors = getCorsHeaders(req);
