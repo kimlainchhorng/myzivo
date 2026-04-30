@@ -1,7 +1,7 @@
 /**
  * Notification Item — 3D/4D Spatial UI
  */
-import { Package, Gift, Headphones, Clock, User, ChevronRight } from 'lucide-react';
+import { Package, Gift, Headphones, Clock, User, ChevronRight, Heart, Repeat2, MessageCircle, AtSign } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { formatDistanceToNow } from 'date-fns';
 import { cn } from '@/lib/utils';
@@ -43,6 +43,42 @@ const NotificationItem = ({ notification, onMarkAsRead, onClick }: NotificationI
         iconBg: 'from-destructive/20 to-destructive/10',
         iconColor: 'text-destructive',
       };
+    }
+    // Trigger-generated social notifications get topic-specific icons + colors,
+    // not the generic transactional Package box.
+    switch (notification.template) {
+      case 'social_reaction':
+        return {
+          icon: Heart,
+          label: 'Reaction',
+          badgeClass: 'bg-rose-500/12 text-rose-600 border-rose-500/20',
+          iconBg: 'from-rose-500/20 to-rose-500/10',
+          iconColor: 'text-rose-500',
+        };
+      case 'social_repost':
+        return {
+          icon: Repeat2,
+          label: 'Repost',
+          badgeClass: 'bg-emerald-500/12 text-emerald-600 border-emerald-500/20',
+          iconBg: 'from-emerald-500/20 to-emerald-500/10',
+          iconColor: 'text-emerald-500',
+        };
+      case 'social_comment':
+        return {
+          icon: MessageCircle,
+          label: 'Comment',
+          badgeClass: 'bg-blue-500/12 text-blue-600 border-blue-500/20',
+          iconBg: 'from-blue-500/20 to-blue-500/10',
+          iconColor: 'text-blue-500',
+        };
+      case 'social_mention':
+        return {
+          icon: AtSign,
+          label: 'Mention',
+          badgeClass: 'bg-violet-500/12 text-violet-600 border-violet-500/20',
+          iconBg: 'from-violet-500/20 to-violet-500/10',
+          iconColor: 'text-violet-500',
+        };
     }
     switch (notification.category) {
       case 'transactional':

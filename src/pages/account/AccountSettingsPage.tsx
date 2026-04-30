@@ -800,12 +800,15 @@ export default function AccountSettingsPage() {
       {/* Header */}
       <div className="sticky top-0 safe-area-top z-40 bg-background/80 backdrop-blur-md border-b border-border/50">
         <div className="flex items-center gap-3 px-4 py-3">
-          <Button variant="ghost" size="icon" className="h-10 w-10 rounded-full" onClick={() => navigate("/more")}>
+          <Button variant="ghost" size="icon" aria-label="Back" className="h-10 w-10 rounded-full" onClick={() => navigate("/more")}>
             <ArrowLeft className="h-5 w-5" />
           </Button>
           <h1 className="text-lg font-semibold">Settings</h1>
         </div>
       </div>
+
+      {/* Body — capped to 2xl on tablet/desktop, full width on mobile */}
+      <div className="mx-auto w-full max-w-2xl">
 
       {/* User profile header */}
       {user && (
@@ -814,7 +817,7 @@ export default function AccountSettingsPage() {
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.25 }}
           onClick={() => navigate("/account/profile-edit")}
-          className="w-full mx-auto mt-3 flex items-center gap-3 px-3 py-3 rounded-2xl bg-card border border-border/40 hover:bg-accent/50 transition-all active:scale-[0.99] max-w-[calc(100%-1.5rem)]"
+          className="w-[calc(100%-1.5rem)] mx-3 mt-3 flex items-center gap-3 px-3 py-3 rounded-2xl bg-card border border-border/40 hover:bg-accent/50 transition-all active:scale-[0.99]"
         >
           <Avatar className="h-12 w-12 ring-2 ring-primary/20">
             <AvatarImage src={profile?.avatar_url || undefined} alt={profile?.full_name || "Profile"} />
@@ -853,7 +856,7 @@ export default function AccountSettingsPage() {
 
       {/* Share toolbar */}
       {user && (
-        <div className="mx-auto mt-2 max-w-[calc(100%-1.5rem)] grid grid-cols-3 gap-2 px-3">
+        <div className="mt-2 grid grid-cols-3 gap-2 px-3">
           <button
             onClick={handlePreviewProfile}
             className="flex items-center justify-center gap-1.5 px-2 py-2 rounded-xl bg-card border border-border/40 hover:bg-accent/50 transition-all active:scale-[0.97]"
@@ -880,7 +883,7 @@ export default function AccountSettingsPage() {
 
       {/* Quick stats bar */}
       {user && (
-        <div className="mx-auto mt-2 max-w-[calc(100%-1.5rem)] grid grid-cols-3 gap-2 px-3">
+        <div className="mt-2 grid grid-cols-3 gap-2 px-3">
           <button
             onClick={() => navigate("/profile?tab=followers")}
             className="flex flex-col items-center justify-center py-2 px-1 rounded-xl bg-card border border-border/40 hover:bg-accent/50 transition-all active:scale-[0.97]"
@@ -911,7 +914,7 @@ export default function AccountSettingsPage() {
           initial={{ opacity: 0, y: -6 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.25, delay: 0.1 }}
-          className="mx-auto mt-3 max-w-[calc(100%-1.5rem)] px-3"
+          className="mt-3 px-3"
         >
           <div className="flex items-center gap-3 p-3 rounded-2xl bg-gradient-to-r from-primary/10 via-primary/5 to-transparent border border-primary/20">
             <div className="relative shrink-0 h-10 w-10 rounded-xl bg-primary/15 flex items-center justify-center">
@@ -939,7 +942,7 @@ export default function AccountSettingsPage() {
 
       {/* Quick toggles */}
       {user && (
-        <div className="mx-auto mt-3 max-w-[calc(100%-1.5rem)] grid grid-cols-3 gap-2 px-3">
+        <div className="mt-3 grid grid-cols-3 gap-2 px-3">
           <button
             onClick={() => {
               const next = isDark ? "light" : "dark";
@@ -997,7 +1000,7 @@ export default function AccountSettingsPage() {
           initial={{ opacity: 0, y: -6 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.25, delay: 0.15 }}
-          className="mx-auto mt-3 max-w-[calc(100%-1.5rem)] px-3"
+          className="mt-3 px-3"
         >
           <div className="rounded-2xl border border-border/40 bg-card overflow-hidden">
             <div className="p-4 border-b border-border/30">
@@ -1066,7 +1069,7 @@ export default function AccountSettingsPage() {
           initial={{ opacity: 0, y: -6 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.25, delay: 0.2 }}
-          className="mx-auto mt-3 max-w-[calc(100%-1.5rem)] px-3"
+          className="mt-3 px-3"
         >
           <button
             onClick={() => navigate("/account/security")}
@@ -1112,7 +1115,7 @@ export default function AccountSettingsPage() {
 
       {/* Recently visited */}
       {recentItems.length > 0 && !search && (
-        <div className="mx-auto mt-3 max-w-[calc(100%-1.5rem)] px-3">
+        <div className="mt-3 px-3">
           <div className="flex items-center justify-between mb-1.5">
             <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">Recently visited</p>
             <button
@@ -1411,6 +1414,7 @@ export default function AccountSettingsPage() {
           )}
         </AnimatePresence>
       </div>
+      </div>{/* /max-w-2xl wrapper */}
 
       {/* Share dialog */}
       <ProfileShareDialog

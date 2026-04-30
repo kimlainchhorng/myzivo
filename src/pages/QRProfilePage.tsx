@@ -111,7 +111,7 @@ export default function QRProfilePage() {
             <div className="w-full space-y-3">
               <Card className="p-3 flex items-center gap-2">
                 <Input value={profileUrl} readOnly className="text-xs flex-1" />
-                <Button size="icon" variant="outline" onClick={copyLink}>
+                <Button aria-label="Copy link" size="icon" variant="outline" onClick={copyLink}>
                   {copied ? <Check className="h-4 w-4 text-green-500" /> : <Copy className="h-4 w-4" />}
                 </Button>
               </Card>

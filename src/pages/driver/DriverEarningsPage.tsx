@@ -41,7 +41,7 @@ export default function DriverEarningsPage() {
               <p className="text-xs text-muted-foreground">Track your income</p>
             </div>
           </div>
-          <Button variant="ghost" size="icon" onClick={refetch} disabled={isLoading}>
+          <Button aria-label="Refresh" variant="ghost" size="icon" onClick={refetch} disabled={isLoading}>
             <RefreshCw className={`w-5 h-5 ${isLoading ? "animate-spin" : ""}`} />
           </Button>
         </div>

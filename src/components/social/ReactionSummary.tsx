@@ -62,8 +62,8 @@ export default function ReactionSummary({ postId, source }: Props) {
   if (total === 0) return null;
 
   return (
-    <div className="flex items-center gap-1 text-white/90 drop-shadow">
-      <span className="flex items-center -space-x-1.5 text-base leading-none">
+    <div className="flex items-center gap-1 text-white/90 drop-shadow shrink-0">
+      <span className="flex items-center -space-x-1.5 text-sm sm:text-base leading-none">
         {top.map((emoji, i) => (
           <span
             key={emoji}
@@ -74,7 +74,7 @@ export default function ReactionSummary({ postId, source }: Props) {
           </span>
         ))}
       </span>
-      <span className="text-[11px] font-semibold">{total}</span>
+      <span className="text-[11px] sm:text-xs font-semibold tabular-nums">{total}</span>
     </div>
   );
 }

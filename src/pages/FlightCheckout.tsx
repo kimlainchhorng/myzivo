@@ -199,7 +199,7 @@ const FlightCheckout = () => {
         <div className="container mx-auto px-4 max-w-lg">
           {/* App-style top bar */}
           <div className="flex items-center gap-3 mb-3">
-            <Button variant="ghost" size="icon" onClick={() => showPaymentForm ? handlePaymentCancel() : navigate(-1)} disabled={isCreatingIntent} className="shrink-0 rounded-xl h-10 w-10">
+            <Button aria-label="Back" variant="ghost" size="icon" onClick={() => showPaymentForm ? handlePaymentCancel() : navigate(-1)} disabled={isCreatingIntent} className="shrink-0 rounded-xl h-10 w-10">
               <ArrowLeft className="w-5 h-5" />
             </Button>
             <h1 className="text-lg font-bold flex-1">Secure Checkout</h1>

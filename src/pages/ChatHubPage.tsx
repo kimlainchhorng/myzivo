@@ -241,24 +241,42 @@ export default function ChatHubPage({ embedded = false }: { embedded?: boolean }
   const active: ChatCategory = builtInActiveFolder?.category || "personal";
   const setActive = (c: ChatCategory) => setFolder(c);
   const [search, setSearch] = useState("");
+  const searchInputRef = useRef<HTMLInputElement>(null);
+
+  // Telegram-style: pressing "/" anywhere on the chat hub focuses the search input.
+  // Skips when the user is already typing in another input/textarea or with a modifier key.
+  useEffect(() => {
+    const handler = (e: KeyboardEvent) => {
+      if (e.key !== "/") return;
+      if (e.metaKey || e.ctrlKey || e.altKey) return;
+      const target = e.target as HTMLElement | null;
+      const tag = target?.tagName;
+      if (tag === "INPUT" || tag === "TEXTAREA" || target?.isContentEditable) return;
+      e.preventDefault();
+      searchInputRef.current?.focus();
+    };
+    window.addEventListener("keydown", handler);
+    return () => window.removeEventListener("keydown", handler);
+  }, []);
   const [searchFilter, setSearchFilter] = useState<"chats" | "media" | "links" | "files">("chats");
   const [globalSearchOpen, setGlobalSearchOpen] = useState(false);
   // Telegram-style: collapse Stories strip on scroll-down, restore on scroll-up
   const [storiesCollapsed, setStoriesCollapsed] = useState(false);
-  // Pre-warm lazy chat chunks so first open is instant (no visible loading delay)
+  // Pre-warm lazy chat chunks so first open is instant (no visible loading delay).
+  // requestIdleCallback is unsupported in Safari — must guard via window.
   useEffect(() => {
-    const id = requestIdleCallback
-      ? requestIdleCallback(() => {
-          void import("@/components/chat/PersonalChat");
-          void import("@/components/chat/GroupChat");
-          void import("@/components/grocery/StoreLiveChat");
-        })
-      : setTimeout(() => {
-          void import("@/components/chat/PersonalChat");
-          void import("@/components/chat/GroupChat");
-          void import("@/components/grocery/StoreLiveChat");
-        }, 1500);
-    return () => (requestIdleCallback ? cancelIdleCallback(id as number) : clearTimeout(id as ReturnType<typeof setTimeout>));
+    const ric = window.requestIdleCallback;
+    const cic = window.cancelIdleCallback;
+    const prefetch = () => {
+      void import("@/components/chat/PersonalChat");
+      void import("@/components/chat/GroupChat");
+      void import("@/components/grocery/StoreLiveChat");
+    };
+    const id = ric ? ric(prefetch) : setTimeout(prefetch, 1500);
+    return () => {
+      if (ric && cic) cic(id as number);
+      else clearTimeout(id as ReturnType<typeof setTimeout>);
+    };
   }, []);
 
   const lastScrollYRef = useRef(0);
@@ -1480,6 +1498,7 @@ export default function ChatHubPage({ embedded = false }: { embedded?: boolean }
               <div className="relative">
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground" />
                 <input
+                  ref={searchInputRef}
                   type="text"
                   placeholder="Search conversations..."
                   value={search}
@@ -1492,14 +1511,21 @@ export default function ChatHubPage({ embedded = false }: { embedded?: boolean }
                   }}
                   onChange={(e) => setSearch(e.target.value)}
                   className={cn(
-                    "w-full pl-9 pr-4 bg-muted/60 rounded-2xl text-sm outline-none focus:ring-2 focus:ring-primary/30 text-foreground placeholder:text-muted-foreground transition-all",
+                    "w-full pl-9 pr-10 bg-muted/60 rounded-2xl text-sm outline-none focus:ring-2 focus:ring-primary/30 text-foreground placeholder:text-muted-foreground transition-all",
                     embedded ? "py-2 text-xs" : "py-2.5"
                   )}
                 />
-                {search && (
+                {search ? (
                   <button onClick={() => setSearch("")} className="absolute right-3 top-1/2 -translate-y-1/2" aria-label="Clear search" title="Clear search">
                     <X className="w-3.5 h-3.5 text-muted-foreground" />
                   </button>
+                ) : (
+                  <span
+                    className="hidden md:inline-flex items-center px-1.5 py-0.5 rounded-md bg-muted/50 text-[10px] font-mono text-muted-foreground absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none"
+                    title="Press / to focus search"
+                  >
+                    /
+                  </span>
                 )}
               </div>
               {search.trim().length > 0 && (

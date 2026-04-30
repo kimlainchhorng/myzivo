@@ -115,7 +115,7 @@ export default function WatchPartyPage() {
           <div className="text-6xl">🎬</div>
           <div className="absolute bottom-2 left-2 right-2 flex items-center justify-between">
             <div className="flex gap-2">
-              <Button size="icon" variant="ghost" className="text-white h-8 w-8" onClick={() => setIsPlaying(!isPlaying)}>
+              <Button aria-label="Play or pause" size="icon" variant="ghost" className="text-white h-8 w-8" onClick={() => setIsPlaying(!isPlaying)}>
                 {isPlaying ? <Pause className="h-4 w-4" /> : <Play className="h-4 w-4" />}
               </Button>
               <Button size="icon" variant="ghost" className="text-white h-8 w-8"><SkipForward className="h-4 w-4" /></Button>
@@ -152,7 +152,7 @@ export default function WatchPartyPage() {
         <div className="p-3 border-t border-border flex gap-2">
           <Input placeholder="Say something..." value={chatInput} onChange={(e) => setChatInput(e.target.value)}
             onKeyDown={(e) => e.key === "Enter" && sendMessage()} className="text-sm" />
-          <Button size="icon" onClick={sendMessage}><Send className="h-4 w-4" /></Button>
+          <Button aria-label="Send" size="icon" onClick={sendMessage}><Send className="h-4 w-4" /></Button>
         </div>
       </div>
     );
@@ -163,7 +163,7 @@ export default function WatchPartyPage() {
       <div className="sticky top-0 safe-area-top z-10 bg-background/95 backdrop-blur-sm border-b border-border p-4">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <Button variant="ghost" size="icon" onClick={() => navigate(-1)}><ArrowLeft className="h-5 w-5" /></Button>
+            <Button aria-label="Back" variant="ghost" size="icon" onClick={() => navigate(-1)}><ArrowLeft className="h-5 w-5" /></Button>
             <Tv className="h-5 w-5 text-primary" />
             <h1 className="text-xl font-bold text-foreground">Watch Party</h1>
           </div>

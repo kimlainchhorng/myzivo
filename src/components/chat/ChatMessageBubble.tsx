@@ -40,6 +40,7 @@ import { assessChatMessageRisk } from "@/lib/security/chatContentSafety";
 import { ILLUSTRATED_PACKS } from "@/config/illustratedStickers";
 import { getAnimatedStickerUrl } from "@/config/animatedStickerMap";
 import { getStickerMotionSpec } from "./stickerMotion";
+import SpoilerText from "./SpoilerText";
 
 // Lazy-load TransparentStickerVideo — heavy chroma-key/WebGL component
 const TransparentStickerVideo = lazy(() => import("./TransparentStickerVideo").then(m => ({ default: m.TransparentStickerVideo })));
@@ -722,11 +723,13 @@ const ChatMessageBubble = memo(function ChatMessageBubble({
                   style={{ background: "linear-gradient(180deg, rgba(255,255,255,0.12) 0%, transparent 50%)" }} />
               )}
 
-              {/* Text portion */}
+              {/* Text portion — supports Telegram-style ||spoiler|| markers. */}
               {textWithoutUrl && (
                 <p className={`whitespace-pre-wrap break-words px-4 pt-3 pb-1 relative z-[1] ${
                   isMe ? "text-primary-foreground" : "text-foreground"
-                }`}>{textWithoutUrl}</p>
+                }`}>
+                  <SpoilerText text={textWithoutUrl} variant="bold" />
+                </p>
               )}
 
               {!isMe && messageRisk.warnings.length > 0 && (

@@ -5,8 +5,9 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { ShieldAlert, RefreshCw, Loader2 } from "lucide-react";
+import { ShieldAlert, RefreshCw, Loader2, ExternalLink, User } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
+import { Link } from "react-router-dom";
 
 type BlockedAttempt = {
   id: string;
@@ -28,6 +29,7 @@ const WINDOWS = [
 export default function AdminBlockedLinksPage() {
   const [window, setWindow] = useState<string>("7d");
   const [endpointFilter, setEndpointFilter] = useState<string>("all");
+  const [userFilter, setUserFilter] = useState<string | null>(null);
 
   const cutoff = useMemo(() => {
     const w = WINDOWS.find((x) => x.id === window);
@@ -51,7 +53,11 @@ export default function AdminBlockedLinksPage() {
   });
 
   const rows = list.data || [];
-  const filtered = endpointFilter === "all" ? rows : rows.filter((r) => r.endpoint === endpointFilter);
+  const filtered = rows.filter((r) => {
+    if (endpointFilter !== "all" && r.endpoint !== endpointFilter) return false;
+    if (userFilter && r.user_id !== userFilter) return false;
+    return true;
+  });
 
   const stats = useMemo(() => {
     const byEndpoint = new Map<string, number>();
@@ -151,8 +157,17 @@ export default function AdminBlockedLinksPage() {
 
       <Card>
         <CardHeader className="pb-2">
-          <CardTitle className="text-sm">
-            Recent rejections {endpointFilter !== "all" && <span className="text-muted-foreground">— {endpointFilter}</span>}
+          <CardTitle className="flex flex-wrap items-center justify-between gap-2 text-sm">
+            <span>
+              Recent rejections
+              {endpointFilter !== "all" && <span className="ml-1 text-muted-foreground">— {endpointFilter}</span>}
+              {userFilter && <span className="ml-1 text-muted-foreground">— user {userFilter.slice(0, 8)}…</span>}
+            </span>
+            {userFilter && (
+              <Button size="sm" variant="ghost" className="h-6 px-2 text-xs" onClick={() => setUserFilter(null)}>
+                Clear user filter
+              </Button>
+            )}
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-2">
@@ -181,7 +196,28 @@ export default function AdminBlockedLinksPage() {
                 </p>
               )}
               <div className="mt-1.5 flex flex-wrap items-center gap-2 text-[10px] text-muted-foreground">
-                {row.user_id && <span>user: <code className="rounded bg-muted px-1">{row.user_id.slice(0, 8)}…</code></span>}
+                {row.user_id && (
+                  <span className="inline-flex items-center gap-1">
+                    user: <code className="rounded bg-muted px-1">{row.user_id.slice(0, 8)}…</code>
+                    <Link
+                      to={`/user/${row.user_id}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-flex items-center gap-0.5 rounded border border-border bg-background px-1.5 py-0.5 text-primary hover:border-primary/40 hover:bg-primary/5"
+                      title="Open profile in new tab"
+                    >
+                      <User className="h-3 w-3" /> profile
+                      <ExternalLink className="h-2.5 w-2.5" />
+                    </Link>
+                    <button
+                      onClick={() => setUserFilter(row.user_id)}
+                      className="rounded border border-border bg-background px-1.5 py-0.5 text-primary hover:border-primary/40 hover:bg-primary/5"
+                      title="Show only this user's attempts"
+                    >
+                      filter by user
+                    </button>
+                  </span>
+                )}
                 {row.ip_hash && <span>ip-hash: <code className="rounded bg-muted px-1">{row.ip_hash.slice(0, 12)}…</code></span>}
               </div>
             </div>

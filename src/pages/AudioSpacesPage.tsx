@@ -120,7 +120,7 @@ export default function AudioSpacesPage() {
       <div className="min-h-screen bg-background flex flex-col">
         <div className="bg-gradient-to-b from-primary/20 to-background p-4 pt-12">
           <div className="flex items-center justify-between mb-6">
-            <Button variant="ghost" size="icon" onClick={leaveSpace}>
+            <Button aria-label="Leave" variant="ghost" size="icon" onClick={leaveSpace}>
               <ArrowLeft className="h-5 w-5" />
             </Button>
             <Badge variant="destructive" className="animate-pulse gap-1">
@@ -166,10 +166,10 @@ export default function AudioSpacesPage() {
         </div>
 
         <div className="p-4 border-t border-border flex items-center justify-center gap-4">
-          <Button variant={handRaised ? "default" : "outline"} size="icon" className="rounded-full h-12 w-12" onClick={() => setHandRaised(!handRaised)}>
+          <Button aria-label="Raise hand" variant={handRaised ? "default" : "outline"} size="icon" className="rounded-full h-12 w-12" onClick={() => setHandRaised(!handRaised)}>
             <Hand className="h-5 w-5" />
           </Button>
-          <Button variant={isMuted ? "outline" : "default"} size="icon" className="rounded-full h-14 w-14" onClick={() => setIsMuted(!isMuted)}>
+          <Button aria-label="Mute or unmute" variant={isMuted ? "outline" : "default"} size="icon" className="rounded-full h-14 w-14" onClick={() => setIsMuted(!isMuted)}>
             {isMuted ? <MicOff className="h-6 w-6" /> : <Mic className="h-6 w-6" />}
           </Button>
           <Button variant="destructive" size="sm" className="rounded-full px-6" onClick={leaveSpace}>
@@ -190,7 +190,7 @@ export default function AudioSpacesPage() {
       <div className="sticky top-0 safe-area-top z-10 bg-background/95 backdrop-blur-sm border-b border-border p-4">
         <div className="flex items-center justify-between mb-4">
           <div className="flex items-center gap-2">
-            <Button variant="ghost" size="icon" onClick={() => navigate(-1)}>
+            <Button aria-label="Back" variant="ghost" size="icon" onClick={() => navigate(-1)}>
               <ArrowLeft className="h-5 w-5" />
             </Button>
             <h1 className="text-xl font-bold text-foreground">Spaces</h1>

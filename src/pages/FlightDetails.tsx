@@ -58,7 +58,7 @@ const FlightDetails = () => {
             animate={{ opacity: 1, y: 0 }}
             className="flex items-center gap-3 mb-5"
           >
-            <Button variant="ghost" size="icon" onClick={() => navigate(-1)} className="shrink-0">
+            <Button aria-label="Back" variant="ghost" size="icon" onClick={() => navigate(-1)} className="shrink-0">
               <ArrowLeft className="w-5 h-5" />
             </Button>
             <div>

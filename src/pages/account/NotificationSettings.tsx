@@ -381,7 +381,7 @@ export default function NotificationSettings() {
         </div>
       </div>
 
-      <div className="px-4 py-4 space-y-6">
+      <div className="px-4 py-4 space-y-6 max-w-2xl mx-auto">
         {/* Push Notifications Card */}
         <motion.div
           initial={{ opacity: 0, y: 10 }}

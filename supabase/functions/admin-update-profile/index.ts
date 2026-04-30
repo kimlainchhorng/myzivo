@@ -1,7 +1,7 @@
 import { createClient } from "npm:@supabase/supabase-js@2.49.4";
 import { decode } from "https://deno.land/std@0.208.0/encoding/base64.ts";
 import { enforceAal2 } from "../_shared/aalCheck.ts";
-import { scanContentForLinks, logBlockedAttempt, isAbuseThresholdExceeded } from "../_shared/contentLinkValidation.ts";
+import { scanContentForLinks, logBlockedAttempt, isAbuseThresholdExceeded, isIpAbuseThresholdExceeded, getRequestIpHash } from "../_shared/contentLinkValidation.ts";
 import { isLikelyMaliciousBot } from "../_shared/botDetection.ts";
 
 const corsHeaders = {
@@ -67,6 +67,11 @@ Deno.serve(async (req) => {
 
     const body = await req.json();
     const { userId, avatarUrl, coverUrl, socialLinks, uploadFile, bio } = body;
+
+    const ipHash = await getRequestIpHash(req);
+    if (await isIpAbuseThresholdExceeded(adminClient, ipHash)) {
+      return new Response(JSON.stringify({ error: "rate_limited", code: "ip_abuse_threshold_exceeded", message: "Too many recent blocked submissions from your network." }), { status: 429, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+    }
 
     if (typeof userId === "string" && await isAbuseThresholdExceeded(adminClient, userId)) {
       return new Response(JSON.stringify({ error: "rate_limited", code: "abuse_threshold_exceeded", message: "Too many recent blocked submissions for this user." }), { status: 429, headers: { ...corsHeaders, "Content-Type": "application/json" } });

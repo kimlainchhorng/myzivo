@@ -164,21 +164,21 @@ export default function HashtagPage() {
       </div>
 
       {/* Hero with stat tiles */}
-      <div className="px-4 pt-5 pb-3 max-w-5xl mx-auto">
-        <div className="rounded-2xl bg-gradient-to-br from-primary/10 via-primary/5 to-background border border-primary/20 p-5">
-          <div className="flex items-center gap-3 mb-3">
-            <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-primary/10">
-              <Hash className="h-6 w-6 text-primary" />
+      <div className="px-4 sm:px-6 pt-5 pb-3 max-w-5xl mx-auto">
+        <div className="rounded-2xl bg-gradient-to-br from-primary/10 via-primary/5 to-background border border-primary/20 p-5 sm:p-6 md:p-7">
+          <div className="flex items-center gap-3 sm:gap-4 mb-3 sm:mb-4">
+            <div className="flex h-12 w-12 sm:h-14 sm:w-14 md:h-16 md:w-16 items-center justify-center rounded-xl bg-primary/10 shrink-0">
+              <Hash className="h-6 w-6 sm:h-7 sm:w-7 md:h-8 md:w-8 text-primary" />
             </div>
             <div className="min-w-0">
-              <h2 className="text-2xl sm:text-3xl font-extrabold tracking-tight">#{safeTag}</h2>
-              <p className="text-xs text-muted-foreground">
+              <h2 className="text-2xl sm:text-3xl md:text-4xl font-extrabold tracking-tight truncate">#{safeTag}</h2>
+              <p className="text-xs sm:text-sm text-muted-foreground">
                 {isLoading ? "Loading…" : totalPosts === 0 ? "Nothing here yet" : `${formatCount(totalPosts)} posts`}
               </p>
             </div>
           </div>
           {totalPosts > 0 && (
-            <div className="grid grid-cols-3 gap-2">
+            <div className="grid grid-cols-3 gap-2 sm:gap-3">
               <StatTile label="Posts"    value={formatCount(totalPosts)}    />
               <StatTile label="Likes"    value={formatCount(totalLikes)}    />
               <StatTile label="Comments" value={formatCount(totalComments)} />
@@ -264,9 +264,9 @@ export default function HashtagPage() {
 
 function StatTile({ label, value }: { label: string; value: string }) {
   return (
-    <div className="rounded-xl bg-background/60 backdrop-blur-sm p-2.5 sm:p-3 text-center border border-border/30">
-      <div className="text-lg sm:text-xl font-bold tabular-nums text-foreground">{value}</div>
-      <div className="text-[10px] uppercase tracking-wide text-muted-foreground">{label}</div>
+    <div className="rounded-xl bg-background/60 backdrop-blur-sm p-2.5 sm:p-3 md:p-4 text-center border border-border/30">
+      <div className="text-lg sm:text-xl md:text-2xl font-bold tabular-nums text-foreground">{value}</div>
+      <div className="text-[10px] sm:text-[11px] uppercase tracking-wide text-muted-foreground mt-0.5">{label}</div>
     </div>
   );
 }

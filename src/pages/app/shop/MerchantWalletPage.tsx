@@ -126,7 +126,7 @@ export default function MerchantWalletPage() {
     <div className="min-h-screen bg-background p-4 pb-24 max-w-lg mx-auto space-y-4">
       {/* Header */}
       <div className="flex items-center gap-3">
-        <Button variant="outline" size="icon" onClick={() => navigate(-1)}>
+        <Button aria-label="Back" variant="outline" size="icon" onClick={() => navigate(-1)}>
           <ArrowLeft className="h-4 w-4" />
         </Button>
         <div>

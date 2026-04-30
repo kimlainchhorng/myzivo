@@ -106,7 +106,7 @@ const defaultFilters: HotelFilters = {
 };
 
 export default function HotelResultsPage() {
-  const [searchParams] = useSearchParams();
+  const [searchParams, setSearchParams] = useSearchParams();
   const [filters, setFilters] = useState<HotelFilters>(defaultFilters);
   const [showFilters, setShowFilters] = useState(false);
   const [sortBy, setSortBy] = useState("price");
@@ -295,8 +295,8 @@ export default function HotelResultsPage() {
           ]}
           searchForm={
             <HotelEditSearchForm
-              onSearch={() => {}}
-              onCancel={() => {}}
+              onSearch={(params) => setSearchParams(params)}
+              onCancel={() => { /* form is always visible — nothing to cancel */ }}
             />
           }
         />

@@ -264,7 +264,7 @@ const SafeAreaQAPage = () => {
     <div className="min-h-screen bg-background safe-area-top">
       <header className="sticky top-0 z-10 bg-background/90 backdrop-blur border-b border-border">
         <div className="flex items-center gap-2 px-4 py-3 max-w-3xl mx-auto">
-          <Button variant="ghost" size="icon" onClick={() => navigate(-1)} aria-label="Back">
+          <Button aria-label="Back" variant="ghost" size="icon" onClick={() => navigate(-1)} aria-label="Back">
             <ArrowLeft className="h-5 w-5" />
           </Button>
           <div className="flex-1">

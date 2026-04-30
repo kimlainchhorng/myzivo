@@ -8,6 +8,8 @@ export interface PostComment {
   parent_id: string | null;
   likes_count: number;
   created_at: string;
+  is_pinned?: boolean;
+  edited_at?: string | null;
   author_name: string;
   author_avatar: string | null;
   author_is_verified?: boolean;
@@ -30,7 +32,7 @@ export function usePostComments({ postId, postSource, currentUserId }: UsePostCo
     setLoading(true);
     const { data: rawComments } = await (supabase as any)
       .from("post_comments")
-      .select("id, content, user_id, parent_id, likes_count, created_at")
+      .select("id, content, user_id, parent_id, likes_count, created_at, is_pinned, updated_at")
       .eq("post_id", postId)
       .eq("post_source", postSource)
       .order("created_at", { ascending: true });
@@ -81,6 +83,11 @@ export function usePostComments({ postId, postSource, currentUserId }: UsePostCo
         parent_id: c.parent_id,
         likes_count: c.likes_count,
         created_at: c.created_at,
+        is_pinned: !!c.is_pinned,
+        // Surface "edited" indicator if updated_at differs from created_at by >2s
+        edited_at: c.updated_at && new Date(c.updated_at).getTime() - new Date(c.created_at).getTime() > 2000
+          ? c.updated_at
+          : null,
         author_name: (profile as any)?.full_name || "User",
         author_avatar: (profile as any)?.avatar_url || null,
         author_is_verified: !!(profile as any)?.is_verified,
@@ -137,13 +144,60 @@ export function usePostComments({ postId, postSource, currentUserId }: UsePostCo
   const addComment = async (content: string, parentId?: string) => {
     if (!currentUserId || !content.trim()) return;
     setSubmitting(true);
-    await (supabase as any).from("post_comments").insert({
+
+    // Optimistic insert — show the comment in the list immediately so the
+    // user sees their submission without a network round-trip. We patch in
+    // a temporary id; fetchComments() at the end replaces it with the real
+    // row (including server-generated id, author profile, reactions).
+    const tempId = `tmp-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+    const optimistic: PostComment = {
+      id: tempId,
+      content: content.trim(),
+      user_id: currentUserId,
+      parent_id: parentId || null,
+      likes_count: 0,
+      created_at: new Date().toISOString(),
+      author_name: "You",
+      author_avatar: null,
+      replies: [],
+      reactions: [],
+    };
+    setComments((prev) => {
+      if (parentId) {
+        // Reply — append to parent's replies
+        return prev.map((c) =>
+          c.id === parentId
+            ? { ...c, replies: [...(c.replies || []), optimistic] }
+            : c,
+        );
+      }
+      // Top-level — append at the end (matches order: created_at asc)
+      return [...prev, optimistic];
+    });
+
+    const { error } = await (supabase as any).from("post_comments").insert({
       post_id: postId,
       post_source: postSource,
       user_id: currentUserId,
       content: content.trim(),
       parent_id: parentId || null,
     });
+
+    if (error) {
+      // Roll back the optimistic insert on failure
+      setComments((prev) => {
+        if (parentId) {
+          return prev.map((c) =>
+            c.id === parentId
+              ? { ...c, replies: (c.replies || []).filter((r) => r.id !== tempId) }
+              : c,
+          );
+        }
+        return prev.filter((c) => c.id !== tempId);
+      });
+      setSubmitting(false);
+      return;
+    }
 
     // Push notification to post author
     try {
@@ -161,6 +215,7 @@ export function usePostComments({ postId, postSource, currentUserId }: UsePostCo
       }
     } catch {}
 
+    // Replace the optimistic row with the real one (real id, author profile)
     await fetchComments();
     setSubmitting(false);
   };
@@ -168,6 +223,25 @@ export function usePostComments({ postId, postSource, currentUserId }: UsePostCo
   const deleteComment = async (commentId: string) => {
     await (supabase as any).from("post_comments").delete().eq("id", commentId);
     await fetchComments();
+  };
+
+  const editComment = async (commentId: string, nextContent: string) => {
+    if (!currentUserId || !nextContent.trim()) return;
+    await (supabase as any)
+      .from("post_comments")
+      .update({ content: nextContent.trim(), updated_at: new Date().toISOString() })
+      .eq("id", commentId)
+      .eq("user_id", currentUserId);
+    await fetchComments();
+  };
+
+  const togglePin = async (commentId: string): Promise<boolean | null> => {
+    const { data, error } = await (supabase as any)
+      .rpc("toggle_unified_comment_pin", { _comment_id: commentId });
+    if (error) return null;
+    await fetchComments();
+    const row = Array.isArray(data) ? data[0] : data;
+    return !!row?.pinned;
   };
 
   const toggleReaction = async (commentId: string, emoji: string) => {
@@ -193,5 +267,15 @@ export function usePostComments({ postId, postSource, currentUserId }: UsePostCo
     await fetchComments();
   };
 
-  return { comments, loading, submitting, addComment, deleteComment, toggleReaction, refetch: fetchComments };
+  return {
+    comments,
+    loading,
+    submitting,
+    addComment,
+    deleteComment,
+    editComment,
+    toggleReaction,
+    togglePin,
+    refetch: fetchComments,
+  };
 }

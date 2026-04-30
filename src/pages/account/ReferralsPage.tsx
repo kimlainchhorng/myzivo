@@ -128,7 +128,7 @@ export default function ReferralsPage() {
         </div>
       </div>
 
-      <div className="px-6 py-6 space-y-6">
+      <div className="px-6 py-6 space-y-6 max-w-2xl mx-auto">
         {/* Stats summary */}
         {!isLoading && referralCode && (
           <motion.div

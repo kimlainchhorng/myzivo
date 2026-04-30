@@ -281,6 +281,25 @@ export default function PersonalChat({ recipientId, recipientName, recipientAvat
   const [showQuickReplies, setShowQuickReplies] = useState(false);
   const [showContactPicker, setShowContactPicker] = useState(false);
   const [isDragOver, setIsDragOver] = useState(false);
+
+  // Desktop keyboard shortcuts:
+  //   ⌘/Ctrl+K → Quick Replies
+  //   ⌘/Ctrl+F → in-chat message search
+  useEffect(() => {
+    const handler = (e: KeyboardEvent) => {
+      if (!(e.metaKey || e.ctrlKey)) return;
+      const key = e.key.toLowerCase();
+      if (key === "k") {
+        e.preventDefault();
+        setShowQuickReplies(true);
+      } else if (key === "f") {
+        e.preventDefault();
+        setShowSearch(true);
+      }
+    };
+    window.addEventListener("keydown", handler);
+    return () => window.removeEventListener("keydown", handler);
+  }, []);
   const [pendingLockedFile, setPendingLockedFile] = useState<File | null>(null);
   const [chatStyle, setChatStyle] = useState({ wallpaper: "default", themeColor: "default", fontSize: "medium" });
   const [callEvents, setCallEvents] = useState<CallEvent[]>([]);
@@ -2062,13 +2081,13 @@ export default function PersonalChat({ recipientId, recipientName, recipientAvat
       {/* Smart reply suggestions — chips above the composer */}
       <SmartReplyBar
         lastIncomingMessage={(() => {
-          for (let i = messages.length - 1; i >= 0; i--) {
-            const m = messages[i];
-            if (m.sender_id !== user?.id && m.message) return m.message;
-          }
-          return null;
+          // Only suggest replies when the LAST message is from the partner —
+          // if the user has already responded, the bar should hide.
+          const last = messages[messages.length - 1];
+          if (!last || last.sender_id === user?.id) return null;
+          return last.message || null;
         })()}
-        userTyping={input.trim().length > 0}
+        userTyping={input.trim().length > 0 || !!editingId || !!replyTo}
         onPick={(text) => {
           setInput((prev) => (prev.trim() ? `${prev.trim()} ${text}` : text));
           setTimeout(() => inputRef.current?.focus(), 0);

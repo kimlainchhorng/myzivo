@@ -144,14 +144,25 @@ const renderWizard = () =>
 const fillBasics = async () => {
   const name = screen.getByLabelText(/full business name/i) as HTMLInputElement;
   const phone = screen.getByLabelText(/business phone number/i) as HTMLInputElement;
+  // bizEmail is prefilled from the mocked profile via a useEffect — wait for
+  // it to flush before typing the rest, so canContinue evaluates against a
+  // fully-populated state once the inputs settle.
+  await waitFor(() => {
+    const email = screen.getByLabelText(/business email/i) as HTMLInputElement;
+    expect(email.value).toMatch(/@/);
+  });
   fireEvent.change(name, { target: { value: "Sunrise Coffee" } });
   fireEvent.change(phone, { target: { value: "5551234567" } });
-  // bizEmail is prefilled from profile.
   // Wait for the Continue button to be enabled — guarantees state has flushed
   // and canContinue() is true (which the Save & exit button also depends on).
-  await waitFor(() => {
-    expect(screen.getByRole("button", { name: /continue/i })).toBeEnabled();
-  });
+  // Bumped from default 1000ms to 3000ms — on busy CI the resume → setChecking
+  // → prefill effect chain occasionally exceeds the default.
+  await waitFor(
+    () => {
+      expect(screen.getByRole("button", { name: /continue/i })).toBeEnabled();
+    },
+    { timeout: 3000 },
+  );
 };
 
 beforeEach(() => {

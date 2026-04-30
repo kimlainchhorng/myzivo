@@ -56,7 +56,7 @@ export default function BookmarksPage() {
       <SEOHead title="Bookmarks – ZIVO" description="Your saved flights, restaurants, and content on ZIVO." canonical="/bookmarks" noIndex />
       <div className="sticky top-0 z-40 bg-background/80 backdrop-blur-md border-b border-border/50 safe-area-top">
         <div className="flex items-center gap-3 px-4 py-3">
-          <Button variant="ghost" size="icon" className="h-10 w-10 rounded-full" onClick={() => navigate(-1)}>
+          <Button aria-label="Back" variant="ghost" size="icon" className="h-10 w-10 rounded-full" onClick={() => navigate(-1)}>
             <ArrowLeft className="h-5 w-5" />
           </Button>
           <h1 className="text-lg font-semibold">Saved</h1>
