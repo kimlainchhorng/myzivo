@@ -276,11 +276,8 @@ export default function PersonalChat({ recipientId, recipientName, recipientAvat
   const [showWalletSheet, setShowWalletSheet] = useState(false);
   const [showScanner, setShowScanner] = useState(false);
   const [showPollCreator, setShowPollCreator] = useState(false);
-<<<<<<< HEAD
   const [showQuickReplies, setShowQuickReplies] = useState(false);
   const [showContactPicker, setShowContactPicker] = useState(false);
-=======
->>>>>>> 4f5c9381f83c04cedd52b5edfbf95b784f58af56
   const [pendingLockedFile, setPendingLockedFile] = useState<File | null>(null);
   const [chatStyle, setChatStyle] = useState({ wallpaper: "default", themeColor: "default", fontSize: "medium" });
   const [callEvents, setCallEvents] = useState<CallEvent[]>([]);
@@ -2073,10 +2070,7 @@ export default function PersonalChat({ recipientId, recipientName, recipientAvat
                   onScanDocument={() => setShowScanner(true)}
                   onFileSelect={() => filePickerTriggerRef.current?.()}
                   onCreatePoll={() => setShowPollCreator(true)}
-<<<<<<< HEAD
                   onShareContact={() => setShowContactPicker(true)}
-=======
->>>>>>> 4f5c9381f83c04cedd52b5edfbf95b784f58af56
                 />
               </div>
 
@@ -2435,7 +2429,6 @@ export default function PersonalChat({ recipientId, recipientName, recipientAvat
         </Suspense>
       )}
 
-<<<<<<< HEAD
       {/* Poll creator (Telegram-style) */}
       <ChatPollCreator
         open={showPollCreator}
@@ -2509,39 +2502,6 @@ export default function PersonalChat({ recipientId, recipientName, recipientAvat
           toast.success("Contact shared");
         }}
       />
-=======
-      {/* Poll Creator */}
-      {showPollCreator && (
-        <Suspense fallback={null}>
-          <PollCreatorSheet
-            open={showPollCreator}
-            onClose={() => setShowPollCreator(false)}
-            onSendPoll={(question, options) => {
-              const pollPayload = JSON.stringify({
-                __rich: true,
-                payload: {
-                  type: "poll",
-                  label: `📊 ${question}`,
-                  question,
-                  options: options.map((o) => ({ text: o, votes: 0 })),
-                  total_votes: 0,
-                },
-              });
-              void (async () => {
-                const { error } = await (supabase as any).from("direct_messages").insert({
-                  sender_id: user!.id,
-                  receiver_id: recipientId,
-                  message: pollPayload,
-                  message_type: "poll",
-                });
-                if (!error) toast.success("Poll sent!");
-              })();
-              setShowPollCreator(false);
-            }}
-          />
-        </Suspense>
-      )}
->>>>>>> 4f5c9381f83c04cedd52b5edfbf95b784f58af56
     </motion.div>
   );
 

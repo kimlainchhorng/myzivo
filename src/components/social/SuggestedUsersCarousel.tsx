@@ -185,13 +185,8 @@ const SuggestedUsersCarousel = memo(forwardRef<HTMLDivElement, SuggestedUsersCar
                 </div>
 
                 {profile.bio && (
-<<<<<<< HEAD
                   <p className="text-[9px] text-muted-foreground line-clamp-2 mb-1.5 leading-tight">
                     <SafeCaption text={profile.bio} />
-=======
-                  <p className="text-[9px] text-muted-foreground line-clamp-2 mb-0.5 leading-tight">
-                    {profile.bio}
->>>>>>> 4f5c9381f83c04cedd52b5edfbf95b784f58af56
                   </p>
                 )}
 

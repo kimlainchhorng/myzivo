@@ -261,16 +261,11 @@ export default function ReelsFeedPage() {
   const [storeSearchResults, setStoreSearchResults] = useState<any[]>([]);
   const [searchLoading, setSearchLoading] = useState(false);
   const [feedFilter, setFeedFilter] = useState<"all" | "photos" | "videos" | "text">("all");
-<<<<<<< HEAD
-  const [feedTab, setFeedTab] = useState<"For You" | "Friends" | "Following">("For You");
-  const [sidebarContacts, setSidebarContacts] = useState<Array<{ id: string; name: string; avatar: string | null }>>([]);
-  const [trendingTags, setTrendingTags] = useState<string[]>([]);
-  const [friendIds, setFriendIds] = useState<Set<string>>(new Set());
-  const [followingIds, setFollowingIds] = useState<Set<string>>(new Set());
-=======
   const [feedMode, setFeedMode] = useState<"foryou" | "following">("foryou");
   const [followingIds, setFollowingIds] = useState<Set<string>>(new Set());
-  // Trending-hashtag chip filter
+  const [friendIds, setFriendIds] = useState<Set<string>>(new Set());
+  const [sidebarContacts, setSidebarContacts] = useState<Array<{ id: string; name: string; avatar: string | null }>>([]);
+  const [trendingTags, setTrendingTags] = useState<string[]>([]);
   const [selectedHashtag, setSelectedHashtag] = useState<string | null>(null);
   const PAGE_INCREMENT = 25;
   const PAGE_MAX = 500;
@@ -278,7 +273,6 @@ export default function ReelsFeedPage() {
   const loadMoreRef = useRef<HTMLDivElement>(null);
   const feedTopRef = useRef<HTMLDivElement>(null);
   const [newPostsCount, setNewPostsCount] = useState(0);
->>>>>>> 855443b0719159d83ad7f6c5c749111be5296ccd
   const searchInputRef = useRef<HTMLInputElement>(null);
   const searchTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const location = useLocation();
@@ -360,55 +354,11 @@ export default function ReelsFeedPage() {
     });
   }, []);
 
-<<<<<<< HEAD
-  // Sidebar contacts + trending tags
+  // Load followed + friend IDs, sidebar contacts, trending tags
   useEffect(() => {
-    if (!userId) return;
-    (async () => {
-      const { data: fships } = await (supabase as any)
-        .from("friendships")
-        .select("user_id, friend_id")
-        .eq("status", "accepted")
-        .or(`user_id.eq.${userId},friend_id.eq.${userId}`)
-        .limit(10);
-      if (!fships?.length) return;
-      const fIds = fships.map((r: any) => r.user_id === userId ? r.friend_id : r.user_id);
-      setFriendIds(new Set(fIds));
-      const { data: profs } = await supabase
-        .from("profiles")
-        .select("user_id, full_name, avatar_url")
-        .in("user_id", fIds)
-        .limit(8);
-      if (profs) setSidebarContacts(profs.map((p: any) => ({ id: p.user_id, name: p.full_name || "User", avatar: p.avatar_url || null })));
-    })();
-    (async () => {
-      const { data: flData } = await (supabase as any)
-        .from("user_followers")
-        .select("following_id")
-        .eq("follower_id", userId);
-      if (flData) setFollowingIds(new Set(flData.map((r: any) => r.following_id)));
-    })();
-    (async () => {
-      const { data: posts } = await (supabase as any)
-        .from("user_posts")
-        .select("caption")
-        .order("created_at", { ascending: false })
-        .limit(100);
-      if (!posts) return;
-      const tagCounts: Record<string, number> = {};
-      posts.forEach((p: any) => {
-        const tags = (p.caption || "").match(/#[\w一-鿿؀-ۿ]+/g) || [];
-        tags.forEach((t: string) => { tagCounts[t] = (tagCounts[t] || 0) + 1; });
-      });
-      setTrendingTags(Object.entries(tagCounts).sort((a, b) => b[1] - a[1]).slice(0, 8).map(([t]) => t));
-    })();
-  }, [userId]);
-
-=======
-  // Load followed user IDs for "Following" tab filtering
-  useEffect(() => {
-    if (!userId) { setFollowingIds(new Set()); return; }
+    if (!userId) { setFollowingIds(new Set()); setFriendIds(new Set()); return; }
     let alive = true;
+    // Following IDs
     (supabase as any)
       .from("user_followers")
       .select("following_id")
@@ -417,32 +367,55 @@ export default function ReelsFeedPage() {
         if (!alive) return;
         setFollowingIds(new Set((data || []).map((r: any) => r.following_id)));
       });
+    // Friend IDs + sidebar contacts
+    (async () => {
+      const { data: fships } = await (supabase as any)
+        .from("friendships")
+        .select("user_id, friend_id")
+        .eq("status", "accepted")
+        .or(`user_id.eq.${userId},friend_id.eq.${userId}`)
+        .limit(10);
+      if (!alive || !fships?.length) return;
+      const fIds = fships.map((r: any) => r.user_id === userId ? r.friend_id : r.user_id);
+      setFriendIds(new Set(fIds));
+      const { data: profs } = await supabase
+        .from("profiles")
+        .select("user_id, full_name, avatar_url")
+        .in("user_id", fIds)
+        .limit(8);
+      if (alive && profs) setSidebarContacts(profs.map((p: any) => ({ id: p.user_id, name: p.full_name || "User", avatar: p.avatar_url || null })));
+    })();
+    // Trending hashtags
+    (async () => {
+      const { data: posts } = await (supabase as any)
+        .from("user_posts")
+        .select("caption")
+        .order("created_at", { ascending: false })
+        .limit(100);
+      if (!alive || !posts) return;
+      const tagCounts: Record<string, number> = {};
+      posts.forEach((p: any) => {
+        const tags = (p.caption || "").match(/#[\w一-鿿؀-ۿ]+/g) || [];
+        tags.forEach((t: string) => { tagCounts[t] = (tagCounts[t] || 0) + 1; });
+      });
+      setTrendingTags(Object.entries(tagCounts).sort((a, b) => b[1] - a[1]).slice(0, 8).map(([t]) => t));
+    })();
     return () => { alive = false; };
   }, [userId]);
 
-  // Realtime: count new posts and prompt the user to refresh.
-  // We don't auto-prepend because that's jarring while they're mid-scroll —
-  // Twitter-style banner instead. Skips the user's own posts and skips
-  // anything they're not following when on the "Following" tab.
+  // Realtime new-posts banner (Twitter-style — don't auto-prepend mid-scroll)
   useEffect(() => {
     const channel = supabase
       .channel("feed-new-posts")
-      .on(
-        // postgres_changes typing varies between supabase-js versions
-        "postgres_changes" as any,
-        { event: "INSERT", schema: "public", table: "user_posts" },
-        (payload: any) => {
-          const post = payload?.new;
-          if (!post || post.is_published === false) return;
-          if (post.user_id && post.user_id === userId) return;
-          if (feedMode === "following" && (!post.user_id || !followingIds.has(post.user_id))) return;
-          setNewPostsCount((n) => Math.min(n + 1, 99));
-        },
-      )
+      .on("postgres_changes" as any, { event: "INSERT", schema: "public", table: "user_posts" }, (payload: any) => {
+        const post = payload?.new;
+        if (!post || post.is_published === false) return;
+        if (post.user_id && post.user_id === userId) return;
+        if (feedMode === "following" && (!post.user_id || !followingIds.has(post.user_id))) return;
+        setNewPostsCount((n) => Math.min(n + 1, 99));
+      })
       .subscribe();
     return () => { void supabase.removeChannel(channel); };
-    // followingIds.size used as a stable proxy so we don't tear the channel
-    // down on every Set identity change.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [userId, feedMode, followingIds.size]);
 
@@ -453,9 +426,7 @@ export default function ReelsFeedPage() {
     feedTopRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
   }, [queryClient]);
 
-<<<<<<< HEAD
-  // Active live-stream count — drives the visibility + label of the Live Now
-  // banner so we don't promote a discovery surface that has nothing to show.
+  // Active live-stream count
   const { data: liveStreamsCount = 0 } = useQuery({
     queryKey: ["feed-live-count"],
     queryFn: async () => {
@@ -468,10 +439,6 @@ export default function ReelsFeedPage() {
     refetchInterval: 30_000,
     refetchOnWindowFocus: false,
   });
-
-=======
->>>>>>> 855443b0719159d83ad7f6c5c749111be5296ccd
->>>>>>> 4f5c9381f83c04cedd52b5edfbf95b784f58af56
   // User search with debounce
   const handleSearchChange = (q: string) => {
     setSearchQuery(q);
@@ -1005,22 +972,6 @@ export default function ReelsFeedPage() {
         {/* Main Feed Content */}
         <PullToRefresh onRefresh={handlePullRefresh} className="min-h-screen bg-background pb-20 lg:pb-0 flex-1 lg:max-w-2xl lg:mx-auto">
           {/* Header — hidden on desktop since the global NavBar already provides search */}
-<<<<<<< HEAD
-          <div data-testid="feed-sticky-header" className="lg:hidden sticky z-40 bg-background/95 backdrop-blur-xl border-b border-border/30 px-4 py-2.5 flex items-center gap-3 lg:pt-3 pt-safe" style={{ top: 'var(--zivo-safe-top, 0px)' }}>
-            <h1 className="text-lg font-bold text-foreground shrink-0 lg:hidden">Feed</h1>
-            <div className="flex-1 relative">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />
-              <input
-                value={searchQuery}
-                onChange={(e) => handleSearchChange(e.target.value)}
-                onFocus={() => setShowSearch(true)}
-                placeholder="Search people..."
-                className="w-full pl-9 pr-8 py-2 rounded-full bg-muted/40 border border-border/30 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 transition-colors"
-              />
-              {searchQuery && (
-                <button onClick={() => { setSearchQuery(""); setSearchResults([]); }} className="absolute right-3 top-1/2 -translate-y-1/2">
-                  <XIcon className="h-4 w-4 text-muted-foreground" />
-=======
           <div data-testid="feed-sticky-header" className="lg:hidden sticky top-0 z-40 bg-background/95 backdrop-blur-xl border-b border-border/30 pt-safe">
             <div className="flex items-center gap-3 px-4 py-2.5">
               <h1 className="text-lg font-bold text-foreground shrink-0 lg:hidden">Feed</h1>
@@ -1074,7 +1025,6 @@ export default function ReelsFeedPage() {
                   )}
                 >
                   {f === "all" ? "All" : f === "photos" ? "Photos" : "Videos"}
->>>>>>> 855443b0719159d83ad7f6c5c749111be5296ccd
                 </button>
               ))}
             </div>
@@ -1294,23 +1244,25 @@ export default function ReelsFeedPage() {
            {/* Suggested Users */}
            <Suspense fallback={null}><SuggestedUsersCarousel /></Suspense>
 
-          {/* Feed filter tabs */}
-          <div className="sticky top-0 lg:top-[60px] z-20 bg-background/95 backdrop-blur-xl border-b border-border/20 flex">
-            {(["For You", "Friends", "Following"] as const).map((tab) => (
-              <button
-                key={tab}
-                onClick={() => setFeedTab(tab)}
-                className={cn(
-                  "flex-1 py-2.5 text-[13px] font-semibold transition-colors",
-                  feedTab === tab
-                    ? "text-primary border-b-2 border-primary"
-                    : "text-muted-foreground hover:text-foreground"
-                )}
-              >
-                {tab}
-              </button>
-            ))}
-          </div>
+          {/* Feed mode tabs — desktop only (mobile uses the sticky header tabs) */}
+          {userId && (
+            <div className="hidden lg:flex sticky lg:top-[60px] z-20 bg-background/95 backdrop-blur-xl border-b border-border/20">
+              {([["foryou", "For You"], ["following", "Following"]] as const).map(([mode, label]) => (
+                <button
+                  key={mode}
+                  onClick={() => setFeedMode(mode)}
+                  className={cn(
+                    "flex-1 py-2.5 text-[13px] font-semibold transition-colors",
+                    feedMode === mode
+                      ? "text-primary border-b-2 border-primary"
+                      : "text-muted-foreground hover:text-foreground"
+                  )}
+                >
+                  {label}
+                </button>
+              ))}
+            </div>
+          )}
 
           {/* Posts */}
           {isLoading ? (
@@ -1344,17 +1296,6 @@ export default function ReelsFeedPage() {
               )}
             </div>
           ) : (() => {
-<<<<<<< HEAD
-            const tabItems = feedTab === "Friends"
-              ? items.filter(i => i.author_id && friendIds.has(i.author_id))
-              : feedTab === "Following"
-              ? items.filter(i => i.author_id && followingIds.has(i.author_id))
-              : items;
-            const filteredItems = feedFilter === "all" ? tabItems
-              : feedFilter === "photos" ? tabItems.filter(i => i.media_type === "image" && i.media_urls.length > 0)
-              : feedFilter === "videos" ? tabItems.filter(i => i.media_type === "video")
-              : tabItems.filter(i => !i.media_urls.length || !i.media_urls[0]);
-=======
             // Apply feed mode (For You vs Following) first
             let modeItems = feedMode === "following" && userId
               ? items.filter(i => i.author_id && followingIds.has(i.author_id))
@@ -1383,7 +1324,6 @@ export default function ReelsFeedPage() {
                 </div>
               );
             }
->>>>>>> 855443b0719159d83ad7f6c5c749111be5296ccd
             return filteredItems.length === 0 ? (
               selectedHashtag ? (
                 <div className="flex flex-col items-center justify-center py-16 text-center px-6 gap-3">

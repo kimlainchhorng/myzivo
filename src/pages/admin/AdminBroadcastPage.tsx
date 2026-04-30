@@ -93,16 +93,22 @@ export default function AdminBroadcastPage() {
         if (error) throw error;
       }
 
-      // Trigger send via edge function for push channel
+      // Trigger push delivery — pass user_ids so the edge function can target each device token
       if (channel === "push") {
-        await supabase.functions.invoke("send-push-notification", {
-          body: {
-            notification_type: "admin_broadcast",
-            title,
-            body,
-            data: { role },
-          },
-        }).catch(() => {}); // best-effort
+        const userIdList = profiles.map((p: any) => p.id as string);
+        // Send in chunks of 500 to stay within edge function limits
+        const PUSH_CHUNK = 500;
+        for (let ci = 0; ci < userIdList.length; ci += PUSH_CHUNK) {
+          await supabase.functions.invoke("send-push-notification", {
+            body: {
+              user_ids: userIdList.slice(ci, ci + PUSH_CHUNK),
+              notification_type: "admin_broadcast",
+              title,
+              body,
+              data: { role, url: "/" },
+            },
+          }).catch(() => {}); // best-effort; don't block on push failure
+        }
       }
 
       qc.invalidateQueries({ queryKey: ["admin-broadcasts"] });
