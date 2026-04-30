@@ -88,7 +88,7 @@ export default function FeaturedEatsSection() {
         </motion.div>
 
         <div className="flex gap-2 mb-8 overflow-x-auto scrollbar-hide pb-1">
-          {liveCategories.map((c) => (
+          {(liveCategories as string[]).map((c) => (
             <button
               key={c}
               onClick={() => setActiveCategory(c)}

@@ -635,7 +635,7 @@ export function LodgingBookingDrawer({
                   <p className="text-muted-foreground truncate">{storeName}</p>
                   {ratePlanLabel && (
                     <span className="inline-flex items-center gap-1 text-[10px] font-semibold text-amber-600 dark:text-amber-400 mt-0.5">
-                      <Coffee className="h-2.5 w-2.5" /> {ratePlanLabel}
+                      <span className="h-2.5 w-2.5 inline-block rounded-full bg-amber-500/60" /> {ratePlanLabel}
                     </span>
                   )}
                 </div>

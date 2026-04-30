@@ -159,7 +159,7 @@ const HelpCenter = () => {
       {/* Header - Mobile optimized */}
       <header className="sticky top-0 safe-area-top z-50 bg-card/80 backdrop-blur-xl border-b border-white/10 px-3 py-2.5">
         <div className="flex items-center gap-2.5">
-          <Button aria-label="Back" variant="ghost" size="icon" onClick={() => navigate(-1)} className="h-9 w-9 rounded-xl hover:bg-white/10 active:scale-95 transition-transform" aria-label="Go back">
+          <Button variant="ghost" size="icon" onClick={() => navigate(-1)} className="h-9 w-9 rounded-xl hover:bg-white/10 active:scale-95 transition-transform" aria-label="Go back">
             <ChevronLeft className="h-4 h-4" />
           </Button>
           <div className="flex items-center gap-2">
