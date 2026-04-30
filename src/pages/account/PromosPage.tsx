@@ -3,7 +3,7 @@
  * Shows available coupons, expiration dates, and usage rules
  */
 import { useState, useCallback, useMemo } from "react";
-import { ArrowLeft, Tag, Clock, Gift, Copy, Check, ChevronRight, Sparkles, Info, Search, X, ArrowUpDown, History } from "lucide-react";
+import { ArrowLeft, Tag, Clock, Gift, Copy, Check, ChevronRight, Sparkles, Info, Search, X, ArrowUpDown, History, Loader2, Plus } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -51,6 +51,8 @@ export default function PromosPage() {
   const [search, setSearch] = useState("");
   const [sortKey, setSortKey] = useState<SortKey>("expiring");
   const [showHistory, setShowHistory] = useState(false);
+  const [applyCodeInput, setApplyCodeInput] = useState("");
+  const [applyingCode, setApplyingCode] = useState(false);
   const queryClient = useQueryClient();
 
   const { data: walletPromos, isLoading: walletLoading } = useUserPromoWallet(user?.id);
@@ -180,6 +182,38 @@ export default function PromosPage() {
     navigate("/eats", { state: { promoCode: code } });
   };
 
+  const handleApplyCode = async (e?: React.FormEvent) => {
+    e?.preventDefault();
+    const code = applyCodeInput.trim().toUpperCase();
+    if (!code) {
+      toast.error("Enter a promo code");
+      return;
+    }
+    setApplyingCode(true);
+    try {
+      const now = new Date().toISOString();
+      const { data, error } = await supabase
+        .from("promo_codes")
+        .select("code, is_active, expires_at")
+        .eq("code", code)
+        .eq("is_active", true)
+        .or(`expires_at.is.null,expires_at.gt.${now}`)
+        .maybeSingle();
+      if (error) throw error;
+      if (!data) {
+        toast.error("Code not found or expired");
+        return;
+      }
+      toast.success(`${code} applied!`, { description: "Continue to checkout to use it." });
+      setApplyCodeInput("");
+      navigate("/eats", { state: { promoCode: code } });
+    } catch (err: any) {
+      toast.error(err?.message || "Could not apply code");
+    } finally {
+      setApplyingCode(false);
+    }
+  };
+
   const getExpirationStatus = (expiresAt: string | null) => {
     if (!expiresAt) {
       return { text: "No expiration", color: "text-emerald-500", urgent: false };
@@ -214,7 +248,7 @@ export default function PromosPage() {
         </div>
       </div>
 
-      <div className="px-6 py-6 space-y-6">
+      <div className="px-6 py-6 space-y-6 max-w-2xl mx-auto">
         {/* Summary Card */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
@@ -234,6 +268,36 @@ export default function PromosPage() {
             Use promo codes at checkout to save on your orders!
           </p>
         </motion.div>
+
+        {/* Apply a code manually (from email, friends, social) */}
+        <motion.form
+          onSubmit={handleApplyCode}
+          initial={{ opacity: 0, y: 8 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.05 }}
+          className="rounded-2xl border border-border/40 bg-card p-3 space-y-2"
+        >
+          <p className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider px-1">
+            Have a code?
+          </p>
+          <div className="flex gap-2">
+            <Input
+              value={applyCodeInput}
+              onChange={(e) => setApplyCodeInput(e.target.value.toUpperCase())}
+              placeholder="Enter promo code"
+              maxLength={32}
+              className="flex-1 h-11 rounded-xl bg-muted/30 border-border/40 font-mono text-sm tracking-wider uppercase"
+              aria-label="Promo code"
+            />
+            <Button
+              type="submit"
+              disabled={applyingCode || !applyCodeInput.trim()}
+              className="h-11 rounded-xl px-4 font-semibold shrink-0"
+            >
+              {applyingCode ? <Loader2 className="h-4 w-4 animate-spin" /> : <><Plus className="h-4 w-4 mr-1.5" />Apply</>}
+            </Button>
+          </div>
+        </motion.form>
 
         {/* Search + Sort + History toggle */}
         {!isLoading && (totalPromos > 0 || historyWalletPromos.length > 0) && (

@@ -6,6 +6,7 @@
  */
 import { useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
+import { useHaptic } from "@/hooks/useHaptic";
 
 export type ReactionEmoji = "❤️" | "😂" | "😮" | "😢" | "😡" | "🔥";
 
@@ -26,6 +27,7 @@ interface Props {
 
 export default function ReactionPicker({ open, onClose, onPick }: Props) {
   const ref = useRef<HTMLDivElement>(null);
+  const haptic = useHaptic();
 
   // Close on outside click / escape
   useEffect(() => {
@@ -49,10 +51,10 @@ export default function ReactionPicker({ open, onClose, onPick }: Props) {
       {open && (
         <motion.div
           ref={ref}
-          initial={{ scale: 0.6, opacity: 0, y: 20 }}
+          initial={{ scale: 0.4, opacity: 0, y: 24 }}
           animate={{ scale: 1, opacity: 1, y: 0 }}
-          exit={{ scale: 0.7, opacity: 0, y: 10 }}
-          transition={{ type: "spring", damping: 22, stiffness: 380 }}
+          exit={{ scale: 0.5, opacity: 0, y: 12 }}
+          transition={{ type: "spring", damping: 16, stiffness: 420, mass: 0.7 }}
           className="absolute -top-16 sm:-top-14 right-0 z-50 flex items-center gap-1 sm:gap-0.5 rounded-full bg-black/80 backdrop-blur-md px-2.5 py-2 sm:px-2 sm:py-1.5 shadow-2xl border border-white/10"
         >
           {REACTIONS.map(({ emoji, label }) => (
@@ -60,6 +62,7 @@ export default function ReactionPicker({ open, onClose, onPick }: Props) {
               key={emoji}
               onClick={(e) => {
                 e.stopPropagation();
+                haptic("medium");
                 onPick(emoji);
                 onClose();
               }}

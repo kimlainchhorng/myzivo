@@ -157,7 +157,7 @@ export default function TripDetailPage() {
                   autoFocus
                   onKeyDown={(e) => e.key === "Enter" && handleSaveTitle()}
                 />
-                <Button size="icon" variant="ghost" onClick={handleSaveTitle}>
+                <Button aria-label="Save title" size="icon" variant="ghost" onClick={handleSaveTitle}>
                   <Check className="w-4 h-4" />
                 </Button>
               </div>
@@ -364,7 +364,7 @@ function TripItemCard({ item, onDelete }: { item: TripItem; onDelete: () => void
               <p className="text-xs text-muted-foreground mt-1 line-clamp-2">{item.description}</p>
             )}
           </div>
-          <Button variant="ghost" size="icon" className="h-7 w-7 text-destructive/60 hover:text-destructive shrink-0" onClick={onDelete}>
+          <Button aria-label="Delete" variant="ghost" size="icon" className="h-7 w-7 text-destructive/60 hover:text-destructive shrink-0" onClick={onDelete}>
             <Trash2 className="w-3.5 h-3.5" />
           </Button>
         </CardContent>

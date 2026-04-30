@@ -1,6 +1,6 @@
 import { createClient } from "../_shared/deps.ts";
 import { enforceAal2 } from "../_shared/aalCheck.ts";
-import { scanContentForLinks, logBlockedAttempt, isAbuseThresholdExceeded } from "../_shared/contentLinkValidation.ts";
+import { scanContentForLinks, logBlockedAttempt, isAbuseThresholdExceeded, isIpAbuseThresholdExceeded, getRequestIpHash } from "../_shared/contentLinkValidation.ts";
 import { isLikelyMaliciousBot } from "../_shared/botDetection.ts";
 
 // Admin-gated approve/block for trip_messages, with admin_actions audit entry.
@@ -56,6 +56,10 @@ Deno.serve(async (req) => {
       });
     }
 
+    const ipHash = await getRequestIpHash(req);
+    if (await isIpAbuseThresholdExceeded(admin, ipHash)) {
+      return new Response(JSON.stringify({ error: "rate_limited", code: "ip_abuse_threshold_exceeded", message: "Too many recent blocked submissions from your network." }), { status: 429, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+    }
     if (await isAbuseThresholdExceeded(admin, user.id)) {
       return new Response(JSON.stringify({ error: "rate_limited", code: "abuse_threshold_exceeded", message: "Too many recent blocked submissions. Try again in 24 hours." }), { status: 429, headers: { ...corsHeaders, "Content-Type": "application/json" } });
     }

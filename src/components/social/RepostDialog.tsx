@@ -54,7 +54,7 @@ export default function RepostDialog({
           onClick={onClose}
         >
           <motion.div
-            className="w-full max-w-md rounded-t-3xl bg-background p-5 pb-8 shadow-2xl sm:rounded-3xl sm:pb-5 max-h-[90vh] overflow-y-auto"
+            className="w-full max-w-md md:max-w-lg rounded-t-3xl bg-background p-5 pb-8 shadow-2xl sm:rounded-3xl sm:pb-5 max-h-[90vh] overflow-y-auto"
             initial={{ y: 400, opacity: 0.5 }} animate={{ y: 0, opacity: 1 }} exit={{ y: 400, opacity: 0 }}
             transition={{ type: "spring", damping: 30, stiffness: 300 }}
             onClick={(e) => e.stopPropagation()}

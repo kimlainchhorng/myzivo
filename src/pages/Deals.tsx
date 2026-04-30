@@ -5,6 +5,7 @@
  */
 
 import { useState } from "react";
+import { supabase } from "@/integrations/supabase/client";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import SEOHead from "@/components/SEOHead";
@@ -61,6 +62,7 @@ const categoryConfig: Record<DealCategoryType, { label: string; icon: typeof Pla
 export default function Deals() {
   const [activeCategory, setActiveCategory] = useState<DealCategoryType>('all');
   const [email, setEmail] = useState("");
+  const [submittingDeals, setSubmittingDeals] = useState(false);
 
   // Fetch live deals from Supabase
   const apiCategory = activeCategory === 'last-minute' ? 'all' : activeCategory as DealCategory;
@@ -71,10 +73,27 @@ export default function Deals() {
     ? allDeals.filter(d => d.deal_type === 'last-minute' || d.deal_type === 'flash')
     : allDeals;
 
-  const handleSubscribe = (e: React.FormEvent) => {
+  const handleSubscribe = async (e: React.FormEvent) => {
     e.preventDefault();
-    toast.success("You'll be notified of new deals!");
-    setEmail("");
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      toast.error("Please enter a valid email");
+      return;
+    }
+    setSubmittingDeals(true);
+    try {
+      const { error } = await supabase.from("feedback_submissions").insert({
+        category: "deals_alert_signup",
+        subject: "Deals page alert signup",
+        message: `Email: ${email}\nCategory: ${activeCategory}`,
+      });
+      if (error) throw error;
+      toast.success("You'll be notified of new deals!");
+      setEmail("");
+    } catch (err: any) {
+      toast.error(err?.message || "Could not subscribe. Please try again.");
+    } finally {
+      setSubmittingDeals(false);
+    }
   };
 
   return (
@@ -140,13 +159,14 @@ export default function Deals() {
                     required
                   />
                 </div>
-                <Button 
-                  type="submit" 
-                  size="lg" 
+                <Button
+                  type="submit"
+                  size="lg"
+                  disabled={submittingDeals}
                   className="h-13 px-6 rounded-2xl font-bold shadow-lg shadow-primary/20 bg-gradient-to-r from-primary to-emerald-500 hover:from-primary/90 hover:to-emerald-500/90 text-primary-foreground active:scale-[0.98] transition-all"
                 >
                   <Bell className="w-4 h-4 mr-2" />
-                  Notify Me
+                  {submittingDeals ? "Subscribing…" : "Notify Me"}
                 </Button>
               </motion.form>
             </div>

@@ -441,7 +441,7 @@ export default function ServiceBookingPage() {
       {/* Header */}
       <div className="bg-card border-b border-border sticky top-0 safe-area-top z-10">
         <div className="max-w-5xl mx-auto px-4 md:px-6 py-3 md:py-4 flex items-center gap-3">
-          <Button variant="ghost" size="icon" onClick={() => navigate(-1)}>
+          <Button aria-label="Back" variant="ghost" size="icon" onClick={() => navigate(-1)}>
             <ArrowLeft className="h-5 w-5" />
           </Button>
           <div className="flex items-center gap-3">

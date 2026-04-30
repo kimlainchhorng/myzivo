@@ -84,12 +84,12 @@ export default function WhiteboardPage() {
       <div className="sticky top-0 safe-area-top z-10 bg-background/95 backdrop-blur-sm border-b border-border p-3">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <Button variant="ghost" size="icon" onClick={() => navigate(-1)}><ArrowLeft className="h-5 w-5" /></Button>
+            <Button aria-label="Back" variant="ghost" size="icon" onClick={() => navigate(-1)}><ArrowLeft className="h-5 w-5" /></Button>
             <h1 className="text-lg font-bold text-foreground">Whiteboard</h1>
           </div>
           <div className="flex gap-1">
-            <Button variant="ghost" size="icon" className="h-8 w-8" onClick={clearCanvas}><Trash2 className="h-4 w-4" /></Button>
-            <Button variant="ghost" size="icon" className="h-8 w-8" onClick={downloadCanvas}><Download className="h-4 w-4" /></Button>
+            <Button aria-label="Clear" variant="ghost" size="icon" className="h-8 w-8" onClick={clearCanvas}><Trash2 className="h-4 w-4" /></Button>
+            <Button aria-label="Download" variant="ghost" size="icon" className="h-8 w-8" onClick={downloadCanvas}><Download className="h-4 w-4" /></Button>
           </div>
         </div>
       </div>
@@ -118,7 +118,7 @@ export default function WhiteboardPage() {
                 <t.icon className="h-4 w-4" />
               </Button>
             ))}
-            <Button variant="outline" size="icon" className="h-9 w-9" onClick={() => setShowColors(!showColors)}>
+            <Button aria-label="Choose color" variant="outline" size="icon" className="h-9 w-9" onClick={() => setShowColors(!showColors)}>
               <div className="h-5 w-5 rounded-full border border-border" style={{ backgroundColor: color }} />
             </Button>
           </div>

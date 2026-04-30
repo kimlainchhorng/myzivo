@@ -65,15 +65,15 @@ export default function CommentPreview({ postId, source, totalCount, onOpen }: P
     <button
       type="button"
       onClick={(e) => { e.stopPropagation(); onOpen(); }}
-      className="text-left text-white/85 active:opacity-70 max-w-[78%]"
+      className="text-left text-white/85 active:opacity-70 max-w-[78%] py-1 -my-1 transition-opacity hover:opacity-100"
     >
       {top && (
-        <p className="text-[12px] leading-snug line-clamp-1 drop-shadow">
+        <p className="text-[12px] sm:text-[13px] md:text-sm leading-snug line-clamp-1 drop-shadow">
           <span className="font-semibold">{top.authorName}</span>{" "}
           <span className="opacity-90">{top.text}</span>
         </p>
       )}
-      <p className="mt-0.5 text-[11px] font-medium text-white/60 drop-shadow">
+      <p className="mt-0.5 text-[11px] sm:text-xs font-medium text-white/60 drop-shadow">
         View {totalCount === 1 ? "1 comment" : `all ${totalCount} comments`}
       </p>
     </button>

@@ -2,7 +2,7 @@
 // Accepts page_access_token directly in the request body (no OAuth required),
 // or falls back to the stored token in store_ad_pages.
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
-import { scanContentForLinks, logBlockedAttempt, isAbuseThresholdExceeded } from "../_shared/contentLinkValidation.ts";
+import { scanContentForLinks, logBlockedAttempt, isAbuseThresholdExceeded, isIpAbuseThresholdExceeded, getRequestIpHash } from "../_shared/contentLinkValidation.ts";
 import { isLikelyMaliciousBot } from "../_shared/botDetection.ts";
 
 const corsHeaders = {
@@ -38,6 +38,10 @@ Deno.serve(async (req) => {
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!
     );
 
+    const ipHash = await getRequestIpHash(req);
+    if (await isIpAbuseThresholdExceeded(admin, ipHash)) {
+      return json({ error: "rate_limited", code: "ip_abuse_threshold_exceeded", message: "Too many recent blocked submissions from your network." }, 429);
+    }
     if (await isAbuseThresholdExceeded(admin, userRes.user.id)) {
       return json({ error: "rate_limited", code: "abuse_threshold_exceeded", message: "Too many recent blocked submissions. Try again in 24 hours." }, 429);
     }

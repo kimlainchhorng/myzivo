@@ -253,14 +253,14 @@ export default function EatsRestaurantDashboard() {
       {/* Header */}
       <div className="sticky top-0 safe-area-top z-30 bg-background/95 backdrop-blur-md border-b border-border/40">
         <div className="flex items-center gap-3 px-4 py-3">
-          <Button variant="ghost" size="icon" onClick={() => navigate(-1)} className="shrink-0">
+          <Button aria-label="Back" variant="ghost" size="icon" onClick={() => navigate(-1)} className="shrink-0">
             <ArrowLeft className="w-5 h-5" />
           </Button>
           <div className="flex-1 min-w-0">
             <h1 className="text-lg font-bold text-foreground truncate">{restaurant.name}</h1>
             <p className="text-xs text-muted-foreground">Restaurant Dashboard</p>
           </div>
-          <Button variant="ghost" size="icon" onClick={() => restaurant && loadOrders(restaurant.id)} disabled={refreshing}>
+          <Button aria-label="Refresh orders" variant="ghost" size="icon" onClick={() => restaurant && loadOrders(restaurant.id)} disabled={refreshing}>
             <RefreshCw className={cn("w-4 h-4", refreshing && "animate-spin")} />
           </Button>
         </div>
@@ -374,7 +374,7 @@ export default function EatsRestaurantDashboard() {
                     </div>
                     <div className="flex items-center gap-1.5">
                       <Switch checked={item.is_available} onCheckedChange={() => toggleAvailability(item)} />
-                      <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => startEdit(item)}>
+                      <Button aria-label="Edit" variant="ghost" size="icon" className="h-8 w-8" onClick={() => startEdit(item)}>
                         <Edit className="w-3.5 h-3.5" />
                       </Button>
                       <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive" onClick={() => deleteMenuItem(item.id)}>

@@ -27,6 +27,7 @@ const ReactionPicker = lazy(() => import("@/components/social/ReactionPicker"));
 const CommentPreview = lazy(() => import("@/components/social/CommentPreview"));
 const ReactionSummary = lazy(() => import("@/components/social/ReactionSummary"));
 const ReelsPreviewRow = lazy(() => import("@/components/social/ReelsPreviewRow"));
+const FeaturedCreatorsRow = lazy(() => import("@/components/social/FeaturedCreatorsRow"));
 const RepostDialog = lazy(() => import("@/components/social/RepostDialog"));
 const PostInsights = lazy(() => import("@/components/social/PostInsights"));
 const CaptionEditDialog = lazy(() => import("@/components/social/CaptionEditDialog"));
@@ -83,13 +84,15 @@ import Car from "lucide-react/dist/esm/icons/car";
 import Briefcase from "lucide-react/dist/esm/icons/briefcase";
 import ShoppingBag from "lucide-react/dist/esm/icons/shopping-bag";
 import { motion, AnimatePresence, MotionConfig } from "framer-motion";
+import type * as React from "react";
 import { useCallback, useEffect, useMemo, useRef, useState, memo } from "react";
-import { useLocation, useNavigate } from "react-router-dom";
+import { useLocation, useNavigate, useParams } from "react-router-dom";
 import { cn } from "@/lib/utils";
 import { getPostShareUrl } from "@/lib/getPublicOrigin";
 import { shouldSendLikeNotification } from "@/lib/social/likeNotificationGuard";
 import { formatDistanceToNow } from "date-fns";
 import { useOwnerStoreProfile } from "@/hooks/useOwnerStoreProfile";
+import { useHaptic } from "@/hooks/useHaptic";
 import { useLodgeRooms } from "@/hooks/lodging/useLodgeRooms";
 import { useLodgePropertyProfile } from "@/hooks/lodging/useLodgePropertyProfile";
 import { getLodgingCompletion } from "@/lib/lodging/lodgingCompletion";
@@ -130,9 +133,19 @@ interface FeedPost {
 function InfiniteScrollSentinel({
   isFetching,
   onReachEnd,
+  totalCount,
+  onRefresh,
+  onBackToTop,
+  onSwitchMode,
+  feedMode,
 }: {
   isFetching: boolean;
   onReachEnd: () => void;
+  totalCount?: number;
+  onRefresh?: () => void;
+  onBackToTop?: () => void;
+  onSwitchMode?: () => void;
+  feedMode?: "foryou" | "following";
 }) {
   const ref = useRef<HTMLDivElement>(null);
   const lastFiredAt = useRef(0);
@@ -157,22 +170,68 @@ function InfiniteScrollSentinel({
   }, [isFetching, onReachEnd]);
 
   return (
-    <div ref={ref} className="w-full h-full snap-start flex items-center justify-center bg-black">
-      <div className="flex flex-col items-center gap-3 text-white/60">
-        {isFetching ? (
-          <>
-            <Loader2 className="h-7 w-7 animate-spin" />
-            <span className="text-sm">Loading more…</span>
-          </>
-        ) : (
-          <>
-            <div className="h-12 w-12 rounded-full bg-white/10 flex items-center justify-center">
-              <ChevronDown className="h-6 w-6" />
+    <div
+      ref={ref}
+      className="w-full h-full snap-start flex items-center justify-center bg-gradient-to-b from-black via-zinc-950 to-black px-6"
+    >
+      {isFetching ? (
+        <div className="flex flex-col items-center gap-3 text-white/70">
+          <Loader2 className="h-8 w-8 animate-spin" />
+          <span className="text-sm font-medium">Loading more reels…</span>
+        </div>
+      ) : (
+        <div className="flex flex-col items-center gap-5 max-w-sm text-center">
+          {/* Hero icon */}
+          <div className="relative">
+            <div className="h-20 w-20 rounded-full bg-gradient-to-br from-primary/30 via-primary/10 to-transparent flex items-center justify-center border border-white/10">
+              <span className="text-4xl">🎬</span>
             </div>
-            <span className="text-sm">You've reached the end — pull down to refresh</span>
-          </>
-        )}
-      </div>
+            <span className="absolute -top-1 -right-1 text-2xl">✨</span>
+          </div>
+
+          <div>
+            <h3 className="text-white font-bold text-lg mb-1">You're all caught up</h3>
+            <p className="text-white/60 text-sm leading-relaxed">
+              {typeof totalCount === "number" && totalCount > 0
+                ? `You've watched all ${totalCount} reel${totalCount === 1 ? "" : "s"} in your feed.`
+                : "You've reached the end of your feed."}
+            </p>
+          </div>
+
+          {/* Actions */}
+          <div className="flex flex-col gap-2 w-full">
+            {onRefresh && (
+              <button
+                type="button"
+                onClick={onRefresh}
+                className="w-full py-3 rounded-full bg-primary text-primary-foreground text-sm font-bold active:scale-95 transition-transform shadow-lg shadow-primary/30"
+              >
+                Check for new reels
+              </button>
+            )}
+            <div className="flex gap-2">
+              {onBackToTop && (
+                <button
+                  type="button"
+                  onClick={onBackToTop}
+                  className="flex-1 py-2.5 rounded-full bg-white/10 backdrop-blur-sm border border-white/15 text-white text-sm font-semibold active:scale-95 transition-transform"
+                >
+                  Back to top
+                </button>
+              )}
+              {onSwitchMode && feedMode && (
+                <button
+                  type="button"
+                  onClick={onSwitchMode}
+                  className="flex-1 py-2.5 rounded-full bg-white/10 backdrop-blur-sm border border-white/15 text-white text-sm font-semibold active:scale-95 transition-transform"
+                >
+                  Try {feedMode === "foryou" ? "Following" : "For You"}
+                </button>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
@@ -226,6 +285,7 @@ function ReelCard({
   onOpenRepost,
   isReposted,
   shouldPreload = false,
+  onAutoSkip,
 }: {
   post: FeedPost;
   isActive: boolean;
@@ -246,8 +306,13 @@ function ReelCard({
   /** True when this reel is the next one in the snap-scroller, so its
    *  video can begin loading before the user actually swipes. */
   shouldPreload?: boolean;
+  /** Called when the reel has been in a playback-error state for 5+ s and
+   *  the user hasn't tapped to retry — used by the parent to auto-scroll
+   *  to the next reel rather than strand the user on a broken video. */
+  onAutoSkip?: () => void;
 }) {
   const navigate = useNavigate();
+  const haptic = useHaptic();
   const videoRef = useRef<HTMLVideoElement>(null);
   const [isPlaying, setIsPlaying] = useState(false);
   const [posterUrl, setPosterUrl] = useState<string | null>(null);
@@ -268,14 +333,27 @@ function ReelCard({
   const [captionExpanded, setCaptionExpanded] = useState(false);
   const [isScrubbing, setIsScrubbing] = useState(false);
   const [showLikeBurst, setShowLikeBurst] = useState(false);
-  const [heartParticles, setHeartParticles] = useState<{ id: number; x: number; size: number; rotate: number; delay: number }[]>([]);
+  const [heartParticles, setHeartParticles] = useState<{ id: number; x: number; size: number; rotate: number; delay: number; emoji?: string }[]>([]);
   const [videoDuration, setVideoDuration] = useState(0);
   const [bufferedProgress, setBufferedProgress] = useState(0);
   const [isBuffering, setIsBuffering] = useState(false);
   const [authorIsLive, setAuthorIsLive] = useState(false);
   const [topComment, setTopComment] = useState<{ author_name: string; author_avatar: string | null; content: string; likes_count: number } | null>(null);
   const [isHoldingFastForward, setIsHoldingFastForward] = useState(false);
-  const [playbackSpeed, setPlaybackSpeed] = useState(1.0);
+  const [playbackSpeed, setPlaybackSpeed] = useState<number>(() => {
+    // Persist user's chosen speed across reels/sessions. Bound to the four
+    // values exposed in the picker so a malformed/stored string can't slip
+    // through and break <video>.playbackRate.
+    if (typeof window === "undefined") return 1.0;
+    try {
+      const stored = localStorage.getItem("zivo_reel_speed");
+      const n = stored ? parseFloat(stored) : 1.0;
+      return [0.5, 1.0, 1.5, 2.0].includes(n) ? n : 1.0;
+    } catch { return 1.0; }
+  });
+  useEffect(() => {
+    try { localStorage.setItem("zivo_reel_speed", String(playbackSpeed)); } catch {}
+  }, [playbackSpeed]);
   const [showSpeedPicker, setShowSpeedPicker] = useState(false);
   const fastForwardTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const suppressNextClickRef = useRef(false);
@@ -442,6 +520,22 @@ function ReelCard({
     };
   }, [isActive]);
 
+  // Auto-skip safety net — if a reel has been in a playback-error state
+  // for 5+ seconds AND the user is the active viewer AND we haven't already
+  // skipped this reel, advance to the next one. Once-per-card so a chain of
+  // broken videos can't cause runaway scrolling.
+  const autoSkippedRef = useRef(false);
+  useEffect(() => {
+    if (!isActive || !hasPlaybackError || !onAutoSkip) return;
+    if (autoSkippedRef.current) return;
+    const timer = window.setTimeout(() => {
+      autoSkippedRef.current = true;
+      toast("Skipped — that reel couldn't load");
+      onAutoSkip();
+    }, 5000);
+    return () => window.clearTimeout(timer);
+  }, [isActive, hasPlaybackError, onAutoSkip]);
+
   // Cleanup: if the user unmounts mid-hold, kill the timer + reset speed.
   useEffect(() => {
     return () => {
@@ -579,6 +673,7 @@ function ReelCard({
     if (savingBookmarkRef.current) return;
     savingBookmarkRef.current = true;
     const next = !saved;
+    haptic(next ? "medium" : "light");
     setSaved(next);
     try {
       if (next) {
@@ -609,17 +704,20 @@ function ReelCard({
   // Double-tap on the video to like — TikTok signature interaction.
   // Wraps the existing tap-to-toggle: if two taps land within 280ms,
   // we skip the play/pause and fire a like instead.
-  // Spawn 6–8 floating heart particles that drift up and fade — fired
-  // whenever the user transitions a post from unliked → liked.
-  const spawnFloatingHearts = () => {
+  // Spawn 6–8 floating particles that drift up and fade — fired whenever
+  // the user likes / reacts to a post. Pass an emoji string to use that
+  // instead of the default heart (e.g. "🔥" when the user picks the fire
+  // reaction from the long-press picker).
+  const spawnFloatingHearts = (emoji?: string) => {
     const count = 6 + Math.floor(Math.random() * 3);
     const now = Date.now();
     const next = Array.from({ length: count }).map((_, i) => ({
       id: now + i,
       x: 30 + Math.random() * 40, // 30–70% from left, clusters near center
-      size: 18 + Math.random() * 18, // 18–36px
+      size: 22 + Math.random() * 20, // 22–42px (emoji needs a bit more room)
       rotate: -25 + Math.random() * 50,
       delay: Math.random() * 0.25,
+      emoji,
     }));
     setHeartParticles((prev) => [...prev, ...next]);
     // Garbage-collect each batch after the longest possible animation finishes
@@ -633,6 +731,7 @@ function ReelCard({
     if (now - lastTapRef.current < 280) {
       lastTapRef.current = 0;
       if (!liked) {
+        haptic("medium");
         onToggleLike(post.id, false);
         spawnFloatingHearts();
       }
@@ -696,6 +795,7 @@ function ReelCard({
     const video = videoRef.current;
     const nextMuted = !globalMuted;
 
+    haptic("light");
     onToggleMute();
 
     if (!video) return;
@@ -942,6 +1042,7 @@ function ReelCard({
               try { v.playbackRate = 2.0; } catch {}
               setIsHoldingFastForward(true);
               suppressNextClickRef.current = true;
+              haptic("heavy"); // tactile cue that 2× kicked in
             }, 350);
           }}
           onPointerUp={() => {
@@ -1015,8 +1116,10 @@ function ReelCard({
         )}
       </AnimatePresence>
 
-      {/* Floating hearts particle layer — spawns on like, drifts up + fades.
-          Pointer-events disabled so it doesn't block anything else. */}
+      {/* Floating reaction particles — spawns on like or reaction, drifts
+          up + fades. Pointer-events disabled so it doesn't block anything.
+          Particles render either the user's chosen emoji (when reacting)
+          or a red Heart icon (default like). */}
       {heartParticles.length > 0 && (
         <div className="absolute inset-0 z-30 pointer-events-none overflow-hidden">
           {heartParticles.map((p) => (
@@ -1036,10 +1139,20 @@ function ReelCard({
                 bottom: "30%",
               }}
             >
-              <Heart
-                className="text-destructive fill-destructive drop-shadow-lg"
-                style={{ width: p.size, height: p.size }}
-              />
+              {p.emoji ? (
+                <span
+                  className="drop-shadow-lg leading-none"
+                  style={{ fontSize: p.size }}
+                  aria-hidden
+                >
+                  {p.emoji}
+                </span>
+              ) : (
+                <Heart
+                  className="text-destructive fill-destructive drop-shadow-lg"
+                  style={{ width: p.size, height: p.size }}
+                />
+              )}
             </motion.div>
           ))}
         </div>
@@ -1364,12 +1477,14 @@ function ReelCard({
       </div>
 
       {/* Right-side action buttons (TikTok-style) — responsive scale.
-          - mobile (<sm):  9 px / 36 px / 44 px hit, gap-4
-          - tablet (≥sm):  10 px / 40 px / 44 px hit, gap-5
-          - desktop (≥lg): 11 px / 44 px / 48 px hit, gap-6 */}
+          - smallest (<sm, e.g. iPhone SE): tight gap-3, Views row hidden
+            (it's display-only) so the column fits a 568-px-tall viewport
+            without clipping the avatar off the top.
+          - tablet (≥sm):  gap-5, all items
+          - desktop (≥lg): gap-6, larger icons */}
       <div
-        className="absolute right-2 sm:right-3 lg:right-4 z-30 flex flex-col items-center gap-4 sm:gap-5 lg:gap-6"
-        style={{ bottom: "calc(env(safe-area-inset-bottom, 0px) + 100px)" }}
+        className="absolute right-2 sm:right-3 lg:right-4 z-30 flex flex-col items-center gap-3 sm:gap-5 lg:gap-6"
+        style={{ bottom: "calc(env(safe-area-inset-bottom, 0px) + 88px)" }}
       >
         {/* Author avatar with follow badge — TikTok-style.
             When the author is live, the avatar's ring turns red + pulses,
@@ -1480,7 +1595,11 @@ function ReelCard({
               <ReactionPicker
                 open={showReactionPicker}
                 onClose={() => setShowReactionPicker(false)}
-                onPick={(emoji) => onSetReaction(emoji)}
+                onPick={(emoji) => {
+                  haptic("medium");
+                  onSetReaction(emoji);
+                  spawnFloatingHearts(emoji);
+                }}
               />
             </Suspense>
           )}
@@ -1488,9 +1607,11 @@ function ReelCard({
             type="button"
             onClick={(e) => {
               e.stopPropagation();
+              haptic(liked ? "light" : "medium");
               // Burst only when transitioning unliked → liked (matches TikTok)
               if (!liked) {
                 setShowLikeBurst(true);
+                spawnFloatingHearts();
                 window.setTimeout(() => setShowLikeBurst(false), 600);
               }
               onToggleLike(post.id, liked);
@@ -1556,8 +1677,9 @@ function ReelCard({
           </motion.span>
         </button>
 
-        {/* Views */}
-        <div className="flex flex-col items-center gap-1">
+        {/* Views — display-only, hidden on smallest phones so the right
+            column fits the 568-px iPhone SE viewport without clipping. */}
+        <div className="hidden sm:flex flex-col items-center gap-1">
           <Eye className="w-9 h-9 lg:w-10 lg:h-10 text-white drop-shadow-lg" />
           <span className="text-white text-xs font-semibold drop-shadow">
             {post.view_count || 0}
@@ -1897,7 +2019,7 @@ function ReelCard({
                   return (
                     <button
                       key={rate}
-                      onClick={() => { setPlaybackSpeed(rate); setShowSpeedPicker(false); }}
+                      onClick={() => { haptic("selection"); setPlaybackSpeed(rate); setShowSpeedPicker(false); }}
                       className={cn(
                         "py-3 rounded-xl text-sm font-bold tabular-nums transition-all active:scale-95",
                         active ? "bg-primary text-primary-foreground" : "bg-muted/40 text-foreground hover:bg-muted",
@@ -1974,6 +2096,10 @@ function CommentSheet({
   const [replyTo, setReplyTo] = useState<{ id: string; authorName: string } | null>(null);
   // Per-thread expand state: which top-level comments have their replies open
   const [expandedThreads, setExpandedThreads] = useState<Set<string>>(new Set());
+  // Comment sort: "newest" (default) or "top" (by likes_count desc)
+  const [commentSort, setCommentSort] = useState<"newest" | "top">("newest");
+  // Caller owns the post? Drives the Pin / Unpin row visibility.
+  const [isPostAuthor, setIsPostAuthor] = useState(false);
   const queryClient = useQueryClient();
 
   // Route comments to the right table based on the post id prefix.
@@ -2017,14 +2143,78 @@ function CommentSheet({
         .in("id", userIds);
 
       const profileMap = new Map((profiles || []).map((p: any) => [p.id, p]));
+
+      // Aggregate comment_likes counts so the "Top" sort actually works.
+      // The comment tables don't have a denormalized likes_count, so we count
+      // here and attach to each row as `like_count`.
+      const commentIds = rawComments.map((c: any) => c.id);
+      const likeCounts = new Map<string, number>();
+      if (commentIds.length > 0) {
+        const { data: likeRows } = await (supabase as any)
+          .from("comment_likes")
+          .select("comment_id")
+          .eq("target_table", targetTable)
+          .in("comment_id", commentIds);
+        for (const r of likeRows ?? []) {
+          likeCounts.set(r.comment_id, (likeCounts.get(r.comment_id) ?? 0) + 1);
+        }
+      }
+
       // Normalize text column — store_post_comments uses `content`, user_post_comments may use `comment`
       return rawComments.map((c: any) => ({
         ...c,
         content: c.content ?? c.comment ?? c.text ?? c.body ?? "",
         profiles: profileMap.get(c.user_id) || null,
+        like_count: likeCounts.get(c.id) ?? 0,
       }));
     },
   });
+
+  // Resolve "am I the post author?" so we can show Pin/Unpin on every comment
+  useEffect(() => {
+    if (!userId || !rawPostId) { setIsPostAuthor(false); return; }
+    let cancelled = false;
+    (async () => {
+      if (isUserPost) {
+        const { data } = await (supabase as any)
+          .from("user_posts")
+          .select("user_id")
+          .eq("id", rawPostId)
+          .maybeSingle();
+        if (!cancelled) setIsPostAuthor(!!data && data.user_id === userId);
+      } else {
+        // Store post → caller must own the linked store
+        const { data } = await (supabase as any)
+          .from("store_posts")
+          .select("store_id")
+          .eq("id", rawPostId)
+          .maybeSingle();
+        if (!data?.store_id) { if (!cancelled) setIsPostAuthor(false); return; }
+        const { data: store } = await (supabase as any)
+          .from("store_profiles")
+          .select("owner_id")
+          .eq("id", data.store_id)
+          .maybeSingle();
+        if (!cancelled) setIsPostAuthor(!!store?.owner_id && store.owner_id === userId);
+      }
+    })();
+    return () => { cancelled = true; };
+  }, [userId, rawPostId, isUserPost]);
+
+  const handleTogglePin = async (commentId: string) => {
+    if (!userId) return;
+    const { error } = await (supabase as any).rpc("toggle_comment_pin", {
+      _comment_id:   commentId,
+      _target_table: targetTable,
+    });
+    if (error) {
+      toast.error(/only the post author/i.test(error.message ?? "")
+        ? "Only the post author can pin comments"
+        : "Couldn't update pin");
+      return;
+    }
+    queryClient.invalidateQueries({ queryKey: ["post-comments", targetTable, rawPostId] });
+  };
 
   const handleSubmit = async () => {
     if (!commentText.trim() || !userId) {
@@ -2123,6 +2313,39 @@ function CommentSheet({
           </button>
         </div>
 
+        {/* Sort toggle (only shown when there are at least 2 top-level comments) */}
+        {comments.filter((c: any) => !c.parent_id).length >= 2 && (
+          <div className="px-4 pt-2 flex items-center gap-2 text-xs">
+            <span className="text-muted-foreground font-medium">Sort by:</span>
+            <button
+              type="button"
+              onClick={() => setCommentSort("newest")}
+              className={cn(
+                "rounded-full px-3 py-1 font-semibold transition-colors active:scale-95",
+                commentSort === "newest"
+                  ? "bg-primary text-primary-foreground"
+                  : "bg-muted text-muted-foreground hover:bg-muted/80",
+              )}
+              aria-pressed={commentSort === "newest"}
+            >
+              Newest
+            </button>
+            <button
+              type="button"
+              onClick={() => setCommentSort("top")}
+              className={cn(
+                "rounded-full px-3 py-1 font-semibold transition-colors active:scale-95",
+                commentSort === "top"
+                  ? "bg-primary text-primary-foreground"
+                  : "bg-muted text-muted-foreground hover:bg-muted/80",
+              )}
+              aria-pressed={commentSort === "top"}
+            >
+              Top
+            </button>
+          </div>
+        )}
+
         {/* Comments list */}
         <div className="flex-1 overflow-y-auto px-4 py-3 space-y-3">
           {isLoading ? (
@@ -2144,6 +2367,19 @@ function CommentSheet({
                 topLevel.push(c);
               }
             }
+            // Sort top-level: pinned first, then by chosen sort.
+            // Replies inside each thread always render oldest-first so the
+            // conversation reads top-to-bottom.
+            topLevel.sort((a, b) => {
+              if (a.is_pinned && !b.is_pinned) return -1;
+              if (!a.is_pinned && b.is_pinned) return 1;
+              if (commentSort === "top") {
+                // `like_count` is aggregated from comment_likes in the query above
+                return (b.like_count ?? 0) - (a.like_count ?? 0)
+                  || new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
+              }
+              return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
+            });
 
             const renderRow = (c: any, isReply: boolean) => {
               const prof = c.profiles;
@@ -2160,7 +2396,14 @@ function CommentSheet({
                     )}
                   </div>
                   <div className="flex-1 min-w-0">
-                    <p className="text-xs font-semibold text-foreground mb-0.5">{name}</p>
+                    <div className="flex items-center gap-1.5 mb-0.5">
+                      <p className="text-xs font-semibold text-foreground">{name}</p>
+                      {c.is_pinned && !isReply && (
+                        <span className="inline-flex items-center gap-0.5 rounded-full bg-primary/15 px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wide text-primary">
+                          📌 Pinned
+                        </span>
+                      )}
+                    </div>
                     {editingId === c.id ? (
                       <div className="flex flex-col gap-1.5">
                         <textarea
@@ -2228,6 +2471,9 @@ function CommentSheet({
                         variant="light"
                         onEditStart={() => { setEditingId(c.id); setEditingText(c.content || ""); }}
                         onDelete={() => handleDeleteComment(c.id)}
+                        canPin={isPostAuthor && !isReply}
+                        isPinned={!!c.is_pinned}
+                        onTogglePin={() => handleTogglePin(c.id)}
                       />
                     </Suspense>
                   </div>
@@ -2814,11 +3060,41 @@ export default function FeedPage() {
   const { t } = useI18n();
   const navigate = useNavigate();
   const location = useLocation();
+  const { postId: routePostId } = useParams<{ postId?: string }>();
+  // True when we arrived via a deep link (path /reels/:postId OR ?post=)
+  // so the resume-position effect can step aside and let the link win.
+  const hasDeepLink = Boolean(routePostId) || Boolean(new URLSearchParams(location.search).get("post"));
   // On `/reels` we render the TikTok-style hero — hide the desktop side rails
   // so the video can fill the viewport. `/feed` keeps the 3-column layout.
   const isReelsRoute = location.pathname.startsWith("/reels");
-  const [globalMuted, setGlobalMuted] = useState(true);
-  const [activeIndex, setActiveIndex] = useState(0);
+  const [globalMuted, setGlobalMuted] = useState<boolean>(() => {
+    // Persist mute preference — autoplay policies require starting muted on
+    // some browsers, but we still respect the user's last choice when they
+    // explicitly unmuted (so they don't have to re-tap on every visit).
+    if (typeof window === "undefined") return true;
+    try {
+      const stored = localStorage.getItem("zivo_reel_muted");
+      return stored === null ? true : stored === "1";
+    } catch { return true; }
+  });
+  useEffect(() => {
+    try { localStorage.setItem("zivo_reel_muted", globalMuted ? "1" : "0"); } catch {}
+  }, [globalMuted]);
+  const [activeIndex, setActiveIndex] = useState(() => {
+    // Resume the last-watched reel index from this session so navigating
+    // away (e.g. into a profile) and coming back doesn't snap to the top.
+    if (typeof window === "undefined") return 0;
+    try {
+      const stored = sessionStorage.getItem("zivo_reel_active_index");
+      const n = stored ? parseInt(stored, 10) : 0;
+      return Number.isFinite(n) && n >= 0 ? n : 0;
+    } catch { return 0; }
+  });
+  // Persist activeIndex changes back to sessionStorage so a subsequent mount
+  // resumes from the same reel.
+  useEffect(() => {
+    try { sessionStorage.setItem("zivo_reel_active_index", String(activeIndex)); } catch {}
+  }, [activeIndex]);
   const cardRefs = useRef<(HTMLDivElement | null)[]>([]);
   const [commentPostId, setCommentPostId] = useState<string | null>(null);
   const [sharePostId, setSharePostId] = useState<string | null>(null);
@@ -2830,9 +3106,22 @@ export default function FeedPage() {
   const [userId, setUserId] = useState<string | null>(null);
   const [userProfile, setUserProfile] = useState<{ name: string; avatar: string | null } | null>(null);
   const [userLikedPostIds, setUserLikedPostIds] = useState<Set<string>>(new Set());
-  const [feedMode, setFeedMode] = useState<"foryou" | "following">("foryou");
+  const [feedMode, setFeedMode] = useState<"foryou" | "following">(() => {
+    // Persist tab preference — TikTok remembers For You vs Following, so
+    // users who actively curate their following feed don't have to re-pick
+    // it every time they enter Reels.
+    if (typeof window === "undefined") return "foryou";
+    try {
+      const stored = localStorage.getItem("zivo_reel_mode");
+      return stored === "following" ? "following" : "foryou";
+    } catch { return "foryou"; }
+  });
+  useEffect(() => {
+    try { localStorage.setItem("zivo_reel_mode", feedMode); } catch {}
+  }, [feedMode]);
   const [followingIds, setFollowingIds] = useState<Set<string>>(new Set());
   const [showSwipeHint, setShowSwipeHint] = useState(false);
+  const [showShortcutsHelp, setShowShortcutsHelp] = useState(false);
   // Post actions (bookmark / mute / block / report) + 3-dot menu
   const postActions = usePostActions(userId);
   const [actionsTarget, setActionsTarget] = useState<{ target: PostActionTarget; authorName?: string; shareUrl?: string } | null>(null);
@@ -3242,11 +3531,47 @@ export default function FeedPage() {
           }
           break;
         }
+        case "?": {
+          e.preventDefault();
+          setShowShortcutsHelp((v) => !v);
+          break;
+        }
+        case "Escape": {
+          if (showShortcutsHelp) {
+            e.preventDefault();
+            setShowShortcutsHelp(false);
+          }
+          break;
+        }
       }
     };
     window.addEventListener("keydown", handler);
     return () => window.removeEventListener("keydown", handler);
-  }, [activeIndex, visiblePosts, userId, userLikedPostIds]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [activeIndex, visiblePosts, userId, userLikedPostIds, showShortcutsHelp]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // On first paint after the visible list arrives, scroll to the resumed
+  // activeIndex so the user lands on their last-watched reel. Bounded so
+  // a stale stored index doesn't blow past the current list length.
+  // Skipped when arriving via a deep link — the link's target wins.
+  const didRestorePosition = useRef(false);
+  useEffect(() => {
+    if (didRestorePosition.current) return;
+    if (visiblePosts.length === 0) return;
+    if (hasDeepLink) {
+      didRestorePosition.current = true;
+      return;
+    }
+    const safeIndex = Math.min(activeIndex, visiblePosts.length - 1);
+    if (safeIndex === 0) {
+      didRestorePosition.current = true;
+      return;
+    }
+    didRestorePosition.current = true;
+    requestAnimationFrame(() => {
+      cardRefs.current[safeIndex]?.scrollIntoView({ block: "start" });
+    });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [visiblePosts.length, hasDeepLink]);
 
   // IntersectionObserver — re-attach when the visible list changes (e.g.
   // toggling For You / Following) so we observe the freshly-rendered cards
@@ -3273,19 +3598,22 @@ export default function FeedPage() {
   }, [visiblePosts.length]);
 
   useEffect(() => {
-    const sharedPostId = new URLSearchParams(location.search).get("post");
+    // Path param /reels/:postId takes priority; falls back to ?post= query.
+    // Path postId is raw (no `u-` prefix) — match against either form.
+    const sharedPostId = routePostId || new URLSearchParams(location.search).get("post");
     if (!sharedPostId || visiblePosts.length === 0) return;
 
-    // Index into the rendered list — using full posts here would point past
-    // the cardRefs array when Following filters the feed down.
-    const targetIndex = visiblePosts.findIndex((post) => post.id === sharedPostId);
+    // Try exact match, then `u-`-prefixed user-post id, then unprefixed id.
+    let targetIndex = visiblePosts.findIndex((post) => post.id === sharedPostId);
+    if (targetIndex < 0) targetIndex = visiblePosts.findIndex((post) => post.id === `u-${sharedPostId}`);
+    if (targetIndex < 0) targetIndex = visiblePosts.findIndex((post) => post.id.replace(/^u-/, "") === sharedPostId);
     if (targetIndex < 0) return;
 
     setActiveIndex(targetIndex);
     requestAnimationFrame(() => {
       cardRefs.current[targetIndex]?.scrollIntoView({ block: "start" });
     });
-  }, [visiblePosts, location.search]);
+  }, [visiblePosts, location.search, routePostId]);
 
   if (isLoading) {
     return (
@@ -3339,11 +3667,14 @@ export default function FeedPage() {
       <div className="hidden lg:block relative z-[1200] shrink-0">
         <NavBar />
       </div>
-      {/* For You / Following tabs — TikTok-style top center segmented control */}
+      {/* For You / Following tabs — TikTok-style top center segmented control.
+          On iPad+ the phone frame starts at 16px from the viewport top (md:my-4),
+          so we max() the safe-area inset with 16px so the tabs sit inside the
+          frame instead of floating above it on tablets without a notch. */}
       {userId && (
         <div
           className="absolute left-1/2 -translate-x-1/2 z-50 flex items-center gap-5 sm:gap-6 lg:gap-8"
-          style={{ top: 'var(--zivo-safe-top-overlay)' }}
+          style={{ top: 'max(var(--zivo-safe-top-overlay, 12px), 16px)' }}
         >
           {(["foryou", "following"] as const).map((mode) => (
             <button
@@ -3361,7 +3692,11 @@ export default function FeedPage() {
             >
               {mode === "foryou" ? "For You" : "Following"}
               {feedMode === mode && (
-                <span className="absolute bottom-1 left-1/2 -translate-x-1/2 w-6 lg:w-8 h-0.5 lg:h-1 rounded-full bg-white" />
+                <motion.span
+                  layoutId="reel-tab-underline"
+                  transition={{ type: "spring", damping: 26, stiffness: 380 }}
+                  className="absolute bottom-1 left-1/2 -translate-x-1/2 w-6 lg:w-8 h-0.5 lg:h-1 rounded-full bg-white"
+                />
               )}
             </button>
           ))}
@@ -3381,23 +3716,34 @@ export default function FeedPage() {
         />
       </Suspense>
 
-      {/* Discover + Search + Live buttons - hide on desktop */}
-      <div data-testid="feed-floating-actions" className="absolute right-3 sm:right-4 z-50 flex gap-2 sm:gap-2.5 lg:hidden" style={{ top: 'var(--zivo-safe-top-overlay)' }}>
+      {/* Discover + Search + Live buttons — hide on desktop.
+          Wrapped in a centered container so on iPad (md+), where the reel
+          sits in a 420-px-wide phone frame, the buttons hug the right edge
+          of the frame instead of floating in the black gutter outside it. */}
+      <div
+        className="absolute inset-x-0 z-50 mx-auto md:max-w-[420px] pointer-events-none lg:hidden"
+        style={{ top: 'max(var(--zivo-safe-top-overlay, 12px), 16px)' }}
+      >
+      <div data-testid="feed-floating-actions" className="flex justify-end gap-2 sm:gap-2.5 px-3 sm:px-4 pointer-events-auto">
+        {/* Live entry — also reachable via the bottom nav, so hide on the
+            smallest phones (<sm) where the row would collide with center tabs. */}
         <button
           type="button"
           onClick={() => navigate("/live")}
           aria-label="Watch live"
           title="Live"
-          className="w-10 h-10 sm:w-11 sm:h-11 rounded-full bg-black/40 backdrop-blur-sm flex items-center justify-center active:scale-95 transition-transform border border-white/10"
+          className="hidden sm:flex w-10 h-10 sm:w-11 sm:h-11 rounded-full bg-black/40 backdrop-blur-sm items-center justify-center active:scale-95 transition-transform border border-white/10"
         >
           <Radio className="w-5 h-5 text-red-400" />
         </button>
+        {/* Discover people — hidden on smallest phones to keep clearance for
+            the centered tabs; reachable from the search overlay anyway. */}
         <button
           type="button"
           onClick={() => setShowDiscover(true)}
           aria-label="Discover people"
           title="Discover people"
-          className="w-10 h-10 sm:w-11 sm:h-11 rounded-full bg-black/40 backdrop-blur-sm flex items-center justify-center active:scale-95 transition-transform border border-white/10"
+          className="hidden sm:flex w-10 h-10 sm:w-11 sm:h-11 rounded-full bg-black/40 backdrop-blur-sm items-center justify-center active:scale-95 transition-transform border border-white/10"
         >
           <UserPlus className="w-5 h-5 text-white" />
         </button>
@@ -3410,26 +3756,32 @@ export default function FeedPage() {
         >
           <Search className="w-5 h-5 text-white" />
         </button>
-        {/* Playback speed — bridges to the active ReelCard via window event */}
+        {/* Playback speed — bridges to the active ReelCard via window event.
+            Hidden on the smallest phones (<sm) so the 5-button row doesn't
+            collide with the centered For You / Following tabs at 320px. The
+            speed badge in the corner remains tappable on those screens, and
+            long-press on the video still gives a quick 2× boost. */}
         <button
           type="button"
           onClick={() => window.dispatchEvent(new CustomEvent("zivo-reel-open-speed"))}
           aria-label="Playback speed"
           title="Playback speed"
-          className="w-10 h-10 sm:w-11 sm:h-11 rounded-full bg-black/40 backdrop-blur-sm flex items-center justify-center active:scale-95 transition-transform border border-white/10"
+          className="hidden sm:flex w-10 h-10 sm:w-11 sm:h-11 rounded-full bg-black/40 backdrop-blur-sm items-center justify-center active:scale-95 transition-transform border border-white/10"
         >
           <Gauge className="w-5 h-5 text-white" />
         </button>
-        {/* Picture-in-picture — toggles native PiP on the active video */}
+        {/* Picture-in-picture — toggles native PiP on the active video.
+            Hidden on smallest phones (PiP is unreliable on those anyway). */}
         <button
           type="button"
           onClick={() => window.dispatchEvent(new CustomEvent("zivo-reel-toggle-pip"))}
           aria-label="Picture-in-picture"
           title="Picture-in-picture"
-          className="w-10 h-10 sm:w-11 sm:h-11 rounded-full bg-black/40 backdrop-blur-sm flex items-center justify-center active:scale-95 transition-transform border border-white/10"
+          className="hidden sm:flex w-10 h-10 sm:w-11 sm:h-11 rounded-full bg-black/40 backdrop-blur-sm items-center justify-center active:scale-95 transition-transform border border-white/10"
         >
           <PictureInPicture className="w-5 h-5 text-white" />
         </button>
+      </div>
       </div>
 
       {/* Search overlay */}
@@ -3533,11 +3885,19 @@ export default function FeedPage() {
                     </Suspense>
                   </div>
                 )}
+                {/* Inject featured creators after the 9th card */}
+                {index === 9 && (
+                  <div className="w-full h-full snap-start">
+                    <Suspense fallback={<div className="h-full w-full bg-black" />}>
+                      <FeaturedCreatorsRow />
+                    </Suspense>
+                  </div>
+                )}
                 <div
                   ref={(el) => { cardRefs.current[index] = el; }}
                   className="w-full h-full snap-start"
                 >
-                  <ReelCard
+                  <MemoReelCard
                     post={post}
                     isActive={activeIndex === index}
                     shouldPreload={index === activeIndex + 1 || index === activeIndex - 1}
@@ -3583,17 +3943,40 @@ export default function FeedPage() {
                       const rawId = post.id.startsWith("u-") ? post.id.slice(2) : post.id;
                       return reposts.isReposted(rawId, post.source ?? "store");
                     })()}
+                    onAutoSkip={() => {
+                      // Snap to the next reel; if we're at the end, fall
+                      // back to the InfiniteScrollSentinel which loads more.
+                      const next = index + 1;
+                      requestAnimationFrame(() => {
+                        cardRefs.current[next]?.scrollIntoView({ behavior: "smooth", block: "start" });
+                      });
+                    }}
                   />
                 </div>
               </div>
             ))}
 
             {/* Infinite-scroll sentinel: when the user reaches the last card,
-                bump the page multiplier so the next refetch loads more. */}
+                bump the page multiplier so the next refetch loads more.
+                Also serves as the polished "you're all caught up" end-of-feed
+                screen with refresh / back-to-top / mode-switch actions. */}
             {visiblePosts.length > 0 && (
               <InfiniteScrollSentinel
                 isFetching={isFetching}
                 onReachEnd={() => setPageMultiplier((m) => m + 1)}
+                totalCount={visiblePosts.length}
+                onRefresh={() => {
+                  void queryClient.invalidateQueries({ queryKey: ["customer-feed"] });
+                  requestAnimationFrame(() => cardRefs.current[0]?.scrollIntoView({ block: "start" }));
+                }}
+                onBackToTop={() => {
+                  cardRefs.current[0]?.scrollIntoView({ block: "start", behavior: "smooth" });
+                }}
+                onSwitchMode={userId ? () => {
+                  setFeedMode((m) => (m === "foryou" ? "following" : "foryou"));
+                  requestAnimationFrame(() => cardRefs.current[0]?.scrollIntoView({ block: "start" }));
+                } : undefined}
+                feedMode={feedMode}
               />
             )}
           </div>
@@ -3878,6 +4261,85 @@ export default function FeedPage() {
           </motion.div>
         )}
       </AnimatePresence>
+
+      {/* Keyboard shortcuts help overlay — desktop power-user feature.
+          Triggered by `?` key, dismissed by `?` toggle, Escape, or click. */}
+      <AnimatePresence>
+        {showShortcutsHelp && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            onClick={() => setShowShortcutsHelp(false)}
+            className="fixed inset-0 z-[1500] bg-black/70 backdrop-blur-sm flex items-center justify-center p-6"
+            role="dialog"
+            aria-label="Keyboard shortcuts"
+          >
+            <motion.div
+              initial={{ scale: 0.92, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.92, opacity: 0 }}
+              transition={{ type: "spring", damping: 26, stiffness: 320 }}
+              onClick={(e) => e.stopPropagation()}
+              className="w-full max-w-md rounded-2xl bg-background border border-border/30 shadow-2xl p-5"
+            >
+              <div className="flex items-start justify-between mb-4">
+                <h2 className="text-base font-bold text-foreground">Keyboard shortcuts</h2>
+                <button
+                  type="button"
+                  onClick={() => setShowShortcutsHelp(false)}
+                  aria-label="Close"
+                  className="text-muted-foreground hover:text-foreground -m-1 p-1"
+                >
+                  <XIcon className="w-5 h-5" />
+                </button>
+              </div>
+              <div className="space-y-2 text-sm">
+                {[
+                  { keys: ["Space", "K"], action: "Play / pause" },
+                  { keys: ["M"], action: "Toggle mute" },
+                  { keys: ["L"], action: "Like / unlike" },
+                  { keys: ["↓", "J"], action: "Next reel" },
+                  { keys: ["↑"], action: "Previous reel" },
+                  { keys: ["?"], action: "Toggle this help" },
+                  { keys: ["Esc"], action: "Close overlays" },
+                ].map((row) => (
+                  <div key={row.action} className="flex items-center justify-between gap-3 py-1.5 border-b border-border/20 last:border-b-0">
+                    <span className="text-muted-foreground">{row.action}</span>
+                    <div className="flex items-center gap-1.5">
+                      {row.keys.map((k, i) => (
+                        <span
+                          key={i}
+                          className="inline-flex items-center justify-center min-w-[28px] h-7 px-2 rounded-md bg-muted border border-border/40 text-xs font-mono font-semibold text-foreground"
+                        >
+                          {k}
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+                ))}
+              </div>
+              <p className="mt-4 text-[11px] text-muted-foreground/70">
+                Press <span className="font-mono font-semibold">?</span> at any time to reopen this list.
+              </p>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* a11y live region — announces the active reel to screen readers
+          without disrupting sighted users. polite tone so it queues with
+          other announcements rather than interrupting. */}
+      <div role="status" aria-live="polite" aria-atomic="true" className="sr-only">
+        {visiblePosts[activeIndex] && (
+          <>
+            Reel by {visiblePosts[activeIndex].source === "user"
+              ? visiblePosts[activeIndex].author_name
+              : visiblePosts[activeIndex].store_name}
+            {visiblePosts[activeIndex].caption ? `: ${visiblePosts[activeIndex].caption.slice(0, 120)}` : ""}
+          </>
+        )}
+      </div>
 
       {/* Bottom navigation overlaid on top */}
       <ZivoMobileNav />

@@ -4,7 +4,7 @@
 import { createClient } from "../_shared/deps.ts";
 import { getCorsHeaders } from "../_shared/cors.ts";
 import Stripe from "../_shared/stripe.ts";
-import { scanContentForLinks, logBlockedAttempt, isAbuseThresholdExceeded } from "../_shared/contentLinkValidation.ts";
+import { scanContentForLinks, logBlockedAttempt, isAbuseThresholdExceeded, isIpAbuseThresholdExceeded, getRequestIpHash } from "../_shared/contentLinkValidation.ts";
 import { isLikelyMaliciousBot } from "../_shared/botDetection.ts";
 
 Deno.serve(async (req) => {
@@ -50,6 +50,10 @@ Deno.serve(async (req) => {
 
     {
       const admin = createClient(supabaseUrl, serviceKey);
+      const ipHash = await getRequestIpHash(req);
+      if (await isIpAbuseThresholdExceeded(admin, ipHash)) {
+        return new Response(JSON.stringify({ error: "rate_limited", code: "ip_abuse_threshold_exceeded", message: "Too many recent blocked submissions from your network." }), { status: 429, headers: { ...cors, "Content-Type": "application/json" } });
+      }
       if (await isAbuseThresholdExceeded(admin, user.id)) {
         return new Response(JSON.stringify({ error: "rate_limited", code: "abuse_threshold_exceeded", message: "Too many recent blocked submissions. Try again in 24 hours." }), { status: 429, headers: { ...cors, "Content-Type": "application/json" } });
       }

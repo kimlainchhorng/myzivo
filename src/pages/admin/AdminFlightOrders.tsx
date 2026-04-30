@@ -284,7 +284,7 @@ export default function AdminFlightOrders() {
                     {order.total_passengers}
                   </td>
                   <td className="px-4 py-3 text-center">
-                    <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => setSelectedOrder(order)}>
+                    <Button aria-label="Open order" variant="ghost" size="icon" className="h-8 w-8" onClick={() => setSelectedOrder(order)}>
                       <Eye className="w-4 h-4" />
                     </Button>
                   </td>

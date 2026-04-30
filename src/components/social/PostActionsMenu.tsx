@@ -69,7 +69,7 @@ export default function PostActionsMenu({
           onClick={handleClose}
         >
           <motion.div
-            className="w-full max-w-md rounded-t-3xl bg-background p-2 pb-6 shadow-2xl sm:rounded-3xl sm:pb-3 max-h-[85vh] overflow-y-auto"
+            className="w-full max-w-md md:max-w-lg rounded-t-3xl bg-background p-2 pb-6 shadow-2xl sm:rounded-3xl sm:pb-3 max-h-[85vh] overflow-y-auto"
             initial={{ y: 400, opacity: 0.5 }}
             animate={{ y: 0, opacity: 1 }}
             exit={{ y: 400, opacity: 0 }}

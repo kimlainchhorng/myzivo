@@ -2,7 +2,7 @@
  * ChatPollCreator — Telegram-style poll composer.
  * Question + 2-10 options + anonymous / multiple-choice toggles.
  */
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { createPortal } from "react-dom";
 import X from "lucide-react/dist/esm/icons/x";
@@ -52,6 +52,16 @@ export default function ChatPollCreator({ open, onClose, onSubmit }: ChatPollCre
     reset();
     onClose();
   };
+
+  useEffect(() => {
+    if (!open) return;
+    const handler = (e: KeyboardEvent) => {
+      if (e.key === "Escape") close();
+    };
+    window.addEventListener("keydown", handler);
+    return () => window.removeEventListener("keydown", handler);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [open, submitting]);
 
   const updateOption = (idx: number, value: string) => {
     setOptions(prev => prev.map((o, i) => (i === idx ? value.slice(0, MAX_OPTION) : o)));

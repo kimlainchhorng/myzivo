@@ -104,40 +104,40 @@ export default function SecurityStatus() {
   }, []);
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-slate-50 to-slate-100 py-10 px-4">
+    <div className="min-h-screen bg-gradient-to-b from-slate-50 to-slate-100 py-6 sm:py-10 px-4 sm:px-6">
       <div className="mx-auto max-w-3xl">
-        <header className="mb-8 text-center">
-          <div className="mb-3 inline-flex items-center justify-center rounded-full bg-emerald-100 p-4">
-            <ShieldCheck className="h-10 w-10 text-emerald-600" />
+        <header className="mb-6 sm:mb-8 text-center">
+          <div className="mb-3 inline-flex items-center justify-center rounded-full bg-emerald-100 p-3 sm:p-4">
+            <ShieldCheck className="h-8 w-8 sm:h-10 sm:w-10 text-emerald-600" />
           </div>
-          <h1 className="text-3xl font-bold text-slate-900">ZIVO Security Status</h1>
-          <p className="mt-2 text-slate-600">
+          <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold text-slate-900">ZIVO Security Status</h1>
+          <p className="mt-2 text-sm sm:text-base text-slate-600">
             {done} / {total} hardening items applied — generated {now}
           </p>
-          <div className="mt-3 inline-block rounded-full bg-emerald-50 px-4 py-1 text-sm font-medium text-emerald-700">
+          <div className="mt-3 inline-block rounded-full bg-emerald-50 px-3 sm:px-4 py-1 text-xs sm:text-sm font-medium text-emerald-700">
             ✓ Build clean · 0 vulnerabilities · 0 secret leaks
           </div>
         </header>
 
-        <div className="space-y-6">
+        <div className="space-y-4 sm:space-y-6">
           {SECTIONS.map((section) => (
             <section
               key={section.title}
-              className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm"
+              className="rounded-2xl border border-slate-200 bg-white p-4 sm:p-6 shadow-sm"
             >
-              <h2 className="mb-4 flex items-center gap-2 text-lg font-semibold text-slate-900">
+              <h2 className="mb-3 sm:mb-4 flex items-center gap-2 text-base sm:text-lg font-semibold text-slate-900">
                 <span className="text-emerald-600">{section.icon}</span>
                 {section.title}
               </h2>
-              <ul className="space-y-3">
+              <ul className="space-y-2.5 sm:space-y-3">
                 {section.items.map((item) => (
                   <li key={item.label} className="flex gap-3">
-                    <span className={`mt-1 flex h-5 w-5 shrink-0 items-center justify-center rounded-full ${item.done ? "bg-emerald-500 text-white" : "bg-slate-200 text-slate-500"}`}>
+                    <span className={`mt-1 flex h-5 w-5 shrink-0 items-center justify-center rounded-full text-[11px] ${item.done ? "bg-emerald-500 text-white" : "bg-slate-200 text-slate-500"}`}>
                       {item.done ? "✓" : "·"}
                     </span>
-                    <div>
-                      <div className="font-medium text-slate-900">{item.label}</div>
-                      <div className="text-sm text-slate-500">{item.detail}</div>
+                    <div className="min-w-0">
+                      <div className="text-sm sm:text-base font-medium text-slate-900">{item.label}</div>
+                      <div className="text-xs sm:text-sm text-slate-500 break-words">{item.detail}</div>
                     </div>
                   </li>
                 ))}

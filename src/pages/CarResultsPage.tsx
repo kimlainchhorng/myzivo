@@ -123,7 +123,7 @@ const defaultFilters: CarFilters = {
 type SortOption = "lowest" | "highest" | "best";
 
 export default function CarResultsPage() {
-  const [searchParams] = useSearchParams();
+  const [searchParams, setSearchParams] = useSearchParams();
   const [filters, setFilters] = useState<CarFilters>(defaultFilters);
   const [showFilters, setShowFilters] = useState(false);
   const [sortBy, setSortBy] = useState<SortOption>("lowest");
@@ -429,8 +429,8 @@ export default function CarResultsPage() {
           ]}
           searchForm={
             <CarEditSearchForm
-              onSearch={() => {}}
-              onCancel={() => {}}
+              onSearch={(params) => setSearchParams(params)}
+              onCancel={() => { /* form is always visible — nothing to cancel */ }}
             />
           }
         />

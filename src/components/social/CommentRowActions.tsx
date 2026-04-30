@@ -9,20 +9,26 @@
  */
 import { useEffect, useRef, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { MoreVertical, Pencil, Trash2 } from "lucide-react";
+import { MoreVertical, Pencil, Trash2, Pin, PinOff } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 interface Props {
-  /** Show the menu only when caller is the comment author */
+  /** Show edit/delete only when caller is the comment author */
   canManage: boolean;
   onEditStart: () => void;
   onDelete: () => void;
+  /** Show Pin/Unpin only when caller is the post author */
+  canPin?: boolean;
+  isPinned?: boolean;
+  onTogglePin?: () => void;
   /** Light surface (e.g. bottom sheet on the feed) vs dark (overlay reels) */
   variant?: "light" | "dark";
 }
 
 export default function CommentRowActions({
-  canManage, onEditStart, onDelete, variant = "light",
+  canManage, onEditStart, onDelete,
+  canPin, isPinned, onTogglePin,
+  variant = "light",
 }: Props) {
   const [open, setOpen] = useState(false);
   const [confirmDelete, setConfirmDelete] = useState(false);
@@ -37,7 +43,8 @@ export default function CommentRowActions({
     return () => document.removeEventListener("mousedown", handler);
   }, [open]);
 
-  if (!canManage) return null;
+  // Show the menu if the caller can manage the comment OR can pin it as the post author.
+  if (!canManage && !canPin) return null;
 
   const isDark = variant === "dark";
 
@@ -58,30 +65,46 @@ export default function CommentRowActions({
       <AnimatePresence>
         {open && (
           <motion.div
-            initial={{ opacity: 0, scale: 0.92, y: -4 }}
+            initial={{ opacity: 0, scale: 0.88, y: -6 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.92, y: -4 }}
-            transition={{ duration: 0.12 }}
+            transition={{ type: "spring", damping: 20, stiffness: 380, mass: 0.5 }}
             className="absolute right-0 top-full z-30 mt-1 min-w-[140px] rounded-xl bg-background border border-border/50 shadow-2xl overflow-hidden"
           >
             {!confirmDelete ? (
               <>
-                <button
-                  type="button"
-                  onClick={(e) => { e.stopPropagation(); setOpen(false); onEditStart(); }}
-                  className="flex w-full items-center gap-2 px-3 py-2.5 text-sm hover:bg-muted active:bg-muted/80"
-                >
-                  <Pencil className="h-4 w-4 text-foreground" />
-                  Edit
-                </button>
-                <button
-                  type="button"
-                  onClick={(e) => { e.stopPropagation(); setConfirmDelete(true); }}
-                  className="flex w-full items-center gap-2 px-3 py-2.5 text-sm text-red-600 hover:bg-red-50 active:bg-red-100 dark:hover:bg-red-950/40"
-                >
-                  <Trash2 className="h-4 w-4" />
-                  Delete
-                </button>
+                {/* Pin/Unpin — post author only */}
+                {canPin && onTogglePin && (
+                  <button
+                    type="button"
+                    onClick={(e) => { e.stopPropagation(); setOpen(false); onTogglePin(); }}
+                    className="flex w-full items-center gap-2 px-3 py-2.5 text-sm hover:bg-muted active:bg-muted/80"
+                  >
+                    {isPinned ? <PinOff className="h-4 w-4 text-foreground" /> : <Pin className="h-4 w-4 text-primary" />}
+                    {isPinned ? "Unpin" : "Pin to top"}
+                  </button>
+                )}
+                {/* Edit/Delete — comment author only */}
+                {canManage && (
+                  <>
+                    <button
+                      type="button"
+                      onClick={(e) => { e.stopPropagation(); setOpen(false); onEditStart(); }}
+                      className="flex w-full items-center gap-2 px-3 py-2.5 text-sm hover:bg-muted active:bg-muted/80"
+                    >
+                      <Pencil className="h-4 w-4 text-foreground" />
+                      Edit
+                    </button>
+                    <button
+                      type="button"
+                      onClick={(e) => { e.stopPropagation(); setConfirmDelete(true); }}
+                      className="flex w-full items-center gap-2 px-3 py-2.5 text-sm text-red-600 hover:bg-red-50 active:bg-red-100 dark:hover:bg-red-950/40"
+                    >
+                      <Trash2 className="h-4 w-4" />
+                      Delete
+                    </button>
+                  </>
+                )}
               </>
             ) : (
               <div className="p-2">

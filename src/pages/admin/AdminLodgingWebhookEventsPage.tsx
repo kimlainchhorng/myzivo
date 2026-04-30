@@ -97,7 +97,7 @@ export default function AdminLodgingWebhookEventsPage() {
       {/* Header */}
       <div className="flex items-center justify-between gap-3">
         <div className="flex items-center gap-2">
-          <Button variant="outline" size="icon" onClick={() => navigate(-1)} className="rounded-xl">
+          <Button aria-label="Back" variant="outline" size="icon" onClick={() => navigate(-1)} className="rounded-xl">
             <ArrowLeft className="h-4 w-4" />
           </Button>
           <div>

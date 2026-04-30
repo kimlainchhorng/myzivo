@@ -1,7 +1,7 @@
 import { createClient } from "npm:@supabase/supabase-js@2.49.4";
 import { getCorsHeaders } from "../_shared/cors.ts";
 import { enforceAal2 } from "../_shared/aalCheck.ts";
-import { scanContentForLinks, logBlockedAttempt, isAbuseThresholdExceeded } from "../_shared/contentLinkValidation.ts";
+import { scanContentForLinks, logBlockedAttempt, isAbuseThresholdExceeded, isIpAbuseThresholdExceeded, getRequestIpHash } from "../_shared/contentLinkValidation.ts";
 import { isLikelyMaliciousBot } from "../_shared/botDetection.ts";
 
 const ALLOWED_ROLES = ["admin", "super_admin", "support"];
@@ -71,6 +71,10 @@ Deno.serve(async (req) => {
       return jsonResponse({ error: "postId, userId, and content are required" }, 400, corsHeaders);
     }
 
+    const ipHash = await getRequestIpHash(req);
+    if (await isIpAbuseThresholdExceeded(adminClient, ipHash)) {
+      return jsonResponse({ error: "rate_limited", code: "ip_abuse_threshold_exceeded", message: "Too many recent blocked submissions from your network." }, 429, corsHeaders);
+    }
     if (await isAbuseThresholdExceeded(adminClient, userId)) {
       return jsonResponse({ error: "rate_limited", code: "abuse_threshold_exceeded", message: "Too many recent blocked submissions for this user." }, 429, corsHeaders);
     }

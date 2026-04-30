@@ -131,7 +131,7 @@ export default function ShopPromotionsPage() {
       <div className="sticky top-0 safe-area-top z-10 bg-background/95 backdrop-blur-sm border-b border-border p-4">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <Button variant="ghost" size="icon" onClick={() => navigate(-1)}><ArrowLeft className="h-5 w-5" /></Button>
+            <Button aria-label="Back" variant="ghost" size="icon" onClick={() => navigate(-1)}><ArrowLeft className="h-5 w-5" /></Button>
             <Tag className="h-5 w-5 text-primary" />
             <h1 className="text-xl font-bold">Promotions</h1>
           </div>
@@ -201,7 +201,7 @@ export default function ShopPromotionsPage() {
                   </Badge>
                 </div>
                 <div className="flex items-center gap-1">
-                  <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => toggleActive(promo.id, promo.isActive)}>
+                  <Button aria-label="Toggle active" variant="ghost" size="icon" className="h-7 w-7" onClick={() => toggleActive(promo.id, promo.isActive)}>
                     {promo.isActive ? <ToggleRight className="h-4 w-4 text-primary" /> : <ToggleLeft className="h-4 w-4 text-muted-foreground" />}
                   </Button>
                   <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => deletePromo(promo.id)}>

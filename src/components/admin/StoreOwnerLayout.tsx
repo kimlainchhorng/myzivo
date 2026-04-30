@@ -280,9 +280,11 @@ export default function StoreOwnerLayout({ children, title, storeId, storeName, 
               tabIndex={-1}
               className={cn(
                 "fixed inset-y-0 left-0 z-50 w-[72vw] max-w-[250px] bg-card border-r border-border flex flex-col overflow-hidden rounded-r-2xl shadow-2xl overscroll-contain lg:hidden",
-                "transition-transform duration-300 ease-[cubic-bezier(0.32,0.72,0,1)]",
+                "transition-transform duration-300",
                 sidebarOpen ? "translate-x-0" : "-translate-x-full"
               )}
+              // iOS-style spring easing — inline avoids Tailwind's bracket ambiguity warning.
+              style={{ transitionTimingFunction: "cubic-bezier(0.32, 0.72, 0, 1)" }}
             >
               {renderSidebarContent({ isMobile: true })}
             </aside>

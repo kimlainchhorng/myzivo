@@ -73,6 +73,8 @@ import RideBookingHome from "@/components/rides/RideBookingHome";
 import ZivoReserve from "@/components/rides/ZivoReserve";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
+import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/contexts/AuthContext";
 import { useI18n } from "@/hooks/useI18n";
 
 /* ─── Primary tabs always visible in nav bar ─── */
@@ -195,6 +197,38 @@ type TabCategory = "book" | "trip" | "money" | "safety" | "comfort" | "rewards" 
 export default function RideHubPage() {
   const navigate = useNavigate();
   const { t } = useI18n();
+  const { user } = useAuth();
+
+  const submitRateAndTip = async (data: { rating: number; tip: number; feedback: string; tags: string[] }) => {
+    try {
+      const { error } = await supabase.from("feedback_submissions").insert({
+        category: "ride_rating",
+        subject: `Ride rating: ${data.rating} stars`,
+        message: `Rating: ${data.rating}/5\nTip: $${data.tip.toFixed(2)}\nTags: ${data.tags.join(", ") || "none"}\n\nFeedback: ${data.feedback || "(no comment)"}`,
+        rating: data.rating,
+        user_id: user?.id ?? null,
+      });
+      if (error) throw error;
+      toast.success("Thanks for the feedback!");
+    } catch (e: any) {
+      toast.error(e?.message || "Could not submit rating. Please try again.");
+    }
+  };
+
+  const submitLostItem = async (data: { category: string; description: string }) => {
+    try {
+      const { error } = await supabase.from("feedback_submissions").insert({
+        category: "lost_item_report",
+        subject: `Lost ${data.category}`,
+        message: data.description,
+        user_id: user?.id ?? null,
+      });
+      if (error) throw error;
+      toast.success("Lost item reported. We'll be in touch.");
+    } catch (e: any) {
+      toast.error(e?.message || "Could not submit report. Please try again.");
+    }
+  };
   const tabs: { id: string; label: string; icon: typeof Zap; category: TabCategory }[] = [
     { id: "book", label: t("ride.tab_book"), icon: Zap, category: "book" },
     { id: "reserve", label: t("ride.tab_reserve"), icon: CalendarDays, category: "book" },
@@ -540,8 +574,8 @@ export default function RideHubPage() {
             {activeTab === "chat"          && <div className="p-4"><InRideChat onCall={() => toast.info("Calling driver...")} /></div>}
             {activeTab === "alerts"        && <div className="p-4"><RideNotificationCenter /></div>}
             {activeTab === "receipt"       && <div className="p-4"><RideReceiptCard /></div>}
-            {activeTab === "rate"          && <div className="p-4"><RateAndTipFlow onSubmit={() => {}} onSkip={() => toast.info("Skipped")} /></div>}
-            {activeTab === "lost"          && <div className="p-4"><LostItemReport onSubmit={() => {}} onContactDriver={() => toast.info("Calling...")} /></div>}
+            {activeTab === "rate"          && <div className="p-4"><RateAndTipFlow onSubmit={submitRateAndTip} onSkip={() => toast.info("Skipped")} /></div>}
+            {activeTab === "lost"          && <div className="p-4"><LostItemReport onSubmit={submitLostItem} onContactDriver={() => toast.info("Calling...")} /></div>}
             {activeTab === "a11y"          && <div className="p-4"><AccessibilityHub /></div>}
             {activeTab === "prefs"         && <div className="p-4"><RidePreferences /></div>}
             {activeTab === "eco"           && <div className="p-4"><RideEcoTracker /></div>}

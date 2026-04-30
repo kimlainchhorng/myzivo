@@ -202,7 +202,14 @@ export async function isAbuseThresholdExceeded(
   return count >= threshold;
 }
 
-async function hashIp(ip: string): Promise<string | null> {
+/**
+ * SHA-256 of the source IP so we never store raw PII. Exported so endpoints
+ * can pass the same hashed value to both `isIpAbuseThresholdExceeded` (gate)
+ * and `logBlockedAttempt` (record) — must match for the IP-level threshold
+ * to count consistently.
+ */
+export async function hashIp(ip: string | null | undefined): Promise<string | null> {
+  if (!ip) return null;
   try {
     const data = new TextEncoder().encode(ip);
     const buf = await crypto.subtle.digest("SHA-256", data);
@@ -212,6 +219,59 @@ async function hashIp(ip: string): Promise<string | null> {
   } catch {
     return null;
   }
+}
+
+/**
+ * Pull the best client IP available from common proxy headers, then hash.
+ * Returns null if no usable header found.
+ */
+export async function getRequestIpHash(req: Request): Promise<string | null> {
+  const ip =
+    req.headers.get("cf-connecting-ip") ||
+    req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ||
+    req.headers.get("x-real-ip");
+  return hashIp(ip);
+}
+
+/**
+ * Count blocked attempts from this IP hash in the last `hours`.
+ * Threshold should be HIGHER than per-user (default 10) since corporate
+ * NATs and household routers share an IP across many real users.
+ */
+export async function getRecentBlockedCountByIp(
+  // deno-lint-ignore no-explicit-any
+  supabase: any,
+  ipHash: string | null | undefined,
+  hours = 24,
+): Promise<number> {
+  if (!ipHash) return 0;
+  try {
+    const cutoff = new Date(Date.now() - hours * 3600 * 1000).toISOString();
+    const { count, error } = await supabase
+      .from("blocked_link_attempts")
+      .select("id", { count: "exact", head: true })
+      .eq("ip_hash", ipHash)
+      .gte("created_at", cutoff);
+    if (error) return 0;
+    return count ?? 0;
+  } catch {
+    return 0;
+  }
+}
+
+/**
+ * IP-level auto-flag: returns true when this IP has hit the threshold.
+ * Catches attackers cycling through multiple accounts from one IP.
+ */
+export async function isIpAbuseThresholdExceeded(
+  // deno-lint-ignore no-explicit-any
+  supabase: any,
+  ipHash: string | null | undefined,
+  threshold = 10,
+  hours = 24,
+): Promise<boolean> {
+  const count = await getRecentBlockedCountByIp(supabase, ipHash, hours);
+  return count >= threshold;
 }
 
 export function scanContentForLinks(text: string | null | undefined): ContentLinkScan {

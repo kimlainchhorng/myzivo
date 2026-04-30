@@ -8,6 +8,7 @@ import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import Heart from "lucide-react/dist/esm/icons/heart";
 import { cn } from "@/lib/utils";
+import { useHaptic } from "@/hooks/useHaptic";
 
 interface Props {
   commentId: string;
@@ -25,6 +26,7 @@ export default function CommentHeartButton({
   const [liked, setLiked] = useState(false);
   const [count, setCount] = useState(initialCount);
   const [loading, setLoading] = useState(false);
+  const haptic = useHaptic();
 
   // Hydrate "did this user like it" + true count on mount
   useEffect(() => {
@@ -56,6 +58,8 @@ export default function CommentHeartButton({
   async function handleToggle() {
     if (!userId || loading) return;
     setLoading(true);
+    // Tactile feedback the moment the user taps; never wait on the network.
+    haptic(liked ? "light" : "medium");
     // Optimistic
     const wasLiked = liked;
     setLiked(!wasLiked);
@@ -87,7 +91,7 @@ export default function CommentHeartButton({
       onClick={handleToggle}
       disabled={loading || !userId}
       className={cn(
-        "flex flex-col items-center justify-center gap-0.5 px-1.5 py-1 rounded-full transition-transform active:scale-90",
+        "flex flex-col items-center justify-center gap-0.5 rounded-full transition-transform active:scale-90 min-w-[36px] min-h-[36px] px-1.5 py-1",
         loading && "opacity-60",
       )}
       aria-label={liked ? "Unlike comment" : "Like comment"}

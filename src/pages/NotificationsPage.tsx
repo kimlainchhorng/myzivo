@@ -267,15 +267,21 @@ const NotificationsPage = () => {
     await Promise.all([fetchNotifications(), fetchFriendRequests()]);
   }, [fetchNotifications, fetchFriendRequests]);
 
+  // Templates produced by the in-DB social triggers
+  // (see 20260430010000_social_notifications_and_comment_hearts.sql).
+  const isSocialTemplate = (t?: string | null) =>
+    !!t && (t === "social_reaction" || t === "social_repost" || t === "social_comment" || t === "social_mention" || t.startsWith("social_"));
+
   const filteredNotifications = useMemo(() => {
-    if (activeTab === 'all' || activeTab === 'social') return notifications;
+    if (activeTab === 'all') return notifications;
     return notifications.filter(n => {
       switch (activeTab) {
-        case 'orders': return n.category === 'transactional';
-        case 'promos': return n.category === 'marketing';
+        case 'social':  return isSocialTemplate(n.template);
+        case 'orders':  return n.category === 'transactional';
+        case 'promos':  return n.category === 'marketing';
         case 'support': return n.category === 'operational';
-        case 'delays': return n.template?.toLowerCase().includes('delay') || n.title?.toLowerCase().includes('delay');
-        default: return true;
+        case 'delays':  return n.template?.toLowerCase().includes('delay') || n.title?.toLowerCase().includes('delay');
+        default:        return true;
       }
     });
   }, [notifications, activeTab]);
@@ -289,6 +295,8 @@ const NotificationsPage = () => {
         else if (n.category === 'marketing') counts.promos++;
         else if (n.category === 'operational') counts.support++;
         if (n.template?.toLowerCase().includes('delay') || n.title?.toLowerCase().includes('delay')) counts.delays++;
+        // Trigger-generated social notifications (reactions/reposts/mentions/comments)
+        if (isSocialTemplate(n.template)) counts.social++;
       }
     });
     counts.all += friendRequests.length + socialUnread;

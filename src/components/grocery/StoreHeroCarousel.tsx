@@ -64,10 +64,15 @@ export default function StoreHeroCarousel({ images, storeName, positions }: Stor
                 src={src}
                 alt={`${storeName} photo ${i + 1}`}
                 className={cn(
-                  "w-full h-full object-cover transition-transform duration-[6000ms] ease-out will-change-transform",
+                  "w-full h-full object-cover transition-transform ease-out will-change-transform",
                   i === selectedIndex ? "scale-110" : "scale-100"
                 )}
-                style={{ objectPosition: `center ${positions?.[src] ?? 50}%` }}
+                // Inline transition-duration avoids the `duration-[6000ms]` Tailwind
+                // ambiguity (the bracket form is parsed as a content-utility otherwise).
+                style={{
+                  objectPosition: `center ${positions?.[src] ?? 50}%`,
+                  transitionDuration: "6000ms",
+                }}
                 loading={i === 0 ? "eager" : "lazy"}
               />
               {/* Cinematic gradient overlay for legibility */}

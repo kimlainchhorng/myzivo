@@ -91,7 +91,7 @@ export default function LeaderboardPage() {
       />
       <div className="bg-gradient-to-b from-primary/20 to-background p-4 pt-6">
         <div className="flex items-center gap-2 mb-6">
-          <Button variant="ghost" size="icon" onClick={() => navigate(-1)}>
+          <Button aria-label="Back" variant="ghost" size="icon" onClick={() => navigate(-1)}>
             <ArrowLeft className="h-5 w-5" />
           </Button>
           <Trophy className="h-5 w-5 text-primary" />

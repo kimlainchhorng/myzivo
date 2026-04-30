@@ -116,7 +116,7 @@ export default function StoryPollsPage() {
       <div className="sticky top-0 safe-area-top z-10 bg-background/95 backdrop-blur-sm border-b border-border p-4">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <Button variant="ghost" size="icon" onClick={() => navigate(-1)}>
+            <Button aria-label="Back" variant="ghost" size="icon" onClick={() => navigate(-1)}>
               <ArrowLeft className="h-5 w-5" />
             </Button>
             <BarChart3 className="h-5 w-5 text-primary" />
@@ -150,7 +150,7 @@ export default function StoryPollsPage() {
                   )}
                   <Input placeholder={`Option ${i + 1}`} value={opt} onChange={(e) => updateOption(i, e.target.value)} />
                   {options.length > 2 && (
-                    <Button variant="ghost" size="icon" className="h-8 w-8 shrink-0" onClick={() => removeOption(i)}>
+                    <Button aria-label="Remove option" variant="ghost" size="icon" className="h-8 w-8 shrink-0" onClick={() => removeOption(i)}>
                       <Trash2 className="h-3 w-3" />
                     </Button>
                   )}
