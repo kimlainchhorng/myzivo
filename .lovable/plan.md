@@ -1,70 +1,49 @@
-## Fix Autofill Issues on AutoZonePro
+## Problem
 
-The screenshot shows two real issues with the in-app browser autofill:
+Two issues visible in your screenshots:
 
-### 1. Username + placeholder overlap ("Kimlain" stacked on "Username *")
-AutoZonePro uses a **floating-label** input. Our autofill sets `el.value` and dispatches `input`/`change`, but the floating label only lifts on `focus` / `blur`. Result: the value renders behind the placeholder text.
+1. **IMG_2328 (top of feed):** The composer card ("What's on your mind?" + Photo/Video / Feeling / Check In / Live) is hidden BEHIND the sticky header instead of sitting below it. It looks like a huge empty white space because the translucent header covers the avatar + input row.
 
-**Fix:** in the injected `setVal()`, additionally call `el.focus()` → dispatch events → `el.blur()` so the host site's label-lift logic runs. Also dispatch `keyup` for sites that listen to it.
+2. **IMG_2329 (scrolled down):** The iOS status bar clock ("2:06") overlaps the "Feed" title and Search bar — the safe-area top padding is collapsing to zero in this state.
 
-### 2. Console error: `Cannot set property attributeName of MutationRecord (getter only)`
-Our `MutationObserver` re-applies credentials on every DOM change. When AutoZone's own scripts run after our `input`/`change` events, our observer fires again, and the host site's code (which reuses `MutationRecord` objects in some patterns) collides — triggering the read-only setter error and a feedback loop.
+## Root Cause
 
-**Fix:**
-- Add an `applying` re-entry guard so `applyCreds()` cannot recurse.
-- Skip refilling fields whose value is already correct (avoids redundant events).
-- Only react to mutations that have `addedNodes` (real DOM additions, like the password step appearing) — ignore attribute/character mutations.
-- Debounce the observer callback (150ms) so a burst of mutations triggers one refill, not dozens.
-- Observe `document.body` (not `document.documentElement`) to reduce noise from `<html>`/`<head>` attribute churn.
+The sticky header is wrapped inside `<PullToRefresh>`, whose inner `motion.div` applies a `transform: translateY(...)` to the entire feed content. On iOS WebKit, when a `position: sticky` element ALSO has its own `transform` (from our show/hide animation `-translate-y-full` / `translate-y-0`) AND lives inside a transformed parent AND has `will-change: transform`, the sticky element gets promoted to its own compositor layer. This breaks sticky positioning — the element no longer reserves flow space (so following content slides under it) and the safe-area padding inset is computed against the wrong containing block (so it collapses).
 
-### Technical Details
+In short: stacking `transform` on the sticky header inside a transformed `PullToRefresh` parent is breaking iOS sticky behavior.
 
-**File:** `supabase/functions/supplier-proxy/index.ts` — replace the autofill block (lines ~236–277) with the hardened version:
+## Fix
 
-```js
-var pendingCreds = null;
-var applying = false;
-function setVal(el, val){
-  try {
-    var setter = Object.getOwnPropertyDescriptor(Object.getPrototypeOf(el), 'value')?.set;
-    if (setter) setter.call(el, val); else el.value = val;
-    try { el.focus({ preventScroll: true }); } catch(_){}
-    el.dispatchEvent(new Event('input',  { bubbles: true }));
-    el.dispatchEvent(new Event('change', { bubbles: true }));
-    el.dispatchEvent(new Event('keyup',  { bubbles: true }));
-    try { el.blur(); } catch(_){}
-  } catch(e){}
-}
-function applyCreds(creds){
-  if (!creds || applying) return false;
-  applying = true;
-  var filled = 0;
-  try {
-    document.querySelectorAll('input').forEach(function(el){
-      if (el.disabled || el.readOnly || el.type === 'hidden') return;
-      var hint = ((el.name||'')+' '+(el.id||'')+' '+(el.autocomplete||'')+' '+(el.placeholder||'')+' '+(el.type||'')).toLowerCase();
-      if (el.type === 'password' && creds.password && el.value !== creds.password) {
-        setVal(el, creds.password); filled++;
-      } else if (creds.username && el.type !== 'password' &&
-                 (el.type === 'email' || /user|email|login|account|signin|userid/.test(hint))) {
-        if (!el.value) { setVal(el, creds.username); filled++; }
-      }
-    });
-  } finally { applying = false; }
-  return filled > 0;
-}
-// Debounced, additions-only observer for the 2-step password screen.
-var moTimer = null;
-new MutationObserver(function(records){
-  if (!pendingCreds || applying) return;
-  if (!records.some(function(r){ return r.addedNodes && r.addedNodes.length; })) return;
-  clearTimeout(moTimer);
-  moTimer = setTimeout(function(){ applyCreds(pendingCreds); }, 150);
-}).observe(document.body || document.documentElement, { childList: true, subtree: true });
-```
+Stop animating the header with a CSS `transform`. Use top offset instead, which doesn't promote the element to its own layer and is compatible with `position: sticky` on iOS.
 
-After the change, redeploy the `supplier-proxy` edge function.
+### Changes in `src/pages/ReelsFeedPage.tsx`
 
-### Out of Scope
-- Fixing AutoZonePro's own internal scripts (we only control our injected code).
-- Per-supplier custom fill selectors — generic input matching is sufficient for now.
+1. **Replace transform-based hide/show with a `top` offset** on the sticky Feed header:
+   - Remove `transition-transform`, `will-change-transform`, `-translate-y-full`, `translate-y-0`.
+   - Keep `sticky top-0 z-40`.
+   - When `headerHidden` is true, animate `transform: translateY(-100%)` via inline style with `transform-origin` set so it doesn't conflict — OR, simpler and safer: use a `marginTop` negative value via state (e.g. `marginTop: hidden ? '-120px' : '0'` with a CSS transition on `margin-top`). This keeps the element in flow and preserves sticky + safe-area behavior on iOS.
+
+2. **Move `paddingTop` (safe area) to a dedicated wrapper inside the sticky box** so it can't be collapsed by transform layer promotion:
+   ```tsx
+   <div className="lg:hidden sticky top-0 z-40 bg-background/95 backdrop-blur-xl border-b border-border/30">
+     <div style={{ paddingTop: 'var(--zivo-safe-top-sticky, 0px)' }}>
+       <div className="px-3 py-1 flex items-center gap-1.5"> ... </div>
+     </div>
+   </div>
+   ```
+
+3. **Add a small spacer above the composer** so the first row of "What's on your mind?" never visually touches the sticky header bottom border. (`mt-1` on the composer card.)
+
+4. **Auto-hide animation:** keep the scroll listener but apply the visibility via a wrapper `<div>` that uses `max-height` + `opacity` transitions (collapses smoothly without breaking sticky). The outer sticky box itself stays in place; only its inner content collapses to 0 height.
+
+### Expected Result
+
+- At scroll=0: composer ("What's on your mind?" / Photo-Video row / story ring) visibly sits BELOW the Feed header — no more giant white gap.
+- When scrolling down: header content collapses smoothly (Facebook-style) without leaving an empty stuck bar.
+- When scrolled (IMG_2329 case): the iOS status bar no longer overlaps the "Feed" title — safe-area padding stays applied.
+
+### Files Touched
+
+- `src/pages/ReelsFeedPage.tsx` (header markup around lines 984–1047)
+
+No CSS token changes needed; `--zivo-safe-top-sticky` is already correctly defined.
