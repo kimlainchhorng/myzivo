@@ -984,12 +984,12 @@ export default function ReelsFeedPage() {
           <div
             data-testid="feed-sticky-header"
             className={cn(
-              "lg:hidden sticky z-40 bg-background/95 backdrop-blur-xl border-b border-border/30 pt-safe transition-transform duration-300 ease-out will-change-transform",
+              "lg:hidden sticky top-0 z-40 bg-background/95 backdrop-blur-xl border-b border-border/30 transition-transform duration-300 ease-out will-change-transform",
               headerHidden ? "-translate-y-full" : "translate-y-0",
             )}
-            style={{ top: 'var(--zivo-safe-top, 0px)' }}
+            style={{ paddingTop: 'var(--zivo-safe-top-sticky, 0px)' }}
           >
-            <div className="px-3 py-1.5 flex items-center gap-1.5">
+            <div className="px-3 py-1 flex items-center gap-1.5">
               <h1 className="text-base font-bold text-foreground shrink-0">Feed</h1>
               <div className="flex-1 relative">
                 <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground pointer-events-none" />
