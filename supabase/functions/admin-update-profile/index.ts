@@ -1,5 +1,6 @@
 import { createClient } from "npm:@supabase/supabase-js@2.49.4";
 import { decode } from "https://deno.land/std@0.208.0/encoding/base64.ts";
+import { enforceAal2 } from "../_shared/aalCheck.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -19,6 +20,10 @@ Deno.serve(async (req) => {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
+
+    // Step-up MFA — admin profile edits (PII) require an AAL2 session
+    const mfaErr = enforceAal2(authHeader, corsHeaders);
+    if (mfaErr) return mfaErr;
 
     const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
     const supabaseAnonKey = Deno.env.get("SUPABASE_ANON_KEY")!;

@@ -87,13 +87,11 @@ export function useCallRecording({ callHistoryId, userId }: UseCallRecordingOpti
 
       if (error) throw error;
 
-      const { data: urlData } = supabase.storage.from("chat-media-files").getPublicUrl(path);
-
-      // Save recording metadata
+      // Store the storage path; consumers mint signed URLs on demand.
       await (supabase as any).from("call_recordings").insert({
         call_history_id: callHistoryId || null,
         recorder_id: userId,
-        recording_url: urlData.publicUrl,
+        recording_url: path, // storage path, not public URL
         duration_seconds: recordingDuration,
         file_size_bytes: blob.size,
         consent_given_by: [userId],

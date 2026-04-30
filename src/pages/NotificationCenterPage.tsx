@@ -2,8 +2,10 @@ import { useState, useEffect, useCallback } from "react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { ArrowLeft, Heart, MessageCircle, UserPlus, ShoppingBag, Bell, Check, Trash2 } from "lucide-react";
+import {
+  ArrowLeft, Heart, MessageCircle, UserPlus, ShoppingBag, Bell, Check, Trash2,
+  Briefcase, Tv, Activity, Rocket, Plane, AlertTriangle, Tag, DollarSign, AtSign,
+} from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import { supabase } from "@/integrations/supabase/client";
@@ -11,9 +13,15 @@ import { useAuth } from "@/contexts/AuthContext";
 import { formatDistanceToNow } from "date-fns";
 import { toast } from "sonner";
 
+type NotifType =
+  | "like" | "comment" | "follow" | "mention"
+  | "order" | "payment" | "deal"
+  | "job" | "live" | "wellness" | "creator" | "travel"
+  | "alert" | "system";
+
 interface Notification {
   id: string;
-  type: "like" | "comment" | "follow" | "order" | "mention" | "system";
+  type: NotifType;
   title: string;
   message: string;
   time: string;
@@ -21,26 +29,55 @@ interface Notification {
   action_url?: string | null;
 }
 
-const ICON_MAP = {
-  like: Heart, comment: MessageCircle, follow: UserPlus,
-  order: ShoppingBag, mention: MessageCircle, system: Bell,
+const ICON_MAP: Record<NotifType, any> = {
+  like: Heart,
+  comment: MessageCircle,
+  follow: UserPlus,
+  mention: AtSign,
+  order: ShoppingBag,
+  payment: DollarSign,
+  deal: Tag,
+  job: Briefcase,
+  live: Tv,
+  wellness: Activity,
+  creator: Rocket,
+  travel: Plane,
+  alert: AlertTriangle,
+  system: Bell,
 };
 
-const COLOR_MAP = {
+const COLOR_MAP: Record<NotifType, string> = {
   like: "text-red-500 bg-red-500/10",
   comment: "text-blue-500 bg-blue-500/10",
   follow: "text-primary bg-primary/10",
-  order: "text-green-500 bg-green-500/10",
   mention: "text-purple-500 bg-purple-500/10",
+  order: "text-green-500 bg-green-500/10",
+  payment: "text-emerald-500 bg-emerald-500/10",
+  deal: "text-orange-500 bg-orange-500/10",
+  job: "text-sky-500 bg-sky-500/10",
+  live: "text-rose-500 bg-rose-500/10",
+  wellness: "text-teal-500 bg-teal-500/10",
+  creator: "text-violet-500 bg-violet-500/10",
+  travel: "text-indigo-500 bg-indigo-500/10",
+  alert: "text-amber-500 bg-amber-500/10",
   system: "text-muted-foreground bg-muted",
 };
 
-function categoryToType(category: string): Notification["type"] {
-  if (category.includes("like") || category.includes("heart")) return "like";
-  if (category.includes("comment") || category.includes("reply")) return "comment";
-  if (category.includes("follow") || category.includes("friend")) return "follow";
-  if (category.includes("order") || category.includes("purchase") || category.includes("payment")) return "order";
-  if (category.includes("mention") || category.includes("tag")) return "mention";
+function categoryToType(category: string): NotifType {
+  const c = category.toLowerCase();
+  if (c.includes("like") || c.includes("heart") || c.includes("reaction")) return "like";
+  if (c.includes("comment") || c.includes("reply")) return "comment";
+  if (c.includes("follow") || c.includes("friend") || c.includes("connection")) return "follow";
+  if (c.includes("mention") || c.includes("tag")) return "mention";
+  if (c.includes("payment") || c.includes("payout") || c.includes("invoice") || c.includes("refund")) return "payment";
+  if (c.includes("order") || c.includes("purchase") || c.includes("delivery") || c.includes("shipping")) return "order";
+  if (c.includes("deal") || c.includes("promo") || c.includes("discount") || c.includes("coupon")) return "deal";
+  if (c.includes("job") || c.includes("application") || c.includes("hiring") || c.includes("interview") || c.includes("career")) return "job";
+  if (c.includes("live") || c.includes("stream") || c.includes("broadcast") || c.includes("space")) return "live";
+  if (c.includes("wellness") || c.includes("workout") || c.includes("fitness") || c.includes("med") || c.includes("vital") || c.includes("health")) return "wellness";
+  if (c.includes("creator") || c.includes("monetization") || c.includes("earning") || c.includes("brand")) return "creator";
+  if (c.includes("trip") || c.includes("flight") || c.includes("hotel") || c.includes("ride") || c.includes("travel") || c.includes("booking")) return "travel";
+  if (c.includes("alert") || c.includes("warning") || c.includes("error") || c.includes("security")) return "alert";
   return "system";
 }
 
@@ -94,16 +131,40 @@ export default function NotificationCenterPage() {
     setNotifications(prev => prev.filter(n => n.id !== id));
   };
 
-  const TAB_TYPES: Record<string, string[]> = {
+  const TAB_TYPES: Record<string, NotifType[]> = {
     all: [],
+    unread: [],
     social: ["like", "comment", "follow", "mention"],
-    orders: ["order"],
+    orders: ["order", "payment", "deal"],
+    travel: ["travel"],
+    jobs: ["job"],
+    live: ["live"],
+    creator: ["creator"],
+    wellness: ["wellness"],
+    alerts: ["alert"],
     system: ["system"],
   };
 
-  const filtered = activeTab === "all"
-    ? notifications
-    : notifications.filter(n => TAB_TYPES[activeTab]?.includes(n.type));
+  const TABS: { key: string; label: string; icon?: any }[] = [
+    { key: "all", label: "All" },
+    { key: "unread", label: "Unread" },
+    { key: "social", label: "Social", icon: Heart },
+    { key: "orders", label: "Orders", icon: ShoppingBag },
+    { key: "travel", label: "Travel", icon: Plane },
+    { key: "jobs", label: "Jobs", icon: Briefcase },
+    { key: "live", label: "Live", icon: Tv },
+    { key: "creator", label: "Creator", icon: Rocket },
+    { key: "wellness", label: "Wellness", icon: Activity },
+    { key: "alerts", label: "Alerts", icon: AlertTriangle },
+    { key: "system", label: "System", icon: Bell },
+  ];
+
+  const filtered =
+    activeTab === "all"
+      ? notifications
+      : activeTab === "unread"
+      ? notifications.filter((n) => !n.isRead)
+      : notifications.filter((n) => TAB_TYPES[activeTab]?.includes(n.type));
 
   return (
     <div className="min-h-screen bg-background pb-20">
@@ -120,14 +181,39 @@ export default function NotificationCenterPage() {
             </Button>
           )}
         </div>
-        <Tabs value={activeTab} onValueChange={setActiveTab}>
-          <TabsList className="grid grid-cols-4 w-full">
-            <TabsTrigger value="all">All</TabsTrigger>
-            <TabsTrigger value="social">Social</TabsTrigger>
-            <TabsTrigger value="orders">Orders</TabsTrigger>
-            <TabsTrigger value="system">System</TabsTrigger>
-          </TabsList>
-        </Tabs>
+        <div className="flex gap-1.5 overflow-x-auto scrollbar-hide -mx-4 px-4 pb-1" style={{ WebkitOverflowScrolling: "touch" }}>
+          {TABS.map((tab) => {
+            const isActive = activeTab === tab.key;
+            const tabUnread =
+              tab.key === "all" || tab.key === "unread"
+                ? 0
+                : notifications.filter((n) => !n.isRead && TAB_TYPES[tab.key]?.includes(n.type)).length;
+            return (
+              <button
+                key={tab.key}
+                onClick={() => setActiveTab(tab.key)}
+                className={`shrink-0 flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold border transition-all touch-manipulation ${
+                  isActive
+                    ? "bg-primary text-primary-foreground border-primary"
+                    : "bg-muted/40 text-muted-foreground border-border hover:bg-muted/70"
+                }`}
+              >
+                {tab.icon && <tab.icon className="h-3.5 w-3.5" />}
+                <span>{tab.label}</span>
+                {tab.key === "unread" && unreadCount > 0 && (
+                  <span className={`text-[10px] font-bold rounded-full px-1.5 ${isActive ? "bg-primary-foreground/20" : "bg-primary text-primary-foreground"}`}>
+                    {unreadCount}
+                  </span>
+                )}
+                {tabUnread > 0 && (
+                  <span className={`text-[10px] font-bold rounded-full px-1.5 ${isActive ? "bg-primary-foreground/20" : "bg-primary/15 text-primary"}`}>
+                    {tabUnread}
+                  </span>
+                )}
+              </button>
+            );
+          })}
+        </div>
       </div>
 
       <div className="divide-y divide-border">

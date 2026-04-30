@@ -2,11 +2,11 @@
  * ExplorePage — Discover users, trending posts, hashtags, and nearby places
  * Features: search, trending grid, hashtag browsing, map toggle
  */
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { Search, TrendingUp, Hash, MapPin, Users, Grid3X3, X, Loader2 } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { motion, AnimatePresence } from "framer-motion";
@@ -23,8 +23,20 @@ type Tab = "trending" | "users" | "hashtags";
 export default function ExplorePage() {
   const { user } = useAuth();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const [search, setSearch] = useState("");
   const [activeTab, setActiveTab] = useState<Tab>("trending");
+
+  // Consume the ?tag=<word> query string from a hashtag tap in a caption.
+  // Switches to the Tags tab and pre-fills the search box so the user lands
+  // on relevant results instead of the generic trending grid.
+  useEffect(() => {
+    const tag = searchParams.get("tag");
+    if (tag) {
+      setActiveTab("hashtags");
+      setSearch(tag);
+    }
+  }, [searchParams]);
 
   // Trending posts
   const { data: trendingPosts = [], isLoading: loadingPosts } = useQuery({

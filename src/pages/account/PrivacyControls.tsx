@@ -36,7 +36,10 @@ import Footer from "@/components/Footer";
 import SEOHead from "@/components/SEOHead";
 import { useAuth } from "@/contexts/AuthContext";
 import { useUserConsents, useRecordConsent, useLegalPolicies } from "@/hooks/useLegalCompliance";
+import { useCookiePrefs } from "@/hooks/useCookiePrefs";
 import { toast } from "sonner";
+import { useEffect } from "react";
+import { Cookie } from "lucide-react";
 
 // DSAR request types
 const dsarRequestTypes = [
@@ -123,6 +126,19 @@ export default function PrivacyControls() {
   const { data: policies } = useLegalPolicies(true);
   const recordConsent = useRecordConsent();
   
+  const { prefs: cookiePrefs, update: updateCookie, acceptAll: acceptAllCookies, rejectAll: rejectAllCookies } = useCookiePrefs();
+
+  // Hash anchor scrolling (e.g. /account/data-rights#cookies)
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const hash = window.location.hash?.replace("#", "");
+    if (!hash) return;
+    const t = setTimeout(() => {
+      document.getElementById(hash)?.scrollIntoView({ behavior: "smooth", block: "start" });
+    }, 300);
+    return () => clearTimeout(t);
+  }, []);
+
   const [requestDialogOpen, setRequestDialogOpen] = useState(false);
   const [selectedRequest, setSelectedRequest] = useState<typeof dsarRequestTypes[0] | null>(null);
   const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
@@ -241,11 +257,12 @@ export default function PrivacyControls() {
           </div>
 
           {/* Tabbed Content */}
-          <Tabs defaultValue="requests" className="mb-12">
-            <TabsList className="grid w-full grid-cols-3 h-auto mb-6">
+          <Tabs defaultValue={typeof window !== "undefined" && window.location.hash === "#cookies" ? "cookies" : "requests"} className="mb-12">
+            <TabsList className="grid w-full grid-cols-4 h-auto mb-6">
               <TabsTrigger value="requests" className="text-xs md:text-sm">Data Requests</TabsTrigger>
-              <TabsTrigger value="consents" className="text-xs md:text-sm">Consent Settings</TabsTrigger>
-              <TabsTrigger value="history" className="text-xs md:text-sm">Request History</TabsTrigger>
+              <TabsTrigger value="consents" className="text-xs md:text-sm">Consents</TabsTrigger>
+              <TabsTrigger value="cookies" className="text-xs md:text-sm">Cookies</TabsTrigger>
+              <TabsTrigger value="history" className="text-xs md:text-sm">History</TabsTrigger>
             </TabsList>
 
             {/* Data Requests Tab */}
@@ -404,6 +421,68 @@ export default function PrivacyControls() {
                       <Ban className="w-4 h-4 mr-2" />
                       Withdraw Marketing Consent
                     </Button>
+                  </CardContent>
+                </Card>
+              </div>
+            </TabsContent>
+
+            {/* Cookies Tab */}
+            <TabsContent value="cookies">
+              <div id="cookies" className="scroll-mt-24 space-y-4">
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2">
+                      <Cookie className="w-5 h-5 text-amber-500" />
+                      Cookie Preferences
+                    </CardTitle>
+                    <CardDescription>
+                      Choose which categories of cookies and similar tracking technologies you allow on your devices.
+                      You can change these at any time.
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent className="space-y-4">
+                    <div className="flex flex-wrap gap-2">
+                      <Button size="sm" onClick={() => { acceptAllCookies(); toast.success("All cookies accepted"); }}>
+                        Accept all
+                      </Button>
+                      <Button size="sm" variant="outline" onClick={() => { rejectAllCookies(); toast.success("Optional cookies rejected"); }}>
+                        Reject optional
+                      </Button>
+                    </div>
+
+                    <Separator />
+
+                    <div className="space-y-3">
+                      {[
+                        { key: "necessary" as const, title: "Strictly Necessary", desc: "Required for the site to function (auth, security, load balancing). Cannot be disabled.", locked: true },
+                        { key: "functional" as const, title: "Functional", desc: "Remember your preferences, language, region, and recently viewed items.", locked: false },
+                        { key: "analytics" as const, title: "Analytics", desc: "Help us understand how the app is used so we can improve performance and reliability.", locked: false },
+                        { key: "personalization" as const, title: "Personalization", desc: "Tailor recommendations, search results, and content to your interests.", locked: false },
+                        { key: "marketing" as const, title: "Marketing", desc: "Show relevant offers and measure the effectiveness of campaigns across services.", locked: false },
+                      ].map((row) => (
+                        <div key={row.key} className="flex items-start justify-between gap-4 p-3 rounded-xl bg-muted/30">
+                          <div className="min-w-0">
+                            <p className="text-sm font-semibold">{row.title}</p>
+                            <p className="text-xs text-muted-foreground mt-0.5">{row.desc}</p>
+                          </div>
+                          <Switch
+                            checked={cookiePrefs[row.key] as boolean}
+                            disabled={row.locked}
+                            onCheckedChange={(v) => {
+                              if (row.locked) return;
+                              updateCookie(row.key as any, v);
+                              toast.success(`${row.title}: ${v ? "enabled" : "disabled"}`);
+                            }}
+                          />
+                        </div>
+                      ))}
+                    </div>
+
+                    {cookiePrefs.updatedAt && (
+                      <p className="text-[11px] text-muted-foreground pt-2">
+                        Last updated {new Date(cookiePrefs.updatedAt).toLocaleString()}
+                      </p>
+                    )}
                   </CardContent>
                 </Card>
               </div>

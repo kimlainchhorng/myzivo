@@ -77,8 +77,9 @@ export default function RideHubPage() {
     { id: "book", label: t("ride.tab_book"), icon: Zap },
     { id: "reserve", label: t("ride.tab_reserve"), icon: CalendarDays },
     { id: "map", label: t("ride.tab_map"), icon: MapIcon },
+    { id: "search", label: t("ride.tab_search"), icon: Search },
     { id: "history", label: t("ride.tab_history"), icon: History },
-    { id: "calendar", label: t("ride.tab_reserve"), icon: CalendarDays },
+    { id: "calendar", label: t("ride.tab_calendar"), icon: CalendarDays },
     { id: "insights", label: t("ride.tab_insights"), icon: BarChart3 },
     { id: "tracking", label: t("ride.tab_live"), icon: Navigation },
     { id: "match", label: "Match", icon: Car },
@@ -131,8 +132,10 @@ export default function RideHubPage() {
     { id: "loyalty-rwd", label: "Loyalty+", icon: Trophy },
     { id: "a11y-adv", label: "A11y+", icon: Accessibility },
   ];
-  const [searchParams] = useSearchParams();
-  const initialTab = searchParams.get("tab") === "reserve" ? "reserve" : "book";
+  const [searchParams, setSearchParams] = useSearchParams();
+  const validTabIds = tabs.map(t => t.id);
+  const requestedTab = searchParams.get("tab");
+  const initialTab = requestedTab && validTabIds.includes(requestedTab) ? requestedTab : "book";
   const initialDestination = searchParams.get("destination") || undefined;
   const initialDestLat = searchParams.get("destLat") ? parseFloat(searchParams.get("destLat")!) : undefined;
   const initialDestLng = searchParams.get("destLng") ? parseFloat(searchParams.get("destLng")!) : undefined;
@@ -140,9 +143,20 @@ export default function RideHubPage() {
   const [bookWithSchedule, setBookWithSchedule] = useState(false);
 
   useEffect(() => {
-    const nextTab = searchParams.get("tab") === "reserve" ? "reserve" : "book";
-    setActiveTab(nextTab);
+    const next = searchParams.get("tab");
+    if (next && validTabIds.includes(next) && next !== activeTab) setActiveTab(next);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [searchParams]);
+
+  const selectTab = (id: string) => {
+    setActiveTab(id);
+    setSearchParams(prev => {
+      const next = new URLSearchParams(prev);
+      if (id === "book") next.delete("tab");
+      else next.set("tab", id);
+      return next;
+    }, { replace: true });
+  };
 
   useEffect(() => {
     window.scrollTo({ top: 0, behavior: "auto" });
@@ -170,7 +184,7 @@ export default function RideHubPage() {
               return (
                 <button
                   key={tab.id}
-                  onClick={() => setActiveTab(tab.id)}
+                  onClick={() => selectTab(tab.id)}
                   className={cn(
                     "flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold whitespace-nowrap transition-all shrink-0",
                     active
@@ -199,7 +213,8 @@ export default function RideHubPage() {
             className={cn(isFullScreen && "h-full min-h-0 flex flex-col flex-1")}
           >
             {activeTab === "book" && <RideBookingHome initialSchedule={bookWithSchedule} initialDestinationAddress={initialDestination} initialDestLat={initialDestLat} initialDestLng={initialDestLng} />}
-            {activeTab === "reserve" && <div className="flex-1 min-h-0 overflow-hidden"><ZivoReserve onReserve={() => { setBookWithSchedule(true); setActiveTab("book"); }} /></div>}
+            {activeTab === "reserve" && <div className="flex-1 min-h-0 overflow-hidden"><ZivoReserve onReserve={() => { setBookWithSchedule(true); selectTab("book"); }} /></div>}
+            {activeTab === "map" && <div className="p-4"><SurgePricingMap /></div>}
             {activeTab === "search" && <div className="p-4"><RideQuickSearch /></div>}
             {activeTab === "history" && <div className="p-4"><RideTripHistory /></div>}
             {activeTab === "calendar" && <div className="p-4"><RideScheduleCalendar /></div>}

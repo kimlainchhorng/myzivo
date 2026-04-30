@@ -278,6 +278,7 @@ export default function CreatePostModal({
         caption: caption.trim() || null,
         filter_css: FILTERS[activeFilter]?.css || null,
         is_published: true,
+        visibility,
       };
       if (location) insertData.location = location;
       if (audioName.trim()) insertData.audio_name = audioName.trim();

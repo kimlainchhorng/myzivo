@@ -1,4 +1,5 @@
 import { createClient } from "../_shared/deps.ts";
+import { enforceAal2 } from "../_shared/aalCheck.ts";
 
 // Admin-gated approve/block for trip_messages, with admin_actions audit entry.
 const corsHeaders = {
@@ -17,6 +18,10 @@ Deno.serve(async (req) => {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
+
+    // Step-up MFA — moderation actions require an AAL2 admin session
+    const mfaErr = enforceAal2(authHeader, corsHeaders);
+    if (mfaErr) return mfaErr;
 
     const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
     const anonKey = Deno.env.get("SUPABASE_ANON_KEY")!;

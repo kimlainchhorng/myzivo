@@ -9,6 +9,7 @@
  */
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "npm:@supabase/supabase-js@2.57.2";
+import { enforceAal2 } from "../_shared/aalCheck.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -33,6 +34,11 @@ serve(async (req) => {
 
     const auth = req.headers.get("Authorization");
     if (!auth) throw new Error("Not authenticated");
+
+    // Step-up MFA — host payout requests must be initiated from an AAL2 session
+    const mfaErr = enforceAal2(auth, corsHeaders);
+    if (mfaErr) return mfaErr;
+
     const { data: ud, error: ue } = await supabase.auth.getUser(auth.replace("Bearer ", ""));
     if (ue || !ud.user) throw new Error("Invalid auth");
     const user = ud.user;

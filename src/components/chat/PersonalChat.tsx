@@ -18,6 +18,7 @@ import { createPortal } from "react-dom";
 import { App as CapacitorApp } from "@capacitor/app";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
+import { signedUrlFor } from "@/lib/security/signedMedia";
 import ArrowLeft from "lucide-react/dist/esm/icons/arrow-left";
 import Send from "lucide-react/dist/esm/icons/send";
 import Loader2 from "lucide-react/dist/esm/icons/loader-2";
@@ -1123,10 +1124,11 @@ export default function PersonalChat({ recipientId, recipientName, recipientAvat
           .from("chat-media-files")
           .upload(path, file, { contentType: file.type, upsert: true, cacheControl: "3600" });
         if (upErr) throw upErr;
-        const { data: urlData } = supabase.storage.from("chat-media-files").getPublicUrl(path);
-        // Swap local blob URL for the real one so the bubble becomes "real".
+        // Mint a short-lived signed URL for the sender's bubble; store the
+        // path in the DB so receivers can re-sign on view (avoids expiring URLs).
+        const signedUrl = await signedUrlFor("chat-media-files", path, "display");
         setMessages((prev) => prev.map((m) => m.id === optimisticId
-          ? { ...m, image_url: kind === "image" ? urlData.publicUrl : null, video_url: kind === "video" ? urlData.publicUrl : null }
+          ? { ...m, image_url: kind === "image" ? signedUrl : null, video_url: kind === "video" ? signedUrl : null }
           : m));
         const insertData: DirectMessageInsert = {
           sender_id: user.id,
@@ -1134,8 +1136,8 @@ export default function PersonalChat({ recipientId, recipientName, recipientAvat
           message: "",
           message_type: kind,
         };
-        if (kind === "image") insertData.image_url = urlData.publicUrl;
-        if (kind === "video") insertData.video_url = urlData.publicUrl;
+        if (kind === "image") insertData.image_url = path;
+        if (kind === "video") insertData.video_url = path;
         if (currentReply) insertData.reply_to_id = currentReply.id;
         const { error: insErr } = await dbFrom("direct_messages").insert(insertData);
         if (insErr) throw insErr;
@@ -1193,7 +1195,7 @@ export default function PersonalChat({ recipientId, recipientName, recipientAvat
       const path = `${user.id}/locked_${Date.now()}.${ext}`;
       const { error } = await supabase.storage.from("chat-media-files").upload(path, file, { contentType: file.type });
       if (error) throw error;
-      const { data: urlData } = supabase.storage.from("chat-media-files").getPublicUrl(path);
+      const signedUrl = await signedUrlFor("chat-media-files", path, "display");
       const messageType = isVideo ? "locked_video" : "locked_image";
       const priceLabel = `$${(priceCents / 100).toFixed(2)}`;
       const label = isVideo ? `🔒 Locked Video · ${priceLabel}` : `🔒 Locked Photo · ${priceLabel}`;
@@ -1205,8 +1207,8 @@ export default function PersonalChat({ recipientId, recipientName, recipientAvat
       const optimisticMsg: Message = {
         id: optimisticId, sender_id: user.id, receiver_id: recipientId,
         message: text || label,
-        image_url: isVideo ? null : urlData.publicUrl,
-        video_url: isVideo ? urlData.publicUrl : null,
+        image_url: isVideo ? null : signedUrl,
+        video_url: isVideo ? signedUrl : null,
         voice_url: null, message_type: messageType,
         reply_to_id: null, location_lat: null, location_lng: null, location_label: null,
         is_pinned: false, expires_at: null, created_at: new Date().toISOString(), is_read: false,
@@ -1219,8 +1221,8 @@ export default function PersonalChat({ recipientId, recipientName, recipientAvat
         .insert({
           sender_id: user.id, receiver_id: recipientId,
           message: text || label,
-          image_url: isVideo ? null : urlData.publicUrl,
-          video_url: isVideo ? urlData.publicUrl : null,
+          image_url: isVideo ? null : path,
+          video_url: isVideo ? path : null,
           message_type: messageType,
           locked_price_cents: priceCents,
         });

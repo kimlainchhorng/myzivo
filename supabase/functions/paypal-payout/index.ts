@@ -1,5 +1,6 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "npm:@supabase/supabase-js@2.57.2";
+import { enforceAal2 } from "../_shared/aalCheck.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -45,6 +46,11 @@ serve(async (req) => {
   try {
     const authHeader = req.headers.get("Authorization");
     if (!authHeader) throw new Error("Not authenticated");
+
+    // Step-up MFA — PayPal payouts must be initiated from an AAL2 session
+    const mfaErr = enforceAal2(authHeader, corsHeaders);
+    if (mfaErr) return mfaErr;
+
     const { data: userData } = await supabase.auth.getUser(authHeader.replace("Bearer ", ""));
     const user = userData.user;
     if (!user) throw new Error("Invalid auth");

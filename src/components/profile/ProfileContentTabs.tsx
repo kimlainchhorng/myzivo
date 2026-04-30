@@ -171,6 +171,7 @@ type FeedItem = {
   isShared?: boolean;
   sharedOrigin?: SharedOriginInfo | null;
   createdAt?: string;
+  location?: string | null;
 };
 
 type NewPostPayload = {
@@ -199,6 +200,7 @@ type UserPostRow = {
   is_published: boolean;
   shared_from_post_id: string | null;
   shared_from_user_id: string | null;
+  location: string | null;
 };
 
 const normalizeFeedItemType = (mediaType: string | null | undefined): "photo" | "reel" =>
@@ -414,7 +416,7 @@ export default function ProfileContentTabs({ userId }: { userId?: string }) {
       try {
         const query = (supabase as any)
           .from("user_posts")
-          .select("id, user_id, media_type, media_url, caption, filter_css, likes_count, comments_count, views_count, created_at, is_published, shared_from_post_id, shared_from_user_id")
+          .select("id, user_id, media_type, media_url, caption, filter_css, likes_count, comments_count, views_count, created_at, is_published, shared_from_post_id, shared_from_user_id, location")
           .eq("is_published", true)
           .order("created_at", { ascending: false })
           .limit(50);
@@ -483,6 +485,7 @@ export default function ProfileContentTabs({ userId }: { userId?: string }) {
               isShared: Boolean(row.shared_from_post_id || row.shared_from_user_id),
               sharedOrigin,
               createdAt: row.created_at,
+              location: row.location ?? null,
             };
           })
           .filter((item) => Boolean(item.url) || Boolean(item.caption.trim()));

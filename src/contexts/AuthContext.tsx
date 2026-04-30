@@ -3,14 +3,20 @@ import { User, Session } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
 import { setupActivityTracking, clearSessionArtifacts } from "@/lib/security/sessionSecurity";
 import { getDeviceFingerprint } from "@/lib/security/deviceFingerprint";
+import { getMfaChallenge, verifyMfaChallenge, type MfaState } from "@/lib/security/mfa";
+import { clearSignedUrlCache } from "@/lib/security/signedMedia";
 
 type AuthContextType = {
   user: User | null;
   session: Session | null;
   isLoading: boolean;
   isAdmin: boolean;
+  /** When true, the user is signed in at AAL1 and must complete the MFA challenge */
+  mfaPending: MfaState | null;
   signUp: (email: string, password: string, fullName: string, phone?: string) => Promise<{ error: Error | null }>;
   signIn: (email: string, password: string) => Promise<{ error: Error | null }>;
+  /** Verify a 6-digit TOTP code; clears `mfaPending` on success */
+  verifyMfa: (code: string) => Promise<{ error: Error | null }>;
   signOut: () => Promise<void>;
 };
 
@@ -29,6 +35,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [session, setSession] = useState<Session | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isAdmin, setIsAdmin] = useState(false);
+  const [mfaPending, setMfaPending] = useState<MfaState | null>(null);
   const initializedRef = useRef(false);
   const loginGraceUntilRef = useRef(0);
   const explicitSignOutRef = useRef(false);
@@ -228,6 +235,16 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         // Reset session-security timers at the exact moment of successful auth.
         clearSessionArtifacts();
 
+        // MFA step-up — if the user has TOTP enrolled, gate access until verified.
+        try {
+          const challenge = await getMfaChallenge();
+          if (challenge.required) {
+            setMfaPending(challenge);
+          }
+        } catch {
+          // Non-critical — proceed without MFA challenge if the API fails
+        }
+
         // Log login event asynchronously (fire-and-forget)
         supabase.functions.invoke("log-login", {
           body: { user_agent: navigator.userAgent },
@@ -239,9 +256,20 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     }
   };
 
+  const verifyMfa = useCallback(async (code: string) => {
+    if (!mfaPending?.factorId || !mfaPending?.challengeId) {
+      return { error: new Error("No active MFA challenge") };
+    }
+    const err = await verifyMfaChallenge(mfaPending.factorId, mfaPending.challengeId, code);
+    if (!err) setMfaPending(null);
+    return { error: err };
+  }, [mfaPending]);
+
   const signOut = useCallback(async () => {
     explicitSignOutRef.current = true;
     clearSessionArtifacts();
+    clearSignedUrlCache();
+    setMfaPending(null);
 
     // Remove this device from trusted devices (so next login requires OTP again)
     const currentUser = user;
@@ -278,7 +306,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   }, [session, signOut]);
 
   return (
-    <AuthContext.Provider value={{ user, session, isLoading, isAdmin, signUp, signIn, signOut }}>
+    <AuthContext.Provider value={{ user, session, isLoading, isAdmin, mfaPending, signUp, signIn, verifyMfa, signOut }}>
       {children}
     </AuthContext.Provider>
   );

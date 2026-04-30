@@ -3,12 +3,12 @@ import Footer from "@/components/Footer";
 import SEOHead from "@/components/SEOHead";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { 
-  Plane, 
-  Search, 
-  ExternalLink, 
-  Shield, 
-  Users, 
+import {
+  Plane,
+  Search,
+  ExternalLink,
+  Shield,
+  Users,
   Globe,
   TrendingUp,
   CheckCircle,
@@ -21,13 +21,69 @@ import {
   Building2,
   Wifi,
   Ticket,
-  Luggage
+  Luggage,
+  Sparkles,
+  Star,
+  Apple,
 } from "lucide-react";
 import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
+import { useEffect } from "react";
+import packageJson from "../../package.json";
+
+const CHANGELOG: { version: string; date: string; highlights: string[] }[] = [
+  {
+    version: packageJson.version,
+    date: "Apr 2026",
+    highlights: [
+      "Expanded account settings with Help & Support, About, and Sign Out",
+      "New Accessibility preferences (text size, reduce motion, high contrast)",
+      "Auto-translate for messages and posts",
+      "GDPR-style cookie consent in Data Rights",
+      "More verification categories (athlete, media, government, nonprofit)",
+    ],
+  },
+  {
+    version: "1.0.3",
+    date: "Mar 2026",
+    highlights: [
+      "Real Supabase analytics on profile views, likes, and engagement",
+      "Loyalty referral codes wired to live data",
+      "Distance, temperature, time & date format preferences",
+    ],
+  },
+  {
+    version: "1.0.2",
+    date: "Feb 2026",
+    highlights: [
+      "Notification quiet hours and SMS opt-in flow",
+      "Linked devices (multi-device QR sign-in)",
+      "Two-factor authentication via TOTP and SMS backup",
+    ],
+  },
+  {
+    version: "1.0.1",
+    date: "Jan 2026",
+    highlights: [
+      "Initial public release of ZIVO travel & social platform",
+      "Flights, hotels, car rentals comparison",
+      "Profile, posts, and follow system",
+    ],
+  },
+];
 
 const About = () => {
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const hash = window.location.hash?.replace("#", "");
+    if (!hash) return;
+    const t = setTimeout(() => {
+      document.getElementById(hash)?.scrollIntoView({ behavior: "smooth", block: "start" });
+    }, 300);
+    return () => clearTimeout(t);
+  }, []);
+
   return (
     <div className="min-h-screen bg-background">
       <SEOHead 
@@ -307,6 +363,90 @@ const About = () => {
               </CardContent>
             </Card>
           </div>
+
+          {/* What's New / Changelog */}
+          <section id="changelog" className="scroll-mt-24 mb-16">
+            <div className="text-center mb-8">
+              <Badge className="mb-3 bg-pink-500/15 text-pink-500 border-pink-500/30">
+                <Sparkles className="w-3 h-3 mr-1" />
+                What's New
+              </Badge>
+              <h2 className="text-3xl font-bold mb-2">Changelog</h2>
+              <p className="text-muted-foreground">Latest features and improvements</p>
+            </div>
+            <div className="space-y-4 max-w-3xl mx-auto">
+              {CHANGELOG.map((entry, i) => (
+                <motion.div
+                  key={entry.version}
+                  initial={{ opacity: 0, y: 16 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  viewport={{ once: true }}
+                  transition={{ duration: 0.4, delay: i * 0.05 }}
+                >
+                  <Card className="border-border/50">
+                    <CardContent className="p-6">
+                      <div className="flex items-baseline justify-between flex-wrap gap-2 mb-3">
+                        <h3 className="text-lg font-bold flex items-center gap-2">
+                          v{entry.version}
+                          {i === 0 && <Badge className="text-[10px] bg-primary/20 text-primary border-primary/30">Latest</Badge>}
+                        </h3>
+                        <span className="text-xs text-muted-foreground">{entry.date}</span>
+                      </div>
+                      <ul className="space-y-1.5">
+                        {entry.highlights.map((h, idx) => (
+                          <li key={idx} className="flex items-start gap-2 text-sm text-muted-foreground">
+                            <CheckCircle className="w-3.5 h-3.5 text-primary shrink-0 mt-0.5" />
+                            <span>{h}</span>
+                          </li>
+                        ))}
+                      </ul>
+                    </CardContent>
+                  </Card>
+                </motion.div>
+              ))}
+            </div>
+          </section>
+
+          {/* Rate the App */}
+          <section id="rate" className="scroll-mt-24 mb-16">
+            <Card className="bg-gradient-to-br from-yellow-500/5 via-background to-amber-500/5 border-yellow-500/20">
+              <CardContent className="p-8 text-center">
+                <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-yellow-400 to-amber-500 mx-auto mb-4 flex items-center justify-center shadow-lg">
+                  <Star className="w-8 h-8 text-white fill-white" />
+                </div>
+                <h2 className="text-2xl font-bold mb-2">Loving ZIVO?</h2>
+                <p className="text-muted-foreground mb-6 max-w-md mx-auto">
+                  Your rating helps other travelers and creators discover us. It only takes a few seconds.
+                </p>
+                <div className="flex flex-wrap gap-3 justify-center">
+                  <a
+                    href="https://apps.apple.com/app/zivo"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center gap-2 px-5 py-3 rounded-xl bg-foreground text-background font-medium hover:opacity-90 transition-opacity"
+                  >
+                    <Apple className="w-4 h-4" />
+                    Rate on App Store
+                  </a>
+                  <a
+                    href="https://play.google.com/store/apps/details?id=com.zivo"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center gap-2 px-5 py-3 rounded-xl bg-foreground text-background font-medium hover:opacity-90 transition-opacity"
+                  >
+                    <Smartphone className="w-4 h-4" />
+                    Rate on Google Play
+                  </a>
+                  <Link
+                    to="/feedback"
+                    className="inline-flex items-center gap-2 px-5 py-3 rounded-xl border border-border hover:bg-accent transition-colors"
+                  >
+                    Send written feedback
+                  </Link>
+                </div>
+              </CardContent>
+            </Card>
+          </section>
 
           {/* CTA */}
           <div className="text-center bg-gradient-to-r from-primary/10 via-background to-teal-500/10 rounded-3xl p-10 border border-primary/20">

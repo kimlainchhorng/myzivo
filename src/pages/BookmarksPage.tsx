@@ -87,29 +87,53 @@ export default function BookmarksPage() {
           </div>
         )}
         <AnimatePresence>
-          {filtered.map((b: any) => (
+          {filtered.map((b: any) => {
+            // Resolve a tap target — posts open in the feed at the saved item.
+            const openHref = (() => {
+              if (b.item_type === "post" && b.item_id) return `/feed?post=${encodeURIComponent(b.item_id)}`;
+              if (b.item_type === "flight" && b.item_id) return `/flights/${b.item_id}`;
+              if (b.item_type === "restaurant" && b.item_id) return `/eats/${b.item_id}`;
+              return null;
+            })();
+            const previewTitle = b.title || (b.item_type === "post" ? "Saved post" : null);
+            return (
             <motion.div
               key={b.id}
               layout
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, x: -100 }}
-              className="flex items-center gap-3 p-3 rounded-xl bg-card border border-border/40"
+              className="flex items-stretch gap-3 p-3 rounded-xl bg-card border border-border/40 active:bg-muted/40 transition-colors"
             >
-              <div className="h-10 w-10 rounded-lg bg-primary/10 flex items-center justify-center">
-                {b.item_type === "post" && <Image className="h-4 w-4 text-primary" />}
-                {b.item_type === "flight" && <Plane className="h-4 w-4 text-primary" />}
-                {b.item_type === "restaurant" && <UtensilsCrossed className="h-4 w-4 text-primary" />}
-              </div>
-              <div className="flex-1 min-w-0">
-                <p className="text-sm font-medium text-foreground capitalize">{b.item_type}</p>
-                <p className="text-xs text-muted-foreground truncate">{b.collection_name} • {new Date(b.created_at).toLocaleDateString()}</p>
-              </div>
-              <button onClick={() => removeBookmark(b.id)} className="p-2 rounded-full hover:bg-destructive/10">
+              <button
+                type="button"
+                onClick={() => openHref && navigate(openHref)}
+                disabled={!openHref}
+                className="flex flex-1 items-start gap-3 min-w-0 text-left disabled:cursor-default"
+              >
+                <div className="h-10 w-10 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
+                  {b.item_type === "post" && <Image className="h-4 w-4 text-primary" />}
+                  {b.item_type === "flight" && <Plane className="h-4 w-4 text-primary" />}
+                  {b.item_type === "restaurant" && <UtensilsCrossed className="h-4 w-4 text-primary" />}
+                </div>
+                <div className="flex-1 min-w-0">
+                  {previewTitle ? (
+                    <p className="text-sm font-medium text-foreground line-clamp-2 leading-snug">{previewTitle}</p>
+                  ) : (
+                    <p className="text-sm font-medium text-foreground capitalize">{b.item_type}</p>
+                  )}
+                  <p className="text-[11px] text-muted-foreground truncate mt-0.5">
+                    {b.collection_name && <>{b.collection_name} · </>}
+                    Saved {new Date(b.created_at).toLocaleDateString()}
+                  </p>
+                </div>
+              </button>
+              <button onClick={() => removeBookmark(b.id)} className="p-2 rounded-full hover:bg-destructive/10 self-start">
                 <Trash2 className="h-4 w-4 text-muted-foreground" />
               </button>
             </motion.div>
-          ))}
+            );
+          })}
         </AnimatePresence>
       </div>
 

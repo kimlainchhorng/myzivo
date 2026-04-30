@@ -10,6 +10,8 @@ import {
   Search, X, Clock, Car, Utensils, Package, Plane, BedDouble,
   ChevronRight, Sparkles, MapPin, Trash2, ShoppingBag, HelpCircle,
   RotateCcw, Navigation, History, BookOpen,
+  Briefcase, Tv, Activity, Rocket, Heart, Crown, Gem, Hash,
+  Mic, Video, Dumbbell, Stethoscope, Pill, Brain,
 } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -39,6 +41,32 @@ const POPULAR_SERVICES = [
   { label: "Rides", icon: Car, href: "/rides", color: "bg-emerald-500/10 text-emerald-500 border-emerald-500/20" },
   { label: "Eats", icon: Package, href: "/eats", color: "bg-orange-500/10 text-orange-500 border-orange-500/20" },
   { label: "Delivery", icon: Package, href: "/delivery", color: "bg-violet-500/10 text-violet-500 border-violet-500/20" },
+  { label: "Jobs", icon: Briefcase, href: "/personal-dashboard", color: "bg-blue-500/10 text-blue-500 border-blue-500/20" },
+  { label: "Live", icon: Tv, href: "/live", color: "bg-rose-500/10 text-rose-500 border-rose-500/20" },
+  { label: "Creator", icon: Rocket, href: "/creator-dashboard", color: "bg-violet-500/10 text-violet-500 border-violet-500/20" },
+  { label: "Wellness", icon: Heart, href: "/wellness", color: "bg-teal-500/10 text-teal-500 border-teal-500/20" },
+  { label: "ZIVO Plus", icon: Crown, href: "/zivo-plus", color: "bg-yellow-500/10 text-yellow-500 border-yellow-500/20" },
+  { label: "Rewards", icon: Gem, href: "/rewards", color: "bg-pink-500/10 text-pink-500 border-pink-500/20" },
+];
+
+// Quick-jump shortcuts that match by keyword (renders in flat results when query matches)
+const FEATURE_SHORTCUTS: { keywords: string[]; label: string; sub: string; icon: any; href: string; accent: string }[] = [
+  { keywords: ["job", "career", "work", "hire", "apply"], label: "Jobs Hub", sub: "Apply, track, and manage applications", icon: Briefcase, href: "/personal-dashboard", accent: "text-blue-500" },
+  { keywords: ["resume", "cv"], label: "Build CV", sub: "Create your resume", icon: Briefcase, href: "/personal/create-cv", accent: "text-blue-500" },
+  { keywords: ["live", "stream", "broadcast"], label: "Live Streams", sub: "Watch creators broadcasting now", icon: Tv, href: "/live", accent: "text-rose-500" },
+  { keywords: ["go live", "broadcast"], label: "Go Live", sub: "Start streaming", icon: Video, href: "/go-live", accent: "text-rose-500" },
+  { keywords: ["space", "audio", "voice room"], label: "Audio Spaces", sub: "Voice rooms & live talks", icon: Mic, href: "/spaces", accent: "text-purple-500" },
+  { keywords: ["channel"], label: "Channels", sub: "Discover & follow channels", icon: Hash, href: "/channels", accent: "text-blue-500" },
+  { keywords: ["creator", "monetize", "earn"], label: "Creator Hub", sub: "Earnings, analytics, growth", icon: Rocket, href: "/creator-dashboard", accent: "text-violet-500" },
+  { keywords: ["payout", "earning", "tips"], label: "Live Earnings", sub: "Tips & gifts in real time", icon: Activity, href: "/creator/live-earnings", accent: "text-violet-500" },
+  { keywords: ["wellness", "health"], label: "Wellness Hub", sub: "Activity, vitals, goals & meditation", icon: Heart, href: "/wellness", accent: "text-teal-500" },
+  { keywords: ["workout", "fitness", "exercise", "gym"], label: "Workouts", sub: "Plans & guided sessions", icon: Dumbbell, href: "/wellness/workouts", accent: "text-rose-500" },
+  { keywords: ["meditate", "meditation", "calm", "mindful"], label: "Mindfulness", sub: "Guided meditations & breathing", icon: Brain, href: "/wellness/mindfulness", accent: "text-purple-500" },
+  { keywords: ["doctor", "telehealth", "consult"], label: "Telehealth", sub: "Talk to a licensed doctor", icon: Stethoscope, href: "/wellness/telehealth", accent: "text-sky-500" },
+  { keywords: ["medication", "pill", "med"], label: "Medications", sub: "Reminders & refills", icon: Pill, href: "/wellness/meds", accent: "text-amber-500" },
+  { keywords: ["zivo plus", "premium"], label: "ZIVO Plus", sub: "Unlock premium perks", icon: Crown, href: "/zivo-plus", accent: "text-yellow-500" },
+  { keywords: ["reward", "points", "loyalty"], label: "Rewards", sub: "Earn points daily", icon: Gem, href: "/rewards", accent: "text-pink-500" },
+  { keywords: ["referral", "invite friend"], label: "Refer a Friend", sub: "Invite & earn rewards", icon: Sparkles, href: "/referrals", accent: "text-emerald-500" },
 ];
 
 // Help articles (static, could be pulled from DB)
@@ -245,6 +273,28 @@ export default function UniversalSearchOverlay({ isOpen, onClose }: UniversalSea
   const cards: ResultCard[] = [];
 
   if (hasQuery) {
+    // Feature shortcuts — match before service results so users find new sections fast
+    const q = debouncedQuery.toLowerCase();
+    FEATURE_SHORTCUTS.forEach((s) => {
+      const matched =
+        s.label.toLowerCase().includes(q) ||
+        s.sub.toLowerCase().includes(q) ||
+        s.keywords.some((k) => q.includes(k) || k.includes(q));
+      if (matched) {
+        cards.push({
+          key: `feat-${s.label}`,
+          category: "all",
+          icon: s.icon,
+          iconColor: s.accent,
+          iconBg: `${s.accent.replace("text-", "bg-")}/10`,
+          title: s.label,
+          subtitle: s.sub,
+          action: () => handleNavigate(s.href),
+          badge: "Open",
+        });
+      }
+    });
+
     // Restaurants
     restaurantResults?.forEach((r) => {
       cards.push({

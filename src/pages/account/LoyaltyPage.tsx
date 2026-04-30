@@ -27,6 +27,7 @@ import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { useAuth } from "@/contexts/AuthContext";
 import { useLoyaltyPoints } from "@/hooks/useLoyaltyPoints";
+import { useReferrals } from "@/hooks/useReferrals";
 import {
   usePointsHistory,
   useAvailableRewards,
@@ -52,6 +53,7 @@ export default function LoyaltyPage() {
   const { data: rewards = [], isLoading: rewardsLoading } = useAvailableRewards();
   const { data: redemptions = [] } = useUserRedemptions();
   const redeemMutation = useRedeemReward();
+  const { referralCode: userReferralCode } = useReferrals();
   const [activeTab, setActiveTab] = useState("overview");
 
   // Map old tier to new
@@ -299,8 +301,8 @@ export default function LoyaltyPage() {
               {/* Refer Tab */}
               <TabsContent value="refer">
                 <ReferralCard
-                  referralCode={user?.id?.slice(0, 8).toUpperCase() || "ZIVO-NEW"}
-                  referralCount={0}
+                  referralCode={userReferralCode?.code || user?.id?.slice(0, 8).toUpperCase() || "ZIVO-NEW"}
+                  referralCount={userReferralCode?.total_referrals || 0}
                 />
               </TabsContent>
             </Tabs>

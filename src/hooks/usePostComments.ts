@@ -112,6 +112,28 @@ export function usePostComments({ postId, postSource, currentUserId }: UsePostCo
     fetchComments();
   }, [fetchComments]);
 
+  // Realtime: refetch when a new comment lands on this post.
+  // Skips inserts authored by the current user since addComment() already
+  // refetches synchronously after writing — avoids the visible double-flash.
+  useEffect(() => {
+    if (!postId) return;
+    const channel = supabase
+      .channel(`post-comments-${postSource}-${postId}`)
+      .on(
+        "postgres_changes" as any,
+        { event: "INSERT", schema: "public", table: "post_comments", filter: `post_id=eq.${postId}` },
+        (payload: any) => {
+          const row = payload?.new;
+          if (!row) return;
+          if (row.post_source && row.post_source !== postSource) return;
+          if (row.user_id && row.user_id === currentUserId) return;
+          fetchComments();
+        },
+      )
+      .subscribe();
+    return () => { void supabase.removeChannel(channel); };
+  }, [postId, postSource, currentUserId, fetchComments]);
+
   const addComment = async (content: string, parentId?: string) => {
     if (!currentUserId || !content.trim()) return;
     setSubmitting(true);

@@ -40,6 +40,7 @@ import MoreHorizontal from "lucide-react/dist/esm/icons/more-horizontal";
 import ChevronUp from "lucide-react/dist/esm/icons/chevron-up";
 import ChevronDown from "lucide-react/dist/esm/icons/chevron-down";
 import Music from "lucide-react/dist/esm/icons/music";
+import MapPin from "lucide-react/dist/esm/icons/map-pin";
 import UserPlus from "lucide-react/dist/esm/icons/user-plus";
 import UserCheck from "lucide-react/dist/esm/icons/user-check";
 import Radio from "lucide-react/dist/esm/icons/radio";
@@ -54,6 +55,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { cn } from "@/lib/utils";
 import { getPostShareUrl } from "@/lib/getPublicOrigin";
+import { shouldSendLikeNotification } from "@/lib/social/likeNotificationGuard";
 import { useOwnerStoreProfile } from "@/hooks/useOwnerStoreProfile";
 import { useLodgeRooms } from "@/hooks/lodging/useLodgeRooms";
 import { useLodgePropertyProfile } from "@/hooks/lodging/useLodgePropertyProfile";
@@ -81,6 +83,7 @@ interface FeedPost {
   author_avatar?: string | null;
   author_is_verified?: boolean;
   store_is_verified?: boolean;
+  location?: string | null;
 }
 
 /* ── Scrolling music ticker ───────────────────────────────────── */
@@ -236,13 +239,19 @@ function ReelCard({
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [currentSrc]);
 
-  // Track view when post becomes active (once per post per session)
+  // Track view when post becomes active (once per post per session).
+  // User reels are stored in user_posts and need a separate RPC because
+  // the column is named views_count (vs. store_posts.view_count).
   useEffect(() => {
     if (!isActive || viewTracked.current) return;
     viewTracked.current = true;
-    // Fire-and-forget view increment
-    supabase.rpc("increment_store_post_view_count" as any, { p_post_id: post.id }).then(() => {});
-  }, [isActive, post.id]);
+    if (post.source === "user") {
+      const rawId = post.id.startsWith("u-") ? post.id.slice(2) : post.id;
+      supabase.rpc("increment_user_post_view_count" as any, { p_post_id: rawId }).then(() => {});
+    } else {
+      supabase.rpc("increment_store_post_view_count" as any, { p_post_id: post.id }).then(() => {});
+    }
+  }, [isActive, post.id, post.source]);
 
   // Reset per-post playback state when source changes
   useEffect(() => {
@@ -588,6 +597,12 @@ function ReelCard({
             </button>
           )}
         </div>
+        {post.location && (
+          <div className="flex items-center gap-1 mb-1.5 text-white/90 text-xs drop-shadow">
+            <MapPin className="w-3 h-3 shrink-0" />
+            <span className="truncate">{post.location}</span>
+          </div>
+        )}
         {post.caption && (
           <p className="text-white text-sm line-clamp-2 drop-shadow leading-snug mb-2">
             {post.caption}
@@ -1005,7 +1020,7 @@ function FeedSearchOverlay({ onClose, onNavigate }: { onClose: () => void; onNav
               <button
                 key={person.id}
                 type="button"
-                onClick={() => { onNavigate(`/profile`); onClose(); }}
+                onClick={() => { onNavigate(`/user/${person.id}`); onClose(); }}
                 className="w-full flex items-center gap-3 py-3 px-2 rounded-xl hover:bg-muted/40 transition-colors"
               >
                 <div className="w-11 h-11 rounded-full bg-muted/30 border border-border/30 flex items-center justify-center overflow-hidden shrink-0">
@@ -1381,7 +1396,7 @@ export default function FeedPage() {
           .limit(50),
         (supabase as any)
           .from("user_posts")
-          .select("id, user_id, media_url, media_urls, media_type, caption, likes_count, comments_count, views_count, created_at, audio_name")
+          .select("id, user_id, media_url, media_urls, media_type, caption, likes_count, comments_count, views_count, created_at, audio_name, location")
           .eq("is_published", true)
           .in("media_type", ["video", "reel"])
           .order("created_at", { ascending: false })
@@ -1447,6 +1462,7 @@ export default function FeedPage() {
           author_name: profile?.full_name || profile?.username || "User",
           author_avatar: profile?.avatar_url || null,
           author_is_verified: !!profile?.is_verified,
+          location: post.location || null,
         });
       }
 
@@ -1504,10 +1520,10 @@ export default function FeedPage() {
       await supabase.from("store_post_likes").delete().eq("post_id", postId).eq("user_id", userId);
     } else {
       await supabase.from("store_post_likes").insert({ post_id: postId, user_id: userId });
-      // Push notification to post author
+      // Push notification to post author — once per post per session.
       const post = posts.find(p => p.id === postId);
       const authorId = post?.author_id;
-      if (authorId && authorId !== userId) {
+      if (authorId && authorId !== userId && shouldSendLikeNotification(postId)) {
         try {
           const { data: sp } = await supabase.from("profiles").select("full_name").eq("user_id", userId).single();
           await supabase.functions.invoke("send-push-notification", {

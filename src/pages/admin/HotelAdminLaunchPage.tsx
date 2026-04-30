@@ -6,6 +6,7 @@ import { BedDouble, CalendarRange, FileText, Hotel, KeyRound, ListChecks, Loader
 import Tag from "lucide-react/dist/esm/icons/tag";
 import { useOwnerStoreProfile } from "@/hooks/useOwnerStoreProfile";
 import { useLodgingOpsData } from "@/components/admin/store/lodging/LodgingOperationsShared";
+import { useLodgingPhase5Counts } from "@/hooks/lodging/useLodgingPhase5Counts";
 import { getLodgingCompletion } from "@/lib/lodging/lodgingCompletion";
 import { runLodgingQa } from "@/lib/lodging/lodgingQa";
 import { LODGING_TAB_IDS } from "@/lib/admin/storeTabRouting";
@@ -24,7 +25,19 @@ export default function HotelAdminLaunchPage() {
   const { data: ownerStore, isLoading } = useOwnerStoreProfile();
   const storeId = ownerStore?.isLodging ? ownerStore.id : "";
   const ops = useLodgingOpsData(storeId);
-  const completion = getLodgingCompletion({ rooms: ops.rooms, profile: ops.profile, addons: ops.addons, reservationsCount: ops.reservations.length, housekeepingCount: 0, maintenanceReady: true, reportsReady: ops.reservations.length > 0 || ops.rooms.length > 0 });
+  const phase5 = useLodgingPhase5Counts(storeId);
+  const completion = getLodgingCompletion({
+    rooms: ops.rooms, profile: ops.profile, addons: ops.addons,
+    reservationsCount: ops.reservations.length,
+    housekeepingCount: phase5.housekeepingCount,
+    maintenanceReady: true,
+    reportsReady: ops.reservations.length > 0 || ops.rooms.length > 0,
+    mealPlansCount: phase5.mealPlansCount,
+    staffCount: phase5.staffCount,
+    channelConnectionsCount: phase5.channelConnectionsCount,
+    promotionsCount: phase5.promotionsCount,
+    reviewsAwaitingReply: phase5.reviewsAwaitingReply,
+  });
   const qa = runLodgingQa({ storeId, storeName: ownerStore?.name, storeCategory: ownerStore?.category, completion });
   const openTab = (tab: string) => tab === "qa" ? navigate("/admin/lodging/qa-checklist") : tab === "verification" ? navigate("/admin/lodging/completion-verification") : navigate(`/admin/stores/${storeId}?tab=${tab}`);
 

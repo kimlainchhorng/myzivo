@@ -31,9 +31,8 @@ export default function LinkDevicePage() {
       body: { deviceLabel: navigator.userAgent.slice(0, 80) },
     });
     if (error || !data?.token) {
-      console.error(error);
       setStatus("error");
-      toast.error("Could not generate QR code");
+      toast.error(error?.message || "Could not generate QR code");
       return;
     }
     setToken(data.token);

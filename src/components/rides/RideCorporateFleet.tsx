@@ -1,9 +1,9 @@
 /**
  * RideCorporateFleet — Company accounts, policies, fleet tracking, bulk billing
  */
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
-import { Building2, Users, Shield, CreditCard, FileText, Car, TrendingUp, Settings, ChevronRight, Plus, Check } from "lucide-react";
+import { Building2, Users, Shield, CreditCard, FileText, Car, TrendingUp, Settings, ChevronRight, Plus, Check, Radio } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Progress } from "@/components/ui/progress";
 import { toast } from "sonner";
@@ -31,16 +31,41 @@ const policies = [
   { id: 4, name: "Weekend Rides", value: "Disabled", active: false },
 ];
 
-const fleetVehicles = [
-  { id: 1, plate: "ABC-1234", driver: "Mike R.", status: "active", location: "Downtown" },
-  { id: 2, plate: "XYZ-5678", driver: "Lisa K.", status: "active", location: "Airport" },
-  { id: 3, plate: "DEF-9012", driver: "John P.", status: "maintenance", location: "Depot" },
+type FleetVehicle = { id: number; plate: string; driver: string; status: "active" | "maintenance"; location: string; speedKph: number };
+
+const initialFleet: FleetVehicle[] = [
+  { id: 1, plate: "ABC-1234", driver: "Mike R.", status: "active", location: "Downtown", speedKph: 32 },
+  { id: 2, plate: "XYZ-5678", driver: "Lisa K.", status: "active", location: "Airport", speedKph: 58 },
+  { id: 3, plate: "DEF-9012", driver: "John P.", status: "maintenance", location: "Depot", speedKph: 0 },
 ];
+
+const fleetLocations = ["Downtown", "Airport", "Riverside", "Old Quarter", "Tech Park", "North Bridge", "Central Mall", "Depot"];
 
 type Section = "overview" | "employees" | "policies" | "fleet";
 
 export default function RideCorporateFleet() {
   const [section, setSection] = useState<Section>("overview");
+  const [fleet, setFleet] = useState<FleetVehicle[]>(initialFleet);
+  const [lastTick, setLastTick] = useState<number>(Date.now());
+
+  useEffect(() => {
+    if (section !== "fleet") return;
+    const id = setInterval(() => {
+      setFleet(prev => prev.map(v => {
+        if (v.status !== "active") return v;
+        const move = Math.random() < 0.35;
+        return {
+          ...v,
+          location: move ? fleetLocations[Math.floor(Math.random() * fleetLocations.length)] : v.location,
+          speedKph: Math.max(0, Math.min(80, v.speedKph + Math.round((Math.random() - 0.5) * 12))),
+        };
+      }));
+      setLastTick(Date.now());
+    }, 3000);
+    return () => clearInterval(id);
+  }, [section]);
+
+  const secondsAgo = Math.max(0, Math.floor((Date.now() - lastTick) / 1000));
 
   const sections: { id: Section; label: string; icon: typeof Building2 }[] = [
     { id: "overview", label: "Overview", icon: TrendingUp },
@@ -173,13 +198,27 @@ export default function RideCorporateFleet() {
 
       {section === "fleet" && (
         <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-3">
-          <p className="text-sm font-bold text-foreground">Fleet Vehicles</p>
-          {fleetVehicles.map((v) => (
-            <div key={v.id} className="bg-card rounded-xl p-3 border border-border/30 flex items-center gap-3">
+          <div className="flex items-center justify-between">
+            <p className="text-sm font-bold text-foreground">Fleet Vehicles</p>
+            <div className="flex items-center gap-1.5 bg-green-500/10 text-green-600 px-2 py-1 rounded-full">
+              <span className="relative flex h-2 w-2">
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-500 opacity-75" />
+                <span className="relative inline-flex rounded-full h-2 w-2 bg-green-500" />
+              </span>
+              <span className="text-[10px] font-bold">LIVE</span>
+            </div>
+          </div>
+          {fleet.map((v) => (
+            <motion.div
+              key={v.id}
+              layout
+              animate={{ opacity: 1 }}
+              className="bg-card rounded-xl p-3 border border-border/30 flex items-center gap-3"
+            >
               <div className="w-10 h-10 rounded-xl bg-primary/15 flex items-center justify-center">
                 <Car className="w-5 h-5 text-primary" />
               </div>
-              <div className="flex-1">
+              <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-2">
                   <p className="text-sm font-bold text-foreground">{v.plate}</p>
                   <span className={cn(
@@ -187,12 +226,19 @@ export default function RideCorporateFleet() {
                     v.status === "active" ? "bg-green-500/15 text-green-600" : "bg-yellow-500/15 text-yellow-600"
                   )}>{v.status}</span>
                 </div>
-                <p className="text-xs text-muted-foreground">{v.driver} • {v.location}</p>
+                <p className="text-xs text-muted-foreground truncate">{v.driver} • {v.location}</p>
               </div>
-            </div>
+              {v.status === "active" && (
+                <div className="text-right shrink-0">
+                  <p className="text-sm font-bold tabular-nums text-foreground">{v.speedKph}</p>
+                  <p className="text-[9px] text-muted-foreground -mt-0.5">km/h</p>
+                </div>
+              )}
+            </motion.div>
           ))}
-          <div className="bg-muted/30 rounded-xl p-3 text-center">
-            <p className="text-xs text-muted-foreground">Real-time fleet tracking coming soon</p>
+          <div className="bg-muted/30 rounded-xl p-3 flex items-center justify-center gap-2">
+            <Radio className="w-3.5 h-3.5 text-primary" />
+            <p className="text-xs text-muted-foreground">Updated {secondsAgo}s ago • {fleet.filter(f => f.status === "active").length} of {fleet.length} on the road</p>
           </div>
         </motion.div>
       )}

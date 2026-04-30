@@ -6,6 +6,7 @@ import { forwardRef } from "react";
 import { createPortal } from "react-dom";
 import { useNavigate, useLocation } from "react-router-dom";
 import { Home, Rss, MapPin, MessageCircle, User, Film, Newspaper, Radio } from "lucide-react";
+import { useQuery } from "@tanstack/react-query";
 import { cn } from "@/lib/utils";
 import { motion } from "framer-motion";
 import { usePriceAlerts } from "@/hooks/usePriceAlerts";
@@ -13,6 +14,8 @@ import { useHaptics } from "@/hooks/useHaptics";
 import { useI18n } from "@/hooks/useI18n";
 import { useAuth } from "@/contexts/AuthContext";
 import { useUserProfile } from "@/hooks/useUserProfile";
+import { useNotifications } from "@/hooks/useNotifications";
+import { supabase } from "@/integrations/supabase/client";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import navHomeBg from "@/assets/nav-home-bg.jpg";
 import navSearchBg from "@/assets/nav-search-bg.jpg";
@@ -38,6 +41,22 @@ const ZivoMobileNav = forwardRef<HTMLElement, Record<string, never>>((_props, re
   const { t } = useI18n();
   const { user } = useAuth();
   const { data: profile } = useUserProfile();
+  const { unreadCount: notificationUnread } = useNotifications(20);
+
+  const { data: chatUnread = 0 } = useQuery({
+    queryKey: ["nav-chat-unread", user?.id],
+    queryFn: async () => {
+      const { count } = await (supabase as any)
+        .from("messages")
+        .select("*", { count: "exact", head: true })
+        .neq("sender_id", user!.id)
+        .eq("is_read", false);
+      return count || 0;
+    },
+    enabled: !!user,
+    refetchInterval: 30000,
+    staleTime: 15000,
+  });
 
   const gated = (path: string) =>
     user ? path : `/login?redirect=${encodeURIComponent(path)}`;
@@ -48,8 +67,8 @@ const ZivoMobileNav = forwardRef<HTMLElement, Record<string, never>>((_props, re
     { id: "feed", labelKey: "nav.reel", icon: Film, path: gated("/reels"), bg: navSearchBg, cssVar: "var(--flights)" },
     { id: "home", labelKey: "nav.home", icon: Home, path: "/", bg: navHomeBg, cssVar: "var(--primary)" },
     { id: "map", labelKey: "nav.map", icon: MapPin, path: gated("/store-map"), bg: navTripsBg, cssVar: "var(--hotels)" },
-    { id: "chat", labelKey: "nav.chat", icon: MessageCircle, path: gated("/chat"), bg: navAlertsBg, cssVar: "var(--cars)" },
-    { id: "account", labelKey: "nav.account", icon: User, path: gated("/profile"), bg: navAccountBg, cssVar: "var(--primary)" },
+    { id: "chat", labelKey: "nav.chat", icon: MessageCircle, path: gated("/chat"), bg: navAlertsBg, cssVar: "var(--cars)", badge: chatUnread },
+    { id: "account", labelKey: "nav.account", icon: User, path: gated("/profile"), bg: navAccountBg, cssVar: "var(--primary)", badge: notificationUnread },
   ];
 
   const getActiveTab = () => {
