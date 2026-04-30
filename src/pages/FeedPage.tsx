@@ -1016,10 +1016,10 @@ function ReelCard({
             }
           }}
           onCanPlay={(e) => {
+            setIsBuffering(false);
             if (!looksPlayableVideoElement(e.currentTarget)) return;
             setHasLoadedFrame(true);
             setHasPlaybackError(false);
-            // Don't capture here — the seek from onLoadedMetadata hasn't finished yet.
             if (isActive) {
               e.currentTarget.muted = globalMuted;
               void e.currentTarget.play().then(() => setIsPlaying(true)).catch(() => {});
@@ -1046,7 +1046,10 @@ function ReelCard({
           onPause={() => setIsPlaying(false)}
           onWaiting={() => setIsBuffering(true)}
           onPlaying={() => setIsBuffering(false)}
+<<<<<<< Updated upstream
           
+=======
+>>>>>>> Stashed changes
           onTimeUpdate={(e) => {
             const v = e.currentTarget;
             if (Number.isFinite(v.duration) && v.duration > 0) {

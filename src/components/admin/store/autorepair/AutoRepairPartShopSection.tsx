@@ -2,7 +2,7 @@
  * Auto Repair — Part Shop (AutoZone-style)
  * Vehicle fitment lookup · rich catalog · stock alerts · sort/view toggle
  */
-import { useState, useMemo, useCallback } from "react";
+import { useState, useMemo, useCallback, useRef } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -35,6 +35,10 @@ import ChevronUp from "lucide-react/dist/esm/icons/chevron-up";
 import Download from "lucide-react/dist/esm/icons/download";
 import Upload from "lucide-react/dist/esm/icons/upload";
 import X from "lucide-react/dist/esm/icons/x";
+import Minus from "lucide-react/dist/esm/icons/minus";
+import ImagePlus from "lucide-react/dist/esm/icons/image-plus";
+import PackagePlus from "lucide-react/dist/esm/icons/package-plus";
+import RefreshCw from "lucide-react/dist/esm/icons/refresh-cw";
 
 interface Props { storeId: string }
 
@@ -66,6 +70,37 @@ const CATS = [
   "All", "Brakes", "Engine", "Fluids", "Electrical", "Tires",
   "HVAC", "Suspension", "Exhaust", "Fuel System", "Transmission",
   "Steering", "Cooling", "Lighting", "Exterior", "Interior", "Other",
+];
+
+const JOBS: { label: string; cats: string[] }[] = [
+  { label: "Air Conditioning",             cats: ["HVAC"] },
+  { label: "Alternators / Belts",          cats: ["Electrical", "Engine"] },
+  { label: "Batteries / Cables",           cats: ["Electrical"] },
+  { label: "Belts / Pulleys",              cats: ["Engine"] },
+  { label: "Brake Calipers / Hoses",       cats: ["Brakes"] },
+  { label: "Brake Hardware",               cats: ["Brakes"] },
+  { label: "Brake Pads / Shoes",           cats: ["Brakes"] },
+  { label: "Brake Rotors / Drums",         cats: ["Brakes"] },
+  { label: "Brakes Complete - Front & Rear", cats: ["Brakes"] },
+  { label: "Control Arms / Ball Joints",   cats: ["Suspension"] },
+  { label: "Cv Axles / U-Joints",          cats: ["Suspension"] },
+  { label: "Exhaust",                      cats: ["Exhaust"] },
+  { label: "Filters",                      cats: ["Engine", "HVAC", "Fluids"] },
+  { label: "Fuel Pumps / Filters",         cats: ["Fuel System"] },
+  { label: "Gaskets",                      cats: ["Engine"] },
+  { label: "Heating",                      cats: ["HVAC", "Cooling"] },
+  { label: "Motor / Transmission Mounts",  cats: ["Transmission", "Engine"] },
+  { label: "Oxygen Sensors",               cats: ["Electrical", "Engine"] },
+  { label: "Power Steering",               cats: ["Steering"] },
+  { label: "Radiators / Thermostats",      cats: ["Cooling"] },
+  { label: "Shocks / Struts",              cats: ["Suspension"] },
+  { label: "Starters",                     cats: ["Electrical"] },
+  { label: "Suspension",                   cats: ["Suspension"] },
+  { label: "Tie Rods",                     cats: ["Steering"] },
+  { label: "Tune Up",                      cats: ["Engine", "Electrical"] },
+  { label: "Water Pumps / Belts",          cats: ["Cooling", "Engine"] },
+  { label: "Wheel / Hub Bearings / Seals", cats: ["Suspension"] },
+  { label: "Wiper Blades / Motors",        cats: ["Exterior"] },
 ];
 
 const CONDITIONS = ["New", "OEM", "Remanufactured", "Aftermarket", "Used"];
@@ -134,6 +169,25 @@ export default function AutoRepairPartShopSection({ storeId }: Props) {
   const [open, setOpen] = useState(false);
   const [editId, setEditId] = useState<string | null>(null);
   const [form, setForm] = useState({ ...blank });
+  const [imgUploading, setImgUploading] = useState(false);
+
+  // Stock adjust dialog
+  const [adjustPart, setAdjustPart] = useState<Part | null>(null);
+  const [adjustDelta, setAdjustDelta] = useState("0");
+  const [adjustMode, setAdjustMode] = useState<"receive" | "use" | "set">("receive");
+
+  // CSV import
+  const csvRef = useRef<HTMLInputElement>(null);
+
+  // Jobs checklist
+  const [selectedJobs, setSelectedJobs] = useState<Set<string>>(new Set());
+  const toggleJob = (label: string) =>
+    setSelectedJobs(prev => { const s = new Set(prev); s.has(label) ? s.delete(label) : s.add(label); return s; });
+  const jobCats = useMemo(() => {
+    const cats = new Set<string>();
+    JOBS.filter(j => selectedJobs.has(j.label)).forEach(j => j.cats.forEach(c => cats.add(c)));
+    return cats;
+  }, [selectedJobs]);
 
   const { data: parts = [], isLoading } = useQuery({
     queryKey: ["ar-parts", storeId],
@@ -148,6 +202,21 @@ export default function AutoRepairPartShopSection({ storeId }: Props) {
     },
   });
 
+  const { data: recentInvoices = [], refetch: refetchInvoices } = useQuery({
+    queryKey: ["ar-invoices-parts", storeId],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("ar_invoices")
+        .select("id,number,status,created_at,vehicle_label,vehicle_year,vehicle_make,vehicle_model")
+        .eq("store_id", storeId)
+        .is("deleted_at", null)
+        .order("created_at", { ascending: false })
+        .limit(10);
+      if (error) throw error;
+      return data ?? [];
+    },
+  });
+
   const vehicleActive = !!(vehicleYear || vehicleMake || vehicleModel);
   const lowStock = parts.filter(p => p.stock > 0 && p.stock <= 5).length;
   const outOfStock = parts.filter(p => p.stock === 0).length;
@@ -155,6 +224,7 @@ export default function AutoRepairPartShopSection({ storeId }: Props) {
   const filtered = useMemo(() => {
     let list = parts.filter(p =>
       (cat === "All" || p.category === cat) &&
+      (jobCats.size === 0 || (p.category ? jobCats.has(p.category) : false)) &&
       (!q || p.name.toLowerCase().includes(q.toLowerCase())
         || p.sku.toLowerCase().includes(q.toLowerCase())
         || (p.brand ?? "").toLowerCase().includes(q.toLowerCase())
@@ -208,6 +278,7 @@ export default function AutoRepairPartShopSection({ storeId }: Props) {
         warranty_months: form.warranty_months || null,
         fitment_notes: form.fitment_notes?.trim() || null,
         location_in_store: form.location_in_store?.trim() || null,
+        image_url: (form as any).image_url ?? null,
         active: true,
       };
       if (editId) {
@@ -234,6 +305,72 @@ export default function AutoRepairPartShopSection({ storeId }: Props) {
     onSuccess: () => { toast.success("Part removed"); qc.invalidateQueries({ queryKey: ["ar-parts", storeId] }); },
   });
 
+  const adjustStock = useMutation({
+    mutationFn: async ({ id, newStock }: { id: string; newStock: number }) => {
+      const { error } = await supabase.from("ar_parts").update({ stock: newStock }).eq("id", id);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      toast.success("Stock updated");
+      qc.invalidateQueries({ queryKey: ["ar-parts", storeId] });
+      setAdjustPart(null);
+    },
+    onError: (e: any) => toast.error(e.message ?? "Failed to update stock"),
+  });
+
+  const importCsv = useMutation({
+    mutationFn: async (file: File) => {
+      const text = await file.text();
+      const lines = text.split(/\r?\n/).filter(Boolean);
+      if (lines.length < 2) throw new Error("CSV has no data rows");
+      const headers = lines[0].split(",").map(h => h.replace(/^"|"$/g, "").trim().toLowerCase());
+      const idx = (name: string) => headers.findIndex(h => h.includes(name));
+      const iSku = idx("sku"), iName = idx("name"), iBrand = idx("brand"), iCat = idx("categ");
+      const iPrice = idx("price"), iCost = idx("cost"), iCore = idx("core"), iStock = idx("stock");
+      const iOem = idx("oem"), iInter = idx("interchange"), iWarr = idx("warranty");
+      const iLoc = idx("location"), iFit = idx("fitment"), iCond = idx("condition");
+      if (iSku < 0 || iName < 0) throw new Error("CSV must have SKU and Name columns");
+      const parseField = (row: string[], i: number) => i >= 0 ? (row[i] ?? "").replace(/^"|"$/g, "").trim() : "";
+      const rows = lines.slice(1).map(line => {
+        const cols = line.match(/("(?:[^"]|"")*"|[^,]*)/g)?.map(c => c.replace(/^"|"$/g, "").replace(/""/g, '"')) ?? line.split(",");
+        const price = parseFloat(cols[iPrice] ?? "0") || 0;
+        const cost = parseFloat(cols[iCost] ?? "0") || 0;
+        const core = parseFloat(cols[iCore] ?? "0") || 0;
+        return {
+          store_id: storeId,
+          sku: parseField(cols, iSku),
+          name: parseField(cols, iName),
+          brand: parseField(cols, iBrand) || null,
+          category: parseField(cols, iCat) || "Other",
+          condition: parseField(cols, iCond) || "New",
+          price_cents: Math.round(price * 100),
+          cost_cents: Math.round(cost * 100),
+          core_charge_cents: Math.round(core * 100),
+          stock: parseInt(parseField(cols, iStock) || "0", 10) || 0,
+          oem_number: parseField(cols, iOem) || null,
+          interchange_number: parseField(cols, iInter) || null,
+          warranty_months: parseInt(parseField(cols, iWarr) || "0", 10) || null,
+          location_in_store: parseField(cols, iLoc) || null,
+          fitment_notes: parseField(cols, iFit) || null,
+          active: true,
+        };
+      }).filter(r => r.sku && r.name);
+      if (rows.length === 0) throw new Error("No valid rows found");
+      const { error } = await supabase.from("ar_parts").upsert(rows, { onConflict: "store_id,sku" });
+      if (error) throw error;
+      return rows.length;
+    },
+    onSuccess: (count) => {
+      toast.success(`Imported ${count} part${count !== 1 ? "s" : ""}`);
+      qc.invalidateQueries({ queryKey: ["ar-parts", storeId] });
+      if (csvRef.current) csvRef.current.value = "";
+    },
+    onError: (e: any) => {
+      toast.error(e.message ?? "Import failed");
+      if (csvRef.current) csvRef.current.value = "";
+    },
+  });
+
   const startEdit = (p: Part) => {
     setEditId(p.id);
     setForm({
@@ -246,11 +383,28 @@ export default function AutoRepairPartShopSection({ storeId }: Props) {
       condition: p.condition ?? "New", warranty_months: p.warranty_months ?? 12,
       core_charge_cents: p.core_charge_cents ?? 0, cost_cents: p.cost_cents ?? 0,
       fitment_notes: p.fitment_notes ?? "", location_in_store: p.location_in_store ?? "",
-    });
+      image_url: p.image_url ?? null,
+    } as any);
     setOpen(true);
   };
 
   const startNew = () => { setEditId(null); setForm({ ...blank }); setOpen(true); };
+
+  const uploadImage = async (file: File) => {
+    setImgUploading(true);
+    try {
+      const ext = file.name.split(".").pop() ?? "jpg";
+      const path = `${storeId}/${Date.now()}.${ext}`;
+      const { error } = await supabase.storage.from("part-images").upload(path, file, { upsert: true });
+      if (error) throw error;
+      const { data } = supabase.storage.from("part-images").getPublicUrl(path);
+      setForm(f => ({ ...f, image_url: data.publicUrl } as any));
+    } catch (e: any) {
+      toast.error(e.message ?? "Image upload failed");
+    } finally {
+      setImgUploading(false);
+    }
+  };
 
   const exportCsv = useCallback(() => {
     const header = "SKU,Name,Brand,Category,Condition,Price,Cost,Core Charge,Stock,OEM#,Interchange#,Warranty(mo),Location,Fitment Notes";
@@ -270,6 +424,107 @@ export default function AutoRepairPartShopSection({ storeId }: Props) {
 
   return (
     <div className="space-y-4">
+
+      {/* ── FREQUENTLY ORDERED / JOBS ─────────────────────────── */}
+      <Card>
+        <div className="px-4 pt-4 pb-2 flex items-center justify-between gap-2">
+          <h3 className="text-sm font-bold tracking-wide uppercase text-foreground">Frequently Ordered / Jobs</h3>
+          <Button size="sm" variant="outline" className="h-7 text-xs gap-1.5"
+            onClick={() => {
+              if (selectedJobs.size === 0) return;
+              const firstCat = JOBS.find(j => selectedJobs.has(j.label))?.cats[0];
+              if (firstCat) setCat(firstCat);
+              const el = document.getElementById("parts-catalog-card");
+              if (el) el.scrollIntoView({ behavior: "smooth", block: "start" });
+            }}>
+            <Search className="w-3 h-3" /> Look Up Parts
+          </Button>
+        </div>
+        <CardContent className="pt-0 pb-3">
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-x-4 gap-y-1.5">
+            {JOBS.map(j => (
+              <label key={j.label} className="flex items-center gap-2 cursor-pointer group">
+                <input
+                  type="checkbox"
+                  checked={selectedJobs.has(j.label)}
+                  onChange={() => toggleJob(j.label)}
+                  className="rounded border-border accent-primary w-4 h-4 shrink-0"
+                />
+                <span className={`text-[12px] leading-tight select-none group-hover:text-primary transition-colors ${selectedJobs.has(j.label) ? "font-semibold text-primary" : "text-foreground"}`}>
+                  {j.label}
+                </span>
+              </label>
+            ))}
+          </div>
+          {selectedJobs.size > 0 && (
+            <div className="mt-3 flex items-center gap-2">
+              <Badge className="text-[10px] bg-primary/10 text-primary border-primary/20 border">
+                {selectedJobs.size} job{selectedJobs.size > 1 ? "s" : ""} selected
+              </Badge>
+              <button onClick={() => setSelectedJobs(new Set())}
+                className="text-[11px] text-muted-foreground hover:text-foreground flex items-center gap-1">
+                <X className="w-3 h-3" /> Clear
+              </button>
+            </div>
+          )}
+        </CardContent>
+      </Card>
+
+      {/* ── MY ORDER STATUS ────────────────────────────────────── */}
+      <Card>
+        <div className="px-4 pt-4 pb-2 flex items-center gap-3">
+          <h3 className="text-sm font-bold tracking-wide uppercase text-foreground flex-1">My Order Status</h3>
+          <Button size="sm" variant="outline" className="h-7 text-xs gap-1" onClick={() => refetchInvoices()}>
+            <RefreshCw className="w-3 h-3" /> Refresh List
+          </Button>
+          <Button size="sm" variant="outline" className="h-7 text-xs">View All</Button>
+        </div>
+        <CardContent className="pt-0 pb-3">
+          {recentInvoices.length === 0 ? (
+            <p className="text-xs text-muted-foreground py-4 text-center">No invoices yet.</p>
+          ) : (
+            <div className="divide-y divide-border/50">
+              {recentInvoices.map(inv => {
+                const vehicle = inv.vehicle_label
+                  || [inv.vehicle_year, inv.vehicle_make, inv.vehicle_model].filter(Boolean).join(" ")
+                  || "—";
+                const statusColor = inv.status === "paid"
+                  ? "bg-emerald-500"
+                  : inv.status === "sent"
+                  ? "bg-blue-500"
+                  : inv.status === "draft"
+                  ? "bg-gray-400"
+                  : "bg-amber-500";
+                const statusLabel = inv.status === "paid" ? "Delivered"
+                  : inv.status === "sent" ? "Sent"
+                  : inv.status === "draft" ? "Draft"
+                  : inv.status;
+                const date = new Date(inv.created_at);
+                const dateStr = date.toLocaleDateString("en-US", { month: "numeric", day: "numeric", year: "2-digit" })
+                  + " " + date.toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit" });
+                return (
+                  <div key={inv.id} className="flex items-center gap-3 py-2.5 hover:bg-muted/20 transition-colors px-1 rounded">
+                    <div className={`w-8 h-8 rounded-full ${statusColor} flex items-center justify-center shrink-0`}>
+                      <Package className="w-4 h-4 text-white" />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-[12px] font-semibold">{statusLabel}</p>
+                      <p className="text-[10px] text-muted-foreground">Order Placed {dateStr}</p>
+                    </div>
+                    <div className="flex-1 min-w-0 text-center hidden sm:block">
+                      <p className="text-[12px] font-medium truncate">{vehicle}</p>
+                    </div>
+                    <div className="text-right shrink-0">
+                      <p className="text-[11px] font-mono text-muted-foreground">Invoice {inv.number}</p>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          )}
+        </CardContent>
+      </Card>
+
       {/* Stock alert banner */}
       {(lowStock > 0 || outOfStock > 0) && (
         <div className="flex items-center gap-3 px-4 py-2.5 rounded-xl bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800">
@@ -337,16 +592,27 @@ export default function AutoRepairPartShopSection({ storeId }: Props) {
       </Card>
 
       {/* Search + toolbar */}
-      <Card>
+      <Card id="parts-catalog-card">
         <CardHeader className="flex flex-row items-center justify-between pb-2">
           <CardTitle className="text-base flex items-center gap-2">
             <Wrench className="w-4 h-4" /> Parts Catalog
             <Badge variant="secondary" className="ml-1">{parts.length}</Badge>
             {lowStockOnly && <Badge className="bg-amber-500 text-white hover:bg-amber-500 text-[10px]">Low stock filter</Badge>}
+            {selectedJobs.size > 0 && <Badge className="bg-primary/10 text-primary border border-primary/20 text-[10px]">{selectedJobs.size} job{selectedJobs.size > 1 ? "s" : ""}</Badge>}
           </CardTitle>
           <div className="flex items-center gap-1.5">
+            <input
+              ref={csvRef}
+              type="file"
+              accept=".csv"
+              className="hidden"
+              onChange={e => { const f = e.target.files?.[0]; if (f) importCsv.mutate(f); }}
+            />
             <Button size="sm" variant="outline" className="h-8 gap-1.5 text-xs hidden sm:flex" onClick={exportCsv} disabled={parts.length === 0}>
               <Download className="w-3.5 h-3.5" /> Export
+            </Button>
+            <Button size="sm" variant="outline" className="h-8 gap-1.5 text-xs hidden sm:flex" onClick={() => csvRef.current?.click()} disabled={importCsv.isPending}>
+              <Upload className="w-3.5 h-3.5" /> {importCsv.isPending ? "Importing…" : "Import CSV"}
             </Button>
             <Button size="sm" className="h-8 gap-1.5 text-xs" onClick={startNew}>
               <Plus className="w-3.5 h-3.5" /> Add Part
@@ -424,7 +690,7 @@ export default function AutoRepairPartShopSection({ storeId }: Props) {
         <div className="text-center py-12 text-muted-foreground text-sm">No parts match your filters.</div>
       ) : view === "grid" ? (
         <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-3">
-          {filtered.map(p => <PartCard key={p.id} part={p} onEdit={startEdit} onRemove={(id) => { if (confirm(`Remove ${p.name}?`)) remove.mutate(id); }} />)}
+          {filtered.map(p => <PartCard key={p.id} part={p} onEdit={startEdit} onAdjust={p => { setAdjustPart(p); setAdjustDelta("0"); setAdjustMode("receive"); }} onRemove={(id) => { if (confirm(`Remove ${p.name}?`)) remove.mutate(id); }} />)}
         </div>
       ) : (
         <Card>
@@ -447,6 +713,7 @@ export default function AutoRepairPartShopSection({ storeId }: Props) {
                 </div>
                 {stockBadge(p.stock)}
                 <div className="flex gap-1">
+                  <Button size="icon" variant="ghost" className="h-7 w-7 text-emerald-600" title="Adjust stock" onClick={() => { setAdjustPart(p); setAdjustDelta("0"); setAdjustMode("receive"); }}><PackagePlus className="w-3.5 h-3.5" /></Button>
                   <Button size="icon" variant="ghost" className="h-7 w-7" onClick={() => startEdit(p)}><Pencil className="w-3.5 h-3.5" /></Button>
                   <Button size="icon" variant="ghost" className="h-7 w-7 text-destructive" onClick={() => { if (confirm(`Remove ${p.name}?`)) remove.mutate(p.id); }}><Trash2 className="w-3.5 h-3.5" /></Button>
                 </div>
@@ -516,11 +783,107 @@ export default function AutoRepairPartShopSection({ storeId }: Props) {
                 className="mt-1 w-full px-3 py-2 rounded-md border border-input bg-background text-sm resize-none focus:outline-none focus:ring-2 focus:ring-ring"
               />
             </div>
+            {/* Image */}
+            <div>
+              <Label className="text-xs">Part Image</Label>
+              <div className="mt-1 flex items-center gap-3">
+                {(form as any).image_url
+                  ? <img src={(form as any).image_url} alt="part" className="h-16 w-16 rounded-lg object-cover border" />
+                  : <div className="h-16 w-16 rounded-lg border border-dashed border-border flex items-center justify-center bg-muted/40">
+                      <Package className="w-6 h-6 text-muted-foreground/40" />
+                    </div>
+                }
+                <label className="cursor-pointer">
+                  <input type="file" accept="image/*" className="hidden"
+                    onChange={e => { const f = e.target.files?.[0]; if (f) uploadImage(f); }} />
+                  <span className={`inline-flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-md border border-border hover:bg-muted transition-colors ${imgUploading ? "opacity-50 pointer-events-none" : ""}`}>
+                    <ImagePlus className="w-3.5 h-3.5" /> {imgUploading ? "Uploading…" : "Upload image"}
+                  </span>
+                </label>
+                {(form as any).image_url && (
+                  <button onClick={() => setForm(f => ({ ...f, image_url: null } as any))}
+                    className="text-xs text-muted-foreground hover:text-destructive flex items-center gap-1">
+                    <X className="w-3 h-3" /> Remove
+                  </button>
+                )}
+              </div>
+            </div>
           </div>
           <DialogFooter className="mt-2">
             <Button variant="outline" onClick={() => setOpen(false)}>Cancel</Button>
-            <Button onClick={() => upsert.mutate()} disabled={upsert.isPending}>
+            <Button onClick={() => upsert.mutate()} disabled={upsert.isPending || imgUploading}>
               {upsert.isPending ? "Saving..." : editId ? "Save changes" : "Add part"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Stock Adjust Dialog */}
+      <Dialog open={!!adjustPart} onOpenChange={o => { if (!o) setAdjustPart(null); }}>
+        <DialogContent className="max-w-sm">
+          <DialogHeader><DialogTitle className="flex items-center gap-2"><PackagePlus className="w-4 h-4" /> Adjust Stock</DialogTitle></DialogHeader>
+          {adjustPart && (
+            <div className="space-y-4">
+              <div>
+                <p className="text-sm font-medium">{adjustPart.name}</p>
+                <p className="text-xs text-muted-foreground">{adjustPart.sku} · Current stock: <strong>{adjustPart.stock}</strong></p>
+              </div>
+              {/* Mode tabs */}
+              <div className="flex rounded-lg overflow-hidden border border-border text-xs">
+                {(["receive", "use", "set"] as const).map(m => (
+                  <button key={m} onClick={() => setAdjustMode(m)}
+                    className={`flex-1 py-1.5 font-medium transition-colors ${adjustMode === m ? "bg-primary text-primary-foreground" : "hover:bg-muted"}`}>
+                    {m === "receive" ? "Receive" : m === "use" ? "Use / Consume" : "Set Exact"}
+                  </button>
+                ))}
+              </div>
+              {/* Quick buttons */}
+              {adjustMode !== "set" && (
+                <div className="flex gap-1.5">
+                  {[1, 5, 10, 25].map(n => (
+                    <button key={n} onClick={() => setAdjustDelta(String(n))}
+                      className="flex-1 text-xs py-1.5 rounded-md border border-border hover:bg-muted transition-colors">
+                      {adjustMode === "receive" ? `+${n}` : `-${n}`}
+                    </button>
+                  ))}
+                </div>
+              )}
+              {/* Input */}
+              <div>
+                <Label className="text-xs">{adjustMode === "set" ? "New quantity" : adjustMode === "receive" ? "Quantity received" : "Quantity used"}</Label>
+                <Input
+                  className="mt-1"
+                  inputMode="numeric"
+                  placeholder="0"
+                  value={adjustDelta}
+                  onChange={e => setAdjustDelta(e.target.value.replace(/\D/g, ""))}
+                />
+                {adjustMode !== "set" && (
+                  <p className="text-[11px] text-muted-foreground mt-1">
+                    New stock: <strong>{Math.max(0, adjustPart.stock + (adjustMode === "receive" ? 1 : -1) * (parseInt(adjustDelta || "0", 10)))}</strong>
+                  </p>
+                )}
+                {adjustMode === "set" && (
+                  <p className="text-[11px] text-muted-foreground mt-1">Will set stock to exactly {adjustDelta || "0"}</p>
+                )}
+              </div>
+            </div>
+          )}
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setAdjustPart(null)}>Cancel</Button>
+            <Button
+              disabled={adjustStock.isPending}
+              onClick={() => {
+                if (!adjustPart) return;
+                const n = parseInt(adjustDelta || "0", 10);
+                const newStock = adjustMode === "set"
+                  ? Math.max(0, n)
+                  : adjustMode === "receive"
+                  ? adjustPart.stock + n
+                  : Math.max(0, adjustPart.stock - n);
+                adjustStock.mutate({ id: adjustPart.id, newStock });
+              }}>
+              {adjustStock.isPending ? "Saving…" : "Save"}
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -530,7 +893,7 @@ export default function AutoRepairPartShopSection({ storeId }: Props) {
 }
 
 /* ─── Part Card ─────────────────────────────────────────────── */
-function PartCard({ part: p, onEdit, onRemove }: { part: Part; onEdit: (p: Part) => void; onRemove: (id: string) => void }) {
+function PartCard({ part: p, onEdit, onAdjust, onRemove }: { part: Part; onEdit: (p: Part) => void; onAdjust: (p: Part) => void; onRemove: (id: string) => void }) {
   const margin = p.cost_cents && p.price_cents > p.cost_cents
     ? Math.round(((p.price_cents - p.cost_cents) / p.price_cents) * 100)
     : null;
@@ -547,6 +910,7 @@ function PartCard({ part: p, onEdit, onRemove }: { part: Part; onEdit: (p: Part)
             {conditionBadge(p.condition)}
           </div>
           <div className="absolute top-1.5 right-1.5 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+            <Button size="icon" variant="secondary" className="h-7 w-7 shadow-sm text-emerald-700" title="Adjust stock" onClick={() => onAdjust(p)}><PackagePlus className="w-3.5 h-3.5" /></Button>
             <Button size="icon" variant="secondary" className="h-7 w-7 shadow-sm" onClick={() => onEdit(p)}><Pencil className="w-3.5 h-3.5" /></Button>
             <Button size="icon" variant="secondary" className="h-7 w-7 shadow-sm text-destructive" onClick={() => onRemove(p.id)}><Trash2 className="w-3.5 h-3.5" /></Button>
           </div>

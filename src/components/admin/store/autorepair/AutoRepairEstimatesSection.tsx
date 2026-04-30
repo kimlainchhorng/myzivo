@@ -15,9 +15,11 @@ import { Label } from "@/components/ui/label";
 import {
   FileSignature, Plus, Send, ArrowRightCircle, Search, Trash2,
   ClipboardList, Download, Pencil, ChevronDown, ChevronUp,
-  Link2, CheckCircle2, XCircle,
+  Link2, CheckCircle2, XCircle, BookOpen,
 } from "lucide-react";
 import { toast } from "sonner";
+import LaborGuidePickerDialog from "./LaborGuidePickerDialog";
+import type { LaborGuideEntry } from "@/lib/laborGuide";
 
 interface Props { storeId: string }
 
@@ -186,6 +188,7 @@ export default function AutoRepairEstimatesSection({ storeId }: Props) {
   });
 
   const [sendingId, setSendingId] = useState<string | null>(null);
+  const [guideOpen, setGuideOpen] = useState(false);
 
   const sendToCustomer = async (est: any) => {
     setSendingId(est.id);
@@ -407,6 +410,16 @@ export default function AutoRepairEstimatesSection({ storeId }: Props) {
         </CardContent>
       </Card>
 
+      <LaborGuidePickerDialog
+        open={guideOpen}
+        onOpenChange={setGuideOpen}
+        title="Labor Guide — add to estimate"
+        onSelect={(entry: LaborGuideEntry) => {
+          setItems(a => [...a, { kind: "labor", name: entry.service, qty: entry.baseHours, unit_cents: 0 }]);
+          toast.info(`Added "${entry.service}" — ${entry.baseHours}h. Set your hourly rate.`);
+        }}
+      />
+
       <Dialog open={open} onOpenChange={(v) => { setOpen(v); if (!v) resetForm(); }}>
         <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
@@ -473,10 +486,16 @@ export default function AutoRepairEstimatesSection({ storeId }: Props) {
                   </div>
                 ))}
               </div>
-              <Button size="sm" variant="outline" className="mt-2"
-                onClick={() => setItems((a) => [...a, blankItem()])}>
-                <Plus className="w-3 h-3 mr-1" /> Add line
-              </Button>
+              <div className="mt-2 flex gap-2">
+                <Button size="sm" variant="outline"
+                  onClick={() => setItems((a) => [...a, blankItem()])}>
+                  <Plus className="w-3 h-3 mr-1" /> Add line
+                </Button>
+                <Button size="sm" variant="outline" className="gap-1 text-primary border-primary/30 hover:bg-primary/5"
+                  onClick={() => setGuideOpen(true)}>
+                  <BookOpen className="w-3 h-3" /> From Labor Guide
+                </Button>
+              </div>
             </div>
 
             <div className="grid grid-cols-2 gap-4">
