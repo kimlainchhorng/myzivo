@@ -756,7 +756,9 @@ function ReelCard({
           { onConflict: "user_id,item_id", ignoreDuplicates: true },
         );
         if (error && !String(error.message || "").toLowerCase().includes("duplicate")) throw error;
-        toast.success("Saved");
+        toast.success("Saved", {
+          action: { label: "View", onClick: () => navigate("/saved") },
+        });
       } else {
         await (supabase as any).from("bookmarks").delete().eq("user_id", userId).eq("item_id", post.id);
         toast.success("Removed from saved");
@@ -3192,6 +3194,8 @@ export default function FeedPage() {
   const [followingIds, setFollowingIds] = useState<Set<string>>(new Set());
   const [showSwipeHint, setShowSwipeHint] = useState(false);
   const [showShortcutsHelp, setShowShortcutsHelp] = useState(false);
+  // Twitter-style "double-tap active tab to refresh + scroll to top".
+  const lastTabTapRef = useRef<{ mode: string; at: number }>({ mode: "", at: 0 });
   const [isOnline, setIsOnline] = useState<boolean>(() => typeof navigator === "undefined" ? true : navigator.onLine);
   // Listen for connectivity changes so we can show a banner when offline +
   // a brief toast when reconnecting. Useful on flaky cellular / subway wifi.
@@ -3845,6 +3849,20 @@ export default function FeedPage() {
               key={mode}
               type="button"
               onClick={() => {
+                const now = Date.now();
+                // Double-tap the SAME tab within 400ms → refresh + scroll to top
+                if (
+                  feedMode === mode &&
+                  lastTabTapRef.current.mode === mode &&
+                  now - lastTabTapRef.current.at < 400
+                ) {
+                  lastTabTapRef.current = { mode: "", at: 0 };
+                  void queryClient.invalidateQueries({ queryKey: ["customer-feed"] });
+                  cardRefs.current[0]?.scrollIntoView({ behavior: "smooth", block: "start" });
+                  toast.success("Refreshing…");
+                  return;
+                }
+                lastTabTapRef.current = { mode, at: now };
                 setFeedMode(mode);
                 setActiveIndex(0);
                 requestAnimationFrame(() => cardRefs.current[0]?.scrollIntoView({ block: "start" }));
@@ -4061,10 +4079,32 @@ export default function FeedPage() {
                   ref={(el) => { cardRefs.current[index] = el; }}
                   className="w-full h-full snap-start"
                 >
-                  <MemoReelCard
-                    post={post}
-                    isActive={activeIndex === index}
-                    shouldPreload={index === activeIndex + 1 || index === activeIndex - 1}
+                  <ErrorBoundary
+                    fallback={
+                      <div className="w-full h-full bg-black flex items-center justify-center px-6">
+                        <div className="text-center max-w-xs">
+                          <div className="w-14 h-14 rounded-full bg-white/10 flex items-center justify-center mx-auto mb-4 border border-white/15">
+                            <span className="text-2xl">⚠️</span>
+                          </div>
+                          <p className="text-white font-semibold mb-1">This reel couldn't load</p>
+                          <p className="text-white/60 text-sm mb-4">Something went wrong rendering this reel. Swipe to keep watching.</p>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              cardRefs.current[index + 1]?.scrollIntoView({ behavior: "smooth", block: "start" });
+                            }}
+                            className="px-4 py-2 rounded-full bg-white text-black text-sm font-bold active:scale-95"
+                          >
+                            Skip to next
+                          </button>
+                        </div>
+                      </div>
+                    }
+                  >
+                    <MemoReelCard
+                      post={post}
+                      isActive={activeIndex === index}
+                      shouldPreload={index === activeIndex + 1 || index === activeIndex - 1}
                     globalMuted={globalMuted}
                     onToggleMute={() => setGlobalMuted((m) => !m)}
                     onNavigate={(slug) => slug.startsWith("__user__") ? navigate(`/user/${slug.replace("__user__", "")}`) : navigate(`/grocery/shop/${slug}`)}
@@ -4115,7 +4155,8 @@ export default function FeedPage() {
                         cardRefs.current[next]?.scrollIntoView({ behavior: "smooth", block: "start" });
                       });
                     }}
-                  />
+                    />
+                  </ErrorBoundary>
                 </div>
               </div>
             ))}

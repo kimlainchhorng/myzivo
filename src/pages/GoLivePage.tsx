@@ -808,13 +808,14 @@ export default function GoLivePage() {
  // ── SETUP / COUNTDOWN / ENDED screens ──
  if (phase === "setup" || phase === "countdown") {
  return (
-<div className="fixed inset-0 z-50 bg-black flex flex-col">
+<div className="fixed inset-0 z-50 bg-zinc-950 flex flex-col lg:flex lg:items-stretch lg:justify-center">
 <SEOHead
  title="Go Live – ZIVO"
  description="Start a live stream on ZIVO and connect with your audience in real time."
  canonical="/go-live"
  noIndex
  />
+<div className="absolute inset-0 lg:max-w-md lg:left-1/2 lg:-translate-x-1/2 lg:rounded-[32px] lg:overflow-hidden lg:my-6 lg:bottom-6 lg:h-auto lg:bg-zinc-950 lg:shadow-2xl lg:ring-1 lg:ring-white/10">
 <video ref={videoRef} autoPlay muted playsInline className={cn("absolute inset-0 w-full h-full object-cover", facingMode === "user" && "scale-x-[-1]")} />
  {cameraError && (
 <div className="absolute inset-0 flex items-center justify-center bg-black">
@@ -825,10 +826,14 @@ export default function GoLivePage() {
 </div>
 </div>
  )}
-<div className="absolute inset-0 bg-gradient-to-b from-black/60 via-transparent to-black/80 pointer-events-none" />
+{/* Top: 25% subtle dim. Bottom 60%: dark for form readability */}
+<div className="absolute inset-0 bg-gradient-to-b from-black/50 via-black/30 to-black/95 pointer-events-none" />
+{/* Extra dark backdrop behind the form area */}
+<div className="absolute inset-x-0 bottom-0 h-[78%] bg-gradient-to-t from-black/95 via-black/85 to-transparent pointer-events-none" />
+</div>
 
  {phase === "setup" && (
-<>
+<div className="relative z-10 w-full h-full flex flex-col lg:max-w-md lg:mx-auto lg:my-6 lg:rounded-[32px] lg:overflow-hidden">
 <div className="relative z-10 flex items-center gap-2 px-3 pt-2" style={{ paddingTop: "calc(env(safe-area-inset-top, 0px) + 8px)" }}>
 <button type="button" onClick={goBack} className="relative z-20 w-9 h-9 rounded-full bg-black/40 backdrop-blur-sm flex items-center justify-center shrink-0 pointer-events-auto">
 <ArrowLeft className="h-5 w-5 text-white" />
@@ -2272,7 +2277,7 @@ export default function GoLivePage() {
  );
  })()}
 </div>
-</>
+</div>
  )}
 
  {phase === "countdown" && (
