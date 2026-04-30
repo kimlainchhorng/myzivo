@@ -981,52 +981,59 @@ export default function ReelsFeedPage() {
         {/* Main Feed Content */}
         <PullToRefresh onRefresh={handlePullRefresh} className="min-h-screen bg-background pb-20 lg:pb-0 flex-1 lg:max-w-2xl lg:mx-auto">
           {/* Header — hidden on desktop since the global NavBar already provides search */}
-          <div data-testid="feed-sticky-header" className="lg:hidden sticky z-40 bg-background/95 backdrop-blur-xl border-b border-border/30 pt-safe" style={{ top: 'var(--zivo-safe-top, 0px)' }}>
-            <div className="px-3 py-2 flex items-center gap-2">
-              <h1 className="text-lg font-bold text-foreground shrink-0">Feed</h1>
+          <div
+            data-testid="feed-sticky-header"
+            className={cn(
+              "lg:hidden sticky z-40 bg-background/95 backdrop-blur-xl border-b border-border/30 pt-safe transition-transform duration-300 ease-out will-change-transform",
+              headerHidden ? "-translate-y-full" : "translate-y-0",
+            )}
+            style={{ top: 'var(--zivo-safe-top, 0px)' }}
+          >
+            <div className="px-3 py-1.5 flex items-center gap-1.5">
+              <h1 className="text-base font-bold text-foreground shrink-0">Feed</h1>
               <div className="flex-1 relative">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />
+                <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground pointer-events-none" />
                 <input
                   value={searchQuery}
                   onChange={(e) => handleSearchChange(e.target.value)}
                   onFocus={() => setShowSearch(true)}
                   placeholder="Search…"
-                  className="w-full pl-9 pr-8 py-1.5 rounded-full bg-muted/40 border border-border/30 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 transition-colors"
+                  className="w-full pl-8 pr-7 py-1 rounded-full bg-muted/40 border border-border/30 text-[13px] text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 transition-colors"
                 />
                 {searchQuery && (
-                  <button onClick={() => { setSearchQuery(""); setSearchResults([]); }} className="absolute right-3 top-1/2 -translate-y-1/2">
-                    <XIcon className="h-4 w-4 text-muted-foreground" />
+                  <button onClick={() => { setSearchQuery(""); setSearchResults([]); }} className="absolute right-2.5 top-1/2 -translate-y-1/2">
+                    <XIcon className="h-3.5 w-3.5 text-muted-foreground" />
                   </button>
                 )}
               </div>
               <button
                 onClick={() => userId ? setShowCreate(true) : navigate("/auth")}
-                className="shrink-0 h-9 w-9 rounded-full flex items-center justify-center text-foreground hover:bg-muted/60 active:scale-95 transition"
+                className="shrink-0 h-8 w-8 rounded-full flex items-center justify-center text-foreground hover:bg-muted/60 active:scale-95 transition"
                 aria-label="Create post"
               >
-                <Plus className="h-5 w-5" />
+                <Plus className="h-[18px] w-[18px]" />
               </button>
               <button
                 onClick={() => navigate("/account/notifications")}
-                className="shrink-0 h-9 w-9 rounded-full flex items-center justify-center text-foreground hover:bg-muted/60 active:scale-95 transition relative"
+                className="shrink-0 h-8 w-8 rounded-full flex items-center justify-center text-foreground hover:bg-muted/60 active:scale-95 transition relative"
                 aria-label="Notifications"
               >
-                <Bell className="h-5 w-5" />
+                <Bell className="h-[18px] w-[18px]" />
                 {newPostsCount > 0 && (
-                  <span className="absolute top-1.5 right-1.5 h-2 w-2 rounded-full bg-primary" />
+                  <span className="absolute top-1 right-1 h-2 w-2 rounded-full bg-primary" />
                 )}
               </button>
               <button
                 onClick={() => navigate("/chat")}
-                className="shrink-0 h-9 w-9 rounded-full flex items-center justify-center text-foreground hover:bg-muted/60 active:scale-95 transition"
+                className="shrink-0 h-8 w-8 rounded-full flex items-center justify-center text-foreground hover:bg-muted/60 active:scale-95 transition"
                 aria-label="Messages"
               >
-                <MessageCircle className="h-5 w-5" />
+                <MessageCircle className="h-[18px] w-[18px]" />
               </button>
             </div>
             {/* Trending hashtag chip row — conditional so empty state doesn't add padding */}
             {trendingTags.length > 0 && (
-              <div className="px-3 pb-2">
+              <div className="px-3 pb-1.5">
                 <Suspense fallback={null}>
                   <TrendingHashtags
                     variant="inline"
