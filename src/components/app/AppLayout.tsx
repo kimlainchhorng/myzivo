@@ -64,13 +64,12 @@ const AppLayout = ({
           "flex-1",
           fixedHeight ? "min-h-0 overflow-hidden flex flex-col" : "scroll-momentum",
           !hideNav && "pb-nav",
-          hideHeader && "safe-area-top",
           className
         )}
         style={
           !hideHeader
             ? { paddingTop: "calc(56px + env(safe-area-inset-top, 0px))" }
-            : undefined
+            : { paddingTop: "env(safe-area-inset-top, 0px)" }
         }
       >
         {children}
