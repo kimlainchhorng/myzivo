@@ -430,7 +430,7 @@ const MultiCityBuilder = lazy(() => import("./pages/MultiCityBuilder"));
 const ZivoPlus = lazy(() => import("./pages/ZivoPlus"));
 const MembershipPage = lazy(() => import("./pages/MembershipPage"));
 const ComingSoonPage = lazy(() => import("./pages/ComingSoonPage"));
-const CookieConsentBanner = lazy(() => import("./components/CookieConsentBanner"));
+
 const Vision = lazy(() => import("./pages/Vision"));
 const BrandMission = lazy(() => import("./pages/BrandMission"));
 const CompanyProfile = lazy(() => import("./pages/CompanyProfile"));
@@ -680,7 +680,7 @@ const App = () => (
               <Toaster />
               <Sonner />
               <BrowserRouter>
-                <Suspense fallback={null}><CookieConsentBanner /></Suspense>
+                
                 <DeferredPageViewTracker />
                 <DeferredGeoDetector />
                 <Suspense fallback={null}><RoutePrefetcher /></Suspense>
