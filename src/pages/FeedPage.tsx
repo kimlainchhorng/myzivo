@@ -93,6 +93,7 @@ import { shouldSendLikeNotification } from "@/lib/social/likeNotificationGuard";
 import { formatDistanceToNow } from "date-fns";
 import { useOwnerStoreProfile } from "@/hooks/useOwnerStoreProfile";
 import { useHaptic } from "@/hooks/useHaptic";
+import { ErrorBoundary } from "@/components/shared/ErrorBoundary";
 import { useLodgeRooms } from "@/hooks/lodging/useLodgeRooms";
 import { useLodgePropertyProfile } from "@/hooks/lodging/useLodgePropertyProfile";
 import { getLodgingCompletion } from "@/lib/lodging/lodgingCompletion";
@@ -337,6 +338,30 @@ function ReelCard({
   const [videoDuration, setVideoDuration] = useState(0);
   const [bufferedProgress, setBufferedProgress] = useState(0);
   const [isBuffering, setIsBuffering] = useState(false);
+  // Track connectivity inside the card so the buffering spinner can hide
+  // when the page-level offline banner is already explaining the issue.
+  const [cardIsOnline, setCardIsOnline] = useState<boolean>(() => typeof navigator === "undefined" ? true : navigator.onLine);
+  useEffect(() => {
+    const onOnline = () => setCardIsOnline(true);
+    const onOffline = () => setCardIsOnline(false);
+    window.addEventListener("online", onOnline);
+    window.addEventListener("offline", onOffline);
+    return () => {
+      window.removeEventListener("online", onOnline);
+      window.removeEventListener("offline", onOffline);
+    };
+  }, []);
+
+  // Auto-resume on reconnect — when connectivity returns and this reel is
+  // the active one, retry play() so users don't have to manually tap to
+  // un-stall the video. Browsers may naturally resume buffering, but the
+  // play() call ensures we don't sit on a frozen frame.
+  useEffect(() => {
+    if (!cardIsOnline || !isActive) return;
+    const v = videoRef.current;
+    if (!v || !v.paused) return;
+    void v.play().then(() => setIsPlaying(true)).catch(() => {});
+  }, [cardIsOnline, isActive]);
   const [authorIsLive, setAuthorIsLive] = useState(false);
   const [topComment, setTopComment] = useState<{ author_name: string; author_avatar: string | null; content: string; likes_count: number } | null>(null);
   const [isHoldingFastForward, setIsHoldingFastForward] = useState(false);
@@ -554,6 +579,48 @@ function ReelCard({
     try { v.playbackRate = playbackSpeed; } catch {}
   }, [playbackSpeed, isHoldingFastForward, currentSrc]);
 
+  // Media Session metadata — when a reel becomes active, surface its
+  // author + caption to the OS so lock screens, Bluetooth headphones, and
+  // Control Center / Android media notification show the right thing
+  // (and skip-track buttons advance through the feed).
+  useEffect(() => {
+    if (!isActive) return;
+    const ms = (typeof navigator !== "undefined" ? navigator.mediaSession : undefined);
+    if (!ms) return;
+    try {
+      const author = post.source === "user" ? post.author_name : post.store_name;
+      const avatar = (post.source === "user" ? post.author_avatar : post.store_logo) || undefined;
+      ms.metadata = new window.MediaMetadata({
+        title: post.caption?.trim() || "ZIVO Reel",
+        artist: author || "ZIVO",
+        album: "ZIVO",
+        artwork: avatar
+          ? [
+              { src: avatar, sizes: "96x96", type: "image/jpeg" },
+              { src: avatar, sizes: "192x192", type: "image/jpeg" },
+              { src: avatar, sizes: "512x512", type: "image/jpeg" },
+            ]
+          : [],
+      });
+      ms.setActionHandler("play", () => { void videoRef.current?.play().catch(() => {}); });
+      ms.setActionHandler("pause", () => { videoRef.current?.pause(); });
+      ms.setActionHandler("nexttrack", () => {
+        window.dispatchEvent(new CustomEvent("zivo-reel-next"));
+      });
+      ms.setActionHandler("previoustrack", () => {
+        window.dispatchEvent(new CustomEvent("zivo-reel-prev"));
+      });
+    } catch { /* MediaSession is best-effort */ }
+    return () => {
+      try {
+        ms.setActionHandler("play", null);
+        ms.setActionHandler("pause", null);
+        ms.setActionHandler("nexttrack", null);
+        ms.setActionHandler("previoustrack", null);
+      } catch {}
+    };
+  }, [isActive, post.id, post.caption, post.author_name, post.store_name, post.author_avatar, post.store_logo, post.source]);
+
   // Live ring: check if the author has an active live stream when this reel
   // becomes active. Only fires for active reels to avoid spamming the DB
   // with N queries per feed page.
@@ -572,11 +639,12 @@ function ReelCard({
   }, [isActive, post.author_id]);
 
   // Top comment preview — fetch the most-liked comment for this reel
-  // when it becomes active, so the user gets a glance at the engagement
-  // without opening the full sheet. Author profile is joined from the
-  // public_profiles view (no RLS friction).
+  // when it becomes active OR is queued up next (shouldPreload). Pre-fetching
+  // means the ribbon appears instantly on swipe instead of after the brief
+  // query. Author profile is joined from the public_profiles view.
   useEffect(() => {
-    if (!isActive || !post.id) { setTopComment(null); return; }
+    if (!post.id) { setTopComment(null); return; }
+    if (!isActive && !shouldPreload) return; // off-screen — don't fetch
     let alive = true;
     const rawId = post.id.startsWith("u-") ? post.id.slice(2) : post.id;
     const source: "user" | "store" = post.source === "user" ? "user" : "store";
@@ -608,7 +676,7 @@ function ReelCard({
       } catch { if (alive) setTopComment(null); }
     })();
     return () => { alive = false; };
-  }, [isActive, post.id, post.source]);
+  }, [isActive, shouldPreload, post.id, post.source]);
 
   // Realtime engagement bumps for the active reel. When other viewers like
   // or comment on the post you're watching, the right-column counters
@@ -1160,8 +1228,9 @@ function ReelCard({
 
       {/* Mid-playback buffering spinner — only shown when the user has
           actually started watching but the network stalled. Hidden during
-          the initial-load and FFmpeg-repair flows (they have their own UI). */}
-      {isVideoPost && isBuffering && isActive && !hasPlaybackError && !isRepairing && !isBlobLoading && hasLoadedFrame && (
+          the initial-load and FFmpeg-repair flows (they have their own UI),
+          and hidden when offline (the top banner already explains it). */}
+      {isVideoPost && isBuffering && isActive && cardIsOnline && !hasPlaybackError && !isRepairing && !isBlobLoading && hasLoadedFrame && (
         <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-30 pointer-events-none">
           <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-black/60 backdrop-blur-md">
             <Loader2 className="w-4 h-4 text-white animate-spin" />
@@ -3090,8 +3159,9 @@ export default function FeedPage() {
       return Number.isFinite(n) && n >= 0 ? n : 0;
     } catch { return 0; }
   });
-  // Persist activeIndex changes back to sessionStorage so a subsequent mount
-  // resumes from the same reel.
+  // Persist activeIndex AND active post ID. Index is used as a fallback if
+  // the post ID has dropped out of the feed (rare — would mean unpublished
+  // or RLS visibility flipped).
   useEffect(() => {
     try { sessionStorage.setItem("zivo_reel_active_index", String(activeIndex)); } catch {}
   }, [activeIndex]);
@@ -3122,6 +3192,22 @@ export default function FeedPage() {
   const [followingIds, setFollowingIds] = useState<Set<string>>(new Set());
   const [showSwipeHint, setShowSwipeHint] = useState(false);
   const [showShortcutsHelp, setShowShortcutsHelp] = useState(false);
+  const [isOnline, setIsOnline] = useState<boolean>(() => typeof navigator === "undefined" ? true : navigator.onLine);
+  // Listen for connectivity changes so we can show a banner when offline +
+  // a brief toast when reconnecting. Useful on flaky cellular / subway wifi.
+  useEffect(() => {
+    const onOnline = () => {
+      setIsOnline(true);
+      toast.success("Back online");
+    };
+    const onOffline = () => setIsOnline(false);
+    window.addEventListener("online", onOnline);
+    window.addEventListener("offline", onOffline);
+    return () => {
+      window.removeEventListener("online", onOnline);
+      window.removeEventListener("offline", onOffline);
+    };
+  }, []);
   // Post actions (bookmark / mute / block / report) + 3-dot menu
   const postActions = usePostActions(userId);
   const [actionsTarget, setActionsTarget] = useState<{ target: PostActionTarget; authorName?: string; shareUrl?: string } | null>(null);
@@ -3473,6 +3559,28 @@ export default function FeedPage() {
     queryClient.invalidateQueries({ queryKey: ["customer-feed"] });
   }, [userId, queryClient, posts]);
 
+  // Media Session bridge — the active ReelCard exposes nexttrack/previoustrack
+  // handlers via window events so the OS-level skip buttons (Bluetooth,
+  // lock screen, Control Center) navigate the feed.
+  useEffect(() => {
+    const onNext = () => {
+      if (activeIndex < visiblePosts.length - 1) {
+        cardRefs.current[activeIndex + 1]?.scrollIntoView({ behavior: "smooth", block: "start" });
+      }
+    };
+    const onPrev = () => {
+      if (activeIndex > 0) {
+        cardRefs.current[activeIndex - 1]?.scrollIntoView({ behavior: "smooth", block: "start" });
+      }
+    };
+    window.addEventListener("zivo-reel-next", onNext);
+    window.addEventListener("zivo-reel-prev", onPrev);
+    return () => {
+      window.removeEventListener("zivo-reel-next", onNext);
+      window.removeEventListener("zivo-reel-prev", onPrev);
+    };
+  }, [activeIndex, visiblePosts.length]);
+
   // Keyboard shortcuts for the reel viewer (desktop power-user).
   // Skipped while typing in any input/textarea so we don't hijack typing.
   // - Space / K  → play / pause active reel
@@ -3549,9 +3657,19 @@ export default function FeedPage() {
     return () => window.removeEventListener("keydown", handler);
   }, [activeIndex, visiblePosts, userId, userLikedPostIds, showShortcutsHelp]); // eslint-disable-line react-hooks/exhaustive-deps
 
+  // Persist the active post's ID so resume survives feed re-shuffling
+  // (the algorithmic feed reorders results; a stored index could land on
+  // a different reel after a refresh).
+  useEffect(() => {
+    if (visiblePosts.length === 0) return;
+    const activePost = visiblePosts[activeIndex];
+    if (!activePost) return;
+    try { sessionStorage.setItem("zivo_reel_active_id", activePost.id); } catch {}
+  }, [activeIndex, visiblePosts]);
+
   // On first paint after the visible list arrives, scroll to the resumed
-  // activeIndex so the user lands on their last-watched reel. Bounded so
-  // a stale stored index doesn't blow past the current list length.
+  // reel. Prefer matching by stored post ID (survives reordering); fall
+  // back to stored index if the post is no longer in the feed.
   // Skipped when arriving via a deep link — the link's target wins.
   const didRestorePosition = useRef(false);
   useEffect(() => {
@@ -3561,8 +3679,23 @@ export default function FeedPage() {
       didRestorePosition.current = true;
       return;
     }
-    const safeIndex = Math.min(activeIndex, visiblePosts.length - 1);
-    if (safeIndex === 0) {
+
+    let safeIndex = -1;
+    try {
+      const storedId = sessionStorage.getItem("zivo_reel_active_id");
+      if (storedId) {
+        safeIndex = visiblePosts.findIndex((p) => p.id === storedId);
+      }
+    } catch { /* ignore */ }
+    if (safeIndex < 0) {
+      // ID lookup failed — fall back to bounded index
+      safeIndex = Math.min(activeIndex, visiblePosts.length - 1);
+    } else if (safeIndex !== activeIndex) {
+      // Sync the index state to the matched ID's position
+      setActiveIndex(safeIndex);
+    }
+
+    if (safeIndex <= 0) {
       didRestorePosition.current = true;
       return;
     }
@@ -3600,7 +3733,8 @@ export default function FeedPage() {
   useEffect(() => {
     // Path param /reels/:postId takes priority; falls back to ?post= query.
     // Path postId is raw (no `u-` prefix) — match against either form.
-    const sharedPostId = routePostId || new URLSearchParams(location.search).get("post");
+    const params = new URLSearchParams(location.search);
+    const sharedPostId = routePostId || params.get("post");
     if (!sharedPostId || visiblePosts.length === 0) return;
 
     // Try exact match, then `u-`-prefixed user-post id, then unprefixed id.
@@ -3610,8 +3744,15 @@ export default function FeedPage() {
     if (targetIndex < 0) return;
 
     setActiveIndex(targetIndex);
+    const matchedPost = visiblePosts[targetIndex];
     requestAnimationFrame(() => {
       cardRefs.current[targetIndex]?.scrollIntoView({ block: "start" });
+      // ?comments=1 (typically from a "new comment" notification tap) →
+      // auto-open the comment sheet on the matched reel after the scroll.
+      // Slight delay so the snap-scroll lands first.
+      if (params.get("comments") === "1" && matchedPost) {
+        window.setTimeout(() => setCommentPostId(matchedPost.id), 250);
+      }
     });
   }, [visiblePosts, location.search, routePostId]);
 
@@ -3667,6 +3808,29 @@ export default function FeedPage() {
       <div className="hidden lg:block relative z-[1200] shrink-0">
         <NavBar />
       </div>
+      {/* Offline banner — slides down from the top when we lose connectivity.
+          Wrapped in a centered max-w container so it aligns with the phone
+          frame on iPad/desktop. */}
+      <AnimatePresence>
+        {!isOnline && (
+          <motion.div
+            initial={{ y: -40, opacity: 0 }}
+            animate={{ y: 0, opacity: 1 }}
+            exit={{ y: -40, opacity: 0 }}
+            transition={{ type: "spring", damping: 24, stiffness: 320 }}
+            className="absolute inset-x-0 z-[55] mx-auto md:max-w-[420px] pointer-events-none"
+            style={{ top: 'max(var(--zivo-safe-top-overlay, 12px), 16px)' }}
+            role="status"
+            aria-live="polite"
+          >
+            <div className="mx-3 px-4 py-2 rounded-full bg-zinc-900/95 backdrop-blur-md border border-white/15 shadow-xl flex items-center justify-center gap-2 pointer-events-auto">
+              <span className="w-2 h-2 rounded-full bg-amber-400 animate-pulse" />
+              <span className="text-white text-xs font-semibold">You're offline — reels will resume when you reconnect</span>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
       {/* For You / Following tabs — TikTok-style top center segmented control.
           On iPad+ the phone frame starts at 16px from the viewport top (md:my-4),
           so we max() the safe-area inset with 16px so the tabs sit inside the

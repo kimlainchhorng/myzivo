@@ -220,7 +220,7 @@ export default function ContentSchedulerPage() {
                           <Clock className="h-2 w-2" /> {format(post.scheduledAt, "MMM d, h:mm a")}
                         </Badge>
                       </div>
-                      <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => deletePost(post.id)}>
+                      <Button aria-label="Delete" variant="ghost" size="icon" className="h-7 w-7" onClick={() => deletePost(post.id)}>
                         <Trash2 className="h-3 w-3 text-muted-foreground" />
                       </Button>
                     </div>

@@ -978,6 +978,26 @@ export default function LiveStreamPage() {
  const [feedbackToast, setFeedbackToast] = useState(false);
  const [eventReminders, setEventReminders] = useState<string[]>([]);
  const [joinedFamily, setJoinedFamily] = useState<string | null>(null);
+ const [activeSection, setActiveSection] = useState<string>("");
+
+ // Observe section visibility to highlight quick-nav chip
+ useEffect(() => {
+   const ids = ["section-discover", "section-community", "section-battles", "section-daily", "section-categories", "section-spotlight"];
+   const observer = new IntersectionObserver(
+     (entries) => {
+       const visible = entries
+         .filter((e) =>e.isIntersecting)
+         .sort((a, b) =>(b.intersectionRatio || 0) - (a.intersectionRatio || 0));
+       if (visible[0]) setActiveSection(visible[0].target.id);
+     },
+     { rootMargin: "-30% 0px -50% 0px", threshold: [0, 0.25, 0.5, 0.75, 1] },
+   );
+   ids.forEach((id) => {
+     const el = document.getElementById(id);
+     if (el) observer.observe(el);
+   });
+   return () =>observer.disconnect();
+ }, []);
  useEffect(() => {
    const handler = () =>setShowScrollTop(window.scrollY > 600);
    window.addEventListener("scroll", handler, { passive: true });
@@ -1164,6 +1184,53 @@ export default function LiveStreamPage() {
 </button>
  );
  })}
+</div>
+
+{/* Section quick-nav (jump-to chips with active highlight) */}
+<div className="flex gap-1.5 px-4 pb-2.5 overflow-x-auto scrollbar-hide border-t border-border/30 pt-2">
+  {[
+    { id: "section-discover", label: "Discover", color: "fuchsia" },
+    { id: "section-community", label: "Community", color: "blue" },
+    { id: "section-battles", label: "Battles", color: "amber" },
+    { id: "section-daily", label: "Daily", color: "emerald" },
+    { id: "section-categories", label: "Categories", color: "violet" },
+    { id: "section-spotlight", label: "Spotlight", color: "rose" },
+  ].map((g) =>{
+    const isActive = activeSection === g.id;
+    return (
+    <button
+      key={g.id}
+      onClick={() =>{
+        const el = document.getElementById(g.id);
+        if (el) el.scrollIntoView({ behavior: "smooth", block: "start" });
+      }}
+      className={cn(
+        "shrink-0 flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-bold border transition-all active:scale-95",
+        isActive
+          ? cn(
+              g.color === "fuchsia" && "bg-fuchsia-500 border-fuchsia-400 text-white shadow-md shadow-fuchsia-500/30",
+              g.color === "blue" && "bg-blue-500 border-blue-400 text-white shadow-md shadow-blue-500/30",
+              g.color === "amber" && "bg-amber-500 border-amber-400 text-white shadow-md shadow-amber-500/30",
+              g.color === "emerald" && "bg-emerald-500 border-emerald-400 text-white shadow-md shadow-emerald-500/30",
+              g.color === "violet" && "bg-violet-500 border-violet-400 text-white shadow-md shadow-violet-500/30",
+              g.color === "rose" && "bg-rose-500 border-rose-400 text-white shadow-md shadow-rose-500/30",
+            )
+          : "bg-muted/50 hover:bg-muted text-muted-foreground hover:text-foreground border-border/40",
+      )}
+    >
+      <span className={cn("h-1.5 w-1.5 rounded-full",
+        isActive ? "bg-white" :
+        g.color === "fuchsia" ? "bg-fuchsia-500" :
+        g.color === "blue" ? "bg-blue-500" :
+        g.color === "amber" ? "bg-amber-500" :
+        g.color === "emerald" ? "bg-emerald-500" :
+        g.color === "violet" ? "bg-violet-500" :
+        "bg-rose-500",
+      )} />
+      {g.label}
+    </button>
+    );
+  })}
 </div>
 </div>
 
@@ -1534,7 +1601,7 @@ export default function LiveStreamPage() {
 </div>
 
  {/* ─── Section divider: Discover ─── */}
-<div className="px-4 pt-6 pb-1 flex items-center gap-3">
+<div id="section-discover" className="px-4 pt-6 pb-1 flex items-center gap-3 scroll-mt-20">
   <div className="h-px flex-1 bg-gradient-to-r from-transparent to-fuchsia-500/30" />
   <span className="text-[10px] font-black tracking-[0.2em] text-muted-foreground/80 uppercase">Discover</span>
   <div className="h-px flex-1 bg-gradient-to-l from-transparent to-fuchsia-500/30" />
@@ -1728,7 +1795,7 @@ export default function LiveStreamPage() {
 </div>
 
  {/* ─── Section divider: Community ─── */}
-<div className="px-4 pt-6 pb-1 flex items-center gap-3">
+<div id="section-community" className="px-4 pt-6 pb-1 flex items-center gap-3 scroll-mt-20">
   <div className="h-px flex-1 bg-gradient-to-r from-transparent to-blue-500/30" />
   <span className="text-[10px] font-black tracking-[0.2em] text-muted-foreground/80 uppercase">Community</span>
   <div className="h-px flex-1 bg-gradient-to-l from-transparent to-blue-500/30" />
@@ -1960,7 +2027,7 @@ export default function LiveStreamPage() {
 </div>
 
  {/* ─── Section divider: Battles & Studio ─── */}
-<div className="px-4 pt-6 pb-1 flex items-center gap-3">
+<div id="section-battles" className="px-4 pt-6 pb-1 flex items-center gap-3 scroll-mt-20">
   <div className="h-px flex-1 bg-gradient-to-r from-transparent to-amber-500/30" />
   <span className="text-[10px] font-black tracking-[0.2em] text-muted-foreground/80 uppercase">Battles & Studio</span>
   <div className="h-px flex-1 bg-gradient-to-l from-transparent to-amber-500/30" />
@@ -2283,7 +2350,7 @@ export default function LiveStreamPage() {
 </div>
 
  {/* ─── Section divider: Daily ─── */}
-<div className="px-4 pt-6 pb-1 flex items-center gap-3">
+<div id="section-daily" className="px-4 pt-6 pb-1 flex items-center gap-3 scroll-mt-20">
   <div className="h-px flex-1 bg-gradient-to-r from-transparent to-emerald-500/30" />
   <span className="text-[10px] font-black tracking-[0.2em] text-muted-foreground/80 uppercase">Daily</span>
   <div className="h-px flex-1 bg-gradient-to-l from-transparent to-emerald-500/30" />
@@ -2396,7 +2463,7 @@ export default function LiveStreamPage() {
 </div>
 
  {/* ─── Section divider: Categories ─── */}
-<div className="px-4 pt-6 pb-1 flex items-center gap-3">
+<div id="section-categories" className="px-4 pt-6 pb-1 flex items-center gap-3 scroll-mt-20">
   <div className="h-px flex-1 bg-gradient-to-r from-transparent to-violet-500/30" />
   <span className="text-[10px] font-black tracking-[0.2em] text-muted-foreground/80 uppercase">Browse Categories</span>
   <div className="h-px flex-1 bg-gradient-to-l from-transparent to-violet-500/30" />
@@ -2795,7 +2862,7 @@ export default function LiveStreamPage() {
 </div>
 
  {/* ─── Section divider: Spotlight ─── */}
-<div className="px-4 pt-6 pb-1 flex items-center gap-3">
+<div id="section-spotlight" className="px-4 pt-6 pb-1 flex items-center gap-3 scroll-mt-20">
   <div className="h-px flex-1 bg-gradient-to-r from-transparent to-rose-500/30" />
   <span className="text-[10px] font-black tracking-[0.2em] text-muted-foreground/80 uppercase">Spotlight</span>
   <div className="h-px flex-1 bg-gradient-to-l from-transparent to-rose-500/30" />

@@ -118,7 +118,7 @@ export default function WatchPartyPage() {
               <Button aria-label="Play or pause" size="icon" variant="ghost" className="text-white h-8 w-8" onClick={() => setIsPlaying(!isPlaying)}>
                 {isPlaying ? <Pause className="h-4 w-4" /> : <Play className="h-4 w-4" />}
               </Button>
-              <Button size="icon" variant="ghost" className="text-white h-8 w-8"><SkipForward className="h-4 w-4" /></Button>
+              <Button aria-label="Skip forward" size="icon" variant="ghost" className="text-white h-8 w-8"><SkipForward className="h-4 w-4" /></Button>
             </div>
             <Badge variant="destructive" className="text-xs gap-1"><Users className="h-3 w-3" />{activeRoom.viewers}</Badge>
           </div>

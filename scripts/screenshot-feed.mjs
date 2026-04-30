@@ -25,6 +25,20 @@ const browser = await webkit.launch({ headless: true });
 // Use a phone-ish width so the lg:hidden mobile header is visible
 const ctx = await browser.newContext({ viewport: { width: 390, height: 844 } });
 const page = await ctx.newPage();
+// Intercept Supabase auth/v1/user so userId-gated UI renders in screenshots
+await ctx.route("**/auth/v1/user**", (route) => {
+  route.fulfill({
+    status: 200,
+    contentType: "application/json",
+    body: JSON.stringify({
+      id: userId, aud: "authenticated", role: "authenticated",
+      email: "probe@example.test",
+      user_metadata: { full_name: "Probe User" },
+      app_metadata: { provider: "email", providers: ["email"] },
+      created_at: new Date(now * 1000).toISOString(),
+    }),
+  });
+});
 await page.goto(`${BASE}/`, { waitUntil: "domcontentloaded", timeout: 90000 });
 await page.evaluate(({ key, value }) => localStorage.setItem(key, value),
   { key: STORAGE_KEY, value: JSON.stringify(session) });

@@ -174,7 +174,9 @@ export default function AdminBlockedLinksPage() {
           {list.isLoading && <p className="text-xs text-muted-foreground">Loading…</p>}
           {!list.isLoading && filtered.length === 0 && (
             <p className="rounded-lg border border-primary/20 bg-primary/5 p-3 text-xs text-muted-foreground">
-              No blocked attempts in this window. The protections are doing their job — every recent submission was clean.
+              {(endpointFilter !== "all" || userFilter)
+                ? "No matches for the current filter. Clear filters to see all attempts in this window."
+                : "No blocked attempts in this window. The protections are doing their job — every recent submission was clean."}
             </p>
           )}
           {filtered.map((row) => (

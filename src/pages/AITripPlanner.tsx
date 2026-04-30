@@ -386,10 +386,10 @@ const AITripPlanner = () => {
                             <><Bookmark className="w-4 h-4" /> Save as Trip</>
                           )}
                         </Button>
-                        <Button variant="outline" size="icon" onClick={() => navigate(`/flights?to=${suggestion.airportCode}`)}>
+                        <Button aria-label="Search flights" variant="outline" size="icon" onClick={() => navigate(`/flights?to=${suggestion.airportCode}`)}>
                           <Plane className="w-4 h-4" />
                         </Button>
-                        <Button variant="outline" size="icon">
+                        <Button aria-label="Share" variant="outline" size="icon">
                           <Share2 className="w-4 h-4" />
                         </Button>
                       </div>

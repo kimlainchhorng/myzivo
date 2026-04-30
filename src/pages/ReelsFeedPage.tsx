@@ -1035,6 +1035,26 @@ export default function ReelsFeedPage() {
                     <MessageCircle className="h-[18px] w-[18px]" />
                   </button>
                 </div>
+                {/* Tab strip — For You / Friends / Following (signed-in only) */}
+                {userId && (
+                  <div className="flex justify-center gap-6 px-3 pb-1.5">
+                    {(["For You", "Friends", "Following"] as const).map((label) => (
+                      <button
+                        key={label}
+                        onClick={() => setFeedTab(label)}
+                        className={cn(
+                          "relative py-1 text-[13px] font-semibold transition-colors",
+                          feedTab === label ? "text-foreground" : "text-muted-foreground"
+                        )}
+                      >
+                        {label}
+                        {feedTab === label && (
+                          <span className="absolute -bottom-0.5 left-1/2 -translate-x-1/2 w-6 h-0.5 rounded-full bg-primary" />
+                        )}
+                      </button>
+                    ))}
+                  </div>
+                )}
                 {/* Trending hashtag chip row — conditional so empty state doesn't add padding */}
                 {trendingTags.length > 0 && (
                   <div className="px-3 pb-1.5">

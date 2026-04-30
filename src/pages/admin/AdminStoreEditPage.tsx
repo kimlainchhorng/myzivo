@@ -2275,7 +2275,7 @@ export default function AdminStoreEditPage() {
         {(isAdmin || activeTab === "profile") && (
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
           <div className="flex items-center gap-3 min-w-0">
-            <Button variant="outline" size="icon" className="h-9 w-9 shrink-0" onClick={() => navigate(isAdmin ? "/admin/stores" : "/")}>
+            <Button aria-label="Back" variant="outline" size="icon" className="h-9 w-9 shrink-0" onClick={() => navigate(isAdmin ? "/admin/stores" : "/")}>
               <ArrowLeft className="h-4 w-4" />
             </Button>
             <div className="min-w-0 flex-1">

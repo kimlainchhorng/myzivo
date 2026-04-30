@@ -221,18 +221,59 @@ export function usePostComments({ postId, postSource, currentUserId }: UsePostCo
   };
 
   const deleteComment = async (commentId: string) => {
-    await (supabase as any).from("post_comments").delete().eq("id", commentId);
-    await fetchComments();
+    // Optimistic remove — mirrors addComment / toggleReaction pattern.
+    // The recursive filter handles both top-level comments and nested
+    // replies (so deleting a reply doesn't leave it briefly visible).
+    const removeFromList = (list: PostComment[]): PostComment[] =>
+      list
+        .filter((c) => c.id !== commentId)
+        .map((c) =>
+          c.replies && c.replies.length > 0
+            ? { ...c, replies: removeFromList(c.replies) }
+            : c,
+        );
+
+    const previous = comments;
+    setComments((prev) => removeFromList(prev));
+
+    try {
+      const { error } = await (supabase as any).from("post_comments").delete().eq("id", commentId);
+      if (error) throw error;
+      await fetchComments();
+    } catch {
+      setComments(previous);
+    }
   };
 
   const editComment = async (commentId: string, nextContent: string) => {
     if (!currentUserId || !nextContent.trim()) return;
-    await (supabase as any)
-      .from("post_comments")
-      .update({ content: nextContent.trim(), updated_at: new Date().toISOString() })
-      .eq("id", commentId)
-      .eq("user_id", currentUserId);
-    await fetchComments();
+    const trimmed = nextContent.trim();
+
+    // Optimistic content update — same recursion to cover nested replies.
+    const editInList = (list: PostComment[]): PostComment[] =>
+      list.map((c) => {
+        if (c.id === commentId) {
+          return { ...c, content: trimmed, edited_at: new Date().toISOString() };
+        }
+        return c.replies && c.replies.length > 0
+          ? { ...c, replies: editInList(c.replies) }
+          : c;
+      });
+
+    const previous = comments;
+    setComments((prev) => editInList(prev));
+
+    try {
+      const { error } = await (supabase as any)
+        .from("post_comments")
+        .update({ content: trimmed, updated_at: new Date().toISOString() })
+        .eq("id", commentId)
+        .eq("user_id", currentUserId);
+      if (error) throw error;
+      await fetchComments();
+    } catch {
+      setComments(previous);
+    }
   };
 
   const togglePin = async (commentId: string): Promise<boolean | null> => {
@@ -246,25 +287,72 @@ export function usePostComments({ postId, postSource, currentUserId }: UsePostCo
 
   const toggleReaction = async (commentId: string, emoji: string) => {
     if (!currentUserId) return;
-    // Check if already reacted
-    const { data: existing } = await (supabase as any)
-      .from("comment_reactions")
-      .select("id")
-      .eq("comment_id", commentId)
-      .eq("user_id", currentUserId)
-      .eq("emoji", emoji)
-      .maybeSingle();
 
-    if (existing) {
-      await (supabase as any).from("comment_reactions").delete().eq("id", existing.id);
-    } else {
-      await (supabase as any).from("comment_reactions").insert({
-        comment_id: commentId,
-        user_id: currentUserId,
-        emoji,
+    // Optimistic flip — instantly toggle the local reaction so taps feel
+    // snappy, then reconcile with the database. The previous flow waited
+    // for an existence check + write + 3-table refetch (3 round-trips
+    // serial) before the UI reflected the change.
+    const flipReactionInList = (list: PostComment[]): PostComment[] =>
+      list.map((c) => {
+        if (c.id !== commentId) {
+          // Recurse into replies in case the target is a nested comment
+          return c.replies && c.replies.length > 0
+            ? { ...c, replies: flipReactionInList(c.replies) }
+            : c;
+        }
+        const reactions = c.reactions ? [...c.reactions] : [];
+        const existing = reactions.find((r) => r.emoji === emoji);
+        if (existing) {
+          if (existing.reacted) {
+            // We had reacted — remove our vote (count down, mark not reacted)
+            const next = { ...existing, count: Math.max(0, existing.count - 1), reacted: false };
+            const filtered = reactions
+              .map((r) => (r.emoji === emoji ? next : r))
+              .filter((r) => r.count > 0);
+            return { ...c, reactions: filtered };
+          } else {
+            // Someone else had reacted — add our vote (count up, mark reacted)
+            return {
+              ...c,
+              reactions: reactions.map((r) =>
+                r.emoji === emoji ? { ...r, count: r.count + 1, reacted: true } : r,
+              ),
+            };
+          }
+        }
+        // No existing reaction for this emoji — add ours
+        return { ...c, reactions: [...reactions, { emoji, count: 1, reacted: true }] };
       });
+
+    const previousComments = comments;
+    setComments((prev) => flipReactionInList(prev));
+
+    try {
+      // Check if already reacted (server-side source of truth)
+      const { data: existing } = await (supabase as any)
+        .from("comment_reactions")
+        .select("id")
+        .eq("comment_id", commentId)
+        .eq("user_id", currentUserId)
+        .eq("emoji", emoji)
+        .maybeSingle();
+
+      if (existing) {
+        await (supabase as any).from("comment_reactions").delete().eq("id", existing.id);
+      } else {
+        await (supabase as any).from("comment_reactions").insert({
+          comment_id: commentId,
+          user_id: currentUserId,
+          emoji,
+        });
+      }
+      // Reconcile with the server (catches drift if another client also
+      // toggled at the same moment)
+      await fetchComments();
+    } catch {
+      // Roll back on failure
+      setComments(previousComments);
     }
-    await fetchComments();
   };
 
   return {

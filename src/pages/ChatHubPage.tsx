@@ -161,6 +161,13 @@ function parseStickerPreview(message: string): { src: string; alt: string } | nu
   return { src: "", alt: id };
 }
 
+// Replace ||spoiler|| segments with block-character redaction for chat list previews.
+// (Inside an open conversation, the bubble uses <SpoilerText> for tap-to-reveal; here
+// previews are plain text so we permanently redact.)
+function redactSpoilers(text: string): string {
+  return text.replace(/\|\|([^|]+)\|\|/g, (_, inner: string) => "▒".repeat(Math.max(3, Math.min(inner.length, 12))));
+}
+
 function parseRichMessagePreview(message: string): string {
   const trimmed = message.trim();
   if (!trimmed) return "";
@@ -183,7 +190,7 @@ function parseRichMessagePreview(message: string): string {
     }
   } catch {}
 
-  return message;
+  return redactSpoilers(message);
 }
 
 function getMessagePreviewIcon(message: string) {

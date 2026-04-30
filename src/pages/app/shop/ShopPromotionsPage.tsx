@@ -204,7 +204,7 @@ export default function ShopPromotionsPage() {
                   <Button aria-label="Toggle active" variant="ghost" size="icon" className="h-7 w-7" onClick={() => toggleActive(promo.id, promo.isActive)}>
                     {promo.isActive ? <ToggleRight className="h-4 w-4 text-primary" /> : <ToggleLeft className="h-4 w-4 text-muted-foreground" />}
                   </Button>
-                  <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => deletePromo(promo.id)}>
+                  <Button aria-label="Delete" variant="ghost" size="icon" className="h-7 w-7" onClick={() => deletePromo(promo.id)}>
                     <Trash2 className="h-3 w-3 text-muted-foreground" />
                   </Button>
                 </div>

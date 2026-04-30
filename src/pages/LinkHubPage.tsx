@@ -264,7 +264,7 @@ export default function LinkHubPage() {
                   <p className="text-xs text-muted-foreground truncate">{link.url}</p>
                 </div>
                 <Badge variant="secondary" className="text-xs gap-1 shrink-0"><BarChart3 className="h-2 w-2" />{link.clicks}</Badge>
-                <Button variant="ghost" size="icon" className="h-7 w-7 shrink-0" onClick={() => removeLink(link.id)}>
+                <Button aria-label="Remove" variant="ghost" size="icon" className="h-7 w-7 shrink-0" onClick={() => removeLink(link.id)}>
                   <Trash2 className="h-3 w-3 text-muted-foreground" />
                 </Button>
               </Card>

@@ -479,12 +479,12 @@ export default function AdminPricingPage() {
                     </TableCell>
                     <TableCell>
                       <div className="flex gap-1">
-                        <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => openEdit(row)}>
+                        <Button aria-label="Edit" variant="ghost" size="icon" className="h-7 w-7" onClick={() => openEdit(row)}>
                           <Pencil className="w-3.5 h-3.5" />
                         </Button>
                         <AlertDialog>
                           <AlertDialogTrigger asChild>
-                            <Button variant="ghost" size="icon" className="h-7 w-7 text-destructive">
+                            <Button aria-label="Delete" variant="ghost" size="icon" className="h-7 w-7 text-destructive">
                               <Trash2 className="w-3.5 h-3.5" />
                             </Button>
                           </AlertDialogTrigger>

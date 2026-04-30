@@ -126,7 +126,7 @@ export default function FlightBookingsPage() {
             className="flex items-center justify-between gap-3 mb-4"
           >
             <div className="flex items-center gap-3">
-              <Button variant="ghost" size="icon" asChild className="shrink-0 rounded-xl">
+              <Button aria-label="Back to flights" variant="ghost" size="icon" asChild className="shrink-0 rounded-xl">
                 <Link to="/flights"><ArrowLeft className="w-5 h-5" /></Link>
               </Button>
               <div>
@@ -137,7 +137,7 @@ export default function FlightBookingsPage() {
               </div>
             </div>
             <div className="flex items-center gap-2">
-              <Button variant="ghost" size="icon" onClick={() => refetch()} className="rounded-xl" title="Refresh">
+              <Button aria-label="Refresh" variant="ghost" size="icon" onClick={() => refetch()} className="rounded-xl" title="Refresh">
                 <RefreshCw className="w-4 h-4" />
               </Button>
               <Button asChild variant="outline" size="sm" className="border-border/40 rounded-xl">

@@ -115,7 +115,7 @@ export default function StoreAssetsUploadCheck() {
     <AdminLayout title={`Upload Check: ${store?.name ?? "Store"}`}>
       <div className="space-y-6 max-w-3xl mx-auto">
         <div className="flex items-center gap-3">
-          <Button variant="outline" size="icon" className="h-9 w-9" onClick={() => navigate(`/admin/stores/${storeId}`)}>
+          <Button aria-label="Back to store" variant="outline" size="icon" className="h-9 w-9" onClick={() => navigate(`/admin/stores/${storeId}`)}>
             <ArrowLeft className="h-4 w-4" />
           </Button>
           <div className="min-w-0 flex-1">

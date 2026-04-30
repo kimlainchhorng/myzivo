@@ -113,7 +113,7 @@ export default function WhiteboardPage() {
         <div className="flex items-center justify-between">
           <div className="flex gap-1">
             {tools.map((t) => (
-              <Button key={t.id} variant={tool === t.id ? "default" : "outline"} size="icon" className="h-9 w-9"
+              <Button key={t.id} aria-label={t.label || t.id} variant={tool === t.id ? "default" : "outline"} size="icon" className="h-9 w-9"
                 onClick={() => setTool(t.id)}>
                 <t.icon className="h-4 w-4" />
               </Button>

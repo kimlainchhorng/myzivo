@@ -377,7 +377,7 @@ export default function EatsRestaurantDashboard() {
                       <Button aria-label="Edit" variant="ghost" size="icon" className="h-8 w-8" onClick={() => startEdit(item)}>
                         <Edit className="w-3.5 h-3.5" />
                       </Button>
-                      <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive" onClick={() => deleteMenuItem(item.id)}>
+                      <Button aria-label="Delete" variant="ghost" size="icon" className="h-8 w-8 text-destructive" onClick={() => deleteMenuItem(item.id)}>
                         <Trash2 className="w-3.5 h-3.5" />
                       </Button>
                     </div>

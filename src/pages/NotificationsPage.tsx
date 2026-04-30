@@ -603,8 +603,10 @@ const NotificationsPage = () => {
             </motion.div>
           )}
 
-          {/* Social tab empty state */}
-          {activeTab === 'social' && friendRequests.length === 0 && socialNotifs.length === 0 && !loadingFR && (
+          {/* Social tab empty state — only when ALL three social sources are empty:
+              friend requests, legacy socialNotifs, and the trigger-generated
+              social_* notifications surfaced via filteredNotifications. */}
+          {activeTab === 'social' && friendRequests.length === 0 && socialNotifs.length === 0 && filteredNotifications.length === 0 && !loadingFR && (
             <motion.div
               initial={{ opacity: 0, y: 30, rotateX: 8 }}
               animate={{ opacity: 1, y: 0, rotateX: 0 }}
