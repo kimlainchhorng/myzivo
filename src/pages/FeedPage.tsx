@@ -976,7 +976,7 @@ function ReelCard({
           onPause={() => setIsPlaying(false)}
           onWaiting={() => setIsBuffering(true)}
           onPlaying={() => setIsBuffering(false)}
-          onCanPlay={() => setIsBuffering(false)}
+          
           onTimeUpdate={(e) => {
             const v = e.currentTarget;
             if (Number.isFinite(v.duration) && v.duration > 0) {
@@ -2140,7 +2140,7 @@ function CommentSheet({
       const { data: profiles } = await supabase
         .from("public_profiles")
         .select("id, full_name, avatar_url")
-        .in("id", userIds);
+        .in("id", userIds as string[]);
 
       const profileMap = new Map((profiles || []).map((p: any) => [p.id, p]));
 

@@ -96,5 +96,6 @@ export async function startStepUpChallenge(): Promise<MfaState | null> {
 export async function isAal2(): Promise<boolean> {
   const { data, error } = await supabase.auth.mfa.getAuthenticatorAssuranceLevel();
   if (error) return false;
-  return data?.currentLevel === "aal2" || data?.currentLevel === "aal3";
+  const lvl = data?.currentLevel as string | undefined;
+  return lvl === "aal2" || lvl === "aal3";
 }

@@ -82,12 +82,12 @@ export default function AutoRepairPage() {
         const matchFilter = activeFilter === "All" || (Array.isArray((s as any).services) && (s as any).services.some((sv: string) => sv.toLowerCase().includes(activeFilter.toLowerCase())));
         return matchSearch && matchFilter;
       })
-    : FALLBACK_SHOPS.filter((s) => {
+    : (FALLBACK_SHOPS.filter((s) => {
         const q = search.toLowerCase();
         const matchSearch = !q || s.name.toLowerCase().includes(q);
         const matchFilter = activeFilter === "All" || s.services.some((sv) => sv === activeFilter);
         return matchSearch && matchFilter;
-      });
+      }).map((s) => ({ ...s, logo_url: null, is_verified: s.verified ?? null })) as Shop[]);
 
   return (
     <div className="min-h-screen bg-background">

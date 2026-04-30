@@ -80,7 +80,7 @@ export default function AutoRepairCustomerNotesSection({ storeId }: Props) {
         .order("created_at", { ascending: false })
         .limit(200);
       if (error) throw error;
-      return data as Note[];
+      return (data ?? []) as unknown as Note[];
     },
     staleTime: 30_000,
   });

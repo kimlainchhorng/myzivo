@@ -380,7 +380,7 @@ export function LodgingRoomCard({
         cancellationPolicy={cancellationPolicy}
         checkInTime={fmtTime(checkInTime)}
         checkOutTime={fmtTime(checkOutTime)}
-        onReserve={onReserve}
+        onReserve={() => onReserve({ rateCents: baseRateCents, label: "Room Only", breakfastIncluded: false })}
       />
     </>
   );

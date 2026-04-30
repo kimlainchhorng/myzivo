@@ -2299,7 +2299,7 @@ function ReelSlide({ item, currentUserId, onClose }: { item: FeedItem; currentUs
               void queryClient.invalidateQueries({ queryKey: ["reels-feed-grid"] });
             }}
             postId={interactionPostId}
-            postSource={item.source}
+            postSource={item.source === "poll" ? "user" : item.source}
             currentUserId={currentUserId}
             commentsCount={localComments}
             onCommentsCountChange={setLocalComments}
@@ -3531,7 +3531,7 @@ function FeedCard({ item, currentUserId, onOpenFullscreen, autoPlayVideo, detail
               void queryClient.invalidateQueries({ queryKey: ["reels-feed-grid"] });
             }}
             postId={interactionPostId}
-            postSource={item.source}
+            postSource={item.source === "poll" ? "user" : item.source}
             currentUserId={currentUserId}
             commentsCount={localComments}
             onCommentsCountChange={setLocalComments}
