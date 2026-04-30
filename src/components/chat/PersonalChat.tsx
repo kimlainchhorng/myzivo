@@ -280,10 +280,7 @@ export default function PersonalChat({ recipientId, recipientName, recipientAvat
   const [showPollCreator, setShowPollCreator] = useState(false);
   const [showQuickReplies, setShowQuickReplies] = useState(false);
   const [showContactPicker, setShowContactPicker] = useState(false);
-<<<<<<< HEAD
   const [isDragOver, setIsDragOver] = useState(false);
-=======
->>>>>>> 716cc08ee549516371a6a5d93f3b5d895434aef7
   const [pendingLockedFile, setPendingLockedFile] = useState<File | null>(null);
   const [chatStyle, setChatStyle] = useState({ wallpaper: "default", themeColor: "default", fontSize: "medium" });
   const [callEvents, setCallEvents] = useState<CallEvent[]>([]);
@@ -2568,10 +2565,7 @@ export default function PersonalChat({ recipientId, recipientName, recipientAvat
           toast.success("Contact shared");
         }}
       />
-<<<<<<< HEAD
 
-=======
->>>>>>> 716cc08ee549516371a6a5d93f3b5d895434aef7
     </motion.div>
   );
 

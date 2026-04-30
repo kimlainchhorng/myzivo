@@ -1,7 +1,8 @@
 // channel-broadcast — owner/admin posts a message to a channel, fans out push
 // notifications to all subscribers via the existing device_tokens table.
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
-import { scanContentForLinks, logBlockedAttempt } from "../_shared/contentLinkValidation.ts";
+import { scanContentForLinks, logBlockedAttempt, isAbuseThresholdExceeded } from "../_shared/contentLinkValidation.ts";
+import { isLikelyMaliciousBot } from "../_shared/botDetection.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -13,6 +14,12 @@ Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
   try {
+    if (isLikelyMaliciousBot(req.headers)) {
+      return new Response(JSON.stringify({ error: "forbidden" }), {
+        status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
     const authHeader = req.headers.get("Authorization");
     if (!authHeader) {
       return new Response(JSON.stringify({ error: "unauthorized" }), {
@@ -33,6 +40,12 @@ Deno.serve(async (req) => {
     if (!u.user) {
       return new Response(JSON.stringify({ error: "unauthorized" }), {
         status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    if (await isAbuseThresholdExceeded(supabase, u.user.id)) {
+      return new Response(JSON.stringify({ error: "rate_limited", code: "abuse_threshold_exceeded", message: "Too many recent blocked submissions. Try again in 24 hours." }), {
+        status: 429, headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
 

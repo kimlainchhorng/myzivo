@@ -7,6 +7,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { motion } from "framer-motion";
+import { toast } from "sonner";
 
 const PARTNER_TYPES = [
   {
@@ -94,7 +95,11 @@ export default function PartnerWithZivo() {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    alert("Thank you for your interest! Our partnerships team will contact you within 2-3 business days.");
+    toast.success("Thanks for your interest!", {
+      description: "Our partnerships team will contact you within 2–3 business days.",
+      duration: 6000,
+    });
+    (e.currentTarget as HTMLFormElement).reset();
   };
 
   return (

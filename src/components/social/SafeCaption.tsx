@@ -109,7 +109,7 @@ export default function SafeCaption({ text, className }: SafeCaptionProps) {
   const handleHashtagClick = (e: React.MouseEvent, tag: string) => {
     e.stopPropagation();
     e.preventDefault();
-    navigate(`/explore?tag=${encodeURIComponent(tag)}`);
+    navigate(`/tag/${encodeURIComponent(tag.toLowerCase())}`);
   };
 
   const handleMentionClick = async (e: React.MouseEvent, username: string) => {

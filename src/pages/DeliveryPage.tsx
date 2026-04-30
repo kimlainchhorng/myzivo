@@ -260,11 +260,8 @@ export default function DeliveryPage() {
   const [recipientPhone, setRecipientPhone] = useState("");
   const [recipientEmail, setRecipientEmail] = useState("");
   const [showDeliveryHistory, setShowDeliveryHistory] = useState(false);
-  const [pastDeliveries] = useState([
-    { id: "1", to: "123 Main St", status: "Delivered", date: "Yesterday", tracking: "ZD-A1B2C3" },
-    { id: "2", to: "456 Oak Ave", status: "Delivered", date: "3 days ago", tracking: "ZD-D4E5F6" },
-    { id: "3", to: "789 Pine Rd", status: "In Transit", date: "Today", tracking: "ZD-G7H8I9" },
-  ]);
+  // TODO: replace with real query of the user's delivery history
+  const [pastDeliveries] = useState<Array<{ id: string; to: string; status: string; date: string; tracking: string }>>([]);
   const [expressPickup, setExpressPickup] = useState(false);
   const [holdAtFacility, setHoldAtFacility] = useState(false);
   const [saturdayDelivery, setSaturdayDelivery] = useState(false);
@@ -273,11 +270,8 @@ export default function DeliveryPage() {
   // === NEW: Roadie-inspired features ===
   const [peerDelivery, setPeerDelivery] = useState(false);
   const [showDriverBids, setShowDriverBids] = useState(false);
-  const [driverBids] = useState([
-    { id: "b1", name: "Alex M.", rating: 4.9, vehicle: "SUV", price: 18.99, eta: "45 min", trips: 342 },
-    { id: "b2", name: "Jordan K.", rating: 4.7, vehicle: "Sedan", price: 15.99, eta: "55 min", trips: 128 },
-    { id: "b3", name: "Sam R.", rating: 4.8, vehicle: "Truck", price: 22.99, eta: "35 min", trips: 567 },
-  ]);
+  // TODO: replace with real bids from the peer-delivery marketplace API
+  const [driverBids] = useState<Array<{ id: string; name: string; rating: number; vehicle: string; price: number; eta: string; trips: number }>>([]);
   const [selectedBid, setSelectedBid] = useState<string | null>(null);
   const [vehicleTypeForDelivery, setVehicleTypeForDelivery] = useState<"any" | "sedan" | "suv" | "truck" | "van">("any");
   const [itemPhotos, setItemPhotos] = useState<string[]>([]);
@@ -941,6 +935,12 @@ export default function DeliveryPage() {
                       <p className="text-xs font-bold text-foreground">🚗 Driver Offers ({driverBids.length})</p>
                       <span className="text-[10px] text-amber-500 font-bold animate-pulse">Expires in {bidExpiry} min</span>
                     </div>
+                    {driverBids.length === 0 && (
+                      <div className="rounded-xl bg-muted/30 border border-border/30 p-4 text-center">
+                        <p className="text-xs text-muted-foreground">Waiting for nearby drivers to bid…</p>
+                        <p className="text-[10px] text-muted-foreground/70 mt-1">First offers usually arrive within a few minutes.</p>
+                      </div>
+                    )}
                     {driverBids.map(bid => (
                       <button key={bid.id} onClick={() => { setSelectedBid(bid.id); toast.success(`Selected ${bid.name}'s offer!`); }}
                         className={cn("w-full flex items-center gap-3 p-3 rounded-xl border transition-all touch-manipulation active:scale-[0.98] text-left",
@@ -1345,6 +1345,12 @@ export default function DeliveryPage() {
                   {showDeliveryHistory && (
                     <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: "auto" }} exit={{ opacity: 0, height: 0 }} className="overflow-hidden">
                       <div className="space-y-2 mt-3">
+                        {pastDeliveries.length === 0 && (
+                          <div className="rounded-xl bg-muted/30 p-4 text-center">
+                            <p className="text-xs text-muted-foreground">No past deliveries yet.</p>
+                            <p className="text-[10px] text-muted-foreground/70 mt-1">Your delivery history will appear here.</p>
+                          </div>
+                        )}
                         {pastDeliveries.map(d => (
                           <div key={d.id} className="rounded-xl bg-muted/30 p-3">
                             <div className="flex justify-between items-center">

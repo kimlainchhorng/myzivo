@@ -58,11 +58,7 @@ const LOCK_UNLOCK_PLANS = new Set(["chat", "pro"]);
 
 export default function ChatAttachMenu({
   open, onClose, onImageSelect, onVideoSelect, onLocationShare, onToggleDisappearing, onLockedImageSelect,
-<<<<<<< HEAD
   onSendGift, onOpenWallet, onScanDocument, onFileSelect, onCreatePoll, onShareContact, disappearingEnabled, disappearingLabel,
-=======
-  onSendGift, onOpenWallet, onScanDocument, onFileSelect, onCreatePoll, onShareContact, disappearingEnabled,
->>>>>>> 716cc08ee549516371a6a5d93f3b5d895434aef7
 }: ChatAttachMenuProps) {
   const { isPlus, plan } = useZivoPlus();
   const navigate = useNavigate();

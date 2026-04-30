@@ -6,7 +6,7 @@ import { useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { motion } from "framer-motion";
 import {
-  ArrowLeft, Share2, Bookmark, ThumbsUp, Eye, Clock,
+  ArrowLeft, Share2, Bookmark, ThumbsUp, Clock,
   ChevronRight, Star, Sparkles, Heart, CheckCircle,
   BookOpen, TrendingUp, Users, Zap, Crown, Gift,
   Video, DollarSign, MessageCircle, Target, Shield,
@@ -138,8 +138,17 @@ export default function MonetizationArticleDetailPage() {
     .filter((a) => !a.toLowerCase().includes((slug || "").replace(/-/g, " ").slice(0, 15).toLowerCase()))
     .slice(0, 4);
 
-  const viewCount = `${Math.floor(100 + Math.random() * 900)}.${Math.floor(1 + Math.random() * 9)}K views`;
-  const readTime = `${3 + Math.floor(Math.random() * 8)} min read`;
+  // Compute real read time from content word count (~225 wpm average reading speed)
+  const wordCount = (() => {
+    let words = 0;
+    for (const section of content.sections) {
+      words += section.heading.split(/\s+/).filter(Boolean).length;
+      words += section.body.split(/\s+/).filter(Boolean).length;
+    }
+    for (const tip of content.tips) words += tip.split(/\s+/).filter(Boolean).length;
+    return words;
+  })();
+  const readTime = `${Math.max(1, Math.round(wordCount / 225))} min read`;
 
   return (
     <div className="min-h-dvh bg-background pb-24">
@@ -186,7 +195,6 @@ export default function MonetizationArticleDetailPage() {
         <div>
           <h2 className="text-2xl font-bold leading-tight mb-3">{title}</h2>
           <div className="flex items-center gap-4 text-[11px] text-muted-foreground">
-            <span className="flex items-center gap-1"><Eye className="w-3 h-3" /> {viewCount}</span>
             <span className="flex items-center gap-1"><Clock className="w-3 h-3" /> {readTime}</span>
             <span className="flex items-center gap-1"><Star className="w-3 h-3" /> ZIVO Academy</span>
           </div>

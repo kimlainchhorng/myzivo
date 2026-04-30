@@ -4,7 +4,7 @@
  */
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Bookmark, BookmarkCheck, VolumeX, UserX, Flag, Link2, Info, X, BarChart3 } from "lucide-react";
+import { Bookmark, BookmarkCheck, VolumeX, UserX, Flag, Link2, Info, X, BarChart3, Pencil, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import type { PostActionTarget } from "@/hooks/usePostActions";
 
@@ -19,9 +19,11 @@ interface Props {
   onReport: (reason: string) => void;
   shareUrl?: string;
   authorName?: string;
-  /** Show "View insights" row when the caller authored this post */
+  /** Show "View insights" / "Edit caption" / "Delete post" rows when the caller authored this post */
   isOwnPost?: boolean;
   onViewInsights?: () => void;
+  onEditCaption?: () => void;
+  onDeletePost?: () => void;
 }
 
 const REPORT_REASONS = [
@@ -39,9 +41,9 @@ export default function PostActionsMenu({
   open, onClose, target, isBookmarked,
   onToggleBookmark, onMute, onBlock, onReport,
   shareUrl, authorName,
-  isOwnPost, onViewInsights,
+  isOwnPost, onViewInsights, onEditCaption, onDeletePost,
 }: Props) {
-  const [view, setView] = useState<"main" | "report" | "why">("main");
+  const [view, setView] = useState<"main" | "report" | "why" | "confirm-delete">("main");
 
   const handleClose = () => { setView("main"); onClose(); };
 
@@ -80,15 +82,33 @@ export default function PostActionsMenu({
 
             {view === "main" && (
               <div className="px-2">
-                {/* Author-only insights row, surfaced first */}
-                {isOwnPost && onViewInsights && (
+                {/* Author-only rows: insights / edit / delete, surfaced first */}
+                {isOwnPost && (onViewInsights || onEditCaption || onDeletePost) && (
                   <>
-                    <MenuRow
-                      icon={<BarChart3 className="h-5 w-5 text-primary" />}
-                      label="View insights"
-                      sub="See who engaged with this post"
-                      onClick={() => { onViewInsights(); handleClose(); }}
-                    />
+                    {onViewInsights && (
+                      <MenuRow
+                        icon={<BarChart3 className="h-5 w-5 text-primary" />}
+                        label="View insights"
+                        sub="See who engaged with this post"
+                        onClick={() => { onViewInsights(); handleClose(); }}
+                      />
+                    )}
+                    {onEditCaption && (
+                      <MenuRow
+                        icon={<Pencil className="h-5 w-5 text-foreground" />}
+                        label="Edit caption"
+                        sub="Update the text of this post"
+                        onClick={() => { onEditCaption(); handleClose(); }}
+                      />
+                    )}
+                    {onDeletePost && (
+                      <MenuRow
+                        icon={<Trash2 className="h-5 w-5 text-red-500" />}
+                        label="Delete post"
+                        sub="Permanently remove from your profile"
+                        onClick={() => setView("confirm-delete")}
+                      />
+                    )}
                     <hr className="my-2 border-border/50" />
                   </>
                 )}
@@ -172,6 +192,38 @@ export default function PostActionsMenu({
                     <li>A small randomization factor to surface fresh content</li>
                   </ul>
                   <p className="pt-2 text-xs">Posts from accounts you mute or block never appear here.</p>
+                </div>
+              </div>
+            )}
+
+            {view === "confirm-delete" && (
+              <div className="px-4 py-2">
+                <div className="mb-3 flex items-center justify-between">
+                  <h3 className="text-base font-semibold text-red-600">Delete this post?</h3>
+                  <button onClick={() => setView("main")} className="text-sm text-muted-foreground">Back</button>
+                </div>
+                <div className="rounded-lg bg-red-500/5 border border-red-500/20 p-4 text-sm text-foreground space-y-2">
+                  <p>This will permanently remove the post from your profile and the feed.</p>
+                  <ul className="ml-4 list-disc space-y-1 text-muted-foreground text-xs">
+                    <li>Likes, reactions, and comments will be deleted with it</li>
+                    <li>Anyone who reposted you will keep their copy unless they delete it</li>
+                    <li>This cannot be undone</li>
+                  </ul>
+                </div>
+                <div className="mt-4 flex gap-2">
+                  <button
+                    onClick={() => setView("main")}
+                    className="flex-1 rounded-xl border border-border bg-background px-3 py-2.5 text-sm font-medium hover:bg-muted active:scale-95 transition-transform min-h-[44px]"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    onClick={() => { onDeletePost?.(); handleClose(); }}
+                    className="flex-1 rounded-xl bg-red-600 px-3 py-2.5 text-sm font-semibold text-white hover:bg-red-700 active:scale-95 transition-transform min-h-[44px] flex items-center justify-center gap-2"
+                  >
+                    <Trash2 className="h-4 w-4" />
+                    Delete
+                  </button>
                 </div>
               </div>
             )}

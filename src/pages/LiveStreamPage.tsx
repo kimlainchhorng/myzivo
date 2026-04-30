@@ -49,6 +49,8 @@ import Hammer from "lucide-react/dist/esm/icons/hammer";
 import BookOpen from "lucide-react/dist/esm/icons/book-open";
 import Target from "lucide-react/dist/esm/icons/target";
 import Pin from "lucide-react/dist/esm/icons/pin";
+import Coins from "lucide-react/dist/esm/icons/coins";
+import Clock from "lucide-react/dist/esm/icons/clock";
 import Calendar from "lucide-react/dist/esm/icons/calendar";
 import Plane from "lucide-react/dist/esm/icons/plane";
 import Megaphone from "lucide-react/dist/esm/icons/megaphone";
@@ -129,6 +131,8 @@ function LiveWatcher({ stream, onLeave }: { stream: LiveStream; onLeave: () =>vo
  const verifiedCacheRef = useRef<Map<string, boolean>>(new Map());
  const [elapsed, setElapsed] = useState(0);
  const [streamEnded, setStreamEnded] = useState(stream.status === "ended");
+ const [pinnedDismissed, setPinnedDismissed] = useState(false);
+ const [followed, setFollowed] = useState(false);
 
  const lastTapRef = useRef<number>(0);
  const chatEndRef = useRef<HTMLDivElement>(null);
@@ -543,20 +547,29 @@ function LiveWatcher({ stream, onLeave }: { stream: LiveStream; onLeave: () =>vo
 <X className="h-4 w-4 text-white" />
 </button>
 
-<div className="flex items-center gap-2 bg-black/40 backdrop-blur-sm rounded-full px-2 py-1 flex-1 min-w-0">
-<Avatar className="h-8 w-8 border-2 border-red-500 shrink-0">
+<div className="flex items-center gap-2 bg-black/40 backdrop-blur-sm rounded-full pl-1 pr-1 py-0.5 flex-1 min-w-0">
+<Avatar className="h-7 w-7 border-2 border-red-500 shrink-0">
 <AvatarImage src={stream.host_avatar || undefined} />
 <AvatarFallback className="bg-red-500/20 text-red-400 text-xs font-bold">
  {stream.host_name[0]}
 </AvatarFallback>
 </Avatar>
-<div className="flex-1 min-w-0">
+<div className="flex-1 min-w-0 px-1">
 <p className="text-white text-xs font-bold truncate leading-tight inline-flex items-center gap-1">
 <span className="truncate">{stream.host_name}</span>
  {isBlueVerified(stream.host_is_verified) &&<VerifiedBadge size={11} interactive={false} />}
 </p>
 <p className="text-white/50 text-[10px] leading-tight">{stream.topic}</p>
 </div>
+<button
+  onClick={() => setFollowed((v) => !v)}
+  className={cn(
+    "shrink-0 px-2.5 h-7 rounded-full text-[11px] font-bold transition-all active:scale-95",
+    followed ? "bg-white/15 text-white border border-white/20" : "bg-rose-500 text-white shadow-md shadow-rose-500/30",
+  )}
+>
+  {followed ? "Following" : "+ Follow"}
+</button>
 </div>
 
 <div className="flex items-center gap-1 bg-black/40 backdrop-blur-sm rounded-full px-2 py-1">
@@ -576,53 +589,53 @@ function LiveWatcher({ stream, onLeave }: { stream: LiveStream; onLeave: () =>vo
 </div>
 </div>
 
-{/* Top 3 Fans (gifters) display */}
-<div className="relative z-10 px-4 mt-2">
-  <div className="flex items-center gap-1.5 bg-black/40 backdrop-blur-sm rounded-full px-2 py-1 w-fit">
-    <Crown className="h-3 w-3 text-amber-300" />
-    <span className="text-[10px] font-bold text-amber-200">Top fans</span>
-    <div className="flex -space-x-1.5 ml-1">
-      <Avatar className="h-5 w-5 ring-1 ring-amber-400">
-        <AvatarImage src="https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=120&q=70&auto=format&fit=crop" />
-        <AvatarFallback className="text-[8px]">D</AvatarFallback>
-      </Avatar>
-      <Avatar className="h-5 w-5 ring-1 ring-zinc-300">
-        <AvatarImage src="https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=120&q=70&auto=format&fit=crop" />
-        <AvatarFallback className="text-[8px]">Q</AvatarFallback>
-      </Avatar>
-      <Avatar className="h-5 w-5 ring-1 ring-orange-500">
-        <AvatarImage src="https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=120&q=70&auto=format&fit=crop" />
-        <AvatarFallback className="text-[8px]">R</AvatarFallback>
-      </Avatar>
+{/* Slim Gift Goal progress bar — directly below LIVE row */}
+<div className="relative z-10 px-4 mt-1.5">
+  <div className="flex items-center gap-2 bg-black/35 backdrop-blur-sm rounded-full pl-2 pr-2.5 py-1 border border-amber-500/30">
+    <Target className="h-3 w-3 text-amber-300 shrink-0" />
+    <div className="flex-1 h-1 rounded-full bg-white/10 overflow-hidden">
+      <div className="h-full bg-gradient-to-r from-amber-400 via-orange-500 to-rose-500 transition-all duration-700" style={{ width: "42.8%" }} />
     </div>
+    <span className="text-[10px] font-mono font-bold text-amber-200 tabular-nums shrink-0">4,280<span className="text-amber-200/50">/10K</span></span>
   </div>
 </div>
 
-{/* Pinned message banner */}
-<div className="relative z-10 px-4 mt-2">
-  <div className="flex items-center gap-2 bg-amber-500/15 backdrop-blur-md border border-amber-500/30 rounded-2xl px-3 py-1.5">
-    <Pin className="h-3 w-3 text-amber-300 shrink-0" />
-    <p className="text-[11px] text-amber-100 font-medium truncate">
-      Welcome to my stream — hit follow if you're new
-    </p>
+{/* Dismissible pinned message */}
+{!pinnedDismissed && (
+  <div className="relative z-10 px-4 mt-1.5">
+    <div className="flex items-center gap-2 bg-amber-500/15 backdrop-blur-md border border-amber-500/30 rounded-full pl-2 pr-1 py-1">
+      <Pin className="h-3 w-3 text-amber-300 shrink-0" />
+      <p className="text-[11px] text-amber-100 font-medium truncate flex-1">
+        Welcome — hit follow if you're new
+      </p>
+      <button
+        onClick={() => setPinnedDismissed(true)}
+        className="w-5 h-5 rounded-full hover:bg-white/10 flex items-center justify-center shrink-0"
+        aria-label="Dismiss pinned message"
+      >
+        <X className="h-3 w-3 text-amber-200/70" />
+      </button>
+    </div>
   </div>
-</div>
+)}
 
-{/* Gift goal progress bar */}
-<div className="relative z-10 px-4 mt-2">
-  <div className="bg-black/40 backdrop-blur-sm rounded-2xl p-2 border border-amber-500/20">
-    <div className="flex items-center justify-between mb-1">
-      <div className="flex items-center gap-1">
-        <Target className="h-3 w-3 text-amber-300" />
-        <span className="text-[10px] font-bold text-amber-200">Gift goal</span>
-      </div>
-      <span className="text-[10px] font-mono text-amber-100">
-        4,280 / 10,000
-      </span>
-    </div>
-    <div className="h-1.5 rounded-full bg-white/10 overflow-hidden">
-      <div className="h-full bg-gradient-to-r from-amber-500 via-orange-500 to-rose-500" style={{ width: "42.8%" }} />
-    </div>
+{/* Top Fans overlay (top-right floating) */}
+<div className="absolute right-3 z-20 flex items-center gap-1.5 bg-black/45 backdrop-blur-sm rounded-full pl-2 pr-2 py-1" style={{ top: "calc(env(safe-area-inset-top, 0px) + 56px)" }}>
+  <Crown className="h-3 w-3 text-amber-300" />
+  <span className="text-[9px] font-bold text-amber-200 uppercase tracking-wider">Top</span>
+  <div className="flex -space-x-1.5">
+    <Avatar className="h-5 w-5 ring-1.5 ring-amber-400">
+      <AvatarImage src="https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=120&q=70&auto=format&fit=crop" />
+      <AvatarFallback className="text-[8px]">1</AvatarFallback>
+    </Avatar>
+    <Avatar className="h-5 w-5 ring-1.5 ring-zinc-300">
+      <AvatarImage src="https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=120&q=70&auto=format&fit=crop" />
+      <AvatarFallback className="text-[8px]">2</AvatarFallback>
+    </Avatar>
+    <Avatar className="h-5 w-5 ring-1.5 ring-orange-500">
+      <AvatarImage src="https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=120&q=70&auto=format&fit=crop" />
+      <AvatarFallback className="text-[8px]">3</AvatarFallback>
+    </Avatar>
   </div>
 </div>
 
@@ -953,6 +966,18 @@ export default function LiveStreamPage() {
  const navigate = useNavigate();
  const [activeStream, setActiveStream] = useState<LiveStream | null>(null);
  const [filter, setFilter] = useState<"all" | "live" | "scheduled" | "popular" | "following" | "nearby" | "pk" | "voice" | "multi">("all");
+ const [showScrollTop, setShowScrollTop] = useState(false);
+ const [selectedCountry, setSelectedCountry] = useState("global");
+ const [rewardClaimed, setRewardClaimed] = useState(false);
+ const [completedMissions, setCompletedMissions] = useState<number[]>([0, 1]);
+ const [reminded, setReminded] = useState<string[]>(["maya"]);
+ const [followedCreators, setFollowedCreators] = useState<string[]>([]);
+ const [feedbackToast, setFeedbackToast] = useState(false);
+ useEffect(() => {
+   const handler = () =>setShowScrollTop(window.scrollY > 600);
+   window.addEventListener("scroll", handler, { passive: true });
+   return () =>window.removeEventListener("scroll", handler);
+ }, []);
  const [searchQuery, setSearchQuery] = useState("");
 
  const { data: streams = [], isLoading, isFetching, refetch } = useQuery({
@@ -1253,12 +1278,15 @@ export default function LiveStreamPage() {
  { flag: "PH", label: "Philippines", id: "ph" },
  { flag: "IN", label: "India", id: "in" },
  { flag: "MY", label: "Malaysia", id: "my" },
- ].map((c, i) =>(
+ ].map((c) =>{
+   const active = selectedCountry === c.id;
+   return (
 <button
  key={c.id}
+ onClick={() =>{ setSelectedCountry(c.id); toast.success(`Showing streams from ${c.label}`); }}
  className={cn(
  "shrink-0 flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold transition-colors border",
- i === 0
+ active
  ? "bg-gradient-to-r from-red-500 to-rose-500 text-white border-transparent shadow-md shadow-rose-500/20"
  : "bg-card text-foreground border-border/40 hover:border-red-500/40",
  )}
@@ -1266,24 +1294,44 @@ export default function LiveStreamPage() {
 <span className="text-sm">{c.flag}</span>
 <span>{c.label}</span>
 </button>
- ))}
+   );
+ })}
 </div>
 </div>
 
  {/* ─── Daily rewards / login bonus banner ─── */}
 <div className="px-4 pt-2 pb-1">
-<button className="w-full relative rounded-2xl overflow-hidden p-3 bg-gradient-to-r from-amber-500 via-orange-500 to-rose-500 text-left active:scale-[0.99] transition-transform shadow-md shadow-amber-500/20">
+<button
+  onClick={() =>{
+    if (rewardClaimed) {
+      toast.info("Already claimed today — come back tomorrow");
+    } else {
+      setRewardClaimed(true);
+      toast.success("100 coins added to your wallet!", { description: "Daily reward claimed" });
+    }
+  }}
+  className={cn(
+    "w-full relative rounded-2xl overflow-hidden p-3 text-left active:scale-[0.99] transition-transform shadow-md",
+    rewardClaimed
+      ? "bg-gradient-to-r from-emerald-500 via-teal-500 to-cyan-500 shadow-emerald-500/20"
+      : "bg-gradient-to-r from-amber-500 via-orange-500 to-rose-500 shadow-amber-500/20",
+  )}
+>
 <div className="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1607344645866-009c320b63e0?w=600&q=50&auto=format&fit=crop')] bg-cover bg-center mix-blend-overlay opacity-30" />
 <div className="relative z-10 flex items-center gap-3">
 <div className="w-11 h-11 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center">
 <Gift className="w-5 h-5 text-white" />
 </div>
 <div className="flex-1 min-w-0">
-<p className="text-white font-bold text-[13px] leading-tight">Daily login reward</p>
-<p className="text-white/80 text-[10px]">Claim 100 coins & VIP perks today</p>
+<p className="text-white font-bold text-[13px] leading-tight">
+  {rewardClaimed ? "Reward claimed!" : "Daily login reward"}
+</p>
+<p className="text-white/80 text-[10px]">
+  {rewardClaimed ? "Come back tomorrow for more" : "Claim 100 coins & VIP perks today"}
+</p>
 </div>
 <div className="flex items-center gap-1 bg-white/25 backdrop-blur-sm rounded-full px-2.5 py-1.5">
-<span className="text-white text-[11px] font-bold">Claim</span>
+<span className="text-white text-[11px] font-bold">{rewardClaimed ? "Done" : "Claim"}</span>
 <ChevronRight className="w-3 h-3 text-white" />
 </div>
 </div>
@@ -2122,38 +2170,51 @@ export default function LiveStreamPage() {
 <div className="flex items-center justify-between mb-2.5">
 <h2 className="font-bold text-sm text-foreground flex items-center gap-1.5">
 <Target className="w-4 h-4 text-emerald-500" />Daily Missions
-<Badge className="bg-emerald-500 text-white border-0 text-[9px]">2/5 done</Badge>
+<Badge className="bg-emerald-500 text-white border-0 text-[9px]">{completedMissions.length}/5 done</Badge>
 </h2>
 <span className="text-[11px] text-muted-foreground">+220 coins</span>
 </div>
 <div className="rounded-2xl border border-emerald-500/30 bg-gradient-to-br from-emerald-500/5 via-card to-teal-500/5 p-2 space-y-1.5">
  {[
- { label: "Watch a live stream for 5 min", reward: 30, done: true },
- { label: "Send 1 gift to any host", reward: 50, done: true },
- { label: "Like 3 streams", reward: 20, done: false, progress: "1/3" },
- { label: "Join a voice room", reward: 40, done: false },
- { label: "Share a stream", reward: 80, done: false, badge: "BIG" },
- ].map((m, i) =>(
-<div key={i} className="flex items-center gap-2.5 px-2.5 py-2 rounded-xl bg-background/40">
+ { label: "Watch a live stream for 5 min", reward: 30 },
+ { label: "Send 1 gift to any host", reward: 50 },
+ { label: "Like 3 streams", reward: 20, progress: "1/3" },
+ { label: "Join a voice room", reward: 40 },
+ { label: "Share a stream", reward: 80, badge: "BIG" },
+ ].map((m, i) =>{
+   const done = completedMissions.includes(i);
+   return (
+<button
+  key={i}
+  onClick={() =>{
+    setCompletedMissions((prev) => {
+      if (prev.includes(i)) return prev.filter((x) =>x !== i);
+      toast.success(`Mission complete! +${m.reward} coins`);
+      return [...prev, i];
+    });
+  }}
+  className="w-full flex items-center gap-2.5 px-2.5 py-2 rounded-xl bg-background/40 hover:bg-background/60 active:scale-[0.99] transition-all text-left"
+>
 <div className={cn(
  "w-7 h-7 rounded-full flex items-center justify-center shrink-0 text-[11px] font-bold",
- m.done ? "bg-emerald-500 text-white" : "bg-muted text-muted-foreground border border-border",
+ done ? "bg-emerald-500 text-white" : "bg-muted text-muted-foreground border border-border",
  )}>
- {m.done ? "" : i + 1}
+ {done ? "✓" : i + 1}
 </div>
 <div className="flex-1 min-w-0">
-<p className={cn("text-[12px] font-semibold leading-tight", m.done ? "text-muted-foreground line-through" : "text-foreground")}>
+<p className={cn("text-[12px] font-semibold leading-tight", done ? "text-muted-foreground line-through" : "text-foreground")}>
  {m.label}
 </p>
- {m.progress &&<p className="text-[10px] text-emerald-600 font-medium">Progress: {m.progress}</p>}
+ {m.progress && !done &&<p className="text-[10px] text-emerald-600 font-medium">Progress: {m.progress}</p>}
 </div>
  {m.badge &&<Badge className="bg-amber-500 text-white border-0 text-[8px] font-bold shrink-0">{m.badge}</Badge>}
 <div className="flex items-center gap-0.5 shrink-0">
-<span className="text-[11px]"></span>
+<Coins className="w-3 h-3 text-amber-500" />
 <span className="text-[11px] font-bold text-amber-600 dark:text-amber-400">+{m.reward}</span>
 </div>
-</div>
- ))}
+</button>
+   );
+ })}
 </div>
 </div>
 
@@ -2170,7 +2231,10 @@ export default function LiveStreamPage() {
  { name: "Maya Chen", title: "Album launch party ", time: "Tonight 8PM", topic: "Music", img: "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=200&q=70&auto=format&fit=crop", reminded: true },
  { name: "Jin Park", title: "Ranked grind to Diamond", time: "Tomorrow 7PM", topic: "Gaming", img: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=200&q=70&auto=format&fit=crop", reminded: false },
  { name: "Lily Wong", title: "Spring makeup tutorial", time: "Sat 3PM", topic: "Beauty", img: "https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=200&q=70&auto=format&fit=crop", reminded: false },
- ].map((s, i) =>(
+ ].map((s, i) =>{
+   const key = s.name.split(" ")[0].toLowerCase();
+   const isReminded = reminded.includes(key);
+   return (
 <div key={i} className="flex items-center gap-3 p-2.5 rounded-2xl bg-card border border-border/30">
 <Avatar className="h-12 w-12 shrink-0">
 <AvatarImage src={s.img} />
@@ -2182,16 +2246,28 @@ export default function LiveStreamPage() {
 <Badge className="bg-muted text-muted-foreground border-border text-[8px] py-0 px-1.5">{s.topic}</Badge>
 </div>
 <p className="text-[12px] text-foreground/90 line-clamp-1">{s.title}</p>
-<p className="text-[10px] text-blue-600 dark:text-blue-400 font-semibold mt-0.5">⏰ {s.time}</p>
+<p className="text-[10px] text-blue-600 dark:text-blue-400 font-semibold mt-0.5"><Clock className="inline w-2.5 h-2.5" /> {s.time}</p>
 </div>
-<button className={cn(
- "shrink-0 px-3 py-1.5 rounded-full text-[11px] font-bold transition-all",
- s.reminded ? "bg-blue-500/15 text-blue-600 dark:text-blue-400 border border-blue-500/30" : "bg-blue-500 text-white",
+<button
+  onClick={() =>{
+    setReminded((prev) => {
+      if (prev.includes(key)) {
+        toast.info(`Reminder removed for ${s.name}`);
+        return prev.filter((x) =>x !== key);
+      }
+      toast.success(`Reminder set for ${s.name} at ${s.time}`);
+      return [...prev, key];
+    });
+  }}
+  className={cn(
+ "shrink-0 px-3 py-1.5 rounded-full text-[11px] font-bold transition-all active:scale-95",
+ isReminded ? "bg-blue-500/15 text-blue-600 dark:text-blue-400 border border-blue-500/30" : "bg-blue-500 text-white",
  )}>
- {s.reminded ? " Set" : "+ Remind"}
+ {isReminded ? "Reminded" : "+ Remind"}
 </button>
 </div>
- ))}
+   );
+ })}
 </div>
 </div>
 
@@ -2636,7 +2712,9 @@ export default function LiveStreamPage() {
  { name: "Diego R.", growth: "+220%", followers: "39K", country: "MX", img: "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=200&q=70&auto=format&fit=crop" },
  { name: "Zara K.", growth: "+200%", followers: "31K", country: "ID", img: "https://images.unsplash.com/photo-1524504388940-b1c1722653e1?w=200&q=70&auto=format&fit=crop" },
  { name: "Theo M.", growth: "+180%", followers: "28K", country: "FR", img: "https://images.unsplash.com/photo-1492562080023-ab3db95bfbce?w=200&q=70&auto=format&fit=crop" },
- ].map((s) =>(
+ ].map((s) =>{
+   const isFollowed = followedCreators.includes(s.name);
+   return (
 <div key={s.name} className="shrink-0 w-[120px] rounded-2xl bg-card border border-emerald-500/30 p-3 text-center">
 <div className="relative inline-block mb-2">
 <Avatar className="h-14 w-14 ring-2 ring-emerald-500/40 mx-auto">
@@ -2652,11 +2730,27 @@ export default function LiveStreamPage() {
 <Badge className="bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border-emerald-500/20 text-[9px] mt-1">
  {s.growth}
 </Badge>
-<button className="mt-2 w-full py-1 rounded-full bg-emerald-500 text-white text-[10px] font-bold active:scale-95 transition-transform">
- + Follow
+<button
+  onClick={() =>{
+    setFollowedCreators((prev) => {
+      if (prev.includes(s.name)) {
+        toast.info(`Unfollowed ${s.name}`);
+        return prev.filter((x) =>x !== s.name);
+      }
+      toast.success(`Following ${s.name}!`);
+      return [...prev, s.name];
+    });
+  }}
+  className={cn(
+    "mt-2 w-full py-1 rounded-full text-[10px] font-bold active:scale-95 transition-transform",
+    isFollowed ? "bg-emerald-500/15 text-emerald-700 dark:text-emerald-300 border border-emerald-500/30" : "bg-emerald-500 text-white",
+  )}
+>
+ {isFollowed ? "Following" : "+ Follow"}
 </button>
 </div>
- ))}
+   );
+ })}
 </div>
 </div>
 
@@ -3079,6 +3173,34 @@ export default function LiveStreamPage() {
 <Suspense fallback={null}>
 <ZivoMobileNav />
 </Suspense>
+
+{/* Floating Back-to-Top FAB + Quick Go-Live shortcut */}
+<AnimatePresence>
+  {showScrollTop && (
+    <motion.div
+      initial={{ opacity: 0, y: 20, scale: 0.8 }}
+      animate={{ opacity: 1, y: 0, scale: 1 }}
+      exit={{ opacity: 0, y: 20, scale: 0.8 }}
+      className="fixed right-4 z-[60] flex flex-col gap-2"
+      style={{ bottom: "calc(env(safe-area-inset-bottom, 0px) + 88px)" }}
+    >
+      <button
+        onClick={handleGoLive}
+        aria-label="Go Live"
+        className="w-12 h-12 rounded-full bg-gradient-to-br from-rose-500 to-red-600 flex items-center justify-center shadow-xl shadow-rose-500/40 active:scale-90 transition-transform"
+      >
+        <Plus className="h-5 w-5 text-white" />
+      </button>
+      <button
+        onClick={() =>window.scrollTo({ top: 0, behavior: "smooth" })}
+        aria-label="Back to top"
+        className="w-12 h-12 rounded-full bg-card border border-border/50 backdrop-blur-md flex items-center justify-center shadow-lg active:scale-90 transition-transform"
+      >
+        <ArrowLeft className="h-5 w-5 text-foreground rotate-90" />
+      </button>
+    </motion.div>
+  )}
+</AnimatePresence>
 </div>
  );
 }

@@ -62,9 +62,8 @@ export default function ScanDevicePage() {
         },
       );
       controlsRef.current = controls;
-    } catch (e) {
-      console.error(e);
-      setErrorMsg("Could not access camera. Please grant camera permission.");
+    } catch (e: any) {
+      setErrorMsg(e?.message || "Could not access camera. Please grant camera permission.");
       setStatus("error");
     }
   };

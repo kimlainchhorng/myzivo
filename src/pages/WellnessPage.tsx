@@ -7,6 +7,7 @@
 import { useMemo } from "react";
 import { useNavigate, useParams, Link } from "react-router-dom";
 import { motion } from "framer-motion";
+import { toast } from "sonner";
 import {
   ArrowLeft, Activity, Dumbbell, Heart, Brain, Stethoscope, Pill,
   UtensilsCrossed, Trophy, Footprints, Flame, Droplets, Moon,
@@ -158,10 +159,26 @@ function HubView() {
       <Card className="p-4">
         <p className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider mb-3">Quick actions</p>
         <div className="space-y-1.5">
-          <ActionRow icon={PlusIcon} label="Log a workout" onClick={() => {}} />
-          <ActionRow icon={Droplets} label="Log water intake" onClick={() => {}} />
-          <ActionRow icon={UtensilsCrossed} label="Log a meal" onClick={() => {}} />
-          <ActionRow icon={Heart} label="Add a vital reading" onClick={() => {}} />
+          <ActionRow
+            icon={PlusIcon}
+            label="Log a workout"
+            onClick={() => toast.info("Workout logging is coming soon", { description: "We'll notify you when it ships." })}
+          />
+          <ActionRow
+            icon={Droplets}
+            label="Log water intake"
+            onClick={() => toast.info("Water tracking is coming soon", { description: "We'll notify you when it ships." })}
+          />
+          <ActionRow
+            icon={UtensilsCrossed}
+            label="Log a meal"
+            onClick={() => toast.info("Meal logging is coming soon", { description: "We'll notify you when it ships." })}
+          />
+          <ActionRow
+            icon={Heart}
+            label="Add a vital reading"
+            onClick={() => toast.info("Vital tracking is coming soon", { description: "We'll notify you when it ships." })}
+          />
         </div>
       </Card>
     </div>

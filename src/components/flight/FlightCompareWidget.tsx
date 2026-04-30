@@ -2,6 +2,8 @@ import { useState } from "react";
 import { Scale, X, Plus, Clock, Plane, Luggage, Utensils, Wifi, Check } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { useNavigate } from "react-router-dom";
+import { toast } from "sonner";
 
 interface CompareFlight {
   id: string;
@@ -16,6 +18,7 @@ interface CompareFlight {
 }
 
 const FlightCompareWidget = () => {
+  const navigate = useNavigate();
   const [compareList, setCompareList] = useState<CompareFlight[]>([]);
 
   const removeFromCompare = (id: string) => {
@@ -102,7 +105,10 @@ const FlightCompareWidget = () => {
 
           {compareList.length < 3 && compareList.length > 0 && (
             <button
-              onClick={() => {}}
+              onClick={() => {
+                toast.info("Search for flights to add", { description: "Tap the compare icon on a flight in the search results." });
+                navigate("/book-flight");
+              }}
               className="flex flex-col items-center justify-center p-8 border-2 border-dashed border-border/50 rounded-2xl hover:border-sky-500/50 hover:bg-sky-500/5 transition-all"
             >
               <div className="w-16 h-16 rounded-full bg-sky-500/10 flex items-center justify-center mb-4">

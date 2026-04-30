@@ -414,6 +414,7 @@ const Reliability = lazy(() => import("./pages/Reliability"));
 const TrustStatement = lazy(() => import("./pages/TrustStatement"));
 const SecurityStatus = lazy(() => import("./pages/SecurityStatus"));
 const SavedPostsPage = lazy(() => import("./pages/SavedPostsPage"));
+const HashtagPage = lazy(() => import("./pages/HashtagPage"));
 const Status = lazy(() => import("./pages/Status"));
 const FAQPage = lazy(() => import("./pages/FAQPage"));
 const BookingReturn = lazy(() => import("./pages/BookingReturnPage"));
@@ -1126,6 +1127,7 @@ const App = () => (
                 <Route path="/security" element={<Security />} />
                 <Route path="/security-status" element={<SecurityStatus />} />
                 <Route path="/saved" element={<ProtectedRoute><SavedPostsPage /></ProtectedRoute>} />
+                <Route path="/tag/:tag" element={<HashtagPage />} />
                 <Route path="/ai-trip-planner" element={<AITripPlanner />} />
                 <Route path="/multi-city-builder" element={<MultiCityBuilder />} />
                 {/* /zivo-plus defined above */}

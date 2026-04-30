@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { ArrowLeft, Search, MessageCircle, Phone, Mail, Car, UtensilsCrossed, Plane, Hotel, Key, ChevronRight, HelpCircle, FileText, Shield, CreditCard, Star, AlertTriangle, User, ChevronLeft, Sparkles, Send, CheckCircle2, Package, Headphones } from "lucide-react";
+import { ArrowLeft, Search, MessageCircle, Phone, Mail, Car, UtensilsCrossed, Plane, Hotel, Key, ChevronRight, HelpCircle, FileText, Shield, CreditCard, Star, AlertTriangle, User, ChevronLeft, Sparkles, Send, CheckCircle2, Package, Headphones, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -10,11 +10,33 @@ import { Badge } from "@/components/ui/badge";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/contexts/AuthContext";
+import { toast } from "sonner";
+import packageJson from "../../package.json";
 
 const HelpCenter = () => {
   const navigate = useNavigate();
+  const { user } = useAuth();
   const [searchQuery, setSearchQuery] = useState("");
   const [ticketSubmitted, setTicketSubmitted] = useState(false);
+  const [submittedRefId, setSubmittedRefId] = useState<string | null>(null);
+
+  // Controlled ticket form state
+  const [ticketCategory, setTicketCategory] = useState<string>("");
+  const [ticketPriority, setTicketPriority] = useState<string>("normal");
+  const [ticketSubject, setTicketSubject] = useState<string>("");
+  const [ticketDescription, setTicketDescription] = useState<string>("");
+  const [submittingTicket, setSubmittingTicket] = useState(false);
+
+  const resetTicketForm = () => {
+    setTicketCategory("");
+    setTicketPriority("normal");
+    setTicketSubject("");
+    setTicketDescription("");
+    setTicketSubmitted(false);
+    setSubmittedRefId(null);
+  };
 
   const categories = [
     { icon: Car, label: "Rides", color: "from-primary to-teal-400", href: "#rides" },
@@ -90,9 +112,41 @@ const HelpCenter = () => {
     },
   ];
 
-  const handleTicketSubmit = (e: React.FormEvent) => {
+  const handleTicketSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setTicketSubmitted(true);
+    if (!ticketSubject.trim() || !ticketDescription.trim()) {
+      toast.error("Please fill in subject and description");
+      return;
+    }
+    if (!ticketCategory) {
+      toast.error("Please select a category");
+      return;
+    }
+    setSubmittingTicket(true);
+    try {
+      const message = `[${ticketPriority.toUpperCase()} priority]\n\n${ticketDescription.trim()}`;
+      const { data, error } = await supabase
+        .from("feedback_submissions")
+        .insert({
+          category: ticketCategory,
+          subject: ticketSubject.trim(),
+          message,
+          user_id: user?.id ?? null,
+          app_version: packageJson.version,
+          device_info: typeof navigator !== "undefined" ? navigator.userAgent.slice(0, 200) : null,
+          status: "open",
+        })
+        .select("id")
+        .single();
+      if (error) throw error;
+      setSubmittedRefId(data?.id ?? null);
+      setTicketSubmitted(true);
+      toast.success("Ticket submitted — we'll be in touch.");
+    } catch (err: any) {
+      toast.error(err?.message || "Could not submit ticket. Please try again.");
+    } finally {
+      setSubmittingTicket(false);
+    }
   };
 
   return (
@@ -350,11 +404,15 @@ const HelpCenter = () => {
                         <CheckCircle2 className="h-8 w-8 sm:h-10 sm:w-10 text-primary-foreground" />
                       </div>
                       <h3 className="font-bold text-xl sm:text-2xl mb-2">Ticket Submitted!</h3>
-                      <p className="text-sm sm:text-base text-muted-foreground mb-4 sm:mb-6">
-                        Your ticket #ZV-{Math.random().toString(36).substr(2, 9).toUpperCase()} has been created. 
-                        You'll receive a confirmation email shortly.
+                      <p className="text-sm sm:text-base text-muted-foreground mb-2">
+                        Our team typically responds within 24 hours. {user?.email ? `We'll reply to ${user.email}.` : "Sign in to track responses."}
                       </p>
-                      <Button onClick={() => setTicketSubmitted(false)} className="rounded-xl font-semibold touch-manipulation active:scale-95">
+                      {submittedRefId && (
+                        <p className="text-[11px] text-muted-foreground/70 mb-4 sm:mb-6 font-mono">
+                          Reference: {submittedRefId.slice(0, 8).toUpperCase()}
+                        </p>
+                      )}
+                      <Button onClick={resetTicketForm} className="rounded-xl font-semibold touch-manipulation active:scale-95">
                         Submit Another Ticket
                       </Button>
                     </div>
@@ -363,7 +421,7 @@ const HelpCenter = () => {
                       <div className="grid md:grid-cols-2 gap-4 sm:gap-5">
                         <div className="space-y-2">
                           <Label htmlFor="category" className="font-semibold text-sm">Category</Label>
-                          <Select required>
+                          <Select required value={ticketCategory} onValueChange={setTicketCategory}>
                             <SelectTrigger className="h-11 sm:h-12 rounded-xl">
                               <SelectValue placeholder="Select category" />
                             </SelectTrigger>
@@ -381,7 +439,7 @@ const HelpCenter = () => {
                         </div>
                         <div className="space-y-2">
                           <Label htmlFor="priority" className="font-semibold text-sm">Priority</Label>
-                          <Select defaultValue="normal">
+                          <Select value={ticketPriority} onValueChange={setTicketPriority}>
                             <SelectTrigger className="h-11 sm:h-12 rounded-xl">
                               <SelectValue />
                             </SelectTrigger>
@@ -396,20 +454,32 @@ const HelpCenter = () => {
                       </div>
                       <div className="space-y-2">
                         <Label htmlFor="subject" className="font-semibold text-sm">Subject</Label>
-                        <Input id="subject" placeholder="Brief description of your issue" required className="h-11 sm:h-12 rounded-xl" />
+                        <Input id="subject" value={ticketSubject} onChange={(e) => setTicketSubject(e.target.value)} placeholder="Brief description of your issue" required maxLength={200} className="h-11 sm:h-12 rounded-xl" />
                       </div>
                       <div className="space-y-2">
                         <Label htmlFor="description" className="font-semibold text-sm">Description</Label>
-                        <Textarea 
-                          id="description" 
-                          placeholder="Please provide as much detail as possible..." 
-                          required 
+                        <Textarea
+                          id="description"
+                          value={ticketDescription}
+                          onChange={(e) => setTicketDescription(e.target.value)}
+                          placeholder="Please provide as much detail as possible..."
+                          required
+                          maxLength={5000}
                           className="min-h-[120px] sm:min-h-[150px] rounded-xl resize-none"
                         />
                       </div>
-                      <Button type="submit" className="w-full h-12 sm:h-14 text-base sm:text-lg font-bold rounded-xl bg-gradient-to-r from-primary to-teal-400 text-primary-foreground shadow-lg shadow-primary/30 gap-2 touch-manipulation active:scale-[0.98]">
-                        <Send className="w-4 h-4 sm:w-5 sm:h-5" />
-                        Submit Ticket
+                      <Button type="submit" disabled={submittingTicket} className="w-full h-12 sm:h-14 text-base sm:text-lg font-bold rounded-xl bg-gradient-to-r from-primary to-teal-400 text-primary-foreground shadow-lg shadow-primary/30 gap-2 touch-manipulation active:scale-[0.98]">
+                        {submittingTicket ? (
+                          <>
+                            <Loader2 className="w-4 h-4 sm:w-5 sm:h-5 animate-spin" />
+                            Submitting…
+                          </>
+                        ) : (
+                          <>
+                            <Send className="w-4 h-4 sm:w-5 sm:h-5" />
+                            Submit Ticket
+                          </>
+                        )}
                       </Button>
                     </form>
                   )}

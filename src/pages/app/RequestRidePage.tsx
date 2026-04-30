@@ -110,13 +110,8 @@ const safetyFeatures = [
   { id: "audio-record", icon: Headphones, label: "Audio Recording", description: "Record ride audio for safety" },
 ];
 
-const recentRides = [
-  { id: "r1", from: "123 Main St", to: "Airport Terminal B", time: "Yesterday", price: "$28.50", vehicle: "Black" },
-  { id: "r2", from: "Home", to: "Downtown Office", time: "2 days ago", price: "$14.20", vehicle: "Standard" },
-  { id: "r3", from: "Whole Foods", to: "Home", time: "Last week", price: "$9.80", vehicle: "Green" },
-  { id: "r4", from: "Hotel Grand", to: "Convention Center", time: "Last week", price: "$11.50", vehicle: "Comfort" },
-  { id: "r5", from: "Home", to: "Airport Terminal A", time: "2 weeks ago", price: "$32.00", vehicle: "Black SUV" },
-];
+// TODO: replace with real query of the user's ride history
+const recentRides: Array<{ id: string; from: string; to: string; time: string; price: string; vehicle: string }> = [];
 
 // Carbon offset data
 const carbonOffsetInfo = {
@@ -356,6 +351,11 @@ function RecentRidesSection({ onSelect }: { onSelect: (from: string, to: string)
         {showRecent && (
           <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: "auto" }} exit={{ opacity: 0, height: 0 }}
             className="space-y-1.5 overflow-hidden">
+            {recentRides.length === 0 && (
+              <div className="rounded-xl bg-muted/30 border border-border/30 p-3 text-center">
+                <p className="text-[11px] text-muted-foreground">No recent rides yet.</p>
+              </div>
+            )}
             {recentRides.map((ride, i) => (
               <motion.button key={ride.id} initial={{ opacity: 0, x: -10 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: i * 0.05 }}
                 onClick={() => onSelect(ride.from, ride.to)}
@@ -445,7 +445,8 @@ export default function RequestRidePage() {
   const [carbonOffset, setCarbonOffset] = useState(false);
   const [showRidePass, setShowRidePass] = useState(false);
   const [selectedPaymentMethod, setSelectedPaymentMethod] = useState<"card" | "cash" | "wallet">("card");
-  const [surgeActive] = useState(Math.random() > 0.6);
+  // TODO: wire to real surge-pricing API
+  const [surgeActive] = useState(false);
   const [favoriteDrivers] = useState(["Marcus T.", "Sarah L.", "David K."]);
   const [requestFavoriteDriver, setRequestFavoriteDriver] = useState(false);
   const [selectedRoute, setSelectedRoute] = useState("fastest");
@@ -461,7 +462,8 @@ export default function RequestRidePage() {
   const [musicPreference, setMusicPreference] = useState<"none" | "chill" | "pop" | "jazz" | "classical">("none");
   const [splitFare, setSplitFare] = useState(false);
   const [splitWith, setSplitWith] = useState(1);
-  const [weatherAlert] = useState(Math.random() > 0.7);
+  // TODO: wire to real weather alert API
+  const [weatherAlert] = useState(false);
   const [accessibilityMode, setAccessibilityMode] = useState(false);
   const [safetyRecording, setSafetyRecording] = useState(false);
   const [waitTimeGuarantee, setWaitTimeGuarantee] = useState(false);
@@ -492,11 +494,8 @@ export default function RequestRidePage() {
   const [etaRecipient, setEtaRecipient] = useState("");
   const [rideNotes, setRideNotes] = useState("");
   const [showRideHistory, setShowRideHistory] = useState(false);
-  const [recentRides] = useState([
-    { id: "1", from: "Home", to: "Downtown Office", price: "$14.50", date: "Yesterday" },
-    { id: "2", from: "Airport", to: "Hotel Grand", price: "$32.00", date: "2 days ago" },
-    { id: "3", from: "Mall", to: "Home", price: "$11.25", date: "Last week" },
-  ]);
+  // TODO: replace with real query of the user's ride history
+  const [recentRides] = useState<Array<{ id: string; from: string; to: string; price: string; date: string }>>([]);
   const [showQuickRebook, setShowQuickRebook] = useState(false);
   const [selectedVehicleAge, setSelectedVehicleAge] = useState<"any" | "new" | "2yr" | "5yr">("any");
   const [airFreshener, setAirFreshener] = useState(false);
@@ -516,7 +515,8 @@ export default function RequestRidePage() {
   const [executiveChauffeur, setExecutiveChauffeur] = useState(false);
   const [flightTracking, setFlightTracking] = useState(false);
   const [flightNumber, setFlightNumber] = useState("");
-  const [poolCountdown] = useState(Math.floor(Math.random() * 4) + 1);
+  // TODO: wire to real ride-pool ETA API
+  const [poolCountdown] = useState(0);
   const [upfrontPrice, setUpfrontPrice] = useState(true);
   const [rewardPoints] = useState(1247);
   const [showRewards, setShowRewards] = useState(false);
@@ -1386,6 +1386,12 @@ export default function RequestRidePage() {
                       <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: "auto" }} exit={{ opacity: 0, height: 0 }}
                         className="overflow-hidden">
                         <div className="space-y-2 mt-3">
+                          {recentRides.length === 0 && (
+                            <div className="rounded-xl bg-muted/30 p-3 text-center">
+                              <p className="text-xs text-muted-foreground">No recent rides yet.</p>
+                              <p className="text-[10px] text-muted-foreground/70 mt-0.5">Your past trips will appear here.</p>
+                            </div>
+                          )}
                           {recentRides.map(ride => (
                             <button key={ride.id} onClick={() => { toast.info(`Rebooking: ${ride.from} → ${ride.to}`); }}
                               className="w-full rounded-xl bg-muted/30 p-3 text-left hover:bg-muted/50 transition-colors touch-manipulation">

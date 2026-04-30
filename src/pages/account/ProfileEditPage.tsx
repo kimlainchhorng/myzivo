@@ -250,7 +250,10 @@ export default function ProfileEditPage() {
       reader.readAsDataURL(file);
       await uploadAvatar.mutateAsync(file);
       setAvatarPreview(null);
-    } catch (err) { console.error("Avatar upload failed:", err); setAvatarPreview(null); }
+    } catch (err: any) {
+      setAvatarPreview(null);
+      toast.error(err?.message || "Avatar upload failed");
+    }
   };
 
   const onSubmit = async (data: ProfileFormData) => {

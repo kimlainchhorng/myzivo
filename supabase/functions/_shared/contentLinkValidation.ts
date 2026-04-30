@@ -161,6 +161,47 @@ export function logBlockedAttempt(
   }
 }
 
+/**
+ * Count how many times this user has been blocked in the last `hours`.
+ * Returns 0 on any DB error — abuse detection must never break user flow.
+ */
+export async function getRecentBlockedCount(
+  // deno-lint-ignore no-explicit-any
+  supabase: any,
+  userId: string | null | undefined,
+  hours = 24,
+): Promise<number> {
+  if (!userId) return 0;
+  try {
+    const cutoff = new Date(Date.now() - hours * 3600 * 1000).toISOString();
+    const { count, error } = await supabase
+      .from("blocked_link_attempts")
+      .select("id", { count: "exact", head: true })
+      .eq("user_id", userId)
+      .gte("created_at", cutoff);
+    if (error) return 0;
+    return count ?? 0;
+  } catch {
+    return 0;
+  }
+}
+
+/**
+ * Auto-flag policy: returns true when a user has hit the threshold
+ * (default 5 blocks in 24h). Callers can short-circuit with a 429 instead
+ * of running expensive checks on a clearly-malicious caller.
+ */
+export async function isAbuseThresholdExceeded(
+  // deno-lint-ignore no-explicit-any
+  supabase: any,
+  userId: string | null | undefined,
+  threshold = 5,
+  hours = 24,
+): Promise<boolean> {
+  const count = await getRecentBlockedCount(supabase, userId, hours);
+  return count >= threshold;
+}
+
 async function hashIp(ip: string): Promise<string | null> {
   try {
     const data = new TextEncoder().encode(ip);

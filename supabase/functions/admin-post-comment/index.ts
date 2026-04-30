@@ -1,7 +1,8 @@
 import { createClient } from "npm:@supabase/supabase-js@2.49.4";
 import { getCorsHeaders } from "../_shared/cors.ts";
 import { enforceAal2 } from "../_shared/aalCheck.ts";
-import { scanContentForLinks, logBlockedAttempt } from "../_shared/contentLinkValidation.ts";
+import { scanContentForLinks, logBlockedAttempt, isAbuseThresholdExceeded } from "../_shared/contentLinkValidation.ts";
+import { isLikelyMaliciousBot } from "../_shared/botDetection.ts";
 
 const ALLOWED_ROLES = ["admin", "super_admin", "support"];
 
@@ -20,6 +21,10 @@ Deno.serve(async (req) => {
   }
 
   try {
+    if (isLikelyMaliciousBot(req.headers)) {
+      return jsonResponse({ error: "forbidden" }, 403, corsHeaders);
+    }
+
     const authHeader = req.headers.get("Authorization");
     if (!authHeader) {
       return jsonResponse({ error: "Missing authorization" }, 401, corsHeaders);
@@ -64,6 +69,10 @@ Deno.serve(async (req) => {
 
     if (!postId || !userId || !content) {
       return jsonResponse({ error: "postId, userId, and content are required" }, 400, corsHeaders);
+    }
+
+    if (await isAbuseThresholdExceeded(adminClient, userId)) {
+      return jsonResponse({ error: "rate_limited", code: "abuse_threshold_exceeded", message: "Too many recent blocked submissions for this user." }, 429, corsHeaders);
     }
 
     const linkScan = scanContentForLinks(content);

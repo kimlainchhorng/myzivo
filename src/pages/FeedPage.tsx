@@ -29,6 +29,7 @@ const ReactionSummary = lazy(() => import("@/components/social/ReactionSummary")
 const ReelsPreviewRow = lazy(() => import("@/components/social/ReelsPreviewRow"));
 const RepostDialog = lazy(() => import("@/components/social/RepostDialog"));
 const PostInsights = lazy(() => import("@/components/social/PostInsights"));
+const CaptionEditDialog = lazy(() => import("@/components/social/CaptionEditDialog"));
 const MentionPicker = lazy(() => import("@/components/social/MentionPicker"));
 const CommentHeartButton = lazy(() => import("@/components/social/CommentHeartButton"));
 const CommentRowActions = lazy(() => import("@/components/social/CommentRowActions"));
@@ -82,7 +83,7 @@ import Car from "lucide-react/dist/esm/icons/car";
 import Briefcase from "lucide-react/dist/esm/icons/briefcase";
 import ShoppingBag from "lucide-react/dist/esm/icons/shopping-bag";
 import { motion, AnimatePresence, MotionConfig } from "framer-motion";
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState, memo } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { cn } from "@/lib/utils";
 import { getPostShareUrl } from "@/lib/getPublicOrigin";
@@ -267,6 +268,7 @@ function ReelCard({
   const [captionExpanded, setCaptionExpanded] = useState(false);
   const [isScrubbing, setIsScrubbing] = useState(false);
   const [showLikeBurst, setShowLikeBurst] = useState(false);
+  const [heartParticles, setHeartParticles] = useState<{ id: number; x: number; size: number; rotate: number; delay: number }[]>([]);
   const [videoDuration, setVideoDuration] = useState(0);
   const [bufferedProgress, setBufferedProgress] = useState(0);
   const [isBuffering, setIsBuffering] = useState(false);
@@ -415,6 +417,30 @@ function ReelCard({
       supabase.rpc("increment_store_post_view_count" as any, { p_post_id: post.id }).then(() => {});
     }
   }, [isActive, post.id, post.source]);
+
+  // Bridge the top-right Speed/PiP buttons (page-level) to the active reel
+  // via window events. Only the active card listens, so multi-reel pages
+  // don't fight over a single dispatch.
+  useEffect(() => {
+    if (!isActive) return;
+    const onOpenSpeed = () => setShowSpeedPicker(true);
+    const onTogglePip = async () => {
+      const v = videoRef.current;
+      if (!v) return;
+      try {
+        const doc = document as any;
+        if (doc.pictureInPictureElement) await doc.exitPictureInPicture();
+        else if ((v as any).requestPictureInPicture) await (v as any).requestPictureInPicture();
+        else toast.error("Picture-in-picture isn't supported on this device");
+      } catch { toast.error("Couldn't open picture-in-picture"); }
+    };
+    window.addEventListener("zivo-reel-open-speed", onOpenSpeed);
+    window.addEventListener("zivo-reel-toggle-pip", onTogglePip);
+    return () => {
+      window.removeEventListener("zivo-reel-open-speed", onOpenSpeed);
+      window.removeEventListener("zivo-reel-toggle-pip", onTogglePip);
+    };
+  }, [isActive]);
 
   // Cleanup: if the user unmounts mid-hold, kill the timer + reset speed.
   useEffect(() => {
@@ -583,11 +609,33 @@ function ReelCard({
   // Double-tap on the video to like — TikTok signature interaction.
   // Wraps the existing tap-to-toggle: if two taps land within 280ms,
   // we skip the play/pause and fire a like instead.
+  // Spawn 6–8 floating heart particles that drift up and fade — fired
+  // whenever the user transitions a post from unliked → liked.
+  const spawnFloatingHearts = () => {
+    const count = 6 + Math.floor(Math.random() * 3);
+    const now = Date.now();
+    const next = Array.from({ length: count }).map((_, i) => ({
+      id: now + i,
+      x: 30 + Math.random() * 40, // 30–70% from left, clusters near center
+      size: 18 + Math.random() * 18, // 18–36px
+      rotate: -25 + Math.random() * 50,
+      delay: Math.random() * 0.25,
+    }));
+    setHeartParticles((prev) => [...prev, ...next]);
+    // Garbage-collect each batch after the longest possible animation finishes
+    window.setTimeout(() => {
+      setHeartParticles((prev) => prev.filter((h) => !next.some((n) => n.id === h.id)));
+    }, 1900);
+  };
+
   const handleVideoClick = () => {
     const now = Date.now();
     if (now - lastTapRef.current < 280) {
       lastTapRef.current = 0;
-      if (!liked) onToggleLike(post.id, false);
+      if (!liked) {
+        onToggleLike(post.id, false);
+        spawnFloatingHearts();
+      }
       setShowDoubleTapHeart(true);
       window.setTimeout(() => setShowDoubleTapHeart(false), 700);
       return;
@@ -966,6 +1014,36 @@ function ReelCard({
           </motion.div>
         )}
       </AnimatePresence>
+
+      {/* Floating hearts particle layer — spawns on like, drifts up + fades.
+          Pointer-events disabled so it doesn't block anything else. */}
+      {heartParticles.length > 0 && (
+        <div className="absolute inset-0 z-30 pointer-events-none overflow-hidden">
+          {heartParticles.map((p) => (
+            <motion.div
+              key={p.id}
+              initial={{ opacity: 0, scale: 0, y: 0, rotate: p.rotate }}
+              animate={{
+                opacity: [0, 1, 1, 0],
+                scale: [0, 1, 1, 0.6],
+                y: [-20, -120 - Math.random() * 80, -200 - Math.random() * 120, -300 - Math.random() * 160],
+                x: [0, (Math.random() - 0.5) * 40, (Math.random() - 0.5) * 80, (Math.random() - 0.5) * 60],
+              }}
+              transition={{ duration: 1.6, delay: p.delay, ease: "easeOut" }}
+              style={{
+                position: "absolute",
+                left: `${p.x}%`,
+                bottom: "30%",
+              }}
+            >
+              <Heart
+                className="text-destructive fill-destructive drop-shadow-lg"
+                style={{ width: p.size, height: p.size }}
+              />
+            </motion.div>
+          ))}
+        </div>
+      )}
 
       {/* Mid-playback buffering spinner — only shown when the user has
           actually started watching but the network stalled. Hidden during
@@ -1838,19 +1916,42 @@ function ReelCard({
         )}
       </AnimatePresence>
 
-      {/* Speed badge — shown in the corner whenever playback isn't 1× and
-          user isn't actively long-pressing (the FF badge takes over then). */}
+      {/* Speed badge — tappable shortcut to the speed picker. Shown whenever
+          playback isn't 1× and the user isn't long-pressing (FF badge wins). */}
       {playbackSpeed !== 1.0 && !isHoldingFastForward && (
-        <div
-          className="absolute right-3 z-30 px-2 py-0.5 rounded-full bg-black/60 backdrop-blur-sm pointer-events-none"
+        <button
+          type="button"
+          onClick={(e) => { e.stopPropagation(); setShowSpeedPicker(true); }}
+          aria-label="Change playback speed"
+          title="Change playback speed"
+          className="absolute right-3 z-30 px-2 py-0.5 rounded-full bg-black/60 backdrop-blur-sm border border-white/10 active:scale-95 transition-transform"
           style={{ top: "calc(env(safe-area-inset-top, 0px) + 80px)" }}
         >
           <span className="text-white text-[11px] font-bold tabular-nums">{playbackSpeed}×</span>
-        </div>
+        </button>
       )}
     </div>
   );
 }
+
+// Memoized export — prevents off-screen reels from re-rendering when an
+// unrelated parent state (mute, current speed, search overlay, etc.) flips.
+// Custom comparator skips the heavy props that don't affect this card's
+// output (e.g. `userLikedPostIds` only matters when it includes this post).
+const MemoReelCard = memo(ReelCard, (prev, next) => {
+  if (prev.post.id !== next.post.id) return false;
+  if (prev.isActive !== next.isActive) return false;
+  if (prev.shouldPreload !== next.shouldPreload) return false;
+  if (prev.globalMuted !== next.globalMuted) return false;
+  if (prev.userId !== next.userId) return false;
+  // Only re-render when our own like state changes, not when any user's does.
+  const prevLiked = prev.userLikedPostIds.has(prev.post.id);
+  const nextLiked = next.userLikedPostIds.has(next.post.id);
+  if (prevLiked !== nextLiked) return false;
+  // Counts/captions can update via the realtime channel inside the card —
+  // no need to bust memo when post object reference changes if id is stable.
+  return true;
+});
 
 // ── Comment Sheet ────────────────────────────────────────────────────────────
 
@@ -1869,6 +1970,10 @@ function CommentSheet({
   // Inline edit state for own comments
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editingText, setEditingText] = useState("");
+  // Reply state: when set, the next submitted comment is a reply to this id
+  const [replyTo, setReplyTo] = useState<{ id: string; authorName: string } | null>(null);
+  // Per-thread expand state: which top-level comments have their replies open
+  const [expandedThreads, setExpandedThreads] = useState<Set<string>>(new Set());
   const queryClient = useQueryClient();
 
   // Route comments to the right table based on the post id prefix.
@@ -1912,8 +2017,10 @@ function CommentSheet({
         .in("id", userIds);
 
       const profileMap = new Map((profiles || []).map((p: any) => [p.id, p]));
+      // Normalize text column — store_post_comments uses `content`, user_post_comments may use `comment`
       return rawComments.map((c: any) => ({
         ...c,
+        content: c.content ?? c.comment ?? c.text ?? c.body ?? "",
         profiles: profileMap.get(c.user_id) || null,
       }));
     },
@@ -1926,16 +2033,25 @@ function CommentSheet({
     }
     if (!confirmContentSafe(commentText, "comment")) return;
     setSubmitting(true);
-    const { error } = await supabase.from("store_post_comments").insert({
-      post_id: postId,
+    // user_post_comments uses `comment`; store_post_comments uses `content`.
+    const insertPayload: Record<string, unknown> = {
+      post_id: rawPostId,
       user_id: userId,
-      content: commentText.trim(),
-    });
+    };
+    if (isUserPost) insertPayload.comment = commentText.trim();
+    else            insertPayload.content = commentText.trim();
+    if (replyTo) insertPayload.parent_id = replyTo.id;
+    const { error } = await (supabase as any).from(targetTable).insert(insertPayload);
     if (error) {
       toast.error("Failed to post comment");
     } else {
       setCommentText("");
-      queryClient.invalidateQueries({ queryKey: ["post-comments", postId] });
+      // Auto-expand the thread we just replied into so the new reply is visible
+      if (replyTo) {
+        setExpandedThreads((prev) => new Set(prev).add(replyTo.id));
+      }
+      setReplyTo(null);
+      queryClient.invalidateQueries({ queryKey: ["post-comments", targetTable, rawPostId] });
       queryClient.invalidateQueries({ queryKey: ["customer-feed"] });
     }
     setSubmitting(false);
@@ -1945,9 +2061,12 @@ function CommentSheet({
   const handleEditComment = async (commentId: string, nextContent: string) => {
     if (!userId || !nextContent.trim()) return;
     if (!confirmContentSafe(nextContent, "comment")) return;
-    const { error } = await supabase
-      .from("store_post_comments")
-      .update({ content: nextContent.trim() })
+    const updatePayload: Record<string, unknown> = isUserPost
+      ? { comment: nextContent.trim() }
+      : { content: nextContent.trim() };
+    const { error } = await (supabase as any)
+      .from(targetTable)
+      .update(updatePayload)
       .eq("id", commentId)
       .eq("user_id", userId); // RLS-style guard
     if (error) {
@@ -1956,13 +2075,13 @@ function CommentSheet({
     }
     setEditingId(null);
     setEditingText("");
-    queryClient.invalidateQueries({ queryKey: ["post-comments", postId] });
+    queryClient.invalidateQueries({ queryKey: ["post-comments", targetTable, rawPostId] });
   };
 
   const handleDeleteComment = async (commentId: string) => {
     if (!userId) return;
-    const { error } = await supabase
-      .from("store_post_comments")
+    const { error } = await (supabase as any)
+      .from(targetTable)
       .delete()
       .eq("id", commentId)
       .eq("user_id", userId);
@@ -1971,7 +2090,7 @@ function CommentSheet({
       return;
     }
     toast.success("Comment deleted");
-    queryClient.invalidateQueries({ queryKey: ["post-comments", postId] });
+    queryClient.invalidateQueries({ queryKey: ["post-comments", targetTable, rawPostId] });
     queryClient.invalidateQueries({ queryKey: ["customer-feed"] });
   };
 
@@ -2012,84 +2131,143 @@ function CommentSheet({
             </div>
           ) : comments.length === 0 ? (
             <p className="text-center text-muted-foreground text-sm py-8">No comments yet. Be the first!</p>
-          ) : (
-            comments.map((c: any) => {
+          ) : (() => {
+            // Group comments into top-level + replies-by-parent
+            const topLevel: any[] = [];
+            const replyMap = new Map<string, any[]>();
+            for (const c of comments) {
+              if (c.parent_id) {
+                const arr = replyMap.get(c.parent_id) ?? [];
+                arr.push(c);
+                replyMap.set(c.parent_id, arr);
+              } else {
+                topLevel.push(c);
+              }
+            }
+
+            const renderRow = (c: any, isReply: boolean) => {
               const prof = c.profiles;
               const name = prof?.full_name || "User";
               const initials = name.split(" ").map((n: string) => n[0]).join("").toUpperCase().slice(0, 2);
+              const avatarSize = isReply ? "w-7 h-7" : "w-8 h-8";
               return (
-              <div key={c.id} className="flex gap-2">
-                <div className="w-8 h-8 rounded-full bg-muted flex items-center justify-center flex-shrink-0 mt-0.5 overflow-hidden">
-                  {prof?.avatar_url ? (
-                    <img src={prof.avatar_url} alt="" className="w-full h-full object-cover" />
-                  ) : (
-                    <span className="text-xs font-bold text-muted-foreground">{initials}</span>
-                  )}
-                </div>
-                <div className="flex-1 min-w-0">
-                  <p className="text-xs font-semibold text-foreground mb-0.5">{name}</p>
-                  {editingId === c.id ? (
-                    <div className="flex flex-col gap-1.5">
-                      <textarea
-                        value={editingText}
-                        onChange={(e) => setEditingText(e.target.value)}
-                        autoFocus
-                        rows={2}
-                        className="w-full rounded-lg border border-border bg-background px-2 py-1.5 text-sm text-foreground outline-none focus:ring-2 focus:ring-primary/40 resize-none"
-                      />
-                      <div className="flex gap-2">
-                        <button
-                          type="button"
-                          onClick={() => { setEditingId(null); setEditingText(""); }}
-                          className="rounded-lg px-3 py-1 text-xs font-medium text-muted-foreground hover:bg-muted active:scale-95"
-                        >
-                          Cancel
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() => handleEditComment(c.id, editingText)}
-                          disabled={!editingText.trim() || editingText.trim() === c.content}
-                          className="rounded-lg bg-primary px-3 py-1 text-xs font-semibold text-primary-foreground disabled:opacity-40 active:scale-95"
-                        >
-                          Save
-                        </button>
+                <div key={c.id} className={`flex gap-2 ${isReply ? "ml-9" : ""}`}>
+                  <div className={`${avatarSize} rounded-full bg-muted flex items-center justify-center flex-shrink-0 mt-0.5 overflow-hidden`}>
+                    {prof?.avatar_url ? (
+                      <img src={prof.avatar_url} alt="" className="w-full h-full object-cover" />
+                    ) : (
+                      <span className="text-xs font-bold text-muted-foreground">{initials}</span>
+                    )}
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-xs font-semibold text-foreground mb-0.5">{name}</p>
+                    {editingId === c.id ? (
+                      <div className="flex flex-col gap-1.5">
+                        <textarea
+                          value={editingText}
+                          onChange={(e) => setEditingText(e.target.value)}
+                          autoFocus
+                          rows={2}
+                          className="w-full rounded-lg border border-border bg-background px-2 py-1.5 text-sm text-foreground outline-none focus:ring-2 focus:ring-primary/40 resize-none"
+                        />
+                        <div className="flex gap-2">
+                          <button
+                            type="button"
+                            onClick={() => { setEditingId(null); setEditingText(""); }}
+                            className="rounded-lg px-3 py-1 text-xs font-medium text-muted-foreground hover:bg-muted active:scale-95"
+                          >
+                            Cancel
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => handleEditComment(c.id, editingText)}
+                            disabled={!editingText.trim() || editingText.trim() === c.content}
+                            className="rounded-lg bg-primary px-3 py-1 text-xs font-semibold text-primary-foreground disabled:opacity-40 active:scale-95"
+                          >
+                            Save
+                          </button>
+                        </div>
                       </div>
-                    </div>
-                  ) : (
-                    <>
-                      <p className="text-sm text-foreground">
-                        <Suspense fallback={<span>{c.content}</span>}>
-                          <SafeCaption text={c.content} />
-                        </Suspense>
-                      </p>
-                      <p className="text-xs text-muted-foreground mt-0.5">
-                        {new Date(c.created_at).toLocaleDateString()}
-                      </p>
-                    </>
-                  )}
+                    ) : (
+                      <>
+                        <p className="text-sm text-foreground">
+                          <Suspense fallback={<span>{c.content}</span>}>
+                            <SafeCaption text={c.content} />
+                          </Suspense>
+                        </p>
+                        <div className="mt-0.5 flex items-center gap-3 text-xs text-muted-foreground">
+                          <span>{new Date(c.created_at).toLocaleDateString()}</span>
+                          {!isReply && userId && (
+                            <button
+                              type="button"
+                              onClick={() => {
+                                setReplyTo({ id: c.id, authorName: name });
+                                requestAnimationFrame(() => inputRef.current?.focus());
+                              }}
+                              className="font-semibold text-foreground/70 hover:text-foreground active:scale-95 transition-transform"
+                            >
+                              Reply
+                            </button>
+                          )}
+                        </div>
+                      </>
+                    )}
+                  </div>
+                  <div className={`flex items-start gap-1 ${editingId === c.id ? "hidden" : ""}`}>
+                    <Suspense fallback={null}>
+                      <CommentHeartButton
+                        commentId={c.id}
+                        targetTable={targetTable}
+                        userId={userId}
+                        variant="light"
+                      />
+                    </Suspense>
+                    <Suspense fallback={null}>
+                      <CommentRowActions
+                        canManage={!!userId && c.user_id === userId}
+                        variant="light"
+                        onEditStart={() => { setEditingId(c.id); setEditingText(c.content || ""); }}
+                        onDelete={() => handleDeleteComment(c.id)}
+                      />
+                    </Suspense>
+                  </div>
                 </div>
-                <div className={`flex items-start gap-1 ${editingId === c.id ? "hidden" : ""}`}>
-                  <Suspense fallback={null}>
-                    <CommentHeartButton
-                      commentId={c.id}
-                      targetTable="store_post_comments"
-                      userId={userId}
-                      variant="light"
-                    />
-                  </Suspense>
-                  <Suspense fallback={null}>
-                    <CommentRowActions
-                      canManage={!!userId && c.user_id === userId}
-                      variant="light"
-                      onEditStart={() => { setEditingId(c.id); setEditingText(c.content || ""); }}
-                      onDelete={() => handleDeleteComment(c.id)}
-                    />
-                  </Suspense>
-                </div>
-              </div>
               );
-            })
-          )}
+            };
+
+            return (
+              <>
+                {topLevel.map((c: any) => {
+                  const replies = replyMap.get(c.id) ?? [];
+                  const isExpanded = expandedThreads.has(c.id);
+                  return (
+                    <div key={c.id} className="flex flex-col gap-2">
+                      {renderRow(c, false)}
+                      {replies.length > 0 && (
+                        <button
+                          type="button"
+                          onClick={() => setExpandedThreads((prev) => {
+                            const next = new Set(prev);
+                            if (next.has(c.id)) next.delete(c.id);
+                            else next.add(c.id);
+                            return next;
+                          })}
+                          className="ml-9 self-start text-xs font-semibold text-muted-foreground hover:text-foreground transition-colors flex items-center gap-1"
+                          aria-expanded={isExpanded}
+                        >
+                          <span className="inline-block w-6 border-t border-muted-foreground/30" />
+                          {isExpanded
+                            ? `Hide replies`
+                            : `View ${replies.length} ${replies.length === 1 ? "reply" : "replies"}`}
+                        </button>
+                      )}
+                      {isExpanded && replies.map((r: any) => renderRow(r, true))}
+                    </div>
+                  );
+                })}
+              </>
+            );
+          })()}
         </div>
 
         {/* Input */}
@@ -2102,7 +2280,24 @@ function CommentSheet({
               <p className="text-sm text-muted-foreground">Only verified accounts can comment</p>
             </div>
           ) : (
-            <div className="relative flex gap-2">
+            <>
+              {/* "Replying to @name" badge */}
+              {replyTo && (
+                <div className="mb-2 flex items-center justify-between rounded-full bg-primary/10 px-3 py-1.5">
+                  <span className="text-xs text-primary">
+                    Replying to <span className="font-semibold">@{replyTo.authorName}</span>
+                  </span>
+                  <button
+                    type="button"
+                    onClick={() => setReplyTo(null)}
+                    className="rounded-full p-1 text-primary hover:bg-primary/20 active:scale-90 transition-transform"
+                    aria-label="Cancel reply"
+                  >
+                    <XIcon className="h-3.5 w-3.5" />
+                  </button>
+                </div>
+              )}
+              <div className="relative flex gap-2">
               {/* @-mention autocomplete (anchors above the input) */}
               <Suspense fallback={null}>
                 <MentionPicker
@@ -2136,7 +2331,7 @@ function CommentSheet({
                   // Picker handles Enter while open; only submit when no picker
                   if (e.key === "Enter" && mentionQuery == null) handleSubmit();
                 }}
-                placeholder="Add a comment..."
+                placeholder={replyTo ? `Reply to @${replyTo.authorName}…` : "Add a comment..."}
                 className="flex-1 h-11 sm:h-10 rounded-full bg-muted px-4 text-base sm:text-sm text-foreground placeholder:text-muted-foreground outline-none focus:ring-2 focus:ring-primary/40 transition-shadow"
                 disabled={submitting}
               />
@@ -2149,7 +2344,8 @@ function CommentSheet({
               >
                 <Send className="w-4 h-4 text-primary-foreground" />
               </button>
-            </div>
+              </div>
+            </>
           )}
         </div>
       </div>
@@ -2659,6 +2855,12 @@ export default function FeedPage() {
   const [insightsTarget, setInsightsTarget] = useState<{
     postId: string; source: "store" | "user";
   } | null>(null);
+  // Author-only caption editor
+  const [editCaptionTarget, setEditCaptionTarget] = useState<{
+    postId: string; initialCaption: string;
+  } | null>(null);
+  // Posts the user has deleted, removed from view immediately while DB catches up
+  const [deletedPostIds, setDeletedPostIds] = useState<Set<string>>(new Set());
   // Infinite scroll — multiplier on the base page size
   const [pageMultiplier, setPageMultiplier] = useState(1);
   // Posts the user just blocked, removed from view immediately
@@ -2871,8 +3073,11 @@ export default function FeedPage() {
     if (hiddenAuthorIds.size > 0) {
       list = list.filter((p) => !p.author_id || !hiddenAuthorIds.has(p.author_id));
     }
+    if (deletedPostIds.size > 0) {
+      list = list.filter((p) => !deletedPostIds.has(p.id));
+    }
     return list;
-  }, [posts, feedMode, userId, followingIds, selectedHashtag, hiddenAuthorIds]);
+  }, [posts, feedMode, userId, followingIds, selectedHashtag, hiddenAuthorIds, deletedPostIds]);
 
   // Fetch user's liked post IDs
   useEffect(() => {
@@ -3085,9 +3290,7 @@ export default function FeedPage() {
   if (isLoading) {
     return (
       <Suspense fallback={
-        <div className="fixed inset-0 bg-black flex items-center justify-center z-50">
-          <Loader2 className="h-9 w-9 animate-spin text-white" />
-        </div>
+        <div className="fixed inset-0 bg-black z-50" aria-busy="true" aria-label="Loading reels" />
       }>
         <FeedSkeleton />
       </Suspense>
@@ -3184,6 +3387,7 @@ export default function FeedPage() {
           type="button"
           onClick={() => navigate("/live")}
           aria-label="Watch live"
+          title="Live"
           className="w-10 h-10 sm:w-11 sm:h-11 rounded-full bg-black/40 backdrop-blur-sm flex items-center justify-center active:scale-95 transition-transform border border-white/10"
         >
           <Radio className="w-5 h-5 text-red-400" />
@@ -3192,6 +3396,7 @@ export default function FeedPage() {
           type="button"
           onClick={() => setShowDiscover(true)}
           aria-label="Discover people"
+          title="Discover people"
           className="w-10 h-10 sm:w-11 sm:h-11 rounded-full bg-black/40 backdrop-blur-sm flex items-center justify-center active:scale-95 transition-transform border border-white/10"
         >
           <UserPlus className="w-5 h-5 text-white" />
@@ -3200,9 +3405,30 @@ export default function FeedPage() {
           type="button"
           onClick={() => setShowSearch(true)}
           aria-label="Search"
+          title="Search"
           className="w-10 h-10 sm:w-11 sm:h-11 rounded-full bg-black/40 backdrop-blur-sm flex items-center justify-center active:scale-95 transition-transform border border-white/10"
         >
           <Search className="w-5 h-5 text-white" />
+        </button>
+        {/* Playback speed — bridges to the active ReelCard via window event */}
+        <button
+          type="button"
+          onClick={() => window.dispatchEvent(new CustomEvent("zivo-reel-open-speed"))}
+          aria-label="Playback speed"
+          title="Playback speed"
+          className="w-10 h-10 sm:w-11 sm:h-11 rounded-full bg-black/40 backdrop-blur-sm flex items-center justify-center active:scale-95 transition-transform border border-white/10"
+        >
+          <Gauge className="w-5 h-5 text-white" />
+        </button>
+        {/* Picture-in-picture — toggles native PiP on the active video */}
+        <button
+          type="button"
+          onClick={() => window.dispatchEvent(new CustomEvent("zivo-reel-toggle-pip"))}
+          aria-label="Picture-in-picture"
+          title="Picture-in-picture"
+          className="w-10 h-10 sm:w-11 sm:h-11 rounded-full bg-black/40 backdrop-blur-sm flex items-center justify-center active:scale-95 transition-transform border border-white/10"
+        >
+          <PictureInPicture className="w-5 h-5 text-white" />
         </button>
       </div>
 
@@ -3472,6 +3698,39 @@ export default function FeedPage() {
             onReport={(reason) => postActions.reportPost(actionsTarget.target, reason)}
             isOwnPost={!!userId && actionsTarget.target.source === "user" && actionsTarget.target.authorId === userId}
             onViewInsights={() => setInsightsTarget({ postId: actionsTarget.target.postId, source: actionsTarget.target.source })}
+            onEditCaption={() => {
+              // Find the prefixed feed id and the current caption
+              const feedId = `u-${actionsTarget.target.postId}`;
+              const post = posts.find((p) => p.id === feedId);
+              setEditCaptionTarget({
+                postId: actionsTarget.target.postId,
+                initialCaption: post?.caption ?? "",
+              });
+            }}
+            onDeletePost={async () => {
+              if (!userId) return;
+              const rawId = actionsTarget.target.postId;
+              const feedId = `u-${rawId}`;
+              // Optimistic remove from view
+              setDeletedPostIds((prev) => new Set(prev).add(feedId));
+              const { error } = await (supabase as any)
+                .from("user_posts")
+                .delete()
+                .eq("id", rawId)
+                .eq("user_id", userId);
+              if (error) {
+                // Roll back
+                setDeletedPostIds((prev) => {
+                  const next = new Set(prev);
+                  next.delete(feedId);
+                  return next;
+                });
+                toast.error("Couldn't delete post");
+                return;
+              }
+              toast.success("Post deleted");
+              queryClient.invalidateQueries({ queryKey: ["customer-feed"] });
+            }}
           />
         )}
       </Suspense>
@@ -3484,6 +3743,31 @@ export default function FeedPage() {
             onClose={() => setInsightsTarget(null)}
             postId={insightsTarget.postId}
             source={insightsTarget.source}
+          />
+        )}
+      </Suspense>
+
+      {/* Caption editor (own user posts only) */}
+      <Suspense fallback={null}>
+        {editCaptionTarget && (
+          <CaptionEditDialog
+            open={!!editCaptionTarget}
+            onClose={() => setEditCaptionTarget(null)}
+            initialCaption={editCaptionTarget.initialCaption}
+            onSave={async (next) => {
+              if (!userId) return;
+              const { error } = await (supabase as any)
+                .from("user_posts")
+                .update({ caption: next })
+                .eq("id", editCaptionTarget.postId)
+                .eq("user_id", userId);
+              if (error) {
+                toast.error("Couldn't save caption");
+                throw error;
+              }
+              toast.success("Caption updated");
+              queryClient.invalidateQueries({ queryKey: ["customer-feed"] });
+            }}
           />
         )}
       </Suspense>
