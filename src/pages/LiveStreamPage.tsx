@@ -1640,21 +1640,42 @@ export default function LiveStreamPage() {
  { name: "Aria Tan", country: "SG", img: "https://images.unsplash.com/photo-1531746020798-e6953c6e8e04?w=200&q=70&auto=format&fit=crop", days: "1 week" },
  { name: "Felix Brown", country: "GB", img: "https://images.unsplash.com/photo-1528741013444-c4e9f3f5beda?w=200&q=70&auto=format&fit=crop", days: "1 week" },
  { name: "Emma R.", country: "FR", img: "https://images.unsplash.com/photo-1524504388940-b1c1722653e1?w=200&q=70&auto=format&fit=crop", days: "2 weeks" },
- ].map((c) =>(
-<div key={c.name} className="shrink-0 flex flex-col items-center gap-1.5 w-[64px]">
+ ].map((c) =>{
+   const isFollowed = followedCreators.includes(c.name);
+   return (
+<button
+  key={c.name}
+  onClick={() =>{
+    setFollowedCreators((prev) => {
+      if (prev.includes(c.name)) {
+        toast.info(`Unfollowed ${c.name}`);
+        return prev.filter((x) =>x !== c.name);
+      }
+      toast.success(`Following ${c.name} — discovering new faces!`);
+      return [...prev, c.name];
+    });
+  }}
+  className="shrink-0 flex flex-col items-center gap-1.5 w-[64px] active:scale-95 transition-transform"
+>
 <div className="relative">
-<Avatar className="h-14 w-14 ring-2 ring-pink-400">
+<Avatar className={cn("h-14 w-14 ring-2", isFollowed ? "ring-emerald-500" : "ring-pink-400")}>
 <AvatarImage src={c.img} />
 <AvatarFallback className="bg-muted">{c.name[0]}</AvatarFallback>
 </Avatar>
 <span className="absolute -bottom-0.5 -right-0.5 w-5 h-5 rounded-full bg-card flex items-center justify-center text-[11px] shadow ring-1 ring-border">
  {c.country}
 </span>
+{isFollowed && (
+  <span className="absolute -top-0.5 -left-0.5 w-4 h-4 rounded-full bg-emerald-500 text-white flex items-center justify-center text-[9px] font-bold shadow">✓</span>
+)}
 </div>
 <p className="text-[10px] font-semibold text-foreground truncate w-full text-center leading-tight">{c.name}</p>
-<p className="text-[9px] text-pink-500 font-medium">{c.days}</p>
-</div>
- ))}
+<p className={cn("text-[9px] font-medium", isFollowed ? "text-emerald-500" : "text-pink-500")}>
+  {isFollowed ? "Following" : c.days}
+</p>
+</button>
+   );
+ })}
 </div>
 </div>
 
