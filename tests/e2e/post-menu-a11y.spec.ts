@@ -4,10 +4,15 @@
  */
 import { test, expect, devices } from "@playwright/test";
 import { seedProfilePosts } from "./fixtures/seedProfilePosts";
+import { login } from "./fixtures/login";
 
 test.use({ ...devices["Desktop Chrome"] });
 
 test.describe("post-menu accessibility", () => {
+  test.beforeEach(async ({ page }) => {
+    await login(page);
+  });
+
   test("Escape on the grab handle closes the post viewer", async ({ page }) => {
     await seedProfilePosts(page);
     await page.goto("/profile", { waitUntil: "domcontentloaded" });
@@ -26,7 +31,7 @@ test.describe("post-menu accessibility", () => {
   test("menu sheet has menu role and arrow keys move focus between menuitems", async ({
     page,
   }) => {
-    await seedProfilePosts(page);
+    await seedProfilePosts(page); // login already ran in beforeEach
     await page.goto("/profile", { waitUntil: "domcontentloaded" });
     const trigger = page.locator('[data-testid^="profile-post-thumb"]').first();
     await expect(trigger).toBeVisible({ timeout: 8000 });

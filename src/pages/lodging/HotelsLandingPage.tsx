@@ -94,9 +94,11 @@ export default function HotelsLandingPage() {
   const [checkIn, setCheckIn] = useState<Date>(() => todayUTC());
   const [checkOut, setCheckOut] = useState<Date>(() => addDays(todayUTC(), 1));
   const [guests, setGuests] = useState<number>(2);
+  const [children, setChildren] = useState<number>(0);
   const [rooms, setRooms] = useState<number>(1);
   const [datesOpen, setDatesOpen] = useState(false);
   const [guestsOpen, setGuestsOpen] = useState(false);
+  const [sortBy, setSortBy] = useState<"default" | "price_asc" | "price_desc">("default");
   const [coords, setCoords] = useState<{ lat: number; lng: number } | null>(null);
 
   useEffect(() => {
@@ -249,6 +251,16 @@ export default function HotelsLandingPage() {
     () => all.filter((s) => s.setup_complete).slice(0, 6),
     [all]
   );
+
+  const sorted = useMemo(() => {
+    if (sortBy === "price_asc") {
+      return [...filtered].sort((a, b) => (minRates[a.id]?.base ?? Infinity) - (minRates[b.id]?.base ?? Infinity));
+    }
+    if (sortBy === "price_desc") {
+      return [...filtered].sort((a, b) => (minRates[b.id]?.base ?? 0) - (minRates[a.id]?.base ?? 0));
+    }
+    return filtered;
+  }, [filtered, sortBy, minRates]);
 
   const filtered = useMemo(() => {
     const q = search.trim().toLowerCase();
@@ -403,14 +415,15 @@ export default function HotelsLandingPage() {
                       Guests · Rooms
                     </p>
                     <p className="text-[12px] font-semibold text-foreground truncate leading-tight">
-                      {guests} guest{guests > 1 ? "s" : ""} · {rooms} room{rooms > 1 ? "s" : ""}
+                      {guests + children} guest{guests + children > 1 ? "s" : ""} · {rooms} room{rooms > 1 ? "s" : ""}
                     </p>
                   </div>
                 </button>
               </PopoverTrigger>
               <PopoverContent className="w-64 p-3" align="end">
                 <div className="space-y-3">
-                  <Stepper label="Guests" value={guests} min={1} max={20} onChange={setGuests} />
+                  <Stepper label="Adults" value={guests} min={1} max={20} onChange={setGuests} />
+                  <Stepper label="Children" value={children} min={0} max={10} onChange={setChildren} />
                   <Stepper label="Rooms" value={rooms} min={1} max={10} onChange={setRooms} />
                   <Button className="w-full h-9" onClick={() => setGuestsOpen(false)}>
                     Done
@@ -525,7 +538,7 @@ export default function HotelsLandingPage() {
               return (
                 <button
                   key={store.id}
-                  onClick={() => navigate(`/hotel/${store.id}`)}
+                  onClick={() => navigate(`/hotel/${store.id}?ci=${format(checkIn, "yyyy-MM-dd")}&co=${format(checkOut, "yyyy-MM-dd")}&adults=${guests}&children=${children}`)}
                   className="shrink-0 w-[210px] rounded-2xl border border-border bg-card overflow-hidden text-left active:scale-[0.98] transition shadow-sm"
                   aria-label={`Open ${store.name}`}
                 >
@@ -581,6 +594,29 @@ export default function HotelsLandingPage() {
         <div className="px-4 flex items-center justify-between mb-2">
           <h3 className="text-sm font-bold text-foreground">All Hotels & Resorts</h3>
           <span className="text-[11px] text-muted-foreground">{filtered.length} found</span>
+        </div>
+
+        {/* Sort chips */}
+        <div className="px-4 pb-2 flex items-center gap-2 overflow-x-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+          <span className="text-[11px] text-muted-foreground shrink-0">Sort:</span>
+          {([
+            { id: "default", label: "Best match" },
+            { id: "price_asc", label: "Price ↑" },
+            { id: "price_desc", label: "Price ↓" },
+          ] as const).map((opt) => (
+            <button
+              key={opt.id}
+              onClick={() => setSortBy(opt.id)}
+              className={
+                "shrink-0 rounded-full px-3 py-1.5 text-xs font-semibold transition " +
+                (sortBy === opt.id
+                  ? "bg-primary text-primary-foreground"
+                  : "bg-muted/70 text-muted-foreground active:bg-muted")
+              }
+            >
+              {opt.label}
+            </button>
+          ))}
         </div>
 
         {/* Type filter chips */}
@@ -642,7 +678,7 @@ export default function HotelsLandingPage() {
             </div>
           ) : (
             <div className="grid gap-3">
-              {filtered.map((store, idx) => (
+              {sorted.map((store, idx) => (
                 <PropertyCard
                   key={store.id}
                   store={store}
@@ -651,7 +687,7 @@ export default function HotelsLandingPage() {
                   promo={promotions[store.id]}
                   amenities={amenitiesMap[store.id] || []}
                   nights={nights}
-                  onOpen={() => navigate(`/hotel/${store.id}`)}
+                  onOpen={() => navigate(`/hotel/${store.id}?ci=${format(checkIn, "yyyy-MM-dd")}&co=${format(checkOut, "yyyy-MM-dd")}&adults=${guests}&children=${children}`)}
                 />
               ))}
             </div>

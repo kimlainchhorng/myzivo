@@ -4,14 +4,14 @@
  */
 import { useNavigate } from "react-router-dom";
 import { useState, useEffect, useCallback } from "react";
-import { 
+import {
   Car, UtensilsCrossed, MapPin, Plane, Hotel, CarFront,
   Package, Compass, ShoppingBag, Heart, MessageCircle,
-  Users, Bookmark, Clock, Settings, TrendingUp,
+  Users, Bookmark, Clock, Settings, TrendingUp, Calendar,
   ArrowLeftRight, Shield, Store, LayoutDashboard,
   Handshake, CarTaxiFront, ChefHat, Building2, Briefcase,
   Headphones, Eye, Wrench, X as XIcon, BadgeCheck, ChevronRight,
-  Crown, LogOut, Plus,
+  Crown, LogOut, Plus, Gift,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/contexts/AuthContext";
@@ -48,11 +48,18 @@ const SERVICE_ITEMS = [
   { label: "Shopping", icon: ShoppingBag, path: "/grocery", color: "text-foreground" },
 ];
 
+const SOCIAL_ITEMS = [
+  { label: "Friends", icon: Users, path: "/friends" },
+  { label: "Groups", icon: Users, path: "/communities" },
+  { label: "Events", icon: Calendar, path: "/explore" },
+  { label: "Marketplace", icon: ShoppingBag, path: "/grocery" },
+  { label: "Birthdays", icon: Gift, path: "/friends" },
+];
+
 const MORE_ITEMS = [
   { label: "Explore", icon: Compass, path: "/explore" },
   { label: "Saved", icon: Bookmark, path: "/saved" },
   { label: "Activity", icon: Heart, path: "/activity" },
-  { label: "Friends", icon: Users, path: "/friends" },
   { label: "Trending", icon: TrendingUp, path: "/trending" },
   { label: "History", icon: Clock, path: "/history" },
   { label: "Settings", icon: Settings, path: "/settings" },
@@ -241,6 +248,19 @@ export default function FeedSidebar() {
           <MessageCircle className="h-5 w-5 text-foreground" />
           <span>Chat</span>
         </button>
+
+        {/* Social */}
+        <p className="text-[11px] font-semibold text-muted-foreground/60 uppercase tracking-wider px-3 pt-4 pb-1">Social</p>
+        {SOCIAL_ITEMS.map((item) => (
+          <button
+            key={item.label}
+            onClick={() => navigate(item.path)}
+            className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-foreground hover:bg-muted/50 transition-colors group"
+          >
+            <item.icon className="h-5 w-5 text-foreground" />
+            <span>{item.label}</span>
+          </button>
+        ))}
 
         {/* Services */}
         <p className="text-[11px] font-semibold text-muted-foreground/60 uppercase tracking-wider px-3 pt-4 pb-1">Services</p>

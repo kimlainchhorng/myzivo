@@ -28,6 +28,7 @@ import CheckSquare from "lucide-react/dist/esm/icons/check-square";
 import Square from "lucide-react/dist/esm/icons/square";
 
 import Check from "lucide-react/dist/esm/icons/check";
+import SquarePen from "lucide-react/dist/esm/icons/square-pen";
 import CheckCheck from "lucide-react/dist/esm/icons/check-check";
 import ImageIcon from "lucide-react/dist/esm/icons/image";
 import Mic from "lucide-react/dist/esm/icons/mic";
@@ -49,9 +50,11 @@ import NewChatFab from "@/components/chat/NewChatFab";
 import AddContactSheet from "@/components/chat/AddContactSheet";
 import MyChannelsStrip from "@/components/chat/MyChannelsStrip";
 import GlobalChatSearch from "@/components/chat/GlobalChatSearch";
+import SuggestedContactsRow from "@/components/chat/SuggestedContactsRow";
 import { useChatPrefs } from "@/hooks/useChatPrefs";
 import { useBulkPresence } from "@/hooks/useBulkPresence";
 import { useTypingBus } from "@/hooks/useTypingBus";
+import { useContactRequests } from "@/hooks/useContactRequests";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/contexts/AuthContext";
 import { useNavigate, useLocation, useSearchParams } from "react-router-dom";
@@ -174,6 +177,7 @@ function parseRichMessagePreview(message: string): string {
         case "tracking": return "📦 Delivery Update";
         case "product": return "🛒 Product";
         case "order": return "📋 Order Details";
+        case "poll": return `📊 Poll: ${parsed.payload.question || ""}`;
         default: return label || `📎 ${type || "Attachment"}`;
       }
     }
@@ -241,6 +245,22 @@ export default function ChatHubPage({ embedded = false }: { embedded?: boolean }
   const [globalSearchOpen, setGlobalSearchOpen] = useState(false);
   // Telegram-style: collapse Stories strip on scroll-down, restore on scroll-up
   const [storiesCollapsed, setStoriesCollapsed] = useState(false);
+  // Pre-warm lazy chat chunks so first open is instant (no visible loading delay)
+  useEffect(() => {
+    const id = requestIdleCallback
+      ? requestIdleCallback(() => {
+          void import("@/components/chat/PersonalChat");
+          void import("@/components/chat/GroupChat");
+          void import("@/components/grocery/StoreLiveChat");
+        })
+      : setTimeout(() => {
+          void import("@/components/chat/PersonalChat");
+          void import("@/components/chat/GroupChat");
+          void import("@/components/grocery/StoreLiveChat");
+        }, 1500);
+    return () => (requestIdleCallback ? cancelIdleCallback(id as number) : clearTimeout(id as ReturnType<typeof setTimeout>));
+  }, []);
+
   const lastScrollYRef = useRef(0);
   useEffect(() => {
     const onScroll = () => {
@@ -687,6 +707,18 @@ export default function ChatHubPage({ embedded = false }: { embedded?: boolean }
             .limit(1)
             .maybeSingle();
 
+          let lastSenderName: string | null = null;
+          if (lastMsg?.sender_id && lastMsg.sender_id !== user!.id) {
+            const { data: senderProf } = await supabase
+              .from("profiles")
+              .select("full_name")
+              .eq("user_id", lastMsg.sender_id)
+              .maybeSingle();
+            lastSenderName = (senderProf as any)?.full_name?.split(" ")[0] || null;
+          } else if (lastMsg?.sender_id === user!.id) {
+            lastSenderName = "You";
+          }
+
           return {
             id: g.id,
             name: g.name,
@@ -697,6 +729,7 @@ export default function ChatHubPage({ embedded = false }: { embedded?: boolean }
             lastTime: lastMsg?.created_at || g.created_at,
             unread: 0,
             isGroup: true,
+            lastSenderName,
           };
         })
       );
@@ -798,6 +831,30 @@ export default function ChatHubPage({ embedded = false }: { embedded?: boolean }
       return data as { message: string; created_at: string } | null;
     },
   });
+
+  // Draft indicators — batch load all chat drafts so we can show "Draft: …" in previews
+  const { data: chatDraftsRaw = [] } = useQuery({
+    queryKey: ["chat-drafts-all", user?.id],
+    enabled: !!user && active === "personal",
+    staleTime: 30_000,
+    queryFn: async () => {
+      const { data } = await (supabase as any)
+        .from("chat_drafts")
+        .select("chat_partner_id, draft_text")
+        .eq("user_id", user!.id)
+        .neq("draft_text", "");
+      return (data || []) as { chat_partner_id: string; draft_text: string }[];
+    },
+  });
+  const draftsMap = useMemo(() => {
+    const map: Record<string, string> = {};
+    chatDraftsRaw.forEach((d) => { if (d.draft_text?.trim()) map[d.chat_partner_id] = d.draft_text.trim(); });
+    return map;
+  }, [chatDraftsRaw]);
+
+  // Incoming contact requests — shown as a notification row at the top
+  const { incoming: allIncomingRequests } = useContactRequests();
+  const pendingRequests = useMemo(() => allIncomingRequests.filter((r) => r.status === "pending"), [allIncomingRequests]);
 
   // Compute unread counts per tab
   const personalUnread = personalChats.reduce((sum: number, c: any) => sum + (c.unread || 0), 0);
@@ -1316,6 +1373,16 @@ export default function ChatHubPage({ embedded = false }: { embedded?: boolean }
                 <div className="flex items-center gap-1">
                   {active === "personal" && !selectionMode && !search && (
                     <button
+                      onClick={() => setShowAddContact(true)}
+                      className="relative w-9 h-9 flex items-center justify-center rounded-full hover:bg-muted active:scale-90 transition-all"
+                      aria-label="New message"
+                      title="New message"
+                    >
+                      <SquarePen className="w-5 h-5 text-muted-foreground" />
+                    </button>
+                  )}
+                  {active === "personal" && !selectionMode && !search && (
+                    <button
                       onClick={() => setSelectionMode(true)}
                       className="relative w-9 h-9 flex items-center justify-center rounded-full hover:bg-muted active:scale-90 transition-all"
                       aria-label="Select chats"
@@ -1455,6 +1522,43 @@ export default function ChatHubPage({ embedded = false }: { embedded?: boolean }
                 </div>
               )}
             </div>
+
+            {/* Active Now strip — online contacts */}
+            {!embedded && !search && active === "personal" && onlineIds.size > 0 && (
+              <div className="px-4 pb-2">
+                <div className="flex items-center gap-1.5 mb-1.5">
+                  <span className="inline-block w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+                  <span className="text-[11px] font-bold text-muted-foreground uppercase tracking-wide">Active Now</span>
+                </div>
+                <div className="flex gap-3 overflow-x-auto no-scrollbar pb-0.5">
+                  {(mergedPersonalList as any[]).filter((c) => !c.isGroup && onlineIds.has(c.id)).slice(0, 12).map((c) => (
+                    <button
+                      key={c.id}
+                      onClick={() => setOpenPersonalChat({ id: c.id, name: c.name, avatar: c.avatar, isVerified: c.isVerified === true })}
+                      className="flex flex-col items-center gap-1 w-[54px] shrink-0 active:scale-95 transition-transform"
+                    >
+                      <div className="relative">
+                        <div className="w-12 h-12 rounded-full bg-muted overflow-hidden ring-2 ring-emerald-500/40">
+                          {c.avatar ? (
+                            <img src={c.avatar} alt={c.name} className="w-full h-full object-cover" />
+                          ) : (
+                            <div className="w-full h-full flex items-center justify-center bg-primary/10">
+                              <span className="text-sm font-bold text-primary">
+                                {(c.name || "U").split(" ").map((n: string) => n[0]).join("").toUpperCase().slice(0, 2)}
+                              </span>
+                            </div>
+                          )}
+                        </div>
+                        <span className="absolute bottom-0 right-0 w-3 h-3 rounded-full bg-emerald-500 border-2 border-background" />
+                      </div>
+                      <span className="text-[9px] font-medium text-foreground truncate w-full text-center leading-tight">
+                        {c.name.split(" ")[0]}
+                      </span>
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
 
             <div className={cn("flex px-5 gap-2 pb-3 overflow-x-auto scrollbar-hide", embedded && "px-3 gap-1.5 pb-2")}>
               <button
@@ -1600,6 +1704,32 @@ export default function ChatHubPage({ embedded = false }: { embedded?: boolean }
                   </div>
                 ) : (
                   <div className={cn("divide-y divide-border/20", embedded && "px-1")}>
+                    {/* Contact Requests notification row */}
+                    {!search && active === "personal" && pendingRequests.length > 0 && (
+                      <button
+                        onClick={() => navigate("/chat/contacts/requests")}
+                        className="w-full flex items-center gap-3 px-4 py-3 active:bg-muted/60 active:scale-[0.99] transition-all"
+                      >
+                        <div className="w-[52px] h-[52px] rounded-full bg-blue-500 flex items-center justify-center flex-shrink-0 shadow-sm relative">
+                          <UserPlus className="w-5 h-5 text-white" />
+                          <span className="absolute -top-0.5 -right-0.5 min-w-[18px] h-[18px] px-1 bg-red-500 text-white text-[10px] font-bold rounded-full flex items-center justify-center border-2 border-background">
+                            {pendingRequests.length > 9 ? "9+" : pendingRequests.length}
+                          </span>
+                        </div>
+                        <div className="flex-1 min-w-0 text-left">
+                          <div className="flex items-center justify-between mb-1">
+                            <span className="text-[15px] font-semibold text-foreground">Contact Requests</span>
+                            <ChevronRight className="w-4 h-4 text-muted-foreground" />
+                          </div>
+                          <p className="text-[13px] text-muted-foreground truncate leading-snug">
+                            {pendingRequests.length === 1
+                              ? `${pendingRequests[0].profile?.full_name || "Someone"} wants to connect`
+                              : `${pendingRequests.length} people want to connect`}
+                          </p>
+                        </div>
+                      </button>
+                    )}
+
                     {/* Archived chats row */}
                     {!search && archivedList.length > 0 && active === "personal" && (
                       <button
@@ -1633,8 +1763,8 @@ export default function ChatHubPage({ embedded = false }: { embedded?: boolean }
                         onClick={() => setOpenPersonalChat({ id: user.id, name: "Saved Messages", avatar: null, isVerified: false })}
                         className="w-full flex items-center gap-3 px-4 py-3 active:bg-muted/50 transition-colors"
                       >
-                        <div className="w-[52px] h-[52px] rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
-                          <Bookmark className="w-5 h-5 text-primary" />
+                        <div className="w-[52px] h-[52px] rounded-full bg-emerald-500 flex items-center justify-center flex-shrink-0 shadow-sm">
+                          <Bookmark className="w-5 h-5 text-white" />
                         </div>
                         <div className="flex-1 min-w-0 text-left">
                           <div className="flex items-center justify-between mb-1">
@@ -1720,9 +1850,9 @@ export default function ChatHubPage({ embedded = false }: { embedded?: boolean }
                             >
                               <button
                                 className={cn(
-                                  "w-full flex items-center gap-3 text-left transition-colors",
+                                  "w-full flex items-center gap-3 text-left transition-all",
                                   embedded ? "px-3 py-2.5" : "px-4 py-3",
-                                  "active:bg-muted/50",
+                                  "active:bg-muted/60 active:scale-[0.99]",
                                   chat.unread > 0 && !muted && "bg-primary/[0.02]"
                                 )}
                                 onClick={() => {
@@ -1805,25 +1935,40 @@ export default function ChatHubPage({ embedded = false }: { embedded?: boolean }
                                         {formatChatTime(chat.lastTime)}
                                       </span>
                                       {isPersonalChat && !chat.isGroup && !selectionMode && (
-                                        <span
-                                          role="button"
-                                          aria-label="Chat options"
-                                          onClick={(e) => {
-                                            e.stopPropagation();
-                                            e.preventDefault();
-                                            setActionsTarget({
-                                              id: chat.id,
-                                              name: chat.name,
-                                              isPinned: pinned,
-                                              isMuted: muted,
-                                              isArchived: isArchived(chat.id),
-                                              hasUnread: (chat.unread || 0) > 0,
-                                            });
-                                          }}
-                                          className="ml-0.5 w-6 h-6 rounded-full hover:bg-muted flex items-center justify-center cursor-pointer"
-                                        >
-                                          <MoreVertical className="w-3.5 h-3.5 text-muted-foreground" />
-                                        </span>
+                                        <>
+                                          <span
+                                            role="button"
+                                            aria-label="Voice call"
+                                            onClick={(e) => {
+                                              e.stopPropagation();
+                                              e.preventDefault();
+                                              setPendingCall("voice");
+                                              setOpenPersonalChat({ id: chat.id, name: chat.name, avatar: chat.avatar, isVerified: (chat as any).isVerified === true });
+                                            }}
+                                            className="ml-0.5 w-6 h-6 rounded-full hover:bg-muted flex items-center justify-center cursor-pointer"
+                                          >
+                                            <Phone className="w-3.5 h-3.5 text-muted-foreground" />
+                                          </span>
+                                          <span
+                                            role="button"
+                                            aria-label="Chat options"
+                                            onClick={(e) => {
+                                              e.stopPropagation();
+                                              e.preventDefault();
+                                              setActionsTarget({
+                                                id: chat.id,
+                                                name: chat.name,
+                                                isPinned: pinned,
+                                                isMuted: muted,
+                                                isArchived: isArchived(chat.id),
+                                                hasUnread: (chat.unread || 0) > 0,
+                                              });
+                                            }}
+                                            className="ml-0.5 w-6 h-6 rounded-full hover:bg-muted flex items-center justify-center cursor-pointer"
+                                          >
+                                            <MoreVertical className="w-3.5 h-3.5 text-muted-foreground" />
+                                          </span>
+                                        </>
                                       )}
                                     </span>
                                   </div>
@@ -1841,6 +1986,19 @@ export default function ChatHubPage({ embedded = false }: { embedded?: boolean }
                                         </span>
                                       )}
                                       {(() => {
+                                        // Draft indicator — show saved draft instead of last message
+                                        const draft = draftsMap[chat.id];
+                                        if (draft && !isTyping) {
+                                          return (
+                                            <span className={cn(
+                                              embedded ? "text-[12px]" : "text-[13px]",
+                                              "truncate leading-snug"
+                                            )}>
+                                              <span className="text-red-500 font-medium">Draft: </span>
+                                              <span className="text-muted-foreground">{draft}</span>
+                                            </span>
+                                          );
+                                        }
                                         if (isTyping) {
                                           return (
                                             <span className={cn(
@@ -1849,7 +2007,7 @@ export default function ChatHubPage({ embedded = false }: { embedded?: boolean }
                                             )}>
                                               typing
                                               {[0,1,2].map(i => (
-                                                <span key={i} className="inline-block w-1 h-1 rounded-full bg-primary animate-bounce" style={{ animationDelay: `${i*0.15}s`, animationDuration: "0.8s" }} />
+                                                <span key={i} className="inline-block w-[3px] h-[3px] rounded-full bg-primary animate-bounce" style={{ animationDelay: `${i*0.15}s`, animationDuration: "0.8s" }} />
                                               ))}
                                             </span>
                                           );
@@ -1869,7 +2027,13 @@ export default function ChatHubPage({ embedded = false }: { embedded?: boolean }
                                           );
                                         }
                                         const preview = parseRichMessagePreview(chat.lastMessage || "");
-                                        const youPrefix = active === "personal" && (chat as any).isSentByMe && !(chat as any).isGroup;
+                                        const isGroupChat = !!(chat as any).isGroup;
+                                        const senderPrefix = active === "personal" && isGroupChat && (chat as any).lastSenderName
+                                          ? `${(chat as any).lastSenderName}: `
+                                          : active === "personal" && (chat as any).isSentByMe && !isGroupChat
+                                          ? null // shown via check icons already
+                                          : null;
+                                        const youPrefix = active === "personal" && (chat as any).isSentByMe && !isGroupChat;
                                         return (
                                           <>
                                             {getMessagePreviewIcon(preview)}
@@ -1879,6 +2043,7 @@ export default function ChatHubPage({ embedded = false }: { embedded?: boolean }
                                               chat.unread > 0 && !muted ? "text-foreground font-medium" : "text-muted-foreground"
                                             )}>
                                               {youPrefix && <span className="text-muted-foreground">You: </span>}
+                                              {senderPrefix && <span className="text-foreground/70 font-medium">{senderPrefix}</span>}
                                               {preview}
                                             </span>
                                           </>
@@ -1946,6 +2111,13 @@ export default function ChatHubPage({ embedded = false }: { embedded?: boolean }
                             </button>
                           </button>
                         ))}
+                      </div>
+                    )}
+
+                    {/* People you may know — Suggested Contacts */}
+                    {!search && active === "personal" && !selectionMode && (
+                      <div className="pt-2">
+                        <SuggestedContactsRow />
                       </div>
                     )}
 
@@ -2233,7 +2405,28 @@ export default function ChatHubPage({ embedded = false }: { embedded?: boolean }
       {/* Inline Personal Chat */}
       <AnimatePresence>
         {openPersonalChat && (
-          <Suspense fallback={null}>
+          <Suspense fallback={
+            <div className="fixed inset-0 z-[1300] bg-background flex flex-col" style={{ transform: "translateX(0)" }}>
+              <div className="sticky top-0 z-10 bg-background/80 backdrop-blur-2xl border-b border-border/10 px-2 py-2.5 flex items-center gap-3">
+                <button onClick={() => setOpenPersonalChat(null)} className="min-h-[44px] min-w-[44px] flex items-center justify-center rounded-full hover:bg-muted/50 active:scale-90 transition-transform">
+                  <ArrowLeft className="h-5 w-5 text-foreground" />
+                </button>
+                <div className="w-9 h-9 rounded-full bg-muted animate-pulse" />
+                <div className="flex-1">
+                  <div className="h-4 w-28 bg-muted rounded-full animate-pulse mb-1" />
+                  <div className="h-3 w-16 bg-muted/60 rounded-full animate-pulse" />
+                </div>
+              </div>
+              <div className="flex-1 px-4 py-4 space-y-3">
+                {[...Array(5)].map((_, i) => (
+                  <div key={i} className={`flex gap-2 ${i % 2 === 0 ? "" : "flex-row-reverse"}`}>
+                    <div className="w-8 h-8 rounded-full bg-muted animate-pulse flex-shrink-0 mt-1" />
+                    <div className={`h-10 rounded-2xl bg-muted animate-pulse ${i % 2 === 0 ? "w-48" : "w-36"}`} style={{ animationDelay: `${i * 0.1}s` }} />
+                  </div>
+                ))}
+              </div>
+            </div>
+          }>
             <PersonalChat
               recipientId={openPersonalChat.id}
               recipientName={openPersonalChat.name}
@@ -2250,7 +2443,28 @@ export default function ChatHubPage({ embedded = false }: { embedded?: boolean }
       {/* Inline Group Chat */}
       <AnimatePresence>
         {openGroupChat && (
-          <Suspense fallback={null}>
+          <Suspense fallback={
+            <div className="fixed inset-0 z-50 bg-background flex flex-col">
+              <div className="sticky top-0 z-10 bg-background/95 backdrop-blur-xl border-b border-border/30 px-2 py-2.5 flex items-center gap-3">
+                <button onClick={() => setOpenGroupChat(null)} className="min-h-[44px] min-w-[44px] flex items-center justify-center rounded-full hover:bg-muted/50 active:scale-90 transition-transform">
+                  <ArrowLeft className="h-5 w-5 text-foreground" />
+                </button>
+                <div className="w-9 h-9 rounded-full bg-muted animate-pulse" />
+                <div className="flex-1">
+                  <div className="h-4 w-28 bg-muted rounded-full animate-pulse mb-1" />
+                  <div className="h-3 w-20 bg-muted/60 rounded-full animate-pulse" />
+                </div>
+              </div>
+              <div className="flex-1 px-4 py-4 space-y-3">
+                {[...Array(5)].map((_, i) => (
+                  <div key={i} className={`flex gap-2 ${i % 2 === 0 ? "" : "flex-row-reverse"}`}>
+                    <div className="w-8 h-8 rounded-full bg-muted animate-pulse flex-shrink-0 mt-1" />
+                    <div className={`h-10 rounded-2xl bg-muted animate-pulse ${i % 2 === 0 ? "w-48" : "w-36"}`} style={{ animationDelay: `${i * 0.1}s` }} />
+                  </div>
+                ))}
+              </div>
+            </div>
+          }>
             <GroupChat
               groupId={openGroupChat.id}
               groupName={openGroupChat.name}

@@ -926,6 +926,7 @@ export default function ProfileContentTabs({ userId }: { userId?: string }) {
             return (
               <motion.div
                 key={item.id}
+                data-testid={`profile-post-thumb-${item.id}`}
                 whileTap={{ scale: 0.95 }}
                 onClick={() => setSelectedPost(item)}
                 className={cn(

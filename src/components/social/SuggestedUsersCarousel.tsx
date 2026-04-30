@@ -31,7 +31,7 @@ const SuggestedUsersCarousel = memo(forwardRef<HTMLDivElement, SuggestedUsersCar
     queryFn: async () => {
       const { data, error } = await (supabase as any)
         .from("profiles")
-        .select("id, full_name, avatar_url, bio, is_verified")
+        .select("id, full_name, avatar_url, bio, is_verified, follower_count, posts_count")
         .neq("id", user?.id || "")
         .limit(20);
       if (error) throw error;
@@ -173,10 +173,19 @@ const SuggestedUsersCarousel = memo(forwardRef<HTMLDivElement, SuggestedUsersCar
                 </div>
 
                 {profile.bio && (
-                  <p className="text-[9px] text-muted-foreground line-clamp-2 mb-1.5 leading-tight">
+                  <p className="text-[9px] text-muted-foreground line-clamp-2 mb-0.5 leading-tight">
                     {profile.bio}
                   </p>
                 )}
+
+                {/* Follower / posts hint */}
+                <p className="text-[9px] text-muted-foreground/70 mb-1.5">
+                  {profile.follower_count > 0
+                    ? `${profile.follower_count >= 1000 ? `${(profile.follower_count / 1000).toFixed(1)}k` : profile.follower_count} followers`
+                    : profile.posts_count > 0
+                    ? `${profile.posts_count} posts`
+                    : "New member"}
+                </p>
               </div>
 
               {/* Follow button */}

@@ -4,7 +4,15 @@
 import { useEffect, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
-import { BarChart3, Crown, Search, Receipt, Star, Car, Calendar, Route, MessageSquare, Shield, MapPin, Users, DollarSign, Accessibility, Navigation, Wallet, User, Share2, Award, PieChart, Zap, History, Map as MapIcon, CalendarDays, Bell, Settings, Leaf, Briefcase, ThumbsUp, Dog, Music, Gift, TrendingUp, Trophy, Building2, Heart, Brain, ShieldCheck, Plane, UserPlus, Gem, Gavel, Camera } from "lucide-react";
+import {
+  BarChart3, Crown, Search, Receipt, Star, Car, Calendar, Route,
+  MessageSquare, Shield, MapPin, Users, DollarSign, Accessibility,
+  Navigation, Wallet, User, Share2, Award, PieChart, Zap, History,
+  Map as MapIcon, CalendarDays, Bell, Settings, Leaf, Briefcase,
+  ThumbsUp, Dog, Music, Gift, TrendingUp, Trophy, Building2, Heart,
+  Brain, ShieldCheck, Plane, UserPlus, Gem, Gavel, Camera, Grid3x3,
+  ChevronLeft,
+} from "lucide-react";
 import AppLayout from "@/components/app/AppLayout";
 import RideHistoryInsights from "@/components/rides/RideHistoryInsights";
 import RidePassPlans from "@/components/rides/RidePassPlans";
@@ -29,7 +37,6 @@ import RideLoyaltyCard from "@/components/rides/RideLoyaltyCard";
 import RideSpendingAnalytics from "@/components/rides/RideSpendingAnalytics";
 import RideQuickSearch from "@/components/rides/RideQuickSearch";
 import RideTripHistory from "@/components/rides/RideTripHistory";
-
 import RideScheduleCalendar from "@/components/rides/RideScheduleCalendar";
 import RideDriverMatch from "@/components/rides/RideDriverMatch";
 import RideSafetyCenter from "@/components/rides/RideSafetyCenter";
@@ -68,76 +75,148 @@ import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 import { useI18n } from "@/hooks/useI18n";
 
-// Tabs are built inside component for translation
+/* ─── Primary tabs always visible in nav bar ─── */
+const PRIMARY_TAB_IDS = ["book", "reserve", "tracking", "history", "wallet", "safety", "pass", "features"];
+
+/* ─── Feature categories grid ─── */
+interface FeatureItem { id: string; label: string; icon: React.ElementType }
+interface FeatureCategory { title: string; iconClass: string; bgClass: string; icon: React.ElementType; items: FeatureItem[] }
+
+const FEATURE_CATEGORIES: FeatureCategory[] = [
+  {
+    title: "Ride Tools",
+    icon: MapIcon,
+    iconClass: "text-primary",
+    bgClass: "bg-primary/10",
+    items: [
+      { id: "map", label: "Demand Map", icon: MapIcon },
+      { id: "compare", label: "Compare Fares", icon: DollarSign },
+      { id: "schedule", label: "Schedule", icon: Calendar },
+      { id: "multi", label: "Multi-Stop", icon: Route },
+      { id: "group", label: "Group Ride", icon: Users },
+      { id: "places", label: "Saved Places", icon: MapPin },
+      { id: "calendar", label: "Calendar", icon: CalendarDays },
+      { id: "ai-assist", label: "AI Assistant", icon: Brain },
+    ],
+  },
+  {
+    title: "Your Driver",
+    icon: Car,
+    iconClass: "text-blue-500",
+    bgClass: "bg-blue-500/10",
+    items: [
+      { id: "match", label: "Driver Match", icon: Car },
+      { id: "driver", label: "Driver Profile", icon: User },
+      { id: "chat", label: "In-Ride Chat", icon: MessageSquare },
+      { id: "rate", label: "Rate & Tip", icon: Star },
+      { id: "receipt", label: "Receipt", icon: Receipt },
+      { id: "driver-comm", label: "Driver Comms", icon: MessageSquare },
+      { id: "confirm", label: "Confirmation", icon: Star },
+    ],
+  },
+  {
+    title: "Rewards & Pay",
+    icon: Trophy,
+    iconClass: "text-amber-500",
+    bgClass: "bg-amber-500/10",
+    items: [
+      { id: "loyalty", label: "Loyalty Card", icon: Award },
+      { id: "loyalty-rwd", label: "Loyalty+", icon: Trophy },
+      { id: "rewards", label: "Rewards", icon: Trophy },
+      { id: "gifting", label: "Gifting", icon: Gift },
+      { id: "spending", label: "Spending", icon: PieChart },
+      { id: "pay-adv", label: "Payments+", icon: Wallet },
+      { id: "smart-price", label: "Smart Pricing", icon: DollarSign },
+      { id: "subscribe", label: "Subscriptions", icon: Gem },
+      { id: "marketplace", label: "Marketplace", icon: Gavel },
+    ],
+  },
+  {
+    title: "Safety & Access",
+    icon: Shield,
+    iconClass: "text-red-500",
+    bgClass: "bg-red-500/10",
+    items: [
+      { id: "a11y", label: "Accessibility", icon: Accessibility },
+      { id: "inclusive", label: "Inclusive+", icon: Heart },
+      { id: "a11y-adv", label: "A11y Adv.", icon: Accessibility },
+      { id: "adv-safety", label: "Safety+", icon: ShieldCheck },
+      { id: "safety-adv2", label: "Dashcam", icon: Camera },
+      { id: "lost", label: "Lost Item", icon: Search },
+      { id: "alerts", label: "Notifications", icon: Bell },
+      { id: "prefs", label: "Ride Prefs", icon: Settings },
+    ],
+  },
+  {
+    title: "Analytics",
+    icon: BarChart3,
+    iconClass: "text-violet-500",
+    bgClass: "bg-violet-500/10",
+    items: [
+      { id: "insights", label: "Trip Insights", icon: BarChart3 },
+      { id: "analytics", label: "Smart Analytics", icon: TrendingUp },
+      { id: "ride-analytics", label: "Dashboard", icon: PieChart },
+      { id: "eco", label: "Eco Tracker", icon: Leaf },
+      { id: "routes", label: "Route Intel", icon: Brain },
+      { id: "surge", label: "Surge Zones", icon: MapIcon },
+    ],
+  },
+  {
+    title: "Social & Lifestyle",
+    icon: Share2,
+    iconClass: "text-pink-500",
+    bgClass: "bg-pink-500/10",
+    items: [
+      { id: "social", label: "Social Hub", icon: Share2 },
+      { id: "social-feat", label: "Community", icon: Users },
+      { id: "entertain", label: "In-Ride Music", icon: Music },
+      { id: "wellness", label: "Wellness", icon: Heart },
+    ],
+  },
+  {
+    title: "Business & More",
+    icon: Briefcase,
+    iconClass: "text-emerald-500",
+    bgClass: "bg-emerald-500/10",
+    items: [
+      { id: "business", label: "Business", icon: Briefcase },
+      { id: "corporate", label: "Fleet", icon: Building2 },
+      { id: "travel", label: "Travel", icon: Plane },
+      { id: "family", label: "Family", icon: UserPlus },
+      { id: "specialty", label: "Specialty", icon: Dog },
+      { id: "feedback", label: "Feedback", icon: ThumbsUp },
+      { id: "scheduling", label: "Recurring", icon: CalendarDays },
+    ],
+  },
+];
 
 export default function RideHubPage() {
   const navigate = useNavigate();
   const { t } = useI18n();
-  const tabs = [
-    { id: "book", label: t("ride.tab_book"), icon: Zap },
-    { id: "reserve", label: t("ride.tab_reserve"), icon: CalendarDays },
-    { id: "map", label: t("ride.tab_map"), icon: MapIcon },
-    { id: "history", label: t("ride.tab_history"), icon: History },
-    { id: "calendar", label: t("ride.tab_reserve"), icon: CalendarDays },
-    { id: "insights", label: t("ride.tab_insights"), icon: BarChart3 },
-    { id: "tracking", label: t("ride.tab_live"), icon: Navigation },
-    { id: "match", label: "Match", icon: Car },
-    { id: "confirm", label: t("ride.confirm"), icon: Star },
-    { id: "wallet", label: t("ride.tab_wallet"), icon: Wallet },
-    { id: "loyalty", label: "Loyalty", icon: Award },
-    { id: "spending", label: "Spending", icon: PieChart },
-    { id: "social", label: "Social", icon: Share2 },
-    { id: "driver", label: "Driver", icon: User },
-    { id: "surge", label: "Demand", icon: Car },
-    { id: "compare", label: "Compare", icon: DollarSign },
-    { id: "schedule", label: "Schedule", icon: Calendar },
-    { id: "multi", label: "Multi-Stop", icon: Route },
-    { id: "group", label: "Group", icon: Users },
-    { id: "places", label: "Places", icon: MapPin },
-    { id: "chat", label: "Chat", icon: MessageSquare },
-    { id: "safety", label: t("ride.tab_safety"), icon: Shield },
-    { id: "alerts", label: t("ride.tab_alerts"), icon: Bell },
-    { id: "pass", label: t("ride.tab_pass"), icon: Crown },
-    { id: "receipt", label: "Receipt", icon: Receipt },
-    { id: "rate", label: "Rate", icon: Star },
-    { id: "lost", label: "Lost Item", icon: Search },
-    { id: "a11y", label: t("ride.accessible"), icon: Accessibility },
-    { id: "prefs", label: "Prefs", icon: Settings },
-    { id: "eco", label: "Eco", icon: Leaf },
-    { id: "business", label: "Business", icon: Briefcase },
-    { id: "feedback", label: "Feedback", icon: ThumbsUp },
-    { id: "specialty", label: "Special", icon: Dog },
-    { id: "analytics", label: "Analytics", icon: TrendingUp },
-    { id: "entertain", label: "Music", icon: Music },
-    { id: "gifting", label: "Gifting", icon: Gift },
-    { id: "rewards", label: "Rewards", icon: Trophy },
-    { id: "corporate", label: "Corporate", icon: Building2 },
-    { id: "inclusive", label: "Inclusive", icon: Heart },
-    { id: "routes", label: "Routes", icon: Brain },
-    { id: "adv-safety", label: t("ride.tab_safety") + "+", icon: ShieldCheck },
-    { id: "travel", label: "Travel", icon: Plane },
-    { id: "family", label: "Family", icon: UserPlus },
-    { id: "subscribe", label: "Subscribe", icon: Gem },
-    { id: "smart-price", label: "Pricing", icon: DollarSign },
-    { id: "driver-comm", label: "Comms", icon: MessageSquare },
-    { id: "social-feat", label: "Community", icon: Users },
-    { id: "ride-analytics", label: "Dashboard", icon: PieChart },
-    { id: "marketplace", label: "Marketplace", icon: Gavel },
-    { id: "wellness", label: "Wellness", icon: Heart },
-    { id: "pay-adv", label: "Pay+", icon: Wallet },
-    { id: "ai-assist", label: "AI", icon: Brain },
-    { id: "scheduling", label: "Scheduling", icon: CalendarDays },
-    { id: "safety-adv2", label: "Dashcam", icon: Camera },
-    { id: "loyalty-rwd", label: "Loyalty+", icon: Trophy },
-    { id: "a11y-adv", label: "A11y+", icon: Accessibility },
+
+  const primaryTabs = [
+    { id: "book",     label: t("ride.tab_book"),    icon: Zap },
+    { id: "reserve",  label: t("ride.tab_reserve"),  icon: CalendarDays },
+    { id: "tracking", label: t("ride.tab_live"),     icon: Navigation },
+    { id: "history",  label: t("ride.tab_history"),  icon: History },
+    { id: "wallet",   label: t("ride.tab_wallet"),   icon: Wallet },
+    { id: "safety",   label: t("ride.tab_safety"),   icon: Shield },
+    { id: "pass",     label: t("ride.tab_pass"),     icon: Crown },
+    { id: "features", label: "Features",             icon: Grid3x3 },
   ];
+
   const [searchParams] = useSearchParams();
   const initialTab = searchParams.get("tab") === "reserve" ? "reserve" : "book";
   const initialDestination = searchParams.get("destination") || undefined;
   const initialDestLat = searchParams.get("destLat") ? parseFloat(searchParams.get("destLat")!) : undefined;
   const initialDestLng = searchParams.get("destLng") ? parseFloat(searchParams.get("destLng")!) : undefined;
+
   const [activeTab, setActiveTab] = useState(initialTab);
   const [bookWithSchedule, setBookWithSchedule] = useState(false);
+  // Rebook prefill state
+  const [rebookDest, setRebookDest] = useState<{ address: string; lat?: number; lng?: number } | null>(null);
+  // Track which tab to return to when back is pressed from a feature tab
+  const [featureReturnTab, setFeatureReturnTab] = useState<string>("features");
 
   useEffect(() => {
     const nextTab = searchParams.get("tab") === "reserve" ? "reserve" : "book";
@@ -149,24 +228,63 @@ export default function RideHubPage() {
   }, [activeTab]);
 
   const isFullScreen = activeTab === "book" || activeTab === "reserve";
+  const isPrimary = PRIMARY_TAB_IDS.includes(activeTab);
+
+  // Navigate from features grid to a feature tab
+  const goToFeature = (id: string) => {
+    setFeatureReturnTab("features");
+    setActiveTab(id);
+  };
+
+  // Handle rebook from trip history → prefill book tab
+  const handleRebook = (dropoffAddress: string, dropoffLat?: number, dropoffLng?: number) => {
+    setRebookDest({ address: dropoffAddress, lat: dropoffLat, lng: dropoffLng });
+    setActiveTab("book");
+    toast.success("Route loaded — set your pickup and go!");
+  };
+
+  // Handle back button: feature tabs go back to features grid, others go to home
+  const handleBack = () => {
+    if (!isPrimary) {
+      setActiveTab(featureReturnTab);
+    } else {
+      navigate("/");
+    }
+  };
 
   return (
     <AppLayout
       title={t("ride.title")}
       showBack
-      onBack={() => navigate("/")}
+      onBack={handleBack}
       fixedHeight={isFullScreen}
       hideHeader={activeTab === "book"}
       hideNav={activeTab === "book"}
       className={activeTab === "book" ? "overflow-hidden !pb-0" : isFullScreen ? "overflow-hidden" : ""}
     >
-      {/* Tab bar — hidden for "book" since RideBookingHome renders its own header + tabs */}
+      {/* Tab bar — hidden when in full-screen book mode */}
       {activeTab !== "book" && (
-        <div className={cn("z-20 bg-background/95 backdrop-blur-lg border-b border-border/30 shrink-0", isFullScreen ? "" : "sticky top-14")}>
+        <div className={cn(
+          "z-20 bg-background/95 backdrop-blur-lg border-b border-border/30 shrink-0",
+          isFullScreen ? "" : "sticky top-14"
+        )}>
+          {/* Back breadcrumb for feature tabs */}
+          {!isPrimary && (
+            <button
+              onClick={() => setActiveTab(featureReturnTab)}
+              className="flex items-center gap-1.5 px-4 pt-2 pb-1 text-xs font-bold text-primary"
+            >
+              <ChevronLeft className="w-3.5 h-3.5" />
+              All Features
+            </button>
+          )}
+
+          {/* Primary tab pills */}
           <div className="flex overflow-x-auto gap-1 px-4 py-2 scrollbar-none">
-            {tabs.map((tab) => {
+            {primaryTabs.map((tab) => {
               const Icon = tab.icon;
-              const active = activeTab === tab.id;
+              // "features" tab is active when we're on any non-primary tab
+              const active = activeTab === tab.id || (tab.id === "features" && !isPrimary);
               return (
                 <button
                   key={tab.id}
@@ -198,62 +316,148 @@ export default function RideHubPage() {
             transition={{ duration: 0.2 }}
             className={cn(isFullScreen && "h-full min-h-0 flex flex-col flex-1")}
           >
-            {activeTab === "book" && <RideBookingHome initialSchedule={bookWithSchedule} initialDestinationAddress={initialDestination} initialDestLat={initialDestLat} initialDestLng={initialDestLng} />}
-            {activeTab === "reserve" && <div className="flex-1 min-h-0 overflow-hidden"><ZivoReserve onReserve={() => { setBookWithSchedule(true); setActiveTab("book"); }} /></div>}
-            {activeTab === "search" && <div className="p-4"><RideQuickSearch /></div>}
-            {activeTab === "history" && <div className="p-4"><RideTripHistory /></div>}
-            {activeTab === "calendar" && <div className="p-4"><RideScheduleCalendar /></div>}
-            {activeTab === "insights" && <div className="pt-4"><RideHistoryInsights /></div>}
+            {/* ── Book ── */}
+            {activeTab === "book" && (
+              <RideBookingHome
+                initialSchedule={bookWithSchedule}
+                initialDestinationAddress={rebookDest?.address ?? initialDestination}
+                initialDestLat={rebookDest?.lat ?? initialDestLat}
+                initialDestLng={rebookDest?.lng ?? initialDestLng}
+              />
+            )}
+
+            {/* ── Reserve ── */}
+            {activeTab === "reserve" && (
+              <div className="flex-1 min-h-0 overflow-hidden">
+                <ZivoReserve onReserve={() => { setBookWithSchedule(true); setActiveTab("book"); }} />
+              </div>
+            )}
+
+            {/* ── Trip History ── */}
+            {activeTab === "history" && (
+              <div className="p-4">
+                <RideTripHistory onRebook={handleRebook} />
+              </div>
+            )}
+
+            {/* ── Live Tracker ── */}
             {activeTab === "tracking" && <div className="p-4"><LiveTripTracker /></div>}
-            {activeTab === "match" && <div className="p-4"><RideDriverMatch /></div>}
-            {activeTab === "confirm" && <div className="p-4"><RideBookingConfirmation onTrackRide={() => setActiveTab("tracking")} onAddToCalendar={() => toast.success("Added to calendar!")} /></div>}
+
+            {/* ── Wallet ── */}
             {activeTab === "wallet" && <div className="p-4"><RideWallet /></div>}
-            {activeTab === "loyalty" && <div className="p-4"><RideLoyaltyCard /></div>}
-            {activeTab === "spending" && <div className="p-4"><RideSpendingAnalytics /></div>}
-            {activeTab === "social" && <div className="p-4"><RideSocialHub /></div>}
-            {activeTab === "driver" && <div className="p-4"><DriverProfileCard /></div>}
-            {activeTab === "surge" && <div className="p-4"><SurgePricingMap /></div>}
-            {activeTab === "compare" && <div className="p-4"><FareComparisonTool /></div>}
-            {activeTab === "schedule" && <div className="p-4"><ScheduleRideSheet /></div>}
-            {activeTab === "multi" && <div className="p-4"><MultiStopRoute /></div>}
-            {activeTab === "group" && <div className="p-4"><GroupRidePlanner /></div>}
-            {activeTab === "places" && <div className="p-4"><SmartSavedPlaces /></div>}
-            {activeTab === "chat" && <div className="p-4"><InRideChat onCall={() => toast.info("Calling driver...")} /></div>}
+
+            {/* ── Safety ── */}
             {activeTab === "safety" && <div className="p-4"><RideSafetyCenter /></div>}
-            {activeTab === "alerts" && <div className="p-4"><RideNotificationCenter /></div>}
-            {activeTab === "pass" && <div className="pt-4"><RidePassPlans onSubscribe={(id) => toast.success(`Starting ${id} subscription...`)} /></div>}
-            {activeTab === "receipt" && <div className="p-4"><RideReceiptCard /></div>}
-            {activeTab === "rate" && <div className="p-4"><RateAndTipFlow onSubmit={(d) => console.log(d)} onSkip={() => toast.info("Skipped")} /></div>}
-            {activeTab === "lost" && <div className="p-4"><LostItemReport onSubmit={(d) => console.log(d)} onContactDriver={() => toast.info("Calling...")} /></div>}
-            {activeTab === "a11y" && <div className="p-4"><AccessibilityHub /></div>}
-            {activeTab === "prefs" && <div className="p-4"><RidePreferences /></div>}
-            {activeTab === "eco" && <div className="p-4"><RideEcoTracker /></div>}
-            {activeTab === "business" && <div className="p-4"><RideBusinessManager /></div>}
-            {activeTab === "feedback" && <div className="p-4"><RideFeedbackCenter /></div>}
-            {activeTab === "specialty" && <div className="p-4"><RideSpecialtyModes /></div>}
-            {activeTab === "analytics" && <div className="p-4"><RideSmartAnalytics /></div>}
-            {activeTab === "entertain" && <div className="p-4"><RideEntertainment /></div>}
-            {activeTab === "gifting" && <div className="p-4"><RideGifting /></div>}
-            {activeTab === "rewards" && <div className="p-4"><RideRewardsGamification /></div>}
-            {activeTab === "corporate" && <div className="p-4"><RideCorporateFleet /></div>}
-            {activeTab === "inclusive" && <div className="p-4"><RideAccessibilityPlus /></div>}
-            {activeTab === "routes" && <div className="p-4"><RideRouteIntelligence /></div>}
-            {activeTab === "adv-safety" && <div className="p-4"><RideAdvancedSafety /></div>}
-            {activeTab === "travel" && <div className="p-4"><RideTravelIntegration /></div>}
-            {activeTab === "family" && <div className="p-4"><RideFamilyAccounts /></div>}
-            {activeTab === "subscribe" && <div className="p-4"><RideSubscriptionHub /></div>}
-            {activeTab === "smart-price" && <div className="p-4"><RideSmartPricing /></div>}
-            {activeTab === "driver-comm" && <div className="p-4"><RideDriverComm /></div>}
-            {activeTab === "social-feat" && <div className="p-4"><RideSocialFeatures /></div>}
-            {activeTab === "ride-analytics" && <div className="p-4"><RideAnalyticsDashboard /></div>}
-            {activeTab === "marketplace" && <div className="p-4"><RideMarketplace /></div>}
-            {activeTab === "wellness" && <div className="p-4"><RideWellnessComfort /></div>}
-            {activeTab === "pay-adv" && <div className="p-4"><RidePaymentsAdvanced /></div>}
-            {activeTab === "ai-assist" && <div className="p-4"><RideAIAssistant /></div>}
-            {activeTab === "scheduling" && <div className="p-4"><RideSchedulingRecurring /></div>}
-            {activeTab === "safety-adv2" && <div className="p-4"><RideSafetyAdvanced /></div>}
-            {activeTab === "loyalty-rwd" && <div className="p-4"><RideLoyaltyRewards /></div>}
-            {activeTab === "a11y-adv" && <div className="p-4"><RideAccessibilityAdvanced /></div>}
+
+            {/* ── Pass ── */}
+            {activeTab === "pass" && (
+              <div className="pt-4">
+                <RidePassPlans onSubscribe={(id) => toast.success(`Starting ${id} subscription...`)} />
+              </div>
+            )}
+
+            {/* ── Features grid ── */}
+            {activeTab === "features" && (
+              <div className="p-4 space-y-5 pb-10">
+                <div>
+                  <h2 className="text-lg font-black text-foreground">All Features</h2>
+                  <p className="text-xs text-muted-foreground mt-0.5">
+                    Everything ZIVO Rides has to offer
+                  </p>
+                </div>
+
+                {FEATURE_CATEGORIES.map((group) => {
+                  const GroupIcon = group.icon;
+                  return (
+                    <div key={group.title}>
+                      <div className="flex items-center gap-2 mb-2.5">
+                        <div className={cn("w-6 h-6 rounded-lg flex items-center justify-center", group.bgClass)}>
+                          <GroupIcon className={cn("w-3.5 h-3.5", group.iconClass)} />
+                        </div>
+                        <h3 className="text-sm font-bold text-foreground">{group.title}</h3>
+                      </div>
+                      <div className="grid grid-cols-4 gap-2">
+                        {group.items.map((item) => {
+                          const ItemIcon = item.icon;
+                          return (
+                            <button
+                              key={item.id}
+                              onClick={() => goToFeature(item.id)}
+                              className="flex flex-col items-center gap-1.5 p-3 rounded-2xl bg-card border border-border/40 hover:border-primary/30 hover:bg-primary/5 active:scale-95 transition-all"
+                            >
+                              <div className={cn("w-9 h-9 rounded-xl flex items-center justify-center", group.bgClass)}>
+                                <ItemIcon className={cn("w-4 h-4", group.iconClass)} />
+                              </div>
+                              <span className="text-[9px] font-bold text-muted-foreground text-center leading-tight">
+                                {item.label}
+                              </span>
+                            </button>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+
+            {/* ── All other feature tabs ── */}
+            {activeTab === "calendar"      && <div className="p-4"><RideScheduleCalendar /></div>}
+            {activeTab === "insights"      && <div className="pt-4"><RideHistoryInsights /></div>}
+            {activeTab === "match"         && <div className="p-4"><RideDriverMatch /></div>}
+            {activeTab === "confirm"       && (
+              <div className="p-4">
+                <RideBookingConfirmation
+                  onTrackRide={() => setActiveTab("tracking")}
+                  onAddToCalendar={() => toast.success("Added to calendar!")}
+                />
+              </div>
+            )}
+            {activeTab === "loyalty"       && <div className="p-4"><RideLoyaltyCard /></div>}
+            {activeTab === "spending"      && <div className="p-4"><RideSpendingAnalytics /></div>}
+            {activeTab === "social"        && <div className="p-4"><RideSocialHub /></div>}
+            {activeTab === "driver"        && <div className="p-4"><DriverProfileCard /></div>}
+            {activeTab === "surge"         && <div className="p-4"><SurgePricingMap /></div>}
+            {activeTab === "map"           && <div className="p-4"><SurgePricingMap /></div>}
+            {activeTab === "compare"       && <div className="p-4"><FareComparisonTool /></div>}
+            {activeTab === "schedule"      && <div className="p-4"><ScheduleRideSheet /></div>}
+            {activeTab === "multi"         && <div className="p-4"><MultiStopRoute /></div>}
+            {activeTab === "group"         && <div className="p-4"><GroupRidePlanner /></div>}
+            {activeTab === "places"        && <div className="p-4"><SmartSavedPlaces /></div>}
+            {activeTab === "chat"          && <div className="p-4"><InRideChat onCall={() => toast.info("Calling driver...")} /></div>}
+            {activeTab === "alerts"        && <div className="p-4"><RideNotificationCenter /></div>}
+            {activeTab === "receipt"       && <div className="p-4"><RideReceiptCard /></div>}
+            {activeTab === "rate"          && <div className="p-4"><RateAndTipFlow onSubmit={() => {}} onSkip={() => toast.info("Skipped")} /></div>}
+            {activeTab === "lost"          && <div className="p-4"><LostItemReport onSubmit={() => {}} onContactDriver={() => toast.info("Calling...")} /></div>}
+            {activeTab === "a11y"          && <div className="p-4"><AccessibilityHub /></div>}
+            {activeTab === "prefs"         && <div className="p-4"><RidePreferences /></div>}
+            {activeTab === "eco"           && <div className="p-4"><RideEcoTracker /></div>}
+            {activeTab === "business"      && <div className="p-4"><RideBusinessManager /></div>}
+            {activeTab === "feedback"      && <div className="p-4"><RideFeedbackCenter /></div>}
+            {activeTab === "specialty"     && <div className="p-4"><RideSpecialtyModes /></div>}
+            {activeTab === "analytics"     && <div className="p-4"><RideSmartAnalytics /></div>}
+            {activeTab === "entertain"     && <div className="p-4"><RideEntertainment /></div>}
+            {activeTab === "gifting"       && <div className="p-4"><RideGifting /></div>}
+            {activeTab === "rewards"       && <div className="p-4"><RideRewardsGamification /></div>}
+            {activeTab === "corporate"     && <div className="p-4"><RideCorporateFleet /></div>}
+            {activeTab === "inclusive"     && <div className="p-4"><RideAccessibilityPlus /></div>}
+            {activeTab === "routes"        && <div className="p-4"><RideRouteIntelligence /></div>}
+            {activeTab === "adv-safety"    && <div className="p-4"><RideAdvancedSafety /></div>}
+            {activeTab === "travel"        && <div className="p-4"><RideTravelIntegration /></div>}
+            {activeTab === "family"        && <div className="p-4"><RideFamilyAccounts /></div>}
+            {activeTab === "subscribe"     && <div className="p-4"><RideSubscriptionHub /></div>}
+            {activeTab === "smart-price"   && <div className="p-4"><RideSmartPricing /></div>}
+            {activeTab === "driver-comm"   && <div className="p-4"><RideDriverComm /></div>}
+            {activeTab === "social-feat"   && <div className="p-4"><RideSocialFeatures /></div>}
+            {activeTab === "ride-analytics"&& <div className="p-4"><RideAnalyticsDashboard /></div>}
+            {activeTab === "marketplace"   && <div className="p-4"><RideMarketplace /></div>}
+            {activeTab === "wellness"      && <div className="p-4"><RideWellnessComfort /></div>}
+            {activeTab === "pay-adv"       && <div className="p-4"><RidePaymentsAdvanced /></div>}
+            {activeTab === "ai-assist"     && <div className="p-4"><RideAIAssistant /></div>}
+            {activeTab === "scheduling"    && <div className="p-4"><RideSchedulingRecurring /></div>}
+            {activeTab === "safety-adv2"   && <div className="p-4"><RideSafetyAdvanced /></div>}
+            {activeTab === "loyalty-rwd"   && <div className="p-4"><RideLoyaltyRewards /></div>}
+            {activeTab === "a11y-adv"      && <div className="p-4"><RideAccessibilityAdvanced /></div>}
           </motion.div>
         </AnimatePresence>
       </div>

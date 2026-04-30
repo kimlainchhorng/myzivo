@@ -53,6 +53,10 @@ import ChevronRight from "lucide-react/dist/esm/icons/chevron-right";
 import MessageSquareOff from "lucide-react/dist/esm/icons/message-square-off";
 import MessageSquare from "lucide-react/dist/esm/icons/message-square";
 import UserCheck from "lucide-react/dist/esm/icons/user-check";
+import Smile from "lucide-react/dist/esm/icons/smile";
+import Calendar from "lucide-react/dist/esm/icons/calendar";
+import Gift from "lucide-react/dist/esm/icons/gift";
+import TrendingUp from "lucide-react/dist/esm/icons/trending-up";
 import Settings2 from "lucide-react/dist/esm/icons/settings-2";
 import Search from "lucide-react/dist/esm/icons/search";
 import Trash2 from "lucide-react/dist/esm/icons/trash-2";
@@ -238,6 +242,11 @@ export default function ReelsFeedPage() {
   const [searchResults, setSearchResults] = useState<any[]>([]);
   const [searchLoading, setSearchLoading] = useState(false);
   const [feedFilter, setFeedFilter] = useState<"all" | "photos" | "videos" | "text">("all");
+  const [feedTab, setFeedTab] = useState<"For You" | "Friends" | "Following">("For You");
+  const [sidebarContacts, setSidebarContacts] = useState<Array<{ id: string; name: string; avatar: string | null }>>([]);
+  const [trendingTags, setTrendingTags] = useState<string[]>([]);
+  const [friendIds, setFriendIds] = useState<Set<string>>(new Set());
+  const [followingIds, setFollowingIds] = useState<Set<string>>(new Set());
   const searchInputRef = useRef<HTMLInputElement>(null);
   const searchTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const location = useLocation();
@@ -316,6 +325,49 @@ export default function ReelsFeedPage() {
         });
     });
   }, []);
+
+  // Sidebar contacts + trending tags
+  useEffect(() => {
+    if (!userId) return;
+    (async () => {
+      const { data: fships } = await (supabase as any)
+        .from("friendships")
+        .select("user_id, friend_id")
+        .eq("status", "accepted")
+        .or(`user_id.eq.${userId},friend_id.eq.${userId}`)
+        .limit(10);
+      if (!fships?.length) return;
+      const fIds = fships.map((r: any) => r.user_id === userId ? r.friend_id : r.user_id);
+      setFriendIds(new Set(fIds));
+      const { data: profs } = await supabase
+        .from("profiles")
+        .select("user_id, full_name, avatar_url")
+        .in("user_id", fIds)
+        .limit(8);
+      if (profs) setSidebarContacts(profs.map((p: any) => ({ id: p.user_id, name: p.full_name || "User", avatar: p.avatar_url || null })));
+    })();
+    (async () => {
+      const { data: flData } = await (supabase as any)
+        .from("user_followers")
+        .select("following_id")
+        .eq("follower_id", userId);
+      if (flData) setFollowingIds(new Set(flData.map((r: any) => r.following_id)));
+    })();
+    (async () => {
+      const { data: posts } = await (supabase as any)
+        .from("user_posts")
+        .select("caption")
+        .order("created_at", { ascending: false })
+        .limit(100);
+      if (!posts) return;
+      const tagCounts: Record<string, number> = {};
+      posts.forEach((p: any) => {
+        const tags = (p.caption || "").match(/#[\w一-鿿؀-ۿ]+/g) || [];
+        tags.forEach((t: string) => { tagCounts[t] = (tagCounts[t] || 0) + 1; });
+      });
+      setTrendingTags(Object.entries(tagCounts).sort((a, b) => b[1] - a[1]).slice(0, 8).map(([t]) => t));
+    })();
+  }, [userId]);
 
   // User search with debounce
   const handleSearchChange = (q: string) => {
@@ -749,7 +801,7 @@ export default function ReelsFeedPage() {
         {/* Main Feed Content */}
         <PullToRefresh onRefresh={handlePullRefresh} className="min-h-screen bg-background pb-20 lg:pb-0 flex-1 lg:max-w-2xl lg:mx-auto">
           {/* Header — hidden on desktop since the global NavBar already provides search */}
-          <div data-testid="feed-sticky-header" className="lg:hidden sticky top-0 z-40 bg-background/95 backdrop-blur-xl border-b border-border/30 px-4 py-2.5 flex items-center gap-3 lg:pt-3 pt-safe">
+          <div data-testid="feed-sticky-header" className="lg:hidden sticky z-40 bg-background/95 backdrop-blur-xl border-b border-border/30 px-4 py-2.5 flex items-center gap-3 lg:pt-3 pt-safe" style={{ top: 'var(--zivo-safe-top, 0px)' }}>
             <h1 className="text-lg font-bold text-foreground shrink-0 lg:hidden">Feed</h1>
             <div className="flex-1 relative">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />
@@ -840,34 +892,45 @@ export default function ReelsFeedPage() {
           </AnimatePresence>
 
 
-          {/* Create post prompt (logged in) */}
+          {/* Create post — Facebook-style card composer */}
           {userId && (
-            <button
-              onClick={() => setShowCreate(true)}
-              className="w-full flex items-center gap-2.5 px-3 py-2.5 border-b border-border/10 bg-card hover:bg-muted/20 transition-colors"
-            >
-              <div className="h-8 w-8 rounded-full overflow-hidden bg-muted border border-primary/20 shrink-0">
-                {userProfile?.avatar ? (
-                  <img src={userProfile.avatar} alt="" className="h-full w-full object-cover" />
-                ) : (
-                  <div className="h-full w-full flex items-center justify-center text-muted-foreground/50">
-                    <Camera className="h-3.5 w-3.5" />
-                  </div>
-                )}
+            <div className="border-b border-border/10 bg-card px-3 pt-3 pb-2">
+              <div className="flex items-center gap-2.5 mb-2.5">
+                <div className="h-9 w-9 rounded-full overflow-hidden bg-muted border border-primary/20 shrink-0">
+                  {userProfile?.avatar ? (
+                    <img src={userProfile.avatar} alt="" className="h-full w-full object-cover" />
+                  ) : (
+                    <div className="h-full w-full flex items-center justify-center text-muted-foreground/50">
+                      <Camera className="h-3.5 w-3.5" />
+                    </div>
+                  )}
+                </div>
+                <button
+                  onClick={() => setShowCreate(true)}
+                  className="flex-1 text-left px-4 py-2 rounded-full bg-muted/40 border border-border/30 text-sm text-muted-foreground hover:bg-muted/60 transition-colors"
+                >
+                  What's on your mind?
+                </button>
               </div>
-              <p className="text-xs text-muted-foreground flex-1 text-left">What's on your mind?</p>
-              <div className="flex gap-1">
-                <div className="h-7 w-7 rounded-full bg-emerald-500/10 flex items-center justify-center">
-                  <ImageIcon className="h-3 w-3 text-emerald-600" />
-                </div>
-                <div className="h-7 w-7 rounded-full bg-blue-500/10 flex items-center justify-center">
-                  <Film className="h-3 w-3 text-blue-600" />
-                </div>
-                <div className="h-7 w-7 rounded-full bg-orange-500/10 flex items-center justify-center">
-                  <Camera className="h-3 w-3 text-orange-600" />
-                </div>
+              <div className="border-t border-border/20 pt-1.5 flex">
+                <button onClick={() => setShowCreate(true)} className="flex-1 flex items-center justify-center gap-1.5 py-1.5 rounded-xl hover:bg-muted/50 transition-colors">
+                  <ImageIcon className="h-4 w-4 text-emerald-500" />
+                  <span className="text-[11px] font-semibold text-muted-foreground">Photo/Video</span>
+                </button>
+                <button onClick={() => setShowCreate(true)} className="flex-1 flex items-center justify-center gap-1.5 py-1.5 rounded-xl hover:bg-muted/50 transition-colors">
+                  <Smile className="h-4 w-4 text-amber-500" />
+                  <span className="text-[11px] font-semibold text-muted-foreground">Feeling</span>
+                </button>
+                <button onClick={() => navigate("/map")} className="flex-1 flex items-center justify-center gap-1.5 py-1.5 rounded-xl hover:bg-muted/50 transition-colors">
+                  <MapPin className="h-4 w-4 text-red-500" />
+                  <span className="text-[11px] font-semibold text-muted-foreground">Check In</span>
+                </button>
+                <button onClick={() => navigate("/live")} className="flex-1 flex items-center justify-center gap-1.5 py-1.5 rounded-xl hover:bg-muted/50 transition-colors">
+                  <Radio className="h-4 w-4 text-rose-600" />
+                  <span className="text-[11px] font-semibold text-muted-foreground">Live</span>
+                </button>
               </div>
-            </button>
+            </div>
           )}
 
 
@@ -893,6 +956,23 @@ export default function ReelsFeedPage() {
            {/* Suggested Users */}
            <Suspense fallback={null}><SuggestedUsersCarousel /></Suspense>
 
+          {/* Feed filter tabs */}
+          <div className="sticky top-0 lg:top-[60px] z-20 bg-background/95 backdrop-blur-xl border-b border-border/20 flex">
+            {(["For You", "Friends", "Following"] as const).map((tab) => (
+              <button
+                key={tab}
+                onClick={() => setFeedTab(tab)}
+                className={cn(
+                  "flex-1 py-2.5 text-[13px] font-semibold transition-colors",
+                  feedTab === tab
+                    ? "text-primary border-b-2 border-primary"
+                    : "text-muted-foreground hover:text-foreground"
+                )}
+              >
+                {tab}
+              </button>
+            ))}
+          </div>
 
           {/* Posts */}
           {isLoading ? (
@@ -926,10 +1006,15 @@ export default function ReelsFeedPage() {
               )}
             </div>
           ) : (() => {
-            const filteredItems = feedFilter === "all" ? items
-              : feedFilter === "photos" ? items.filter(i => i.media_type === "image" && i.media_urls.length > 0)
-              : feedFilter === "videos" ? items.filter(i => i.media_type === "video")
-              : items.filter(i => !i.media_urls.length || !i.media_urls[0]);
+            const tabItems = feedTab === "Friends"
+              ? items.filter(i => i.author_id && friendIds.has(i.author_id))
+              : feedTab === "Following"
+              ? items.filter(i => i.author_id && followingIds.has(i.author_id))
+              : items;
+            const filteredItems = feedFilter === "all" ? tabItems
+              : feedFilter === "photos" ? tabItems.filter(i => i.media_type === "image" && i.media_urls.length > 0)
+              : feedFilter === "videos" ? tabItems.filter(i => i.media_type === "video")
+              : tabItems.filter(i => !i.media_urls.length || !i.media_urls[0]);
             return filteredItems.length === 0 ? (
               <div className="flex flex-col items-center justify-center h-40 text-muted-foreground/50">
                 <p className="text-sm">No {feedFilter} posts found</p>
@@ -1118,6 +1203,98 @@ export default function ReelsFeedPage() {
           </AnimatePresence>
 
         </PullToRefresh>
+
+        {/* Desktop RIGHT rail */}
+        <aside className="hidden xl:flex flex-col w-[280px] shrink-0 sticky top-[4.5rem] h-[calc(100vh-4.5rem)] overflow-y-auto py-4 px-3 gap-4 border-l border-border/20 bg-background/40 backdrop-blur-sm">
+
+          {/* Contacts */}
+          {sidebarContacts.length > 0 && (
+            <div>
+              <div className="flex items-center justify-between mb-2 px-1">
+                <h3 className="text-sm font-semibold text-foreground">Contacts</h3>
+                <button onClick={() => navigate("/friends")} className="text-[11px] text-primary hover:underline">See all</button>
+              </div>
+              <div className="space-y-0.5">
+                {sidebarContacts.map((c) => (
+                  <button
+                    key={c.id}
+                    onClick={() => navigate(`/user/${c.id}`)}
+                    className="w-full flex items-center gap-2.5 px-2 py-2 rounded-xl hover:bg-muted/50 transition-colors"
+                  >
+                    <div className="relative shrink-0">
+                      <div className="h-8 w-8 rounded-full overflow-hidden bg-muted border border-border/30">
+                        {c.avatar ? (
+                          <img src={c.avatar} alt={c.name} className="h-full w-full object-cover" />
+                        ) : (
+                          <div className="h-full w-full flex items-center justify-center text-[11px] font-bold text-muted-foreground bg-primary/10 text-primary">
+                            {c.name[0]?.toUpperCase()}
+                          </div>
+                        )}
+                      </div>
+                      <span className="absolute bottom-0 right-0 h-2.5 w-2.5 rounded-full bg-emerald-500 ring-2 ring-background" />
+                    </div>
+                    <span className="text-sm font-medium text-foreground truncate">{c.name}</span>
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Trending */}
+          {trendingTags.length > 0 && (
+            <div>
+              <div className="flex items-center gap-1.5 mb-2 px-1">
+                <TrendingUp className="h-4 w-4 text-primary" />
+                <h3 className="text-sm font-semibold text-foreground">Trending</h3>
+              </div>
+              <div className="space-y-0.5">
+                {trendingTags.map((tag) => (
+                  <button
+                    key={tag}
+                    onClick={() => navigate(`/search?q=${encodeURIComponent(tag)}`)}
+                    className="w-full flex items-center gap-2 px-2 py-1.5 rounded-lg hover:bg-muted/50 transition-colors text-left"
+                  >
+                    <Hash className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
+                    <span className="text-sm text-foreground truncate">{tag.replace("#", "")}</span>
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Birthdays */}
+          <div className="rounded-xl border border-border/30 bg-card/40 p-3">
+            <div className="flex items-center gap-1.5 mb-2">
+              <Gift className="h-4 w-4 text-rose-500" />
+              <h3 className="text-sm font-semibold text-foreground">Birthdays</h3>
+            </div>
+            <p className="text-[12px] text-muted-foreground mb-2">See which friends have birthdays today.</p>
+            <button
+              onClick={() => navigate("/friends")}
+              className="text-[12px] font-semibold text-primary hover:underline"
+            >
+              View birthdays →
+            </button>
+          </div>
+
+          {/* Upcoming Events */}
+          <div className="rounded-xl border border-border/30 bg-card/40 p-3">
+            <div className="flex items-center gap-1.5 mb-2">
+              <Calendar className="h-4 w-4 text-blue-500" />
+              <h3 className="text-sm font-semibold text-foreground">Events</h3>
+            </div>
+            <p className="text-[12px] text-muted-foreground mb-2">Discover events happening near you.</p>
+            <button
+              onClick={() => navigate("/explore")}
+              className="text-[12px] font-semibold text-primary hover:underline"
+            >
+              Browse events →
+            </button>
+          </div>
+
+          <p className="text-[10px] text-muted-foreground/60 mt-auto px-1 pt-2">© ZIVO LLC · hizivo.com</p>
+        </aside>
+
       </div>
 
       {/* Bottom nav rendered outside PullToRefresh so its `transform` doesn't
@@ -2746,6 +2923,33 @@ function FeedCard({ item, currentUserId, onOpenFullscreen, autoPlayVideo, detail
         )}
       </AnimatePresence>
 
+      {/* Facebook-style engagement summary row */}
+      {(localLikes > 0 || localComments > 0 || (item.shares_count || 0) > 0) && (
+        <div className="flex items-center justify-between px-3 pb-1 pt-0.5">
+          <div className="flex items-center gap-1">
+            {localLikes > 0 && (
+              <div className="flex items-center gap-1">
+                <span className="text-sm">{selectedReaction || "❤️"}</span>
+                {selectedReaction && selectedReaction !== "❤️" && <span className="text-sm">❤️</span>}
+                <span className="text-[12px] text-muted-foreground">{localLikes >= 1000 ? `${(localLikes / 1000).toFixed(1)}k` : localLikes}</span>
+              </div>
+            )}
+          </div>
+          <div className="flex items-center gap-2.5">
+            {localComments > 0 && (
+              <button onClick={handleComment} className="text-[12px] text-muted-foreground hover:text-foreground hover:underline transition-colors">
+                {localComments === 1 ? "1 comment" : `${localComments >= 1000 ? `${(localComments / 1000).toFixed(1)}k` : localComments} comments`}
+              </button>
+            )}
+            {(item.shares_count || 0) > 0 && (
+              <span className="text-[12px] text-muted-foreground">
+                {item.shares_count} {item.shares_count === 1 ? "share" : "shares"}
+              </span>
+            )}
+          </div>
+        </div>
+      )}
+
       {/* Action buttons — enhanced with counts */}
       <div className="flex items-center px-2.5 sm:px-3 py-1.5">
         <div className="flex items-center gap-1 flex-1">
@@ -2922,6 +3126,15 @@ function FeedCard({ item, currentUserId, onOpenFullscreen, autoPlayVideo, detail
             <EyeOff className="h-5 w-5 text-foreground" />
             <span className="text-sm font-medium text-foreground">Not interested</span>
           </button>
+          {!isOwner && item.author_name && (
+            <button
+              onClick={() => { setShowPostMenu(false); toast.success(`${item.author_name} snoozed for 30 days`); }}
+              className="flex items-center gap-4 w-full px-4 py-3.5 hover:bg-muted/50 rounded-xl min-h-[48px]"
+            >
+              <BellOff className="h-5 w-5 text-foreground" />
+              <span className="text-sm font-medium text-foreground">Snooze {item.author_name} for 30 days</span>
+            </button>
+          )}
           <button
             onClick={() => { setShowPostMenu(false); setShowShareSheet(true); }}
             className="flex items-center gap-4 w-full px-4 py-3.5 hover:bg-muted/50 rounded-xl min-h-[48px]"

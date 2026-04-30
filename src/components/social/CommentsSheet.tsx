@@ -37,6 +37,7 @@ export default function CommentsSheet({
   const [text, setText] = useState("");
   const [replyTo, setReplyTo] = useState<{ id: string; name: string } | null>(null);
   const [showReactionsFor, setShowReactionsFor] = useState<string | null>(null);
+  const [sort, setSort] = useState<"recent" | "top">("recent");
   const inputRef = useRef<HTMLInputElement>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
 
@@ -79,6 +80,26 @@ export default function CommentsSheet({
       className={cn(dark && "bg-black/95 text-white")}
       headerClassName={cn("border-b", border)}
     >
+      {/* Sort tabs */}
+      {comments.length > 1 && (
+        <div className={cn("flex gap-1 px-4 pt-2 pb-1 border-b", border)}>
+          {(["recent", "top"] as const).map((s) => (
+            <button
+              key={s}
+              onClick={() => setSort(s)}
+              className={cn(
+                "px-3 py-1 rounded-full text-[11px] font-semibold capitalize transition-colors",
+                sort === s
+                  ? "bg-primary/10 text-primary"
+                  : dark ? "text-white/50 hover:text-white/80" : "text-muted-foreground hover:text-foreground"
+              )}
+            >
+              {s === "recent" ? "Most Recent" : "Top Comments"}
+            </button>
+          ))}
+        </div>
+      )}
+
       {/* Comments List */}
       <div ref={scrollRef} className="px-4 py-3 space-y-4 scrollbar-none">
         {loading ? (
@@ -89,7 +110,13 @@ export default function CommentsSheet({
             <p className={cn("text-xs mt-1", mutedText)}>Be the first to comment!</p>
           </div>
         ) : (
-          comments.map((comment) => (
+          [...comments]
+            .sort((a, b) =>
+              sort === "top"
+                ? ((b.reactions?.length || 0) + (b.replies?.length || 0)) - ((a.reactions?.length || 0) + (a.replies?.length || 0))
+                : new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+            )
+            .map((comment) => (
             <CommentItem
               key={comment.id}
               comment={comment}

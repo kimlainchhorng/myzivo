@@ -96,6 +96,7 @@ import Flame from "lucide-react/dist/esm/icons/flame";
 import Clock from "lucide-react/dist/esm/icons/clock";
 const ForwardPickerSheet = lazy(() => import("./ForwardPickerSheet"));
 const ScheduledMessagesSheet = lazy(() => import("./ScheduledMessagesSheet"));
+const PollCreatorSheet = lazy(() => import("./PollCreatorSheet"));
 import { useMessageActions, type DirectMessage } from "@/hooks/useMessageActions";
 
 const INITIAL_VISIBLE_TIMELINE_ITEMS = 25;
@@ -267,6 +268,7 @@ export default function PersonalChat({ recipientId, recipientName, recipientAvat
   const [showGiftPanel, setShowGiftPanel] = useState(false);
   const [showWalletSheet, setShowWalletSheet] = useState(false);
   const [showScanner, setShowScanner] = useState(false);
+  const [showPollCreator, setShowPollCreator] = useState(false);
   const [pendingLockedFile, setPendingLockedFile] = useState<File | null>(null);
   const [chatStyle, setChatStyle] = useState({ wallpaper: "default", themeColor: "default", fontSize: "medium" });
   const [callEvents, setCallEvents] = useState<CallEvent[]>([]);
@@ -1422,7 +1424,7 @@ export default function PersonalChat({ recipientId, recipientName, recipientAvat
       initial={inline ? { opacity: 0 } : { x: "100%" }}
       animate={inline ? { opacity: 1 } : { x: 0 }}
       exit={inline ? { opacity: 0 } : { x: "100%" }}
-      transition={inline ? { duration: 0.15 } : { type: "spring", damping: 25, stiffness: 300 }}
+      transition={inline ? { duration: 0.12 } : { type: "tween", duration: 0.22, ease: [0.25, 0.46, 0.45, 0.94] }}
     >
       {/* Header */}
       <div className="sticky top-0 z-10 bg-background/80 backdrop-blur-2xl border-b border-border/5 safe-area-top">
@@ -1964,6 +1966,7 @@ export default function PersonalChat({ recipientId, recipientName, recipientAvat
                   onOpenWallet={() => setShowWalletSheet(true)}
                   onScanDocument={() => setShowScanner(true)}
                   onFileSelect={() => filePickerTriggerRef.current?.()}
+                  onCreatePoll={() => setShowPollCreator(true)}
                 />
               </div>
 
@@ -2307,6 +2310,38 @@ export default function PersonalChat({ recipientId, recipientName, recipientAvat
                 },
               });
               toast.success("Scan sent");
+            }}
+          />
+        </Suspense>
+      )}
+
+      {/* Poll Creator */}
+      {showPollCreator && (
+        <Suspense fallback={null}>
+          <PollCreatorSheet
+            open={showPollCreator}
+            onClose={() => setShowPollCreator(false)}
+            onSendPoll={(question, options) => {
+              const pollPayload = JSON.stringify({
+                __rich: true,
+                payload: {
+                  type: "poll",
+                  label: `📊 ${question}`,
+                  question,
+                  options: options.map((o) => ({ text: o, votes: 0 })),
+                  total_votes: 0,
+                },
+              });
+              void (async () => {
+                const { error } = await (supabase as any).from("direct_messages").insert({
+                  sender_id: user!.id,
+                  receiver_id: recipientId,
+                  message: pollPayload,
+                  message_type: "poll",
+                });
+                if (!error) toast.success("Poll sent!");
+              })();
+              setShowPollCreator(false);
             }}
           />
         </Suspense>

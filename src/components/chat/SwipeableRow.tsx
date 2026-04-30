@@ -105,9 +105,10 @@ export default function SwipeableRow({ leftActions = [], rightActions = [], chil
 
       <motion.div
         drag={disabled ? false : "x"}
-        style={{ x }}
+        style={{ x, touchAction: "pan-y" }}
         dragConstraints={{ left: -rightWidth, right: leftWidth }}
-        dragElastic={0.1}
+        dragElastic={0.08}
+        dragMomentum={false}
         onDragEnd={handleDragEnd}
         className="relative z-10 bg-transparent"
       >

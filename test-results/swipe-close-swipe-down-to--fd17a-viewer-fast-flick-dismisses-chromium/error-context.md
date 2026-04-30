@@ -1,0 +1,146 @@
+# Page snapshot
+
+```yaml
+- generic [active] [ref=e1]:
+  - generic [ref=e2]:
+    - link "Skip to main content" [ref=e3] [cursor=pointer]:
+      - /url: "#main-content"
+    - region "Notifications (F8)":
+      - list
+    - region "Notifications alt+T"
+    - generic [ref=e4]:
+      - img [ref=e8]
+      - generic [ref=e13]:
+        - generic [ref=e17]:
+          - generic [ref=e18]:
+            - generic:
+              - generic:
+                - generic:
+                  - img
+                  - text: Add cover photo
+            - generic "Add cover photo" [ref=e20] [cursor=pointer]:
+              - img [ref=e21]
+              - generic [ref=e25]: Add cover
+          - button "Add cover photo" [ref=e26]
+          - generic [ref=e29]:
+            - img "Profile" [ref=e32]
+            - generic "Change profile photo" [ref=e33] [cursor=pointer]:
+              - img [ref=e34]
+            - button "Change profile photo" [ref=e37]
+          - generic [ref=e38]:
+            - heading "Kimlain Chhorng" [level=3] [ref=e39]:
+              - generic [ref=e40]: Kimlain Chhorng
+            - button "Set a username" [ref=e42] [cursor=pointer]
+            - button "Verified account Get blue verified" [ref=e43] [cursor=pointer]:
+              - img "Verified account" [ref=e44]:
+                - img [ref=e45]
+              - text: Get blue verified
+            - button "Add bio" [ref=e49] [cursor=pointer]:
+              - img [ref=e50]
+              - text: Add bio
+            - generic [ref=e53]:
+              - button "View 0 followers" [ref=e54] [cursor=pointer]:
+                - generic [ref=e55]: "0"
+                - generic [ref=e56]: followers
+              - generic [ref=e57]: ·
+              - button "View 0 following" [ref=e58] [cursor=pointer]:
+                - generic [ref=e59]: "0"
+                - generic [ref=e60]: following
+              - generic [ref=e61]: ·
+              - generic [ref=e62]:
+                - generic [ref=e63]: "0"
+                - generic [ref=e64]: posts
+              - generic [ref=e65]: ·
+              - button "View 0 friends" [ref=e66] [cursor=pointer]:
+                - generic [ref=e67]: "0"
+                - generic [ref=e68]: friends
+            - generic [ref=e69]:
+              - button "Shop" [ref=e70] [cursor=pointer]:
+                - img [ref=e71]
+                - generic [ref=e76]: Shop
+              - button "Employees" [ref=e77] [cursor=pointer]:
+                - img [ref=e78]
+                - generic [ref=e83]: Employees
+              - button "Mode" [ref=e84] [cursor=pointer]:
+                - img [ref=e85]
+                - generic [ref=e90]: Mode
+              - button "Monetization" [ref=e91] [cursor=pointer]:
+                - img [ref=e92]
+                - generic [ref=e94]: Monetization
+            - button "Facebook" [ref=e96] [cursor=pointer]:
+              - img [ref=e97]
+        - button "Your story" [ref=e103] [cursor=pointer]:
+          - generic [ref=e104]:
+            - img [ref=e108]
+            - img [ref=e110]
+          - generic [ref=e111]: Your story
+        - generic [ref=e113]:
+          - button "What's on your mind?" [ref=e114] [cursor=pointer]:
+            - img [ref=e117]
+            - paragraph [ref=e120]: What's on your mind?
+            - generic [ref=e121]:
+              - img [ref=e123]
+              - img [ref=e128]
+              - img [ref=e131]
+          - generic [ref=e134]:
+            - button "All" [ref=e135] [cursor=pointer]:
+              - img [ref=e136]
+              - text: All
+            - button "Photos" [ref=e138] [cursor=pointer]:
+              - img [ref=e139]
+              - text: Photos
+            - button "Reels" [ref=e143] [cursor=pointer]:
+              - img [ref=e144]
+              - text: Reels
+    - generic [ref=e153]:
+      - img [ref=e155]
+      - generic [ref=e157]:
+        - heading "We Value Your Privacy" [level=3] [ref=e158]:
+          - text: We Value Your Privacy
+          - img [ref=e159]
+        - paragraph [ref=e161]:
+          - text: We use cookies to enhance your experience, analyze site traffic, and for marketing purposes. By clicking "Accept All", you consent to our use of cookies. Read our
+          - link "Privacy Policy" [ref=e162] [cursor=pointer]:
+            - /url: /privacy-policy
+          - text: .
+        - generic [ref=e163]:
+          - button "Accept All" [ref=e165] [cursor=pointer]
+          - button "Reject All" [ref=e166] [cursor=pointer]
+          - button "Customize" [ref=e167] [cursor=pointer]:
+            - img
+            - text: Customize
+      - button [ref=e169] [cursor=pointer]:
+        - img
+  - banner "Profile quick navigation" [ref=e170]:
+    - button "Go back" [ref=e172] [cursor=pointer]:
+      - img [ref=e173]
+    - generic [ref=e178]: Kimlain Chhorng
+    - button "Open notifications" [ref=e180] [cursor=pointer]:
+      - img [ref=e181]
+      - generic [ref=e184]: "1"
+    - button "More account options" [ref=e185] [cursor=pointer]:
+      - img [ref=e186]
+  - navigation [ref=e190]:
+    - generic [ref=e192]:
+      - button "Live" [ref=e193] [cursor=pointer]:
+        - img [ref=e195]
+        - generic [ref=e201]: Live
+      - button "Feed" [ref=e202] [cursor=pointer]:
+        - img [ref=e204]
+        - generic [ref=e207]: Feed
+      - button "Reel" [ref=e208] [cursor=pointer]:
+        - img [ref=e210]
+        - generic [ref=e212]: Reel
+      - button "Home" [ref=e213] [cursor=pointer]:
+        - img [ref=e215]
+        - generic [ref=e218]: Home
+      - button "Map" [ref=e219] [cursor=pointer]:
+        - img [ref=e221]
+        - generic [ref=e224]: Map
+      - button "Chat" [ref=e225] [cursor=pointer]:
+        - img [ref=e227]
+        - generic [ref=e229]: Chat
+      - button "Account" [ref=e230] [cursor=pointer]:
+        - img "Account" [ref=e233]
+        - generic [ref=e234]: Account
+```

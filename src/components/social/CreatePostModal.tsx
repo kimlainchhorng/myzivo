@@ -61,6 +61,29 @@ const LOCATIONS = [
 
 const QUICK_EMOJIS = ["😀", "❤️", "🔥", "👏", "😂", "😍", "🎉", "💯", "🤩", "😎", "✨", "🙏"];
 
+const FEELINGS = [
+  { emoji: "😊", label: "happy" },
+  { emoji: "😢", label: "sad" },
+  { emoji: "😍", label: "in love" },
+  { emoji: "😂", label: "laughing" },
+  { emoji: "😤", label: "motivated" },
+  { emoji: "🙏", label: "grateful" },
+  { emoji: "😴", label: "tired" },
+  { emoji: "🤩", label: "excited" },
+  { emoji: "😡", label: "frustrated" },
+  { emoji: "😎", label: "cool" },
+  { emoji: "🥳", label: "celebrating" },
+  { emoji: "😌", label: "relaxed" },
+  { emoji: "🤔", label: "thoughtful" },
+  { emoji: "💪", label: "strong" },
+  { emoji: "🥺", label: "overwhelmed" },
+  { emoji: "😏", label: "confident" },
+  { emoji: "🤒", label: "sick" },
+  { emoji: "😇", label: "blessed" },
+  { emoji: "🫶", label: "loved" },
+  { emoji: "🧠", label: "focused" },
+];
+
 const DRAFT_KEY = "zivo-post-draft";
 
 export default function CreatePostModal({
@@ -115,7 +138,11 @@ export default function CreatePostModal({
   const [audioName, setAudioName] = useState(initialAudioName || "");
   const [showAudioInput, setShowAudioInput] = useState(!!initialAudioName);
   const [showCameraChoice, setShowCameraChoice] = useState(false);
-  
+  const [feeling, setFeeling] = useState<{ emoji: string; label: string } | null>(null);
+  const [showFeelingPicker, setShowFeelingPicker] = useState(false);
+  const [isPoll, setIsPoll] = useState(false);
+  const [pollOptions, setPollOptions] = useState(["", ""]);
+
   const fileRef = useRef<HTMLInputElement>(null);
   const cameraRef = useRef<HTMLInputElement>(null);
   const captionRef = useRef<HTMLTextAreaElement>(null);
@@ -232,7 +259,11 @@ export default function CreatePostModal({
   const [uploadStatus, setUploadStatus] = useState("");
 
   const handlePost = async () => {
-    if (files.length === 0 && !hasSharedLink && !caption.trim()) {
+    if (isPoll) {
+      const valid = pollOptions.filter((o) => o.trim());
+      if (!caption.trim()) { toast.error("Please write a poll question"); return; }
+      if (valid.length < 2) { toast.error("Add at least 2 poll options"); return; }
+    } else if (files.length === 0 && !hasSharedLink && !caption.trim()) {
       toast.error("Please add a photo, video, or write something");
       return;
     }
@@ -270,12 +301,25 @@ export default function CreatePostModal({
 
       setUploadStatus("Creating post...");
 
+      let finalCaption = caption.trim() || null;
+      if (feeling && finalCaption) {
+        finalCaption = `${finalCaption}\n\n— feeling ${feeling.emoji} ${feeling.label}`;
+      } else if (feeling) {
+        finalCaption = `feeling ${feeling.emoji} ${feeling.label}`;
+      }
+      if (isPoll && finalCaption) {
+        const validOptions = pollOptions.filter((o) => o.trim());
+        const optLines = validOptions.map((o, i) => `${["🔵", "🟢", "🔴", "🟡", "🟠", "🟣"][i] || "▪"} ${o}`).join("\n");
+        finalCaption = `📊 ${finalCaption}\n\n${optLines}`;
+        finalMediaType = "image";
+      }
+
       const insertData: any = {
         user_id: userId,
         media_type: finalMediaType,
         media_url: mediaUrl,
         media_urls: allMediaUrls,
-        caption: caption.trim() || null,
+        caption: finalCaption,
         filter_css: FILTERS[activeFilter]?.css || null,
         is_published: true,
       };
@@ -346,7 +390,7 @@ export default function CreatePostModal({
           <h2 className="text-sm font-bold text-foreground">Create Post</h2>
           <button
             onClick={handlePost}
-            disabled={(files.length === 0 && !hasSharedLink && !caption.trim()) || uploading}
+            disabled={(files.length === 0 && !hasSharedLink && !caption.trim() && !isPoll) || uploading}
             className={cn(
               "px-4 py-1.5 rounded-full text-xs font-bold transition-all",
               (files.length > 0 || caption.trim() || hasSharedLink) && !uploading
@@ -375,7 +419,12 @@ export default function CreatePostModal({
             )}
           </div>
           <div className="min-w-0">
-            <p className="text-sm font-semibold text-foreground truncate">{userProfile?.name || "You"}</p>
+            <p className="text-sm font-semibold text-foreground truncate">
+              {userProfile?.name || "You"}
+              {feeling && (
+                <span className="text-muted-foreground font-normal"> — feeling {feeling.emoji} {feeling.label}</span>
+              )}
+            </p>
             {location && (
               <p className="text-[10px] text-muted-foreground flex items-center gap-1">
                 <MapPin className="h-2.5 w-2.5 shrink-0" /> {location}
@@ -724,6 +773,83 @@ export default function CreatePostModal({
           </AnimatePresence>
         </div>
 
+        {/* Feeling picker */}
+        <AnimatePresence>
+          {showFeelingPicker && (
+            <motion.div
+              initial={{ height: 0, opacity: 0 }}
+              animate={{ height: "auto", opacity: 1 }}
+              exit={{ height: 0, opacity: 0 }}
+              className="overflow-hidden border-t border-border/30"
+            >
+              <div className="px-4 py-3">
+                <p className="text-[11px] font-semibold text-muted-foreground mb-2 uppercase tracking-wide">How are you feeling?</p>
+                <div className="grid grid-cols-4 gap-1.5">
+                  {FEELINGS.map((f) => (
+                    <button
+                      key={f.label}
+                      onClick={() => { setFeeling(feeling?.label === f.label ? null : f); setShowFeelingPicker(false); }}
+                      className={cn(
+                        "flex flex-col items-center gap-1 py-2 rounded-xl transition-all active:scale-95",
+                        feeling?.label === f.label ? "bg-primary/10 ring-2 ring-primary/30" : "hover:bg-muted/50"
+                      )}
+                    >
+                      <span className="text-xl">{f.emoji}</span>
+                      <span className="text-[9px] font-medium text-muted-foreground capitalize">{f.label}</span>
+                    </button>
+                  ))}
+                </div>
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+
+        {/* Poll creation */}
+        <AnimatePresence>
+          {isPoll && (
+            <motion.div
+              initial={{ height: 0, opacity: 0 }}
+              animate={{ height: "auto", opacity: 1 }}
+              exit={{ height: 0, opacity: 0 }}
+              className="overflow-hidden border-t border-border/30"
+            >
+              <div className="px-4 py-3 space-y-2">
+                <p className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wide">Poll Options</p>
+                {pollOptions.map((opt, i) => (
+                  <div key={i} className="flex items-center gap-2">
+                    <span className="text-base">{["🔵", "🟢", "🔴", "🟡"][i] || "▪"}</span>
+                    <input
+                      type="text"
+                      value={opt}
+                      onChange={(e) => {
+                        const next = [...pollOptions];
+                        next[i] = e.target.value;
+                        setPollOptions(next);
+                      }}
+                      placeholder={`Option ${i + 1}`}
+                      maxLength={80}
+                      className="flex-1 px-3 py-2 rounded-xl bg-muted/40 border border-border/30 text-sm text-foreground placeholder:text-muted-foreground/50 focus:outline-none focus:ring-2 focus:ring-primary/20"
+                    />
+                    {pollOptions.length > 2 && (
+                      <button onClick={() => setPollOptions(pollOptions.filter((_, j) => j !== i))} className="text-muted-foreground hover:text-destructive">
+                        <XIcon className="h-4 w-4" />
+                      </button>
+                    )}
+                  </div>
+                ))}
+                {pollOptions.length < 6 && (
+                  <button
+                    onClick={() => setPollOptions([...pollOptions, ""])}
+                    className="w-full flex items-center justify-center gap-1.5 py-2 rounded-xl border border-dashed border-border/40 text-xs text-primary font-medium hover:bg-primary/5 transition-colors"
+                  >
+                    <Plus className="h-3.5 w-3.5" /> Add option
+                  </button>
+                )}
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+
         {/* Media preview — grid layout like Facebook */}
         {previews.length > 0 && (
           <div className="mx-4 mb-3">
@@ -927,50 +1053,59 @@ export default function CreatePostModal({
           )}
         </AnimatePresence>
 
-        {/* Media type selector — bottom toolbar */}
-        <div className="px-4 py-3 border-t border-border/30 grid grid-cols-5 gap-1">
-          {[
-            { label: "Photo", icon: ImageIcon, accept: "image/*", color: "text-emerald-500", action: "file" },
-            { label: "Video", icon: Play, accept: "video/*", color: "text-rose-500", action: "file" },
-            { label: "Reel", icon: Film, accept: "video/*", color: "text-violet-500", action: "file" },
-            { label: "Music", icon: Music, accept: "", color: "text-sky-500", action: "audio" },
-            { label: "Live", icon: Radio, accept: "", color: "text-amber-500", action: "live" as const },
-          ].map((opt) => (
-            <button
-              key={opt.label}
-              onClick={() => {
-                if (opt.action === "live") {
-                  onClose();
-                  navigate("/live");
-                  return;
-                }
-                if (opt.action === "audio") {
-                  setShowAudioInput((v) => !v);
-                  return;
-                }
-                setSelectedType(opt.label as any);
-                if (fileRef.current) {
-                  fileRef.current.accept = opt.accept;
-                  fileRef.current.multiple = opt.label === "Photo";
-                  fileRef.current.click();
-                }
-              }}
-              className="flex flex-col items-center gap-1.5 py-2 rounded-xl hover:bg-muted/30 transition-colors active:scale-95"
-            >
-              <opt.icon className={cn(
-                "h-5 w-5 transition-colors",
-                (opt.action === "audio" && showAudioInput) ? "text-primary" :
-                selectedType === opt.label ? "text-primary" : opt.color
-              )} />
-              <span className={cn(
-                "text-[10px] font-medium transition-colors",
-                (opt.action === "audio" && showAudioInput) ? "text-primary" :
-                selectedType === opt.label ? "text-primary" : "text-muted-foreground"
-              )}>
-                {opt.label}
-              </span>
-            </button>
-          ))}
+        {/* Bottom toolbar — Add to your post */}
+        <div className="px-4 py-2 border-t border-border/30">
+          <p className="text-[10px] font-semibold text-muted-foreground/60 uppercase tracking-wide mb-2">Add to your post</p>
+          <div className="flex gap-1 overflow-x-auto scrollbar-none pb-1">
+            {[
+              { label: "Photo", icon: ImageIcon, color: "text-emerald-500", action: "photo" as const },
+              { label: "Video", icon: Play, color: "text-rose-500", action: "video" as const },
+              { label: "Feeling", icon: Smile, color: "text-amber-500", action: "feeling" as const },
+              { label: "Poll", icon: Hash, color: "text-violet-500", action: "poll" as const },
+              { label: "Reel", icon: Film, color: "text-indigo-500", action: "reel" as const },
+              { label: "Music", icon: Music, color: "text-sky-500", action: "audio" as const },
+              { label: "Live", icon: Radio, color: "text-red-500", action: "live" as const },
+            ].map((opt) => {
+              const isActive =
+                (opt.action === "audio" && showAudioInput) ||
+                (opt.action === "feeling" && (showFeelingPicker || !!feeling)) ||
+                (opt.action === "poll" && isPoll) ||
+                (["photo", "video", "reel"].includes(opt.action) && selectedType === (opt.label as any));
+              return (
+                <button
+                  key={opt.label}
+                  onClick={() => {
+                    if (opt.action === "live") { onClose(); navigate("/live"); return; }
+                    if (opt.action === "audio") { setShowAudioInput((v) => !v); return; }
+                    if (opt.action === "feeling") {
+                      setShowFeelingPicker((v) => !v);
+                      return;
+                    }
+                    if (opt.action === "poll") {
+                      setIsPoll((v) => !v);
+                      return;
+                    }
+                    const accept = opt.action === "video" || opt.action === "reel" ? "video/*" : "image/*";
+                    setSelectedType(opt.label as any);
+                    if (fileRef.current) {
+                      fileRef.current.accept = accept;
+                      fileRef.current.multiple = opt.action === "photo";
+                      fileRef.current.click();
+                    }
+                  }}
+                  className={cn(
+                    "flex flex-col items-center gap-1 py-2 px-3 rounded-xl shrink-0 transition-colors active:scale-95",
+                    isActive ? "bg-primary/10" : "hover:bg-muted/30"
+                  )}
+                >
+                  <opt.icon className={cn("h-5 w-5 transition-colors", isActive ? "text-primary" : opt.color)} />
+                  <span className={cn("text-[10px] font-medium", isActive ? "text-primary" : "text-muted-foreground")}>
+                    {opt.label}
+                  </span>
+                </button>
+              );
+            })}
+          </div>
         </div>
 
         {/* Add more media button */}

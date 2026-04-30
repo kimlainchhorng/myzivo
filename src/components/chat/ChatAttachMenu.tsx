@@ -13,6 +13,8 @@ import Gift from "lucide-react/dist/esm/icons/gift";
 import Coins from "lucide-react/dist/esm/icons/coins";
 import ScanLine from "lucide-react/dist/esm/icons/scan-line";
 import FileUp from "lucide-react/dist/esm/icons/file-up";
+import BarChart2 from "lucide-react/dist/esm/icons/bar-chart-2";
+import Contact from "lucide-react/dist/esm/icons/contact";
 import { useZivoPlus } from "@/contexts/ZivoPlusContext";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
@@ -30,6 +32,7 @@ interface ChatAttachMenuProps {
   onOpenWallet?: () => void;
   onScanDocument?: () => void;
   onFileSelect?: () => void;
+  onCreatePoll?: () => void;
   disappearingEnabled: boolean;
 }
 
@@ -38,6 +41,8 @@ const menuItems = [
   { id: "video", label: "Video", icon: Video, color: "bg-violet-500" },
   { id: "file", label: "File", icon: FileUp, color: "bg-sky-500" },
   { id: "location", label: "Location", icon: MapPin, color: "bg-blue-500" },
+  { id: "poll", label: "Poll", icon: BarChart2, color: "bg-indigo-500" },
+  { id: "contact", label: "Contact", icon: Contact, color: "bg-teal-500" },
   { id: "gift", label: "Gift", icon: Gift, color: "bg-gradient-to-br from-amber-500 to-pink-500" },
   { id: "money", label: "Money", icon: Coins, color: "bg-gradient-to-br from-emerald-500 to-teal-500" },
   { id: "locked", label: "Locked", icon: Lock, color: "bg-rose-500" },
@@ -49,7 +54,7 @@ const LOCK_UNLOCK_PLANS = new Set(["chat", "pro"]);
 
 export default function ChatAttachMenu({
   open, onClose, onImageSelect, onVideoSelect, onLocationShare, onToggleDisappearing, onLockedImageSelect,
-  onSendGift, onOpenWallet, onScanDocument, onFileSelect, disappearingEnabled,
+  onSendGift, onOpenWallet, onScanDocument, onFileSelect, onCreatePoll, disappearingEnabled,
 }: ChatAttachMenuProps) {
   const { isPlus, plan } = useZivoPlus();
   const navigate = useNavigate();
@@ -81,6 +86,8 @@ export default function ChatAttachMenu({
         }
         break;
       case "file": onFileSelect?.(); break;
+      case "poll": onCreatePoll?.(); break;
+      case "contact": toast("Share Contact — coming soon"); onClose(); return;
       case "image": onImageSelect(); break;
       case "video": onVideoSelect(); break;
       case "location": onLocationShare(); break;

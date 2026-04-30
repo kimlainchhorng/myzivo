@@ -14,6 +14,7 @@
  */
 
 import { test, expect, devices, type Page, type Locator } from "@playwright/test";
+import { login } from "./fixtures/login";
 
 interface ViewerCase {
   name: string;
@@ -171,7 +172,14 @@ async function openOverlay(page: Page, c: ViewerCase) {
 
 for (const profile of DEVICE_PROFILES) {
   test.describe(`swipe-down-to-close — ${profile.label}`, () => {
-    test.use({ ...profile.device });
+    // defaultBrowserType can only be set top-level; strip it so the rest of the
+    // device descriptor (viewport, userAgent, etc.) can still be applied here.
+    const { defaultBrowserType: _dt, ...deviceOpts } = profile.device;
+    test.use(deviceOpts);
+
+    test.beforeEach(async ({ page }) => {
+      await login(page);
+    });
 
     for (const c of CASES) {
       test.describe(c.name, () => {
