@@ -17,11 +17,33 @@ import VerifiedBadge from "@/components/VerifiedBadge";
 import { isBlueVerified } from "@/lib/verification";
 const CreatePostModal = lazy(() => import("@/components/social/CreatePostModal"));
 const FeedSidebar = lazy(() => import("@/components/social/FeedSidebar"));
+const SafeCaption = lazy(() => import("@/components/social/SafeCaption"));
 const SuggestedUsersCarousel = lazy(() => import("@/components/social/SuggestedUsersCarousel"));
+const FeedSkeleton = lazy(() => import("@/components/social/FeedSkeleton"));
+const NewPostsPill = lazy(() => import("@/components/social/NewPostsPill"));
+const PostActionsMenu = lazy(() => import("@/components/social/PostActionsMenu"));
+const TrendingHashtags = lazy(() => import("@/components/social/TrendingHashtags"));
+const ReactionPicker = lazy(() => import("@/components/social/ReactionPicker"));
+const CommentPreview = lazy(() => import("@/components/social/CommentPreview"));
+const ReactionSummary = lazy(() => import("@/components/social/ReactionSummary"));
+const ReelsPreviewRow = lazy(() => import("@/components/social/ReelsPreviewRow"));
+const RepostDialog = lazy(() => import("@/components/social/RepostDialog"));
+const PostInsights = lazy(() => import("@/components/social/PostInsights"));
+const MentionPicker = lazy(() => import("@/components/social/MentionPicker"));
+import { detectMention, applyMention } from "@/components/social/MentionPicker";
+import { postHasHashtag } from "@/components/social/TrendingHashtags";
+import { usePostActions, type PostActionTarget } from "@/hooks/usePostActions";
+import { usePostReactions } from "@/hooks/usePostReactions";
+import { usePostReposts } from "@/hooks/usePostReposts";
+import { usePostViewTracking } from "@/hooks/usePostViewTracking";
+import type { ReactionEmoji } from "@/components/social/ReactionPicker";
+import { topicForUserSync } from "@/lib/security/channelName";
+import { confirmContentSafe } from "@/lib/security/contentLinkValidation";
 import Loader2 from "lucide-react/dist/esm/icons/loader-2";
 import Heart from "lucide-react/dist/esm/icons/heart";
 import MessageCircle from "lucide-react/dist/esm/icons/message-circle";
 import Share2 from "lucide-react/dist/esm/icons/share-2";
+import Repeat2 from "lucide-react/dist/esm/icons/repeat-2";
 import Store from "lucide-react/dist/esm/icons/store";
 import Play from "lucide-react/dist/esm/icons/play";
 import Volume2 from "lucide-react/dist/esm/icons/volume-2";
@@ -37,9 +59,14 @@ import Search from "lucide-react/dist/esm/icons/search";
 import ArrowLeft from "lucide-react/dist/esm/icons/arrow-left";
 import UserCircle from "lucide-react/dist/esm/icons/user-circle";
 import MoreHorizontal from "lucide-react/dist/esm/icons/more-horizontal";
+import Bookmark from "lucide-react/dist/esm/icons/bookmark";
+import Flag from "lucide-react/dist/esm/icons/flag";
+import EyeOff from "lucide-react/dist/esm/icons/eye-off";
 import ChevronUp from "lucide-react/dist/esm/icons/chevron-up";
 import ChevronDown from "lucide-react/dist/esm/icons/chevron-down";
 import Music from "lucide-react/dist/esm/icons/music";
+import Gauge from "lucide-react/dist/esm/icons/gauge";
+import PictureInPicture from "lucide-react/dist/esm/icons/picture-in-picture-2";
 import MapPin from "lucide-react/dist/esm/icons/map-pin";
 import UserPlus from "lucide-react/dist/esm/icons/user-plus";
 import UserCheck from "lucide-react/dist/esm/icons/user-check";
@@ -56,6 +83,7 @@ import { useLocation, useNavigate } from "react-router-dom";
 import { cn } from "@/lib/utils";
 import { getPostShareUrl } from "@/lib/getPublicOrigin";
 import { shouldSendLikeNotification } from "@/lib/social/likeNotificationGuard";
+import { formatDistanceToNow } from "date-fns";
 import { useOwnerStoreProfile } from "@/hooks/useOwnerStoreProfile";
 import { useLodgeRooms } from "@/hooks/lodging/useLodgeRooms";
 import { useLodgePropertyProfile } from "@/hooks/lodging/useLodgePropertyProfile";
@@ -75,6 +103,8 @@ interface FeedPost {
   store_slug?: string;
   likes_count?: number;
   comments_count?: number;
+  shares_count?: number;
+  reposts_count?: number;
   view_count?: number;
   audio_name?: string | null;
   source?: "store" | "user";
@@ -87,6 +117,61 @@ interface FeedPost {
 }
 
 /* ── Scrolling music ticker ───────────────────────────────────── */
+/**
+ * IntersectionObserver-based sentinel rendered at the end of the feed.
+ * When it scrolls into view, fires `onReachEnd` (debounced via isFetching).
+ * Renders a small "Loading more…" indicator while the next page is in flight.
+ */
+function InfiniteScrollSentinel({
+  isFetching,
+  onReachEnd,
+}: {
+  isFetching: boolean;
+  onReachEnd: () => void;
+}) {
+  const ref = useRef<HTMLDivElement>(null);
+  const lastFiredAt = useRef(0);
+
+  useEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries[0]?.isIntersecting && !isFetching) {
+          // Throttle to once per second
+          const now = Date.now();
+          if (now - lastFiredAt.current < 1000) return;
+          lastFiredAt.current = now;
+          onReachEnd();
+        }
+      },
+      { threshold: 0.5 },
+    );
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, [isFetching, onReachEnd]);
+
+  return (
+    <div ref={ref} className="w-full h-full snap-start flex items-center justify-center bg-black">
+      <div className="flex flex-col items-center gap-3 text-white/60">
+        {isFetching ? (
+          <>
+            <Loader2 className="h-7 w-7 animate-spin" />
+            <span className="text-sm">Loading more…</span>
+          </>
+        ) : (
+          <>
+            <div className="h-12 w-12 rounded-full bg-white/10 flex items-center justify-center">
+              <ChevronDown className="h-6 w-6" />
+            </div>
+            <span className="text-sm">You've reached the end — pull down to refresh</span>
+          </>
+        )}
+      </div>
+    </div>
+  );
+}
+
 function MusicTicker({ name, onClick }: { name: string; onClick?: () => void }) {
   return (
     <button
@@ -130,6 +215,12 @@ function ReelCard({
   onOpenComments,
   onOpenShare,
   onOpenSound,
+  onOpenActions,
+  currentReaction,
+  onSetReaction,
+  onOpenRepost,
+  isReposted,
+  shouldPreload = false,
 }: {
   post: FeedPost;
   isActive: boolean;
@@ -142,13 +233,54 @@ function ReelCard({
   onOpenComments: (postId: string) => void;
   onOpenShare: (postId: string) => void;
   onOpenSound: (soundName: string) => void;
+  onOpenActions?: () => void;
+  currentReaction?: ReactionEmoji | null;
+  onSetReaction?: (emoji: ReactionEmoji) => void;
+  onOpenRepost?: () => void;
+  isReposted?: boolean;
+  /** True when this reel is the next one in the snap-scroller, so its
+   *  video can begin loading before the user actually swipes. */
+  shouldPreload?: boolean;
 }) {
+  const navigate = useNavigate();
   const videoRef = useRef<HTMLVideoElement>(null);
   const [isPlaying, setIsPlaying] = useState(false);
   const [posterUrl, setPosterUrl] = useState<string | null>(null);
   const [hasPlaybackError, setHasPlaybackError] = useState(false);
   const [isRepairing, setIsRepairing] = useState(false);
   const [isBlobLoading, setIsBlobLoading] = useState(false);
+  const [saved, setSaved] = useState(false);
+  const [showDoubleTapHeart, setShowDoubleTapHeart] = useState(false);
+  // Long-press → open reaction picker instead of plain like
+  const [showReactionPicker, setShowReactionPicker] = useState(false);
+  const longPressTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  // Track view: counts after the post stays active in the viewport for 1.5s
+  const rawPostId = post.id.startsWith("u-") ? post.id.slice(2) : post.id;
+  usePostViewTracking(rawPostId, post.source ?? "store", isActive);
+  const [videoProgress, setVideoProgress] = useState(0); // 0..1
+  const [showMoreMenu, setShowMoreMenu] = useState(false);
+  const [captionExpanded, setCaptionExpanded] = useState(false);
+  const [isScrubbing, setIsScrubbing] = useState(false);
+  const [showLikeBurst, setShowLikeBurst] = useState(false);
+  const [videoDuration, setVideoDuration] = useState(0);
+  const [authorIsLive, setAuthorIsLive] = useState(false);
+  const [isHoldingFastForward, setIsHoldingFastForward] = useState(false);
+  const [playbackSpeed, setPlaybackSpeed] = useState(1.0);
+  const [showSpeedPicker, setShowSpeedPicker] = useState(false);
+  const fastForwardTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const suppressNextClickRef = useRef(false);
+  const progressBarRef = useRef<HTMLDivElement>(null);
+  const wasPlayingBeforeScrub = useRef(false);
+  const lastTapRef = useRef(0);
+  const savingBookmarkRef = useRef(false);
+
+  const formatVideoTime = (seconds: number): string => {
+    if (!Number.isFinite(seconds) || seconds < 0) return "0:00";
+    const m = Math.floor(seconds / 60);
+    const s = Math.floor(seconds % 60);
+    return `${m}:${s.toString().padStart(2, "0")}`;
+  };
   const [blobSrc, setBlobSrc] = useState<string | null>(null);
   const [triedBlobFallback, setTriedBlobFallback] = useState(false);
   const [triedFFmpegRepair, setTriedFFmpegRepair] = useState(false);
@@ -226,6 +358,30 @@ function ReelCard({
     }
   }, [isActive, isVideoPost]); // eslint-disable-line react-hooks/exhaustive-deps
 
+  // Auto-pause when the tab/window becomes hidden (Page Visibility API).
+  // Without this, videos keep playing in background tabs and burn battery.
+  // Only the active reel is touched — inactive ones are already paused.
+  useEffect(() => {
+    if (!isActive || !isVideoPost) return;
+    const handleVisibility = () => {
+      const video = videoRef.current;
+      if (!video) return;
+      if (document.hidden) {
+        if (!video.paused) {
+          video.pause();
+          setIsPlaying(false);
+        }
+      } else {
+        // Tab back in focus — resume only if user hasn't manually paused.
+        if (video.paused && !isScrubbing) {
+          void video.play().then(() => setIsPlaying(true)).catch(() => {});
+        }
+      }
+    };
+    document.addEventListener("visibilitychange", handleVisibility);
+    return () => document.removeEventListener("visibilitychange", handleVisibility);
+  }, [isActive, isVideoPost, isScrubbing]);
+
   // Re-attempt play whenever the video source changes (e.g. after blob/repair recovery).
   // When <video key={currentSrc}> remounts with a new src the isActive effect above
   // does NOT re-run (its deps are unchanged), so this dedicated effect fills that gap.
@@ -252,6 +408,147 @@ function ReelCard({
       supabase.rpc("increment_store_post_view_count" as any, { p_post_id: post.id }).then(() => {});
     }
   }, [isActive, post.id, post.source]);
+
+  // Cleanup: if the user unmounts mid-hold, kill the timer + reset speed.
+  useEffect(() => {
+    return () => {
+      if (fastForwardTimerRef.current) clearTimeout(fastForwardTimerRef.current);
+      const v = videoRef.current;
+      if (v) { try { v.playbackRate = 1.0; } catch {} }
+    };
+  }, []);
+
+  // Apply the user's chosen playback speed whenever it changes (and not
+  // currently in a long-press fast-forward, which temporarily overrides).
+  useEffect(() => {
+    const v = videoRef.current;
+    if (!v) return;
+    if (isHoldingFastForward) return;
+    try { v.playbackRate = playbackSpeed; } catch {}
+  }, [playbackSpeed, isHoldingFastForward, currentSrc]);
+
+  // Live ring: check if the author has an active live stream when this reel
+  // becomes active. Only fires for active reels to avoid spamming the DB
+  // with N queries per feed page.
+  useEffect(() => {
+    if (!isActive || !post.author_id) { setAuthorIsLive(false); return; }
+    let alive = true;
+    (supabase as any)
+      .from("live_streams")
+      .select("id", { count: "exact", head: true })
+      .eq("user_id", post.author_id)
+      .eq("status", "live")
+      .then(({ count }: any) => {
+        if (alive) setAuthorIsLive((count || 0) > 0);
+      });
+    return () => { alive = false; };
+  }, [isActive, post.author_id]);
+
+  // Realtime engagement bumps for the active reel. When other viewers like
+  // or comment on the post you're watching, the right-column counters
+  // animate up without requiring a refetch. Only subscribes for the active
+  // reel so we don't open one channel per off-screen card.
+  const [liveLikesCount, setLiveLikesCount] = useState(post.likes_count || 0);
+  const [liveCommentsCount, setLiveCommentsCount] = useState(post.comments_count || 0);
+  useEffect(() => {
+    setLiveLikesCount(post.likes_count || 0);
+    setLiveCommentsCount(post.comments_count || 0);
+  }, [post.id, post.likes_count, post.comments_count]);
+  useEffect(() => {
+    if (!isActive) return;
+    const isUser = post.source === "user";
+    const rawId = post.id.startsWith("u-") ? post.id.slice(2) : post.id;
+    const likesTable = isUser ? "post_likes" : "store_post_likes";
+    const channel = supabase
+      .channel(`reel-engagement-${post.id}`)
+      .on(
+        "postgres_changes" as any,
+        { event: "INSERT", schema: "public", table: likesTable, filter: `post_id=eq.${rawId}` },
+        () => setLiveLikesCount((n) => n + 1),
+      )
+      .on(
+        "postgres_changes" as any,
+        { event: "DELETE", schema: "public", table: likesTable, filter: `post_id=eq.${rawId}` },
+        () => setLiveLikesCount((n) => Math.max(0, n - 1)),
+      )
+      .on(
+        "postgres_changes" as any,
+        { event: "INSERT", schema: "public", table: "post_comments", filter: `post_id=eq.${rawId}` },
+        () => setLiveCommentsCount((n) => n + 1),
+      )
+      .on(
+        "postgres_changes" as any,
+        { event: "DELETE", schema: "public", table: "post_comments", filter: `post_id=eq.${rawId}` },
+        () => setLiveCommentsCount((n) => Math.max(0, n - 1)),
+      )
+      .subscribe();
+    return () => { void supabase.removeChannel(channel); };
+  }, [isActive, post.id, post.source]);
+
+  // Load existing bookmark state for this post
+  useEffect(() => {
+    if (!userId) { setSaved(false); return; }
+    let alive = true;
+    (supabase as any)
+      .from("bookmarks")
+      .select("id")
+      .eq("user_id", userId)
+      .eq("item_id", post.id)
+      .maybeSingle()
+      .then(({ data }: any) => { if (alive && data) setSaved(true); });
+    return () => { alive = false; };
+  }, [userId, post.id]);
+
+  const handleSaveToggle = async () => {
+    if (!userId) {
+      toast.error("Please sign in to save reels");
+      return;
+    }
+    if (savingBookmarkRef.current) return;
+    savingBookmarkRef.current = true;
+    const next = !saved;
+    setSaved(next);
+    try {
+      if (next) {
+        const { error } = await (supabase as any).from("bookmarks").upsert(
+          {
+            user_id: userId,
+            item_id: post.id,
+            item_type: "post",
+            title: post.caption || `Reel by ${post.source === "user" ? post.author_name : post.store_name}`,
+            collection_name: "Reels",
+          },
+          { onConflict: "user_id,item_id", ignoreDuplicates: true },
+        );
+        if (error && !String(error.message || "").toLowerCase().includes("duplicate")) throw error;
+        toast.success("Saved");
+      } else {
+        await (supabase as any).from("bookmarks").delete().eq("user_id", userId).eq("item_id", post.id);
+        toast.success("Removed from saved");
+      }
+    } catch {
+      setSaved(!next);
+      toast.error("Couldn't update saved");
+    } finally {
+      savingBookmarkRef.current = false;
+    }
+  };
+
+  // Double-tap on the video to like — TikTok signature interaction.
+  // Wraps the existing tap-to-toggle: if two taps land within 280ms,
+  // we skip the play/pause and fire a like instead.
+  const handleVideoClick = () => {
+    const now = Date.now();
+    if (now - lastTapRef.current < 280) {
+      lastTapRef.current = 0;
+      if (!liked) onToggleLike(post.id, false);
+      setShowDoubleTapHeart(true);
+      window.setTimeout(() => setShowDoubleTapHeart(false), 700);
+      return;
+    }
+    lastTapRef.current = now;
+    togglePlay();
+  };
 
   // Reset per-post playback state when source changes
   useEffect(() => {
@@ -444,7 +741,7 @@ function ReelCard({
           playsInline
           loop
           muted={globalMuted}
-          preload={isActive ? "auto" : "none"}
+          preload={isActive ? "auto" : shouldPreload ? "metadata" : "none"}
           onLoadedData={(e) => {
             setHasLoadedFrame(true);
             setHasPlaybackError(false);
@@ -468,15 +765,27 @@ function ReelCard({
             // Seek to 10% of duration, at least 1.5 s, capped at 3 s — skips dark iPhone intros.
             const dur = e.currentTarget.duration;
             if (Number.isFinite(dur) && dur > 0) {
+              setVideoDuration(dur);
               const t = Math.min(3, Math.max(dur * 0.1, 1.5));
               try { e.currentTarget.currentTime = t; } catch { /* ignore */ }
             }
+          }}
+          onDurationChange={(e) => {
+            // Some streams emit duration after metadata; pick it up here too.
+            const dur = e.currentTarget.duration;
+            if (Number.isFinite(dur) && dur > 0) setVideoDuration(dur);
           }}
           onSeeked={(e) => {
             capturePoster(e.currentTarget);
           }}
           onPlay={() => setIsPlaying(true)}
           onPause={() => setIsPlaying(false)}
+          onTimeUpdate={(e) => {
+            const v = e.currentTarget;
+            if (Number.isFinite(v.duration) && v.duration > 0) {
+              setVideoProgress(Math.min(1, v.currentTime / v.duration));
+            }
+          }}
           onError={async () => {
             setIsPlaying(false);
             if (isBlobLoading) return;
@@ -492,15 +801,103 @@ function ReelCard({
         />
       )}
 
-      {/* Tap-to-play/pause */}
+      {/* Tap-to-play/pause · double-tap-to-like · long-press-to-2x.
+          - Pointer down starts a 350ms timer that, on fire, kicks the
+            video to 2× speed and shows the FF badge.
+          - Pointer up before the timer fires falls through to the click
+            handler (single/double-tap detection).
+          - Pointer up after the timer fires resets to 1× and suppresses
+            the click so we don't toggle play/pause on release. */}
       {isVideoPost && !hasPlaybackError && !isRepairing && !isBlobLoading && (
         <button
           type="button"
-          onClick={togglePlay}
+          onClick={(e) => {
+            if (suppressNextClickRef.current) {
+              suppressNextClickRef.current = false;
+              return;
+            }
+            handleVideoClick();
+          }}
+          onPointerDown={() => {
+            if (fastForwardTimerRef.current) clearTimeout(fastForwardTimerRef.current);
+            fastForwardTimerRef.current = setTimeout(() => {
+              const v = videoRef.current;
+              if (!v) return;
+              try { v.playbackRate = 2.0; } catch {}
+              setIsHoldingFastForward(true);
+              suppressNextClickRef.current = true;
+            }, 350);
+          }}
+          onPointerUp={() => {
+            if (fastForwardTimerRef.current) {
+              clearTimeout(fastForwardTimerRef.current);
+              fastForwardTimerRef.current = null;
+            }
+            if (isHoldingFastForward) {
+              const v = videoRef.current;
+              if (v) { try { v.playbackRate = playbackSpeed; } catch {} }
+              setIsHoldingFastForward(false);
+            }
+          }}
+          onPointerCancel={() => {
+            if (fastForwardTimerRef.current) {
+              clearTimeout(fastForwardTimerRef.current);
+              fastForwardTimerRef.current = null;
+            }
+            if (isHoldingFastForward) {
+              const v = videoRef.current;
+              if (v) { try { v.playbackRate = playbackSpeed; } catch {} }
+              setIsHoldingFastForward(false);
+            }
+          }}
+          onPointerLeave={() => {
+            // If the user drags off the video while holding, treat as cancel.
+            if (fastForwardTimerRef.current) {
+              clearTimeout(fastForwardTimerRef.current);
+              fastForwardTimerRef.current = null;
+            }
+            if (isHoldingFastForward) {
+              const v = videoRef.current;
+              if (v) { try { v.playbackRate = playbackSpeed; } catch {} }
+              setIsHoldingFastForward(false);
+            }
+          }}
           className="absolute inset-0 z-10"
           aria-label={isPlaying ? "Pause" : "Play"}
         />
       )}
+
+      {/* 2× fast-forward badge — pulses while the user holds */}
+      <AnimatePresence>
+        {isHoldingFastForward && (
+          <motion.div
+            initial={{ opacity: 0, scale: 0.85, y: -10 }}
+            animate={{ opacity: 1, scale: 1, y: 0 }}
+            exit={{ opacity: 0, scale: 0.85 }}
+            transition={{ duration: 0.18 }}
+            className="absolute left-1/2 -translate-x-1/2 z-30 px-3 py-1.5 rounded-full bg-black/70 backdrop-blur-md flex items-center gap-1.5 pointer-events-none"
+            style={{ top: "calc(env(safe-area-inset-top, 0px) + 84px)" }}
+          >
+            <span className="text-white text-sm font-bold tabular-nums">2×</span>
+            <span className="text-white text-xs">▶▶</span>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Double-tap heart burst */}
+      <AnimatePresence>
+        {showDoubleTapHeart && (
+          <motion.div
+            initial={{ scale: 0, opacity: 0 }}
+            animate={{ scale: 1.2, opacity: 1 }}
+            exit={{ scale: 1.6, opacity: 0 }}
+            transition={{ duration: 0.5, ease: "easeOut" }}
+            className="absolute inset-0 z-30 flex items-center justify-center pointer-events-none"
+          >
+            <Heart className="w-32 h-32 text-white fill-destructive drop-shadow-2xl" />
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       {/* Paused indicator */}
       {isVideoPost && !isPlaying && !hasPlaybackError && !isRepairing && !isBlobLoading && (
@@ -566,7 +963,7 @@ function ReelCard({
                 </div>
               )}
             </div>
-            <span className="text-white font-bold text-sm drop-shadow-lg inline-flex items-center gap-1">
+            <span className="text-white font-bold text-sm sm:text-[15px] lg:text-base drop-shadow-lg inline-flex items-center gap-1">
               {post.source === "user" ? post.author_name : post.store_name}
               {(post.source === "user" ? isBlueVerified(post.author_is_verified) : isBlueVerified(post.store_is_verified)) && (
                 <VerifiedBadge size={16} />
@@ -597,16 +994,108 @@ function ReelCard({
             </button>
           )}
         </div>
-        {post.location && (
-          <div className="flex items-center gap-1 mb-1.5 text-white/90 text-xs drop-shadow">
-            <MapPin className="w-3 h-3 shrink-0" />
-            <span className="truncate">{post.location}</span>
+        {/* Posted-time + location row */}
+        {(post.location || post.created_at) && (
+          <div className="flex items-center gap-2 mb-1.5 text-white/80 text-[11px] drop-shadow">
+            {post.created_at && (() => {
+              try {
+                return <span>{formatDistanceToNow(new Date(post.created_at), { addSuffix: true })}</span>;
+              } catch { return null; }
+            })()}
+            {post.location && post.created_at && <span className="text-white/50">·</span>}
+            {post.location && (
+              <span className="flex items-center gap-1 truncate">
+                <MapPin className="w-3 h-3 shrink-0" />
+                <span className="truncate">{post.location}</span>
+              </span>
+            )}
           </div>
         )}
-        {post.caption && (
-          <p className="text-white text-sm line-clamp-2 drop-shadow leading-snug mb-2">
-            {post.caption}
-          </p>
+        {post.caption && (() => {
+          const isLong = post.caption.length > 90;
+          return (
+            <button
+              type="button"
+              onClick={(e) => { e.stopPropagation(); if (isLong) setCaptionExpanded((v) => !v); }}
+              className={cn(
+                "block w-full text-left text-white text-sm sm:text-[15px] lg:text-base drop-shadow leading-snug mb-2",
+                !captionExpanded && "line-clamp-2",
+                isLong ? "cursor-pointer" : "cursor-default",
+              )}
+              aria-expanded={captionExpanded}
+            >
+              <Suspense fallback={<span>{post.caption}</span>}>
+                <SafeCaption text={post.caption} />
+              </Suspense>
+              {isLong && (
+                <span className="text-white/70 ml-1 font-semibold">
+                  {captionExpanded ? " less" : " …more"}
+                </span>
+              )}
+            </button>
+          );
+        })()}
+
+        {/* Hashtag chips — extracted from caption, rendered as primary-colored
+            pills below the caption so they're easier to tap on a tall reel.
+            Deduped + capped at 6 to avoid clutter. */}
+        {post.caption && (() => {
+          const matches = post.caption.match(/#[a-zA-Z0-9_]{2,30}/g);
+          if (!matches || matches.length === 0) return null;
+          const seen = new Set<string>();
+          const tags = matches.filter((t) => {
+            const k = t.toLowerCase();
+            if (seen.has(k)) return false;
+            seen.add(k);
+            return true;
+          }).slice(0, 6);
+          return (
+            <div className="flex flex-wrap gap-1.5 mb-2">
+              {tags.map((tag) => (
+                <button
+                  key={tag}
+                  type="button"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    navigate(`/explore?tag=${encodeURIComponent(tag.slice(1))}`);
+                  }}
+                  className="px-2.5 py-1 rounded-full bg-white/10 backdrop-blur-sm border border-white/20 text-white text-[11px] font-semibold active:scale-95 transition-transform"
+                >
+                  {tag}
+                </button>
+              ))}
+            </div>
+          );
+        })()}
+
+        {/* Reaction summary + top comment preview */}
+        <div className="mb-2 flex items-start justify-between gap-3">
+          <Suspense fallback={null}>
+            <CommentPreview
+              postId={rawPostId}
+              source={post.source ?? "store"}
+              totalCount={post.comments_count ?? 0}
+              onOpen={() => onOpenComments(post.id)}
+            />
+          </Suspense>
+          <Suspense fallback={null}>
+            <ReactionSummary postId={rawPostId} source={post.source ?? "store"} />
+          </Suspense>
+        </div>
+
+        {/* "View N comments" inline link — Instagram/TikTok pattern.
+            Opens the existing comment sheet without forcing a trip to the
+            right column. */}
+        {(post.comments_count || 0) > 0 && (
+          <button
+            type="button"
+            onClick={(e) => { e.stopPropagation(); onOpenComments(post.id); }}
+            className="block text-white/80 text-xs font-medium drop-shadow mb-2 active:opacity-70"
+          >
+            View {post.comments_count === 1
+              ? "1 comment"
+              : `all ${post.comments_count! > 999 ? `${(post.comments_count! / 1000).toFixed(1)}k` : post.comments_count} comments`}
+          </button>
         )}
 
         {/* Music ticker */}
@@ -619,19 +1108,92 @@ function ReelCard({
         />
       </div>
 
-      {/* Right-side action buttons (TikTok-style) */}
+      {/* Right-side action buttons (TikTok-style) — responsive scale.
+          - mobile (<sm):  9 px / 36 px / 44 px hit, gap-4
+          - tablet (≥sm):  10 px / 40 px / 44 px hit, gap-5
+          - desktop (≥lg): 11 px / 44 px / 48 px hit, gap-6 */}
       <div
-        className="absolute right-3 z-30 flex flex-col items-center gap-5"
+        className="absolute right-2 sm:right-3 lg:right-4 z-30 flex flex-col items-center gap-4 sm:gap-5 lg:gap-6"
         style={{ bottom: "calc(env(safe-area-inset-bottom, 0px) + 100px)" }}
       >
+        {/* Author avatar with follow badge — TikTok-style.
+            When the author is live, the avatar's ring turns red + pulses,
+            and a tap routes to the live stream instead of the profile. */}
+        <button
+          type="button"
+          onClick={(e) => {
+            e.stopPropagation();
+            if (authorIsLive && post.author_id) {
+              navigate(`/live/${post.author_id}`);
+              return;
+            }
+            if (post.source === "user" && post.author_id) {
+              onNavigate(`__user__${post.author_id}`);
+            } else if (post.store_slug) {
+              onNavigate(post.store_slug);
+            }
+          }}
+          className={cn(
+            "relative mb-1",
+            authorIsLive && "after:absolute after:inset-0 after:rounded-full after:ring-2 after:ring-red-500 after:animate-ping after:pointer-events-none"
+          )}
+          aria-label={authorIsLive
+            ? `${post.source === "user" ? post.author_name : post.store_name} is live — tap to watch`
+            : `View ${post.source === "user" ? post.author_name : post.store_name}'s profile`}
+        >
+          <div className={cn(
+            "w-11 h-11 sm:w-12 sm:h-12 lg:w-14 lg:h-14 rounded-full overflow-hidden bg-black/40 border-2",
+            authorIsLive ? "border-red-500" : "border-white",
+          )}>
+            {(post.source === "user" ? post.author_avatar : post.store_logo) ? (
+              <img
+                src={(post.source === "user" ? post.author_avatar : post.store_logo)!}
+                alt=""
+                className="w-full h-full object-cover"
+              />
+            ) : (
+              <div className="w-full h-full flex items-center justify-center text-white text-base font-bold">
+                {((post.source === "user" ? post.author_name : post.store_name) || "?").slice(0, 1).toUpperCase()}
+              </div>
+            )}
+          </div>
+          {/* LIVE pill — replaces the follow badge while streaming */}
+          {authorIsLive && (
+            <span className="absolute -top-1 left-1/2 -translate-x-1/2 px-1.5 py-0.5 rounded-full bg-red-500 text-white text-[9px] font-bold leading-none border-2 border-black">
+              LIVE
+            </span>
+          )}
+          {/* + button when not yet following — suppressed while LIVE pill is showing */}
+          {!authorIsLive && authorId && !isSelf && !isFollowing && !followLoading && (
+            <span
+              onClick={(e) => { e.stopPropagation(); void handleFollow(e as any); }}
+              className="absolute -bottom-1.5 left-1/2 -translate-x-1/2 w-6 h-6 rounded-full bg-primary flex items-center justify-center border-2 border-black cursor-pointer"
+            >
+              <span className="text-primary-foreground text-sm font-bold leading-none">+</span>
+            </span>
+          )}
+          {/* Checkmark when following */}
+          {!authorIsLive && authorId && !isSelf && isFollowing && (
+            <span className="absolute -bottom-1.5 left-1/2 -translate-x-1/2 w-6 h-6 rounded-full bg-emerald-500 flex items-center justify-center border-2 border-black">
+              <UserCheck className="w-3 h-3 text-white" strokeWidth={3} />
+            </span>
+          )}
+          {/* Loading spinner during follow toggle */}
+          {!authorIsLive && authorId && !isSelf && followLoading && (
+            <span className="absolute -bottom-1.5 left-1/2 -translate-x-1/2 w-6 h-6 rounded-full bg-primary flex items-center justify-center border-2 border-black">
+              <Loader2 className="w-3 h-3 text-primary-foreground animate-spin" />
+            </span>
+          )}
+        </button>
+
         {/* Mute/Unmute with sound wave */}
         <button
           type="button"
           onClick={(e) => { e.stopPropagation(); handleMuteToggle(); }}
-          className="flex flex-col items-center gap-1"
+          className="flex flex-col items-center gap-1 min-w-[44px] min-h-[44px]"
           aria-label={globalMuted ? "Unmute" : "Mute"}
         >
-          <div className="w-11 h-11 rounded-full bg-black/40 backdrop-blur-sm flex items-center justify-center relative overflow-hidden border border-white/10">
+          <div className="w-11 h-11 lg:w-12 lg:h-12 rounded-full bg-black/40 backdrop-blur-sm flex items-center justify-center relative overflow-hidden border border-white/10">
             {globalMuted ? (
               <VolumeX className="w-5 h-5 text-white/70" />
             ) : (
@@ -655,56 +1217,448 @@ function ReelCard({
           </div>
         </button>
 
-        {/* Like */}
-        <button
-          type="button"
-          onClick={(e) => { e.stopPropagation(); onToggleLike(post.id, liked); }}
-          className="flex flex-col items-center gap-1"
-          aria-label="Like"
-        >
-          <Heart
-            className={cn(
-              "w-9 h-9 drop-shadow-lg transition-transform active:scale-125",
-              liked ? "text-destructive fill-destructive" : "text-white",
+        {/* Like / Reaction (long-press for emoji picker) */}
+        <div className="relative">
+          {onSetReaction && (
+            <Suspense fallback={null}>
+              <ReactionPicker
+                open={showReactionPicker}
+                onClose={() => setShowReactionPicker(false)}
+                onPick={(emoji) => onSetReaction(emoji)}
+              />
+            </Suspense>
+          )}
+          <button
+            type="button"
+            onClick={(e) => {
+              e.stopPropagation();
+              // Burst only when transitioning unliked → liked (matches TikTok)
+              if (!liked) {
+                setShowLikeBurst(true);
+                window.setTimeout(() => setShowLikeBurst(false), 600);
+              }
+              onToggleLike(post.id, liked);
+            }}
+            onPointerDown={(e) => {
+              if (!onSetReaction) return;
+              e.stopPropagation();
+              if (longPressTimer.current) clearTimeout(longPressTimer.current);
+              longPressTimer.current = setTimeout(() => setShowReactionPicker(true), 350);
+            }}
+            onPointerUp={() => {
+              if (longPressTimer.current) { clearTimeout(longPressTimer.current); longPressTimer.current = null; }
+            }}
+            onPointerLeave={() => {
+              if (longPressTimer.current) { clearTimeout(longPressTimer.current); longPressTimer.current = null; }
+            }}
+            onContextMenu={(e) => { e.preventDefault(); if (onSetReaction) setShowReactionPicker(true); }}
+            className="flex flex-col items-center gap-1 min-w-[44px] min-h-[44px]"
+            aria-label={currentReaction ? `Reacted ${currentReaction}` : "Like"}
+          >
+            {currentReaction ? (
+              <span className="text-3xl drop-shadow-lg leading-none transition-transform active:scale-125" aria-hidden>
+                {currentReaction}
+              </span>
+            ) : (
+              <Heart
+                className={cn(
+                  "w-9 h-9 lg:w-10 lg:h-10 drop-shadow-lg transition-transform active:scale-125",
+                  liked ? "text-destructive fill-destructive" : "text-white",
+                )}
+              />
             )}
-          />
-          <span className="text-white text-xs font-semibold drop-shadow">
-            {post.likes_count || 0}
-          </span>
-        </button>
+            <motion.span
+              key={liveLikesCount}
+              initial={{ scale: 1.3, color: "#ef4444" }}
+              animate={{ scale: 1, color: "#ffffff" }}
+              transition={{ duration: 0.3 }}
+              className="text-xs font-semibold drop-shadow tabular-nums"
+            >
+              {liveLikesCount > 999 ? `${(liveLikesCount / 1000).toFixed(1)}k` : liveLikesCount}
+            </motion.span>
+          </button>
+        </div>
 
         {/* Comment */}
         <button
           type="button"
           onClick={(e) => { e.stopPropagation(); onOpenComments(post.id); }}
-          className="flex flex-col items-center gap-1"
+          className="flex flex-col items-center gap-1 min-w-[44px] min-h-[44px]"
           aria-label="Comment"
+          title="Comments"
         >
-          <MessageCircle className="w-9 h-9 text-white drop-shadow-lg" />
-          <span className="text-white text-xs font-semibold drop-shadow">
-            {post.comments_count || 0}
-          </span>
+          <MessageCircle className="w-9 h-9 lg:w-10 lg:h-10 text-white drop-shadow-lg" />
+          <motion.span
+            key={liveCommentsCount}
+            initial={{ scale: 1.3 }}
+            animate={{ scale: 1 }}
+            transition={{ duration: 0.3 }}
+            className="text-white text-xs font-semibold drop-shadow tabular-nums"
+          >
+            {liveCommentsCount > 999 ? `${(liveCommentsCount / 1000).toFixed(1)}k` : liveCommentsCount}
+          </motion.span>
         </button>
 
         {/* Views */}
         <div className="flex flex-col items-center gap-1">
-          <Eye className="w-9 h-9 text-white drop-shadow-lg" />
+          <Eye className="w-9 h-9 lg:w-10 lg:h-10 text-white drop-shadow-lg" />
           <span className="text-white text-xs font-semibold drop-shadow">
             {post.view_count || 0}
           </span>
         </div>
 
+        {/* Repost */}
+        {onOpenRepost && (
+          <button
+            type="button"
+            onClick={(e) => { e.stopPropagation(); onOpenRepost(); }}
+            className="flex flex-col items-center gap-1 min-w-[44px] min-h-[44px]"
+            aria-label={isReposted ? "Reposted" : "Repost"}
+          >
+            <Repeat2 className={cn(
+              "w-9 h-9 drop-shadow-lg",
+              isReposted ? "text-emerald-400 fill-emerald-400/20" : "text-white",
+            )} />
+            <span className="text-white text-xs font-semibold drop-shadow">
+              {(post.reposts_count || 0) > 0
+                ? (post.reposts_count! > 999 ? `${(post.reposts_count! / 1000).toFixed(1)}k` : post.reposts_count)
+                : isReposted ? "Reposted" : "Repost"}
+            </span>
+          </button>
+        )}
+
         {/* Share */}
         <button
           type="button"
           onClick={(e) => { e.stopPropagation(); onOpenShare(post.id); }}
-          className="flex flex-col items-center gap-1"
+          className="flex flex-col items-center gap-1 min-w-[44px] min-h-[44px]"
           aria-label="Share"
         >
-          <Share2 className="w-9 h-9 text-white drop-shadow-lg" />
-          <span className="text-white text-xs font-semibold drop-shadow">Share</span>
+          <Share2 className="w-9 h-9 lg:w-10 lg:h-10 text-white drop-shadow-lg" />
+          <span className="text-white text-xs font-semibold drop-shadow">
+            {(post.shares_count || 0) > 0
+              ? (post.shares_count! > 999 ? `${(post.shares_count! / 1000).toFixed(1)}k` : post.shares_count)
+              : "Share"}
+          </span>
+        </button>
+
+        {/* Save / Bookmark */}
+        <button
+          type="button"
+          onClick={(e) => { e.stopPropagation(); handleSaveToggle(); }}
+          className="flex flex-col items-center gap-1 min-w-[44px] min-h-[44px]"
+          aria-label={saved ? "Remove from saved" : "Save reel"}
+        >
+          <Bookmark
+            className={cn(
+              "w-9 h-9 drop-shadow-lg transition-transform active:scale-125",
+              saved ? "text-amber-400 fill-amber-400" : "text-white",
+            )}
+          />
+          <span className="text-white text-xs font-semibold drop-shadow">
+            {saved ? "Saved" : "Save"}
+          </span>
+        </button>
+
+        {/* More options (3-dot) → opens unified PostActionsMenu */}
+        <button
+          type="button"
+          onClick={(e) => {
+            e.stopPropagation();
+            if (onOpenActions) onOpenActions();
+            else setShowMoreMenu(true);
+          }}
+          className="flex flex-col items-center gap-1 min-w-[44px] min-h-[44px]"
+          aria-label="More options"
+        >
+          <div className="w-11 h-11 rounded-full bg-black/40 backdrop-blur-sm flex items-center justify-center border border-white/10">
+            <MoreHorizontal className="w-5 h-5 text-white" />
+          </div>
+        </button>
+
+        {/* Rotating sound disk — TikTok-signature album art. Spins only while
+            the video is playing; tap to open the sound's reels feed. */}
+        <button
+          type="button"
+          onClick={(e) => {
+            e.stopPropagation();
+            const soundLabel = post.audio_name || `Original Sound - ${post.source === "user" ? post.author_name || "ZIVO" : post.store_name || "ZIVO"}`;
+            onOpenSound(soundLabel);
+          }}
+          className="mt-1"
+          aria-label="Sound details"
+        >
+          <div
+            className={cn(
+              "w-11 h-11 rounded-full overflow-hidden border-2 border-black bg-gradient-to-br from-zinc-700 via-zinc-900 to-black flex items-center justify-center",
+              isActive && isPlaying && "animate-[spin_5s_linear_infinite]",
+            )}
+          >
+            {(post.source === "user" ? post.author_avatar : post.store_logo) ? (
+              <img
+                src={(post.source === "user" ? post.author_avatar : post.store_logo)!}
+                alt=""
+                className="w-7 h-7 rounded-full object-cover"
+              />
+            ) : (
+              <Music className="w-4 h-4 text-white" />
+            )}
+          </div>
         </button>
       </div>
+
+      {/* Scrub timecode — appears in the center of the screen while dragging
+          the progress bar so the user can land on a specific moment. */}
+      <AnimatePresence>
+        {isScrubbing && videoDuration > 0 && (
+          <motion.div
+            initial={{ opacity: 0, scale: 0.9 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0, scale: 0.9 }}
+            transition={{ duration: 0.15 }}
+            className="absolute left-1/2 -translate-x-1/2 z-30 px-4 py-2 rounded-2xl bg-black/70 backdrop-blur-md flex items-baseline gap-1 pointer-events-none"
+            style={{ top: "40%" }}
+          >
+            <span className="text-white text-2xl font-bold tabular-nums">
+              {formatVideoTime(videoProgress * videoDuration)}
+            </span>
+            <span className="text-white/50 text-sm tabular-nums">
+              / {formatVideoTime(videoDuration)}
+            </span>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Video progress bar — drag-to-seek (TikTok style).
+          The wrapper is a tall invisible touch target so users can grab it
+          easily, while the visible bar stays thin (or grows when scrubbing). */}
+      {isVideoPost && !hasPlaybackError && (
+        <div
+          ref={progressBarRef}
+          className="absolute inset-x-0 bottom-0 z-25 h-6 flex items-end touch-none select-none"
+          onPointerDown={(e) => {
+            if (!progressBarRef.current || !videoRef.current) return;
+            (e.currentTarget as HTMLDivElement).setPointerCapture(e.pointerId);
+            const rect = progressBarRef.current.getBoundingClientRect();
+            const ratio = Math.max(0, Math.min(1, (e.clientX - rect.left) / rect.width));
+            wasPlayingBeforeScrub.current = !videoRef.current.paused;
+            videoRef.current.pause();
+            setIsScrubbing(true);
+            setVideoProgress(ratio);
+            if (Number.isFinite(videoRef.current.duration)) {
+              videoRef.current.currentTime = ratio * videoRef.current.duration;
+            }
+          }}
+          onPointerMove={(e) => {
+            if (!isScrubbing || !progressBarRef.current || !videoRef.current) return;
+            const rect = progressBarRef.current.getBoundingClientRect();
+            const ratio = Math.max(0, Math.min(1, (e.clientX - rect.left) / rect.width));
+            setVideoProgress(ratio);
+            if (Number.isFinite(videoRef.current.duration)) {
+              videoRef.current.currentTime = ratio * videoRef.current.duration;
+            }
+          }}
+          onPointerUp={(e) => {
+            (e.currentTarget as HTMLDivElement).releasePointerCapture(e.pointerId);
+            setIsScrubbing(false);
+            if (wasPlayingBeforeScrub.current) {
+              void videoRef.current?.play().catch(() => {});
+            }
+          }}
+          onPointerCancel={() => {
+            setIsScrubbing(false);
+            if (wasPlayingBeforeScrub.current) {
+              void videoRef.current?.play().catch(() => {});
+            }
+          }}
+        >
+          <div
+            className={cn(
+              "relative w-full bg-white/15 transition-[height] duration-150",
+              isScrubbing ? "h-1" : "h-0.5",
+            )}
+          >
+            <div
+              className="absolute inset-y-0 left-0 bg-white/90"
+              style={{ width: `${videoProgress * 100}%` }}
+            />
+            {isScrubbing && (
+              <div
+                className="absolute -top-1.5 w-4 h-4 -ml-2 rounded-full bg-white shadow-lg"
+                style={{ left: `${videoProgress * 100}%` }}
+              />
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* Like-tap heart burst — single-tap on the like button (right column).
+          Distinct from the double-tap-on-video burst — this one is small + on
+          the side. */}
+      <AnimatePresence>
+        {showLikeBurst && (
+          <motion.div
+            initial={{ scale: 0, opacity: 1, y: 0 }}
+            animate={{ scale: 1.1, opacity: 0, y: -40 }}
+            transition={{ duration: 0.6, ease: "easeOut" }}
+            className="absolute right-6 z-40 pointer-events-none"
+            style={{ bottom: "calc(env(safe-area-inset-bottom, 0px) + 270px)" }}
+          >
+            <Heart className="w-12 h-12 text-destructive fill-destructive drop-shadow-lg" />
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* More-options bottom sheet */}
+      <AnimatePresence>
+        {showMoreMenu && (
+          <>
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => setShowMoreMenu(false)}
+              className="fixed inset-0 z-[80] bg-black/60"
+            />
+            <motion.div
+              initial={{ y: "100%" }}
+              animate={{ y: 0 }}
+              exit={{ y: "100%" }}
+              transition={{ type: "spring", damping: 30, stiffness: 320 }}
+              className="fixed inset-x-0 bottom-0 z-[81] bg-background rounded-t-2xl pb-[env(safe-area-inset-bottom,16px)]"
+            >
+              <div className="flex justify-center pt-2 pb-1">
+                <div className="w-10 h-1 rounded-full bg-muted-foreground/20" />
+              </div>
+              <div className="px-2 py-2 space-y-0.5">
+                <button
+                  onClick={() => {
+                    setShowMoreMenu(false);
+                    const url = `${window.location.origin}/reels/${post.id}`;
+                    try {
+                      const ta = document.createElement("textarea");
+                      ta.value = url;
+                      ta.style.cssText = "position:fixed;opacity:0;left:-9999px";
+                      document.body.appendChild(ta);
+                      ta.select();
+                      document.execCommand("copy");
+                      document.body.removeChild(ta);
+                      toast.success("Link copied");
+                    } catch { toast.info("Long-press URL bar to copy"); }
+                  }}
+                  className="flex items-center gap-4 w-full px-4 py-3.5 hover:bg-muted/50 rounded-xl"
+                >
+                  <Link2 className="h-5 w-5 text-foreground" />
+                  <span className="text-sm font-medium text-foreground">Copy link</span>
+                </button>
+                <button
+                  onClick={() => { setShowMoreMenu(false); setShowSpeedPicker(true); }}
+                  className="flex items-center gap-4 w-full px-4 py-3.5 hover:bg-muted/50 rounded-xl"
+                >
+                  <Gauge className="h-5 w-5 text-foreground" />
+                  <span className="text-sm font-medium text-foreground flex-1 text-left">Playback speed</span>
+                  <span className="text-xs font-semibold text-muted-foreground tabular-nums">{playbackSpeed}×</span>
+                </button>
+                <button
+                  onClick={async () => {
+                    setShowMoreMenu(false);
+                    const v = videoRef.current;
+                    if (!v) return;
+                    try {
+                      const doc = document as any;
+                      if (doc.pictureInPictureElement) {
+                        await doc.exitPictureInPicture();
+                      } else if ((v as any).requestPictureInPicture) {
+                        await (v as any).requestPictureInPicture();
+                      } else {
+                        toast.error("Picture-in-picture isn't supported on this device");
+                      }
+                    } catch {
+                      toast.error("Couldn't open picture-in-picture");
+                    }
+                  }}
+                  className="flex items-center gap-4 w-full px-4 py-3.5 hover:bg-muted/50 rounded-xl"
+                >
+                  <PictureInPicture className="h-5 w-5 text-foreground" />
+                  <span className="text-sm font-medium text-foreground">Picture-in-picture</span>
+                </button>
+                <button
+                  onClick={() => { setShowMoreMenu(false); toast.success("You'll see fewer reels like this"); }}
+                  className="flex items-center gap-4 w-full px-4 py-3.5 hover:bg-muted/50 rounded-xl"
+                >
+                  <EyeOff className="h-5 w-5 text-foreground" />
+                  <span className="text-sm font-medium text-foreground">Not interested</span>
+                </button>
+                <button
+                  onClick={() => { setShowMoreMenu(false); toast.success("Thanks — we'll review this reel"); }}
+                  className="flex items-center gap-4 w-full px-4 py-3.5 hover:bg-muted/50 rounded-xl"
+                >
+                  <Flag className="h-5 w-5 text-destructive" />
+                  <span className="text-sm font-medium text-destructive">Report</span>
+                </button>
+              </div>
+            </motion.div>
+          </>
+        )}
+      </AnimatePresence>
+
+      {/* Speed-picker bottom sheet */}
+      <AnimatePresence>
+        {showSpeedPicker && (
+          <>
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => setShowSpeedPicker(false)}
+              className="fixed inset-0 z-[80] bg-black/60"
+            />
+            <motion.div
+              initial={{ y: "100%" }}
+              animate={{ y: 0 }}
+              exit={{ y: "100%" }}
+              transition={{ type: "spring", damping: 30, stiffness: 320 }}
+              className="fixed inset-x-0 bottom-0 z-[81] bg-background rounded-t-2xl pb-[env(safe-area-inset-bottom,16px)]"
+            >
+              <div className="flex justify-center pt-2 pb-1">
+                <div className="w-10 h-1 rounded-full bg-muted-foreground/20" />
+              </div>
+              <p className="px-5 py-2 text-xs font-bold text-muted-foreground uppercase tracking-wider">Playback speed</p>
+              <div className="px-2 pb-2 grid grid-cols-4 gap-2">
+                {[0.5, 1.0, 1.5, 2.0].map((rate) => {
+                  const active = Math.abs(playbackSpeed - rate) < 0.01;
+                  return (
+                    <button
+                      key={rate}
+                      onClick={() => { setPlaybackSpeed(rate); setShowSpeedPicker(false); }}
+                      className={cn(
+                        "py-3 rounded-xl text-sm font-bold tabular-nums transition-all active:scale-95",
+                        active ? "bg-primary text-primary-foreground" : "bg-muted/40 text-foreground hover:bg-muted",
+                      )}
+                    >
+                      {rate}×
+                    </button>
+                  );
+                })}
+              </div>
+              <p className="px-5 pb-3 text-[11px] text-muted-foreground">
+                Tip: tap and hold the video for a quick 2× boost.
+              </p>
+            </motion.div>
+          </>
+        )}
+      </AnimatePresence>
+
+      {/* Speed badge — shown in the corner whenever playback isn't 1× and
+          user isn't actively long-pressing (the FF badge takes over then). */}
+      {playbackSpeed !== 1.0 && !isHoldingFastForward && (
+        <div
+          className="absolute right-3 z-30 px-2 py-0.5 rounded-full bg-black/60 backdrop-blur-sm pointer-events-none"
+          style={{ top: "calc(env(safe-area-inset-top, 0px) + 80px)" }}
+        >
+          <span className="text-white text-[11px] font-bold tabular-nums">{playbackSpeed}×</span>
+        </div>
+      )}
     </div>
   );
 }
@@ -722,6 +1676,7 @@ function CommentSheet({
 }) {
   const [commentText, setCommentText] = useState("");
   const [submitting, setSubmitting] = useState(false);
+  const [mentionQuery, setMentionQuery] = useState<string | null>(null);
   const queryClient = useQueryClient();
   const inputRef = useRef<HTMLInputElement>(null);
 
@@ -771,6 +1726,7 @@ function CommentSheet({
       if (!userId) toast.error("Please sign in to comment");
       return;
     }
+    if (!confirmContentSafe(commentText, "comment")) return;
     setSubmitting(true);
     const { error } = await supabase.from("store_post_comments").insert({
       post_id: postId,
@@ -840,7 +1796,11 @@ function CommentSheet({
                 </div>
                 <div className="flex-1 min-w-0">
                   <p className="text-xs font-semibold text-foreground mb-0.5">{name}</p>
-                  <p className="text-sm text-foreground">{c.content}</p>
+                  <p className="text-sm text-foreground">
+                    <Suspense fallback={<span>{c.content}</span>}>
+                      <SafeCaption text={c.content} />
+                    </Suspense>
+                  </p>
                   <p className="text-xs text-muted-foreground mt-0.5">
                     {new Date(c.created_at).toLocaleDateString()}
                   </p>
@@ -861,22 +1821,50 @@ function CommentSheet({
               <p className="text-sm text-muted-foreground">Only verified accounts can comment</p>
             </div>
           ) : (
-            <div className="flex gap-2">
+            <div className="relative flex gap-2">
+              {/* @-mention autocomplete (anchors above the input) */}
+              <Suspense fallback={null}>
+                <MentionPicker
+                  query={mentionQuery}
+                  onSelect={(r) => {
+                    if (!inputRef.current) return;
+                    const caret = inputRef.current.selectionStart ?? commentText.length;
+                    const handle = r.username || r.fullName || "";
+                    if (!handle) return;
+                    const next = applyMention(commentText, caret, handle);
+                    setCommentText(next.value);
+                    setMentionQuery(null);
+                    requestAnimationFrame(() => {
+                      inputRef.current?.focus();
+                      inputRef.current?.setSelectionRange(next.caret, next.caret);
+                    });
+                  }}
+                  onClose={() => setMentionQuery(null)}
+                />
+              </Suspense>
               <input
                 ref={inputRef}
                 type="text"
                 value={commentText}
-                onChange={(e) => setCommentText(e.target.value)}
-                onKeyDown={(e) => e.key === "Enter" && handleSubmit()}
+                onChange={(e) => {
+                  setCommentText(e.target.value);
+                  const caret = e.target.selectionStart ?? e.target.value.length;
+                  setMentionQuery(detectMention(e.target.value, caret));
+                }}
+                onKeyDown={(e) => {
+                  // Picker handles Enter while open; only submit when no picker
+                  if (e.key === "Enter" && mentionQuery == null) handleSubmit();
+                }}
                 placeholder="Add a comment..."
-                className="flex-1 h-10 rounded-full bg-muted px-4 text-sm text-foreground placeholder:text-muted-foreground outline-none"
+                className="flex-1 h-11 sm:h-10 rounded-full bg-muted px-4 text-base sm:text-sm text-foreground placeholder:text-muted-foreground outline-none focus:ring-2 focus:ring-primary/40 transition-shadow"
                 disabled={submitting}
               />
               <button
                 type="button"
                 onClick={handleSubmit}
                 disabled={!commentText.trim() || submitting}
-                className="w-10 h-10 rounded-full bg-primary flex items-center justify-center disabled:opacity-40"
+                className="w-11 h-11 sm:w-10 sm:h-10 rounded-full bg-primary flex items-center justify-center disabled:opacity-40 active:scale-95 transition-transform"
+                aria-label="Send comment"
               >
                 <Send className="w-4 h-4 text-primary-foreground" />
               </button>
@@ -1317,7 +2305,11 @@ function DiscoverPeopleOverlay({ onClose, onNavigate }: { onClose: () => void; o
                   </div>
                   <p className="text-sm font-semibold text-foreground truncate">{profile.full_name || "User"}</p>
                   {profile.bio && (
-                    <p className="text-[10px] text-muted-foreground line-clamp-2 mt-0.5 leading-tight">{profile.bio}</p>
+                    <p className="text-[10px] text-muted-foreground line-clamp-2 mt-0.5 leading-tight">
+                      <Suspense fallback={<span>{profile.bio}</span>}>
+                        <SafeCaption text={profile.bio} />
+                      </Suspense>
+                    </p>
                   )}
                 </div>
                 <button
@@ -1361,6 +2353,35 @@ export default function FeedPage() {
   const [userId, setUserId] = useState<string | null>(null);
   const [userProfile, setUserProfile] = useState<{ name: string; avatar: string | null } | null>(null);
   const [userLikedPostIds, setUserLikedPostIds] = useState<Set<string>>(new Set());
+  const [feedMode, setFeedMode] = useState<"foryou" | "following">("foryou");
+  const [followingIds, setFollowingIds] = useState<Set<string>>(new Set());
+  const [showSwipeHint, setShowSwipeHint] = useState(false);
+  // Post actions (bookmark / mute / block / report) + 3-dot menu
+  const postActions = usePostActions(userId);
+  const [actionsTarget, setActionsTarget] = useState<{ target: PostActionTarget; authorName?: string; shareUrl?: string } | null>(null);
+  // Realtime new-posts banner
+  const [newPostsCount, setNewPostsCount] = useState(0);
+  // Pull-to-refresh state
+  const [isRefreshing, setIsRefreshing] = useState(false);
+  const pullStartY = useRef<number | null>(null);
+  const [pullDelta, setPullDelta] = useState(0);
+  // Trending-hashtag chip filter
+  const [selectedHashtag, setSelectedHashtag] = useState<string | null>(null);
+  // Multi-emoji reactions
+  const reactions = usePostReactions(userId);
+  // Reposts
+  const reposts = usePostReposts(userId);
+  const [repostTarget, setRepostTarget] = useState<{
+    postId: string; source: "store" | "user"; authorName?: string; preview?: string | null;
+  } | null>(null);
+  // Author-only insights drawer
+  const [insightsTarget, setInsightsTarget] = useState<{
+    postId: string; source: "store" | "user";
+  } | null>(null);
+  // Infinite scroll — multiplier on the base page size
+  const [pageMultiplier, setPageMultiplier] = useState(1);
+  // Posts the user just blocked, removed from view immediately
+  const [hiddenAuthorIds, setHiddenAuthorIds] = useState<Set<string>>(new Set());
   const { data: ownerStore } = useOwnerStoreProfile();
   const lodgingRooms = useLodgeRooms(ownerStore?.isLodging ? ownerStore.id : "");
   const lodgingProfile = useLodgePropertyProfile(ownerStore?.isLodging ? ownerStore.id : "");
@@ -1383,29 +2404,94 @@ export default function FeedPage() {
     });
   }, []);
 
-  const { data: posts = [], isLoading } = useQuery({
-    queryKey: ["customer-feed"],
+  // First-visit swipe-up hint — auto-dismisses after 3 s and on any user
+  // interaction (scroll, key press, click). Persisted in localStorage so
+  // returning users don't see it again.
+  useEffect(() => {
+    try {
+      if (localStorage.getItem("zivo_reel_onboarded") === "1") return;
+    } catch { /* private mode etc. — just show the hint */ }
+    setShowSwipeHint(true);
+    const dismiss = () => {
+      setShowSwipeHint(false);
+      try { localStorage.setItem("zivo_reel_onboarded", "1"); } catch {}
+      window.removeEventListener("keydown", dismiss);
+      window.removeEventListener("click", dismiss);
+      window.removeEventListener("wheel", dismiss);
+      window.removeEventListener("touchstart", dismiss);
+    };
+    window.addEventListener("keydown", dismiss);
+    window.addEventListener("click", dismiss);
+    window.addEventListener("wheel", dismiss, { passive: true });
+    window.addEventListener("touchstart", dismiss, { passive: true });
+    const timer = window.setTimeout(dismiss, 3500);
+    return () => {
+      window.clearTimeout(timer);
+      window.removeEventListener("keydown", dismiss);
+      window.removeEventListener("click", dismiss);
+      window.removeEventListener("wheel", dismiss);
+      window.removeEventListener("touchstart", dismiss);
+    };
+  }, []);
+
+  // Followed user IDs — drives the "Following" tab filter
+  useEffect(() => {
+    if (!userId) { setFollowingIds(new Set()); return; }
+    let alive = true;
+    (supabase as any)
+      .from("user_followers")
+      .select("following_id")
+      .eq("follower_id", userId)
+      .then(({ data }: any) => {
+        if (!alive) return;
+        setFollowingIds(new Set((data || []).map((r: any) => r.following_id)));
+      });
+    return () => { alive = false; };
+  }, [userId]);
+
+  const { data: posts = [], isLoading, isFetching } = useQuery({
+    queryKey: ["customer-feed", userId, pageMultiplier],
     queryFn: async () => {
-      // Fetch store posts and user video posts in parallel
+      // Pull the muted/blocked author list first so we can filter the feed
+      // server-side. Defence-in-depth: client also filters in case RLS isn't
+      // wired for these tables yet (the migration is included in this branch).
+      let mutedAuthorIds = new Set<string>();
+      if (userId) {
+        const { data: safety } = await (supabase as any)
+          .from("user_safety_actions")
+          .select("target_user_id, action")
+          .eq("user_id", userId);
+        mutedAuthorIds = new Set((safety ?? []).map((s: any) => s.target_user_id));
+      }
+
+      // Fetch store posts and user video posts in parallel.
+      // Page size grows with `pageMultiplier` so "load more" reveals additional content.
+      const STORE_PAGE = 50;
+      const USER_PAGE  = 30;
       const [{ data: postsData, error }, { data: userVideos }] = await Promise.all([
         supabase
           .from("store_posts")
           .select("*")
           .eq("is_published", true)
           .order("created_at", { ascending: false })
-          .limit(50),
+          .limit(STORE_PAGE * pageMultiplier),
         (supabase as any)
           .from("user_posts")
-          .select("id, user_id, media_url, media_urls, media_type, caption, likes_count, comments_count, views_count, created_at, audio_name, location")
+          .select("id, user_id, media_url, media_urls, media_type, caption, likes_count, comments_count, shares_count, views_count, created_at, audio_name, location")
           .eq("is_published", true)
           .in("media_type", ["video", "reel"])
           .order("created_at", { ascending: false })
-          .limit(30),
+          .limit(USER_PAGE * pageMultiplier),
       ]);
       if (error) throw error;
 
+      // Strip muted/blocked authors from user video posts
+      const filteredUserVideos = (userVideos ?? []).filter(
+        (p: any) => !mutedAuthorIds.has(p.user_id)
+      );
+
       const storeIds = [...new Set((postsData || []).map((p: any) => p.store_id))];
-      const userIds = [...new Set((userVideos || []).map((p: any) => p.user_id))];
+      const userIds = [...new Set(filteredUserVideos.map((p: any) => p.user_id))];
 
       const [{ data: stores }, { data: profiles }] = await Promise.all([
         storeIds.length
@@ -1438,8 +2524,8 @@ export default function FeedPage() {
         });
       }
 
-      // User video posts
-      for (const post of userVideos || []) {
+      // User video posts (already filtered for muted/blocked authors above)
+      for (const post of filteredUserVideos) {
         const profile = profileMap.get(post.user_id);
         const urls: string[] = Array.isArray(post.media_urls) && post.media_urls.length > 0
           ? post.media_urls
@@ -1455,6 +2541,7 @@ export default function FeedPage() {
           created_at: post.created_at,
           likes_count: post.likes_count || 0,
           comments_count: post.comments_count || 0,
+          shares_count: post.shares_count || 0,
           view_count: post.views_count || 0,
           audio_name: post.audio_name || null,
           source: "user",
@@ -1490,6 +2577,22 @@ export default function FeedPage() {
     },
   });
 
+  // Posts shown in the snap-scroller — filtered by For You / Following + hashtag.
+  // Memoized so cardRefs / activeIndex stay aligned with what's rendered.
+  const visiblePosts = useMemo(() => {
+    let list = posts;
+    if (feedMode === "following" && userId) {
+      list = list.filter((p) => p.author_id && followingIds.has(p.author_id));
+    }
+    if (selectedHashtag) {
+      list = list.filter((p) => postHasHashtag(p.caption, selectedHashtag));
+    }
+    if (hiddenAuthorIds.size > 0) {
+      list = list.filter((p) => !p.author_id || !hiddenAuthorIds.has(p.author_id));
+    }
+    return list;
+  }, [posts, feedMode, userId, followingIds, selectedHashtag, hiddenAuthorIds]);
+
   // Fetch user's liked post IDs
   useEffect(() => {
     if (!userId || posts.length === 0) return;
@@ -1503,6 +2606,66 @@ export default function FeedPage() {
         setUserLikedPostIds(new Set((data || []).map((d: any) => d.post_id)));
       });
   }, [userId, posts]);
+
+  // ── Realtime: count new posts that arrive while user is mid-feed ────────────
+  // Channel name is opaque (per security guidance) — uses topicForUserSync so
+  // the leaked topic-name metadata doesn't reveal the user ID.
+  useEffect(() => {
+    const channelName = userId ? topicForUserSync(userId, "feed-new-posts") : "feed-new-posts:anon";
+    const channel = supabase
+      .channel(channelName)
+      .on("postgres_changes", { event: "INSERT", schema: "public", table: "user_posts" }, (payload: any) => {
+        // Skip the user's own posts (they'll see them via the optimistic update)
+        if (payload?.new?.user_id === userId) return;
+        if (payload?.new?.is_published === false) return;
+        setNewPostsCount((c) => c + 1);
+      })
+      .on("postgres_changes", { event: "INSERT", schema: "public", table: "store_posts" }, (payload: any) => {
+        if (payload?.new?.is_published === false) return;
+        setNewPostsCount((c) => c + 1);
+      })
+      .subscribe();
+    return () => { supabase.removeChannel(channel); };
+  }, [userId]);
+
+  // Tapping the pill: scroll to top, refetch, clear count
+  const handleShowNewPosts = useCallback(() => {
+    setNewPostsCount(0);
+    queryClient.invalidateQueries({ queryKey: ["customer-feed"] });
+    cardRefs.current[0]?.scrollIntoView({ behavior: "smooth" });
+    setActiveIndex(0);
+  }, [queryClient]);
+
+  // ── Pull-to-refresh: simple touch-driven swipe-down at the top ─────────────
+  const handleTouchStart = useCallback((e: React.TouchEvent) => {
+    // Only begin pull if we're already at the top of the scroll container
+    const scroller = (e.currentTarget as HTMLDivElement);
+    if (scroller.scrollTop > 0) return;
+    pullStartY.current = e.touches[0].clientY;
+  }, []);
+
+  const handleTouchMove = useCallback((e: React.TouchEvent) => {
+    if (pullStartY.current == null) return;
+    const delta = e.touches[0].clientY - pullStartY.current;
+    if (delta > 0) setPullDelta(Math.min(delta, 120));
+  }, []);
+
+  const handleTouchEnd = useCallback(async () => {
+    if (pullStartY.current == null) return;
+    const triggered = pullDelta > 70;
+    pullStartY.current = null;
+    setPullDelta(0);
+    if (triggered && !isRefreshing) {
+      setIsRefreshing(true);
+      try {
+        await queryClient.invalidateQueries({ queryKey: ["customer-feed"] });
+        setNewPostsCount(0);
+        toast.success("Feed refreshed");
+      } finally {
+        setIsRefreshing(false);
+      }
+    }
+  }, [pullDelta, isRefreshing, queryClient]);
 
   const handleToggleLike = useCallback(async (postId: string, currentlyLiked: boolean) => {
     if (!userId) {
@@ -1535,9 +2698,75 @@ export default function FeedPage() {
     queryClient.invalidateQueries({ queryKey: ["customer-feed"] });
   }, [userId, queryClient, posts]);
 
-  // IntersectionObserver
+  // Keyboard shortcuts for the reel viewer (desktop power-user).
+  // Skipped while typing in any input/textarea so we don't hijack typing.
+  // - Space / K  → play / pause active reel
+  // - M          → toggle mute
+  // - L          → like / unlike active reel
+  // - ↓ / J      → next reel
+  // - ↑          → previous reel
   useEffect(() => {
-    if (posts.length === 0) return;
+    const handler = (e: KeyboardEvent) => {
+      const target = e.target as HTMLElement | null;
+      const tag = target?.tagName;
+      if (tag === "INPUT" || tag === "TEXTAREA" || target?.isContentEditable) return;
+      if (e.metaKey || e.ctrlKey || e.altKey) return;
+
+      const currentPost = visiblePosts[activeIndex];
+      const currentCard = cardRefs.current[activeIndex];
+
+      switch (e.key) {
+        case " ":
+        case "k":
+        case "K": {
+          e.preventDefault();
+          const video = currentCard?.querySelector("video");
+          if (video) {
+            if (video.paused) void video.play().catch(() => {});
+            else video.pause();
+          }
+          break;
+        }
+        case "m":
+        case "M": {
+          e.preventDefault();
+          setGlobalMuted((m) => !m);
+          break;
+        }
+        case "l":
+        case "L": {
+          if (!currentPost || !userId) return;
+          e.preventDefault();
+          handleToggleLike(currentPost.id, userLikedPostIds.has(currentPost.id));
+          break;
+        }
+        case "ArrowDown":
+        case "j":
+        case "J": {
+          if (activeIndex < visiblePosts.length - 1) {
+            e.preventDefault();
+            cardRefs.current[activeIndex + 1]?.scrollIntoView({ behavior: "smooth" });
+          }
+          break;
+        }
+        case "ArrowUp": {
+          if (activeIndex > 0) {
+            e.preventDefault();
+            cardRefs.current[activeIndex - 1]?.scrollIntoView({ behavior: "smooth" });
+          }
+          break;
+        }
+      }
+    };
+    window.addEventListener("keydown", handler);
+    return () => window.removeEventListener("keydown", handler);
+  }, [activeIndex, visiblePosts, userId, userLikedPostIds]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // IntersectionObserver — re-attach when the visible list changes (e.g.
+  // toggling For You / Following) so we observe the freshly-rendered cards
+  // instead of stale DOM nodes from the previous list.
+  useEffect(() => {
+    if (visiblePosts.length === 0) return;
     const observers: IntersectionObserver[] = [];
 
     cardRefs.current.forEach((card, index) => {
@@ -1555,26 +2784,32 @@ export default function FeedPage() {
     });
 
     return () => observers.forEach((o) => o.disconnect());
-  }, [posts.length]);
+  }, [visiblePosts.length]);
 
   useEffect(() => {
     const sharedPostId = new URLSearchParams(location.search).get("post");
-    if (!sharedPostId || posts.length === 0) return;
+    if (!sharedPostId || visiblePosts.length === 0) return;
 
-    const targetIndex = posts.findIndex((post) => post.id === sharedPostId);
+    // Index into the rendered list — using full posts here would point past
+    // the cardRefs array when Following filters the feed down.
+    const targetIndex = visiblePosts.findIndex((post) => post.id === sharedPostId);
     if (targetIndex < 0) return;
 
     setActiveIndex(targetIndex);
     requestAnimationFrame(() => {
       cardRefs.current[targetIndex]?.scrollIntoView({ block: "start" });
     });
-  }, [posts, location.search]);
+  }, [visiblePosts, location.search]);
 
   if (isLoading) {
     return (
-      <div className="fixed inset-0 bg-black flex items-center justify-center z-50">
-        <Loader2 className="h-9 w-9 animate-spin text-white" />
-      </div>
+      <Suspense fallback={
+        <div className="fixed inset-0 bg-black flex items-center justify-center z-50">
+          <Loader2 className="h-9 w-9 animate-spin text-white" />
+        </div>
+      }>
+        <FeedSkeleton />
+      </Suspense>
     );
   }
 
@@ -1589,32 +2824,101 @@ export default function FeedPage() {
     );
   }
 
+  // Following tab with no matching reels — distinct empty state.
+  if (feedMode === "following" && visiblePosts.length === 0 && userId) {
+    return (
+      <div className="fixed inset-0 bg-black flex flex-col items-center justify-center gap-4 z-50 px-8 text-center">
+        <UserPlus className="h-14 w-14 text-white/20" />
+        <p className="text-white font-semibold">No reels from people you follow</p>
+        <p className="text-white/50 text-sm">Follow creators to see their reels here, or switch back to For You to discover new ones.</p>
+        <button
+          onClick={() => setFeedMode("foryou")}
+          className="mt-2 px-5 py-2 rounded-full bg-white text-black text-sm font-bold active:scale-95 transition-transform"
+        >
+          Back to For You
+        </button>
+        <button
+          onClick={() => setShowDiscover(true)}
+          className="text-white/70 text-sm underline"
+        >
+          Discover creators
+        </button>
+        <ZivoMobileNav />
+      </div>
+    );
+  }
+
   return (
     <div className="fixed inset-0 bg-black lg:flex lg:flex-col">
       {/* Desktop NavBar */}
       <div className="hidden lg:block relative z-[1200] shrink-0">
         <NavBar />
       </div>
+      {/* For You / Following tabs — TikTok-style top center segmented control */}
+      {userId && (
+        <div
+          className="absolute left-1/2 -translate-x-1/2 z-50 flex items-center gap-5 sm:gap-6 lg:gap-8"
+          style={{ top: 'var(--zivo-safe-top-overlay)' }}
+        >
+          {(["foryou", "following"] as const).map((mode) => (
+            <button
+              key={mode}
+              type="button"
+              onClick={() => {
+                setFeedMode(mode);
+                setActiveIndex(0);
+                requestAnimationFrame(() => cardRefs.current[0]?.scrollIntoView({ block: "start" }));
+              }}
+              className={cn(
+                "relative py-2 px-1 min-h-[44px] text-sm sm:text-[15px] lg:text-base font-bold transition-colors drop-shadow-[0_1px_4px_rgba(0,0,0,0.6)] active:scale-95",
+                feedMode === mode ? "text-white" : "text-white/60",
+              )}
+            >
+              {mode === "foryou" ? "For You" : "Following"}
+              {feedMode === mode && (
+                <span className="absolute bottom-1 left-1/2 -translate-x-1/2 w-6 lg:w-8 h-0.5 lg:h-1 rounded-full bg-white" />
+              )}
+            </button>
+          ))}
+        </div>
+      )}
+
+      {/* Trending hashtags chip row */}
+      <Suspense fallback={null}>
+        <TrendingHashtags
+          posts={posts}
+          selected={selectedHashtag}
+          onSelect={(tag) => {
+            setSelectedHashtag(tag);
+            setActiveIndex(0);
+            requestAnimationFrame(() => cardRefs.current[0]?.scrollIntoView({ block: "start" }));
+          }}
+        />
+      </Suspense>
+
       {/* Discover + Search + Live buttons - hide on desktop */}
-      <div data-testid="feed-floating-actions" className="absolute right-4 z-50 flex gap-2 lg:hidden" style={{ top: 'var(--zivo-safe-top-overlay)' }}>
+      <div data-testid="feed-floating-actions" className="absolute right-3 sm:right-4 z-50 flex gap-2 sm:gap-2.5 lg:hidden" style={{ top: 'var(--zivo-safe-top-overlay)' }}>
         <button
           type="button"
           onClick={() => navigate("/live")}
-          className="w-10 h-10 rounded-full bg-black/40 backdrop-blur-sm flex items-center justify-center"
+          aria-label="Watch live"
+          className="w-10 h-10 sm:w-11 sm:h-11 rounded-full bg-black/40 backdrop-blur-sm flex items-center justify-center active:scale-95 transition-transform border border-white/10"
         >
           <Radio className="w-5 h-5 text-red-400" />
         </button>
         <button
           type="button"
           onClick={() => setShowDiscover(true)}
-          className="w-10 h-10 rounded-full bg-black/40 backdrop-blur-sm flex items-center justify-center"
+          aria-label="Discover people"
+          className="w-10 h-10 sm:w-11 sm:h-11 rounded-full bg-black/40 backdrop-blur-sm flex items-center justify-center active:scale-95 transition-transform border border-white/10"
         >
           <UserPlus className="w-5 h-5 text-white" />
         </button>
         <button
           type="button"
           onClick={() => setShowSearch(true)}
-          className="w-10 h-10 rounded-full bg-black/40 backdrop-blur-sm flex items-center justify-center"
+          aria-label="Search"
+          className="w-10 h-10 sm:w-11 sm:h-11 rounded-full bg-black/40 backdrop-blur-sm flex items-center justify-center active:scale-95 transition-transform border border-white/10"
         >
           <Search className="w-5 h-5 text-white" />
         </button>
@@ -1653,30 +2957,137 @@ export default function FeedPage() {
           isReelsRoute ? "lg:max-w-[520px] xl:max-w-[560px]" : "lg:max-w-[460px] xl:max-w-[500px]",
         )}>
           <div
-            className="w-full h-full overflow-y-scroll snap-y snap-mandatory"
-            style={{ scrollbarWidth: "none", WebkitOverflowScrolling: "touch" } as React.CSSProperties}
+            className="w-full h-full overflow-y-scroll snap-y snap-mandatory relative"
+            style={{
+              scrollbarWidth: "none",
+              WebkitOverflowScrolling: "touch",
+              transform: pullDelta > 0 ? `translateY(${pullDelta}px)` : undefined,
+              transition: pullDelta === 0 ? "transform 200ms ease-out" : undefined,
+            } as React.CSSProperties}
+            onTouchStart={handleTouchStart}
+            onTouchMove={handleTouchMove}
+            onTouchEnd={handleTouchEnd}
           >
-            {posts.map((post, index) => (
+            {/* Pull-to-refresh indicator */}
+            {(pullDelta > 0 || isRefreshing) && (
               <div
-                key={post.id}
-                ref={(el) => { cardRefs.current[index] = el; }}
-                className="w-full h-full snap-start"
+                className="pointer-events-none absolute left-1/2 z-50 -translate-x-1/2 flex items-center justify-center"
+                style={{ top: Math.max(20, pullDelta - 30) }}
               >
-                <ReelCard
-                  post={post}
-                  isActive={activeIndex === index}
-                  globalMuted={globalMuted}
-                  onToggleMute={() => setGlobalMuted((m) => !m)}
-                  onNavigate={(slug) => slug.startsWith("__user__") ? navigate(`/user/${slug.replace("__user__", "")}`) : navigate(`/grocery/shop/${slug}`)}
-                  userId={userId}
-                  userLikedPostIds={userLikedPostIds}
-                  onToggleLike={handleToggleLike}
-                  onOpenComments={(id) => setCommentPostId(id)}
-                  onOpenShare={(id) => setSharePostId(id)}
-                  onOpenSound={(name) => setSoundOverlayName(name)}
-                />
+                <div
+                  className={cn(
+                    "rounded-full bg-white/15 backdrop-blur-md p-2 transition-transform",
+                    isRefreshing && "animate-spin",
+                  )}
+                  style={{ transform: !isRefreshing ? `rotate(${pullDelta * 3}deg)` : undefined }}
+                >
+                  <RefreshCw className="h-5 w-5 text-white" />
+                </div>
+              </div>
+            )}
+
+            {/* New posts pill */}
+            <Suspense fallback={null}>
+              <NewPostsPill count={newPostsCount} onClick={handleShowNewPosts} />
+            </Suspense>
+
+            {/* Empty state when a hashtag filter or Following tab returns no results */}
+            {visiblePosts.length === 0 && (selectedHashtag || (feedMode === "following" && userId)) && (
+              <div className="w-full h-full snap-start flex flex-col items-center justify-center px-8 text-center bg-black">
+                <div className="text-5xl mb-4">{selectedHashtag ? "🔍" : "👥"}</div>
+                <p className="text-white font-semibold text-lg mb-1">
+                  {selectedHashtag ? `No posts tagged #${selectedHashtag}` : "Your following feed is empty"}
+                </p>
+                <p className="text-white/60 text-sm max-w-xs">
+                  {selectedHashtag
+                    ? "Try clearing the filter or swipe back to the full feed."
+                    : "Follow some creators or shops and their posts will show up here."}
+                </p>
+                <button
+                  onClick={() => {
+                    if (selectedHashtag) setSelectedHashtag(null);
+                    else setShowDiscover(true);
+                  }}
+                  className="mt-5 rounded-full bg-emerald-500 px-5 py-2 text-sm font-semibold text-white"
+                >
+                  {selectedHashtag ? "Clear filter" : "Discover people"}
+                </button>
+              </div>
+            )}
+
+            {visiblePosts.map((post, index) => (
+              <div key={post.id} className="contents">
+                {/* Inject the reels preview after the 4th card */}
+                {index === 4 && (
+                  <div className="w-full h-full snap-start">
+                    <Suspense fallback={<div className="h-full w-full bg-black" />}>
+                      <ReelsPreviewRow />
+                    </Suspense>
+                  </div>
+                )}
+                <div
+                  ref={(el) => { cardRefs.current[index] = el; }}
+                  className="w-full h-full snap-start"
+                >
+                  <ReelCard
+                    post={post}
+                    isActive={activeIndex === index}
+                    shouldPreload={index === activeIndex + 1 || index === activeIndex - 1}
+                    globalMuted={globalMuted}
+                    onToggleMute={() => setGlobalMuted((m) => !m)}
+                    onNavigate={(slug) => slug.startsWith("__user__") ? navigate(`/user/${slug.replace("__user__", "")}`) : navigate(`/grocery/shop/${slug}`)}
+                    userId={userId}
+                    userLikedPostIds={userLikedPostIds}
+                    onToggleLike={handleToggleLike}
+                    onOpenComments={(id) => setCommentPostId(id)}
+                    onOpenShare={(id) => setSharePostId(id)}
+                    onOpenSound={(name) => setSoundOverlayName(name)}
+                    onOpenActions={() => {
+                      const rawId = post.id.startsWith("u-") ? post.id.slice(2) : post.id;
+                      setActionsTarget({
+                        target: {
+                          postId: rawId,
+                          source: post.source ?? "store",
+                          authorId: post.author_id ?? undefined,
+                        },
+                        authorName: post.author_name ?? post.store_name,
+                        shareUrl: getPostShareUrl(post.id),
+                      });
+                    }}
+                    currentReaction={(() => {
+                      const rawId = post.id.startsWith("u-") ? post.id.slice(2) : post.id;
+                      return reactions.reactionFor(rawId, post.source ?? "store");
+                    })()}
+                    onSetReaction={(emoji) => {
+                      const rawId = post.id.startsWith("u-") ? post.id.slice(2) : post.id;
+                      void reactions.setReaction(rawId, post.source ?? "store", emoji);
+                    }}
+                    onOpenRepost={() => {
+                      const rawId = post.id.startsWith("u-") ? post.id.slice(2) : post.id;
+                      setRepostTarget({
+                        postId: rawId,
+                        source: post.source ?? "store",
+                        authorName: post.author_name ?? post.store_name,
+                        preview: post.caption,
+                      });
+                    }}
+                    isReposted={(() => {
+                      const rawId = post.id.startsWith("u-") ? post.id.slice(2) : post.id;
+                      return reposts.isReposted(rawId, post.source ?? "store");
+                    })()}
+                  />
+                </div>
               </div>
             ))}
+
+            {/* Infinite-scroll sentinel: when the user reaches the last card,
+                bump the page multiplier so the next refetch loads more. */}
+            {visiblePosts.length > 0 && (
+              <InfiniteScrollSentinel
+                isFetching={isFetching}
+                onReachEnd={() => setPageMultiplier((m) => m + 1)}
+              />
+            )}
           </div>
         </div>
 
@@ -1731,11 +3142,11 @@ export default function FeedPage() {
           </button>
           <button
             onClick={() => {
-              if (activeIndex < posts.length - 1) {
+              if (activeIndex < visiblePosts.length - 1) {
                 cardRefs.current[activeIndex + 1]?.scrollIntoView({ behavior: "smooth" });
               }
             }}
-            disabled={activeIndex >= posts.length - 1}
+            disabled={activeIndex >= visiblePosts.length - 1}
             className="w-12 h-12 rounded-full bg-white/10 backdrop-blur-sm border border-white/20 flex items-center justify-center text-white hover:bg-white/20 transition-all disabled:opacity-30 disabled:cursor-not-allowed"
             aria-label="Next reel"
           >
@@ -1753,14 +3164,92 @@ export default function FeedPage() {
         />
       )}
 
+      {/* 3-dot post actions menu (save / mute / block / report / why) */}
+      <Suspense fallback={null}>
+        {actionsTarget && (
+          <PostActionsMenu
+            open={!!actionsTarget}
+            onClose={() => setActionsTarget(null)}
+            target={actionsTarget.target}
+            authorName={actionsTarget.authorName}
+            shareUrl={actionsTarget.shareUrl}
+            isBookmarked={postActions.isBookmarked(actionsTarget.target)}
+            onToggleBookmark={() => postActions.toggleBookmark(actionsTarget.target)}
+            onMute={() => {
+              if (actionsTarget.target.authorId) {
+                setHiddenAuthorIds((prev) => new Set(prev).add(actionsTarget.target.authorId!));
+              }
+              postActions.muteAuthor(actionsTarget.target);
+            }}
+            onBlock={() => {
+              if (actionsTarget.target.authorId) {
+                setHiddenAuthorIds((prev) => new Set(prev).add(actionsTarget.target.authorId!));
+              }
+              postActions.blockAuthor(actionsTarget.target);
+            }}
+            onReport={(reason) => postActions.reportPost(actionsTarget.target, reason)}
+            isOwnPost={!!userId && actionsTarget.target.source === "user" && actionsTarget.target.authorId === userId}
+            onViewInsights={() => setInsightsTarget({ postId: actionsTarget.target.postId, source: actionsTarget.target.source })}
+          />
+        )}
+      </Suspense>
+
+      {/* Author-only insights drawer */}
+      <Suspense fallback={null}>
+        {insightsTarget && (
+          <PostInsights
+            open={!!insightsTarget}
+            onClose={() => setInsightsTarget(null)}
+            postId={insightsTarget.postId}
+            source={insightsTarget.source}
+          />
+        )}
+      </Suspense>
+
+      {/* Repost dialog */}
+      <Suspense fallback={null}>
+        {repostTarget && (
+          <RepostDialog
+            open={!!repostTarget}
+            onClose={() => setRepostTarget(null)}
+            authorName={repostTarget.authorName}
+            postPreview={repostTarget.preview}
+            alreadyReposted={reposts.isReposted(repostTarget.postId, repostTarget.source)}
+            onConfirm={async (quoteText) => {
+              const nowReposted = await reposts.toggleRepost(
+                repostTarget.postId,
+                repostTarget.source,
+                quoteText,
+              );
+              toast.success(nowReposted ? "Reposted to your profile" : "Repost removed");
+            }}
+          />
+        )}
+      </Suspense>
+
       {/* Share sheet */}
-      {sharePostId && (
-        <UnifiedShareSheet
-          shareUrl={getPostShareUrl(sharePostId)}
-          shareText={posts.find((p) => p.id === sharePostId)?.caption || "Check out this post!"}
-          onClose={() => setSharePostId(null)}
-        />
-      )}
+      {sharePostId && (() => {
+        const sharePost = posts.find((p) => p.id === sharePostId);
+        const sharePostSource = sharePost?.source ?? "store";
+        const sharePostRawId = sharePostId.startsWith("u-") ? sharePostId.slice(2) : sharePostId;
+        return (
+          <UnifiedShareSheet
+            shareUrl={getPostShareUrl(sharePostId)}
+            shareText={sharePost?.caption || "Check out this post!"}
+            onClose={() => {
+              // Log the share so the count actually moves. Channel is "other"
+              // because the unified sheet doesn't tell us which target was used;
+              // we'll segment in a future improvement.
+              (supabase as any).rpc("record_post_share", {
+                _post_id: sharePostRawId,
+                _source: sharePostSource,
+                _channel: "other",
+              }).catch(() => { /* fire-and-forget */ });
+              setSharePostId(null);
+            }}
+          />
+        );
+      })()}
 
       {/* Sound overlay */}
       <AnimatePresence>
@@ -1795,6 +3284,32 @@ export default function FeedPage() {
             }}
             initialAudioName={createWithAudio}
           />
+        )}
+      </AnimatePresence>
+
+      {/* First-visit swipe-up hint — animated chevron + label, dismisses on
+          any interaction or after 3.5 s. */}
+      <AnimatePresence>
+        {showSwipeHint && (
+          <motion.div
+            initial={{ opacity: 0, y: 12 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: 8 }}
+            transition={{ duration: 0.35 }}
+            className="absolute left-1/2 -translate-x-1/2 z-[55] pointer-events-none flex flex-col items-center gap-2"
+            style={{ bottom: "calc(env(safe-area-inset-bottom, 0px) + 140px)" }}
+          >
+            <motion.div
+              animate={{ y: [0, -8, 0] }}
+              transition={{ duration: 1.4, repeat: Infinity, ease: "easeInOut" }}
+              className="w-12 h-12 rounded-full bg-white/15 backdrop-blur-md border border-white/30 flex items-center justify-center shadow-lg"
+            >
+              <ChevronUp className="w-7 h-7 text-white" strokeWidth={2.5} />
+            </motion.div>
+            <span className="text-white text-xs font-semibold drop-shadow-[0_1px_4px_rgba(0,0,0,0.7)] px-3 py-1 rounded-full bg-black/40 backdrop-blur-sm">
+              Swipe up for more
+            </span>
+          </motion.div>
         )}
       </AnimatePresence>
 

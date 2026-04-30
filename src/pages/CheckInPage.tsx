@@ -6,6 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { ArrowLeft, MapPin, Camera, Users, Send, Clock, Heart, MessageCircle, Loader2 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import SafeCaption from "@/components/social/SafeCaption";
 import { motion } from "framer-motion";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
@@ -150,7 +151,7 @@ export default function CheckInPage() {
                 <MapPin className="h-3 w-3 text-primary" />
                 <span className="text-sm font-medium text-primary">{checkin.location}</span>
               </div>
-              {checkin.caption && <p className="text-sm text-foreground mb-2">{checkin.caption}</p>}
+              {checkin.caption && <p className="text-sm text-foreground mb-2"><SafeCaption text={checkin.caption} /></p>}
               {checkin.taggedFriends.length > 0 && (
                 <div className="flex items-center gap-1 mb-2">
                   <Users className="h-3 w-3 text-muted-foreground" />

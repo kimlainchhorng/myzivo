@@ -39,7 +39,8 @@ function extractContactProfile(value: UserContactRow["profiles"]): ContactProfil
 interface Props {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  onConfirm: (recipientIds: string[]) => void;
+  /** Called with selected recipients and an optional Telegram-style comment to send before the forwarded message. */
+  onConfirm: (recipientIds: string[], comment?: string) => void;
 }
 
 export default function ForwardPickerSheet({ open, onOpenChange, onConfirm }: Props) {
@@ -47,6 +48,7 @@ export default function ForwardPickerSheet({ open, onOpenChange, onConfirm }: Pr
   const [contacts, setContacts] = useState<Contact[]>([]);
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [search, setSearch] = useState("");
+  const [comment, setComment] = useState("");
 
   useEffect(() => {
     if (!open || !user) return;
@@ -91,8 +93,9 @@ export default function ForwardPickerSheet({ open, onOpenChange, onConfirm }: Pr
 
   const confirm = () => {
     if (selected.size === 0) return;
-    onConfirm(Array.from(selected));
+    onConfirm(Array.from(selected), comment.trim() || undefined);
     setSelected(new Set());
+    setComment("");
     onOpenChange(false);
   };
 
@@ -131,6 +134,15 @@ export default function ForwardPickerSheet({ open, onOpenChange, onConfirm }: Pr
             </button>
           ))}
         </div>
+        {selected.size > 0 && (
+          <Input
+            placeholder="Add a comment (optional)…"
+            value={comment}
+            onChange={(e) => setComment(e.target.value.slice(0, 500))}
+            className="mt-3"
+            maxLength={500}
+          />
+        )}
         <Button onClick={confirm} disabled={selected.size === 0} className="mt-3">
           Forward {selected.size > 0 && `(${selected.size})`}
         </Button>

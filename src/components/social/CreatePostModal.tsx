@@ -12,10 +12,12 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
+import { confirmContentSafe } from "@/lib/security/contentLinkValidation";
 import { supabase } from "@/integrations/supabase/client";
 import VerifiedBadge from "@/components/VerifiedBadge";
 import { isBlueVerified } from "@/lib/verification";
 import { uploadWithProgress } from "@/utils/uploadWithProgress";
+import { stripImageMetadata } from "@/utils/stripImageMetadata";
 
 interface CreatePostModalProps {
   userId: string;
@@ -236,6 +238,7 @@ export default function CreatePostModal({
       toast.error("Please add a photo, video, or write something");
       return;
     }
+    if (!confirmContentSafe(caption, "caption")) return;
     setUploading(true);
     setUploadStatus("");
     try {
@@ -247,7 +250,8 @@ export default function CreatePostModal({
       if (files.length > 0) {
         const uploadedUrls: string[] = [];
         for (let i = 0; i < files.length; i++) {
-          const file = files[i];
+          const original = files[i];
+          const file = await stripImageMetadata(original);
           const sizeMB = (file.size / (1024 * 1024)).toFixed(0);
           setUploadStatus(`Uploading ${i + 1}/${files.length} — ${file.name} (${sizeMB} MB) — 0%`);
           const ext = file.name.split(".").pop() || "jpg";

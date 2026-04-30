@@ -2,6 +2,7 @@
 // Accepts page_access_token directly in the request body (no OAuth required),
 // or falls back to the stored token in store_ad_pages.
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
+import { scanContentForLinks } from "../_shared/contentLinkValidation.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",

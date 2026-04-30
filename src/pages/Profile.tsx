@@ -3,6 +3,9 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { createPortal } from "react-dom";
 import { useNavigate, Link, useLocation } from "react-router-dom";
 import { useI18n } from "@/hooks/useI18n";
+import SafeCaption from "@/components/social/SafeCaption";
+import { confirmContentSafe } from "@/lib/security/contentLinkValidation";
+import { stripImageMetadata } from "@/utils/stripImageMetadata";
 
 import SEOHead from "@/components/SEOHead";
 import {
@@ -521,9 +524,10 @@ const Profile = () => {
     if (file.size > 10 * 1024 * 1024) { toast.error("Cover image must be under 10MB"); input.value = ""; return; }
     setCoverUploading(true);
     try {
-      const ext = file.name.split(".").pop();
+      const safe = await stripImageMetadata(file);
+      const ext = safe.name.split(".").pop();
       const path = `${user.id}/cover_${Date.now()}.${ext}`;
-      const { error: upErr } = await supabase.storage.from("avatars").upload(path, file, { upsert: true });
+      const { error: upErr } = await supabase.storage.from("avatars").upload(path, safe, { upsert: true });
       if (upErr) throw upErr;
       const { data: { publicUrl } } = supabase.storage.from("avatars").getPublicUrl(path);
       await updateProfile.mutateAsync({ cover_url: publicUrl, cover_position: 50 });
@@ -882,6 +886,18 @@ const Profile = () => {
           </AnimatePresence>
           </div>
           <motion.button
+            onClick={() => navigate("/account/settings")}
+            aria-label="Account settings"
+            whileTap={{ scale: 0.86 }}
+            transition={{ type: "spring", stiffness: 400, damping: 22 }}
+            className={cn(
+              "h-9 w-9 flex items-center justify-center rounded-full transition focus-visible:ring-2 focus-visible:ring-primary/70 focus-visible:outline-none focus-visible:ring-offset-2 focus-visible:ring-offset-background",
+              overCover ? "hover:bg-white/15 text-white drop-shadow-md" : "hover:bg-muted/60 text-foreground"
+            )}
+          >
+            <Settings className="h-5 w-5" />
+          </motion.button>
+          <motion.button
             onClick={() => navigate("/more")}
             aria-label="More account options"
             whileTap={{ scale: 0.86 }}
@@ -1160,7 +1176,9 @@ const Profile = () => {
                       <div className="mt-2 max-w-sm">
                         {profile?.bio && !bioEditing ? (
                           <div className="flex items-start gap-2">
-                            <p className="flex-1 text-xs text-foreground/85 whitespace-pre-wrap break-words">{profile.bio}</p>
+                            <p className="flex-1 text-xs text-foreground/85 whitespace-pre-wrap break-words">
+                              <SafeCaption text={profile.bio} />
+                            </p>
                             <button
                               type="button"
                               onClick={() => { setBioDraft(profile.bio ?? ""); setBioEditing(true); }}
@@ -1201,6 +1219,7 @@ const Profile = () => {
                                 type="button"
                                 size="sm"
                                 onClick={() => {
+                                  if (!confirmContentSafe(bioDraft, "bio")) return;
                                   updateProfile.mutate(
                                     { bio: bioDraft.trim() || null },
                                     { onSuccess: () => setBioEditing(false) }

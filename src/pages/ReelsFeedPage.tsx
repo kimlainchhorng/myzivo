@@ -90,6 +90,11 @@ import { shouldSendLikeNotification } from "@/lib/social/likeNotificationGuard";
 import { EngagementSkeleton } from "@/components/social/EngagementSkeleton";
 import SwipeableSheet from "@/components/social/SwipeableSheet";
 const FeedSidebar = lazy(() => import("@/components/social/FeedSidebar"));
+const TrendingHashtags = lazy(() => import("@/components/social/TrendingHashtags"));
+const ReactionSummary = lazy(() => import("@/components/social/ReactionSummary"));
+const CommentPreview = lazy(() => import("@/components/social/CommentPreview"));
+const ReelsPreviewRow = lazy(() => import("@/components/social/ReelsPreviewRow"));
+import { postHasHashtag } from "@/components/social/TrendingHashtags";
 import { optimizeAvatar } from "@/utils/optimizeAvatar";
 import { useSwipeDownClose } from "@/components/social/useSwipeDownClose";
 import { SwipeGrabHandle } from "@/components/social/SwipeGrabHandle";
@@ -254,6 +259,8 @@ export default function ReelsFeedPage() {
   const [feedFilter, setFeedFilter] = useState<"all" | "photos" | "videos" | "text">("all");
   const [feedMode, setFeedMode] = useState<"foryou" | "following">("foryou");
   const [followingIds, setFollowingIds] = useState<Set<string>>(new Set());
+  // Trending-hashtag chip filter
+  const [selectedHashtag, setSelectedHashtag] = useState<string | null>(null);
   const PAGE_INCREMENT = 25;
   const PAGE_MAX = 500;
   const [pageSize, setPageSize] = useState(50);
@@ -388,6 +395,21 @@ export default function ReelsFeedPage() {
     queryClient.invalidateQueries({ queryKey: ["reels-feed-grid"] });
     feedTopRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
   }, [queryClient]);
+
+  // Active live-stream count — drives the visibility + label of the Live Now
+  // banner so we don't promote a discovery surface that has nothing to show.
+  const { data: liveStreamsCount = 0 } = useQuery({
+    queryKey: ["feed-live-count"],
+    queryFn: async () => {
+      const { count } = await (supabase as any)
+        .from("live_streams")
+        .select("id", { count: "exact", head: true })
+        .eq("status", "live");
+      return count || 0;
+    },
+    refetchInterval: 30_000,
+    refetchOnWindowFocus: false,
+  });
 
   // User search with debounce
   const handleSearchChange = (q: string) => {
@@ -978,6 +1000,18 @@ export default function ReelsFeedPage() {
                 </button>
               ))}
             </div>
+
+            {/* Trending hashtag chip row (inline, theme-aware) */}
+            <div className="px-3 pb-2">
+              <Suspense fallback={null}>
+                <TrendingHashtags
+                  variant="inline"
+                  posts={items as { caption?: string | null }[]}
+                  selected={selectedHashtag}
+                  onSelect={setSelectedHashtag}
+                />
+              </Suspense>
+            </div>
           </div>
 
           {/* Search overlay */}
@@ -1140,21 +1174,30 @@ export default function ReelsFeedPage() {
             )}
           </AnimatePresence>
 
-          {/* Live Now Banner */}
-          <button
-            onClick={() => navigate("/live")}
-            className="mx-3 mt-1.5 mb-0.5 flex items-center gap-2 px-3 py-2 rounded-xl bg-gradient-to-r from-red-500/10 via-rose-500/5 to-amber-500/10 border border-red-500/20 hover:border-red-500/40 transition-colors"
-          >
-            <div className="relative">
-              <Radio className="h-4 w-4 text-red-500" />
-              <span className="absolute -top-0.5 -right-0.5 w-1.5 h-1.5 bg-red-500 rounded-full animate-pulse" />
-            </div>
-            <div className="flex-1 text-left min-w-0">
-              <p className="text-[11px] font-bold text-foreground leading-tight">Live Now</p>
-              <p className="text-[9px] text-muted-foreground leading-tight">Watch live streams from creators</p>
-            </div>
-            <ChevronRight className="h-3.5 w-3.5 text-muted-foreground" />
-          </button>
+          {/* Live Now Banner — only when there's actually something to watch */}
+          {liveStreamsCount > 0 && (
+            <button
+              onClick={() => navigate("/live")}
+              className="mx-3 mt-1.5 mb-0.5 flex w-[calc(100%-1.5rem)] items-center gap-2 px-3 py-2 rounded-xl bg-gradient-to-r from-red-500/10 via-rose-500/5 to-amber-500/10 border border-red-500/20 hover:border-red-500/40 transition-colors"
+            >
+              <div className="relative">
+                <Radio className="h-4 w-4 text-red-500" />
+                <span className="absolute -top-0.5 -right-0.5 w-1.5 h-1.5 bg-red-500 rounded-full animate-pulse" />
+              </div>
+              <div className="flex-1 text-left min-w-0">
+                <p className="text-[11px] font-bold text-foreground leading-tight flex items-center gap-1.5">
+                  Live Now
+                  <span className="px-1.5 py-px rounded-full bg-red-500 text-white text-[9px] font-bold leading-none">
+                    {liveStreamsCount}
+                  </span>
+                </p>
+                <p className="text-[9px] text-muted-foreground leading-tight">
+                  {liveStreamsCount === 1 ? "1 creator is live right now" : `${liveStreamsCount} creators are live right now`}
+                </p>
+              </div>
+              <ChevronRight className="h-3.5 w-3.5 text-muted-foreground" />
+            </button>
+          )}
 
           {/* Story Rings */}
            <Suspense fallback={null}><FeedStoryRing /></Suspense>
@@ -1196,9 +1239,13 @@ export default function ReelsFeedPage() {
             </div>
           ) : (() => {
             // Apply feed mode (For You vs Following) first
-            const modeItems = feedMode === "following" && userId
+            let modeItems = feedMode === "following" && userId
               ? items.filter(i => i.author_id && followingIds.has(i.author_id))
               : items;
+            // Then apply trending-hashtag filter, if any
+            if (selectedHashtag) {
+              modeItems = modeItems.filter(i => postHasHashtag(i.caption, selectedHashtag));
+            }
             const filteredItems = feedFilter === "all" ? modeItems
               : feedFilter === "photos" ? modeItems.filter(i => i.media_type === "image" && i.media_urls.length > 0)
               : feedFilter === "videos" ? modeItems.filter(i => i.media_type === "video")
@@ -1220,9 +1267,25 @@ export default function ReelsFeedPage() {
               );
             }
             return filteredItems.length === 0 ? (
-              <div className="flex flex-col items-center justify-center h-40 text-muted-foreground/50">
-                <p className="text-sm">No {feedFilter} posts found</p>
-              </div>
+              selectedHashtag ? (
+                <div className="flex flex-col items-center justify-center py-16 text-center px-6 gap-3">
+                  <div className="text-5xl">🔍</div>
+                  <p className="text-base font-bold text-foreground">No posts tagged #{selectedHashtag}</p>
+                  <p className="text-sm text-muted-foreground max-w-[280px]">
+                    Try clearing the filter or browse all posts.
+                  </p>
+                  <button
+                    onClick={() => setSelectedHashtag(null)}
+                    className="mt-1 px-5 py-2 rounded-full bg-primary text-primary-foreground text-sm font-semibold active:scale-95 transition-transform"
+                  >
+                    Clear filter
+                  </button>
+                </div>
+              ) : (
+                <div className="flex flex-col items-center justify-center h-40 text-muted-foreground/50">
+                  <p className="text-sm">No {feedFilter} posts found</p>
+                </div>
+              )
             ) : (
             <div className="divide-y divide-border/20">
               {filteredItems.map((item, idx) => (

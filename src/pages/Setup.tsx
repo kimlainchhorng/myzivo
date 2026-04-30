@@ -11,6 +11,7 @@ import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import { User, ArrowRight, Loader2, Camera, ImagePlus } from "lucide-react";
 import { getSafeRedirectTarget, withRedirectParam } from "@/lib/authRedirect";
+import { stripImageMetadata } from "@/utils/stripImageMetadata";
 
 const ALLOWED_TYPES = ["image/jpeg", "image/png", "image/webp"];
 const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
@@ -108,12 +109,13 @@ export default function Setup() {
   };
 
   const uploadImage = async (file: File, bucket: string, folder: string): Promise<string> => {
-    const fileExt = file.name.split(".").pop();
+    const safe = await stripImageMetadata(file);
+    const fileExt = safe.name.split(".").pop();
     const filePath = `${folder}/${bucket}_${Date.now()}.${fileExt}`;
 
     const { error: uploadError } = await supabase.storage
       .from(bucket)
-      .upload(filePath, file, { upsert: true });
+      .upload(filePath, safe, { upsert: true });
 
     if (uploadError) throw uploadError;
 

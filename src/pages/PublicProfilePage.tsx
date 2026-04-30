@@ -31,6 +31,7 @@ import { toast } from "sonner";
 import { motion, AnimatePresence } from "framer-motion";
 import PullToRefresh from "@/components/shared/PullToRefresh";
 import CommentsSheet from "@/components/social/CommentsSheet";
+import SafeCaption from "@/components/social/SafeCaption";
 import ReelThumbnail from "@/components/social/ReelThumbnail";
 import { resolveSharedOrigins, type SharedOriginInfo } from "@/lib/social/resolveSharedOrigins";
 import { toUserPostInteractionId } from "@/lib/social/postInteraction";
@@ -870,7 +871,7 @@ export default function PublicProfilePage() {
             </h2>
             {resolvedProfile.bio && (
               <p className="mt-2 max-w-md text-center text-sm text-muted-foreground whitespace-pre-wrap break-words">
-                {resolvedProfile.bio}
+                <SafeCaption text={resolvedProfile.bio} />
               </p>
             )}
 
@@ -1030,7 +1031,7 @@ export default function PublicProfilePage() {
                           {/* Sharer's own caption */}
                           {post.caption && post.caption !== post.sharedOrigin.caption && (
                             <div className="px-3 pb-2">
-                              <p className="text-[13px] text-foreground">{post.caption}</p>
+                              <p className="text-[13px] text-foreground"><SafeCaption text={post.caption} /></p>
                             </div>
                           )}
 

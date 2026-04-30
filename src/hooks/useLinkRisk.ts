@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import {
   isAllowedPartnerUrl, isPunycodeHost, hasSuspiciousTld,
-  hasEmbeddedCredentials, isSafeProtocol,
+  hasEmbeddedCredentials, isSafeProtocol, isUrlShortener, isZivoTyposquat,
 } from "@/lib/urlSafety";
 
 export type LinkRiskLevel = "trusted" | "neutral" | "suspicious" | "blocked";
@@ -25,8 +25,10 @@ export function assessLinkSync(url: string): LinkRisk {
   if (hasSuspiciousTld(url)) warnings.push("Suspicious TLD");
   if (/^\d+\.\d+\.\d+\.\d+$/.test(host)) warnings.push("Raw IP address");
   if (url.length > 250) warnings.push("Unusually long URL");
+  if (isUrlShortener(url)) warnings.push("URL shortener — destination is hidden");
+  if (isZivoTyposquat(url)) warnings.push("Domain impersonates a ZIVO site");
 
-  if (warnings.some(w => w.includes("Unsafe") || w.includes("Embedded"))) {
+  if (warnings.some(w => w.includes("Unsafe") || w.includes("Embedded") || w.includes("impersonates"))) {
     return { level: "blocked", warnings };
   }
   if (isAllowedPartnerUrl(url) && warnings.length === 0) {

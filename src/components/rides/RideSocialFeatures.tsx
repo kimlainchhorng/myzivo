@@ -6,6 +6,7 @@ import { motion } from "framer-motion";
 import { Users, Trophy, Star, Share2, MapPin, Clock, Heart, MessageCircle, ThumbsUp } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { StarRating } from "@/components/shared/StarRating";
+import SafeCaption from "@/components/social/SafeCaption";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
@@ -153,7 +154,9 @@ export default function RideSocialFeatures() {
                     </div>
                     <span className="text-[10px] text-muted-foreground">{review.time}</span>
                   </div>
-                  <p className="text-xs text-muted-foreground leading-relaxed">{review.text}</p>
+                  <p className="text-xs text-muted-foreground leading-relaxed">
+                    <SafeCaption text={review.text} />
+                  </p>
                   <div className="flex items-center gap-3">
                     <button
                       className={`flex items-center gap-1 text-xs transition-colors ${likedReviews.includes(review.id) ? "text-primary" : "text-muted-foreground"}`}

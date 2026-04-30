@@ -1,6 +1,7 @@
 import { createClient } from "npm:@supabase/supabase-js@2.49.4";
 import { getCorsHeaders } from "../_shared/cors.ts";
 import { enforceAal2 } from "../_shared/aalCheck.ts";
+import { scanContentForLinks } from "../_shared/contentLinkValidation.ts";
 
 const ALLOWED_ROLES = ["admin", "super_admin", "support"];
 
@@ -63,6 +64,11 @@ Deno.serve(async (req) => {
 
     if (!postId || !userId || !content) {
       return jsonResponse({ error: "postId, userId, and content are required" }, 400, corsHeaders);
+    }
+
+    const linkScan = scanContentForLinks(content);
+    if (!linkScan.ok) {
+      return jsonResponse({ error: "blocked_link", code: "blocked_link", urls: linkScan.blocked }, 422, corsHeaders);
     }
 
     const { data: comment, error: insertError } = await adminClient

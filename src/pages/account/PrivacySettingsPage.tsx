@@ -6,7 +6,7 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { useNavigate } from "react-router-dom";
-import { ArrowLeft, Shield, Eye, EyeOff, MessageSquare, Users, UserX, Loader2, ToggleLeft, ToggleRight } from "lucide-react";
+import { ArrowLeft, Shield, Eye, EyeOff, MessageSquare, Users, UserX, Loader2, ToggleLeft, ToggleRight, Database, Cookie, ChevronRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -100,6 +100,36 @@ export default function PrivacySettingsPage() {
       </div>
 
       <div className="p-4 space-y-6">
+        {/* GDPR / CCPA cross-link */}
+        <section className="grid grid-cols-2 gap-2">
+          <button
+            onClick={() => navigate("/account/data-rights")}
+            className="flex flex-col items-start gap-1.5 p-3 rounded-2xl bg-card border border-border/40 hover:bg-accent/50 transition-all text-left active:scale-[0.98]"
+          >
+            <div className="flex items-center justify-between w-full">
+              <div className="h-8 w-8 rounded-xl bg-zinc-500/15 flex items-center justify-center">
+                <Database className="h-4 w-4 text-zinc-500" />
+              </div>
+              <ChevronRight className="h-4 w-4 text-muted-foreground/40" />
+            </div>
+            <p className="text-[13px] font-semibold text-foreground">Data Rights</p>
+            <p className="text-[11px] text-muted-foreground leading-tight">Access, download, or delete your data (GDPR/CCPA)</p>
+          </button>
+          <button
+            onClick={() => navigate("/account/data-rights#cookies")}
+            className="flex flex-col items-start gap-1.5 p-3 rounded-2xl bg-card border border-border/40 hover:bg-accent/50 transition-all text-left active:scale-[0.98]"
+          >
+            <div className="flex items-center justify-between w-full">
+              <div className="h-8 w-8 rounded-xl bg-amber-500/15 flex items-center justify-center">
+                <Cookie className="h-4 w-4 text-amber-500" />
+              </div>
+              <ChevronRight className="h-4 w-4 text-muted-foreground/40" />
+            </div>
+            <p className="text-[13px] font-semibold text-foreground">Cookies</p>
+            <p className="text-[11px] text-muted-foreground leading-tight">Manage tracking & consent preferences</p>
+          </button>
+        </section>
+
         {/* Profile Visibility */}
         <section>
           <h3 className="text-sm font-semibold text-foreground mb-3 flex items-center gap-2">

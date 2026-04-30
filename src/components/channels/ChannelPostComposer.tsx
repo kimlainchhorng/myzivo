@@ -1,5 +1,6 @@
 import { useRef, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import { stripImageMetadata } from "@/utils/stripImageMetadata";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
@@ -37,12 +38,13 @@ export function ChannelPostComposer({ channelId, onPosted }: Props) {
     }
     setUploading(true);
     const uploaded: MediaItem[] = [];
-    for (const f of Array.from(files)) {
-      if (!f.type.startsWith("image/")) continue;
-      if (f.size > 10 * 1024 * 1024) {
-        toast.error(`${f.name} is over 10MB`);
+    for (const original of Array.from(files)) {
+      if (!original.type.startsWith("image/")) continue;
+      if (original.size > 10 * 1024 * 1024) {
+        toast.error(`${original.name} is over 10MB`);
         continue;
       }
+      const f = await stripImageMetadata(original);
       const ext = f.name.split(".").pop() || "jpg";
       const path = `${u.user.id}/${channelId}/${Date.now()}-${Math.random().toString(36).slice(2, 8)}.${ext}`;
       const { error } = await supabase.storage.from("channel-media").upload(path, f, {

@@ -12,6 +12,7 @@ import { getPublicOrigin, getProfileShareUrl } from "@/lib/getPublicOrigin";
 import { useQuery } from "@tanstack/react-query";
 import { motion, AnimatePresence } from "framer-motion";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import SafeCaption from "@/components/social/SafeCaption";
 import { Switch } from "@/components/ui/switch";
 import ChatBackupExport from "./ChatBackupExport";
 import ArrowLeft from "lucide-react/dist/esm/icons/arrow-left";
@@ -338,7 +339,7 @@ export default function ChatContactInfo({
           </h2>
           {recipientProfile?.bio && (
             <p className="text-[13px] text-muted-foreground text-center mt-1 max-w-[240px] line-clamp-2">
-              {recipientProfile.bio}
+              <SafeCaption text={recipientProfile.bio} />
             </p>
           )}
           <div className="flex items-center gap-1.5 mt-1.5">

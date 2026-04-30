@@ -70,68 +70,88 @@ import { useI18n } from "@/hooks/useI18n";
 
 // Tabs are built inside component for translation
 
+type TabCategory = "book" | "trip" | "money" | "safety" | "comfort" | "rewards" | "business";
+
 export default function RideHubPage() {
   const navigate = useNavigate();
   const { t } = useI18n();
-  const tabs = [
-    { id: "book", label: t("ride.tab_book"), icon: Zap },
-    { id: "reserve", label: t("ride.tab_reserve"), icon: CalendarDays },
-    { id: "map", label: t("ride.tab_map"), icon: MapIcon },
-    { id: "search", label: t("ride.tab_search"), icon: Search },
-    { id: "history", label: t("ride.tab_history"), icon: History },
-    { id: "calendar", label: t("ride.tab_calendar"), icon: CalendarDays },
-    { id: "insights", label: t("ride.tab_insights"), icon: BarChart3 },
-    { id: "tracking", label: t("ride.tab_live"), icon: Navigation },
-    { id: "match", label: "Match", icon: Car },
-    { id: "confirm", label: t("ride.confirm"), icon: Star },
-    { id: "wallet", label: t("ride.tab_wallet"), icon: Wallet },
-    { id: "loyalty", label: "Loyalty", icon: Award },
-    { id: "spending", label: "Spending", icon: PieChart },
-    { id: "social", label: "Social", icon: Share2 },
-    { id: "driver", label: "Driver", icon: User },
-    { id: "surge", label: "Demand", icon: Car },
-    { id: "compare", label: "Compare", icon: DollarSign },
-    { id: "schedule", label: "Schedule", icon: Calendar },
-    { id: "multi", label: "Multi-Stop", icon: Route },
-    { id: "group", label: "Group", icon: Users },
-    { id: "places", label: "Places", icon: MapPin },
-    { id: "chat", label: "Chat", icon: MessageSquare },
-    { id: "safety", label: t("ride.tab_safety"), icon: Shield },
-    { id: "alerts", label: t("ride.tab_alerts"), icon: Bell },
-    { id: "pass", label: t("ride.tab_pass"), icon: Crown },
-    { id: "receipt", label: "Receipt", icon: Receipt },
-    { id: "rate", label: "Rate", icon: Star },
-    { id: "lost", label: "Lost Item", icon: Search },
-    { id: "a11y", label: t("ride.accessible"), icon: Accessibility },
-    { id: "prefs", label: "Prefs", icon: Settings },
-    { id: "eco", label: "Eco", icon: Leaf },
-    { id: "business", label: "Business", icon: Briefcase },
-    { id: "feedback", label: "Feedback", icon: ThumbsUp },
-    { id: "specialty", label: "Special", icon: Dog },
-    { id: "analytics", label: "Analytics", icon: TrendingUp },
-    { id: "entertain", label: "Music", icon: Music },
-    { id: "gifting", label: "Gifting", icon: Gift },
-    { id: "rewards", label: "Rewards", icon: Trophy },
-    { id: "corporate", label: "Corporate", icon: Building2 },
-    { id: "inclusive", label: "Inclusive", icon: Heart },
-    { id: "routes", label: "Routes", icon: Brain },
-    { id: "adv-safety", label: t("ride.tab_safety") + "+", icon: ShieldCheck },
-    { id: "travel", label: "Travel", icon: Plane },
-    { id: "family", label: "Family", icon: UserPlus },
-    { id: "subscribe", label: "Subscribe", icon: Gem },
-    { id: "smart-price", label: "Pricing", icon: DollarSign },
-    { id: "driver-comm", label: "Comms", icon: MessageSquare },
-    { id: "social-feat", label: "Community", icon: Users },
-    { id: "ride-analytics", label: "Dashboard", icon: PieChart },
-    { id: "marketplace", label: "Marketplace", icon: Gavel },
-    { id: "wellness", label: "Wellness", icon: Heart },
-    { id: "pay-adv", label: "Pay+", icon: Wallet },
-    { id: "ai-assist", label: "AI", icon: Brain },
-    { id: "scheduling", label: "Scheduling", icon: CalendarDays },
-    { id: "safety-adv2", label: "Dashcam", icon: Camera },
-    { id: "loyalty-rwd", label: "Loyalty+", icon: Trophy },
-    { id: "a11y-adv", label: "A11y+", icon: Accessibility },
+  const tabs: { id: string; label: string; icon: typeof Zap; category: TabCategory }[] = [
+    { id: "book", label: t("ride.tab_book"), icon: Zap, category: "book" },
+    { id: "reserve", label: t("ride.tab_reserve"), icon: CalendarDays, category: "book" },
+    { id: "schedule", label: "Schedule", icon: Calendar, category: "book" },
+    { id: "scheduling", label: "Scheduling", icon: CalendarDays, category: "book" },
+    { id: "calendar", label: t("ride.tab_calendar"), icon: CalendarDays, category: "book" },
+    { id: "multi", label: "Multi-Stop", icon: Route, category: "book" },
+    { id: "group", label: "Group", icon: Users, category: "book" },
+    { id: "places", label: "Places", icon: MapPin, category: "book" },
+    { id: "search", label: t("ride.tab_search"), icon: Search, category: "book" },
+    { id: "map", label: t("ride.tab_map"), icon: MapIcon, category: "trip" },
+    { id: "tracking", label: t("ride.tab_live"), icon: Navigation, category: "trip" },
+    { id: "match", label: "Match", icon: Car, category: "trip" },
+    { id: "confirm", label: t("ride.confirm"), icon: Star, category: "trip" },
+    { id: "history", label: t("ride.tab_history"), icon: History, category: "trip" },
+    { id: "chat", label: "Chat", icon: MessageSquare, category: "trip" },
+    { id: "driver", label: "Driver", icon: User, category: "trip" },
+    { id: "driver-comm", label: "Comms", icon: MessageSquare, category: "trip" },
+    { id: "routes", label: "Routes", icon: Brain, category: "trip" },
+    { id: "rate", label: "Rate", icon: Star, category: "trip" },
+    { id: "lost", label: "Lost Item", icon: Search, category: "trip" },
+    { id: "feedback", label: "Feedback", icon: ThumbsUp, category: "trip" },
+    { id: "wallet", label: t("ride.tab_wallet"), icon: Wallet, category: "money" },
+    { id: "pay-adv", label: "Pay+", icon: Wallet, category: "money" },
+    { id: "pass", label: t("ride.tab_pass"), icon: Crown, category: "money" },
+    { id: "subscribe", label: "Subscribe", icon: Gem, category: "money" },
+    { id: "spending", label: "Spending", icon: PieChart, category: "money" },
+    { id: "receipt", label: "Receipt", icon: Receipt, category: "money" },
+    { id: "compare", label: "Compare", icon: DollarSign, category: "money" },
+    { id: "smart-price", label: "Pricing", icon: DollarSign, category: "money" },
+    { id: "surge", label: "Demand", icon: Car, category: "money" },
+    { id: "marketplace", label: "Marketplace", icon: Gavel, category: "money" },
+    { id: "gifting", label: "Gifting", icon: Gift, category: "money" },
+    { id: "safety", label: t("ride.tab_safety"), icon: Shield, category: "safety" },
+    { id: "adv-safety", label: t("ride.tab_safety") + "+", icon: ShieldCheck, category: "safety" },
+    { id: "safety-adv2", label: "Dashcam", icon: Camera, category: "safety" },
+    { id: "alerts", label: t("ride.tab_alerts"), icon: Bell, category: "safety" },
+    { id: "a11y", label: t("ride.accessible"), icon: Accessibility, category: "comfort" },
+    { id: "a11y-adv", label: "A11y+", icon: Accessibility, category: "comfort" },
+    { id: "inclusive", label: "Inclusive", icon: Heart, category: "comfort" },
+    { id: "prefs", label: "Prefs", icon: Settings, category: "comfort" },
+    { id: "eco", label: "Eco", icon: Leaf, category: "comfort" },
+    { id: "specialty", label: "Special", icon: Dog, category: "comfort" },
+    { id: "entertain", label: "Music", icon: Music, category: "comfort" },
+    { id: "wellness", label: "Wellness", icon: Heart, category: "comfort" },
+    { id: "ai-assist", label: "AI", icon: Brain, category: "comfort" },
+    { id: "loyalty", label: "Loyalty", icon: Award, category: "rewards" },
+    { id: "loyalty-rwd", label: "Loyalty+", icon: Trophy, category: "rewards" },
+    { id: "rewards", label: "Rewards", icon: Trophy, category: "rewards" },
+    { id: "social", label: "Social", icon: Share2, category: "rewards" },
+    { id: "social-feat", label: "Community", icon: Users, category: "rewards" },
+    { id: "insights", label: t("ride.tab_insights"), icon: BarChart3, category: "rewards" },
+    { id: "analytics", label: "Analytics", icon: TrendingUp, category: "rewards" },
+    { id: "ride-analytics", label: "Dashboard", icon: PieChart, category: "rewards" },
+    { id: "business", label: "Business", icon: Briefcase, category: "business" },
+    { id: "corporate", label: "Corporate", icon: Building2, category: "business" },
+    { id: "family", label: "Family", icon: UserPlus, category: "business" },
+    { id: "travel", label: "Travel", icon: Plane, category: "business" },
   ];
+
+  const categories: { id: TabCategory | "all"; label: string }[] = [
+    { id: "all", label: "All" },
+    { id: "book", label: "Book" },
+    { id: "trip", label: "Trip" },
+    { id: "money", label: "Money" },
+    { id: "safety", label: "Safety" },
+    { id: "comfort", label: "Comfort" },
+    { id: "rewards", label: "Rewards" },
+    { id: "business", label: "Business" },
+  ];
+  const [activeCategory, setActiveCategory] = useState<TabCategory | "all">("all");
+  const [tabFilter, setTabFilter] = useState("");
+  const visibleTabs = tabs.filter(tb => {
+    if (activeCategory !== "all" && tb.category !== activeCategory) return false;
+    if (tabFilter.trim() && !tb.label.toLowerCase().includes(tabFilter.trim().toLowerCase())) return false;
+    return true;
+  });
   const [searchParams, setSearchParams] = useSearchParams();
   const validTabIds = tabs.map(t => t.id);
   const requestedTab = searchParams.get("tab");
@@ -177,8 +197,45 @@ export default function RideHubPage() {
       {/* Tab bar — hidden for "book" since RideBookingHome renders its own header + tabs */}
       {activeTab !== "book" && (
         <div className={cn("z-20 bg-background/95 backdrop-blur-lg border-b border-border/30 shrink-0", isFullScreen ? "" : "sticky top-14")}>
+          {/* Category filter chips */}
+          <div className="flex overflow-x-auto gap-1.5 px-4 pt-2 scrollbar-none">
+            {categories.map(cat => {
+              const isActive = activeCategory === cat.id;
+              const count = cat.id === "all" ? tabs.length : tabs.filter(tb => tb.category === cat.id).length;
+              return (
+                <button
+                  key={cat.id}
+                  onClick={() => setActiveCategory(cat.id)}
+                  className={cn(
+                    "flex items-center gap-1 px-2.5 py-1 rounded-md text-[11px] font-bold whitespace-nowrap transition-all shrink-0",
+                    isActive ? "bg-foreground text-background" : "bg-transparent text-muted-foreground hover:text-foreground"
+                  )}
+                >
+                  {cat.label}
+                  <span className={cn("text-[9px] px-1 rounded", isActive ? "bg-background/20" : "bg-muted/40")}>{count}</span>
+                </button>
+              );
+            })}
+          </div>
+          {/* Filter search input */}
+          <div className="px-4 pt-2">
+            <div className="relative">
+              <Search className="w-3.5 h-3.5 absolute left-2.5 top-1/2 -translate-y-1/2 text-muted-foreground pointer-events-none" />
+              <input
+                type="text"
+                value={tabFilter}
+                onChange={e => setTabFilter(e.target.value)}
+                placeholder="Filter tabs…"
+                className="w-full h-8 pl-8 pr-3 rounded-full bg-muted/30 border border-border/30 text-xs focus:outline-none focus:ring-1 focus:ring-primary/40"
+              />
+            </div>
+          </div>
+          {/* Tab pills */}
           <div className="flex overflow-x-auto gap-1 px-4 py-2 scrollbar-none">
-            {tabs.map((tab) => {
+            {visibleTabs.length === 0 && (
+              <p className="text-xs text-muted-foreground py-1.5">No tabs match.</p>
+            )}
+            {visibleTabs.map((tab) => {
               const Icon = tab.icon;
               const active = activeTab === tab.id;
               return (

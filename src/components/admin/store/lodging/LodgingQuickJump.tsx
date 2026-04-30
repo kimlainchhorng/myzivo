@@ -1,8 +1,9 @@
 import {
   KeyRound, CalendarRange, Sparkles, BellRing, Inbox, Search,
   Hotel, CalendarDays, Users, BedDouble, Tags, BarChart3, Building2, Moon, FileText,
-  Receipt, TrendingUp, Bell, Zap, Package,
+  Receipt, TrendingUp, Bell, Zap, Package, PackagePlus,
   UtensilsCrossed, Gift, Car, AlarmClock, WashingMachine, MessageCircleWarning,
+  Utensils, Tag, Globe,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -14,6 +15,11 @@ const CHIPS = [
   { id: "lodge-reservations", label: "Reservations", icon: CalendarRange },
   { id: "lodge-calendar", label: "Calendar", icon: CalendarDays },
   { id: "lodge-housekeeping", label: "Housekeeping", icon: Sparkles },
+  { id: "lodge-addons", label: "Add-ons", icon: PackagePlus },
+  { id: "lodge-dining", label: "Dining", icon: Utensils },
+  { id: "lodge-staff", label: "Staff", icon: Users },
+  { id: "lodge-promos", label: "Promos", icon: Tag },
+  { id: "lodge-channels", label: "Channels", icon: Globe },
   { id: "lodge-inbox", label: "Inbox", icon: Inbox },
   { id: "lodge-concierge", label: "Concierge", icon: BellRing },
   { id: "lodge-guests", label: "Guests", icon: Users },

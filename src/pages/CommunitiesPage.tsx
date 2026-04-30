@@ -5,6 +5,8 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import ZivoMobileNav from "@/components/app/ZivoMobileNav";
+import SafeCaption from "@/components/social/SafeCaption";
+import { confirmContentSafe } from "@/lib/security/contentLinkValidation";
 import SEOHead from "@/components/SEOHead";
 import { ArrowLeft, Plus, Users, Shield, Globe, Lock, Search, MessageSquare, TrendingUp } from "lucide-react";
 import { useNavigate } from "react-router-dom";
@@ -71,6 +73,9 @@ export default function CommunitiesPage() {
   const createMutation = useMutation({
     mutationFn: async () => {
       if (!user) throw new Error("Login required");
+      if (!confirmContentSafe(`${newCommunity.name}\n${newCommunity.description}`, "community details")) {
+        throw new Error("Blocked content");
+      }
       const { error } = await (supabase as any).from("communities").insert({
         ...newCommunity,
         created_by: user.id,
@@ -183,7 +188,7 @@ export default function CommunitiesPage() {
                       )}
                     </div>
                     {community.description && (
-                      <p className="text-xs text-muted-foreground line-clamp-2 mt-0.5">{community.description}</p>
+                      <p className="text-xs text-muted-foreground line-clamp-2 mt-0.5"><SafeCaption text={community.description} /></p>
                     )}
                     <div className="flex gap-3 mt-2 text-[10px] text-muted-foreground">
                       <span className="flex items-center gap-1">

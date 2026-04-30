@@ -12,6 +12,7 @@ import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
+import { confirmContentSafe } from "@/lib/security/contentLinkValidation";
 
 interface LostItemReportProps {
   tripId?: string;
@@ -50,6 +51,7 @@ export default function LostItemReport({
 
   const handleSubmit = () => {
     if (!selectedCategory) return;
+    if (!confirmContentSafe(description, "item description")) return;
     onSubmit?.({ category: selectedCategory, description });
     setStep("tracking");
     toast.success("Lost item report submitted!");

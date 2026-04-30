@@ -6,6 +6,7 @@ import SEOHead from "@/components/SEOHead";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { StarRating } from "@/components/shared/StarRating";
+import SafeCaption from "@/components/social/SafeCaption";
 import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { toast } from "sonner";
@@ -780,7 +781,7 @@ const CarRentalBooking = () => {
                       </div>
                       <StarRating value={review.rating} size="xs" />
                     </div>
-                    <p className="text-xs text-muted-foreground">{review.text}</p>
+                    <p className="text-xs text-muted-foreground"><SafeCaption text={review.text} /></p>
                   </div>
                 ))}
               </div>

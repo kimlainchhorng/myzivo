@@ -5,6 +5,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import ZivoMobileNav from "@/components/app/ZivoMobileNav";
+import SafeCaption from "@/components/social/SafeCaption";
 import { ArrowLeft, Heart, X, MapPin, Sparkles, MessageCircle } from "lucide-react";
 import VerifiedBadge from "@/components/VerifiedBadge";
 import { isBlueVerified } from "@/lib/verification";
@@ -155,7 +156,9 @@ export default function DatingPage() {
                     )}
 
                     {currentProfile.bio && (
-                      <p className="text-sm text-foreground/80 line-clamp-3">{currentProfile.bio}</p>
+                      <p className="text-sm text-foreground/80 line-clamp-3">
+                        <SafeCaption text={currentProfile.bio} />
+                      </p>
                     )}
                   </div>
                 </motion.div>

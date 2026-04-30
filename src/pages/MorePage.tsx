@@ -73,11 +73,14 @@ const quickActions = [
 /* ============================================= */
 /*  SPOTLIGHT — featured top cards               */
 /* ============================================= */
-const spotlightCards = [
+const spotlightCards: { icon: any; label: string; desc: string; href: string; gradient: string; isNew?: boolean }[] = [
   { icon: Crown, label: "ZIVO Plus", desc: "Unlock premium perks", href: "/zivo-plus", gradient: "from-amber-500 via-yellow-400 to-orange-400" },
   { icon: Rocket, label: "Creator Hub", desc: "Grow & monetize", href: "/creator-dashboard", gradient: "from-violet-500 via-purple-500 to-fuchsia-500" },
-  { icon: Gem, label: "Rewards", desc: "Earn points daily", href: "/rewards", gradient: "from-emerald-500 via-teal-400 to-cyan-400" },
-  { icon: Trophy, label: "Membership", desc: "Exclusive tiers", href: "/membership", gradient: "from-rose-500 via-pink-500 to-red-400" },
+  { icon: Heart, label: "Wellness", desc: "Stay healthy", href: "/wellness", gradient: "from-emerald-500 via-teal-400 to-cyan-400", isNew: true },
+  { icon: Briefcase, label: "Jobs Hub", desc: "Find work", href: "/personal-dashboard", gradient: "from-blue-500 via-indigo-500 to-violet-500", isNew: true },
+  { icon: Tv, label: "Live", desc: "Watch & broadcast", href: "/live", gradient: "from-rose-500 via-pink-500 to-red-400", isNew: true },
+  { icon: Gem, label: "Rewards", desc: "Earn points daily", href: "/rewards", gradient: "from-pink-500 via-fuchsia-500 to-purple-500" },
+  { icon: Trophy, label: "Membership", desc: "Exclusive tiers", href: "/membership", gradient: "from-yellow-500 via-amber-400 to-orange-400" },
 ];
 
 /* ============================================= */
@@ -497,7 +500,12 @@ export default function MorePage() {
   const renderSpotlight = () => (
     <div className="flex gap-3 overflow-x-auto scrollbar-hide pb-1 -mx-1 px-1 mb-6">
       {spotlightCards.map((card, i) => (
-        <Link key={card.label} to={card.href} className="flex-shrink-0">
+        <Link key={card.label} to={card.href} className="flex-shrink-0 relative">
+          {card.isNew && (
+            <span className="absolute -top-1 -right-1 z-10 text-[8px] font-bold tracking-wide px-1.5 py-0.5 rounded-full bg-white text-rose-600 shadow-md ring-1 ring-rose-500/30">
+              NEW
+            </span>
+          )}
           <motion.div
             initial={{ opacity: 0, scale: 0.9 }}
             animate={{ opacity: 1, scale: 1 }}
@@ -649,7 +657,7 @@ export default function MorePage() {
   const handleConfirm = () => {
     if (confirmAction === "switch") {
       signOut();
-      navigate("/auth?intent=switch");
+      navigate("/login?intent=switch");
     } else if (confirmAction === "signout") {
       signOut();
     }

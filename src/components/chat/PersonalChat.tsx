@@ -19,6 +19,7 @@ import { App as CapacitorApp } from "@capacitor/app";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { signedUrlFor } from "@/lib/security/signedMedia";
+import { topicForPairSync } from "@/lib/security/channelName";
 import ArrowLeft from "lucide-react/dist/esm/icons/arrow-left";
 import Send from "lucide-react/dist/esm/icons/send";
 import Loader2 from "lucide-react/dist/esm/icons/loader-2";
@@ -48,6 +49,10 @@ import ChatMessageBubble from "./ChatMessageBubble";
 import FileBubble, { type FileBubbleData } from "./FileBubble";
 import HoldToRecordMic from "./HoldToRecordMic";
 import ChatAttachMenu from "./ChatAttachMenu";
+import ChatPollCreator, { type PollDraft } from "./ChatPollCreator";
+import ChatQuickReplies from "./ChatQuickReplies";
+import ChatContactPicker, { type SharedContact } from "./ChatContactPicker";
+import SmartReplyBar from "./SmartReplyBar";
 const ChatGiftPanel = lazy(() => import("./ChatGiftPanel"));
 const ChatWalletSheet = lazy(() => import("./ChatWalletSheet"));
 const CoinTransferBubble = lazy(() => import("./CoinTransferBubble"));
@@ -269,6 +274,9 @@ export default function PersonalChat({ recipientId, recipientName, recipientAvat
   const [showGiftPanel, setShowGiftPanel] = useState(false);
   const [showWalletSheet, setShowWalletSheet] = useState(false);
   const [showScanner, setShowScanner] = useState(false);
+  const [showPollCreator, setShowPollCreator] = useState(false);
+  const [showQuickReplies, setShowQuickReplies] = useState(false);
+  const [showContactPicker, setShowContactPicker] = useState(false);
   const [pendingLockedFile, setPendingLockedFile] = useState<File | null>(null);
   const [chatStyle, setChatStyle] = useState({ wallpaper: "default", themeColor: "default", fontSize: "medium" });
   const [callEvents, setCallEvents] = useState<CallEvent[]>([]);
@@ -580,7 +588,7 @@ export default function PersonalChat({ recipientId, recipientName, recipientAvat
   // Realtime
   useEffect(() => {
     if (!user?.id) return;
-    const channelName = `dm-${[user.id, recipientId].sort().join("-")}`;
+    const channelName = topicForPairSync(user.id, recipientId, "dm");
     const channel = supabase
       .channel(channelName)
       .on("postgres_changes", { event: "INSERT", schema: "public", table: "direct_messages" }, (payload: RealtimeInsertPayload<Message>) => {
@@ -2010,6 +2018,22 @@ export default function PersonalChat({ recipientId, recipientName, recipientAvat
         )}
       </AnimatePresence>
 
+      {/* Smart reply suggestions — chips above the composer */}
+      <SmartReplyBar
+        lastIncomingMessage={(() => {
+          for (let i = messages.length - 1; i >= 0; i--) {
+            const m = messages[i];
+            if (m.sender_id !== user?.id && m.message) return m.message;
+          }
+          return null;
+        })()}
+        userTyping={input.trim().length > 0}
+        onPick={(text) => {
+          setInput((prev) => (prev.trim() ? `${prev.trim()} ${text}` : text));
+          setTimeout(() => inputRef.current?.focus(), 0);
+        }}
+      />
+
       <div className="bg-background/80 backdrop-blur-2xl border-t border-border/5 px-2.5 py-2 relative" style={{ paddingBottom: "max(env(safe-area-inset-bottom, 0px), 0.5rem)" }}>
           <div className="flex items-end gap-1.5">
             {/* Action buttons — attach + emoji picker; extra tools accessible via attach menu */}
@@ -2044,8 +2068,20 @@ export default function PersonalChat({ recipientId, recipientName, recipientAvat
                   onOpenWallet={() => setShowWalletSheet(true)}
                   onScanDocument={() => setShowScanner(true)}
                   onFileSelect={() => filePickerTriggerRef.current?.()}
+                  onCreatePoll={() => setShowPollCreator(true)}
+                  onShareContact={() => setShowContactPicker(true)}
                 />
               </div>
+
+              {/* Quick replies — saved canned responses */}
+              <button
+                onClick={() => setShowQuickReplies(true)}
+                className="h-11 w-11 rounded-full flex items-center justify-center transition-all shrink-0 text-muted-foreground/60 hover:bg-muted/50 hover:text-amber-500"
+                aria-label="Quick replies"
+                title="Quick replies"
+              >
+                <Zap className="h-5 w-5" />
+              </button>
 
               <input ref={fileInputRef} type="file" accept="image/*" className="hidden" onChange={handleImageSelect} title="Choose image" aria-label="Choose image" />
               <input ref={videoInputRef} type="file" accept="video/*,.gif" className="hidden" onChange={handleVideoSelect} title="Choose video" aria-label="Choose video" />
@@ -2306,8 +2342,8 @@ export default function PersonalChat({ recipientId, recipientName, recipientAvat
           <ForwardPickerSheet
             open={!!forwardingMsg}
             onOpenChange={(open) => { if (!open) setForwardingMsg(null); }}
-            onConfirm={async (recipientIds) => {
-              const ok = await forwardMessage(forwardingMsg as unknown as DirectMessage, recipientIds);
+            onConfirm={async (recipientIds, comment) => {
+              const ok = await forwardMessage(forwardingMsg as unknown as DirectMessage, recipientIds, comment);
               if (ok) setForwardingMsg(null);
             }}
           />
@@ -2391,6 +2427,80 @@ export default function PersonalChat({ recipientId, recipientName, recipientAvat
           />
         </Suspense>
       )}
+
+      {/* Poll creator (Telegram-style) */}
+      <ChatPollCreator
+        open={showPollCreator}
+        onClose={() => setShowPollCreator(false)}
+        onSubmit={async (poll: PollDraft) => {
+          if (!user?.id || !recipientId) {
+            toast.error("Couldn't create poll");
+            throw new Error("missing user or recipient");
+          }
+          const optionsPayload = poll.options.map((text) => ({ text }));
+          const { error: pollError } = await dbFrom("chat_polls").insert({
+            creator_id: user.id,
+            chat_partner_id: recipientId,
+            question: poll.question,
+            options: optionsPayload,
+            is_anonymous: poll.isAnonymous,
+            votes: {},
+          });
+          if (pollError) {
+            toast.error("Failed to create poll");
+            throw pollError;
+          }
+          const announcement = `📊 Poll: ${poll.question}\n${poll.options.map((o, i) => `${i + 1}. ${o}`).join("\n")}`;
+          const { error: msgError } = await dbFrom("direct_messages").insert({
+            sender_id: user.id,
+            receiver_id: recipientId,
+            message: announcement,
+            message_type: "text",
+          });
+          if (msgError) {
+            toast.error("Poll created, but couldn't send announcement");
+            throw msgError;
+          }
+          toast.success("Poll sent");
+        }}
+      />
+
+      {/* Quick replies — saved canned responses */}
+      <ChatQuickReplies
+        open={showQuickReplies}
+        onClose={() => setShowQuickReplies(false)}
+        onSelect={(text) => {
+          setInput(prev => (prev.trim() ? `${prev.trim()} ${text}` : text));
+          setTimeout(() => inputRef.current?.focus(), 0);
+        }}
+      />
+
+      {/* Contact share picker (Telegram-style) */}
+      <ChatContactPicker
+        open={showContactPicker}
+        onOpenChange={setShowContactPicker}
+        onConfirm={async (contact: SharedContact) => {
+          if (!user?.id || !recipientId) {
+            toast.error("Couldn't share contact");
+            return;
+          }
+          const lines = [
+            `👤 Contact: ${contact.displayName}`,
+            contact.username ? `@${contact.username}` : null,
+          ].filter(Boolean);
+          const { error } = await dbFrom("direct_messages").insert({
+            sender_id: user.id,
+            receiver_id: recipientId,
+            message: lines.join("\n"),
+            message_type: "text",
+          });
+          if (error) {
+            toast.error("Failed to share contact");
+            return;
+          }
+          toast.success("Contact shared");
+        }}
+      />
     </motion.div>
   );
 

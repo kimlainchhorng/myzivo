@@ -91,6 +91,23 @@ const SUSPICIOUS_TLDS = new Set([
 ]);
 
 /**
+ * URL shorteners hide the real destination — heavily used in phishing.
+ * We don't block them outright (legit uses exist), but surface them as suspicious.
+ */
+const URL_SHORTENERS = new Set([
+  'bit.ly', 'tinyurl.com', 't.co', 'ow.ly', 'goo.gl', 'is.gd', 'buff.ly',
+  'rebrand.ly', 'cutt.ly', 'lnkd.in', 'shorturl.at', 't.ly', 'rb.gy',
+  'tiny.cc', 'soo.gd', 'clck.ru', 'shorte.st', 'adf.ly', 'bc.vc',
+  'short.io', 'qr.ae', 's.id', 'v.gd',
+]);
+
+/**
+ * ZIVO-owned hostnames — anything that's *similar but not identical* to one
+ * of these is treated as a typosquat attempt and blocked.
+ */
+const ZIVO_OWNED_HOSTS = ['hizivo.com', 'myzivo.lovable.app'];
+
+/**
  * Check if a URL uses a safe protocol (http/https only).
  * Blocks javascript:, data:, vbscript:, file:, etc.
  */
@@ -132,6 +149,59 @@ export function hasSuspiciousTld(url: string): boolean {
     const parsed = new URL(url);
     const host = parsed.hostname.toLowerCase();
     return Array.from(SUSPICIOUS_TLDS).some(tld => host.endsWith(tld));
+  } catch {
+    return false;
+  }
+}
+
+/**
+ * Detect URL shortener domains (bit.ly, tinyurl, t.co, etc.).
+ * These hide the real destination and are heavily used in phishing.
+ */
+export function isUrlShortener(url: string): boolean {
+  try {
+    const host = new URL(url).hostname.toLowerCase();
+    return URL_SHORTENERS.has(host);
+  } catch {
+    return false;
+  }
+}
+
+function levenshtein(a: string, b: string): number {
+  if (a === b) return 0;
+  const m = a.length, n = b.length;
+  if (!m) return n;
+  if (!n) return m;
+  const dp: number[] = new Array(n + 1);
+  for (let j = 0; j <= n; j++) dp[j] = j;
+  for (let i = 1; i <= m; i++) {
+    let prev = dp[0];
+    dp[0] = i;
+    for (let j = 1; j <= n; j++) {
+      const tmp = dp[j];
+      dp[j] = a.charCodeAt(i - 1) === b.charCodeAt(j - 1)
+        ? prev
+        : 1 + Math.min(prev, dp[j], dp[j - 1]);
+      prev = tmp;
+    }
+  }
+  return dp[n];
+}
+
+/**
+ * Detect impersonation attempts of ZIVO-owned domains (e.g. h1zivo.com,
+ * hizovo.com, hizvo.com). Returns true if hostname is *close to* but not
+ * equal to a known ZIVO host.
+ */
+export function isZivoTyposquat(url: string): boolean {
+  try {
+    const host = new URL(url).hostname.toLowerCase();
+    if (ZIVO_OWNED_HOSTS.includes(host)) return false;
+    if (ZIVO_OWNED_HOSTS.some((h) => host === h || host.endsWith(`.${h}`))) return false;
+    return ZIVO_OWNED_HOSTS.some((own) => {
+      const dist = levenshtein(host, own);
+      return dist > 0 && dist <= 2;
+    });
   } catch {
     return false;
   }

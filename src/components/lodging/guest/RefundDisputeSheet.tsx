@@ -7,6 +7,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
 import { useSubmitLodgingRefundDispute } from "@/hooks/lodging/useLodgingRefundDisputes";
+import { confirmContentSafe } from "@/lib/security/contentLinkValidation";
 
 interface Props {
   open: boolean;
@@ -26,6 +27,7 @@ export default function RefundDisputeSheet({ open, onOpenChange, reservationId, 
       toast.error("Add a short explanation before submitting.");
       return;
     }
+    if (!confirmContentSafe(description, "refund explanation")) return;
     try {
       await submit.mutateAsync({ reason_category: reason, description: description.trim(), requested_amount_cents: Math.round(Number(amount || 0) * 100) });
       toast.success("Refund request submitted");

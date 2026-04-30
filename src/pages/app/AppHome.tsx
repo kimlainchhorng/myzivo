@@ -101,7 +101,7 @@ import { useLodgeRooms } from "@/hooks/lodging/useLodgeRooms";
 import { useLodgePropertyProfile } from "@/hooks/lodging/useLodgePropertyProfile";
 import { useLodgeReservations } from "@/hooks/lodging/useLodgeReservations";
 import { useLodgingPhase5Counts } from "@/hooks/lodging/useLodgingPhase5Counts";
-import { getLodgingSetupItems, setupProgress } from "@/components/admin/store/lodging/LodgingSetupChecklist";
+import { getLodgingCompletion } from "@/lib/lodging/lodgingCompletion";
 
 import tabFlightsBg from "@/assets/tab-flights-bg.jpg";
 import tabHotelsBg from "@/assets/tab-hotels-bg.jpg";
@@ -283,7 +283,7 @@ const AppHome = () => {
   const lodgingProfile = useLodgePropertyProfile(lodgingStoreId);
   const lodgingReservations = useLodgeReservations(lodgingStoreId, "all");
   const lodgingPhase5 = useLodgingPhase5Counts(lodgingStoreId);
-  const lodgingProgress = ownerStore?.isLodging ? setupProgress(getLodgingSetupItems({
+  const lodgingCompletion = ownerStore?.isLodging ? getLodgingCompletion({
     rooms: lodgingRooms.data || [],
     profile: lodgingProfile.data,
     addons: (lodgingRooms.data || []).flatMap((room: any) => room.addons || []),
@@ -296,7 +296,8 @@ const AppHome = () => {
     promotionsCount: lodgingPhase5.promotionsCount,
     reviewsAwaitingReply: lodgingPhase5.reviewsAwaitingReply,
     reservationsCount: lodgingReservations.data?.length ?? 0,
-  })) : null;
+  }) : null;
+  const lodgingProgress = lodgingCompletion ? { complete: lodgingCompletion.complete, total: lodgingCompletion.total, percent: lodgingCompletion.percent } : null;
   const { data: deals = [] } = useRecommendedDeals("all", 6);
   const { items: recentItems } = useRecentlyViewed();
   const { data: savedLocations } = useSavedLocations(user?.id);
@@ -491,6 +492,67 @@ const AppHome = () => {
             </motion.button>
           </div>
 
+          {/* What's New — recent product updates */}
+          <div className="px-4 sm:px-5 pb-4 grid grid-cols-1 sm:grid-cols-2 gap-2">
+            <motion.button
+              type="button"
+              onClick={() => navigate("/rides/hub?tab=corporate")}
+              whileTap={{ scale: 0.98 }}
+              whileHover={{ y: -1 }}
+              className="group relative w-full overflow-hidden rounded-2xl border border-primary/20 bg-gradient-to-r from-primary/10 via-primary/5 to-transparent p-3 sm:p-4 text-left shadow-sm"
+              aria-label="See what's new in the Ride Hub"
+            >
+              <div className="flex items-center gap-2.5 sm:gap-3">
+                <div className="relative w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-primary/15 flex items-center justify-center shrink-0">
+                  <Sparkles className="w-4 h-4 sm:w-5 sm:h-5 text-primary" />
+                  <span className="absolute -top-0.5 -right-0.5 flex h-2.5 w-2.5">
+                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary opacity-75" />
+                    <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-primary" />
+                  </span>
+                </div>
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-1.5">
+                    <p className="text-sm font-bold text-foreground">What's new in Ride Hub</p>
+                    <span className="text-[9px] font-bold px-1.5 py-0.5 rounded-full bg-primary/15 text-primary">3 NEW</span>
+                  </div>
+                  <p className="text-xs text-muted-foreground truncate">
+                    Live fleet tracker · Tab categories &amp; filter · Shareable URLs
+                  </p>
+                </div>
+                <ChevronRight className="w-4 h-4 text-muted-foreground shrink-0 transition-transform group-hover:translate-x-0.5" />
+              </div>
+            </motion.button>
+
+            <motion.button
+              type="button"
+              onClick={() => navigate("/chat")}
+              whileTap={{ scale: 0.98 }}
+              whileHover={{ y: -1 }}
+              className="group relative w-full overflow-hidden rounded-2xl border border-fuchsia-500/20 bg-gradient-to-r from-fuchsia-500/10 via-fuchsia-500/5 to-transparent p-3 sm:p-4 text-left shadow-sm"
+              aria-label="See what's new in Chat"
+            >
+              <div className="flex items-center gap-2.5 sm:gap-3">
+                <div className="relative w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-fuchsia-500/15 flex items-center justify-center shrink-0">
+                  <Sparkles className="w-4 h-4 sm:w-5 sm:h-5 text-fuchsia-500" />
+                  <span className="absolute -top-0.5 -right-0.5 flex h-2.5 w-2.5">
+                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-fuchsia-500 opacity-75" />
+                    <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-fuchsia-500" />
+                  </span>
+                </div>
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-1.5">
+                    <p className="text-sm font-bold text-foreground">What's new in Chat</p>
+                    <span className="text-[9px] font-bold px-1.5 py-0.5 rounded-full bg-fuchsia-500/15 text-fuchsia-500">6 NEW</span>
+                  </div>
+                  <p className="text-xs text-muted-foreground truncate">
+                    Smart replies · Polls · Quick replies · Forward + comment · Share · Scan
+                  </p>
+                </div>
+                <ChevronRight className="w-4 h-4 text-muted-foreground shrink-0 transition-transform group-hover:translate-x-0.5" />
+              </div>
+            </motion.button>
+          </div>
+
           <div className="px-5 pb-4">
             {ownerStoreLoading ? (
               <div className="rounded-2xl border border-border bg-card p-4 shadow-sm">
@@ -541,11 +603,33 @@ const AppHome = () => {
                     <div className="mb-1 flex items-center justify-between text-[10px] font-semibold text-primary"><span>Setup progress</span><span>{lodgingProgress ? `${lodgingProgress.complete}/${lodgingProgress.total} ready` : "Loading"}</span></div>
                     <Progress value={lodgingProgress?.percent || 0} className="h-1.5 bg-primary/15" />
                   </div>
-                  <div className="mt-3 grid grid-cols-2 gap-2">
-                    <Button size="sm" className="h-9" onClick={(e) => { e.stopPropagation(); navigate(`/admin/stores/${ownerStore.id}?tab=lodge-overview`); }}>Open Ops <ArrowRight className="ml-1.5 h-3.5 w-3.5" /></Button>
-                    <Button size="sm" variant="outline" className="h-9" onClick={(e) => { e.stopPropagation(); navigate("/admin/lodging/qa-checklist"); }}>Run QA</Button>
-                    <Button size="sm" variant="outline" className="h-9" onClick={(e) => { e.stopPropagation(); navigate("/hotel-admin"); }}>Operations Hub</Button>
-                    <Button size="sm" variant="outline" className="h-9" onClick={(e) => { e.stopPropagation(); navigate("/admin/lodging/completion-verification"); }}>View QA Report</Button>
+                  {lodgingCompletion && lodgingCompletion.percent < 100 && lodgingCompletion.nextBestAction && (
+                    <button
+                      onClick={(e) => { e.stopPropagation(); navigate(`/admin/stores/${ownerStore.id}?tab=${lodgingCompletion.nextBestAction.tab}`); }}
+                      className="mt-2 flex w-full items-center justify-between rounded-lg border border-primary/25 bg-primary/8 px-3 py-2 text-left transition-colors hover:bg-primary/12 active:scale-[0.99]"
+                    >
+                      <span className="min-w-0">
+                        <span className="block text-[10px] font-semibold uppercase tracking-wide text-primary">Next best action</span>
+                        <span className="block truncate text-xs font-bold text-foreground">{lodgingCompletion.nextBestAction.actionLabel}</span>
+                        <span className="block truncate text-[10px] text-muted-foreground">{lodgingCompletion.nextBestAction.hint}</span>
+                      </span>
+                      <ArrowRight className="ml-2 h-4 w-4 shrink-0 text-primary" />
+                    </button>
+                  )}
+                  <div className="mt-3 grid grid-cols-2 gap-2 sm:grid-cols-4">
+                    <Button size="sm" className="h-9 px-2 text-xs sm:text-sm" onClick={(e) => { e.stopPropagation(); navigate(`/admin/stores/${ownerStore.id}?tab=lodge-overview`); }}>
+                      <span className="truncate">Open Ops</span>
+                      <ArrowRight className="ml-1 h-3.5 w-3.5 shrink-0" />
+                    </Button>
+                    <Button size="sm" variant="outline" className="h-9 px-2 text-xs sm:text-sm" onClick={(e) => { e.stopPropagation(); navigate("/admin/lodging/qa-checklist"); }}>
+                      <span className="truncate">Run QA</span>
+                    </Button>
+                    <Button size="sm" variant="outline" className="h-9 px-2 text-xs sm:text-sm" onClick={(e) => { e.stopPropagation(); navigate("/hotel-admin"); }}>
+                      <span className="truncate">Operations</span>
+                    </Button>
+                    <Button size="sm" variant="outline" className="h-9 px-2 text-xs sm:text-sm" onClick={(e) => { e.stopPropagation(); navigate("/admin/lodging/completion-verification"); }}>
+                      <span className="truncate">QA Report</span>
+                    </Button>
                   </div>
                 </div>
               </motion.div>

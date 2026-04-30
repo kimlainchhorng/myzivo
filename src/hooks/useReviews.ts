@@ -6,6 +6,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
+import { scanContentForLinks } from "@/lib/security/contentLinkValidation";
 
 export interface Review {
   id: string;
@@ -53,6 +54,11 @@ export function useReviews(targetType?: string, targetId?: string) {
       order_id?: string;
     }) => {
       if (!user?.id) throw new Error("Not authenticated");
+
+      const scan = scanContentForLinks(input.comment);
+      if (!scan.ok) {
+        throw new Error("Your review contains a blocked link. Remove it and try again.");
+      }
 
       const { data, error } = await supabase
         .from("reviews")

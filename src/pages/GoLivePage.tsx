@@ -41,6 +41,7 @@ import { useBeautyFilter, DEFAULT_BEAUTY, BEAUTY_PRESETS, type BeautySettings } 
 import { useVirtualBackground } from "@/hooks/useVirtualBackground";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 import { supabase, SUPABASE_PUBLISHABLE_KEY, SUPABASE_URL } from "@/integrations/supabase/client";
@@ -87,14 +88,37 @@ type LivePhase = "setup" | "countdown" | "live" | "ended";
 interface ChatRow { id: string; user_id: string; user_name: string; text: string; created_at: string; isGift?: boolean; user_is_verified?: boolean }
 
 const TOPICS = [
-  { name: "General", icon: Globe },
-  { name: "Music", icon: Music },
-  { name: "Gaming", icon: Gamepad2 },
-  { name: "Cooking", icon: ChefHat },
-  { name: "Tech", icon: Laptop },
-  { name: "Fitness", icon: Dumbbell },
-  { name: "Art", icon: PaintBucket },
-  { name: "Travel", icon: Plane },
+  { name: "General", icon: Globe, emoji: "🌍" },
+  { name: "Music", icon: Music, emoji: "🎵" },
+  { name: "Gaming", icon: Gamepad2, emoji: "🎮" },
+  { name: "Cooking", icon: ChefHat, emoji: "🍳" },
+  { name: "Tech", icon: Laptop, emoji: "💻" },
+  { name: "Fitness", icon: Dumbbell, emoji: "💪" },
+  { name: "Art", icon: PaintBucket, emoji: "🎨" },
+  { name: "Travel", icon: Plane, emoji: "✈️" },
+  { name: "Beauty", icon: Sparkles, emoji: "💄" },
+  { name: "Dance", icon: Sparkles, emoji: "💃" },
+  { name: "Talent", icon: Sparkles, emoji: "⭐" },
+  { name: "Comedy", icon: Sparkles, emoji: "😂" },
+  { name: "Talk Show", icon: Sparkles, emoji: "🎙️" },
+  { name: "Education", icon: Sparkles, emoji: "📚" },
+  { name: "ASMR", icon: Sparkles, emoji: "😴" },
+  { name: "Pets", icon: Sparkles, emoji: "🐾" },
+];
+
+type StreamType = "video" | "audio" | "pk" | "multi";
+const STREAM_TYPES: { id: StreamType; label: string; desc: string; emoji: string; gradient: string }[] = [
+  { id: "video", label: "Video Live", desc: "Standard camera stream", emoji: "📹", gradient: "from-rose-500 to-red-500" },
+  { id: "audio", label: "Voice Room", desc: "Audio only · multi-host", emoji: "🎙️", gradient: "from-violet-500 to-purple-500" },
+  { id: "pk", label: "PK Battle", desc: "Compete head-to-head", emoji: "⚔️", gradient: "from-amber-500 to-orange-500" },
+  { id: "multi", label: "Multi-Guest", desc: "Up to 9 guests", emoji: "👥", gradient: "from-emerald-500 to-teal-500" },
+];
+
+type Privacy = "public" | "followers" | "private";
+const PRIVACY_OPTIONS: { id: Privacy; label: string; desc: string; emoji: string }[] = [
+  { id: "public", label: "Public", desc: "Anyone can watch", emoji: "🌍" },
+  { id: "followers", label: "Followers only", desc: "Only your followers", emoji: "❤️" },
+  { id: "private", label: "Private", desc: "Invite link required", emoji: "🔒" },
 ];
 
 export default function GoLivePage() {
@@ -203,6 +227,39 @@ export default function GoLivePage() {
   const verifiedCacheRef = useRef<Map<string, boolean>>(new Map());
 
   const [phase, setPhase] = useState<LivePhase>("setup");
+  const [streamType, setStreamType] = useState<StreamType>("video");
+  const [privacy, setPrivacy] = useState<Privacy>("public");
+  const [hashtags, setHashtags] = useState<string>("");
+  const [coinGoal, setCoinGoal] = useState<number>(0);
+  const [showAdvanced, setShowAdvanced] = useState(false);
+  const [allowGifts, setAllowGifts] = useState(true);
+  const [allowComments, setAllowComments] = useState(true);
+  const [ageRestricted, setAgeRestricted] = useState(false);
+  const [coverImage, setCoverImage] = useState<string | null>(null);
+  const [language, setLanguage] = useState("en");
+  const [country, setCountry] = useState("global");
+  const [scheduleAt, setScheduleAt] = useState<string>("");
+  const [streamRules, setStreamRules] = useState("");
+  const [arEffect, setArEffect] = useState<string | null>(null);
+  const [beautyIntensity, setBeautyIntensity] = useState(50);
+  const [agency, setAgency] = useState<string | null>(null);
+  const [quality, setQuality] = useState<"480p" | "720p" | "1080p">("720p");
+  const [saveReplay, setSaveReplay] = useState(true);
+  const [slowMode, setSlowMode] = useState<0 | 5 | 10 | 30>(0);
+  const [bannedWords, setBannedWords] = useState("");
+  const [pinnedMessage, setPinnedMessage] = useState("");
+  const [coHosts, setCoHosts] = useState<string[]>([]);
+  const [donationCause, setDonationCause] = useState<string | null>(null);
+  const [donationGoal, setDonationGoal] = useState(0);
+  const [streamMood, setStreamMood] = useState<string>("chill");
+  const [connTested, setConnTested] = useState<"idle" | "testing" | "ok" | "weak">("idle");
+  const [bgm, setBgm] = useState<string | null>(null);
+  const [bgmVolume, setBgmVolume] = useState(50);
+  const [streamDesc, setStreamDesc] = useState("");
+  const [welcomeMsg, setWelcomeMsg] = useState("");
+  const [milestones, setMilestones] = useState<{ viewers: number; reward: string }[]>([]);
+  const [products, setProducts] = useState<string[]>([]);
+  const [cameraFilter, setCameraFilter] = useState<string>("none");
   const [streamId, setStreamId] = useState<string | null>(null);
   const [title, setTitle] = useState("");
   const [topic, setTopic] = useState("General");
@@ -793,7 +850,65 @@ export default function GoLivePage() {
               )}
             </div>
 
-            <div className="relative z-10 mt-auto px-4 pb-6 space-y-4" style={{ paddingBottom: "calc(env(safe-area-inset-bottom, 0px) + 24px)" }}>
+            <div className="relative z-10 mt-auto px-4 pb-6 space-y-3 max-h-[75vh] overflow-y-auto scrollbar-hide" style={{ paddingBottom: "calc(env(safe-area-inset-bottom, 0px) + 24px)" }}>
+              {/* Streamer Pro Tips carousel (visible at the top) */}
+              <div>
+                <div className="flex items-center justify-between mb-1.5 px-1">
+                  <span className="text-white/80 text-xs font-semibold flex items-center gap-1">
+                    💡 Pro tips
+                  </span>
+                  <span className="text-[10px] text-white/40">Swipe →</span>
+                </div>
+                <div className="flex gap-2 overflow-x-auto scrollbar-hide pb-1 snap-x snap-mandatory">
+                  {[
+                    { tip: "Start with a strong title to grab viewers", icon: "🎯", gradient: "from-rose-500/30 via-orange-500/20 to-amber-500/10" },
+                    { tip: "Greet new viewers within 10 seconds", icon: "👋", gradient: "from-blue-500/30 via-cyan-500/20 to-teal-500/10" },
+                    { tip: "Use good lighting — face a window", icon: "💡", gradient: "from-amber-500/30 via-yellow-500/20 to-orange-500/10" },
+                    { tip: "Respond to comments to boost engagement", icon: "💬", gradient: "from-emerald-500/30 via-green-500/20 to-teal-500/10" },
+                    { tip: "Stream for at least 30 mins for algo boost", icon: "⏱️", gradient: "from-violet-500/30 via-purple-500/20 to-fuchsia-500/10" },
+                    { tip: "Set a coin goal to motivate gifts", icon: "🪙", gradient: "from-amber-500/30 via-orange-500/20 to-rose-500/10" },
+                    { tip: "Add hashtags for discovery", icon: "#️⃣", gradient: "from-cyan-500/30 via-blue-500/20 to-indigo-500/10" },
+                    { tip: "Schedule streams to build a routine", icon: "📅", gradient: "from-pink-500/30 via-rose-500/20 to-red-500/10" },
+                  ].map((p, i) => (
+                    <div
+                      key={i}
+                      className={cn(
+                        "shrink-0 snap-start w-[220px] rounded-2xl p-3 bg-gradient-to-br border border-white/15 backdrop-blur-sm",
+                        p.gradient,
+                      )}
+                    >
+                      <span className="text-2xl">{p.icon}</span>
+                      <p className="text-[12px] font-semibold text-white leading-tight mt-1.5">{p.tip}</p>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* Stream type selector */}
+              <div>
+                <span className="text-white/80 text-xs font-semibold mb-1.5 block px-1">Stream type</span>
+                <div className="grid grid-cols-4 gap-1.5">
+                  {STREAM_TYPES.map((t) => {
+                    const active = streamType === t.id;
+                    return (
+                      <button
+                        key={t.id}
+                        onClick={() => setStreamType(t.id)}
+                        className={cn(
+                          "rounded-2xl p-2 flex flex-col items-center gap-0.5 border-2 transition-all",
+                          active
+                            ? `bg-gradient-to-br ${t.gradient} border-white/30 shadow-lg`
+                            : "bg-white/8 border-white/15",
+                        )}
+                      >
+                        <span className="text-2xl">{t.emoji}</span>
+                        <span className={cn("text-[10px] font-bold leading-tight", active ? "text-white" : "text-white/80")}>{t.label}</span>
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+
               <Input
                 value={title}
                 onChange={(e) => setTitle(e.target.value)}
@@ -802,10 +917,62 @@ export default function GoLivePage() {
                 className="bg-white/10 border-white/20 text-white placeholder:text-white/40 h-12 text-base"
               />
 
-              <div className="flex gap-2 overflow-x-auto scrollbar-hide pb-1">
-                {TOPICS.map((t) => {
-                  const Ico = t.icon;
-                  return (
+              {/* Stream description */}
+              <div>
+                <span className="text-white/80 text-xs font-semibold mb-1.5 block px-1">Description (optional)</span>
+                <textarea
+                  value={streamDesc}
+                  onChange={(e) => setStreamDesc(e.target.value)}
+                  placeholder="Tell viewers what your stream is about..."
+                  rows={2}
+                  maxLength={300}
+                  className="w-full px-3 py-2 rounded-2xl bg-white/10 border border-white/20 text-white placeholder:text-white/40 text-sm resize-none focus:outline-none focus:border-blue-400"
+                />
+                <p className="text-[9px] text-white/40 mt-0.5 px-1 text-right">{streamDesc.length}/300</p>
+              </div>
+
+              {/* Cover image upload */}
+              <div>
+                <span className="text-white/80 text-xs font-semibold mb-1.5 block px-1">Cover image (optional)</span>
+                <label className="block w-full h-20 rounded-2xl border-2 border-dashed border-white/20 bg-white/5 cursor-pointer overflow-hidden relative">
+                  <input
+                    type="file"
+                    accept="image/*"
+                    className="hidden"
+                    onChange={(e) => {
+                      const file = e.target.files?.[0];
+                      if (file) {
+                        const reader = new FileReader();
+                        reader.onload = () => setCoverImage(reader.result as string);
+                        reader.readAsDataURL(file);
+                      }
+                    }}
+                  />
+                  {coverImage ? (
+                    <>
+                      <img src={coverImage} alt="cover" className="absolute inset-0 w-full h-full object-cover" />
+                      <button
+                        type="button"
+                        onClick={(e) => { e.preventDefault(); setCoverImage(null); }}
+                        className="absolute top-1.5 right-1.5 w-6 h-6 rounded-full bg-black/60 backdrop-blur-sm flex items-center justify-center"
+                      >
+                        <X className="h-3 w-3 text-white" />
+                      </button>
+                    </>
+                  ) : (
+                    <div className="w-full h-full flex flex-col items-center justify-center gap-1">
+                      <ImageIcon className="h-5 w-5 text-white/50" />
+                      <span className="text-[11px] text-white/60 font-semibold">Tap to upload thumbnail</span>
+                    </div>
+                  )}
+                </label>
+              </div>
+
+              {/* Topics */}
+              <div>
+                <span className="text-white/80 text-xs font-semibold mb-1.5 block px-1">Category · {topic}</span>
+                <div className="flex gap-2 overflow-x-auto scrollbar-hide pb-1">
+                  {TOPICS.map((t) => (
                     <button
                       key={t.name}
                       onClick={() => setTopic(t.name)}
@@ -814,10 +981,832 @@ export default function GoLivePage() {
                         topic === t.name ? "bg-red-500 border-red-400 text-white" : "bg-white/10 border-white/20 text-white/70"
                       )}
                     >
-                      <Ico className="h-3.5 w-3.5" /> {t.name}
+                      <span>{t.emoji}</span> {t.name}
                     </button>
-                  );
-                })}
+                  ))}
+                </div>
+              </div>
+
+              {/* Hashtags */}
+              <div>
+                <span className="text-white/80 text-xs font-semibold mb-1.5 block px-1">Hashtags (comma separated)</span>
+                <Input
+                  value={hashtags}
+                  onChange={(e) => setHashtags(e.target.value)}
+                  placeholder="#newyearlive, #khmernewyear, #vibes"
+                  className="bg-white/10 border-white/20 text-white placeholder:text-white/40 h-10 text-sm"
+                />
+              </div>
+
+              {/* Stream Language */}
+              <div>
+                <span className="text-white/80 text-xs font-semibold mb-1.5 block px-1">Stream language</span>
+                <div className="flex gap-1.5 overflow-x-auto scrollbar-hide pb-1">
+                  {[
+                    { id: "en", label: "English", flag: "🇺🇸" },
+                    { id: "km", label: "ខ្មែរ", flag: "🇰🇭" },
+                    { id: "zh", label: "中文", flag: "🇨🇳" },
+                    { id: "ja", label: "日本語", flag: "🇯🇵" },
+                    { id: "ko", label: "한국어", flag: "🇰🇷" },
+                    { id: "th", label: "ไทย", flag: "🇹🇭" },
+                    { id: "vi", label: "Tiếng Việt", flag: "🇻🇳" },
+                    { id: "es", label: "Español", flag: "🇪🇸" },
+                    { id: "fr", label: "Français", flag: "🇫🇷" },
+                    { id: "id", label: "Indonesia", flag: "🇮🇩" },
+                  ].map((l) => (
+                    <button
+                      key={l.id}
+                      onClick={() => setLanguage(l.id)}
+                      className={cn(
+                        "shrink-0 flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold border transition-colors",
+                        language === l.id ? "bg-blue-500 border-blue-400 text-white" : "bg-white/10 border-white/20 text-white/70",
+                      )}
+                    >
+                      <span>{l.flag}</span> {l.label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Country / region */}
+              <div>
+                <span className="text-white/80 text-xs font-semibold mb-1.5 block px-1">Broadcast region</span>
+                <div className="flex gap-1.5 overflow-x-auto scrollbar-hide pb-1">
+                  {[
+                    { id: "global", label: "Global", flag: "🌍" },
+                    { id: "kh", label: "Cambodia", flag: "🇰🇭" },
+                    { id: "us", label: "USA", flag: "🇺🇸" },
+                    { id: "jp", label: "Japan", flag: "🇯🇵" },
+                    { id: "kr", label: "Korea", flag: "🇰🇷" },
+                    { id: "th", label: "Thailand", flag: "🇹🇭" },
+                    { id: "vn", label: "Vietnam", flag: "🇻🇳" },
+                    { id: "cn", label: "China", flag: "🇨🇳" },
+                    { id: "id", label: "Indonesia", flag: "🇮🇩" },
+                    { id: "my", label: "Malaysia", flag: "🇲🇾" },
+                    { id: "ph", label: "Philippines", flag: "🇵🇭" },
+                    { id: "in", label: "India", flag: "🇮🇳" },
+                  ].map((c) => (
+                    <button
+                      key={c.id}
+                      onClick={() => setCountry(c.id)}
+                      className={cn(
+                        "shrink-0 flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold border transition-colors",
+                        country === c.id ? "bg-emerald-500 border-emerald-400 text-white" : "bg-white/10 border-white/20 text-white/70",
+                      )}
+                    >
+                      <span>{c.flag}</span> {c.label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* AR effects preview */}
+              <div>
+                <span className="text-white/80 text-xs font-semibold mb-1.5 block px-1">AR Effects · {arEffect ?? "None"}</span>
+                <div className="flex gap-2 overflow-x-auto scrollbar-hide pb-1">
+                  {[
+                    { id: null, label: "None", emoji: "🚫", gradient: "from-zinc-700 to-zinc-800" },
+                    { id: "beauty", label: "Beauty", emoji: "✨", gradient: "from-pink-400 to-rose-300" },
+                    { id: "anime", label: "Anime", emoji: "👀", gradient: "from-purple-400 to-fuchsia-300" },
+                    { id: "cat", label: "Cat", emoji: "🐱", gradient: "from-orange-300 to-pink-300" },
+                    { id: "bunny", label: "Bunny", emoji: "🐰", gradient: "from-pink-300 to-rose-200" },
+                    { id: "crown", label: "Crown", emoji: "👑", gradient: "from-amber-300 to-yellow-200" },
+                    { id: "galaxy", label: "Galaxy", emoji: "🌌", gradient: "from-violet-500 to-indigo-500" },
+                    { id: "vintage", label: "Vintage", emoji: "📷", gradient: "from-amber-200 to-orange-200" },
+                    { id: "neon", label: "Neon", emoji: "💫", gradient: "from-cyan-400 to-purple-400" },
+                  ].map((e) => {
+                    const active = arEffect === e.id;
+                    return (
+                      <button
+                        key={e.label}
+                        onClick={() => setArEffect(e.id)}
+                        className={cn(
+                          "shrink-0 w-14 h-14 rounded-xl bg-gradient-to-br flex flex-col items-center justify-center gap-0.5 border-2 transition-all",
+                          e.gradient,
+                          active ? "border-white shadow-lg" : "border-white/15",
+                        )}
+                      >
+                        <span className="text-xl">{e.emoji}</span>
+                        <span className="text-[8px] font-bold text-white">{e.label}</span>
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+
+              {/* Beauty intensity slider */}
+              <div>
+                <div className="flex items-center justify-between mb-1.5 px-1">
+                  <span className="text-white/80 text-xs font-semibold">Beauty intensity</span>
+                  <span className="text-[11px] text-white/60 font-mono">{beautyIntensity}%</span>
+                </div>
+                <input
+                  type="range"
+                  min={0}
+                  max={100}
+                  value={beautyIntensity}
+                  onChange={(e) => setBeautyIntensity(parseInt(e.target.value))}
+                  className="w-full h-2 rounded-full bg-white/10 appearance-none accent-pink-400 cursor-pointer"
+                />
+                <div className="flex justify-between text-[9px] text-white/40 mt-1 px-1">
+                  <span>Natural</span>
+                  <span>Soft</span>
+                  <span>Smooth</span>
+                  <span>Glow</span>
+                </div>
+              </div>
+
+              {/* Schedule for later */}
+              <div>
+                <div className="flex items-center justify-between mb-1.5 px-1">
+                  <span className="text-white/80 text-xs font-semibold">Schedule for later</span>
+                  {scheduleAt && (
+                    <button onClick={() => setScheduleAt("")} className="text-[10px] text-white/50 hover:text-white">Clear</button>
+                  )}
+                </div>
+                <input
+                  type="datetime-local"
+                  value={scheduleAt}
+                  onChange={(e) => setScheduleAt(e.target.value)}
+                  className="w-full h-10 px-3 rounded-2xl bg-white/10 border border-white/20 text-white text-sm focus:outline-none focus:border-blue-400 [color-scheme:dark]"
+                />
+                {scheduleAt && (
+                  <p className="text-[10px] text-blue-300 mt-1 px-1">⏰ Stream will be scheduled — followers get notified</p>
+                )}
+              </div>
+
+              {/* Family / Agency */}
+              <div>
+                <span className="text-white/80 text-xs font-semibold mb-1.5 block px-1">Family / Agency (optional)</span>
+                <div className="flex gap-1.5 overflow-x-auto scrollbar-hide pb-1">
+                  {[
+                    { id: null, label: "None", emoji: "—" },
+                    { id: "dragon", label: "DragonFamily", emoji: "🐉" },
+                    { id: "moon", label: "MoonGuild", emoji: "🌙" },
+                    { id: "phoenix", label: "PhoenixFam", emoji: "🔥" },
+                    { id: "sakura", label: "SakuraVibe", emoji: "🌸" },
+                    { id: "angel", label: "AngelClub", emoji: "👼" },
+                    { id: "royal", label: "RoyalCrew", emoji: "👑" },
+                  ].map((f) => (
+                    <button
+                      key={f.label}
+                      onClick={() => setAgency(f.id)}
+                      className={cn(
+                        "shrink-0 flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold border transition-colors",
+                        agency === f.id ? "bg-violet-500 border-violet-400 text-white" : "bg-white/10 border-white/20 text-white/70",
+                      )}
+                    >
+                      <span>{f.emoji}</span> {f.label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Stream rules */}
+              <div>
+                <span className="text-white/80 text-xs font-semibold mb-1.5 block px-1">Room rules (shown to viewers)</span>
+                <textarea
+                  value={streamRules}
+                  onChange={(e) => setStreamRules(e.target.value)}
+                  placeholder="No spam · Respect everyone · Keep it fun!"
+                  rows={2}
+                  maxLength={200}
+                  className="w-full px-3 py-2 rounded-2xl bg-white/10 border border-white/20 text-white placeholder:text-white/40 text-sm resize-none focus:outline-none focus:border-blue-400"
+                />
+                <p className="text-[9px] text-white/40 mt-0.5 px-1 text-right">{streamRules.length}/200</p>
+              </div>
+
+              {/* Privacy */}
+              <div>
+                <span className="text-white/80 text-xs font-semibold mb-1.5 block px-1">Who can watch</span>
+                <div className="grid grid-cols-3 gap-1.5">
+                  {PRIVACY_OPTIONS.map((p) => {
+                    const active = privacy === p.id;
+                    return (
+                      <button
+                        key={p.id}
+                        onClick={() => setPrivacy(p.id)}
+                        className={cn(
+                          "rounded-2xl p-2 flex flex-col items-center gap-0.5 border-2 transition-all",
+                          active ? "bg-red-500/20 border-red-500" : "bg-white/8 border-white/15",
+                        )}
+                      >
+                        <span className="text-lg">{p.emoji}</span>
+                        <span className="text-[11px] font-bold text-white">{p.label}</span>
+                        <span className="text-[9px] text-white/60 leading-tight text-center">{p.desc}</span>
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+
+              {/* Coin goal */}
+              <div>
+                <div className="flex items-center justify-between mb-1.5 px-1">
+                  <span className="text-white/80 text-xs font-semibold">Coin goal · {coinGoal > 0 ? coinGoal.toLocaleString() : "Off"}</span>
+                  {coinGoal > 0 && (
+                    <button onClick={() => setCoinGoal(0)} className="text-[10px] text-white/50 hover:text-white">Clear</button>
+                  )}
+                </div>
+                <div className="flex gap-1.5 overflow-x-auto scrollbar-hide pb-1">
+                  {[0, 1000, 5000, 10000, 50000, 100000].map((g) => {
+                    const active = coinGoal === g;
+                    return (
+                      <button
+                        key={g}
+                        onClick={() => setCoinGoal(g)}
+                        className={cn(
+                          "shrink-0 flex items-center gap-1 px-3 py-1.5 rounded-full text-xs font-semibold border transition-colors",
+                          active ? "bg-amber-500 border-amber-400 text-black" : "bg-white/10 border-white/20 text-white/70"
+                        )}
+                      >
+                        {g === 0 ? "Off" : (
+                          <>
+                            <img src={goldCoinIcon} alt="" className="w-3.5 h-3.5" />
+                            {g >= 1000 ? `${g / 1000}K` : g}
+                          </>
+                        )}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+
+              {/* Stream Mood / Vibe selector */}
+              <div>
+                <span className="text-white/80 text-xs font-semibold mb-1.5 block px-1">Stream vibe</span>
+                <div className="flex gap-1.5 overflow-x-auto scrollbar-hide pb-1">
+                  {[
+                    { id: "chill", label: "Chill", emoji: "😌", gradient: "from-blue-500/40 to-cyan-500/30" },
+                    { id: "hype", label: "Hype", emoji: "🔥", gradient: "from-red-500/40 to-orange-500/30" },
+                    { id: "cozy", label: "Cozy", emoji: "🧸", gradient: "from-amber-500/40 to-yellow-500/30" },
+                    { id: "spicy", label: "Spicy", emoji: "🌶️", gradient: "from-rose-500/40 to-red-500/30" },
+                    { id: "wholesome", label: "Wholesome", emoji: "🌸", gradient: "from-pink-500/40 to-fuchsia-500/30" },
+                    { id: "savage", label: "Savage", emoji: "💀", gradient: "from-zinc-500/40 to-slate-500/30" },
+                    { id: "romantic", label: "Romantic", emoji: "💕", gradient: "from-rose-500/40 to-pink-500/30" },
+                    { id: "mysterious", label: "Mysterious", emoji: "🔮", gradient: "from-violet-500/40 to-purple-500/30" },
+                    { id: "energetic", label: "Energetic", emoji: "⚡", gradient: "from-yellow-500/40 to-amber-500/30" },
+                  ].map((m) => (
+                    <button
+                      key={m.id}
+                      onClick={() => setStreamMood(m.id)}
+                      className={cn(
+                        "shrink-0 flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold border transition-all",
+                        streamMood === m.id ? `bg-gradient-to-br ${m.gradient} border-white/40 text-white shadow-md` : "bg-white/5 border-white/15 text-white/60",
+                      )}
+                    >
+                      <span>{m.emoji}</span> {m.label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Donation Goal / Cause */}
+              <div>
+                <div className="flex items-center justify-between mb-1.5 px-1">
+                  <span className="text-white/80 text-xs font-semibold">Charity / Cause goal</span>
+                  {donationCause && (
+                    <button onClick={() => { setDonationCause(null); setDonationGoal(0); }} className="text-[10px] text-white/50 hover:text-white">Clear</button>
+                  )}
+                </div>
+                <div className="flex gap-2 overflow-x-auto scrollbar-hide pb-1 mb-2">
+                  {[
+                    { id: null, label: "None", emoji: "—" },
+                    { id: "education", label: "Education", emoji: "📚" },
+                    { id: "kids", label: "Kids in need", emoji: "👶" },
+                    { id: "ocean", label: "Ocean cleanup", emoji: "🌊" },
+                    { id: "wildlife", label: "Wildlife", emoji: "🐘" },
+                    { id: "disaster", label: "Disaster relief", emoji: "🤝" },
+                    { id: "mental", label: "Mental health", emoji: "🧠" },
+                    { id: "lgbt", label: "LGBTQ+", emoji: "🏳️‍🌈" },
+                    { id: "veterans", label: "Veterans", emoji: "🎖️" },
+                  ].map((d) => (
+                    <button
+                      key={d.label}
+                      onClick={() => setDonationCause(d.id)}
+                      className={cn(
+                        "shrink-0 flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold border transition-colors",
+                        donationCause === d.id ? "bg-pink-500 border-pink-400 text-white" : "bg-white/10 border-white/20 text-white/70",
+                      )}
+                    >
+                      <span>{d.emoji}</span> {d.label}
+                    </button>
+                  ))}
+                </div>
+                {donationCause && (
+                  <div className="flex gap-1.5 overflow-x-auto scrollbar-hide pb-1">
+                    {[100, 500, 1000, 5000, 10000].map((amt) => (
+                      <button
+                        key={amt}
+                        onClick={() => setDonationGoal(amt)}
+                        className={cn(
+                          "shrink-0 flex items-center gap-1 px-3 py-1.5 rounded-full text-xs font-bold border transition-colors",
+                          donationGoal === amt ? "bg-pink-500/30 border-pink-400 text-pink-200" : "bg-white/5 border-white/15 text-white/60",
+                        )}
+                      >
+                        ${amt.toLocaleString()}
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
+
+              {/* Connection / Network test */}
+              <div>
+                <div className="flex items-center justify-between mb-1.5 px-1">
+                  <span className="text-white/80 text-xs font-semibold">Connection check</span>
+                  {connTested === "ok" && <span className="text-[10px] text-emerald-400 font-bold">✓ Stable</span>}
+                  {connTested === "weak" && <span className="text-[10px] text-amber-400 font-bold">⚠ Weak signal</span>}
+                </div>
+                <button
+                  onClick={() => {
+                    setConnTested("testing");
+                    setTimeout(() => {
+                      // Simulate ping check using navigator.connection if available
+                      const eff = (navigator as any).connection?.effectiveType;
+                      const isWeak = eff === "slow-2g" || eff === "2g";
+                      setConnTested(isWeak ? "weak" : "ok");
+                    }, 1200);
+                  }}
+                  disabled={connTested === "testing"}
+                  className={cn(
+                    "w-full flex items-center justify-center gap-2 px-3 py-2.5 rounded-2xl border-2 transition-all font-bold text-[12px]",
+                    connTested === "ok" && "bg-emerald-500/15 border-emerald-500/40 text-emerald-300",
+                    connTested === "weak" && "bg-amber-500/15 border-amber-500/40 text-amber-300",
+                    connTested === "testing" && "bg-blue-500/15 border-blue-500/40 text-blue-300",
+                    connTested === "idle" && "bg-white/5 border-white/15 text-white",
+                  )}
+                >
+                  {connTested === "testing" ? (
+                    <>
+                      <span className="inline-block w-3 h-3 rounded-full border-2 border-current border-t-transparent animate-spin" />
+                      Testing connection…
+                    </>
+                  ) : connTested === "ok" ? (
+                    <>📶 Connection healthy — ready to stream</>
+                  ) : connTested === "weak" ? (
+                    <>📡 Connection weak — try lowering quality</>
+                  ) : (
+                    <>📡 Run connection test</>
+                  )}
+                </button>
+              </div>
+
+              {/* Background Music (BGM) */}
+              <div>
+                <div className="flex items-center justify-between mb-1.5 px-1">
+                  <span className="text-white/80 text-xs font-semibold">🎵 Background music</span>
+                  {bgm && <span className="text-[10px] text-purple-300 font-bold">{bgm}</span>}
+                </div>
+                <div className="flex gap-2 overflow-x-auto scrollbar-hide pb-1">
+                  {[
+                    { id: null, label: "Off", emoji: "🔇" },
+                    { id: "lofi", label: "Lo-fi chill", emoji: "🎧" },
+                    { id: "house", label: "House mix", emoji: "🪩" },
+                    { id: "kpop", label: "K-Pop hits", emoji: "🌟" },
+                    { id: "rnb", label: "R&B vibes", emoji: "💜" },
+                    { id: "acoustic", label: "Acoustic", emoji: "🎸" },
+                    { id: "jazz", label: "Jazz cafe", emoji: "🎷" },
+                    { id: "classical", label: "Classical", emoji: "🎻" },
+                    { id: "khmer", label: "Khmer pop", emoji: "🇰🇭" },
+                    { id: "edm", label: "EDM festival", emoji: "🔊" },
+                  ].map((m) => (
+                    <button
+                      key={m.label}
+                      onClick={() => setBgm(m.id)}
+                      className={cn(
+                        "shrink-0 flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold border transition-colors",
+                        bgm === m.id ? "bg-purple-500 border-purple-400 text-white" : "bg-white/10 border-white/20 text-white/70",
+                      )}
+                    >
+                      <span>{m.emoji}</span> {m.label}
+                    </button>
+                  ))}
+                </div>
+                {bgm && (
+                  <div className="mt-2">
+                    <div className="flex items-center justify-between mb-1 px-1">
+                      <span className="text-[10px] text-white/60">BGM volume</span>
+                      <span className="text-[10px] text-purple-300 font-mono">{bgmVolume}%</span>
+                    </div>
+                    <input
+                      type="range"
+                      min={0}
+                      max={100}
+                      value={bgmVolume}
+                      onChange={(e) => setBgmVolume(parseInt(e.target.value))}
+                      className="w-full h-2 rounded-full bg-white/10 appearance-none accent-purple-400 cursor-pointer"
+                    />
+                  </div>
+                )}
+              </div>
+
+              {/* Sound Effects pad */}
+              <div>
+                <span className="text-white/80 text-xs font-semibold mb-1.5 block px-1">🔊 Sound effects (tap to test)</span>
+                <div className="grid grid-cols-4 gap-1.5">
+                  {[
+                    { label: "Laugh", emoji: "😂" },
+                    { label: "Applause", emoji: "👏" },
+                    { label: "Drum roll", emoji: "🥁" },
+                    { label: "Boo", emoji: "👻" },
+                    { label: "Air horn", emoji: "📯" },
+                    { label: "Boom", emoji: "💥" },
+                    { label: "Ding", emoji: "🔔" },
+                    { label: "Crickets", emoji: "🦗" },
+                  ].map((s) => (
+                    <button
+                      key={s.label}
+                      onClick={() => toast.info(`SFX: ${s.label} ${s.emoji}`)}
+                      className="aspect-square rounded-2xl bg-gradient-to-br from-white/10 to-white/5 border border-white/15 flex flex-col items-center justify-center gap-0.5 active:scale-90 transition-transform"
+                    >
+                      <span className="text-2xl">{s.emoji}</span>
+                      <span className="text-[9px] text-white/70 font-semibold">{s.label}</span>
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Camera filter / color grading */}
+              <div>
+                <span className="text-white/80 text-xs font-semibold mb-1.5 block px-1">📷 Camera filter</span>
+                <div className="flex gap-2 overflow-x-auto scrollbar-hide pb-1">
+                  {[
+                    { id: "none", label: "Original", emoji: "🎬" },
+                    { id: "warm", label: "Warm", emoji: "☀️" },
+                    { id: "cool", label: "Cool", emoji: "❄️" },
+                    { id: "vintage", label: "Vintage", emoji: "📷" },
+                    { id: "noir", label: "Noir B&W", emoji: "⚫" },
+                    { id: "vivid", label: "Vivid", emoji: "🌈" },
+                    { id: "dreamy", label: "Dreamy", emoji: "💭" },
+                    { id: "cinema", label: "Cinema", emoji: "🎞️" },
+                  ].map((f) => (
+                    <button
+                      key={f.id}
+                      onClick={() => setCameraFilter(f.id)}
+                      className={cn(
+                        "shrink-0 flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold border transition-colors",
+                        cameraFilter === f.id ? "bg-cyan-500 border-cyan-400 text-white" : "bg-white/10 border-white/20 text-white/70",
+                      )}
+                    >
+                      <span>{f.emoji}</span> {f.label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Goal Milestones */}
+              <div>
+                <div className="flex items-center justify-between mb-1.5 px-1">
+                  <span className="text-white/80 text-xs font-semibold">🎯 Goal milestones</span>
+                  {milestones.length > 0 && (
+                    <button onClick={() => setMilestones([])} className="text-[10px] text-white/50 hover:text-white">Clear all</button>
+                  )}
+                </div>
+                <div className="space-y-1.5">
+                  {[
+                    { viewers: 100, reward: "Sing a song 🎤" },
+                    { viewers: 500, reward: "Reveal next category" },
+                    { viewers: 1000, reward: "Try a beauty filter swap" },
+                    { viewers: 5000, reward: "1-hour Q&A" },
+                    { viewers: 10000, reward: "Dance challenge 💃" },
+                  ].map((m, i) => {
+                    const set = milestones.some((x) => x.viewers === m.viewers);
+                    return (
+                      <button
+                        key={i}
+                        onClick={() => {
+                          setMilestones((prev) =>
+                            prev.some((x) => x.viewers === m.viewers)
+                              ? prev.filter((x) => x.viewers !== m.viewers)
+                              : [...prev, m],
+                          );
+                        }}
+                        className={cn(
+                          "w-full flex items-center gap-3 px-3 py-2 rounded-xl border transition-colors text-left",
+                          set ? "bg-amber-500/15 border-amber-500/40" : "bg-white/5 border-white/10",
+                        )}
+                      >
+                        <span className="text-base">{set ? "🎯" : "○"}</span>
+                        <div className="flex-1 min-w-0">
+                          <p className="text-[12px] font-bold text-white">When {m.viewers.toLocaleString()} viewers</p>
+                          <p className="text-[10px] text-white/60">{m.reward}</p>
+                        </div>
+                        {set && <span className="text-[10px] text-amber-300 font-bold">✓ Set</span>}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+
+              {/* Welcome auto-message */}
+              <div>
+                <span className="text-white/80 text-xs font-semibold mb-1.5 block px-1">👋 Auto-welcome (new viewers)</span>
+                <Input
+                  value={welcomeMsg}
+                  onChange={(e) => setWelcomeMsg(e.target.value)}
+                  placeholder="Hi! Drop a like 💖 if you're new here"
+                  maxLength={150}
+                  className="bg-white/10 border-white/20 text-white placeholder:text-white/40 h-10 text-sm"
+                />
+                <p className="text-[9px] text-white/40 mt-0.5 px-1">DM'd to viewers when they join</p>
+              </div>
+
+              {/* Live Shopping products */}
+              <div>
+                <div className="flex items-center justify-between mb-1.5 px-1">
+                  <span className="text-white/80 text-xs font-semibold">🛍️ Pin products to sell</span>
+                  <span className="text-[10px] text-emerald-300 font-bold">{products.length} pinned</span>
+                </div>
+                <div className="flex gap-2 overflow-x-auto scrollbar-hide pb-1">
+                  {[
+                    { id: "p1", label: "Spring fashion", price: "$19+", img: "https://images.unsplash.com/photo-1483985988355-763728e1935b?w=200&q=70&auto=format&fit=crop" },
+                    { id: "p2", label: "K-Beauty kit", price: "$29+", img: "https://images.unsplash.com/photo-1487412947147-5cebf100ffc2?w=200&q=70&auto=format&fit=crop" },
+                    { id: "p3", label: "Tech gadgets", price: "$49+", img: "https://images.unsplash.com/photo-1518770660439-4636190af475?w=200&q=70&auto=format&fit=crop" },
+                    { id: "p4", label: "Home & decor", price: "$15+", img: "https://images.unsplash.com/photo-1556909114-f6e7ad7d3136?w=200&q=70&auto=format&fit=crop" },
+                    { id: "p5", label: "Snacks pack", price: "$9+", img: "https://images.unsplash.com/photo-1559054663-e8d23213f55c?w=200&q=70&auto=format&fit=crop" },
+                  ].map((p) => {
+                    const pinned = products.includes(p.id);
+                    return (
+                      <button
+                        key={p.id}
+                        onClick={() => setProducts((prev) => (prev.includes(p.id) ? prev.filter((x) => x !== p.id) : [...prev, p.id]))}
+                        className="shrink-0 w-[100px] rounded-2xl overflow-hidden border-2 transition-all relative active:scale-95"
+                        style={{ borderColor: pinned ? "rgb(16 185 129)" : "rgba(255,255,255,0.15)" }}
+                      >
+                        <div className="relative aspect-square">
+                          <img src={p.img} alt="" className="absolute inset-0 w-full h-full object-cover" />
+                          {pinned && (
+                            <div className="absolute inset-0 bg-emerald-500/30 flex items-center justify-center">
+                              <span className="w-7 h-7 rounded-full bg-emerald-500 text-white text-sm font-black flex items-center justify-center shadow-md">✓</span>
+                            </div>
+                          )}
+                        </div>
+                        <div className="bg-black/80 p-1.5 text-left">
+                          <p className="text-[10px] font-bold text-white truncate">{p.label}</p>
+                          <p className="text-[9px] text-emerald-300 font-bold">{p.price}</p>
+                        </div>
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+
+              {/* Coin balance + recharge shortcut */}
+              <div className="flex items-center justify-between px-3 py-2 rounded-2xl bg-amber-500/10 border border-amber-500/20">
+                <div className="flex items-center gap-2">
+                  <img src={goldCoinIcon} alt="" className="w-5 h-5" />
+                  <div>
+                    <p className="text-[10px] text-white/60 leading-none">Your balance</p>
+                    <p className="text-[14px] font-black text-amber-300 leading-tight">{coinBalance.toLocaleString()}</p>
+                  </div>
+                </div>
+                <button
+                  onClick={() => setShowRechargeSheet(true)}
+                  className="px-3 py-1.5 rounded-full bg-gradient-to-r from-amber-500 to-orange-500 text-amber-950 text-[11px] font-bold active:scale-95 transition-transform"
+                >
+                  + Recharge
+                </button>
+              </div>
+
+              {/* Advanced toggles */}
+              <button
+                onClick={() => setShowAdvanced((v) => !v)}
+                className="w-full flex items-center justify-between px-3 py-2 rounded-2xl bg-white/5 border border-white/15 active:scale-[0.99] transition-transform"
+              >
+                <span className="text-[12px] font-semibold text-white">Advanced settings</span>
+                <span className="text-white/60 text-xs">{showAdvanced ? "−" : "+"}</span>
+              </button>
+              {showAdvanced && (
+                <div className="space-y-3 pl-1">
+                  {/* Toggles */}
+                  {[
+                    { label: "Allow gifts & tips", desc: "Viewers can send gifts", value: allowGifts, set: setAllowGifts, icon: "🎁" },
+                    { label: "Allow comments", desc: "Public chat enabled", value: allowComments, set: setAllowComments, icon: "💬" },
+                    { label: "Age-restricted (18+)", desc: "Hide from minors", value: ageRestricted, set: setAgeRestricted, icon: "🔞" },
+                    { label: "Save replay", desc: "Record stream for VOD", value: saveReplay, set: setSaveReplay, icon: "🎬" },
+                  ].map((t) => (
+                    <button
+                      key={t.label}
+                      onClick={() => t.set(!t.value)}
+                      className="w-full flex items-center gap-3 px-3 py-2 rounded-xl bg-white/5 border border-white/10"
+                    >
+                      <span className="text-lg">{t.icon}</span>
+                      <div className="flex-1 text-left">
+                        <p className="text-[12px] font-semibold text-white">{t.label}</p>
+                        <p className="text-[10px] text-white/50">{t.desc}</p>
+                      </div>
+                      <span className={cn(
+                        "w-9 h-5 rounded-full p-0.5 transition-colors",
+                        t.value ? "bg-emerald-500" : "bg-white/20",
+                      )}>
+                        <span className={cn(
+                          "block w-4 h-4 rounded-full bg-white transition-transform",
+                          t.value && "translate-x-4",
+                        )} />
+                      </span>
+                    </button>
+                  ))}
+
+                  {/* Stream quality */}
+                  <div>
+                    <span className="text-white/80 text-xs font-semibold mb-1.5 block px-1">Stream quality</span>
+                    <div className="grid grid-cols-3 gap-1.5">
+                      {(["480p", "720p", "1080p"] as const).map((q) => (
+                        <button
+                          key={q}
+                          onClick={() => setQuality(q)}
+                          className={cn(
+                            "py-2 rounded-xl text-xs font-bold border transition-colors",
+                            quality === q ? "bg-blue-500 border-blue-400 text-white" : "bg-white/5 border-white/15 text-white/70",
+                          )}
+                        >
+                          {q}
+                          <span className="block text-[9px] font-normal opacity-70">
+                            {q === "480p" ? "Save data" : q === "720p" ? "Recommended" : "HD · pro"}
+                          </span>
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Slow mode chat */}
+                  <div>
+                    <span className="text-white/80 text-xs font-semibold mb-1.5 block px-1">Slow mode (chat rate limit)</span>
+                    <div className="grid grid-cols-4 gap-1.5">
+                      {([
+                        { val: 0, label: "Off" },
+                        { val: 5, label: "5s" },
+                        { val: 10, label: "10s" },
+                        { val: 30, label: "30s" },
+                      ] as const).map((s) => (
+                        <button
+                          key={s.val}
+                          onClick={() => setSlowMode(s.val)}
+                          className={cn(
+                            "py-1.5 rounded-xl text-[11px] font-bold border transition-colors",
+                            slowMode === s.val ? "bg-amber-500 border-amber-400 text-amber-950" : "bg-white/5 border-white/15 text-white/70",
+                          )}
+                        >
+                          {s.label}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Pinned message */}
+                  <div>
+                    <span className="text-white/80 text-xs font-semibold mb-1.5 block px-1">Pinned message (top of chat)</span>
+                    <Input
+                      value={pinnedMessage}
+                      onChange={(e) => setPinnedMessage(e.target.value)}
+                      placeholder="Welcome! Drop a like 💖"
+                      maxLength={120}
+                      className="bg-white/10 border-white/20 text-white placeholder:text-white/40 h-10 text-sm"
+                    />
+                  </div>
+
+                  {/* Banned words */}
+                  <div>
+                    <span className="text-white/80 text-xs font-semibold mb-1.5 block px-1">Banned words (comma separated)</span>
+                    <Input
+                      value={bannedWords}
+                      onChange={(e) => setBannedWords(e.target.value)}
+                      placeholder="spam, scam, link"
+                      className="bg-white/10 border-white/20 text-white placeholder:text-white/40 h-10 text-sm"
+                    />
+                  </div>
+
+                  {/* Co-host invite */}
+                  {(streamType === "multi" || streamType === "pk") && (
+                    <div>
+                      <span className="text-white/80 text-xs font-semibold mb-1.5 block px-1">
+                        Invite co-hosts {coHosts.length > 0 && `(${coHosts.length})`}
+                      </span>
+                      <div className="flex gap-2 overflow-x-auto scrollbar-hide pb-1">
+                        {[
+                          { id: "maya", name: "Maya", img: "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=120&q=70&auto=format&fit=crop" },
+                          { id: "jin", name: "Jin", img: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=120&q=70&auto=format&fit=crop" },
+                          { id: "lily", name: "Lily", img: "https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=120&q=70&auto=format&fit=crop" },
+                          { id: "sofia", name: "Sofia", img: "https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=120&q=70&auto=format&fit=crop" },
+                          { id: "alex", name: "Alex", img: "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=120&q=70&auto=format&fit=crop" },
+                          { id: "ryan", name: "Ryan", img: "https://images.unsplash.com/photo-1492562080023-ab3db95bfbce?w=120&q=70&auto=format&fit=crop" },
+                        ].map((c) => {
+                          const invited = coHosts.includes(c.id);
+                          return (
+                            <button
+                              key={c.id}
+                              onClick={() =>
+                                setCoHosts((prev) => (prev.includes(c.id) ? prev.filter((x) => x !== c.id) : [...prev, c.id]))
+                              }
+                              className="shrink-0 flex flex-col items-center gap-1 w-[56px]"
+                            >
+                              <div className="relative">
+                                <Avatar className={cn("h-12 w-12 ring-2", invited ? "ring-emerald-500" : "ring-white/20")}>
+                                  <AvatarImage src={c.img} />
+                                  <AvatarFallback className="text-xs">{c.name[0]}</AvatarFallback>
+                                </Avatar>
+                                {invited && (
+                                  <span className="absolute -bottom-1 -right-1 w-5 h-5 rounded-full bg-emerald-500 flex items-center justify-center text-[10px] font-bold text-white shadow">✓</span>
+                                )}
+                              </div>
+                              <span className="text-[10px] font-semibold text-white truncate w-full text-center">{c.name}</span>
+                            </button>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {/* Settings summary card */}
+              <div className="rounded-2xl border border-white/15 bg-white/5 p-3 mt-2">
+                <p className="text-[10px] font-bold text-white/60 uppercase tracking-wider mb-2">Stream summary</p>
+                <div className="flex flex-wrap gap-1.5">
+                  <Badge className="bg-rose-500/20 text-rose-300 border-rose-500/30 text-[10px] gap-1">
+                    {STREAM_TYPES.find((t) => t.id === streamType)?.emoji} {STREAM_TYPES.find((t) => t.id === streamType)?.label}
+                  </Badge>
+                  <Badge className="bg-blue-500/20 text-blue-300 border-blue-500/30 text-[10px] gap-1">
+                    {TOPICS.find((t) => t.name === topic)?.emoji} {topic}
+                  </Badge>
+                  <Badge className="bg-emerald-500/20 text-emerald-300 border-emerald-500/30 text-[10px]">
+                    {PRIVACY_OPTIONS.find((p) => p.id === privacy)?.emoji} {PRIVACY_OPTIONS.find((p) => p.id === privacy)?.label}
+                  </Badge>
+                  <Badge className="bg-violet-500/20 text-violet-300 border-violet-500/30 text-[10px]">
+                    🎬 {quality}
+                  </Badge>
+                  {coinGoal > 0 && (
+                    <Badge className="bg-amber-500/20 text-amber-300 border-amber-500/30 text-[10px]">
+                      🎯 {coinGoal.toLocaleString()} coins
+                    </Badge>
+                  )}
+                  {scheduleAt && (
+                    <Badge className="bg-cyan-500/20 text-cyan-300 border-cyan-500/30 text-[10px]">
+                      ⏰ Scheduled
+                    </Badge>
+                  )}
+                  {arEffect && (
+                    <Badge className="bg-pink-500/20 text-pink-300 border-pink-500/30 text-[10px]">
+                      ✨ {arEffect}
+                    </Badge>
+                  )}
+                  {coHosts.length > 0 && (
+                    <Badge className="bg-fuchsia-500/20 text-fuchsia-300 border-fuchsia-500/30 text-[10px]">
+                      👥 {coHosts.length} co-host{coHosts.length > 1 ? "s" : ""}
+                    </Badge>
+                  )}
+                  {agency && (
+                    <Badge className="bg-yellow-500/20 text-yellow-300 border-yellow-500/30 text-[10px]">
+                      🏆 {agency}
+                    </Badge>
+                  )}
+                  {!allowComments && (
+                    <Badge className="bg-red-500/20 text-red-300 border-red-500/30 text-[10px]">
+                      💬 Chat off
+                    </Badge>
+                  )}
+                  {ageRestricted && (
+                    <Badge className="bg-red-500/20 text-red-300 border-red-500/30 text-[10px]">
+                      🔞 18+
+                    </Badge>
+                  )}
+                  {donationCause && (
+                    <Badge className="bg-pink-500/20 text-pink-300 border-pink-500/30 text-[10px]">
+                      ❤️ {donationCause}{donationGoal > 0 ? ` · $${donationGoal.toLocaleString()}` : ""}
+                    </Badge>
+                  )}
+                  {streamMood !== "chill" && (
+                    <Badge className="bg-blue-500/20 text-blue-300 border-blue-500/30 text-[10px]">
+                      🎭 {streamMood}
+                    </Badge>
+                  )}
+                  {connTested === "ok" && (
+                    <Badge className="bg-emerald-500/20 text-emerald-300 border-emerald-500/30 text-[10px]">
+                      📶 Network OK
+                    </Badge>
+                  )}
+                  {bgm && (
+                    <Badge className="bg-purple-500/20 text-purple-300 border-purple-500/30 text-[10px]">
+                      🎵 {bgm}
+                    </Badge>
+                  )}
+                  {cameraFilter !== "none" && (
+                    <Badge className="bg-cyan-500/20 text-cyan-300 border-cyan-500/30 text-[10px]">
+                      📷 {cameraFilter}
+                    </Badge>
+                  )}
+                  {milestones.length > 0 && (
+                    <Badge className="bg-amber-500/20 text-amber-300 border-amber-500/30 text-[10px]">
+                      🎯 {milestones.length} milestone{milestones.length > 1 ? "s" : ""}
+                    </Badge>
+                  )}
+                  {products.length > 0 && (
+                    <Badge className="bg-emerald-500/20 text-emerald-300 border-emerald-500/30 text-[10px]">
+                      🛍️ {products.length} product{products.length > 1 ? "s" : ""}
+                    </Badge>
+                  )}
+                </div>
               </div>
 
               {/* Virtual background picker */}

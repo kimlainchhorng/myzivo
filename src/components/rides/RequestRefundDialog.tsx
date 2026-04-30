@@ -8,6 +8,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { Loader2 } from "lucide-react";
+import { confirmContentSafe } from "@/lib/security/contentLinkValidation";
 
 interface Props {
   open: boolean;
@@ -29,6 +30,7 @@ export default function RequestRefundDialog({ open, onOpenChange, rideRequestId,
       toast.error("Enter a valid amount");
       return;
     }
+    if (!confirmContentSafe(description, "refund details")) return;
     setSubmitting(true);
     const { data, error } = await supabase.functions.invoke("submit-refund-request", {
       body: { ride_request_id: rideRequestId, reason_category: category, description: description.slice(0, 500), requested_amount_cents: Math.min(amountCents, tripTotalCents) },

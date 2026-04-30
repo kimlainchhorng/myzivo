@@ -2,6 +2,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
+import { stripImageMetadata } from "@/utils/stripImageMetadata";
 
 export type UserProfile = {
   id: string;
@@ -177,12 +178,13 @@ export const useUploadAvatar = () => {
         throw new Error("Please upload a JPG, PNG, or WebP image");
       }
 
-      const fileExt = file.name.split(".").pop();
+      const safe = await stripImageMetadata(file);
+      const fileExt = safe.name.split(".").pop();
       const filePath = `${user.id}/avatar_${Date.now()}.${fileExt}`;
 
       const { error: uploadError } = await supabase.storage
         .from("avatars")
-        .upload(filePath, file, { upsert: true });
+        .upload(filePath, safe, { upsert: true });
 
       if (uploadError) throw uploadError;
 

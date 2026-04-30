@@ -1,4 +1,5 @@
 import { createClient } from "../_shared/deps.ts";
+import { scanContentForLinks } from "../_shared/contentLinkValidation.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -33,6 +34,16 @@ Deno.serve(async (req) => {
     }
     if (typeof requested_amount_cents !== "number" || requested_amount_cents <= 0) {
       return new Response(JSON.stringify({ error: "requested_amount_cents must be positive" }), { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+    }
+
+    if (typeof description === "string") {
+      const linkScan = scanContentForLinks(description);
+      if (!linkScan.ok) {
+        return new Response(
+          JSON.stringify({ error: "blocked_link", code: "blocked_link", urls: linkScan.blocked }),
+          { status: 422, headers: { ...corsHeaders, "Content-Type": "application/json" } },
+        );
+      }
     }
 
     const admin = createClient(supabaseUrl, serviceKey);

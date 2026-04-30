@@ -1,6 +1,7 @@
 // channel-broadcast — owner/admin posts a message to a channel, fans out push
 // notifications to all subscribers via the existing device_tokens table.
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
+import { scanContentForLinks } from "../_shared/contentLinkValidation.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -41,6 +42,16 @@ Deno.serve(async (req) => {
       return new Response(JSON.stringify({ error: "channel_id and body or media required" }), {
         status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
+    }
+
+    if (typeof text === "string") {
+      const linkScan = scanContentForLinks(text);
+      if (!linkScan.ok) {
+        return new Response(
+          JSON.stringify({ error: "blocked_link", code: "blocked_link", urls: linkScan.blocked }),
+          { status: 422, headers: { ...corsHeaders, "Content-Type": "application/json" } },
+        );
+      }
     }
 
     // Verify caller is owner or admin

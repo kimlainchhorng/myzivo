@@ -3,6 +3,8 @@ import ProfileFeedCard from "./ProfileFeedCard";
 import UnifiedShareSheet from "@/components/shared/ShareSheet";
 import CreatePostModal from "@/components/social/CreatePostModal";
 import CommentsSheet from "@/components/social/CommentsSheet";
+import SafeCaption from "@/components/social/SafeCaption";
+import { stripImageMetadata } from "@/utils/stripImageMetadata";
 import ReelThumbnail from "@/components/social/ReelThumbnail";
 import { createPortal } from "react-dom";
 import { motion, AnimatePresence } from "framer-motion";
@@ -675,12 +677,13 @@ export default function ProfileContentTabs({ userId }: { userId?: string }) {
 
   const uploadMediaToSupabase = useCallback(async (file?: File | null) => {
     if (!file) return null;
-    const extension = file.name.split(".").pop() || (file.type.startsWith("video/") ? "webm" : "jpg");
+    const safe = await stripImageMetadata(file);
+    const extension = safe.name.split(".").pop() || (safe.type.startsWith("video/") ? "webm" : "jpg");
     const objectPath = `${user?.id || "guest"}/${Date.now()}-${Math.random().toString(36).slice(2)}.${extension}`;
     try {
-      const { error } = await supabase.storage.from("user-posts").upload(objectPath, file, {
+      const { error } = await supabase.storage.from("user-posts").upload(objectPath, safe, {
         upsert: false,
-        contentType: file.type || undefined,
+        contentType: safe.type || undefined,
       });
       if (error) return null;
       const { data } = supabase.storage.from("user-posts").getPublicUrl(objectPath);
@@ -1076,7 +1079,7 @@ export default function ProfileContentTabs({ userId }: { userId?: string }) {
                     </button>
                   </div>
                 ) : (
-                  <p className="text-white/90 text-sm">{selectedPost.caption}</p>
+                  <p className="text-white/90 text-sm"><SafeCaption text={selectedPost.caption} /></p>
                 )}
                 <div className="flex items-center gap-5">
                   <button
@@ -1202,7 +1205,7 @@ export default function ProfileContentTabs({ userId }: { userId?: string }) {
                         <p className="text-xs font-semibold text-foreground">{selectedPost.sharedOrigin.name}</p>
                       </div>
                       {selectedPost.caption && (
-                        <p className="text-xs text-muted-foreground mt-1.5 line-clamp-2">{selectedPost.caption}</p>
+                        <p className="text-xs text-muted-foreground mt-1.5 line-clamp-2"><SafeCaption text={selectedPost.caption} /></p>
                       )}
                     </div>
                   )}

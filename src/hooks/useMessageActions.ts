@@ -67,9 +67,18 @@ export function useMessageActions() {
     return true;
   }, [user]);
 
-  const forwardMessage = useCallback(async (msg: DirectMessage, recipientIds: string[]) => {
+  const forwardMessage = useCallback(async (msg: DirectMessage, recipientIds: string[], comment?: string) => {
     if (!user) return false;
-    const rows = recipientIds.map((rid) => ({
+    const trimmedComment = comment?.trim();
+    const commentRows = trimmedComment
+      ? recipientIds.map((rid) => ({
+          sender_id: user.id,
+          receiver_id: rid,
+          message: trimmedComment,
+          message_type: "text",
+        }))
+      : [];
+    const forwardRows = recipientIds.map((rid) => ({
       sender_id: user.id,
       receiver_id: rid,
       message: msg.message,
@@ -80,7 +89,14 @@ export function useMessageActions() {
       forwarded_from_user_id: msg.sender_id,
       forwarded_from_message_id: msg.id,
     }));
-    const { error } = await (supabase as any).from("direct_messages").insert(rows);
+    if (commentRows.length > 0) {
+      const { error: commentError } = await (supabase as any).from("direct_messages").insert(commentRows);
+      if (commentError) {
+        toast.error("Could not send comment");
+        return false;
+      }
+    }
+    const { error } = await (supabase as any).from("direct_messages").insert(forwardRows);
     if (error) {
       toast.error("Could not forward message");
       return false;

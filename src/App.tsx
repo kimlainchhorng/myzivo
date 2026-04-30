@@ -10,7 +10,7 @@ import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { useVerificationRealtime } from "@/hooks/useVerificationRealtime";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route, useLocation, useSearchParams } from "react-router-dom";
+import { BrowserRouter, Routes, Route, Navigate, useLocation, useSearchParams } from "react-router-dom";
 import { ThemeProvider } from "next-themes";
 import { AuthProvider, useAuth } from "@/contexts/AuthContext";
 import { RemoteConfigProvider } from "@/contexts/RemoteConfigContext";
@@ -411,6 +411,8 @@ const Promotions = lazy(() => import("./pages/Promotions"));
 const ForCustomers = lazy(() => import("./pages/ForCustomers"));
 const Reliability = lazy(() => import("./pages/Reliability"));
 const TrustStatement = lazy(() => import("./pages/TrustStatement"));
+const SecurityStatus = lazy(() => import("./pages/SecurityStatus"));
+const SavedPostsPage = lazy(() => import("./pages/SavedPostsPage"));
 const Status = lazy(() => import("./pages/Status"));
 const FAQPage = lazy(() => import("./pages/FAQPage"));
 const BookingReturn = lazy(() => import("./pages/BookingReturnPage"));
@@ -421,6 +423,7 @@ const MultiCityBuilder = lazy(() => import("./pages/MultiCityBuilder"));
 const ZivoPlus = lazy(() => import("./pages/ZivoPlus"));
 const MembershipPage = lazy(() => import("./pages/MembershipPage"));
 const ComingSoonPage = lazy(() => import("./pages/ComingSoonPage"));
+const CookieConsentBanner = lazy(() => import("./components/CookieConsentBanner"));
 const Vision = lazy(() => import("./pages/Vision"));
 const BrandMission = lazy(() => import("./pages/BrandMission"));
 const CompanyProfile = lazy(() => import("./pages/CompanyProfile"));
@@ -471,6 +474,7 @@ const ScamPrevention = lazy(() => import("./pages/security/ScamPrevention"));
 const SecurityOperations = lazy(() => import("./pages/security/SecurityOperations"));
 const DisasterRecovery = lazy(() => import("./pages/security/DisasterRecovery"));
 const VulnerabilityDisclosure = lazy(() => import("./pages/security/VulnerabilityDisclosure"));
+const SecurityTestPage = lazy(() => import("./pages/SecurityTestPage"));
 const EnterpriseTrust = lazy(() => import("./pages/security/EnterpriseTrust"));
 
 // Business pages
@@ -669,6 +673,7 @@ const App = () => (
               <Toaster />
               <Sonner />
               <BrowserRouter>
+                <Suspense fallback={null}><CookieConsentBanner /></Suspense>
                 <DeferredPageViewTracker />
                 <DeferredGeoDetector />
                 <Suspense fallback={null}><RoutePrefetcher /></Suspense>
@@ -1037,10 +1042,16 @@ const App = () => (
                 <Route path="/media-library" element={<ProtectedRoute><ComingSoonPage title="Media Library" description="All your photos, videos, and assets." /></ProtectedRoute>} />
                 <Route path="/creator/goals" element={<ProtectedRoute><ComingSoonPage title="Creator Goals" description="Track milestones and creator achievements." /></ProtectedRoute>} />
                 <Route path="/track" element={<ProtectedRoute><ComingSoonPage title="Track Package" description="Live tracking for deliveries and shipments." /></ProtectedRoute>} />
-                <Route path="/account/cookies" element={<ProtectedRoute><ComingSoonPage title="Cookie Settings" description="Tracking & cookie preferences." /></ProtectedRoute>} />
-                <Route path="/account/translation" element={<ProtectedRoute><ComingSoonPage title="Auto-Translate" description="Translate messages and posts automatically." /></ProtectedRoute>} />
-                <Route path="/account/accessibility" element={<ProtectedRoute><ComingSoonPage title="Accessibility" description="Adjust the UI for vision, hearing, and motor needs." /></ProtectedRoute>} />
-                <Route path="/account/contact" element={<ProtectedRoute><ComingSoonPage title="Email & Phone" description="Update your contact information." /></ProtectedRoute>} />
+                {/* Redirect legacy paths to the real implementations */}
+                <Route path="/account/cookies" element={<Navigate to="/account/data-rights#cookies" replace />} />
+                <Route path="/account/translation" element={<Navigate to="/account/preferences#translation" replace />} />
+                <Route path="/account/accessibility" element={<Navigate to="/account/preferences#accessibility" replace />} />
+                <Route path="/account/contact" element={<Navigate to="/account/profile-edit" replace />} />
+
+                {/* Wellness — placeholders */}
+                <Route path="/wellness/meds" element={<ProtectedRoute><ComingSoonPage title="Medications" description="Track meds, doses, and refills with reminders." /></ProtectedRoute>} />
+                <Route path="/wellness/mindfulness" element={<ProtectedRoute><ComingSoonPage title="Mindfulness" description="Guided meditation, breathing, and sleep stories." /></ProtectedRoute>} />
+                <Route path="/wellness/nutrition" element={<ProtectedRoute><ComingSoonPage title="Nutrition" description="Log meals, calories, macros, and water intake." /></ProtectedRoute>} />
                 <Route path="/account/tax" element={<ProtectedRoute><ComingSoonPage title="Tax Info" description="Tax forms, 1099s, and reporting." /></ProtectedRoute>} />
                 <Route path="/account/receipts" element={<ProtectedRoute><ComingSoonPage title="Receipts" description="Past payments and order receipts." /></ProtectedRoute>} />
                 <Route path="/account/reviews" element={<ProtectedRoute><ComingSoonPage title="My Reviews" description="Ratings and reviews you've left." /></ProtectedRoute>} />
@@ -1111,6 +1122,8 @@ const App = () => (
                 <Route path="/refunds" element={<Refunds />} />
                 <Route path="/company" element={<Company />} />
                 <Route path="/security" element={<Security />} />
+                <Route path="/security-status" element={<SecurityStatus />} />
+                <Route path="/saved" element={<ProtectedRoute><SavedPostsPage /></ProtectedRoute>} />
                 <Route path="/ai-trip-planner" element={<AITripPlanner />} />
                 <Route path="/multi-city-builder" element={<MultiCityBuilder />} />
                 {/* /zivo-plus defined above */}
@@ -1156,6 +1169,7 @@ const App = () => (
                 <Route path="/security/operations" element={<SecurityOperations />} />
                 <Route path="/security/disaster-recovery" element={<DisasterRecovery />} />
                 <Route path="/security/vulnerability-disclosure" element={<VulnerabilityDisclosure />} />
+                <Route path="/security-test" element={<SecurityTestPage />} />
 
                 {/* Business */}
                 <Route path="/partner-with-zivo" element={<PartnerOnboardingDispatcher />} />

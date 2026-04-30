@@ -1,6 +1,7 @@
 import { Star, ThumbsUp, MessageSquare, ChevronRight, Verified, User } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { StarRating } from "@/components/shared/StarRating";
+import SafeCaption from "@/components/social/SafeCaption";
 import { Button } from "@/components/ui/button";
 import { useState } from "react";
 import { useReviews } from "@/hooks/useReviews";
@@ -177,7 +178,7 @@ const FlightReviewsWidget = () => {
                       <span>•</span>
                       <span>{review.created_at ? new Date(review.created_at).toLocaleDateString() : ""}</span>
                     </div>
-                    {review.comment && <p className="text-sm text-muted-foreground">{review.comment}</p>}
+                    {review.comment && <p className="text-sm text-muted-foreground"><SafeCaption text={review.comment} /></p>}
                     <div className="flex items-center gap-4 mt-3">
                       <button
                         onClick={() => handleHelpful(review.id)}

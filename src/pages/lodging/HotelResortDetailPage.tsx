@@ -10,6 +10,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { Helmet } from "react-helmet-async";
 import { useNavigate, useParams } from "react-router-dom";
+import SafeCaption from "@/components/social/SafeCaption";
 import { motion } from "framer-motion";
 import ArrowLeft from "lucide-react/dist/esm/icons/arrow-left";
 import Hotel from "lucide-react/dist/esm/icons/hotel";
@@ -430,7 +431,7 @@ export default function HotelResortDetailPage() {
       {!!store?.description && (
         <Section title="About">
           <p className="text-sm leading-relaxed text-muted-foreground whitespace-pre-wrap">
-            {store.description}
+            <SafeCaption text={store.description} />
           </p>
         </Section>
       )}

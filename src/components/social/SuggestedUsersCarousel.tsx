@@ -11,6 +11,7 @@ import { X, Users } from "lucide-react";
 import VerifiedBadge from "@/components/VerifiedBadge";
 import { isBlueVerified } from "@/lib/verification";
 import { useState, memo, forwardRef } from "react";
+import SafeCaption from "@/components/social/SafeCaption";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 import { motion, AnimatePresence } from "framer-motion";
@@ -185,7 +186,7 @@ const SuggestedUsersCarousel = memo(forwardRef<HTMLDivElement, SuggestedUsersCar
 
                 {profile.bio && (
                   <p className="text-[9px] text-muted-foreground line-clamp-2 mb-1.5 leading-tight">
-                    {profile.bio}
+                    <SafeCaption text={profile.bio} />
                   </p>
                 )}
               </div>

@@ -7,6 +7,7 @@ import { X, Star, Send, Loader2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
+import { confirmContentSafe } from "@/lib/security/contentLinkValidation";
 
 interface MarketplaceReviewSheetProps {
   open: boolean;
@@ -25,6 +26,7 @@ export default function MarketplaceReviewSheet({ open, onClose, sellerId, listin
 
   const handleSubmit = async () => {
     if (!user || rating < 1) return;
+    if (!confirmContentSafe(`${title}\n${content}`, "review")) return;
     setSubmitting(true);
     try {
       const { error } = await (supabase as any).from("marketplace_reviews").insert({

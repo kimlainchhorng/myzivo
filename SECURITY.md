@@ -43,6 +43,22 @@ Edge-function responses additionally receive `Cache-Control: no-store`, `X-Frame
 - **Shared CVs**: removed permissive RLS policy. CVs are now fetched only via `public.get_cv_by_share_code(text)` which requires the exact share code.
 - **Audit log**: `public.security_audit_log` (admin-readable, service-role-writable) records logins, password changes, two-step toggles, payout changes, role changes, and account deletions.
 
+## User-content link safety (2026-04-30)
+
+Two-layer defense against phishing/scam links posted in user-generated content (post captions, comments, bios, reviews, support tickets, refund disputes, lost-item reports, community descriptions, ride feedback):
+
+- **Client-side write gate** (`src/lib/security/contentLinkValidation.ts`):
+  `confirmContentSafe(text, label)` runs `assessLinkSync` (`src/hooks/useLinkRisk.ts` + `src/lib/urlSafety.ts`) on every URL extracted from the input. Hard-blocks: ZIVO typosquats (Levenshtein ≤ 2 from `hizivo.com` / `myzivo.lovable.app`), embedded credentials, dangerous protocols, impersonation. Surfaces as suspicious: 23 URL shorteners, suspicious TLDs (`.zip`, `.tk`, etc.), punycode/IDN, raw IPs, oversized URLs.
+- **Client-side render gate** (`src/components/social/SafeCaption.tsx`): all user-content surfaces (20 sites including FeedPage, ReelsFeedPage, Profile, PublicProfile, Dating, ChatContact, Communities, Stores, Hotels, Reviews, etc.) tokenize URLs through SafeCaption, rendering blocked links struck through and non-clickable, suspicious links with a Caution badge + interstitial.
+- **Server-side mirror** (`supabase/functions/_shared/contentLinkValidation.ts`): port of the client validator for use in edge functions. Wire into any function that accepts user free-text — returns `422` with `{ blocked: string[] }` on hard fail. Closes the "malicious client bypasses JS gate" attack.
+- **Tests**: 47 unit tests in `src/lib/urlSafety.test.ts` + `src/lib/security/contentLinkValidation.test.ts` cover every rule. Visible demo at `/security-test`.
+
+## Photo upload privacy (2026-04-30)
+
+`src/utils/stripImageMetadata.ts` re-encodes uploaded images through a `<canvas>` pipeline before sending to Supabase Storage. Drops EXIF, GPS, IPTC, XMP, ICC profiles, MakerNote — anything embedded by the camera. Caps max dimension at 4096px.
+
+Wired into 7 user-photo upload paths: feed/reel posts (`CreatePostModal`), profile content (`ProfileContentTabs`), avatar (`useUserProfile`), cover photo (`Profile`), signup avatar/cover (`Setup`), CV photos (`CreateCVPage`), channel media (`ChannelPostComposer`). Deliberately NOT applied to KYC docs / driver-onboarding docs (fraud detection needs metadata) or chat media (already private via signed URLs).
+
 ## Step-up MFA (2026-04-29)
 
 Sensitive endpoints now require an AAL2 session (TOTP-completed). Enforcement points:

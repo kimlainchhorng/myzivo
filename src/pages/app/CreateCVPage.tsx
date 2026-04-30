@@ -39,6 +39,7 @@ import {
 } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
+import { stripImageMetadata } from "@/utils/stripImageMetadata";
 import { cn } from "@/lib/utils";
 import AppLayout from "@/components/app/AppLayout";
 import { toast } from "sonner";
@@ -144,9 +145,10 @@ function PhotoUpload({ photo, onPhotoChange, userId }: { photo: string | null; o
       return;
     }
     setUploading(true);
-    const ext = file.name.split(".").pop() || "jpg";
+    const safe = await stripImageMetadata(file);
+    const ext = safe.name.split(".").pop() || "jpg";
     const path = `${userId}/cv-photo.${ext}`;
-    const { error } = await supabase.storage.from("cv-photos").upload(path, file, { upsert: true });
+    const { error } = await supabase.storage.from("cv-photos").upload(path, safe, { upsert: true });
     if (error) { toast.error("Upload failed"); setUploading(false); return; }
     const { data: urlData } = supabase.storage.from("cv-photos").getPublicUrl(path);
     onPhotoChange(urlData.publicUrl + "?t=" + Date.now());

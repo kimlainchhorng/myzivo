@@ -32,6 +32,27 @@ import VolumeX from "lucide-react/dist/esm/icons/volume-x";
 import Clapperboard from "lucide-react/dist/esm/icons/clapperboard";
 import Flame from "lucide-react/dist/esm/icons/flame";
 import RefreshCw from "lucide-react/dist/esm/icons/refresh-cw";
+import Crown from "lucide-react/dist/esm/icons/crown";
+import Trophy from "lucide-react/dist/esm/icons/trophy";
+import Mic from "lucide-react/dist/esm/icons/mic";
+import Swords from "lucide-react/dist/esm/icons/swords";
+import Users from "lucide-react/dist/esm/icons/users";
+import Sparkles from "lucide-react/dist/esm/icons/sparkles";
+import TrendingUp from "lucide-react/dist/esm/icons/trending-up";
+import Globe from "lucide-react/dist/esm/icons/globe";
+import ChevronRight from "lucide-react/dist/esm/icons/chevron-right";
+import ShoppingBag from "lucide-react/dist/esm/icons/shopping-bag";
+import History from "lucide-react/dist/esm/icons/history";
+import Film from "lucide-react/dist/esm/icons/film";
+import MicVocal from "lucide-react/dist/esm/icons/mic-vocal";
+import Hammer from "lucide-react/dist/esm/icons/hammer";
+import BookOpen from "lucide-react/dist/esm/icons/book-open";
+import Target from "lucide-react/dist/esm/icons/target";
+import Calendar from "lucide-react/dist/esm/icons/calendar";
+import Plane from "lucide-react/dist/esm/icons/plane";
+import Megaphone from "lucide-react/dist/esm/icons/megaphone";
+import BadgeCheck from "lucide-react/dist/esm/icons/badge-check";
+import Headphones from "lucide-react/dist/esm/icons/headphones";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -816,7 +837,7 @@ function LiveWatcher({ stream, onLeave }: { stream: LiveStream; onLeave: () => v
 export default function LiveStreamPage() {
   const navigate = useNavigate();
   const [activeStream, setActiveStream] = useState<LiveStream | null>(null);
-  const [filter, setFilter] = useState<"all" | "live" | "scheduled">("all");
+  const [filter, setFilter] = useState<"all" | "live" | "scheduled" | "popular" | "following" | "nearby" | "pk" | "voice" | "multi">("all");
   const [searchQuery, setSearchQuery] = useState("");
 
   const { data: streams = [], isLoading, isFetching, refetch } = useQuery({
@@ -971,26 +992,1853 @@ export default function LiveStreamPage() {
         </div>
 
         <div className="flex gap-2 px-4 pb-3 overflow-x-auto scrollbar-hide">
-          {(["all", "live", "scheduled"] as const).map((f) => (
-            <button
-              key={f}
-              onClick={() => setFilter(f)}
-              className={cn(
-                "px-4 py-1.5 rounded-full text-xs font-semibold capitalize whitespace-nowrap transition-colors",
-                filter === f ? "bg-red-500 text-white" : "bg-muted/50 text-muted-foreground hover:bg-muted"
-              )}
-            >
-              {f === "all" ? "All" : f === "live" ? (
-                <span className="flex items-center gap-1">
-                  <span className="h-2 w-2 rounded-full bg-red-500 animate-pulse" /> Live{liveCount > 0 ? ` (${liveCount})` : ""}
-                </span>
-              ) : "Scheduled"}
+          {[
+            { id: "all", label: "All", icon: null, live: false },
+            { id: "live", label: liveCount > 0 ? `Live (${liveCount})` : "Live", icon: null, live: true },
+            { id: "popular", label: "Popular", icon: Flame, live: false },
+            { id: "following", label: "Following", icon: Heart, live: false },
+            { id: "nearby", label: "Nearby", icon: Globe, live: false },
+            { id: "pk", label: "PK Battles", icon: Swords, live: false },
+            { id: "voice", label: "Voice Rooms", icon: Mic, live: false },
+            { id: "multi", label: "Multi-Guest", icon: Users, live: false },
+            { id: "scheduled", label: "Scheduled", icon: null, live: false },
+          ].map((f) => {
+            const Icon = f.icon;
+            return (
+              <button
+                key={f.id}
+                onClick={() => setFilter(f.id as any)}
+                className={cn(
+                  "px-3.5 py-1.5 rounded-full text-xs font-semibold whitespace-nowrap transition-colors flex items-center gap-1",
+                  filter === f.id ? "bg-red-500 text-white" : "bg-muted/50 text-muted-foreground hover:bg-muted"
+                )}
+              >
+                {f.live && <span className="h-2 w-2 rounded-full bg-red-500 animate-pulse" />}
+                {Icon && <Icon className="h-3 w-3" />}
+                {f.label}
+              </button>
+            );
+          })}
+        </div>
+      </div>
+
+      {/* ─── News ticker / Live announcements marquee ─── */}
+      <div className="relative h-7 bg-gradient-to-r from-red-500/90 via-rose-500/90 to-orange-500/90 overflow-hidden flex items-center gap-2 px-3">
+        <Badge className="bg-white text-red-600 border-0 text-[9px] font-black shrink-0 z-10">LIVE NEWS</Badge>
+        <div className="flex-1 overflow-hidden">
+          <div className="flex gap-8 animate-[scroll_30s_linear_infinite] whitespace-nowrap" style={{ animation: "marquee 30s linear infinite" }}>
+            {[
+              "🎤 Maya Chen just hit 1M followers — celebration live tonight 8PM",
+              "🏆 PK Season 4 Finals — DragonFamily vs MoonGuild this Saturday",
+              "🎁 Limited gift drop: Phoenix Wings only available for 24h",
+              "🌍 ZIVO now live in 12 countries — invite friends, earn coins",
+              "💎 +50% bonus on first recharge ends in 4h 22m",
+              "🥇 Diamond tier unlocked — top 50 PK warriors get exclusive perks",
+            ].map((item, i) => (
+              <span key={i} className="text-white text-[11px] font-semibold inline-flex items-center gap-2">
+                {item}
+                <span className="text-white/40">•</span>
+              </span>
+            ))}
+          </div>
+        </div>
+        <style>{`
+          @keyframes marquee {
+            0% { transform: translateX(0%); }
+            100% { transform: translateX(-50%); }
+          }
+        `}</style>
+      </div>
+
+      {/* ─── Story-style "Live Now" bar (Instagram/Bigo hybrid) ─── */}
+      <div className="px-4 pt-3 pb-1 bg-gradient-to-b from-rose-500/5 to-transparent">
+        <div className="flex gap-3 overflow-x-auto scrollbar-hide -mx-4 px-4 pb-1">
+          {/* Add your own — go live button */}
+          <button onClick={handleGoLive} className="shrink-0 flex flex-col items-center gap-1.5 w-[64px]">
+            <div className="relative w-14 h-14 rounded-full bg-gradient-to-br from-red-500 to-rose-600 flex items-center justify-center ring-2 ring-red-500/20 shadow-lg active:scale-90 transition-transform">
+              <Plus className="w-6 h-6 text-white" />
+            </div>
+            <span className="text-[10px] font-semibold text-foreground">Go Live</span>
+          </button>
+
+          {/* Live now story circles */}
+          {[
+            { name: "Maya", img: "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=200&q=70&auto=format&fit=crop", topic: "Music" },
+            { name: "Jin", img: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=200&q=70&auto=format&fit=crop", topic: "Game" },
+            { name: "Lily", img: "https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=200&q=70&auto=format&fit=crop", topic: "Beauty" },
+            { name: "Sofia", img: "https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=200&q=70&auto=format&fit=crop", topic: "Yoga" },
+            { name: "Alex", img: "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=200&q=70&auto=format&fit=crop", topic: "Cook" },
+            { name: "Carlos", img: "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=200&q=70&auto=format&fit=crop", topic: "Talk" },
+            { name: "Aria", img: "https://images.unsplash.com/photo-1531746020798-e6953c6e8e04?w=200&q=70&auto=format&fit=crop", topic: "Sing" },
+            { name: "Ryan", img: "https://images.unsplash.com/photo-1492562080023-ab3db95bfbce?w=200&q=70&auto=format&fit=crop", topic: "Dance" },
+            { name: "Felix", img: "https://images.unsplash.com/photo-1528741013444-c4e9f3f5beda?w=200&q=70&auto=format&fit=crop", topic: "Gym" },
+          ].map((s) => (
+            <button key={s.name} className="shrink-0 flex flex-col items-center gap-1.5 w-[64px] active:scale-95 transition-transform">
+              <div className="relative">
+                <div className="w-14 h-14 rounded-full p-[2.5px] bg-gradient-to-tr from-rose-500 via-red-500 to-orange-500 animate-pulse">
+                  <div className="w-full h-full rounded-full bg-card p-[1.5px]">
+                    <Avatar className="w-full h-full">
+                      <AvatarImage src={s.img} className="object-cover rounded-full" />
+                      <AvatarFallback className="text-xs bg-muted">{s.name[0]}</AvatarFallback>
+                    </Avatar>
+                  </div>
+                </div>
+                <span className="absolute -bottom-0.5 left-1/2 -translate-x-1/2 px-1.5 py-0.5 rounded-full bg-red-500 text-white text-[7px] font-bold shadow-md leading-none">LIVE</span>
+              </div>
+              <span className="text-[10px] font-semibold text-foreground truncate w-full text-center leading-tight">{s.name}</span>
+              <span className="text-[8px] text-muted-foreground -mt-1">{s.topic}</span>
             </button>
           ))}
         </div>
       </div>
 
-      <div className="p-4 grid grid-cols-2 sm:grid-cols-3 md:grid-cols-3 lg:grid-cols-4 2xl:grid-cols-5 gap-4">
+      {/* ─── Following Live ticker (call-out banner) ─── */}
+      <div className="px-4 pt-2 pb-1">
+        <button
+          onClick={() => setFilter("following")}
+          className="w-full flex items-center gap-3 p-2.5 rounded-2xl bg-gradient-to-r from-rose-500/10 via-red-500/10 to-orange-500/10 border border-rose-500/20 active:scale-[0.99] transition-transform"
+        >
+          <div className="flex -space-x-2 shrink-0">
+            <Avatar className="h-8 w-8 ring-2 ring-rose-500 ring-offset-1 ring-offset-background">
+              <AvatarImage src="https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=200&q=70&auto=format&fit=crop" />
+              <AvatarFallback className="text-[10px]">M</AvatarFallback>
+            </Avatar>
+            <Avatar className="h-8 w-8 ring-2 ring-rose-500 ring-offset-1 ring-offset-background">
+              <AvatarImage src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=200&q=70&auto=format&fit=crop" />
+              <AvatarFallback className="text-[10px]">J</AvatarFallback>
+            </Avatar>
+            <Avatar className="h-8 w-8 ring-2 ring-rose-500 ring-offset-1 ring-offset-background">
+              <AvatarImage src="https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=200&q=70&auto=format&fit=crop" />
+              <AvatarFallback className="text-[10px]">L</AvatarFallback>
+            </Avatar>
+          </div>
+          <div className="flex-1 text-left min-w-0">
+            <p className="text-[12px] font-bold text-foreground">3 friends are live now</p>
+            <p className="text-[10px] text-muted-foreground truncate">Maya, Jin & Lily • Don't miss out</p>
+          </div>
+          <Badge className="bg-red-500 text-white border-0 text-[9px] gap-1 animate-pulse shrink-0">
+            <Radio className="w-2 h-2" /> WATCH
+          </Badge>
+        </button>
+      </div>
+
+      {/* ─── Country / region picker (horizontal pills) ─── */}
+      <div className="px-4 pt-3 pb-1">
+        <div className="flex gap-2 overflow-x-auto scrollbar-hide -mx-4 px-4 pb-1">
+          {[
+            { flag: "🌍", label: "Global", id: "global" },
+            { flag: "🇰🇭", label: "Cambodia", id: "kh" },
+            { flag: "🇺🇸", label: "USA", id: "us" },
+            { flag: "🇯🇵", label: "Japan", id: "jp" },
+            { flag: "🇰🇷", label: "Korea", id: "kr" },
+            { flag: "🇹🇭", label: "Thailand", id: "th" },
+            { flag: "🇻🇳", label: "Vietnam", id: "vn" },
+            { flag: "🇨🇳", label: "China", id: "cn" },
+            { flag: "🇮🇩", label: "Indonesia", id: "id" },
+            { flag: "🇵🇭", label: "Philippines", id: "ph" },
+            { flag: "🇮🇳", label: "India", id: "in" },
+            { flag: "🇲🇾", label: "Malaysia", id: "my" },
+          ].map((c, i) => (
+            <button
+              key={c.id}
+              className={cn(
+                "shrink-0 flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold transition-colors border",
+                i === 0
+                  ? "bg-gradient-to-r from-red-500 to-rose-500 text-white border-transparent shadow-md shadow-rose-500/20"
+                  : "bg-card text-foreground border-border/40 hover:border-red-500/40",
+              )}
+            >
+              <span className="text-sm">{c.flag}</span>
+              <span>{c.label}</span>
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {/* ─── Daily rewards / login bonus banner ─── */}
+      <div className="px-4 pt-2 pb-1">
+        <button className="w-full relative rounded-2xl overflow-hidden p-3 bg-gradient-to-r from-amber-500 via-orange-500 to-rose-500 text-left active:scale-[0.99] transition-transform shadow-md shadow-amber-500/20">
+          <div className="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1607344645866-009c320b63e0?w=600&q=50&auto=format&fit=crop')] bg-cover bg-center mix-blend-overlay opacity-30" />
+          <div className="relative z-10 flex items-center gap-3">
+            <div className="w-11 h-11 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center">
+              <Gift className="w-5 h-5 text-white" />
+            </div>
+            <div className="flex-1 min-w-0">
+              <p className="text-white font-bold text-[13px] leading-tight">Daily login reward</p>
+              <p className="text-white/80 text-[10px]">Claim 100 coins & VIP perks today</p>
+            </div>
+            <div className="flex items-center gap-1 bg-white/25 backdrop-blur-sm rounded-full px-2.5 py-1.5">
+              <span className="text-white text-[11px] font-bold">Claim</span>
+              <ChevronRight className="w-3 h-3 text-white" />
+            </div>
+          </div>
+        </button>
+      </div>
+
+      {/* ─── Live PK Battles section (split-screen preview cards) ─── */}
+      <div className="px-4 pt-4 pb-1">
+        <div className="flex items-center justify-between mb-2.5">
+          <h2 className="font-bold text-sm text-foreground flex items-center gap-1.5">
+            <Swords className="w-4 h-4 text-red-500" /> Live PK Battles
+            <Badge className="bg-red-500 text-white border-0 text-[9px] gap-1 animate-pulse">
+              <span className="h-1.5 w-1.5 rounded-full bg-white" /> 12 LIVE
+            </Badge>
+          </h2>
+          <button onClick={() => setFilter("pk")} className="text-[11px] text-muted-foreground flex items-center gap-0.5">
+            See all <ChevronRight className="w-3 h-3" />
+          </button>
+        </div>
+        <div className="flex gap-3 overflow-x-auto scrollbar-hide -mx-4 px-4 pb-1">
+          {[
+            { left: { name: "Maya", img: "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=200&q=70&auto=format&fit=crop", score: 8420 }, right: { name: "Lily", img: "https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=200&q=70&auto=format&fit=crop", score: 6230 }, viewers: 12453 },
+            { left: { name: "Jin", img: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=200&q=70&auto=format&fit=crop", score: 5180 }, right: { name: "Alex", img: "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=200&q=70&auto=format&fit=crop", score: 7840 }, viewers: 8721 },
+            { left: { name: "Sofia", img: "https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=200&q=70&auto=format&fit=crop", score: 4920 }, right: { name: "Ryan", img: "https://images.unsplash.com/photo-1492562080023-ab3db95bfbce?w=200&q=70&auto=format&fit=crop", score: 4210 }, viewers: 5402 },
+          ].map((pk, i) => {
+            const total = pk.left.score + pk.right.score;
+            const leftPct = (pk.left.score / total) * 100;
+            return (
+              <button
+                key={i}
+                onClick={() => toast.info(`PK Battle: ${pk.left.name} vs ${pk.right.name}`)}
+                className="shrink-0 w-[220px] rounded-2xl overflow-hidden bg-card border border-border/30 active:scale-[0.97] transition-transform shadow-sm"
+              >
+                <div className="relative h-[120px] flex">
+                  <img src={pk.left.img} alt="" className="w-1/2 h-full object-cover" />
+                  <img src={pk.right.img} alt="" className="w-1/2 h-full object-cover" />
+                  <div className="absolute inset-0 bg-gradient-to-b from-transparent via-black/10 to-black/60" />
+                  {/* Center VS badge */}
+                  <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-9 h-9 rounded-full bg-gradient-to-br from-red-500 to-rose-600 flex items-center justify-center shadow-lg ring-2 ring-white">
+                    <span className="text-white font-bold text-[10px]">VS</span>
+                  </div>
+                  <Badge className="absolute top-2 left-2 bg-red-500 text-white border-0 text-[9px] gap-1 animate-pulse">
+                    <Radio className="w-2 h-2" /> LIVE
+                  </Badge>
+                  <div className="absolute top-2 right-2 flex items-center gap-1 bg-black/60 rounded-full px-1.5 py-0.5">
+                    <Eye className="w-2.5 h-2.5 text-white/80" />
+                    <span className="text-[9px] text-white font-semibold">{pk.viewers.toLocaleString()}</span>
+                  </div>
+                </div>
+                {/* Vote bar */}
+                <div className="p-2.5">
+                  <div className="flex items-center justify-between text-[10px] font-bold mb-1">
+                    <span className="text-rose-500">{pk.left.name} {pk.left.score.toLocaleString()}</span>
+                    <span className="text-blue-500">{pk.right.score.toLocaleString()} {pk.right.name}</span>
+                  </div>
+                  <div className="h-1.5 rounded-full bg-blue-500 overflow-hidden">
+                    <div className="h-full bg-rose-500" style={{ width: `${leftPct}%` }} />
+                  </div>
+                </div>
+              </button>
+            );
+          })}
+        </div>
+      </div>
+
+      {/* ─── Trending hashtags ─── */}
+      <div className="px-4 pt-3 pb-1">
+        <div className="flex items-center justify-between mb-2">
+          <h2 className="font-bold text-sm text-foreground flex items-center gap-1.5">
+            <TrendingUp className="w-4 h-4 text-emerald-500" /> Trending now
+          </h2>
+        </div>
+        <div className="flex gap-2 overflow-x-auto scrollbar-hide -mx-4 px-4 pb-1">
+          {[
+            { tag: "#NewYearLive", count: "2.4M" },
+            { tag: "#KhmerNewYear", count: "890K" },
+            { tag: "#KPopChallenge", count: "1.2M" },
+            { tag: "#DanceBattle", count: "640K" },
+            { tag: "#CookWithMe", count: "412K" },
+            { tag: "#GlowUp", count: "380K" },
+            { tag: "#GameNight", count: "320K" },
+            { tag: "#SingForLove", count: "298K" },
+          ].map((h) => (
+            <button
+              key={h.tag}
+              onClick={() => setSearchQuery(h.tag.replace("#", ""))}
+              className="shrink-0 flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-card border border-border/40 active:scale-95 transition-transform"
+            >
+              <span className="text-[12px] font-bold text-foreground">{h.tag}</span>
+              <span className="text-[10px] text-muted-foreground">{h.count}</span>
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {/* ─── Voice rooms grid (multi-host audio rooms) ─── */}
+      <div className="px-4 pt-4 pb-1">
+        <div className="flex items-center justify-between mb-2.5">
+          <h2 className="font-bold text-sm text-foreground flex items-center gap-1.5">
+            <Mic className="w-4 h-4 text-violet-500" /> Voice Rooms
+            <Badge className="bg-violet-500 text-white border-0 text-[9px]">240 active</Badge>
+          </h2>
+          <button onClick={() => navigate("/spaces")} className="text-[11px] text-muted-foreground flex items-center gap-0.5">
+            See all <ChevronRight className="w-3 h-3" />
+          </button>
+        </div>
+        <div className="grid grid-cols-2 gap-2.5">
+          {[
+            { title: "Late night chill 🌙", hosts: 5, listeners: "2.3K", emoji: "🎵", gradient: "from-violet-500 via-purple-500 to-pink-500" },
+            { title: "Khmer talk show", hosts: 8, listeners: "1.8K", emoji: "🇰🇭", gradient: "from-blue-500 via-cyan-500 to-teal-500" },
+            { title: "Dating room ✨", hosts: 6, listeners: "1.2K", emoji: "💕", gradient: "from-pink-500 via-rose-500 to-red-500" },
+            { title: "Game lobby 🎮", hosts: 4, listeners: "890", emoji: "🎮", gradient: "from-emerald-500 via-teal-500 to-cyan-500" },
+          ].map((r, i) => (
+            <button
+              key={i}
+              onClick={() => navigate("/spaces")}
+              className={cn(
+                "relative rounded-2xl p-3 h-[92px] bg-gradient-to-br text-left active:scale-95 transition-transform shadow-sm overflow-hidden",
+                r.gradient,
+              )}
+            >
+              <div className="absolute top-2 right-2 flex items-center gap-1 bg-black/30 backdrop-blur-sm rounded-full px-1.5 py-0.5">
+                <span className="h-1 w-1 rounded-full bg-red-400 animate-pulse" />
+                <span className="text-[9px] text-white font-bold">LIVE</span>
+              </div>
+              <div className="text-2xl mb-1">{r.emoji}</div>
+              <p className="text-white font-bold text-[12px] leading-tight line-clamp-1">{r.title}</p>
+              <div className="flex items-center justify-between mt-1.5">
+                <div className="flex -space-x-1.5">
+                  {Array.from({ length: Math.min(r.hosts, 3) }).map((_, j) => (
+                    <div key={j} className="w-5 h-5 rounded-full bg-white/30 border border-white/60 backdrop-blur-sm" />
+                  ))}
+                </div>
+                <span className="text-[10px] text-white/90 font-semibold">{r.listeners}</span>
+              </div>
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {/* ─── (removed redundant hero strip — rich PK Battles + Voice Rooms sections above replace it) ─── */}
+      <div className="hidden">
+        <div className="grid grid-cols-2 gap-2.5">
+          <button
+            onClick={() => navigate("/live?type=pk")}
+            className="relative h-[88px] rounded-2xl overflow-hidden text-left active:scale-[0.97] transition-transform"
+          >
+            <img src="https://images.unsplash.com/photo-1542751371-adc38448a05e?w=600&q=70&auto=format&fit=crop" alt="PK Battles" className="absolute inset-0 w-full h-full object-cover" />
+            <div className="absolute inset-0 bg-gradient-to-tr from-red-600/90 via-rose-500/70 to-orange-500/40" />
+            <div className="relative z-10 p-3 h-full flex flex-col justify-between">
+              <Swords className="w-5 h-5 text-white" />
+              <div>
+                <p className="text-white font-bold text-[13px] leading-tight">PK Battles</p>
+                <p className="text-white/80 text-[10px]">Vote for your favorite</p>
+              </div>
+            </div>
+            <Badge className="absolute top-2 right-2 bg-white/20 backdrop-blur-sm text-white border-0 text-[9px]">HOT</Badge>
+          </button>
+
+          <button
+            onClick={() => navigate("/spaces")}
+            className="relative h-[88px] rounded-2xl overflow-hidden text-left active:scale-[0.97] transition-transform"
+          >
+            <img src="https://images.unsplash.com/photo-1516280440614-37939bbacd81?w=600&q=70&auto=format&fit=crop" alt="Voice Rooms" className="absolute inset-0 w-full h-full object-cover" />
+            <div className="absolute inset-0 bg-gradient-to-tr from-violet-600/90 via-purple-500/70 to-pink-500/40" />
+            <div className="relative z-10 p-3 h-full flex flex-col justify-between">
+              <Mic className="w-5 h-5 text-white" />
+              <div>
+                <p className="text-white font-bold text-[13px] leading-tight">Voice Rooms</p>
+                <p className="text-white/80 text-[10px]">Join audio spaces</p>
+              </div>
+            </div>
+          </button>
+        </div>
+      </div>
+
+      {/* ─── Live Events & Tournaments carousel ─── */}
+      <div className="px-4 pt-4 pb-1">
+        <div className="flex items-center justify-between mb-2.5">
+          <h2 className="font-bold text-sm text-foreground flex items-center gap-1.5">
+            <Sparkles className="w-4 h-4 text-fuchsia-500" /> Live Events
+            <Badge className="bg-fuchsia-500 text-white border-0 text-[9px]">FEATURED</Badge>
+          </h2>
+        </div>
+        <div className="flex gap-3 overflow-x-auto scrollbar-hide -mx-4 px-4 pb-1">
+          {[
+            { title: "Khmer New Year Live Festival", subtitle: "Apr 14 — 5 days of celebration", img: "https://images.unsplash.com/photo-1532635241-17e820acc59f?w=600&q=70&auto=format&fit=crop", gradient: "from-amber-500/95 via-orange-500/85 to-rose-500/70", prize: "$50K Prize Pool" },
+            { title: "ZIVO Got Talent S2", subtitle: "Sing, dance, win cash", img: "https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?w=600&q=70&auto=format&fit=crop", gradient: "from-violet-600/95 via-purple-500/85 to-pink-500/70", prize: "$10K Top Prize" },
+            { title: "Esports Cup Finals", subtitle: "Top 8 teams battle live", img: "https://images.unsplash.com/photo-1542751371-adc38448a05e?w=600&q=70&auto=format&fit=crop", gradient: "from-blue-600/95 via-indigo-500/85 to-violet-500/70", prize: "$25K Tournament" },
+            { title: "Beauty Awards 2026", subtitle: "Vote for your favorite creator", img: "https://images.unsplash.com/photo-1487412947147-5cebf100ffc2?w=600&q=70&auto=format&fit=crop", gradient: "from-rose-500/95 via-pink-500/85 to-fuchsia-500/70", prize: "Crowning Live" },
+          ].map((e, i) => (
+            <button
+              key={i}
+              onClick={() => toast.info(`Event: ${e.title}`)}
+              className="shrink-0 w-[280px] h-[120px] rounded-2xl overflow-hidden relative active:scale-[0.97] transition-transform shadow-md text-left"
+            >
+              <img src={e.img} alt={e.title} className="absolute inset-0 w-full h-full object-cover" />
+              <div className={cn("absolute inset-0 bg-gradient-to-tr", e.gradient)} />
+              <Badge className="absolute top-2 right-2 bg-white/25 backdrop-blur-sm text-white border-0 text-[9px]">{e.prize}</Badge>
+              <div className="absolute inset-0 p-3 flex flex-col justify-end">
+                <p className="text-white font-bold text-[14px] leading-tight drop-shadow">{e.title}</p>
+                <p className="text-white/85 text-[11px] mt-0.5">{e.subtitle}</p>
+              </div>
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {/* ─── Mini Games / Lucky Box / Slots ─── */}
+      <div className="px-4 pt-4 pb-1">
+        <div className="flex items-center justify-between mb-2.5">
+          <h2 className="font-bold text-sm text-foreground flex items-center gap-1.5">
+            <Gift className="w-4 h-4 text-amber-500" /> Mini Games
+          </h2>
+          <span className="text-[10px] text-muted-foreground">Win coins & gifts</span>
+        </div>
+        <div className="grid grid-cols-4 gap-2">
+          {[
+            { label: "Lucky Box", emoji: "🎁", gradient: "from-amber-400 via-orange-400 to-red-400" },
+            { label: "Slots", emoji: "🎰", gradient: "from-rose-500 via-pink-500 to-fuchsia-500" },
+            { label: "Wheel", emoji: "🎡", gradient: "from-emerald-500 via-teal-400 to-cyan-400" },
+            { label: "Dice", emoji: "🎲", gradient: "from-violet-500 via-purple-500 to-indigo-500" },
+            { label: "Lottery", emoji: "🎫", gradient: "from-blue-500 via-cyan-500 to-teal-500" },
+            { label: "Treasure", emoji: "💎", gradient: "from-amber-500 via-yellow-400 to-lime-400" },
+            { label: "Trivia", emoji: "🧠", gradient: "from-pink-500 via-rose-400 to-orange-400" },
+            { label: "Match-3", emoji: "🧩", gradient: "from-sky-500 via-blue-500 to-indigo-500" },
+          ].map((g) => (
+            <button
+              key={g.label}
+              onClick={() => toast.info(`${g.label} coming soon!`)}
+              className={cn(
+                "rounded-2xl bg-gradient-to-br p-2.5 h-[78px] flex flex-col items-center justify-center gap-1 active:scale-95 transition-transform shadow-sm relative overflow-hidden",
+                g.gradient,
+              )}
+            >
+              <span className="text-2xl">{g.emoji}</span>
+              <span className="text-[10px] font-bold text-white">{g.label}</span>
+              <Badge className="absolute top-1 right-1 bg-white/30 backdrop-blur-sm text-white border-0 text-[7px] px-1">HOT</Badge>
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {/* ─── Live Shopping section ─── */}
+      <div className="px-4 pt-4 pb-1">
+        <div className="flex items-center justify-between mb-2.5">
+          <h2 className="font-bold text-sm text-foreground flex items-center gap-1.5">
+            <ShoppingBag className="w-4 h-4 text-emerald-500" /> Live Shopping
+            <Badge className="bg-emerald-500 text-white border-0 text-[9px]">Up to 60% off</Badge>
+          </h2>
+          <button onClick={() => navigate("/marketplace")} className="text-[11px] text-muted-foreground flex items-center gap-0.5">
+            See all <ChevronRight className="w-3 h-3" />
+          </button>
+        </div>
+        <div className="flex gap-3 overflow-x-auto scrollbar-hide -mx-4 px-4 pb-1">
+          {[
+            { host: "Sofia", title: "Spring fashion drop", img: "https://images.unsplash.com/photo-1483985988355-763728e1935b?w=400&q=70&auto=format&fit=crop", price: "$19+", discount: "-40%", viewers: 4820 },
+            { host: "Lily", title: "K-Beauty essentials", img: "https://images.unsplash.com/photo-1487412947147-5cebf100ffc2?w=400&q=70&auto=format&fit=crop", price: "$12+", discount: "-50%", viewers: 3210 },
+            { host: "Maya", title: "Tech gadgets sale", img: "https://images.unsplash.com/photo-1518770660439-4636190af475?w=400&q=70&auto=format&fit=crop", price: "$29+", discount: "-30%", viewers: 2540 },
+            { host: "Ryan", title: "Home & kitchen", img: "https://images.unsplash.com/photo-1556909114-f6e7ad7d3136?w=400&q=70&auto=format&fit=crop", price: "$9+", discount: "-25%", viewers: 1860 },
+          ].map((s, i) => (
+            <button
+              key={i}
+              onClick={() => navigate("/marketplace")}
+              className="shrink-0 w-[150px] rounded-2xl overflow-hidden bg-card border border-border/30 active:scale-[0.97] transition-transform shadow-sm text-left"
+            >
+              <div className="relative aspect-square">
+                <img src={s.img} alt={s.title} className="absolute inset-0 w-full h-full object-cover" />
+                <Badge className="absolute top-2 left-2 bg-red-500 text-white border-0 text-[9px] gap-0.5 animate-pulse">
+                  <Radio className="w-2 h-2" /> LIVE
+                </Badge>
+                <Badge className="absolute top-2 right-2 bg-emerald-500 text-white border-0 text-[10px] font-bold">{s.discount}</Badge>
+                <div className="absolute bottom-1.5 left-1.5 flex items-center gap-1 bg-black/60 rounded-full px-1.5 py-0.5">
+                  <Eye className="w-2.5 h-2.5 text-white/80" />
+                  <span className="text-[9px] text-white font-semibold">{s.viewers.toLocaleString()}</span>
+                </div>
+              </div>
+              <div className="p-2">
+                <p className="font-semibold text-[12px] text-foreground line-clamp-1">{s.title}</p>
+                <div className="flex items-center justify-between mt-0.5">
+                  <span className="text-[11px] text-emerald-600 font-bold">{s.price}</span>
+                  <span className="text-[10px] text-muted-foreground">@{s.host}</span>
+                </div>
+              </div>
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {/* ─── New Faces (newly joined creators) ─── */}
+      <div className="px-4 pt-4 pb-1">
+        <div className="flex items-center justify-between mb-2.5">
+          <h2 className="font-bold text-sm text-foreground flex items-center gap-1.5">
+            <Sparkles className="w-4 h-4 text-pink-500" /> New Faces
+            <Badge className="bg-pink-500 text-white border-0 text-[9px]">Just joined</Badge>
+          </h2>
+          <button onClick={() => navigate("/explore")} className="text-[11px] text-muted-foreground flex items-center gap-0.5">
+            See all <ChevronRight className="w-3 h-3" />
+          </button>
+        </div>
+        <div className="flex gap-3 overflow-x-auto scrollbar-hide -mx-4 px-4 pb-1">
+          {[
+            { name: "Niko Ito", country: "🇯🇵", img: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=200&q=70&auto=format&fit=crop", days: "2 days" },
+            { name: "Sarah Lee", country: "🇰🇷", img: "https://images.unsplash.com/photo-1517841905240-472988babdf9?w=200&q=70&auto=format&fit=crop", days: "3 days" },
+            { name: "Luca Rossi", country: "🇮🇹", img: "https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?w=200&q=70&auto=format&fit=crop", days: "5 days" },
+            { name: "Aria Tan", country: "🇸🇬", img: "https://images.unsplash.com/photo-1531746020798-e6953c6e8e04?w=200&q=70&auto=format&fit=crop", days: "1 week" },
+            { name: "Felix Brown", country: "🇬🇧", img: "https://images.unsplash.com/photo-1528741013444-c4e9f3f5beda?w=200&q=70&auto=format&fit=crop", days: "1 week" },
+            { name: "Emma R.", country: "🇫🇷", img: "https://images.unsplash.com/photo-1524504388940-b1c1722653e1?w=200&q=70&auto=format&fit=crop", days: "2 weeks" },
+          ].map((c) => (
+            <div key={c.name} className="shrink-0 flex flex-col items-center gap-1.5 w-[64px]">
+              <div className="relative">
+                <Avatar className="h-14 w-14 ring-2 ring-pink-400">
+                  <AvatarImage src={c.img} />
+                  <AvatarFallback className="bg-muted">{c.name[0]}</AvatarFallback>
+                </Avatar>
+                <span className="absolute -bottom-0.5 -right-0.5 w-5 h-5 rounded-full bg-card flex items-center justify-center text-[11px] shadow ring-1 ring-border">
+                  {c.country}
+                </span>
+              </div>
+              <p className="text-[10px] font-semibold text-foreground truncate w-full text-center leading-tight">{c.name}</p>
+              <p className="text-[9px] text-pink-500 font-medium">{c.days}</p>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* ─── Recently Watched / Continue Watching ─── */}
+      <div className="px-4 pt-4 pb-1">
+        <div className="flex items-center justify-between mb-2.5">
+          <h2 className="font-bold text-sm text-foreground flex items-center gap-1.5">
+            <History className="w-4 h-4 text-blue-500" /> Recently Watched
+          </h2>
+          <button className="text-[11px] text-muted-foreground flex items-center gap-0.5">
+            Clear <X className="w-3 h-3" />
+          </button>
+        </div>
+        <div className="flex gap-3 overflow-x-auto scrollbar-hide -mx-4 px-4 pb-1">
+          {[
+            { name: "Maya Chen", topic: "Music", img: "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=200&q=70&auto=format&fit=crop", lastSeen: "2h ago", isLive: true },
+            { name: "Jin Park", topic: "Gaming", img: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=200&q=70&auto=format&fit=crop", lastSeen: "5h ago", isLive: false },
+            { name: "Sofia G.", topic: "Fitness", img: "https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=200&q=70&auto=format&fit=crop", lastSeen: "Yesterday", isLive: true },
+            { name: "Lily Wong", topic: "Beauty", img: "https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=200&q=70&auto=format&fit=crop", lastSeen: "2d ago", isLive: false },
+            { name: "Alex Rivera", topic: "Cooking", img: "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=200&q=70&auto=format&fit=crop", lastSeen: "3d ago", isLive: false },
+          ].map((r) => (
+            <div key={r.name} className="shrink-0 flex flex-col items-center gap-1.5 w-[64px]">
+              <div className="relative">
+                <Avatar className={cn("h-14 w-14 ring-2", r.isLive ? "ring-red-500" : "ring-border/40 grayscale-[20%]")}>
+                  <AvatarImage src={r.img} />
+                  <AvatarFallback className="bg-muted">{r.name[0]}</AvatarFallback>
+                </Avatar>
+                {r.isLive && (
+                  <span className="absolute -bottom-0.5 left-1/2 -translate-x-1/2 px-1.5 py-0.5 rounded-full bg-red-500 text-white text-[7px] font-bold shadow-md">
+                    LIVE
+                  </span>
+                )}
+              </div>
+              <p className="text-[10px] font-semibold text-foreground truncate w-full text-center leading-tight">{r.name}</p>
+              <p className="text-[9px] text-muted-foreground">{r.lastSeen}</p>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* ─── Top Gifters leaderboard ─── */}
+      <div className="px-4 pt-4 pb-1">
+        <div className="flex items-center justify-between mb-2.5">
+          <h2 className="font-bold text-sm text-foreground flex items-center gap-1.5">
+            <Gift className="w-4 h-4 text-amber-500" /> Top Gifters
+            <Badge className="bg-gradient-to-r from-amber-500 to-orange-500 text-white border-0 text-[9px]">This week</Badge>
+          </h2>
+          <button className="text-[11px] text-muted-foreground flex items-center gap-0.5">
+            See all <ChevronRight className="w-3 h-3" />
+          </button>
+        </div>
+        <div className="rounded-2xl border border-border/40 bg-gradient-to-br from-amber-500/5 via-card to-orange-500/5 p-3 space-y-2">
+          {[
+            { rank: 1, name: "DiamondKing88", coins: "2.4M", img: "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=200&q=70&auto=format&fit=crop", level: 88 },
+            { rank: 2, name: "QueenLuxe", coins: "1.8M", img: "https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=200&q=70&auto=format&fit=crop", level: 76 },
+            { rank: 3, name: "RoyalBoss", coins: "1.5M", img: "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=200&q=70&auto=format&fit=crop", level: 65 },
+            { rank: 4, name: "PandaLove", coins: "920K", img: "https://images.unsplash.com/photo-1531746020798-e6953c6e8e04?w=200&q=70&auto=format&fit=crop", level: 54 },
+            { rank: 5, name: "Mr.Smile", coins: "780K", img: "https://images.unsplash.com/photo-1492562080023-ab3db95bfbce?w=200&q=70&auto=format&fit=crop", level: 48 },
+          ].map((g) => (
+            <div key={g.name} className="flex items-center gap-3">
+              <div className={cn(
+                "w-7 text-center font-black text-[14px] shrink-0",
+                g.rank === 1 ? "text-amber-500" : g.rank === 2 ? "text-zinc-400" : g.rank === 3 ? "text-orange-600" : "text-muted-foreground",
+              )}>
+                {g.rank === 1 ? "🥇" : g.rank === 2 ? "🥈" : g.rank === 3 ? "🥉" : `#${g.rank}`}
+              </div>
+              <Avatar className="h-9 w-9 ring-1 ring-border/40">
+                <AvatarImage src={g.img} />
+                <AvatarFallback>{g.name[0]}</AvatarFallback>
+              </Avatar>
+              <div className="flex-1 min-w-0">
+                <div className="flex items-center gap-1.5">
+                  <p className="text-[12px] font-bold text-foreground truncate">{g.name}</p>
+                  <Badge className="bg-gradient-to-r from-fuchsia-500 to-purple-500 text-white border-0 text-[8px] px-1 py-0 font-bold">Lv {g.level}</Badge>
+                </div>
+                <p className="text-[10px] text-muted-foreground">Top fan • Diamond donor</p>
+              </div>
+              <div className="flex items-center gap-1 shrink-0">
+                <Gift className="w-3 h-3 text-amber-500" />
+                <span className="text-[12px] font-bold text-amber-600 dark:text-amber-400">{g.coins}</span>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* ─── Karaoke / Singing Rooms ─── */}
+      <div className="px-4 pt-4 pb-1">
+        <div className="flex items-center justify-between mb-2.5">
+          <h2 className="font-bold text-sm text-foreground flex items-center gap-1.5">
+            <MicVocal className="w-4 h-4 text-pink-500" /> Karaoke Rooms
+            <Badge className="bg-pink-500 text-white border-0 text-[9px]">Sing now</Badge>
+          </h2>
+        </div>
+        <div className="flex gap-3 overflow-x-auto scrollbar-hide -mx-4 px-4 pb-1">
+          {[
+            { song: "Perfect — Ed Sheeran", host: "Aria Tan", listeners: "1.2K", img: "https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?w=400&q=70&auto=format&fit=crop", lang: "🇺🇸" },
+            { song: "Dynamite — BTS", host: "Sarah Lee", listeners: "2.8K", img: "https://images.unsplash.com/photo-1571330735066-03aaa9429d89?w=400&q=70&auto=format&fit=crop", lang: "🇰🇷" },
+            { song: "ស្រលាញ់បងម្នាក់ឯង", host: "Sophea", listeners: "890", img: "https://images.unsplash.com/photo-1517450612988-c79b1f4ee2d3?w=400&q=70&auto=format&fit=crop", lang: "🇰🇭" },
+            { song: "Lemon — Kenshi", host: "Niko Ito", listeners: "1.5K", img: "https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?w=400&q=70&auto=format&fit=crop", lang: "🇯🇵" },
+            { song: "Shape of You", host: "Felix", listeners: "640", img: "https://images.unsplash.com/photo-1571330735066-03aaa9429d89?w=400&q=70&auto=format&fit=crop", lang: "🇬🇧" },
+          ].map((k, i) => (
+            <button
+              key={i}
+              onClick={() => navigate("/spaces")}
+              className="shrink-0 w-[180px] rounded-2xl overflow-hidden bg-card border border-border/30 active:scale-[0.97] transition-transform shadow-sm text-left"
+            >
+              <div className="relative h-[100px]">
+                <img src={k.img} alt="" className="absolute inset-0 w-full h-full object-cover" />
+                <div className="absolute inset-0 bg-gradient-to-tr from-pink-600/85 via-rose-500/60 to-purple-500/40" />
+                <span className="absolute top-2 left-2 text-base">{k.lang}</span>
+                <Badge className="absolute top-2 right-2 bg-pink-500 text-white border-0 text-[9px] gap-1 animate-pulse">
+                  <Mic className="w-2 h-2" /> SINGING
+                </Badge>
+                <div className="absolute bottom-1.5 right-1.5 flex items-center gap-1 bg-black/60 rounded-full px-1.5 py-0.5">
+                  <Users className="w-2.5 h-2.5 text-white/80" />
+                  <span className="text-[9px] text-white font-semibold">{k.listeners}</span>
+                </div>
+                <MicVocal className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-7 h-7 text-white/80" />
+              </div>
+              <div className="p-2.5">
+                <p className="font-semibold text-[12px] text-foreground line-clamp-1">🎵 {k.song}</p>
+                <p className="text-[10px] text-muted-foreground mt-0.5">@{k.host}</p>
+              </div>
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {/* ─── Birthday Celebrations ─── */}
+      <div className="px-4 pt-4 pb-1">
+        <div className="flex items-center justify-between mb-2.5">
+          <h2 className="font-bold text-sm text-foreground flex items-center gap-1.5">
+            🎂 Birthday Celebrations
+            <Badge className="bg-fuchsia-500 text-white border-0 text-[9px]">Send gifts</Badge>
+          </h2>
+        </div>
+        <div className="flex gap-3 overflow-x-auto scrollbar-hide -mx-4 px-4 pb-1">
+          {[
+            { name: "Maya Chen", age: "22", img: "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=200&q=70&auto=format&fit=crop", today: true },
+            { name: "Niko Ito", age: "25", img: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=200&q=70&auto=format&fit=crop", today: false, when: "Tomorrow" },
+            { name: "Sarah Lee", age: "21", img: "https://images.unsplash.com/photo-1517841905240-472988babdf9?w=200&q=70&auto=format&fit=crop", today: false, when: "in 2 days" },
+            { name: "Felix B.", age: "27", img: "https://images.unsplash.com/photo-1528741013444-c4e9f3f5beda?w=200&q=70&auto=format&fit=crop", today: false, when: "in 3 days" },
+            { name: "Emma R.", age: "24", img: "https://images.unsplash.com/photo-1524504388940-b1c1722653e1?w=200&q=70&auto=format&fit=crop", today: false, when: "in 5 days" },
+          ].map((b) => (
+            <button
+              key={b.name}
+              onClick={() => toast.info(`Send a birthday gift to ${b.name}!`)}
+              className="shrink-0 w-[100px] rounded-2xl overflow-hidden bg-gradient-to-br from-fuchsia-500/10 via-pink-500/5 to-rose-500/10 border border-fuchsia-500/30 p-2.5 text-center active:scale-95 transition-transform"
+            >
+              <div className="relative inline-block">
+                <Avatar className="h-14 w-14 ring-2 ring-fuchsia-400 mx-auto">
+                  <AvatarImage src={b.img} />
+                  <AvatarFallback>{b.name[0]}</AvatarFallback>
+                </Avatar>
+                <span className="absolute -top-1 -right-1 text-base">🎂</span>
+              </div>
+              <p className="text-[11px] font-bold text-foreground truncate mt-1.5">{b.name}</p>
+              <p className={cn("text-[9px] font-semibold", b.today ? "text-fuchsia-500" : "text-muted-foreground")}>
+                {b.today ? "🎉 Today!" : b.when}
+              </p>
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {/* ─── Replays / Top Moments ─── */}
+      <div className="px-4 pt-4 pb-1">
+        <div className="flex items-center justify-between mb-2.5">
+          <h2 className="font-bold text-sm text-foreground flex items-center gap-1.5">
+            <Clapperboard className="w-4 h-4 text-violet-500" /> Top Moments
+            <Badge className="bg-violet-500 text-white border-0 text-[9px]">Replays</Badge>
+          </h2>
+          <button onClick={() => navigate("/reels")} className="text-[11px] text-muted-foreground flex items-center gap-0.5">
+            See all <ChevronRight className="w-3 h-3" />
+          </button>
+        </div>
+        <div className="flex gap-3 overflow-x-auto scrollbar-hide -mx-4 px-4 pb-1">
+          {[
+            { title: "Best PK comeback ever", host: "Maya", views: "2.1M", duration: "0:48", img: "https://images.unsplash.com/photo-1542751371-adc38448a05e?w=400&q=70&auto=format&fit=crop" },
+            { title: "Hit the high note 🎤", host: "Aria", views: "890K", duration: "1:12", img: "https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?w=400&q=70&auto=format&fit=crop" },
+            { title: "Cooking gone wrong 😂", host: "Alex", views: "1.4M", duration: "0:32", img: "https://images.unsplash.com/photo-1556910103-1c02745aae4d?w=400&q=70&auto=format&fit=crop" },
+            { title: "Diamond rain shower 💎", host: "DiamondKing", views: "640K", duration: "1:05", img: "https://images.unsplash.com/photo-1518770660439-4636190af475?w=400&q=70&auto=format&fit=crop" },
+            { title: "Surprise birthday party 🎂", host: "Sarah", views: "412K", duration: "2:18", img: "https://images.unsplash.com/photo-1530103862676-de8c9debad1d?w=400&q=70&auto=format&fit=crop" },
+          ].map((m, i) => (
+            <button
+              key={i}
+              onClick={() => navigate("/reels")}
+              className="shrink-0 w-[140px] rounded-2xl overflow-hidden bg-card border border-border/30 active:scale-[0.97] transition-transform shadow-sm text-left"
+            >
+              <div className="relative aspect-[9/16]">
+                <img src={m.img} alt="" className="absolute inset-0 w-full h-full object-cover" />
+                <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-transparent to-black/30" />
+                <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-10 h-10 rounded-full bg-white/20 backdrop-blur-md flex items-center justify-center">
+                  <Film className="w-4 h-4 text-white" />
+                </div>
+                <Badge className="absolute top-2 left-2 bg-violet-500 text-white border-0 text-[9px]">REPLAY</Badge>
+                <span className="absolute top-2 right-2 px-1.5 py-0.5 rounded bg-black/60 text-white text-[9px] font-mono font-bold">{m.duration}</span>
+                <div className="absolute bottom-2 left-2 right-2">
+                  <p className="text-white font-bold text-[12px] leading-tight line-clamp-2 drop-shadow">{m.title}</p>
+                  <div className="flex items-center justify-between mt-1">
+                    <span className="text-[10px] text-white/80">@{m.host}</span>
+                    <div className="flex items-center gap-0.5">
+                      <Eye className="w-2.5 h-2.5 text-white/80" />
+                      <span className="text-[9px] text-white/80 font-semibold">{m.views}</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {/* ─── PK Battle Tier / Season Ranking ─── */}
+      <div className="px-4 pt-4 pb-1">
+        <div className="flex items-center justify-between mb-2.5">
+          <h2 className="font-bold text-sm text-foreground flex items-center gap-1.5">
+            <Swords className="w-4 h-4 text-amber-500" /> PK Season 4
+            <Badge className="bg-gradient-to-r from-amber-500 to-orange-500 text-white border-0 text-[9px]">Ends in 12d</Badge>
+          </h2>
+          <button className="text-[11px] text-muted-foreground flex items-center gap-0.5">
+            Rules <ChevronRight className="w-3 h-3" />
+          </button>
+        </div>
+        <div className="rounded-2xl border border-amber-500/30 bg-gradient-to-br from-amber-500/5 via-orange-500/5 to-rose-500/5 p-3">
+          <div className="grid grid-cols-5 gap-2 mb-3">
+            {[
+              { tier: "Bronze", emoji: "🥉", color: "from-orange-700 to-orange-500", count: "12K" },
+              { tier: "Silver", emoji: "🥈", color: "from-zinc-400 to-zinc-300", count: "8.4K" },
+              { tier: "Gold", emoji: "🥇", color: "from-amber-500 to-yellow-400", count: "3.2K" },
+              { tier: "Diamond", emoji: "💎", color: "from-cyan-400 to-blue-500", count: "820" },
+              { tier: "Master", emoji: "👑", color: "from-fuchsia-500 to-purple-600", count: "Top 50" },
+            ].map((t) => (
+              <div key={t.tier} className="flex flex-col items-center gap-1">
+                <div className={cn("w-12 h-12 rounded-2xl bg-gradient-to-br flex items-center justify-center shadow-md", t.color)}>
+                  <span className="text-xl">{t.emoji}</span>
+                </div>
+                <p className="text-[10px] font-bold text-foreground">{t.tier}</p>
+                <p className="text-[9px] text-muted-foreground">{t.count}</p>
+              </div>
+            ))}
+          </div>
+          <div className="border-t border-border/40 pt-2.5 flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <span className="text-lg">🥈</span>
+              <div>
+                <p className="text-[11px] font-bold text-foreground">Your tier: Silver II</p>
+                <p className="text-[10px] text-muted-foreground">Win 3 more PKs to reach Gold</p>
+              </div>
+            </div>
+            <button className="text-[11px] font-bold text-amber-600 dark:text-amber-400">
+              View ladder →
+            </button>
+          </div>
+        </div>
+      </div>
+
+      {/* ─── Family / Agency Spotlight ─── */}
+      <div className="px-4 pt-4 pb-1">
+        <div className="flex items-center justify-between mb-2.5">
+          <h2 className="font-bold text-sm text-foreground flex items-center gap-1.5">
+            <Users className="w-4 h-4 text-indigo-500" /> Top Families
+            <Badge className="bg-indigo-500 text-white border-0 text-[9px]">Join one</Badge>
+          </h2>
+          <button className="text-[11px] text-muted-foreground flex items-center gap-0.5">
+            See all <ChevronRight className="w-3 h-3" />
+          </button>
+        </div>
+        <div className="flex gap-3 overflow-x-auto scrollbar-hide -mx-4 px-4 pb-1">
+          {[
+            { name: "DragonFamily", emoji: "🐉", members: "1.2K", rank: 1, color: "from-red-600 via-orange-500 to-amber-500" },
+            { name: "MoonGuild", emoji: "🌙", members: "894", rank: 2, color: "from-violet-600 via-purple-500 to-indigo-500" },
+            { name: "PhoenixFam", emoji: "🔥", members: "740", rank: 3, color: "from-orange-600 via-red-500 to-pink-500" },
+            { name: "SakuraVibe", emoji: "🌸", members: "612", rank: 4, color: "from-pink-500 via-rose-400 to-fuchsia-500" },
+            { name: "AngelClub", emoji: "👼", members: "548", rank: 5, color: "from-cyan-400 via-sky-500 to-blue-500" },
+            { name: "RoyalCrew", emoji: "👑", members: "490", rank: 6, color: "from-amber-500 via-yellow-400 to-orange-400" },
+          ].map((f) => (
+            <button
+              key={f.name}
+              onClick={() => toast.info(`Family: ${f.name}`)}
+              className={cn(
+                "shrink-0 w-[140px] h-[110px] rounded-2xl bg-gradient-to-br p-3 active:scale-95 transition-transform shadow-md text-left relative overflow-hidden",
+                f.color,
+              )}
+            >
+              <div className="absolute -top-2 -right-2 w-12 h-12 rounded-full bg-white/15 backdrop-blur-sm" />
+              <span className="text-3xl block mb-1">{f.emoji}</span>
+              <p className="text-white font-bold text-[12px] leading-tight">{f.name}</p>
+              <div className="flex items-center justify-between mt-1">
+                <span className="text-white/80 text-[10px]">#{f.rank}</span>
+                <div className="flex items-center gap-0.5">
+                  <Users className="w-2.5 h-2.5 text-white/80" />
+                  <span className="text-white/80 text-[10px] font-semibold">{f.members}</span>
+                </div>
+              </div>
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {/* ─── AR Effects / Studio Preview ─── */}
+      <div className="px-4 pt-4 pb-1">
+        <div className="flex items-center justify-between mb-2.5">
+          <h2 className="font-bold text-sm text-foreground flex items-center gap-1.5">
+            <Sparkles className="w-4 h-4 text-cyan-500" /> Studio Effects
+            <Badge className="bg-cyan-500 text-white border-0 text-[9px]">Try free</Badge>
+          </h2>
+          <button onClick={() => navigate("/filters")} className="text-[11px] text-muted-foreground flex items-center gap-0.5">
+            Browse all <ChevronRight className="w-3 h-3" />
+          </button>
+        </div>
+        <div className="flex gap-3 overflow-x-auto scrollbar-hide -mx-4 px-4 pb-1">
+          {[
+            { label: "Beauty", emoji: "✨", desc: "Smooth skin & glow", gradient: "from-pink-400 via-rose-300 to-amber-200" },
+            { label: "Anime Eyes", emoji: "👀", desc: "Big sparkly eyes", gradient: "from-purple-400 via-fuchsia-300 to-pink-300" },
+            { label: "Cat Ears", emoji: "🐱", desc: "Cute kitty filter", gradient: "from-orange-300 via-pink-300 to-rose-200" },
+            { label: "Bunny", emoji: "🐰", desc: "Pink bunny ears", gradient: "from-pink-300 via-rose-200 to-fuchsia-300" },
+            { label: "Crown", emoji: "👑", desc: "Royal sparkle", gradient: "from-amber-300 via-yellow-200 to-orange-300" },
+            { label: "Galaxy", emoji: "🌌", desc: "Star background", gradient: "from-violet-500 via-purple-500 to-indigo-500" },
+            { label: "Vintage", emoji: "📷", desc: "Film grain", gradient: "from-amber-200 via-orange-200 to-yellow-200" },
+            { label: "Neon", emoji: "💫", desc: "Cyberpunk glow", gradient: "from-cyan-400 via-blue-400 to-purple-400" },
+          ].map((e) => (
+            <button
+              key={e.label}
+              onClick={() => navigate("/go-live?effect=" + e.label.toLowerCase())}
+              className="shrink-0 w-[100px] flex flex-col items-center gap-1.5"
+            >
+              <div className={cn(
+                "w-[88px] h-[88px] rounded-2xl bg-gradient-to-br flex items-center justify-center shadow-md active:scale-95 transition-transform relative overflow-hidden",
+                e.gradient,
+              )}>
+                <span className="text-4xl">{e.emoji}</span>
+                <Badge className="absolute bottom-1 right-1 bg-white/30 backdrop-blur-sm text-white border-0 text-[8px] font-bold">TRY</Badge>
+              </div>
+              <p className="text-[11px] font-semibold text-foreground">{e.label}</p>
+              <p className="text-[9px] text-muted-foreground text-center leading-tight">{e.desc}</p>
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {/* ─── Dating Live ─── */}
+      <div className="px-4 pt-4 pb-1">
+        <div className="flex items-center justify-between mb-2.5">
+          <h2 className="font-bold text-sm text-foreground flex items-center gap-1.5">
+            <Heart className="w-4 h-4 text-pink-500 fill-pink-500" /> Dating Live
+            <Badge className="bg-pink-500 text-white border-0 text-[9px]">18+</Badge>
+          </h2>
+          <button onClick={() => navigate("/dating")} className="text-[11px] text-muted-foreground flex items-center gap-0.5">
+            See all <ChevronRight className="w-3 h-3" />
+          </button>
+        </div>
+        <div className="flex gap-3 overflow-x-auto scrollbar-hide -mx-4 px-4 pb-1">
+          {[
+            { name: "Aria", age: 24, country: "🇸🇬", interests: "Music, Travel", img: "https://images.unsplash.com/photo-1531746020798-e6953c6e8e04?w=400&q=70&auto=format&fit=crop", online: true },
+            { name: "Felix", age: 27, country: "🇬🇧", interests: "Gym, Coffee", img: "https://images.unsplash.com/photo-1528741013444-c4e9f3f5beda?w=400&q=70&auto=format&fit=crop", online: true },
+            { name: "Emma", age: 23, country: "🇫🇷", interests: "Art, Cooking", img: "https://images.unsplash.com/photo-1524504388940-b1c1722653e1?w=400&q=70&auto=format&fit=crop", online: false },
+            { name: "Yui", age: 25, country: "🇯🇵", interests: "Anime, Tech", img: "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=400&q=70&auto=format&fit=crop", online: true },
+            { name: "Marco", age: 28, country: "🇮🇹", interests: "Food, Wine", img: "https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?w=400&q=70&auto=format&fit=crop", online: false },
+          ].map((d) => (
+            <div
+              key={d.name}
+              className="shrink-0 w-[140px] rounded-2xl overflow-hidden bg-card border border-border/30 shadow-sm text-left"
+            >
+              <button
+                onClick={() => navigate("/dating")}
+                className="block w-full text-left active:scale-[0.97] transition-transform"
+              >
+                <div className="relative aspect-[3/4]">
+                  <img src={d.img} alt="" className="absolute inset-0 w-full h-full object-cover" />
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-transparent to-transparent" />
+                  {d.online && (
+                    <div className="absolute top-2 left-2 flex items-center gap-1 bg-emerald-500 rounded-full px-1.5 py-0.5">
+                      <span className="h-1.5 w-1.5 rounded-full bg-white animate-pulse" />
+                      <span className="text-[8px] text-white font-bold">ONLINE</span>
+                    </div>
+                  )}
+                  <span className="absolute top-2 right-2 text-base">{d.country}</span>
+                  <div className="absolute bottom-2 left-2 right-2">
+                    <p className="text-white font-bold text-[13px] leading-tight">{d.name}, {d.age}</p>
+                    <p className="text-white/80 text-[10px] line-clamp-1">{d.interests}</p>
+                  </div>
+                </div>
+              </button>
+              <div className="p-2 flex gap-1.5">
+                <button onClick={() => toast.info(`Waved at ${d.name}!`)} className="flex-1 py-1.5 rounded-full bg-pink-500/15 text-pink-600 dark:text-pink-400 text-[10px] font-bold active:scale-95 transition-transform">
+                  💌 Wave
+                </button>
+                <button onClick={() => toast.info(`Match request sent to ${d.name}!`)} className="flex-1 py-1.5 rounded-full bg-pink-500 text-white text-[10px] font-bold active:scale-95 transition-transform">
+                  💕 Match
+                </button>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* ─── Become a Host promo banner ─── */}
+      <div className="px-4 pt-4 pb-1">
+        <button
+          onClick={handleGoLive}
+          className="w-full relative rounded-2xl overflow-hidden p-4 bg-gradient-to-br from-violet-600 via-purple-600 to-fuchsia-600 text-left active:scale-[0.99] transition-transform shadow-lg"
+        >
+          <div className="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?w=600&q=50&auto=format&fit=crop')] bg-cover bg-center mix-blend-overlay opacity-25" />
+          <div className="relative z-10 flex items-center gap-3">
+            <div className="w-12 h-12 rounded-2xl bg-white/20 backdrop-blur-sm flex items-center justify-center shrink-0">
+              <Mic className="w-6 h-6 text-white" />
+            </div>
+            <div className="flex-1 min-w-0">
+              <div className="flex items-center gap-1.5 flex-wrap">
+                <Badge className="bg-amber-400 text-amber-900 border-0 text-[9px] font-black">RECRUITING</Badge>
+                <span className="text-[10px] text-white/90 font-semibold">Earn up to $5K/mo</span>
+              </div>
+              <p className="text-white font-bold text-[14px] leading-tight mt-1">Become a ZIVO Host</p>
+              <p className="text-white/80 text-[11px] leading-tight mt-0.5">Join our creator program — get bonuses, gifts, and global reach</p>
+            </div>
+            <div className="flex items-center gap-1 bg-white rounded-full px-3 py-2 shrink-0 shadow-md">
+              <span className="text-violet-600 text-[11px] font-bold">Apply</span>
+              <ChevronRight className="w-3 h-3 text-violet-600" />
+            </div>
+          </div>
+        </button>
+      </div>
+
+      {/* ─── Live Auctions ─── */}
+      <div className="px-4 pt-4 pb-1">
+        <div className="flex items-center justify-between mb-2.5">
+          <h2 className="font-bold text-sm text-foreground flex items-center gap-1.5">
+            <Hammer className="w-4 h-4 text-rose-500" /> Live Auctions
+            <Badge className="bg-rose-500 text-white border-0 text-[9px] gap-1 animate-pulse">
+              <span className="h-1.5 w-1.5 rounded-full bg-white" /> Bidding now
+            </Badge>
+          </h2>
+        </div>
+        <div className="flex gap-3 overflow-x-auto scrollbar-hide -mx-4 px-4 pb-1">
+          {[
+            { item: "Vintage Rolex Submariner", current: 8420, ends: "2m 15s", bidders: 42, img: "https://images.unsplash.com/photo-1547996160-81dfa63595aa?w=400&q=70&auto=format&fit=crop" },
+            { item: "Signed Jordan Jersey", current: 1240, ends: "12m 04s", bidders: 28, img: "https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b?w=400&q=70&auto=format&fit=crop" },
+            { item: "Limited Edition Sneakers", current: 580, ends: "5m 32s", bidders: 67, img: "https://images.unsplash.com/photo-1542291026-7eec264c27ff?w=400&q=70&auto=format&fit=crop" },
+            { item: "Rare Pokémon Card", current: 920, ends: "8m 18s", bidders: 35, img: "https://images.unsplash.com/photo-1606107557195-0e29a4b5b4aa?w=400&q=70&auto=format&fit=crop" },
+          ].map((a, i) => (
+            <button
+              key={i}
+              onClick={() => toast.info(`Bidding on: ${a.item}`)}
+              className="shrink-0 w-[160px] rounded-2xl overflow-hidden bg-card border border-rose-500/30 active:scale-[0.97] transition-transform shadow-sm text-left"
+            >
+              <div className="relative aspect-square">
+                <img src={a.img} alt="" className="absolute inset-0 w-full h-full object-cover" />
+                <Badge className="absolute top-2 left-2 bg-rose-500 text-white border-0 text-[9px] gap-1 animate-pulse">
+                  <Hammer className="w-2 h-2" /> LIVE
+                </Badge>
+                <div className="absolute top-2 right-2 bg-black/70 backdrop-blur-sm rounded-full px-1.5 py-0.5">
+                  <span className="text-[9px] text-white font-mono font-bold">{a.ends}</span>
+                </div>
+              </div>
+              <div className="p-2.5">
+                <p className="font-semibold text-[12px] text-foreground line-clamp-1">{a.item}</p>
+                <div className="flex items-center justify-between mt-1.5">
+                  <div>
+                    <p className="text-[9px] text-muted-foreground leading-none">Current bid</p>
+                    <p className="text-[13px] font-black text-rose-600 dark:text-rose-400 leading-tight">${a.current.toLocaleString()}</p>
+                  </div>
+                  <div className="flex items-center gap-0.5 text-muted-foreground">
+                    <Users className="w-2.5 h-2.5" />
+                    <span className="text-[10px] font-semibold">{a.bidders}</span>
+                  </div>
+                </div>
+              </div>
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {/* ─── Study Together rooms ─── */}
+      <div className="px-4 pt-4 pb-1">
+        <div className="flex items-center justify-between mb-2.5">
+          <h2 className="font-bold text-sm text-foreground flex items-center gap-1.5">
+            <BookOpen className="w-4 h-4 text-emerald-500" /> Study Together
+            <Badge className="bg-emerald-500 text-white border-0 text-[9px]">Focus mode</Badge>
+          </h2>
+        </div>
+        <div className="grid grid-cols-2 gap-2.5">
+          {[
+            { title: "Pomodoro 25/5", studying: 142, emoji: "🍅", gradient: "from-red-500 to-orange-500" },
+            { title: "Silent library", studying: 89, emoji: "📚", gradient: "from-emerald-500 to-teal-500" },
+            { title: "Coding bootcamp", studying: 64, emoji: "💻", gradient: "from-blue-500 to-indigo-500" },
+            { title: "Lo-fi study", studying: 218, emoji: "🎧", gradient: "from-violet-500 to-purple-500" },
+          ].map((r, i) => (
+            <button
+              key={i}
+              onClick={() => navigate("/spaces")}
+              className={cn(
+                "rounded-2xl bg-gradient-to-br p-3 h-[80px] flex flex-col justify-between active:scale-95 transition-transform shadow-sm text-left",
+                r.gradient,
+              )}
+            >
+              <span className="text-2xl">{r.emoji}</span>
+              <div>
+                <p className="text-white font-bold text-[12px] leading-tight">{r.title}</p>
+                <div className="flex items-center justify-between mt-0.5">
+                  <span className="text-white/80 text-[10px]">{r.studying} studying</span>
+                  <span className="h-1.5 w-1.5 rounded-full bg-emerald-300 animate-pulse" />
+                </div>
+              </div>
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {/* ─── Daily Missions / Quests ─── */}
+      <div className="px-4 pt-4 pb-1">
+        <div className="flex items-center justify-between mb-2.5">
+          <h2 className="font-bold text-sm text-foreground flex items-center gap-1.5">
+            <Target className="w-4 h-4 text-emerald-500" /> Daily Missions
+            <Badge className="bg-emerald-500 text-white border-0 text-[9px]">2/5 done</Badge>
+          </h2>
+          <span className="text-[11px] text-muted-foreground">+220 coins</span>
+        </div>
+        <div className="rounded-2xl border border-emerald-500/30 bg-gradient-to-br from-emerald-500/5 via-card to-teal-500/5 p-2 space-y-1.5">
+          {[
+            { label: "Watch a live stream for 5 min", reward: 30, done: true },
+            { label: "Send 1 gift to any host", reward: 50, done: true },
+            { label: "Like 3 streams", reward: 20, done: false, progress: "1/3" },
+            { label: "Join a voice room", reward: 40, done: false },
+            { label: "Share a stream", reward: 80, done: false, badge: "BIG" },
+          ].map((m, i) => (
+            <div key={i} className="flex items-center gap-2.5 px-2.5 py-2 rounded-xl bg-background/40">
+              <div className={cn(
+                "w-7 h-7 rounded-full flex items-center justify-center shrink-0 text-[11px] font-bold",
+                m.done ? "bg-emerald-500 text-white" : "bg-muted text-muted-foreground border border-border",
+              )}>
+                {m.done ? "✓" : i + 1}
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className={cn("text-[12px] font-semibold leading-tight", m.done ? "text-muted-foreground line-through" : "text-foreground")}>
+                  {m.label}
+                </p>
+                {m.progress && <p className="text-[10px] text-emerald-600 font-medium">Progress: {m.progress}</p>}
+              </div>
+              {m.badge && <Badge className="bg-amber-500 text-white border-0 text-[8px] font-bold shrink-0">{m.badge}</Badge>}
+              <div className="flex items-center gap-0.5 shrink-0">
+                <span className="text-[11px]">🪙</span>
+                <span className="text-[11px] font-bold text-amber-600 dark:text-amber-400">+{m.reward}</span>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* ─── Upcoming / Scheduled Live (Anchor Schedule) ─── */}
+      <div className="px-4 pt-4 pb-1">
+        <div className="flex items-center justify-between mb-2.5">
+          <h2 className="font-bold text-sm text-foreground flex items-center gap-1.5">
+            <Calendar className="w-4 h-4 text-blue-500" /> Coming Up
+            <Badge className="bg-blue-500 text-white border-0 text-[9px]">Set reminder</Badge>
+          </h2>
+        </div>
+        <div className="space-y-2">
+          {[
+            { name: "Maya Chen", title: "Album launch party 🎤", time: "Tonight 8PM", topic: "Music", img: "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=200&q=70&auto=format&fit=crop", reminded: true },
+            { name: "Jin Park", title: "Ranked grind to Diamond", time: "Tomorrow 7PM", topic: "Gaming", img: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=200&q=70&auto=format&fit=crop", reminded: false },
+            { name: "Lily Wong", title: "Spring makeup tutorial", time: "Sat 3PM", topic: "Beauty", img: "https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=200&q=70&auto=format&fit=crop", reminded: false },
+          ].map((s, i) => (
+            <div key={i} className="flex items-center gap-3 p-2.5 rounded-2xl bg-card border border-border/30">
+              <Avatar className="h-12 w-12 shrink-0">
+                <AvatarImage src={s.img} />
+                <AvatarFallback>{s.name[0]}</AvatarFallback>
+              </Avatar>
+              <div className="flex-1 min-w-0">
+                <div className="flex items-center gap-1.5">
+                  <p className="text-[12px] font-bold text-foreground truncate">{s.name}</p>
+                  <Badge className="bg-muted text-muted-foreground border-border text-[8px] py-0 px-1.5">{s.topic}</Badge>
+                </div>
+                <p className="text-[12px] text-foreground/90 line-clamp-1">{s.title}</p>
+                <p className="text-[10px] text-blue-600 dark:text-blue-400 font-semibold mt-0.5">⏰ {s.time}</p>
+              </div>
+              <button className={cn(
+                "shrink-0 px-3 py-1.5 rounded-full text-[11px] font-bold transition-all",
+                s.reminded ? "bg-blue-500/15 text-blue-600 dark:text-blue-400 border border-blue-500/30" : "bg-blue-500 text-white",
+              )}>
+                {s.reminded ? "✓ Set" : "+ Remind"}
+              </button>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* ─── Game Live Hub (game-specific streams) ─── */}
+      <div className="px-4 pt-4 pb-1">
+        <div className="flex items-center justify-between mb-2.5">
+          <h2 className="font-bold text-sm text-foreground flex items-center gap-1.5">
+            🎮 Gaming Live
+            <Badge className="bg-violet-500 text-white border-0 text-[9px]">Esports</Badge>
+          </h2>
+          <button onClick={() => setSearchQuery("gaming")} className="text-[11px] text-muted-foreground flex items-center gap-0.5">
+            See all <ChevronRight className="w-3 h-3" />
+          </button>
+        </div>
+        <div className="flex gap-3 overflow-x-auto scrollbar-hide -mx-4 px-4 pb-1">
+          {[
+            { game: "Mobile Legends", players: "1.2K live", img: "https://images.unsplash.com/photo-1542751371-adc38448a05e?w=400&q=70&auto=format&fit=crop", color: "from-blue-600 to-cyan-500" },
+            { game: "PUBG Mobile", players: "890 live", img: "https://images.unsplash.com/photo-1538481199705-c710c4e965fc?w=400&q=70&auto=format&fit=crop", color: "from-orange-600 to-amber-500" },
+            { game: "Free Fire", players: "640 live", img: "https://images.unsplash.com/photo-1556438064-2d7646166914?w=400&q=70&auto=format&fit=crop", color: "from-red-600 to-rose-500" },
+            { game: "Valorant", players: "480 live", img: "https://images.unsplash.com/photo-1593305841991-05c297ba4575?w=400&q=70&auto=format&fit=crop", color: "from-rose-600 to-pink-500" },
+            { game: "Genshin Impact", players: "420 live", img: "https://images.unsplash.com/photo-1511512578047-dfb367046420?w=400&q=70&auto=format&fit=crop", color: "from-violet-600 to-fuchsia-500" },
+            { game: "Call of Duty", players: "380 live", img: "https://images.unsplash.com/photo-1552820728-8b83bb6b773f?w=400&q=70&auto=format&fit=crop", color: "from-emerald-600 to-teal-500" },
+          ].map((g, i) => (
+            <button
+              key={i}
+              onClick={() => setSearchQuery(g.game)}
+              className="shrink-0 w-[140px] rounded-2xl overflow-hidden bg-card border border-border/30 active:scale-[0.97] transition-transform shadow-sm text-left"
+            >
+              <div className="relative h-[140px]">
+                <img src={g.img} alt="" className="absolute inset-0 w-full h-full object-cover" />
+                <div className={cn("absolute inset-0 bg-gradient-to-tr opacity-80", g.color)} />
+                <Badge className="absolute top-2 left-2 bg-red-500 text-white border-0 text-[9px] gap-1 animate-pulse">
+                  <Radio className="w-2 h-2" /> LIVE
+                </Badge>
+                <div className="absolute bottom-2 left-2 right-2">
+                  <p className="text-white font-bold text-[12px] leading-tight drop-shadow">{g.game}</p>
+                  <p className="text-white/90 text-[10px] font-semibold">{g.players}</p>
+                </div>
+              </div>
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {/* ─── Pet Live (cute animals) ─── */}
+      <div className="px-4 pt-4 pb-1">
+        <div className="flex items-center justify-between mb-2.5">
+          <h2 className="font-bold text-sm text-foreground flex items-center gap-1.5">
+            🐾 Pet Live
+            <Badge className="bg-orange-500 text-white border-0 text-[9px]">So cute</Badge>
+          </h2>
+        </div>
+        <div className="flex gap-3 overflow-x-auto scrollbar-hide -mx-4 px-4 pb-1">
+          {[
+            { name: "Mochi the Shiba", host: "Yui", viewers: 2840, emoji: "🐕", img: "https://images.unsplash.com/photo-1546238232-20216dec9f72?w=400&q=70&auto=format&fit=crop" },
+            { name: "Luna the Cat", host: "Sarah", viewers: 1920, emoji: "🐱", img: "https://images.unsplash.com/photo-1574158622682-e40e69881006?w=400&q=70&auto=format&fit=crop" },
+            { name: "Bunny Bowl", host: "Emma", viewers: 1240, emoji: "🐰", img: "https://images.unsplash.com/photo-1553284965-83fd3e82fa5a?w=400&q=70&auto=format&fit=crop" },
+            { name: "Parrot Show", host: "Marco", viewers: 890, emoji: "🦜", img: "https://images.unsplash.com/photo-1452570053594-1b985d6ea890?w=400&q=70&auto=format&fit=crop" },
+            { name: "Aquarium tour", host: "Felix", viewers: 720, emoji: "🐠", img: "https://images.unsplash.com/photo-1544552866-d3ed42536cfd?w=400&q=70&auto=format&fit=crop" },
+          ].map((p, i) => (
+            <button
+              key={i}
+              onClick={() => toast.info(p.name)}
+              className="shrink-0 w-[150px] rounded-2xl overflow-hidden bg-card border border-border/30 active:scale-[0.97] transition-transform shadow-sm text-left"
+            >
+              <div className="relative aspect-square">
+                <img src={p.img} alt="" className="absolute inset-0 w-full h-full object-cover" />
+                <Badge className="absolute top-2 left-2 bg-red-500 text-white border-0 text-[9px] gap-1 animate-pulse">
+                  <Radio className="w-2 h-2" /> LIVE
+                </Badge>
+                <span className="absolute top-2 right-2 text-2xl">{p.emoji}</span>
+                <div className="absolute bottom-1.5 right-1.5 flex items-center gap-1 bg-black/60 rounded-full px-1.5 py-0.5">
+                  <Eye className="w-2.5 h-2.5 text-white/80" />
+                  <span className="text-[9px] text-white font-semibold">{p.viewers.toLocaleString()}</span>
+                </div>
+              </div>
+              <div className="p-2">
+                <p className="font-semibold text-[12px] text-foreground line-clamp-1">{p.name}</p>
+                <p className="text-[10px] text-muted-foreground">@{p.host}</p>
+              </div>
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {/* ─── Travel Live (vlog streams) ─── */}
+      <div className="px-4 pt-4 pb-1">
+        <div className="flex items-center justify-between mb-2.5">
+          <h2 className="font-bold text-sm text-foreground flex items-center gap-1.5">
+            <Plane className="w-4 h-4 text-sky-500" /> Travel Live
+            <Badge className="bg-sky-500 text-white border-0 text-[9px]">Around the world</Badge>
+          </h2>
+        </div>
+        <div className="flex gap-3 overflow-x-auto scrollbar-hide -mx-4 px-4 pb-1">
+          {[
+            { city: "Tokyo, Japan", host: "Niko Ito", viewers: 4820, country: "🇯🇵", img: "https://images.unsplash.com/photo-1540959733332-eab4deabeeaf?w=400&q=70&auto=format&fit=crop" },
+            { city: "Bali, Indonesia", host: "Dewi", viewers: 3210, country: "🇮🇩", img: "https://images.unsplash.com/photo-1537996194471-e657df975ab4?w=400&q=70&auto=format&fit=crop" },
+            { city: "Paris, France", host: "Emma", viewers: 2540, country: "🇫🇷", img: "https://images.unsplash.com/photo-1502602898657-3e91760cbb34?w=400&q=70&auto=format&fit=crop" },
+            { city: "Phnom Penh, Cambodia", host: "Sokha", viewers: 1860, country: "🇰🇭", img: "https://images.unsplash.com/photo-1564507592333-c60657eea523?w=400&q=70&auto=format&fit=crop" },
+            { city: "Bangkok, Thailand", host: "Ploy", viewers: 1420, country: "🇹🇭", img: "https://images.unsplash.com/photo-1508009603885-50cf7c579365?w=400&q=70&auto=format&fit=crop" },
+            { city: "Seoul, Korea", host: "Min-Jun", viewers: 1180, country: "🇰🇷", img: "https://images.unsplash.com/photo-1538485399081-7c8970d5ff97?w=400&q=70&auto=format&fit=crop" },
+          ].map((t, i) => (
+            <button
+              key={i}
+              onClick={() => toast.info(`Travel live: ${t.city}`)}
+              className="shrink-0 w-[180px] rounded-2xl overflow-hidden bg-card border border-border/30 active:scale-[0.97] transition-transform shadow-sm text-left"
+            >
+              <div className="relative h-[110px]">
+                <img src={t.img} alt="" className="absolute inset-0 w-full h-full object-cover" />
+                <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-transparent to-black/30" />
+                <Badge className="absolute top-2 left-2 bg-red-500 text-white border-0 text-[9px] gap-1 animate-pulse">
+                  <Radio className="w-2 h-2" /> LIVE
+                </Badge>
+                <span className="absolute top-2 right-2 text-base">{t.country}</span>
+                <div className="absolute bottom-2 left-2 right-2">
+                  <p className="text-white font-bold text-[12px] leading-tight drop-shadow">{t.city}</p>
+                  <div className="flex items-center justify-between mt-0.5">
+                    <span className="text-white/80 text-[10px]">@{t.host}</span>
+                    <div className="flex items-center gap-0.5 text-white/90">
+                      <Eye className="w-2.5 h-2.5" />
+                      <span className="text-[9px] font-semibold">{t.viewers.toLocaleString()}</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {/* ─── Hot News / Live Newsroom ─── */}
+      <div className="px-4 pt-4 pb-1">
+        <div className="flex items-center justify-between mb-2.5">
+          <h2 className="font-bold text-sm text-foreground flex items-center gap-1.5">
+            <Megaphone className="w-4 h-4 text-red-500" /> Hot Topics Live
+            <Badge className="bg-red-500 text-white border-0 text-[9px] gap-1 animate-pulse">
+              <span className="h-1.5 w-1.5 rounded-full bg-white" /> Breaking
+            </Badge>
+          </h2>
+        </div>
+        <div className="space-y-2">
+          {[
+            { title: "ZIVO 2026 launch — global watch party", host: "ZIVO Official", topic: "Tech", viewers: 28430, img: "https://images.unsplash.com/photo-1518770660439-4636190af475?w=400&q=70&auto=format&fit=crop", verified: true, breaking: true },
+            { title: "Live Q&A with founders", host: "ZIVO News", topic: "News", viewers: 12480, img: "https://images.unsplash.com/photo-1495020689067-958852a7765e?w=400&q=70&auto=format&fit=crop", verified: true },
+            { title: "Khmer New Year traditions explained", host: "Sokha", topic: "Culture", viewers: 8240, img: "https://images.unsplash.com/photo-1532635241-17e820acc59f?w=400&q=70&auto=format&fit=crop", verified: false },
+          ].map((n, i) => (
+            <button
+              key={i}
+              onClick={() => toast.info(n.title)}
+              className="w-full flex items-center gap-3 p-2 rounded-2xl bg-card border border-border/30 active:scale-[0.99] transition-transform shadow-sm text-left"
+            >
+              <div className="relative w-20 h-20 rounded-xl overflow-hidden shrink-0">
+                <img src={n.img} alt="" className="absolute inset-0 w-full h-full object-cover" />
+                {n.breaking && <Badge className="absolute top-1 left-1 bg-red-500 text-white border-0 text-[8px] px-1 animate-pulse">BREAKING</Badge>}
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="font-bold text-[12px] text-foreground line-clamp-2 leading-tight">{n.title}</p>
+                <div className="flex items-center gap-1.5 mt-1">
+                  <span className="text-[10px] font-semibold text-foreground inline-flex items-center gap-0.5">
+                    {n.host}
+                    {n.verified && <BadgeCheck className="w-2.5 h-2.5 text-blue-500 fill-blue-500/20" />}
+                  </span>
+                  <span className="text-[10px] text-muted-foreground">·</span>
+                  <Badge className="bg-muted text-muted-foreground border-border text-[8px] py-0 px-1">{n.topic}</Badge>
+                </div>
+                <div className="flex items-center gap-1 mt-0.5">
+                  <Eye className="w-3 h-3 text-muted-foreground" />
+                  <span className="text-[10px] text-muted-foreground font-semibold">{n.viewers.toLocaleString()} watching</span>
+                </div>
+              </div>
+              <ChevronRight className="w-4 h-4 text-muted-foreground/50 shrink-0" />
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {/* ─── Sports Live (matches & e-sports) ─── */}
+      <div className="px-4 pt-4 pb-1">
+        <div className="flex items-center justify-between mb-2.5">
+          <h2 className="font-bold text-sm text-foreground flex items-center gap-1.5">
+            ⚽ Sports Live
+            <Badge className="bg-emerald-600 text-white border-0 text-[9px] gap-1 animate-pulse">
+              <span className="h-1.5 w-1.5 rounded-full bg-white" /> Match on
+            </Badge>
+          </h2>
+        </div>
+        <div className="flex gap-3 overflow-x-auto scrollbar-hide -mx-4 px-4 pb-1">
+          {[
+            { league: "Premier League", teams: "Liverpool vs Arsenal", score: "2 - 1", minute: "78'", img: "https://images.unsplash.com/photo-1574629810360-7efbbe195018?w=400&q=70&auto=format&fit=crop", emoji: "⚽" },
+            { league: "NBA", teams: "Lakers vs Warriors", score: "98 - 102", minute: "Q3 5:42", img: "https://images.unsplash.com/photo-1546519638-68e109498ffc?w=400&q=70&auto=format&fit=crop", emoji: "🏀" },
+            { league: "Esports — ML Pro", teams: "ONIC vs RRQ", score: "1 - 1", minute: "Game 3", img: "https://images.unsplash.com/photo-1542751371-adc38448a05e?w=400&q=70&auto=format&fit=crop", emoji: "🎮" },
+            { league: "UFC 312", teams: "Pereira vs Ankalaev", score: "Round 2", minute: "2:14", img: "https://images.unsplash.com/photo-1517649763962-0c623066013b?w=400&q=70&auto=format&fit=crop", emoji: "🥊" },
+            { league: "Tennis Open", teams: "Alcaraz vs Sinner", score: "4 - 6, 6 - 4", minute: "Set 3", img: "https://images.unsplash.com/photo-1554068865-24cecd4e34b8?w=400&q=70&auto=format&fit=crop", emoji: "🎾" },
+          ].map((s, i) => (
+            <button
+              key={i}
+              onClick={() => toast.info(s.teams)}
+              className="shrink-0 w-[200px] rounded-2xl overflow-hidden bg-card border border-border/30 active:scale-[0.97] transition-transform shadow-sm text-left"
+            >
+              <div className="relative h-[110px]">
+                <img src={s.img} alt="" className="absolute inset-0 w-full h-full object-cover" />
+                <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/30 to-black/40" />
+                <Badge className="absolute top-2 left-2 bg-emerald-600 text-white border-0 text-[9px] gap-1 animate-pulse">
+                  <Radio className="w-2 h-2" /> LIVE
+                </Badge>
+                <span className="absolute top-2 right-2 text-xl">{s.emoji}</span>
+                <div className="absolute bottom-2 left-2 right-2">
+                  <p className="text-white/70 text-[9px] font-semibold uppercase tracking-wide">{s.league}</p>
+                  <p className="text-white font-bold text-[12px] leading-tight">{s.teams}</p>
+                  <div className="flex items-center justify-between mt-0.5">
+                    <span className="text-amber-300 text-[12px] font-mono font-bold">{s.score}</span>
+                    <span className="text-white/80 text-[10px] font-semibold">{s.minute}</span>
+                  </div>
+                </div>
+              </div>
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {/* ─── Zodiac / Astrology Live ─── */}
+      <div className="px-4 pt-4 pb-1">
+        <div className="flex items-center justify-between mb-2.5">
+          <h2 className="font-bold text-sm text-foreground flex items-center gap-1.5">
+            🔮 Zodiac & Tarot Live
+            <Badge className="bg-violet-500 text-white border-0 text-[9px]">Daily reading</Badge>
+          </h2>
+        </div>
+        <div className="grid grid-cols-4 gap-2">
+          {[
+            { sign: "Aries", emoji: "♈", date: "Mar 21 - Apr 19" },
+            { sign: "Taurus", emoji: "♉", date: "Apr 20 - May 20" },
+            { sign: "Gemini", emoji: "♊", date: "May 21 - Jun 20" },
+            { sign: "Cancer", emoji: "♋", date: "Jun 21 - Jul 22" },
+            { sign: "Leo", emoji: "♌", date: "Jul 23 - Aug 22" },
+            { sign: "Virgo", emoji: "♍", date: "Aug 23 - Sep 22" },
+            { sign: "Libra", emoji: "♎", date: "Sep 23 - Oct 22" },
+            { sign: "Scorpio", emoji: "♏", date: "Oct 23 - Nov 21" },
+          ].map((z, i) => (
+            <button
+              key={z.sign}
+              onClick={() => toast.info(`${z.sign} reading`)}
+              className="rounded-2xl bg-gradient-to-br from-violet-500/15 via-purple-500/10 to-indigo-500/15 border border-violet-500/20 p-2 h-[80px] flex flex-col items-center justify-center gap-0.5 active:scale-95 transition-transform shadow-sm relative overflow-hidden"
+            >
+              <span className="text-2xl">{z.emoji}</span>
+              <span className="text-[11px] font-bold text-foreground">{z.sign}</span>
+              {i < 3 && (
+                <Badge className="absolute top-1 right-1 bg-violet-500 text-white border-0 text-[8px] px-1 animate-pulse">LIVE</Badge>
+              )}
+            </button>
+          ))}
+        </div>
+        <button onClick={() => toast.info("Browse all 12 signs & tarot readings")} className="mt-2 w-full py-2 rounded-full bg-violet-500/10 border border-violet-500/20 text-[11px] font-bold text-violet-600 dark:text-violet-400">
+          ✨ Browse all 12 signs & tarot
+        </button>
+      </div>
+
+      {/* ─── DJ / Music Mix Live rooms ─── */}
+      <div className="px-4 pt-4 pb-1">
+        <div className="flex items-center justify-between mb-2.5">
+          <h2 className="font-bold text-sm text-foreground flex items-center gap-1.5">
+            🎧 DJ Live Rooms
+            <Badge className="bg-fuchsia-600 text-white border-0 text-[9px]">Beat drops</Badge>
+          </h2>
+        </div>
+        <div className="flex gap-3 overflow-x-auto scrollbar-hide -mx-4 px-4 pb-1">
+          {[
+            { dj: "DJ Skylight", set: "House sunset mix", listeners: "8.4K", img: "https://images.unsplash.com/photo-1516280440614-37939bbacd81?w=400&q=70&auto=format&fit=crop", bpm: 124, vibe: "🌅 Chillhouse" },
+            { dj: "BassBoss", set: "EDM festival mode", listeners: "12.1K", img: "https://images.unsplash.com/photo-1571330735066-03aaa9429d89?w=400&q=70&auto=format&fit=crop", bpm: 132, vibe: "🔥 Heavy bass" },
+            { dj: "Lofi Cat", set: "Late night beats", listeners: "5.2K", img: "https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?w=400&q=70&auto=format&fit=crop", bpm: 88, vibe: "🌙 Lo-fi" },
+            { dj: "TechnoQueen", set: "Berlin techno", listeners: "3.8K", img: "https://images.unsplash.com/photo-1470225620780-dba8ba36b745?w=400&q=70&auto=format&fit=crop", bpm: 138, vibe: "⚡ Underground" },
+          ].map((d, i) => (
+            <button
+              key={i}
+              onClick={() => toast.info(d.set)}
+              className="shrink-0 w-[180px] rounded-2xl overflow-hidden active:scale-[0.97] transition-transform shadow-md text-left relative"
+            >
+              <div className="relative h-[150px]">
+                <img src={d.img} alt="" className="absolute inset-0 w-full h-full object-cover" />
+                <div className="absolute inset-0 bg-gradient-to-tr from-fuchsia-700/85 via-purple-600/70 to-pink-500/40" />
+                <Badge className="absolute top-2 left-2 bg-fuchsia-500 text-white border-0 text-[9px] gap-1 animate-pulse">
+                  <Radio className="w-2 h-2" /> ON AIR
+                </Badge>
+                <Badge className="absolute top-2 right-2 bg-black/50 backdrop-blur-sm text-white border-0 text-[9px] font-mono">{d.bpm} BPM</Badge>
+                <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-12 h-12 rounded-full bg-white/20 backdrop-blur-md flex items-center justify-center animate-pulse">
+                  <Headphones className="w-6 h-6 text-white" />
+                </div>
+                <div className="absolute bottom-2 left-2 right-2">
+                  <p className="text-white font-bold text-[12px] leading-tight drop-shadow">@{d.dj}</p>
+                  <p className="text-white/85 text-[10px] line-clamp-1">{d.set} • {d.vibe}</p>
+                  <div className="flex items-center gap-0.5 mt-0.5">
+                    <Users className="w-2.5 h-2.5 text-white/80" />
+                    <span className="text-[10px] text-white/90 font-semibold">{d.listeners}</span>
+                  </div>
+                </div>
+              </div>
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {/* ─── Comedy / Stand-up Live ─── */}
+      <div className="px-4 pt-4 pb-1">
+        <div className="flex items-center justify-between mb-2.5">
+          <h2 className="font-bold text-sm text-foreground flex items-center gap-1.5">
+            😂 Comedy Live
+            <Badge className="bg-yellow-500 text-yellow-950 border-0 text-[9px]">LOL</Badge>
+          </h2>
+        </div>
+        <div className="flex gap-3 overflow-x-auto scrollbar-hide -mx-4 px-4 pb-1">
+          {[
+            { name: "Stand-up Marathon", host: "Mike L.", lol: "412K 😂", img: "https://images.unsplash.com/photo-1527224538127-2104bb71c51b?w=400&q=70&auto=format&fit=crop" },
+            { name: "Khmer comedy night", host: "Vannak", lol: "180K 😂", img: "https://images.unsplash.com/photo-1521336575822-6da63fb45455?w=400&q=70&auto=format&fit=crop" },
+            { name: "Improv jam", host: "Sara T.", lol: "98K 😂", img: "https://images.unsplash.com/photo-1559223607-a43c990c692c?w=400&q=70&auto=format&fit=crop" },
+            { name: "Roast room", host: "Big J", lol: "76K 😂", img: "https://images.unsplash.com/photo-1604329760661-e71dc83f8f26?w=400&q=70&auto=format&fit=crop" },
+          ].map((c, i) => (
+            <button
+              key={i}
+              onClick={() => toast.info(c.name)}
+              className="shrink-0 w-[160px] rounded-2xl overflow-hidden bg-card border border-border/30 active:scale-[0.97] transition-transform shadow-sm text-left"
+            >
+              <div className="relative h-[90px]">
+                <img src={c.img} alt="" className="absolute inset-0 w-full h-full object-cover" />
+                <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
+                <Badge className="absolute top-2 left-2 bg-yellow-500 text-yellow-950 border-0 text-[9px] gap-1 animate-pulse">
+                  <Radio className="w-2 h-2" /> LIVE
+                </Badge>
+                <span className="absolute top-2 right-2 text-xl">😂</span>
+              </div>
+              <div className="p-2">
+                <p className="font-bold text-[12px] text-foreground line-clamp-1">{c.name}</p>
+                <div className="flex items-center justify-between mt-0.5">
+                  <span className="text-[10px] text-muted-foreground">@{c.host}</span>
+                  <span className="text-[10px] text-yellow-600 dark:text-yellow-400 font-semibold">{c.lol}</span>
+                </div>
+              </div>
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {/* ─── Quiz Show / Trivia Live ─── */}
+      <div className="px-4 pt-4 pb-1">
+        <div className="flex items-center justify-between mb-2.5">
+          <h2 className="font-bold text-sm text-foreground flex items-center gap-1.5">
+            🧠 Quiz Show Live
+            <Badge className="bg-blue-500 text-white border-0 text-[9px]">Win prizes</Badge>
+          </h2>
+        </div>
+        <div className="space-y-2">
+          {[
+            { name: "Daily Trivia Champion", players: 12420, prize: "10K coins", time: "Starts in 18 min", host: "ZIVO Quiz", topic: "General knowledge", emoji: "🏆" },
+            { name: "Music Quiz Battle", players: 4120, prize: "5K coins", time: "Live now", host: "DJ Skylight", topic: "Music 80s-2020s", emoji: "🎵" },
+            { name: "Movie Buff Trivia", players: 2840, prize: "3K coins", time: "Starts in 1h", host: "FilmFan", topic: "Cinema & TV", emoji: "🎬" },
+          ].map((q, i) => (
+            <div key={i} className="flex items-center gap-3 p-2.5 rounded-2xl bg-gradient-to-r from-blue-500/10 via-card to-cyan-500/10 border border-blue-500/20">
+              <div className="w-12 h-12 rounded-2xl bg-blue-500/15 flex items-center justify-center shrink-0">
+                <span className="text-2xl">{q.emoji}</span>
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="font-bold text-[12px] text-foreground line-clamp-1">{q.name}</p>
+                <p className="text-[10px] text-muted-foreground">{q.topic} • @{q.host}</p>
+                <div className="flex items-center gap-2 mt-0.5">
+                  <span className="text-[10px] text-blue-600 dark:text-blue-400 font-semibold">{q.time}</span>
+                  <span className="text-[10px] text-muted-foreground">·</span>
+                  <span className="text-[10px] text-foreground font-semibold">{q.players.toLocaleString()} playing</span>
+                </div>
+              </div>
+              <div className="text-right shrink-0">
+                <p className="text-[9px] text-muted-foreground leading-none">Prize</p>
+                <p className="text-[12px] font-black text-amber-600 dark:text-amber-400 leading-tight">{q.prize}</p>
+                <button className="mt-1 px-2.5 py-1 rounded-full bg-blue-500 text-white text-[10px] font-bold">
+                  Join
+                </button>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* ─── Creator of the Day spotlight ─── */}
+      <div className="px-4 pt-4 pb-1">
+        <div className="flex items-center justify-between mb-2.5">
+          <h2 className="font-bold text-sm text-foreground flex items-center gap-1.5">
+            <Crown className="w-4 h-4 text-amber-500" /> Creator of the Day
+            <Badge className="bg-gradient-to-r from-amber-400 to-orange-500 text-amber-950 border-0 text-[9px] font-black">SPOTLIGHT</Badge>
+          </h2>
+        </div>
+        <button
+          onClick={() => toast.info("Featured creator: Maya Chen")}
+          className="w-full relative rounded-2xl overflow-hidden h-[150px] active:scale-[0.99] transition-transform shadow-lg shadow-amber-500/20"
+        >
+          <img src="https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=800&q=70&auto=format&fit=crop" alt="" className="absolute inset-0 w-full h-full object-cover" />
+          <div className="absolute inset-0 bg-gradient-to-tr from-amber-600/80 via-orange-500/60 to-rose-500/40" />
+          <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/20 to-transparent" />
+          <Badge className="absolute top-3 left-3 bg-white/25 backdrop-blur-md text-white border-0 text-[10px] gap-1 font-bold">
+            <Crown className="w-3 h-3" /> #1 TODAY
+          </Badge>
+          <Badge className="absolute top-3 right-3 bg-red-500 text-white border-0 text-[10px] gap-1 animate-pulse">
+            <Radio className="w-2.5 h-2.5" /> LIVE
+          </Badge>
+          <div className="absolute bottom-0 left-0 right-0 p-4">
+            <div className="flex items-center gap-3">
+              <Avatar className="h-14 w-14 ring-3 ring-white shadow-lg">
+                <AvatarImage src="https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=200&q=70&auto=format&fit=crop" />
+                <AvatarFallback>M</AvatarFallback>
+              </Avatar>
+              <div className="flex-1 min-w-0 text-left">
+                <div className="flex items-center gap-1.5">
+                  <p className="text-white font-bold text-[15px] drop-shadow">Maya Chen</p>
+                  <BadgeCheck className="w-4 h-4 text-blue-300 fill-blue-500/40" />
+                </div>
+                <p className="text-white/85 text-[11px] line-clamp-1">Late night vibes 🌙 — Music acoustic set</p>
+                <div className="flex items-center gap-3 mt-1 text-white/90">
+                  <span className="text-[10px] font-semibold flex items-center gap-0.5"><Eye className="w-3 h-3" /> 12.4K</span>
+                  <span className="text-[10px] font-semibold flex items-center gap-0.5"><Heart className="w-3 h-3 fill-rose-300 text-rose-300" /> 89.2K</span>
+                  <span className="text-[10px] font-semibold flex items-center gap-0.5"><Gift className="w-3 h-3 text-amber-300" /> 4.1M</span>
+                </div>
+              </div>
+              <div className="bg-white text-amber-700 rounded-full px-4 py-2 font-bold text-[12px] shadow-md shrink-0">
+                Watch
+              </div>
+            </div>
+          </div>
+        </button>
+      </div>
+
+      {/* ─── Rising Stars (trending creators) ─── */}
+      <div className="px-4 pt-4 pb-1">
+        <div className="flex items-center justify-between mb-2.5">
+          <h2 className="font-bold text-sm text-foreground flex items-center gap-1.5">
+            <TrendingUp className="w-4 h-4 text-emerald-500" /> Rising Stars
+            <Badge className="bg-emerald-500 text-white border-0 text-[9px]">+200%</Badge>
+          </h2>
+          <span className="text-[10px] text-muted-foreground">This week</span>
+        </div>
+        <div className="flex gap-3 overflow-x-auto scrollbar-hide -mx-4 px-4 pb-1">
+          {[
+            { name: "Kai Tanaka", growth: "+340%", followers: "84K", country: "🇯🇵", img: "https://images.unsplash.com/photo-1531746020798-e6953c6e8e04?w=200&q=70&auto=format&fit=crop" },
+            { name: "Sophea", growth: "+280%", followers: "62K", country: "🇰🇭", img: "https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=200&q=70&auto=format&fit=crop" },
+            { name: "Min-Joo", growth: "+260%", followers: "48K", country: "🇰🇷", img: "https://images.unsplash.com/photo-1517841905240-472988babdf9?w=200&q=70&auto=format&fit=crop" },
+            { name: "Diego R.", growth: "+220%", followers: "39K", country: "🇲🇽", img: "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=200&q=70&auto=format&fit=crop" },
+            { name: "Zara K.", growth: "+200%", followers: "31K", country: "🇮🇩", img: "https://images.unsplash.com/photo-1524504388940-b1c1722653e1?w=200&q=70&auto=format&fit=crop" },
+            { name: "Theo M.", growth: "+180%", followers: "28K", country: "🇫🇷", img: "https://images.unsplash.com/photo-1492562080023-ab3db95bfbce?w=200&q=70&auto=format&fit=crop" },
+          ].map((s) => (
+            <div key={s.name} className="shrink-0 w-[120px] rounded-2xl bg-card border border-emerald-500/30 p-3 text-center">
+              <div className="relative inline-block mb-2">
+                <Avatar className="h-14 w-14 ring-2 ring-emerald-500/40 mx-auto">
+                  <AvatarImage src={s.img} />
+                  <AvatarFallback>{s.name[0]}</AvatarFallback>
+                </Avatar>
+                <span className="absolute -top-1 -right-1 w-5 h-5 rounded-full bg-card flex items-center justify-center text-[11px] shadow ring-1 ring-border">
+                  {s.country}
+                </span>
+              </div>
+              <p className="text-[11px] font-bold text-foreground truncate">{s.name}</p>
+              <p className="text-[10px] text-muted-foreground">{s.followers}</p>
+              <Badge className="bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border-emerald-500/20 text-[9px] mt-1">
+                {s.growth}
+              </Badge>
+              <button className="mt-2 w-full py-1 rounded-full bg-emerald-500 text-white text-[10px] font-bold active:scale-95 transition-transform">
+                + Follow
+              </button>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* ─── Cosplay Live ─── */}
+      <div className="px-4 pt-4 pb-1">
+        <div className="flex items-center justify-between mb-2.5">
+          <h2 className="font-bold text-sm text-foreground flex items-center gap-1.5">
+            🎭 Cosplay Live
+            <Badge className="bg-purple-500 text-white border-0 text-[9px]">Anime fans</Badge>
+          </h2>
+        </div>
+        <div className="flex gap-3 overflow-x-auto scrollbar-hide -mx-4 px-4 pb-1">
+          {[
+            { character: "Demon Slayer", host: "Yui", viewers: 6420, img: "https://images.unsplash.com/photo-1578662996442-48f60103fc96?w=400&q=70&auto=format&fit=crop", emoji: "🗡️" },
+            { character: "Sailor Moon", host: "Aria", viewers: 4810, img: "https://images.unsplash.com/photo-1611162617474-5b21e879e113?w=400&q=70&auto=format&fit=crop", emoji: "🌙" },
+            { character: "JoJo's Pose", host: "Kai", viewers: 3640, img: "https://images.unsplash.com/photo-1606107557195-0e29a4b5b4aa?w=400&q=70&auto=format&fit=crop", emoji: "✨" },
+            { character: "Lolita Fashion", host: "Mei", viewers: 2920, img: "https://images.unsplash.com/photo-1517023321906-9b86d22f3aab?w=400&q=70&auto=format&fit=crop", emoji: "🎀" },
+            { character: "K-Pop Idol", host: "Min-Joo", viewers: 2410, img: "https://images.unsplash.com/photo-1571330735066-03aaa9429d89?w=400&q=70&auto=format&fit=crop", emoji: "🌟" },
+          ].map((c, i) => (
+            <button
+              key={i}
+              onClick={() => toast.info(c.character)}
+              className="shrink-0 w-[150px] rounded-2xl overflow-hidden bg-card border border-border/30 active:scale-[0.97] transition-transform shadow-sm text-left"
+            >
+              <div className="relative aspect-[4/5]">
+                <img src={c.img} alt="" className="absolute inset-0 w-full h-full object-cover" />
+                <div className="absolute inset-0 bg-gradient-to-tr from-purple-700/85 via-pink-500/40 to-fuchsia-500/30" />
+                <Badge className="absolute top-2 left-2 bg-purple-500 text-white border-0 text-[9px] gap-1 animate-pulse">
+                  <Radio className="w-2 h-2" /> LIVE
+                </Badge>
+                <span className="absolute top-2 right-2 text-xl">{c.emoji}</span>
+                <div className="absolute bottom-2 left-2 right-2">
+                  <p className="text-white font-bold text-[12px] leading-tight drop-shadow">{c.character}</p>
+                  <div className="flex items-center justify-between mt-0.5">
+                    <span className="text-white/80 text-[10px]">@{c.host}</span>
+                    <div className="flex items-center gap-0.5">
+                      <Eye className="w-2.5 h-2.5 text-white/80" />
+                      <span className="text-[9px] text-white/90 font-semibold">{c.viewers.toLocaleString()}</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {/* ─── ASMR / Relaxation Rooms ─── */}
+      <div className="px-4 pt-4 pb-1">
+        <div className="flex items-center justify-between mb-2.5">
+          <h2 className="font-bold text-sm text-foreground flex items-center gap-1.5">
+            <Headphones className="w-4 h-4 text-cyan-500" /> ASMR & Relaxation
+            <Badge className="bg-cyan-500 text-white border-0 text-[9px]">😴 Tingles</Badge>
+          </h2>
+        </div>
+        <div className="grid grid-cols-2 gap-2.5">
+          {[
+            { title: "Whisper sleep", listeners: "8.4K", emoji: "💤", gradient: "from-indigo-600 via-blue-500 to-cyan-500" },
+            { title: "Rain & thunder", listeners: "6.2K", emoji: "🌧️", gradient: "from-slate-700 via-slate-600 to-blue-700" },
+            { title: "Tapping & scratching", listeners: "4.8K", emoji: "🎙️", gradient: "from-purple-600 via-violet-500 to-indigo-500" },
+            { title: "Roleplay haircut", listeners: "3.6K", emoji: "✂️", gradient: "from-emerald-600 via-teal-500 to-cyan-500" },
+          ].map((a, i) => (
+            <button
+              key={i}
+              onClick={() => navigate("/spaces")}
+              className={cn(
+                "rounded-2xl bg-gradient-to-br p-3 h-[88px] flex flex-col justify-between active:scale-95 transition-transform shadow-sm text-left relative overflow-hidden",
+                a.gradient,
+              )}
+            >
+              <div className="absolute -right-2 -top-2 w-12 h-12 rounded-full bg-white/10 blur-md" />
+              <div className="flex items-center justify-between relative z-10">
+                <span className="text-2xl">{a.emoji}</span>
+                <Badge className="bg-white/25 backdrop-blur-sm text-white border-0 text-[8px] font-bold">LIVE</Badge>
+              </div>
+              <div className="relative z-10">
+                <p className="text-white font-bold text-[12px] leading-tight">{a.title}</p>
+                <div className="flex items-center justify-between mt-0.5">
+                  <span className="text-white/80 text-[10px]">{a.listeners}</span>
+                  <span className="h-1.5 w-1.5 rounded-full bg-cyan-300 animate-pulse" />
+                </div>
+              </div>
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {/* ─── Crypto / Trading Live ─── */}
+      <div className="px-4 pt-4 pb-1">
+        <div className="flex items-center justify-between mb-2.5">
+          <h2 className="font-bold text-sm text-foreground flex items-center gap-1.5">
+            💹 Crypto & Trading Live
+            <Badge className="bg-blue-600 text-white border-0 text-[9px]">Markets open</Badge>
+          </h2>
+        </div>
+        <div className="space-y-2">
+          {[
+            { name: "BTC analysis live", host: "TradeKing", change: "+4.2%", price: "$68,420", viewers: 12480, ticker: "BTC", emoji: "₿" },
+            { name: "ETH 4h breakout", host: "CryptoQueen", change: "+2.8%", price: "$3,820", viewers: 8240, ticker: "ETH", emoji: "Ξ" },
+            { name: "Tech stocks daily", host: "WallSt Pro", change: "+1.4%", price: "NASDAQ", viewers: 5240, ticker: "NSDQ", emoji: "📊" },
+            { name: "Forex EUR/USD", host: "FXMaster", change: "-0.6%", price: "$1.0842", viewers: 3120, ticker: "FX", emoji: "💱" },
+          ].map((t, i) => {
+            const positive = t.change.startsWith("+");
+            return (
+              <button
+                key={i}
+                onClick={() => toast.info(t.name)}
+                className="w-full flex items-center gap-3 p-2.5 rounded-2xl bg-card border border-border/30 active:scale-[0.99] transition-transform shadow-sm text-left"
+              >
+                <div className={cn(
+                  "w-10 h-10 rounded-xl flex items-center justify-center text-lg shrink-0",
+                  positive ? "bg-emerald-500/15 text-emerald-600 dark:text-emerald-400" : "bg-red-500/15 text-red-600 dark:text-red-400",
+                )}>
+                  <span>{t.emoji}</span>
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="font-bold text-[12px] text-foreground truncate">{t.name}</p>
+                  <p className="text-[10px] text-muted-foreground">@{t.host} · {t.viewers.toLocaleString()} watching</p>
+                </div>
+                <div className="text-right shrink-0">
+                  <p className="text-[11px] font-mono font-bold text-foreground leading-none">{t.price}</p>
+                  <p className={cn("text-[10px] font-bold mt-0.5", positive ? "text-emerald-600 dark:text-emerald-400" : "text-red-600 dark:text-red-400")}>
+                    {t.change}
+                  </p>
+                </div>
+                <Badge className={cn("border-0 text-[9px] gap-1 animate-pulse shrink-0", positive ? "bg-emerald-500 text-white" : "bg-red-500 text-white")}>
+                  <Radio className="w-2 h-2" /> LIVE
+                </Badge>
+              </button>
+            );
+          })}
+        </div>
+      </div>
+
+      {/* ─── Magic Shows / Illusion Live ─── */}
+      <div className="px-4 pt-4 pb-1">
+        <div className="flex items-center justify-between mb-2.5">
+          <h2 className="font-bold text-sm text-foreground flex items-center gap-1.5">
+            🎩 Magic & Illusion
+            <Badge className="bg-fuchsia-600 text-white border-0 text-[9px]">Mind blown</Badge>
+          </h2>
+        </div>
+        <div className="flex gap-3 overflow-x-auto scrollbar-hide -mx-4 px-4 pb-1">
+          {[
+            { trick: "Card mind-reading", host: "MagicMike", viewers: 3420, img: "https://images.unsplash.com/photo-1542652694-40abf526446e?w=400&q=70&auto=format&fit=crop", emoji: "🎴" },
+            { trick: "Coin vanish trick", host: "Illusio", viewers: 2810, img: "https://images.unsplash.com/photo-1534073828943-f801091bb18c?w=400&q=70&auto=format&fit=crop", emoji: "🪙" },
+            { trick: "Levitation street magic", host: "Mystica", viewers: 4120, img: "https://images.unsplash.com/photo-1518709268805-4e9042af2176?w=400&q=70&auto=format&fit=crop", emoji: "✨" },
+            { trick: "Escape act live", host: "HoudiniJr", viewers: 6240, img: "https://images.unsplash.com/photo-1535063406830-27dec3df96fc?w=400&q=70&auto=format&fit=crop", emoji: "🔓" },
+          ].map((m, i) => (
+            <button
+              key={i}
+              onClick={() => toast.info(m.trick)}
+              className="shrink-0 w-[160px] rounded-2xl overflow-hidden bg-card border border-fuchsia-500/30 active:scale-[0.97] transition-transform shadow-sm text-left"
+            >
+              <div className="relative aspect-square">
+                <img src={m.img} alt="" className="absolute inset-0 w-full h-full object-cover" />
+                <div className="absolute inset-0 bg-gradient-to-tr from-fuchsia-700/85 via-purple-700/60 to-pink-500/30" />
+                <Badge className="absolute top-2 left-2 bg-fuchsia-600 text-white border-0 text-[9px] gap-1 animate-pulse">
+                  <Radio className="w-2 h-2" /> LIVE
+                </Badge>
+                <span className="absolute top-2 right-2 text-xl">{m.emoji}</span>
+                <div className="absolute bottom-2 left-2 right-2">
+                  <p className="text-white font-bold text-[12px] leading-tight drop-shadow">{m.trick}</p>
+                  <div className="flex items-center justify-between mt-0.5">
+                    <span className="text-white/80 text-[10px]">@{m.host}</span>
+                    <div className="flex items-center gap-0.5">
+                      <Eye className="w-2.5 h-2.5 text-white/80" />
+                      <span className="text-[9px] text-white/90 font-semibold">{m.viewers.toLocaleString()}</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {/* ─── Coin Recharge promo (limited offer) ─── */}
+      <div className="px-4 pt-4 pb-1">
+        <button className="w-full relative rounded-2xl overflow-hidden p-3.5 bg-gradient-to-r from-amber-500 via-orange-500 to-rose-500 text-left active:scale-[0.99] transition-transform shadow-lg shadow-amber-500/30">
+          <div className="absolute -right-4 -top-4 w-24 h-24 rounded-full bg-white/15" />
+          <div className="absolute -right-1 -bottom-6 w-16 h-16 rounded-full bg-white/10" />
+          <div className="relative z-10 flex items-center gap-3">
+            <div className="w-12 h-12 rounded-2xl bg-white/25 backdrop-blur-sm flex items-center justify-center shrink-0">
+              <span className="text-2xl">🪙</span>
+            </div>
+            <div className="flex-1 min-w-0">
+              <Badge className="bg-white/30 backdrop-blur-sm text-white border-0 text-[8px] font-black mb-1">FLASH 24H</Badge>
+              <p className="text-white font-bold text-[14px] leading-tight">+50% Bonus on first recharge</p>
+              <p className="text-white/85 text-[11px] leading-tight">Top up coins • Send bigger gifts • Climb the ladder</p>
+            </div>
+            <div className="flex items-center gap-1 bg-white rounded-full px-3 py-2 shrink-0 shadow-md">
+              <span className="text-amber-700 text-[11px] font-bold">Recharge</span>
+              <ChevronRight className="w-3 h-3 text-amber-700" />
+            </div>
+          </div>
+        </button>
+      </div>
+
+      {/* ─── Live Shopping is above; this section was the old Bigo-style categories grid ─── */}
+
+      {/* ─── Bigo-style categories grid ─── */}
+      <div className="px-4 pt-4 pb-2">
+        <div className="flex items-center justify-between mb-2.5">
+          <h2 className="font-bold text-sm text-foreground flex items-center gap-1.5">
+            <Sparkles className="w-4 h-4 text-amber-500" /> Explore
+          </h2>
+          <button onClick={() => navigate("/explore")} className="text-[11px] text-muted-foreground flex items-center gap-0.5 active:text-foreground">
+            See all <ChevronRight className="w-3 h-3" />
+          </button>
+        </div>
+        <div className="grid grid-cols-4 gap-2">
+          {[
+            { label: "Music", icon: "🎵", gradient: "from-pink-500 to-rose-400", q: "music" },
+            { label: "Gaming", icon: "🎮", gradient: "from-violet-500 to-indigo-500", q: "gaming" },
+            { label: "Dance", icon: "💃", gradient: "from-fuchsia-500 to-pink-500", q: "dance" },
+            { label: "Talent", icon: "⭐", gradient: "from-amber-500 to-orange-400", q: "talent" },
+            { label: "Beauty", icon: "💄", gradient: "from-rose-400 to-red-400", q: "beauty" },
+            { label: "Cooking", icon: "🍳", gradient: "from-orange-500 to-yellow-400", q: "cooking" },
+            { label: "Sports", icon: "⚽", gradient: "from-emerald-500 to-teal-400", q: "sports" },
+            { label: "Travel", icon: "✈️", gradient: "from-sky-500 to-cyan-400", q: "travel" },
+            { label: "Fashion", icon: "👗", gradient: "from-purple-500 to-fuchsia-500", q: "fashion" },
+            { label: "Tech", icon: "💻", gradient: "from-blue-500 to-indigo-500", q: "tech" },
+            { label: "Comedy", icon: "😂", gradient: "from-yellow-400 to-orange-400", q: "comedy" },
+            { label: "Education", icon: "📚", gradient: "from-teal-500 to-emerald-500", q: "education" },
+          ].map((c) => (
+            <button
+              key={c.label}
+              onClick={() => setSearchQuery(c.q)}
+              className={cn(
+                "rounded-2xl bg-gradient-to-br p-2.5 h-[78px] flex flex-col items-center justify-center gap-1 active:scale-95 transition-transform shadow-sm",
+                c.gradient,
+              )}
+            >
+              <span className="text-2xl">{c.icon}</span>
+              <span className="text-[10px] font-bold text-white">{c.label}</span>
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {/* ─── Top Creators leaderboard ─── */}
+      <div className="px-4 pt-4 pb-2">
+        <div className="flex items-center justify-between mb-2.5">
+          <h2 className="font-bold text-sm text-foreground flex items-center gap-1.5">
+            <Trophy className="w-4 h-4 text-amber-500" /> Top Creators
+          </h2>
+          <button onClick={() => navigate("/leaderboard")} className="text-[11px] text-muted-foreground flex items-center gap-0.5">
+            Leaderboard <ChevronRight className="w-3 h-3" />
+          </button>
+        </div>
+        <div className="flex gap-3 overflow-x-auto scrollbar-hide -mx-4 px-4 pb-1">
+          {[
+            { name: "Maya Chen", followers: "2.4M", img: "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=200&q=70&auto=format&fit=crop", rank: 1 },
+            { name: "Alex Rivera", followers: "1.8M", img: "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=200&q=70&auto=format&fit=crop", rank: 2 },
+            { name: "Jin Park", followers: "1.5M", img: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=200&q=70&auto=format&fit=crop", rank: 3 },
+            { name: "Lily Wong", followers: "1.2M", img: "https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=200&q=70&auto=format&fit=crop", rank: 4 },
+            { name: "Carlos M.", followers: "950K", img: "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=200&q=70&auto=format&fit=crop", rank: 5 },
+            { name: "Sofia G.", followers: "780K", img: "https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=200&q=70&auto=format&fit=crop", rank: 6 },
+            { name: "Ryan T.", followers: "640K", img: "https://images.unsplash.com/photo-1492562080023-ab3db95bfbce?w=200&q=70&auto=format&fit=crop", rank: 7 },
+          ].map((c) => (
+            <div key={c.name} className="shrink-0 flex flex-col items-center gap-1.5 w-[64px]">
+              <div className="relative">
+                <Avatar className={cn(
+                  "h-14 w-14 ring-2",
+                  c.rank === 1 ? "ring-amber-400" : c.rank === 2 ? "ring-zinc-300" : c.rank === 3 ? "ring-orange-600" : "ring-border",
+                )}>
+                  <AvatarImage src={c.img} />
+                  <AvatarFallback className="bg-muted">{c.name[0]}</AvatarFallback>
+                </Avatar>
+                {c.rank <= 3 && (
+                  <div className={cn(
+                    "absolute -top-1 -right-1 w-5 h-5 rounded-full flex items-center justify-center text-[9px] font-bold text-white shadow-md",
+                    c.rank === 1 ? "bg-amber-500" : c.rank === 2 ? "bg-zinc-400" : "bg-orange-600",
+                  )}>
+                    {c.rank === 1 && <Crown className="w-2.5 h-2.5" />}
+                    {c.rank > 1 && c.rank}
+                  </div>
+                )}
+              </div>
+              <p className="text-[10px] font-semibold text-foreground truncate w-full text-center leading-tight">{c.name}</p>
+              <p className="text-[9px] text-muted-foreground">{c.followers}</p>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* ─── Recommended for you / Multi-guest preview ─── */}
+      <div className="px-4 pt-4 pb-2">
+        <div className="flex items-center justify-between mb-2.5">
+          <h2 className="font-bold text-sm text-foreground flex items-center gap-1.5">
+            <TrendingUp className="w-4 h-4 text-rose-500" /> {filteredStreams.length === 0 ? "Coming soon" : "Live now"}
+          </h2>
+        </div>
+      </div>
+
+      <div className="p-4 pt-0 grid grid-cols-2 sm:grid-cols-3 md:grid-cols-3 lg:grid-cols-4 2xl:grid-cols-5 gap-4">
         {isLoading ? (
           <div className="col-span-full flex items-center justify-center h-40">
             <div className="flex flex-col items-center gap-3">
@@ -999,18 +2847,65 @@ export default function LiveStreamPage() {
             </div>
           </div>
         ) : filteredStreams.length === 0 ? (
-          <div className="col-span-full flex flex-col items-center justify-center h-60 text-center px-6">
-            <div className="w-20 h-20 rounded-full bg-red-500/10 flex items-center justify-center mb-4">
-              <WifiOff className="h-9 w-9 text-red-500/40" />
+          <>
+            {/* Suggested Bigo-style preview cards when nobody is live */}
+            {[
+              { name: "Maya Chen", title: "Late night vibes 🌙", topic: "Music", viewers: 12453, photo: topicPhotos.Music, host: "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=200&q=70&auto=format&fit=crop", verified: true, hot: true },
+              { name: "Jin Park", title: "Pro gameplay clinic", topic: "Gaming", viewers: 8521, photo: topicPhotos.Gaming, host: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=200&q=70&auto=format&fit=crop", verified: true, hot: true },
+              { name: "Lily Wong", title: "Glow-up makeup tutorial", topic: "Beauty", viewers: 6210, photo: "https://images.unsplash.com/photo-1487412947147-5cebf100ffc2?w=800&q=70&auto=format&fit=crop", host: "https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=200&q=70&auto=format&fit=crop", verified: true, hot: false },
+              { name: "Alex Rivera", title: "Cooking carbonara live", topic: "Cooking", viewers: 4870, photo: topicPhotos.Cooking, host: "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=200&q=70&auto=format&fit=crop", verified: false, hot: false },
+              { name: "Sofia G.", title: "Yoga & morning flow", topic: "Fitness", viewers: 3942, photo: topicPhotos.Fitness, host: "https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=200&q=70&auto=format&fit=crop", verified: true, hot: false },
+              { name: "Ryan T.", title: "Singing my favorites", topic: "Music", viewers: 2810, photo: topicPhotos.Music, host: "https://images.unsplash.com/photo-1492562080023-ab3db95bfbce?w=200&q=70&auto=format&fit=crop", verified: false, hot: false },
+            ].map((s, i) => (
+              <motion.div key={s.name} initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.05 }}>
+                <button
+                  onClick={() => toast.info("This creator isn't live yet — be the first to know when they go live.")}
+                  className="w-full text-left bg-card rounded-2xl border border-border/30 overflow-hidden hover:border-red-500/30 transition-all group shadow-sm hover:shadow-xl hover:-translate-y-1 duration-300 opacity-90"
+                >
+                  <div className="relative aspect-[3/4] overflow-hidden bg-muted">
+                    <img src={s.photo} alt={s.title} loading="lazy" className="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-500 grayscale-[20%]" />
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/20 to-black/40" />
+                    <Badge className="absolute top-3 left-3 bg-zinc-700/90 backdrop-blur-sm text-white border-0 text-[10px] gap-1">
+                      <span className="h-1.5 w-1.5 rounded-full bg-zinc-300" /> Soon
+                    </Badge>
+                    {s.hot && (
+                      <Badge className="absolute top-3 left-[68px] bg-gradient-to-r from-orange-500 to-amber-500 text-white border-0 text-[10px] gap-0.5 shadow-lg">
+                        <Flame className="h-2.5 w-2.5" /> Hot
+                      </Badge>
+                    )}
+                    <div className="absolute top-3 right-3 flex items-center gap-1 bg-black/60 backdrop-blur-sm rounded-full px-2.5 py-1 border border-white/10">
+                      <Eye className="h-3 w-3 text-white/80" />
+                      <span className="text-[11px] text-white font-semibold">{s.viewers.toLocaleString()}</span>
+                    </div>
+                    <div className="absolute bottom-0 left-0 right-0 p-3">
+                      <div className="flex items-center gap-2 mb-2">
+                        <Avatar className="h-8 w-8 border-2 border-white/80 shadow-lg">
+                          <AvatarImage src={s.host} />
+                          <AvatarFallback className="bg-red-500/20 text-white text-[10px] font-bold">{s.name[0]}</AvatarFallback>
+                        </Avatar>
+                        <div className="flex-1 min-w-0">
+                          <p className="text-[11px] font-semibold text-white truncate drop-shadow inline-flex items-center gap-1">
+                            <span className="truncate">{s.name}</span>
+                            {s.verified && <VerifiedBadge size={11} interactive={false} />}
+                          </p>
+                          <p className="text-[10px] text-white/70 truncate drop-shadow">{s.topic}</p>
+                        </div>
+                      </div>
+                      <h3 className="font-bold text-white text-sm leading-tight line-clamp-2 drop-shadow-lg">{s.title}</h3>
+                    </div>
+                  </div>
+                </button>
+              </motion.div>
+            ))}
+            <div className="col-span-full flex flex-col items-center justify-center mt-2 mb-4 text-center px-6">
+              <p className="text-[12px] text-muted-foreground mb-3">
+                Nobody's live right now — explore creators above or start your own stream.
+              </p>
+              <Button onClick={handleGoLive} className="rounded-full gap-1.5 bg-red-500 hover:bg-red-600 text-white">
+                <Radio className="h-4 w-4" /> Start Your Own
+              </Button>
             </div>
-            <p className="text-base font-bold text-foreground mb-1">No live streams</p>
-            <p className="text-sm text-muted-foreground mb-5">
-              {filter === "live" ? "No one is streaming right now." : "Check back later for upcoming streams."}
-            </p>
-            <Button onClick={handleGoLive} className="rounded-full gap-1.5 bg-red-500 hover:bg-red-600 text-white">
-              <Radio className="h-4 w-4" /> Start Your Own
-            </Button>
-          </div>
+          </>
         ) : (
           filteredStreams.map((stream, i) => {
             const photo = topicPhotos[stream.topic] || topicPhotos.General;

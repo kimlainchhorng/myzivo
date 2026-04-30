@@ -7,6 +7,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { ArrowLeft, ShoppingCart, Star, Clock, MapPin, Phone, Store, Package, Loader2, Plus, Minus, Sparkles, Heart, Eye, MessageCircle, Facebook, Instagram, Send, CalendarCheck, BedDouble, Lock, Share2, RefreshCcw } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { StarRating } from "@/components/shared/StarRating";
+import SafeCaption from "@/components/social/SafeCaption";
 import { track } from "@/lib/analytics";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { Button } from "@/components/ui/button";
@@ -446,7 +447,7 @@ export default function StoreProfilePage() {
                 )}
               </div>
               {store.description && (
-                <p className="text-xs text-muted-foreground mt-1 line-clamp-2">{store.description}</p>
+                <p className="text-xs text-muted-foreground mt-1 line-clamp-2"><SafeCaption text={store.description} /></p>
               )}
             </div>
           </div>

@@ -1,6 +1,7 @@
 /** request-lodging-change — guest submits a validated lodging reschedule request. */
 import { createClient } from "../_shared/deps.ts";
 import { notifyLodgingReservation } from "../_shared/lodging-notifications.ts";
+import { scanContentForLinks } from "../_shared/contentLinkValidation.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -24,6 +25,10 @@ Deno.serve(async (req) => {
 
     const { reservation_id, type, check_in, check_out, reason } = await req.json();
     if (!reservation_id || type !== "reschedule") return new Response(JSON.stringify({ error: "invalid_request" }), { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+    if (typeof reason === "string") {
+      const linkScan = scanContentForLinks(reason);
+      if (!linkScan.ok) return new Response(JSON.stringify({ error: "blocked_link", code: "blocked_link", urls: linkScan.blocked }), { status: 422, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+    }
     if (!check_in || !check_out || daysBetween(check_in, check_out) < 1 || new Date(check_in) < new Date(new Date().toDateString())) {
       return new Response(JSON.stringify({ error: "invalid_range" }), { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } });
     }

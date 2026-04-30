@@ -2,6 +2,7 @@
 import { createClient } from "../_shared/deps.ts";
 import Stripe from "../_shared/stripe.ts";
 import { notifyLodgingReservation } from "../_shared/lodging-notifications.ts";
+import { scanContentForLinks } from "../_shared/contentLinkValidation.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -39,6 +40,10 @@ Deno.serve(async (req) => {
 
     const { reservation_id, reason, preview } = await req.json();
     if (!reservation_id) return new Response(JSON.stringify({ error: "missing_reservation_id" }), { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+    if (typeof reason === "string") {
+      const linkScan = scanContentForLinks(reason);
+      if (!linkScan.ok) return new Response(JSON.stringify({ error: "blocked_link", code: "blocked_link", urls: linkScan.blocked }), { status: 422, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+    }
 
     const { data: r } = await supabase
       .from("lodge_reservations")
