@@ -195,7 +195,6 @@ type TabCategory = "book" | "trip" | "money" | "safety" | "comfort" | "rewards" 
 export default function RideHubPage() {
   const navigate = useNavigate();
   const { t } = useI18n();
-<<<<<<< HEAD
   const tabs: { id: string; label: string; icon: typeof Zap; category: TabCategory }[] = [
     { id: "book", label: t("ride.tab_book"), icon: Zap, category: "book" },
     { id: "reserve", label: t("ride.tab_reserve"), icon: CalendarDays, category: "book" },
@@ -254,8 +253,7 @@ export default function RideHubPage() {
     { id: "corporate", label: "Corporate", icon: Building2, category: "business" },
     { id: "family", label: "Family", icon: UserPlus, category: "business" },
     { id: "travel", label: "Travel", icon: Plane, category: "business" },
-=======
-<<<<<<< HEAD
+  ];
 
   const primaryTabs = [
     { id: "book",     label: t("ride.tab_book"),    icon: Zap },
@@ -266,70 +264,6 @@ export default function RideHubPage() {
     { id: "safety",   label: t("ride.tab_safety"),   icon: Shield },
     { id: "pass",     label: t("ride.tab_pass"),     icon: Crown },
     { id: "features", label: "Features",             icon: Grid3x3 },
-  ];
-
-  const [searchParams] = useSearchParams();
-  const initialTab = searchParams.get("tab") === "reserve" ? "reserve" : "book";
-=======
-  const tabs = [
-    { id: "book", label: t("ride.tab_book"), icon: Zap },
-    { id: "reserve", label: t("ride.tab_reserve"), icon: CalendarDays },
-    { id: "map", label: t("ride.tab_map"), icon: MapIcon },
-    { id: "search", label: t("ride.tab_search"), icon: Search },
-    { id: "history", label: t("ride.tab_history"), icon: History },
-    { id: "calendar", label: t("ride.tab_calendar"), icon: CalendarDays },
-    { id: "insights", label: t("ride.tab_insights"), icon: BarChart3 },
-    { id: "tracking", label: t("ride.tab_live"), icon: Navigation },
-    { id: "match", label: "Match", icon: Car },
-    { id: "confirm", label: t("ride.confirm"), icon: Star },
-    { id: "wallet", label: t("ride.tab_wallet"), icon: Wallet },
-    { id: "loyalty", label: "Loyalty", icon: Award },
-    { id: "spending", label: "Spending", icon: PieChart },
-    { id: "social", label: "Social", icon: Share2 },
-    { id: "driver", label: "Driver", icon: User },
-    { id: "surge", label: "Demand", icon: Car },
-    { id: "compare", label: "Compare", icon: DollarSign },
-    { id: "schedule", label: "Schedule", icon: Calendar },
-    { id: "multi", label: "Multi-Stop", icon: Route },
-    { id: "group", label: "Group", icon: Users },
-    { id: "places", label: "Places", icon: MapPin },
-    { id: "chat", label: "Chat", icon: MessageSquare },
-    { id: "safety", label: t("ride.tab_safety"), icon: Shield },
-    { id: "alerts", label: t("ride.tab_alerts"), icon: Bell },
-    { id: "pass", label: t("ride.tab_pass"), icon: Crown },
-    { id: "receipt", label: "Receipt", icon: Receipt },
-    { id: "rate", label: "Rate", icon: Star },
-    { id: "lost", label: "Lost Item", icon: Search },
-    { id: "a11y", label: t("ride.accessible"), icon: Accessibility },
-    { id: "prefs", label: "Prefs", icon: Settings },
-    { id: "eco", label: "Eco", icon: Leaf },
-    { id: "business", label: "Business", icon: Briefcase },
-    { id: "feedback", label: "Feedback", icon: ThumbsUp },
-    { id: "specialty", label: "Special", icon: Dog },
-    { id: "analytics", label: "Analytics", icon: TrendingUp },
-    { id: "entertain", label: "Music", icon: Music },
-    { id: "gifting", label: "Gifting", icon: Gift },
-    { id: "rewards", label: "Rewards", icon: Trophy },
-    { id: "corporate", label: "Corporate", icon: Building2 },
-    { id: "inclusive", label: "Inclusive", icon: Heart },
-    { id: "routes", label: "Routes", icon: Brain },
-    { id: "adv-safety", label: t("ride.tab_safety") + "+", icon: ShieldCheck },
-    { id: "travel", label: "Travel", icon: Plane },
-    { id: "family", label: "Family", icon: UserPlus },
-    { id: "subscribe", label: "Subscribe", icon: Gem },
-    { id: "smart-price", label: "Pricing", icon: DollarSign },
-    { id: "driver-comm", label: "Comms", icon: MessageSquare },
-    { id: "social-feat", label: "Community", icon: Users },
-    { id: "ride-analytics", label: "Dashboard", icon: PieChart },
-    { id: "marketplace", label: "Marketplace", icon: Gavel },
-    { id: "wellness", label: "Wellness", icon: Heart },
-    { id: "pay-adv", label: "Pay+", icon: Wallet },
-    { id: "ai-assist", label: "AI", icon: Brain },
-    { id: "scheduling", label: "Scheduling", icon: CalendarDays },
-    { id: "safety-adv2", label: "Dashcam", icon: Camera },
-    { id: "loyalty-rwd", label: "Loyalty+", icon: Trophy },
-    { id: "a11y-adv", label: "A11y+", icon: Accessibility },
->>>>>>> 4f5c9381f83c04cedd52b5edfbf95b784f58af56
   ];
 
   const categories: { id: TabCategory | "all"; label: string }[] = [
@@ -353,7 +287,6 @@ export default function RideHubPage() {
   const validTabIds = tabs.map(t => t.id);
   const requestedTab = searchParams.get("tab");
   const initialTab = requestedTab && validTabIds.includes(requestedTab) ? requestedTab : "book";
->>>>>>> 855443b0719159d83ad7f6c5c749111be5296ccd
   const initialDestination = searchParams.get("destination") || undefined;
   const initialDestLat = searchParams.get("destLat") ? parseFloat(searchParams.get("destLat")!) : undefined;
   const initialDestLng = searchParams.get("destLng") ? parseFloat(searchParams.get("destLng")!) : undefined;
@@ -422,7 +355,6 @@ export default function RideHubPage() {
     >
       {/* Tab bar — hidden when in full-screen book mode */}
       {activeTab !== "book" && (
-<<<<<<< HEAD
         <div className={cn("z-20 bg-background/95 backdrop-blur-lg border-b border-border/30 shrink-0", isFullScreen ? "" : "sticky top-14")}>
           {/* Category filter chips */}
           <div className="flex overflow-x-auto gap-1.5 px-4 pt-2 scrollbar-none">
@@ -463,26 +395,6 @@ export default function RideHubPage() {
               <p className="text-xs text-muted-foreground py-1.5">No tabs match.</p>
             )}
             {visibleTabs.map((tab) => {
-=======
-        <div className={cn(
-          "z-20 bg-background/95 backdrop-blur-lg border-b border-border/30 shrink-0",
-          isFullScreen ? "" : "sticky top-14"
-        )}>
-          {/* Back breadcrumb for feature tabs */}
-          {!isPrimary && (
-            <button
-              onClick={() => setActiveTab(featureReturnTab)}
-              className="flex items-center gap-1.5 px-4 pt-2 pb-1 text-xs font-bold text-primary"
-            >
-              <ChevronLeft className="w-3.5 h-3.5" />
-              All Features
-            </button>
-          )}
-
-          {/* Primary tab pills */}
-          <div className="flex overflow-x-auto gap-1 px-4 py-2 scrollbar-none">
-            {primaryTabs.map((tab) => {
->>>>>>> 4f5c9381f83c04cedd52b5edfbf95b784f58af56
               const Icon = tab.icon;
               // "features" tab is active when we're on any non-primary tab
               const active = activeTab === tab.id || (tab.id === "features" && !isPrimary);
@@ -517,7 +429,6 @@ export default function RideHubPage() {
             transition={{ duration: 0.2 }}
             className={cn(isFullScreen && "h-full min-h-0 flex flex-col flex-1")}
           >
-<<<<<<< HEAD
             {/* ── Book ── */}
             {activeTab === "book" && (
               <RideBookingHome
@@ -543,15 +454,6 @@ export default function RideHubPage() {
             )}
 
             {/* ── Live Tracker ── */}
-=======
-            {activeTab === "book" && <RideBookingHome initialSchedule={bookWithSchedule} initialDestinationAddress={initialDestination} initialDestLat={initialDestLat} initialDestLng={initialDestLng} />}
-            {activeTab === "reserve" && <div className="flex-1 min-h-0 overflow-hidden"><ZivoReserve onReserve={() => { setBookWithSchedule(true); selectTab("book"); }} /></div>}
-            {activeTab === "map" && <div className="p-4"><SurgePricingMap /></div>}
-            {activeTab === "search" && <div className="p-4"><RideQuickSearch /></div>}
-            {activeTab === "history" && <div className="p-4"><RideTripHistory /></div>}
-            {activeTab === "calendar" && <div className="p-4"><RideScheduleCalendar /></div>}
-            {activeTab === "insights" && <div className="pt-4"><RideHistoryInsights /></div>}
->>>>>>> 855443b0719159d83ad7f6c5c749111be5296ccd
             {activeTab === "tracking" && <div className="p-4"><LiveTripTracker /></div>}
 
             {/* ── Wallet ── */}

@@ -1330,7 +1330,13 @@ export default function ChatHubPage({ embedded = false }: { embedded?: boolean }
   }
 
   const shell = (
-    <div className={cn("flex flex-col", embedded ? "h-full min-h-0" : "min-h-screen")}>
+    <div className={cn(
+      "flex flex-col mx-auto w-full",
+      embedded ? "h-full min-h-0" : "min-h-screen",
+      // Cap width on tablet+/desktop so the chat list reads as a clean panel,
+      // not a sprawl. Mobile keeps full width.
+      !embedded && "md:max-w-2xl lg:max-w-3xl xl:max-w-4xl",
+    )}>
       {showListShell && (
         <>
           <div

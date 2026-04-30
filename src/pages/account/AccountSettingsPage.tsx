@@ -20,6 +20,7 @@ import { useUsername } from "@/hooks/useUsername";
 import { useLoyaltyPoints } from "@/hooks/useLoyaltyPoints";
 import { useAccessibilityPrefs } from "@/hooks/useAccessibilityPrefs";
 import { useNotificationPreferences, useUpdateNotificationPreferences } from "@/hooks/useNotificationPreferences";
+import { useNotifications } from "@/hooks/useNotifications";
 import { useRecentSettings } from "@/hooks/useRecentSettings";
 import { usePinnedSettings } from "@/hooks/usePinnedSettings";
 import { useLinkedDevices } from "@/hooks/useLinkedDevices";
@@ -79,7 +80,8 @@ const settingsGroups: SettingsGroup[] = [
     items: [
       { icon: Shield, label: "Privacy & Safety", description: "Blocks, mutes & visibility", href: "/account/privacy", color: "bg-rose-500/15", iconColor: "text-rose-500" },
       { icon: Database, label: "Data Rights", description: "GDPR/CCPA — access, delete, consents", href: "/account/data-rights", color: "bg-zinc-500/15", iconColor: "text-zinc-500" },
-      { icon: Bell, label: "Notifications", description: "Preferences & alerts", href: "/account/notifications", color: "bg-sky-500/15", iconColor: "text-sky-500" },
+      { icon: Bell, label: "Inbox", description: "Past notifications & alerts", href: "/notifications", color: "bg-sky-500/15", iconColor: "text-sky-500" },
+      { icon: Bell, label: "Notification Settings", description: "Preferences & channels", href: "/account/notifications", color: "bg-sky-500/15", iconColor: "text-sky-500" },
       { icon: Globe, label: "Preferences", description: "Language & settings", href: "/account/preferences", color: "bg-indigo-500/15", iconColor: "text-indigo-500" },
       { icon: Eye, label: "Read Receipts", description: "Show when you read messages", href: "/account/privacy#receipts", color: "bg-rose-500/15", iconColor: "text-rose-500" },
       { icon: Lock, label: "Two-Step Verification", description: "Extra login security", href: "/chat/settings/two-step", color: "bg-emerald-500/15", iconColor: "text-emerald-500" },
@@ -196,6 +198,7 @@ export default function AccountSettingsPage() {
   const { prefs: a11yPrefs, update: updateA11yPref } = useAccessibilityPrefs();
   const { data: notifPrefs } = useNotificationPreferences();
   const updateNotifPrefs = useUpdateNotificationPreferences();
+  const { unreadCount: notifUnread } = useNotifications(50);
   const { theme, resolvedTheme, setTheme } = useTheme();
   const { items: recentItems, record: recordRecent, clear: clearRecents } = useRecentSettings();
   const { isPinned, toggle: togglePin } = usePinnedSettings();
@@ -384,6 +387,9 @@ export default function AccountSettingsPage() {
     if (notifPrefs?.inAppEnabled === false) {
       map["/account/notifications"] = { text: "Muted", variant: "warn" };
     }
+    if (notifUnread > 0) {
+      map["/notifications"] = { text: `${notifUnread} new`, variant: "info" };
+    }
     if (setupSignals && !setupSignals.phoneVerified) {
       map["/account/profile-edit"] = { text: "Verify phone", variant: "warn" };
     }
@@ -391,7 +397,7 @@ export default function AccountSettingsPage() {
       map["/account/loyalty"] = { text: `${points.points_balance.toLocaleString()} pts`, variant: "info" };
     }
     return map;
-  }, [setupSignals, user, profile?.is_verified, devices, notifPrefs?.inAppEnabled, points?.points_balance]);
+  }, [setupSignals, user, profile?.is_verified, devices, notifPrefs?.inAppEnabled, notifUnread, points?.points_balance, securitySummary?.failed_logins]);
 
   const setupDone = setupSteps.filter((s) => s.done).length;
   const setupTotal = setupSteps.length;

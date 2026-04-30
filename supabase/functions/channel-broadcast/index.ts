@@ -1,7 +1,7 @@
 // channel-broadcast — owner/admin posts a message to a channel, fans out push
 // notifications to all subscribers via the existing device_tokens table.
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
-import { scanContentForLinks } from "../_shared/contentLinkValidation.ts";
+import { scanContentForLinks, logBlockedAttempt } from "../_shared/contentLinkValidation.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -47,6 +47,13 @@ Deno.serve(async (req) => {
     if (typeof text === "string") {
       const linkScan = scanContentForLinks(text);
       if (!linkScan.ok) {
+        logBlockedAttempt(supabase, {
+          endpoint: "channel-broadcast",
+          userId: u.user.id,
+          urls: linkScan.blocked,
+          text,
+          ip: req.headers.get("cf-connecting-ip") || req.headers.get("x-forwarded-for"),
+        });
         return new Response(
           JSON.stringify({ error: "blocked_link", code: "blocked_link", urls: linkScan.blocked }),
           { status: 422, headers: { ...corsHeaders, "Content-Type": "application/json" } },

@@ -2,7 +2,7 @@
 import { createClient } from "../_shared/deps.ts";
 import Stripe from "../_shared/stripe.ts";
 import { notifyLodgingReservation } from "../_shared/lodging-notifications.ts";
-import { scanContentForLinks } from "../_shared/contentLinkValidation.ts";
+import { scanContentForLinks, logBlockedAttempt } from "../_shared/contentLinkValidation.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -42,7 +42,10 @@ Deno.serve(async (req) => {
     if (!reservation_id) return new Response(JSON.stringify({ error: "missing_reservation_id" }), { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } });
     if (typeof reason === "string") {
       const linkScan = scanContentForLinks(reason);
-      if (!linkScan.ok) return new Response(JSON.stringify({ error: "blocked_link", code: "blocked_link", urls: linkScan.blocked }), { status: 422, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+      if (!linkScan.ok) {
+        logBlockedAttempt(admin, { endpoint: "cancel-lodging-reservation", userId: user.id, urls: linkScan.blocked, text: reason, ip: req.headers.get("cf-connecting-ip") || req.headers.get("x-forwarded-for") });
+        return new Response(JSON.stringify({ error: "blocked_link", code: "blocked_link", urls: linkScan.blocked }), { status: 422, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+      }
     }
 
     const { data: r } = await supabase

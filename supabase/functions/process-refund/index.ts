@@ -1,5 +1,6 @@
 import { createClient } from "../_shared/deps.ts";
 import Stripe from "../_shared/stripe.ts";
+import { scanContentForLinks, logBlockedAttempt } from "../_shared/contentLinkValidation.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -33,6 +34,13 @@ Deno.serve(async (req) => {
     const { request_id, decision, approved_amount_cents, notes } = await req.json();
     if (!request_id || !["approve", "partial", "deny"].includes(decision)) {
       return new Response(JSON.stringify({ error: "invalid input" }), { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+    }
+    if (typeof notes === "string") {
+      const linkScan = scanContentForLinks(notes);
+      if (!linkScan.ok) {
+        logBlockedAttempt(admin, { endpoint: "process-refund", userId: user.id, urls: linkScan.blocked, text: notes, ip: req.headers.get("cf-connecting-ip") || req.headers.get("x-forwarded-for") });
+        return new Response(JSON.stringify({ error: "blocked_link", code: "blocked_link", urls: linkScan.blocked }), { status: 422, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+      }
     }
 
     const { data: refundReq, error: reqErr } = await admin

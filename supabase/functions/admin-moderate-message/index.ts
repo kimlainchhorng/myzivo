@@ -1,6 +1,6 @@
 import { createClient } from "../_shared/deps.ts";
 import { enforceAal2 } from "../_shared/aalCheck.ts";
-import { scanContentForLinks } from "../_shared/contentLinkValidation.ts";
+import { scanContentForLinks, logBlockedAttempt } from "../_shared/contentLinkValidation.ts";
 
 // Admin-gated approve/block for trip_messages, with admin_actions audit entry.
 const corsHeaders = {
@@ -60,7 +60,10 @@ Deno.serve(async (req) => {
     }
     if (typeof notes === "string") {
       const linkScan = scanContentForLinks(notes);
-      if (!linkScan.ok) return new Response(JSON.stringify({ error: "blocked_link", code: "blocked_link", urls: linkScan.blocked }), { status: 422, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+      if (!linkScan.ok) {
+        logBlockedAttempt(admin, { endpoint: "admin-moderate-message", userId: user.id, urls: linkScan.blocked, text: notes, ip: req.headers.get("cf-connecting-ip") || req.headers.get("x-forwarded-for") });
+        return new Response(JSON.stringify({ error: "blocked_link", code: "blocked_link", urls: linkScan.blocked }), { status: 422, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+      }
     }
 
     const { error: updErr } = await admin

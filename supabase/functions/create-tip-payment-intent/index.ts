@@ -4,7 +4,7 @@
 import { createClient } from "../_shared/deps.ts";
 import { getCorsHeaders } from "../_shared/cors.ts";
 import Stripe from "../_shared/stripe.ts";
-import { scanContentForLinks } from "../_shared/contentLinkValidation.ts";
+import { scanContentForLinks, logBlockedAttempt } from "../_shared/contentLinkValidation.ts";
 
 Deno.serve(async (req) => {
   const cors = getCorsHeaders(req);
@@ -41,6 +41,14 @@ Deno.serve(async (req) => {
       return new Response(JSON.stringify({ error: "creator_id required, minimum tip $1.00" }), {
         status: 400, headers: { ...cors, "Content-Type": "application/json" },
       });
+    }
+    if (typeof message === "string") {
+      const linkScan = scanContentForLinks(message);
+      if (!linkScan.ok) {
+        const admin = createClient(supabaseUrl, serviceKey);
+        logBlockedAttempt(admin, { endpoint: "create-tip-payment-intent", userId: user.id, urls: linkScan.blocked, text: message, ip: req.headers.get("cf-connecting-ip") || req.headers.get("x-forwarded-for") });
+        return new Response(JSON.stringify({ error: "blocked_link", code: "blocked_link", urls: linkScan.blocked }), { status: 422, headers: { ...cors, "Content-Type": "application/json" } });
+      }
     }
 
     const stripe = new Stripe(stripeKey, { apiVersion: "2025-08-27.basil" });

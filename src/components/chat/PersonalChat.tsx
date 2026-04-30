@@ -259,7 +259,9 @@ export default function PersonalChat({ recipientId, recipientName, recipientAvat
   const [showSearch, setShowSearch] = useState(false);
   const [highlightedMsgId, setHighlightedMsgId] = useState<string | null>(null);
   const [showAttachMenu, setShowAttachMenu] = useState(false);
-  const [disappearingMode, setDisappearingMode] = useState(false);
+  // Auto-delete (chat-wide disappearing). null = off, otherwise seconds. Cycles 1d→7d→30d→off.
+  const [disappearingSec, setDisappearingSec] = useState<number | null>(null);
+  const disappearingMode = disappearingSec != null;
   const [showNotifSettings, setShowNotifSettings] = useState(false);
   const [showMediaGallery, setShowMediaGallery] = useState(false);
   const [mediaGalleryTab, setMediaGalleryTab] = useState<"photos" | "videos" | "voice" | "files" | "links">("photos");
@@ -276,11 +278,9 @@ export default function PersonalChat({ recipientId, recipientName, recipientAvat
   const [showWalletSheet, setShowWalletSheet] = useState(false);
   const [showScanner, setShowScanner] = useState(false);
   const [showPollCreator, setShowPollCreator] = useState(false);
-<<<<<<< HEAD
   const [showQuickReplies, setShowQuickReplies] = useState(false);
   const [showContactPicker, setShowContactPicker] = useState(false);
-=======
->>>>>>> 4f5c9381f83c04cedd52b5edfbf95b784f58af56
+  const [isDragOver, setIsDragOver] = useState(false);
   const [pendingLockedFile, setPendingLockedFile] = useState<File | null>(null);
   const [chatStyle, setChatStyle] = useState({ wallpaper: "default", themeColor: "default", fontSize: "medium" });
   const [callEvents, setCallEvents] = useState<CallEvent[]>([]);
@@ -791,8 +791,8 @@ export default function PersonalChat({ recipientId, recipientName, recipientAvat
       file_payload: filePayload || null,
       expires_at: selfDestructSec
         ? new Date(Date.now() + selfDestructSec * 1000).toISOString()
-        : disappearingMode
-        ? new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString()
+        : disappearingSec != null
+        ? new Date(Date.now() + disappearingSec * 1000).toISOString()
         : null,
       created_at: new Date().toISOString(),
       is_read: false,
@@ -825,8 +825,8 @@ export default function PersonalChat({ recipientId, recipientName, recipientAvat
       if (selfDestructSec) {
         insertData.expires_at = new Date(Date.now() + selfDestructSec * 1000).toISOString();
         insertData.self_destruct_seconds = selfDestructSec;
-      } else if (disappearingMode) {
-        insertData.expires_at = new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString();
+      } else if (disappearingSec != null) {
+        insertData.expires_at = new Date(Date.now() + disappearingSec * 1000).toISOString();
       }
 
       // Fire-and-forget insert; realtime INSERT echo will replace the optimistic row.
@@ -1755,11 +1755,39 @@ export default function PersonalChat({ recipientId, recipientName, recipientAvat
         />
       )}
 
-      {/* Messages */}
+      {/* Messages — drag & drop file upload zone (desktop / iPad) */}
       <div
         ref={scrollRef}
         onScroll={handleScroll}
-        className={`flex-1 min-h-0 overflow-y-auto overscroll-contain px-4 py-3 flex flex-col ${getWallpaperClass(chatStyle.wallpaper)}`}
+        onDragEnter={(e) => {
+          if (!e.dataTransfer.types.includes("Files")) return;
+          e.preventDefault();
+          setIsDragOver(true);
+        }}
+        onDragOver={(e) => {
+          if (!e.dataTransfer.types.includes("Files")) return;
+          e.preventDefault();
+          e.dataTransfer.dropEffect = "copy";
+        }}
+        onDragLeave={(e) => {
+          if (e.target === e.currentTarget) setIsDragOver(false);
+        }}
+        onDrop={(e) => {
+          e.preventDefault();
+          setIsDragOver(false);
+          const file = e.dataTransfer.files?.[0];
+          if (!file || !user?.id) return;
+          if (file.type.startsWith("image/")) {
+            if (file.size > 5 * 1024 * 1024) { toast.error("Image must be under 5MB"); return; }
+            sendOptimisticMedia(file, "image");
+          } else if (file.type.startsWith("video/")) {
+            if (file.size > 25 * 1024 * 1024) { toast.error("Video must be under 25MB"); return; }
+            sendOptimisticMedia(file, "video");
+          } else {
+            toast.error("Drop an image or video — for other files, use the attach menu");
+          }
+        }}
+        className={`relative flex-1 min-h-0 overflow-y-auto overscroll-contain px-4 py-3 flex flex-col ${getWallpaperClass(chatStyle.wallpaper)}`}
         style={{
           ...getWallpaperStyle(chatStyle.wallpaper),
           WebkitOverflowScrolling: "touch",
@@ -1768,6 +1796,15 @@ export default function PersonalChat({ recipientId, recipientName, recipientAvat
           contain: "layout paint" as React.CSSProperties["contain"],
         }}
       >
+        {/* Drag-over overlay for desktop/iPad file drop */}
+        {isDragOver && (
+          <div className="pointer-events-none absolute inset-3 z-30 rounded-3xl border-2 border-dashed border-primary bg-primary/10 backdrop-blur-sm flex items-center justify-center">
+            <div className="bg-background/90 px-5 py-4 rounded-2xl shadow-lg border border-primary/30 text-center">
+              <p className="text-sm font-bold text-foreground">Drop image or video to send</p>
+              <p className="text-[11px] text-muted-foreground mt-0.5">Up to 5MB image · 25MB video</p>
+            </div>
+          </div>
+        )}
         {loading ? (
           <div className="flex items-center justify-center h-40">
             <Loader2 className="h-5 w-5 animate-spin text-primary" />
@@ -2063,20 +2100,40 @@ export default function PersonalChat({ recipientId, recipientName, recipientAvat
                   onVideoSelect={() => videoInputRef.current?.click()}
                   onLocationShare={handleLocationShare}
                   onToggleDisappearing={() => {
-                    setDisappearingMode(!disappearingMode);
-                    toast.success(disappearingMode ? "Disappearing messages OFF" : "Disappearing messages ON — messages auto-delete after 24h");
+                    // Cycle Off → 1d → 7d → 30d → Off
+                    const next = disappearingSec == null
+                      ? 24 * 60 * 60
+                      : disappearingSec === 24 * 60 * 60
+                      ? 7 * 24 * 60 * 60
+                      : disappearingSec === 7 * 24 * 60 * 60
+                      ? 30 * 24 * 60 * 60
+                      : null;
+                    setDisappearingSec(next);
+                    toast.success(
+                      next == null
+                        ? "Auto-delete: Off"
+                        : next === 24 * 60 * 60
+                        ? "Auto-delete: 1 day"
+                        : next === 7 * 24 * 60 * 60
+                        ? "Auto-delete: 7 days"
+                        : "Auto-delete: 30 days"
+                    );
                   }}
                   disappearingEnabled={disappearingMode}
+                  disappearingLabel={
+                    disappearingSec == null ? "Off" :
+                    disappearingSec === 24 * 60 * 60 ? "1d" :
+                    disappearingSec === 7 * 24 * 60 * 60 ? "7d" :
+                    disappearingSec === 30 * 24 * 60 * 60 ? "30d" :
+                    "On"
+                  }
                   onLockedImageSelect={() => lockedImageInputRef.current?.click()}
                   onSendGift={() => setShowGiftPanel(true)}
                   onOpenWallet={() => setShowWalletSheet(true)}
                   onScanDocument={() => setShowScanner(true)}
                   onFileSelect={() => filePickerTriggerRef.current?.()}
                   onCreatePoll={() => setShowPollCreator(true)}
-<<<<<<< HEAD
                   onShareContact={() => setShowContactPicker(true)}
-=======
->>>>>>> 4f5c9381f83c04cedd52b5edfbf95b784f58af56
                 />
               </div>
 
@@ -2435,7 +2492,6 @@ export default function PersonalChat({ recipientId, recipientName, recipientAvat
         </Suspense>
       )}
 
-<<<<<<< HEAD
       {/* Poll creator (Telegram-style) */}
       <ChatPollCreator
         open={showPollCreator}
@@ -2509,39 +2565,7 @@ export default function PersonalChat({ recipientId, recipientName, recipientAvat
           toast.success("Contact shared");
         }}
       />
-=======
-      {/* Poll Creator */}
-      {showPollCreator && (
-        <Suspense fallback={null}>
-          <PollCreatorSheet
-            open={showPollCreator}
-            onClose={() => setShowPollCreator(false)}
-            onSendPoll={(question, options) => {
-              const pollPayload = JSON.stringify({
-                __rich: true,
-                payload: {
-                  type: "poll",
-                  label: `📊 ${question}`,
-                  question,
-                  options: options.map((o) => ({ text: o, votes: 0 })),
-                  total_votes: 0,
-                },
-              });
-              void (async () => {
-                const { error } = await (supabase as any).from("direct_messages").insert({
-                  sender_id: user!.id,
-                  receiver_id: recipientId,
-                  message: pollPayload,
-                  message_type: "poll",
-                });
-                if (!error) toast.success("Poll sent!");
-              })();
-              setShowPollCreator(false);
-            }}
-          />
-        </Suspense>
-      )}
->>>>>>> 4f5c9381f83c04cedd52b5edfbf95b784f58af56
+
     </motion.div>
   );
 

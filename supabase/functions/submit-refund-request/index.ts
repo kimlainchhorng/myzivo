@@ -1,5 +1,5 @@
 import { createClient } from "../_shared/deps.ts";
-import { scanContentForLinks } from "../_shared/contentLinkValidation.ts";
+import { scanContentForLinks, logBlockedAttempt } from "../_shared/contentLinkValidation.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -36,17 +36,24 @@ Deno.serve(async (req) => {
       return new Response(JSON.stringify({ error: "requested_amount_cents must be positive" }), { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } });
     }
 
+    const admin = createClient(supabaseUrl, serviceKey);
+
     if (typeof description === "string") {
       const linkScan = scanContentForLinks(description);
       if (!linkScan.ok) {
+        logBlockedAttempt(admin, {
+          endpoint: "submit-refund-request",
+          userId: user.id,
+          urls: linkScan.blocked,
+          text: description,
+          ip: req.headers.get("cf-connecting-ip") || req.headers.get("x-forwarded-for"),
+        });
         return new Response(
           JSON.stringify({ error: "blocked_link", code: "blocked_link", urls: linkScan.blocked }),
           { status: 422, headers: { ...corsHeaders, "Content-Type": "application/json" } },
         );
       }
     }
-
-    const admin = createClient(supabaseUrl, serviceKey);
 
     // Validate ride: completed, owned by user, within 30 days
     const { data: ride, error: rideErr } = await admin

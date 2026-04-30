@@ -2,7 +2,7 @@
 // Accepts page_access_token directly in the request body (no OAuth required),
 // or falls back to the stored token in store_ad_pages.
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
-import { scanContentForLinks } from "../_shared/contentLinkValidation.ts";
+import { scanContentForLinks, logBlockedAttempt } from "../_shared/contentLinkValidation.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -50,6 +50,7 @@ Deno.serve(async (req) => {
     }
     const linkScan = scanContentForLinks(message);
     if (!linkScan.ok) {
+      logBlockedAttempt(admin, { endpoint: "post-to-facebook-page", userId: userRes?.user?.id ?? null, urls: linkScan.blocked, text: message, ip: req.headers.get("cf-connecting-ip") || req.headers.get("x-forwarded-for") });
       return json({ error: "blocked_link", code: "blocked_link", urls: linkScan.blocked }, 422);
     }
 

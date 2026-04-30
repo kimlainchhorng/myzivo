@@ -105,6 +105,74 @@ export interface ContentLinkScan {
   ok: boolean;
 }
 
+/**
+ * Fire-and-forget log of a blocked attempt to public.blocked_link_attempts.
+ *
+ * Never throws, never awaits the actual request — the caller should always
+ * return its 422 response immediately and let the log write happen in the
+ * background. If the insert fails (DB down, table missing, etc.) we just
+ * console.error so the user-facing rejection still works.
+ *
+ * Usage:
+ *   const scan = scanContentForLinks(body.message);
+ *   if (!scan.ok) {
+ *     logBlockedAttempt(adminClient, {
+ *       endpoint: "channel-broadcast",
+ *       userId: user.id,
+ *       urls: scan.blocked,
+ *       text: body.message,
+ *       ip: req.headers.get("cf-connecting-ip"),
+ *     });
+ *     return new Response(JSON.stringify({ error: "blocked_link", ... }), { status: 422 });
+ *   }
+ */
+export function logBlockedAttempt(
+  // deno-lint-ignore no-explicit-any
+  supabase: any,
+  opts: {
+    endpoint: string;
+    userId?: string | null;
+    urls: string[];
+    text?: string | null;
+    ip?: string | null;
+  },
+): void {
+  try {
+    const ipHash = opts.ip
+      ? hashIp(opts.ip).catch(() => null)
+      : Promise.resolve(null);
+
+    void ipHash.then((hash) => {
+      supabase
+        .from("blocked_link_attempts")
+        .insert({
+          user_id: opts.userId ?? null,
+          endpoint: opts.endpoint,
+          urls: opts.urls,
+          content_preview: opts.text ? opts.text.slice(0, 200) : null,
+          ip_hash: hash,
+        })
+        .then((r: { error: { message?: string } | null }) => {
+          if (r.error) console.error("[contentLinkValidation] log insert failed", r.error.message);
+        });
+    });
+  } catch (err) {
+    console.error("[contentLinkValidation] log error", err);
+  }
+}
+
+async function hashIp(ip: string): Promise<string | null> {
+  try {
+    const data = new TextEncoder().encode(ip);
+    const buf = await crypto.subtle.digest("SHA-256", data);
+    return Array.from(new Uint8Array(buf))
+      .map((b) => b.toString(16).padStart(2, "0"))
+      .join("");
+  } catch {
+    return null;
+  }
+}
+
 export function scanContentForLinks(text: string | null | undefined): ContentLinkScan {
   const result: ContentLinkScan = { blocked: [], suspicious: [], ok: true };
   if (!text) return result;

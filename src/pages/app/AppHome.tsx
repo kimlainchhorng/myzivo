@@ -542,10 +542,10 @@ const AppHome = () => {
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-1.5">
                     <p className="text-sm font-bold text-foreground">What's new in Chat</p>
-                    <span className="text-[9px] font-bold px-1.5 py-0.5 rounded-full bg-fuchsia-500/15 text-fuchsia-500">6 NEW</span>
+                    <span className="text-[9px] font-bold px-1.5 py-0.5 rounded-full bg-fuchsia-500/15 text-fuchsia-500">7 NEW</span>
                   </div>
                   <p className="text-xs text-muted-foreground truncate">
-                    Smart replies · Polls · Quick replies · Forward + comment · Share · Scan
+                    Drag &amp; drop · Smart replies · Polls · Quick replies · Forward + comment
                   </p>
                 </div>
                 <ChevronRight className="w-4 h-4 text-muted-foreground shrink-0 transition-transform group-hover:translate-x-0.5" />

@@ -1,7 +1,7 @@
 import { createClient } from "npm:@supabase/supabase-js@2.49.4";
 import { getCorsHeaders } from "../_shared/cors.ts";
 import { enforceAal2 } from "../_shared/aalCheck.ts";
-import { scanContentForLinks } from "../_shared/contentLinkValidation.ts";
+import { scanContentForLinks, logBlockedAttempt } from "../_shared/contentLinkValidation.ts";
 
 const ALLOWED_ROLES = ["admin", "super_admin", "support"];
 
@@ -68,6 +68,7 @@ Deno.serve(async (req) => {
 
     const linkScan = scanContentForLinks(content);
     if (!linkScan.ok) {
+      logBlockedAttempt(adminClient, { endpoint: "admin-post-comment", userId, urls: linkScan.blocked, text: content, ip: req.headers.get("cf-connecting-ip") || req.headers.get("x-forwarded-for") });
       return jsonResponse({ error: "blocked_link", code: "blocked_link", urls: linkScan.blocked }, 422, corsHeaders);
     }
 

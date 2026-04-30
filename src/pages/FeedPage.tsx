@@ -30,6 +30,8 @@ const ReelsPreviewRow = lazy(() => import("@/components/social/ReelsPreviewRow")
 const RepostDialog = lazy(() => import("@/components/social/RepostDialog"));
 const PostInsights = lazy(() => import("@/components/social/PostInsights"));
 const MentionPicker = lazy(() => import("@/components/social/MentionPicker"));
+const CommentHeartButton = lazy(() => import("@/components/social/CommentHeartButton"));
+const CommentRowActions = lazy(() => import("@/components/social/CommentRowActions"));
 import { detectMention, applyMention } from "@/components/social/MentionPicker";
 import { postHasHashtag } from "@/components/social/TrendingHashtags";
 import { usePostActions, type PostActionTarget } from "@/hooks/usePostActions";
@@ -65,6 +67,8 @@ import EyeOff from "lucide-react/dist/esm/icons/eye-off";
 import ChevronUp from "lucide-react/dist/esm/icons/chevron-up";
 import ChevronDown from "lucide-react/dist/esm/icons/chevron-down";
 import Music from "lucide-react/dist/esm/icons/music";
+import Flame from "lucide-react/dist/esm/icons/flame";
+import Languages from "lucide-react/dist/esm/icons/languages";
 import Gauge from "lucide-react/dist/esm/icons/gauge";
 import PictureInPicture from "lucide-react/dist/esm/icons/picture-in-picture-2";
 import MapPin from "lucide-react/dist/esm/icons/map-pin";
@@ -77,7 +81,7 @@ import UtensilsCrossed from "lucide-react/dist/esm/icons/utensils-crossed";
 import Car from "lucide-react/dist/esm/icons/car";
 import Briefcase from "lucide-react/dist/esm/icons/briefcase";
 import ShoppingBag from "lucide-react/dist/esm/icons/shopping-bag";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion, AnimatePresence, MotionConfig } from "framer-motion";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { cn } from "@/lib/utils";
@@ -264,7 +268,10 @@ function ReelCard({
   const [isScrubbing, setIsScrubbing] = useState(false);
   const [showLikeBurst, setShowLikeBurst] = useState(false);
   const [videoDuration, setVideoDuration] = useState(0);
+  const [bufferedProgress, setBufferedProgress] = useState(0);
+  const [isBuffering, setIsBuffering] = useState(false);
   const [authorIsLive, setAuthorIsLive] = useState(false);
+  const [topComment, setTopComment] = useState<{ author_name: string; author_avatar: string | null; content: string; likes_count: number } | null>(null);
   const [isHoldingFastForward, setIsHoldingFastForward] = useState(false);
   const [playbackSpeed, setPlaybackSpeed] = useState(1.0);
   const [showSpeedPicker, setShowSpeedPicker] = useState(false);
@@ -443,6 +450,45 @@ function ReelCard({
       });
     return () => { alive = false; };
   }, [isActive, post.author_id]);
+
+  // Top comment preview — fetch the most-liked comment for this reel
+  // when it becomes active, so the user gets a glance at the engagement
+  // without opening the full sheet. Author profile is joined from the
+  // public_profiles view (no RLS friction).
+  useEffect(() => {
+    if (!isActive || !post.id) { setTopComment(null); return; }
+    let alive = true;
+    const rawId = post.id.startsWith("u-") ? post.id.slice(2) : post.id;
+    const source: "user" | "store" = post.source === "user" ? "user" : "store";
+    (async () => {
+      try {
+        const { data: cmts } = await (supabase as any)
+          .from("post_comments")
+          .select("user_id, content, likes_count")
+          .eq("post_id", rawId)
+          .eq("post_source", source)
+          .is("parent_id", null)
+          .order("likes_count", { ascending: false })
+          .order("created_at", { ascending: false })
+          .limit(1);
+        if (!alive || !cmts || cmts.length === 0) { setTopComment(null); return; }
+        const top = cmts[0];
+        const { data: profile } = await (supabase as any)
+          .from("public_profiles")
+          .select("full_name, avatar_url")
+          .eq("id", top.user_id)
+          .maybeSingle();
+        if (!alive) return;
+        setTopComment({
+          author_name: profile?.full_name || "User",
+          author_avatar: profile?.avatar_url || null,
+          content: String(top.content || "").slice(0, 80),
+          likes_count: top.likes_count || 0,
+        });
+      } catch { if (alive) setTopComment(null); }
+    })();
+    return () => { alive = false; };
+  }, [isActive, post.id, post.source]);
 
   // Realtime engagement bumps for the active reel. When other viewers like
   // or comment on the post you're watching, the right-column counters
@@ -778,12 +824,34 @@ function ReelCard({
           onSeeked={(e) => {
             capturePoster(e.currentTarget);
           }}
-          onPlay={() => setIsPlaying(true)}
+          onPlay={() => { setIsPlaying(true); setIsBuffering(false); }}
           onPause={() => setIsPlaying(false)}
+          onWaiting={() => setIsBuffering(true)}
+          onPlaying={() => setIsBuffering(false)}
+          onCanPlay={() => setIsBuffering(false)}
           onTimeUpdate={(e) => {
             const v = e.currentTarget;
             if (Number.isFinite(v.duration) && v.duration > 0) {
               setVideoProgress(Math.min(1, v.currentTime / v.duration));
+            }
+          }}
+          onProgress={(e) => {
+            // Update buffered range whenever the browser reports progress.
+            // We use the buffered range that contains the current playhead so
+            // the indicator always reflects what's available "ahead" of the
+            // user, not just the largest accidental island.
+            const v = e.currentTarget;
+            if (!Number.isFinite(v.duration) || v.duration <= 0) return;
+            const buf = v.buffered;
+            for (let i = 0; i < buf.length; i++) {
+              if (buf.start(i) <= v.currentTime && v.currentTime <= buf.end(i)) {
+                setBufferedProgress(Math.min(1, buf.end(i) / v.duration));
+                return;
+              }
+            }
+            // Fallback to the last buffered range
+            if (buf.length > 0) {
+              setBufferedProgress(Math.min(1, buf.end(buf.length - 1) / v.duration));
             }
           }}
           onError={async () => {
@@ -899,6 +967,18 @@ function ReelCard({
         )}
       </AnimatePresence>
 
+      {/* Mid-playback buffering spinner — only shown when the user has
+          actually started watching but the network stalled. Hidden during
+          the initial-load and FFmpeg-repair flows (they have their own UI). */}
+      {isVideoPost && isBuffering && isActive && !hasPlaybackError && !isRepairing && !isBlobLoading && hasLoadedFrame && (
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-30 pointer-events-none">
+          <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-black/60 backdrop-blur-md">
+            <Loader2 className="w-4 h-4 text-white animate-spin" />
+            <span className="text-white text-[11px] font-semibold">Buffering…</span>
+          </div>
+        </div>
+      )}
+
       {/* Paused indicator */}
       {isVideoPost && !isPlaying && !hasPlaybackError && !isRepairing && !isBlobLoading && (
         <div className="absolute inset-0 z-20 flex items-center justify-center pointer-events-none">
@@ -934,6 +1014,25 @@ function ReelCard({
         className="absolute bottom-0 left-0 right-16 z-30 px-4"
         style={{ paddingBottom: "calc(env(safe-area-inset-bottom, 0px) + 88px)" }}
       >
+        {/* Owner-only insights pill — small "Your reel · X views" affordance
+            that takes the creator to their post analytics on tap. */}
+        {userId && post.author_id && userId === post.author_id && (
+          <button
+            type="button"
+            onClick={(e) => {
+              e.stopPropagation();
+              const rawId = post.id.startsWith("u-") ? post.id.slice(2) : post.id;
+              navigate(`/u/post/${rawId}/insights`);
+            }}
+            className="inline-flex items-center gap-1.5 mb-2 px-2.5 py-1 rounded-full bg-white/15 backdrop-blur-md border border-white/20 active:scale-95 transition-transform"
+          >
+            <Eye className="w-3 h-3 text-white" />
+            <span className="text-white text-[11px] font-semibold">
+              Your reel · {(post.view_count || 0) > 999 ? `${((post.view_count || 0) / 1000).toFixed(1)}k` : (post.view_count || 0)} views
+            </span>
+          </button>
+        )}
+
         <div className="flex items-center gap-2.5 mb-2.5">
           <button
             type="button"
@@ -970,6 +1069,26 @@ function ReelCard({
               )}
             </span>
           </button>
+
+          {/* Trending badge — engagement signal blended with recency.
+              Shown when (likes·1 + comments·2 + shares·3 + views·0.05) is
+              high relative to age, capping at "very recent + very engaging". */}
+          {(() => {
+            const ageHours = Math.max(1, (Date.now() - new Date(post.created_at || Date.now()).getTime()) / 3_600_000);
+            const score =
+              (post.likes_count || 0)
+              + (post.comments_count || 0) * 2
+              + (post.view_count || 0) * 0.05;
+            const trendingScore = score / Math.max(1, Math.log2(2 + ageHours));
+            const isTrending = trendingScore >= 50;
+            if (!isTrending) return null;
+            return (
+              <span className="hidden sm:inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-gradient-to-r from-orange-500/90 to-rose-500/90 backdrop-blur-sm border border-white/20 shadow-lg">
+                <Flame className="w-3 h-3 text-white" />
+                <span className="text-white text-[10px] font-bold leading-none">Trending</span>
+              </span>
+            );
+          })()}
 
           {/* Follow / Following button */}
           {authorId && !isSelf && (
@@ -1013,26 +1132,51 @@ function ReelCard({
         )}
         {post.caption && (() => {
           const isLong = post.caption.length > 90;
+          // Detect non-Latin scripts (Khmer, Thai, Lao, Burmese, Chinese, Japanese,
+          // Korean, Arabic, Hebrew, Cyrillic, Devanagari, etc.). When present and
+          // the user's locale is en-*, offer a translate shortcut.
+          const hasNonLatin = /[؀-ۿ֐-׿ऀ-ॿ฀-๿຀-໿က-႟ក-៿぀-ゟ゠-ヿ一-鿿가-힯Ѐ-ӿ]/.test(post.caption);
+          const userLang = (typeof navigator !== "undefined" ? navigator.language : "en").toLowerCase();
+          const showTranslate = hasNonLatin && userLang.startsWith("en");
           return (
-            <button
-              type="button"
-              onClick={(e) => { e.stopPropagation(); if (isLong) setCaptionExpanded((v) => !v); }}
-              className={cn(
-                "block w-full text-left text-white text-sm sm:text-[15px] lg:text-base drop-shadow leading-snug mb-2",
-                !captionExpanded && "line-clamp-2",
-                isLong ? "cursor-pointer" : "cursor-default",
+            <>
+              <button
+                type="button"
+                onClick={(e) => { e.stopPropagation(); if (isLong) setCaptionExpanded((v) => !v); }}
+                className={cn(
+                  "block w-full text-left text-white text-sm sm:text-[15px] lg:text-base drop-shadow leading-snug mb-1",
+                  !captionExpanded && "line-clamp-2",
+                  isLong ? "cursor-pointer" : "cursor-default",
+                )}
+                aria-expanded={captionExpanded}
+              >
+                <Suspense fallback={<span>{post.caption}</span>}>
+                  <SafeCaption text={post.caption} />
+                </Suspense>
+                {isLong && (
+                  <span className="text-white/70 ml-1 font-semibold">
+                    {captionExpanded ? " less" : " …more"}
+                  </span>
+                )}
+              </button>
+              {showTranslate && (
+                <button
+                  type="button"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    const url = `https://translate.google.com/?sl=auto&tl=en&text=${encodeURIComponent(post.caption!)}&op=translate`;
+                    window.open(url, "_blank", "noopener,noreferrer");
+                  }}
+                  className="inline-flex items-center gap-1 mb-2 text-white/80 active:scale-95 transition-transform"
+                  title="Translate caption to English"
+                >
+                  <Languages className="w-3 h-3" />
+                  <span className="text-[11px] font-semibold underline decoration-white/40 underline-offset-2">
+                    See translation
+                  </span>
+                </button>
               )}
-              aria-expanded={captionExpanded}
-            >
-              <Suspense fallback={<span>{post.caption}</span>}>
-                <SafeCaption text={post.caption} />
-              </Suspense>
-              {isLong && (
-                <span className="text-white/70 ml-1 font-semibold">
-                  {captionExpanded ? " less" : " …more"}
-                </span>
-              )}
-            </button>
+            </>
           );
         })()}
 
@@ -1082,6 +1226,39 @@ function ReelCard({
             <ReactionSummary postId={rawPostId} source={post.source ?? "store"} />
           </Suspense>
         </div>
+
+        {/* Top comment preview — surfaces the most-liked comment so users
+            get social proof of engagement without opening the comment sheet.
+            Tap routes to the full comments. */}
+        {topComment && (
+          <button
+            type="button"
+            onClick={(e) => { e.stopPropagation(); onOpenComments(post.id); }}
+            className="flex items-start gap-2 mb-2 max-w-full text-left active:opacity-70"
+          >
+            <div className="w-6 h-6 rounded-full overflow-hidden bg-white/15 border border-white/20 shrink-0">
+              {topComment.author_avatar ? (
+                <img src={topComment.author_avatar} alt="" className="w-full h-full object-cover" />
+              ) : (
+                <div className="w-full h-full flex items-center justify-center text-white text-[10px] font-bold">
+                  {topComment.author_name[0]?.toUpperCase()}
+                </div>
+              )}
+            </div>
+            <div className="flex-1 min-w-0">
+              <p className="text-white/90 text-[12px] leading-snug drop-shadow line-clamp-2">
+                <span className="font-bold mr-1">{topComment.author_name}</span>
+                {topComment.content}
+              </p>
+            </div>
+            {topComment.likes_count > 0 && (
+              <div className="flex items-center gap-0.5 shrink-0 text-white/70 text-[11px] font-semibold drop-shadow">
+                <Heart className="w-3 h-3 fill-white/70" />
+                <span>{topComment.likes_count > 999 ? `${(topComment.likes_count / 1000).toFixed(1)}k` : topComment.likes_count}</span>
+              </div>
+            )}
+          </button>
+        )}
 
         {/* "View N comments" inline link — Instagram/TikTok pattern.
             Opens the existing comment sheet without forcing a trip to the
@@ -1192,6 +1369,7 @@ function ReelCard({
           onClick={(e) => { e.stopPropagation(); handleMuteToggle(); }}
           className="flex flex-col items-center gap-1 min-w-[44px] min-h-[44px]"
           aria-label={globalMuted ? "Unmute" : "Mute"}
+          title={`${globalMuted ? "Unmute" : "Mute"} (M)`}
         >
           <div className="w-11 h-11 lg:w-12 lg:h-12 rounded-full bg-black/40 backdrop-blur-sm flex items-center justify-center relative overflow-hidden border border-white/10">
             {globalMuted ? (
@@ -1254,6 +1432,7 @@ function ReelCard({
             onContextMenu={(e) => { e.preventDefault(); if (onSetReaction) setShowReactionPicker(true); }}
             className="flex flex-col items-center gap-1 min-w-[44px] min-h-[44px]"
             aria-label={currentReaction ? `Reacted ${currentReaction}` : "Like"}
+            title="Like (L)"
           >
             {currentReaction ? (
               <span className="text-3xl drop-shadow-lg leading-none transition-transform active:scale-125" aria-hidden>
@@ -1333,6 +1512,7 @@ function ReelCard({
           onClick={(e) => { e.stopPropagation(); onOpenShare(post.id); }}
           className="flex flex-col items-center gap-1 min-w-[44px] min-h-[44px]"
           aria-label="Share"
+          title="Share"
         >
           <Share2 className="w-9 h-9 lg:w-10 lg:h-10 text-white drop-shadow-lg" />
           <span className="text-white text-xs font-semibold drop-shadow">
@@ -1348,6 +1528,7 @@ function ReelCard({
           onClick={(e) => { e.stopPropagation(); handleSaveToggle(); }}
           className="flex flex-col items-center gap-1 min-w-[44px] min-h-[44px]"
           aria-label={saved ? "Remove from saved" : "Save reel"}
+          title={saved ? "Saved" : "Save"}
         >
           <Bookmark
             className={cn(
@@ -1370,6 +1551,7 @@ function ReelCard({
           }}
           className="flex flex-col items-center gap-1 min-w-[44px] min-h-[44px]"
           aria-label="More options"
+          title="More options"
         >
           <div className="w-11 h-11 rounded-full bg-black/40 backdrop-blur-sm flex items-center justify-center border border-white/10">
             <MoreHorizontal className="w-5 h-5 text-white" />
@@ -1478,6 +1660,13 @@ function ReelCard({
               isScrubbing ? "h-1" : "h-0.5",
             )}
           >
+            {/* Buffered range — sits beneath the playhead fill so the user
+                can see how much is ready ahead of where they're watching. */}
+            <div
+              className="absolute inset-y-0 left-0 bg-white/30 transition-[width] duration-200 ease-out"
+              style={{ width: `${bufferedProgress * 100}%` }}
+            />
+            {/* Played fill */}
             <div
               className="absolute inset-y-0 left-0 bg-white/90"
               style={{ width: `${videoProgress * 100}%` }}
@@ -1677,7 +1866,16 @@ function CommentSheet({
   const [commentText, setCommentText] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [mentionQuery, setMentionQuery] = useState<string | null>(null);
+  // Inline edit state for own comments
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [editingText, setEditingText] = useState("");
   const queryClient = useQueryClient();
+
+  // Route comments to the right table based on the post id prefix.
+  // User posts are passed with a "u-" prefix; everything else is a store post.
+  const isUserPost  = postId.startsWith("u-");
+  const rawPostId   = isUserPost ? postId.slice(2) : postId;
+  const targetTable = isUserPost ? "user_post_comments" : "store_post_comments";
   const inputRef = useRef<HTMLInputElement>(null);
 
   // Check if user has a verified account (phone_verified)
@@ -1743,6 +1941,40 @@ function CommentSheet({
     setSubmitting(false);
   };
 
+  // Edit / delete handlers for own comments
+  const handleEditComment = async (commentId: string, nextContent: string) => {
+    if (!userId || !nextContent.trim()) return;
+    if (!confirmContentSafe(nextContent, "comment")) return;
+    const { error } = await supabase
+      .from("store_post_comments")
+      .update({ content: nextContent.trim() })
+      .eq("id", commentId)
+      .eq("user_id", userId); // RLS-style guard
+    if (error) {
+      toast.error("Couldn't save edit");
+      return;
+    }
+    setEditingId(null);
+    setEditingText("");
+    queryClient.invalidateQueries({ queryKey: ["post-comments", postId] });
+  };
+
+  const handleDeleteComment = async (commentId: string) => {
+    if (!userId) return;
+    const { error } = await supabase
+      .from("store_post_comments")
+      .delete()
+      .eq("id", commentId)
+      .eq("user_id", userId);
+    if (error) {
+      toast.error("Couldn't delete comment");
+      return;
+    }
+    toast.success("Comment deleted");
+    queryClient.invalidateQueries({ queryKey: ["post-comments", postId] });
+    queryClient.invalidateQueries({ queryKey: ["customer-feed"] });
+  };
+
   useEffect(() => {
     inputRef.current?.focus();
   }, []);
@@ -1796,14 +2028,63 @@ function CommentSheet({
                 </div>
                 <div className="flex-1 min-w-0">
                   <p className="text-xs font-semibold text-foreground mb-0.5">{name}</p>
-                  <p className="text-sm text-foreground">
-                    <Suspense fallback={<span>{c.content}</span>}>
-                      <SafeCaption text={c.content} />
-                    </Suspense>
-                  </p>
-                  <p className="text-xs text-muted-foreground mt-0.5">
-                    {new Date(c.created_at).toLocaleDateString()}
-                  </p>
+                  {editingId === c.id ? (
+                    <div className="flex flex-col gap-1.5">
+                      <textarea
+                        value={editingText}
+                        onChange={(e) => setEditingText(e.target.value)}
+                        autoFocus
+                        rows={2}
+                        className="w-full rounded-lg border border-border bg-background px-2 py-1.5 text-sm text-foreground outline-none focus:ring-2 focus:ring-primary/40 resize-none"
+                      />
+                      <div className="flex gap-2">
+                        <button
+                          type="button"
+                          onClick={() => { setEditingId(null); setEditingText(""); }}
+                          className="rounded-lg px-3 py-1 text-xs font-medium text-muted-foreground hover:bg-muted active:scale-95"
+                        >
+                          Cancel
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => handleEditComment(c.id, editingText)}
+                          disabled={!editingText.trim() || editingText.trim() === c.content}
+                          className="rounded-lg bg-primary px-3 py-1 text-xs font-semibold text-primary-foreground disabled:opacity-40 active:scale-95"
+                        >
+                          Save
+                        </button>
+                      </div>
+                    </div>
+                  ) : (
+                    <>
+                      <p className="text-sm text-foreground">
+                        <Suspense fallback={<span>{c.content}</span>}>
+                          <SafeCaption text={c.content} />
+                        </Suspense>
+                      </p>
+                      <p className="text-xs text-muted-foreground mt-0.5">
+                        {new Date(c.created_at).toLocaleDateString()}
+                      </p>
+                    </>
+                  )}
+                </div>
+                <div className={`flex items-start gap-1 ${editingId === c.id ? "hidden" : ""}`}>
+                  <Suspense fallback={null}>
+                    <CommentHeartButton
+                      commentId={c.id}
+                      targetTable="store_post_comments"
+                      userId={userId}
+                      variant="light"
+                    />
+                  </Suspense>
+                  <Suspense fallback={null}>
+                    <CommentRowActions
+                      canManage={!!userId && c.user_id === userId}
+                      variant="light"
+                      onEditStart={() => { setEditingId(c.id); setEditingText(c.content || ""); }}
+                      onDelete={() => handleDeleteComment(c.id)}
+                    />
+                  </Suspense>
                 </div>
               </div>
               );
@@ -2849,6 +3130,7 @@ export default function FeedPage() {
   }
 
   return (
+    <MotionConfig reducedMotion="user">
     <div className="fixed inset-0 bg-black lg:flex lg:flex-col">
       {/* Desktop NavBar */}
       <div className="hidden lg:block relative z-[1200] shrink-0">
@@ -3316,5 +3598,6 @@ export default function FeedPage() {
       {/* Bottom navigation overlaid on top */}
       <ZivoMobileNav />
     </div>
+    </MotionConfig>
   );
 }

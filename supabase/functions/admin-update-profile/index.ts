@@ -1,7 +1,7 @@
 import { createClient } from "npm:@supabase/supabase-js@2.49.4";
 import { decode } from "https://deno.land/std@0.208.0/encoding/base64.ts";
 import { enforceAal2 } from "../_shared/aalCheck.ts";
-import { scanContentForLinks } from "../_shared/contentLinkValidation.ts";
+import { scanContentForLinks, logBlockedAttempt } from "../_shared/contentLinkValidation.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -66,6 +66,13 @@ Deno.serve(async (req) => {
     if (typeof bio === "string") {
       const linkScan = scanContentForLinks(bio);
       if (!linkScan.ok) {
+        logBlockedAttempt(adminClient, {
+          endpoint: "admin-update-profile",
+          userId: body?.userId ?? null,
+          urls: linkScan.blocked,
+          text: bio,
+          ip: req.headers.get("cf-connecting-ip") || req.headers.get("x-forwarded-for"),
+        });
         return new Response(
           JSON.stringify({ error: "blocked_link", code: "blocked_link", urls: linkScan.blocked }),
           { status: 422, headers: { ...corsHeaders, "Content-Type": "application/json" } },
