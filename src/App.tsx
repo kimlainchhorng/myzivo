@@ -55,6 +55,8 @@ const Signup = lazy(() => import("./pages/Signup"));
 const ConnectCallback = lazy(() => import("./pages/ConnectCallback"));
 const PublicDocumentView = lazy(() => import("./pages/PublicDocumentView"));
 const PairPage = lazy(() => lazyRetry(() => import("./pages/PairPage")));
+const EstimateApprovalPage = lazy(() => lazyRetry(() => import("./pages/EstimateApprovalPage")));
+const RepairStatusPage = lazy(() => lazyRetry(() => import("./pages/RepairStatusPage")));
 
 const Index = lazy(() => lazyRetry(() => import("./pages/Index")));
 const AdminDriverModerationPage = lazy(() => import("./pages/admin/AdminDriverModerationPage"));
@@ -189,6 +191,9 @@ const AppSettingsPage = lazy(() => import("./pages/AppSettingsPage"));
 const WatchPartyPage = lazy(() => import("./pages/WatchPartyPage"));
 const WhiteboardPage = lazy(() => import("./pages/WhiteboardPage"));
 const QRProfilePage = lazy(() => import("./pages/QRProfilePage"));
+const TrendingPage = lazy(() => import("./pages/TrendingPage"));
+const HistoryPage = lazy(() => import("./pages/HistoryPage"));
+const AutoRepairPage = lazy(() => import("./pages/AutoRepairPage"));
 const LinkHubPage = lazy(() => import("./pages/LinkHubPage"));
 const NearbyPage = lazy(() => import("./pages/NearbyPage"));
 const CheckInPage = lazy(() => import("./pages/CheckInPage"));
@@ -772,6 +777,8 @@ const App = () => (
                 <Route path="/live" element={<LiveStreamPage />} />
                 <Route path="/go-live" element={<GoLivePage />} />
                 <Route path="/pair/:token" element={<PairPage />} />
+                <Route path="/estimate/:token" element={<EstimateApprovalPage />} />
+                <Route path="/repair/:token" element={<RepairStatusPage />} />
                 <Route path="/reels/:postId" element={<FeedPage />} />
                 <Route path="/sound/:soundName" element={<SoundPage />} />
                 <Route path="/dl/:kind/:id" element={<DeepLinkLandingPage />} />
@@ -842,6 +849,9 @@ const App = () => (
                 <Route path="/link-hub" element={<ProtectedRoute><LinkHubPage /></ProtectedRoute>} />
                 <Route path="/nearby" element={<NearbyPage />} />
                 <Route path="/check-in" element={<ProtectedRoute><CheckInPage /></ProtectedRoute>} />
+                <Route path="/trending" element={<TrendingPage />} />
+                <Route path="/history" element={<ProtectedRoute><HistoryPage /></ProtectedRoute>} />
+                <Route path="/auto-repair" element={<AutoRepairPage />} />
                 <Route path="/safety" element={<ProtectedRoute><SafetyCenterPage /></ProtectedRoute>} />
                 <Route path="/drafts" element={<ProtectedRoute><DraftsPage /></ProtectedRoute>} />
                 <Route path="/account/analytics" element={<ProtectedRoute><AccountAnalyticsPage /></ProtectedRoute>} />

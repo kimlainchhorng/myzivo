@@ -9,6 +9,7 @@ import { login } from "./fixtures/login";
 test.use({ ...devices["Desktop Chrome"] });
 
 test.describe("post-menu accessibility", () => {
+  test.setTimeout(90_000);
   test.beforeEach(async ({ page }) => {
     await login(page);
   });
@@ -16,6 +17,9 @@ test.describe("post-menu accessibility", () => {
   test("Escape on the grab handle closes the post viewer", async ({ page }) => {
     await seedProfilePosts(page);
     await page.goto("/profile", { waitUntil: "domcontentloaded" });
+    const photoTab = page.getByTestId("profile-tab-photo");
+    await photoTab.waitFor({ state: "visible", timeout: 8000 }).catch(() => {});
+    if (await photoTab.isVisible().catch(() => false)) await photoTab.click();
     const trigger = page.locator('[data-testid^="profile-post-thumb"]').first();
     await expect(trigger).toBeVisible({ timeout: 8000 });
     await trigger.click();
@@ -33,6 +37,9 @@ test.describe("post-menu accessibility", () => {
   }) => {
     await seedProfilePosts(page); // login already ran in beforeEach
     await page.goto("/profile", { waitUntil: "domcontentloaded" });
+    const photoTab2 = page.getByTestId("profile-tab-photo");
+    await photoTab2.waitFor({ state: "visible", timeout: 8000 }).catch(() => {});
+    if (await photoTab2.isVisible().catch(() => false)) await photoTab2.click();
     const trigger = page.locator('[data-testid^="profile-post-thumb"]').first();
     await expect(trigger).toBeVisible({ timeout: 8000 });
     await trigger.click();

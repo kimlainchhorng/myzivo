@@ -8,12 +8,17 @@ const STORE_ID = "a914b90d-c249-4794-ba5e-3fdac0deed44";
 // ─── helpers ────────────────────────────────────────────────────────────────
 
 async function login(page: Page) {
+  await page.addInitScript(() => {
+    try {
+      window.localStorage.setItem(
+        "zivo_cookie_consent",
+        JSON.stringify({ necessary: true, functional: true, analytics: false, marketing: false, personalization: false, updatedAt: new Date().toISOString() }),
+      );
+    } catch {}
+  });
   await page.goto("/login");
-  // The login page is server-rendered, so domcontentloaded is enough
   await page.waitForLoadState("domcontentloaded");
-  // If already logged in, the page will redirect away from /login
   if (!page.url().includes("/login")) return;
-
   await page.locator("#login-email").fill(EMAIL);
   await page.locator("#login-password").fill(PASSWORD);
   await page.locator('button[type="submit"]').click();
@@ -28,7 +33,7 @@ async function goToPartShop(page: Page) {
   await partShopBtn.waitFor({ timeout: 15_000 });
   await partShopBtn.click();
   // Wait for the SuppliersNetworkCard to render
-  await page.getByText("Parts Suppliers").waitFor({ timeout: 20_000 });
+  await page.getByText("Parts Suppliers").first().waitFor({ timeout: 20_000 });
 }
 
 /** The Retail Chain filter is a small chip button inside the suppliers card. */
@@ -74,8 +79,8 @@ test.describe("Parts Suppliers — AutoZonePro connect flow", () => {
     await expect(azBtn).toBeVisible({ timeout: 8_000 });
     await azBtn.click();
 
-    // Dialog should open — "In-app browser" badge is unique to the modal header
-    await expect(page.getByText("In-app browser").first()).toBeVisible({ timeout: 8_000 });
+    // Dialog should open — wait for the modal dialog container
+    await expect(page.locator('[role="dialog"]').first()).toBeVisible({ timeout: 8_000 });
   });
 
   // ── 3. credential panel: save + localStorage ──────────────────────────────
@@ -90,18 +95,19 @@ test.describe("Parts Suppliers — AutoZonePro connect flow", () => {
     // Open AutoZonePro modal
     const azBtn = page.locator("button").filter({ hasText: "AutoZonePro" }).first();
     await azBtn.click();
-    await page.getByText("In-app browser").first().waitFor({ timeout: 8_000 });
+    const dialog = page.locator('[role="dialog"]').first();
+    await dialog.waitFor({ state: "visible", timeout: 8_000 });
 
-    // With no saved creds the credential panel opens automatically (showCreds=true on init).
-    // Clicking "Account" would toggle it closed, so go straight to the inputs.
-    const emailInput = page.locator('input[type="email"]').last();
+    // In proxy-fail mode (test env), the credentialLauncher view is always shown.
+    // The credential form is immediately visible — no "Account" toggle needed.
+    const emailInput = dialog.locator('input[type="email"]');
     await emailInput.waitFor({ timeout: 8_000 });
     await emailInput.fill("Kimlain");
-    await page.locator('input[type="password"]').last().fill("Chhorng@1903");
+    await dialog.locator('input[type="password"]').fill("Chhorng@1903");
 
     // Save
-    await page.getByRole("button", { name: /save.*open/i }).click();
-    await expect(page.getByText(/credentials saved/i)).toBeVisible({ timeout: 6_000 });
+    await dialog.getByRole("button", { name: /save account/i }).click();
+    await expect(page.getByText(/account saved/i)).toBeVisible({ timeout: 6_000 });
 
     // Verify localStorage
     const cred = await page.evaluate((sid) => {

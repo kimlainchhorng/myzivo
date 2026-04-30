@@ -9,9 +9,9 @@ import {
   Package, Compass, ShoppingBag, Heart, MessageCircle,
   Users, Bookmark, Clock, Settings, TrendingUp, Calendar,
   ArrowLeftRight, Shield, Store, LayoutDashboard,
-  Handshake, CarTaxiFront, ChefHat, Building2, Briefcase,
+  Handshake, CarTaxiFront, ChefHat, Building2,
   Headphones, Eye, Wrench, X as XIcon, BadgeCheck, ChevronRight,
-  Crown, LogOut, Plus, Gift,
+  Crown, LogOut, Gift, Radio, Film, Bell, Star, Mic2, ShoppingCart,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/contexts/AuthContext";
@@ -35,6 +35,8 @@ import { Loader2 } from "lucide-react";
 const ChatHubPage = lazy(() => import("@/pages/ChatHubPage"));
 
 const NAV_ITEMS = [
+  { label: "Live", icon: Radio, path: "/live", color: "text-red-500" },
+  { label: "Reels", icon: Film, path: "/reels", color: "text-foreground" },
   { label: "Rides", icon: Car, path: "/rides", color: "text-foreground" },
   { label: "Eats", icon: UtensilsCrossed, path: "/eats", color: "text-foreground" },
   { label: "Map", icon: MapPin, path: "/map", color: "text-foreground" },
@@ -45,21 +47,24 @@ const SERVICE_ITEMS = [
   { label: "Hotels", icon: Hotel, path: "/hotels", color: "text-foreground" },
   { label: "Cars", icon: CarFront, path: "/cars", color: "text-foreground" },
   { label: "Delivery", icon: Package, path: "/delivery", color: "text-foreground" },
-  { label: "Shopping", icon: ShoppingBag, path: "/grocery", color: "text-foreground" },
+  { label: "Shopping", icon: ShoppingCart, path: "/grocery", color: "text-foreground" },
 ];
 
 const SOCIAL_ITEMS = [
   { label: "Friends", icon: Users, path: "/friends" },
   { label: "Groups", icon: Users, path: "/communities" },
   { label: "Events", icon: Calendar, path: "/explore" },
-  { label: "Marketplace", icon: ShoppingBag, path: "/grocery" },
-  { label: "Birthdays", icon: Gift, path: "/friends" },
+  { label: "Marketplace", icon: ShoppingBag, path: "/marketplace" },
+  { label: "Spaces", icon: Mic2, path: "/spaces" },
+  { label: "Dating", icon: Heart, path: "/dating" },
 ];
 
 const MORE_ITEMS = [
   { label: "Explore", icon: Compass, path: "/explore" },
   { label: "Saved", icon: Bookmark, path: "/saved" },
-  { label: "Activity", icon: Heart, path: "/activity" },
+  { label: "Notifications", icon: Bell, path: "/notifications" },
+  { label: "Creators", icon: Star, path: "/creators" },
+  { label: "Rewards", icon: Gift, path: "/rewards" },
   { label: "Trending", icon: TrendingUp, path: "/trending" },
   { label: "History", icon: Clock, path: "/history" },
   { label: "Settings", icon: Settings, path: "/settings" },

@@ -133,6 +133,32 @@ export default function AdminBookingsTab({ storeId }: { storeId: string }) {
     fetchBookings();
   };
 
+  const [convertingId, setConvertingId] = useState<string | null>(null);
+
+  const convertToWorkOrder = async (b: any) => {
+    if (b.workorder_id) return;
+    setConvertingId(b.id);
+    const woNumber = `WO-${Date.now().toString().slice(-6)}`;
+    const vehicleLabel = [b.vehicle_year, b.vehicle_make, b.vehicle_model].filter(Boolean).join(" ") || "Unknown Vehicle";
+    const { data: wo, error: woErr } = await supabase
+      .from("ar_work_orders")
+      .insert({
+        store_id: storeId,
+        number: woNumber,
+        customer_name: b.customer_name,
+        vehicle_label: vehicleLabel,
+        notes: [b.service_name, b.notes].filter(Boolean).join("\n"),
+        status: "awaiting",
+      } as any)
+      .select("id")
+      .single();
+    if (woErr || !wo) { toast.error("Failed to create work order"); setConvertingId(null); return; }
+    await supabase.from("service_bookings").update({ workorder_id: wo.id } as any).eq("id", b.id);
+    setConvertingId(null);
+    toast.success(`Work Order ${woNumber} created from booking`);
+    fetchBookings();
+  };
+
   const saveNotes = async () => {
     setSaving(true);
     const { error } = await supabase
@@ -771,6 +797,22 @@ export default function AdminBookingsTab({ storeId }: { storeId: string }) {
                             <Button size="sm" variant="outline" onClick={() => updateStatus(b.id, "confirmed")} className="gap-1.5">
                               <RefreshCw className="h-3.5 w-3.5" /> Reopen
                             </Button>
+                          )}
+                          {!b.workorder_id ? (
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              className="gap-1.5 border-amber-500/40 text-amber-700 hover:bg-amber-500/10"
+                              disabled={convertingId === b.id}
+                              onClick={() => convertToWorkOrder(b)}
+                            >
+                              <Wrench className="h-3.5 w-3.5" />
+                              {convertingId === b.id ? "Creating…" : "Create Work Order"}
+                            </Button>
+                          ) : (
+                            <Badge variant="outline" className="gap-1 text-emerald-600 border-emerald-500/40 px-2.5 py-1 text-xs">
+                              <CheckCircle2 className="h-3 w-3" /> Work Order Created
+                            </Badge>
                           )}
                           <Button
                             size="sm"

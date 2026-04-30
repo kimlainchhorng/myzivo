@@ -47,7 +47,7 @@ export default function StorePayrollSection({ storeId }: Props) {
   const [period, setPeriod] = useState(0);
   const [runDialog, setRunDialog] = useState(false);
   const [bonusDialog, setBonusDialog] = useState(false);
-  const [payRuns, setPayRuns] = useState<PayRun[]>([]);
+  const payRunsKey = `payroll_runs_${storeId}`;
   const [bonusForm, setBonusForm] = useState({ employeeId: "", amount: "", reason: "" });
   const [tab, setTab] = useState("overview");
   const [overtimeEnabled, setOvertimeEnabled] = useState(true);
@@ -83,6 +83,19 @@ export default function StorePayrollSection({ storeId }: Props) {
       return data;
     },
   });
+
+  // Load persisted pay runs
+  const { data: payRunsData, refetch: refetchPayRuns } = useQuery({
+    queryKey: ["payroll-runs", storeId],
+    queryFn: async () => {
+      const { data } = await supabase.from("app_settings").select("value").eq("key", payRunsKey).maybeSingle();
+      if (data?.value && Array.isArray(data.value)) {
+        return (data.value as any[]).map((r: any) => ({ ...r, createdAt: new Date(r.createdAt) })) as PayRun[];
+      }
+      return [] as PayRun[];
+    },
+  });
+  const payRuns = payRunsData ?? [];
 
   const saveSettingsMutation = useMutation({
     mutationFn: async () => {
@@ -154,13 +167,21 @@ export default function StorePayrollSection({ storeId }: Props) {
   const highestPaid = employees.reduce((max: any, e: any) => getMonthlyGross(e) > getMonthlyGross(max || {}) ? e : max, employees[0]);
   const budgetUsed = totalGross > 0 ? Math.min(100, (totalGross / (parseFloat(budgetLimit) || 50000)) * 100) : 0;
 
-  const processPayRun = () => {
+  const processPayRun = async () => {
     const run: PayRun = {
       id: crypto.randomUUID(), period: periods[period].label,
       totalGross, totalNet, employees: employees.length,
       status: "completed", createdAt: new Date(),
     };
-    setPayRuns(prev => [run, ...prev]);
+    const updatedRuns = [run, ...payRuns];
+    const serializable = updatedRuns.map(r => ({ ...r, createdAt: r.createdAt.toISOString() }));
+    const { data: existing } = await supabase.from("app_settings").select("id").eq("key", payRunsKey).maybeSingle();
+    if (existing) {
+      await supabase.from("app_settings").update({ value: serializable, updated_at: new Date().toISOString() }).eq("key", payRunsKey);
+    } else {
+      await supabase.from("app_settings").insert({ key: payRunsKey, value: serializable, description: "Payroll run history" });
+    }
+    refetchPayRuns();
     setRunDialog(false);
     toast.success(`Payroll processed for ${periods[period].label}`);
   };

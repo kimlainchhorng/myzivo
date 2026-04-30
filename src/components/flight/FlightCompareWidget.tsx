@@ -1,11 +1,10 @@
-import { useState } from "react";
-import { Scale, X, Plus, Clock, Plane, Luggage, Utensils, Wifi, Check } from "lucide-react";
+import { Scale, X, Plus, Clock } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 
-interface CompareFlight {
+export interface CompareFlight {
   id: string;
   airline: string;
   route: string;
@@ -17,19 +16,13 @@ interface CompareFlight {
   amenities: string[];
 }
 
-const FlightCompareWidget = () => {
+interface FlightCompareWidgetProps {
+  compareList: CompareFlight[];
+  onRemove: (id: string) => void;
+}
+
+const FlightCompareWidget = ({ compareList, onRemove }: FlightCompareWidgetProps) => {
   const navigate = useNavigate();
-  const [compareList, setCompareList] = useState<CompareFlight[]>([]);
-
-  const removeFromCompare = (id: string) => {
-    setCompareList(compareList.filter(f => f.id !== id));
-  };
-
-  const addToCompare = (flight: CompareFlight) => {
-    if (compareList.length < 3 && !compareList.find(f => f.id === flight.id)) {
-      setCompareList([...compareList, flight]);
-    }
-  };
 
   return (
     <section className="py-12 px-4 bg-gradient-to-b from-background to-sky-500/5">
@@ -55,7 +48,7 @@ const FlightCompareWidget = () => {
           {compareList.map((flight, index) => (
             <div key={flight.id} className="relative bg-card/50 backdrop-blur-xl border border-border/50 rounded-2xl p-4">
               <button
-                onClick={() => removeFromCompare(flight.id)}
+                onClick={() => onRemove(flight.id)}
                 className="absolute top-2 right-2 p-1.5 rounded-full bg-destructive/10 text-destructive hover:bg-destructive/20 transition-all duration-200 active:scale-[0.90] touch-manipulation"
               >
                 <X className="w-4 h-4" />

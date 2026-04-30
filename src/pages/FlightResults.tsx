@@ -30,6 +30,7 @@ import { AirlineLogo } from "@/components/flight/AirlineLogo";
 import { getAirportByCode } from "@/data/airports";
 import { cn } from "@/lib/utils";
 import DuffelFlightCard from "@/components/flight/DuffelFlightCard";
+import FlightCompareWidget, { type CompareFlight } from "@/components/flight/FlightCompareWidget";
 import FlightLegCard, { type LegGroup } from "@/components/flight/FlightLegCard";
 import FlightEmptyState from "@/components/flight/FlightEmptyState";
 import { useIsMobile } from "@/hooks/use-mobile";
@@ -89,6 +90,15 @@ const FlightResults = () => {
   const [selectionStep, setSelectionStep] = useState<"outbound" | "return">("outbound");
   const [selectedOutboundGroup, setSelectedOutboundGroup] = useState<LegGroup | null>(null);
   const [editMode, setEditMode] = useState(false);
+  const [compareList, setCompareList] = useState<CompareFlight[]>([]);
+
+  const handleAddToCompare = (flight: CompareFlight) => {
+    setCompareList(prev => {
+      if (prev.find(f => f.id === flight.id)) return prev.filter(f => f.id !== flight.id);
+      if (prev.length >= 3) return prev;
+      return [...prev, flight];
+    });
+  };
 
   const handlePartnerOpen = useCallback((url: string) => {
     void openExternalUrl(url);
@@ -1308,6 +1318,8 @@ const FlightResults = () => {
                         hasReturn={false}
                         onSelect={handleSelect}
                         searchDestination={destination}
+                        onCompare={handleAddToCompare}
+                        inCompare={compareList.some(f => f.id === offer.id)}
                       />
                     </motion.div>
                   ))}
@@ -1330,6 +1342,20 @@ const FlightResults = () => {
               )}
             </div>
           </div>
+
+          {/* Flight Compare Widget — one-way only, shown when at least one flight added */}
+          {!isRoundTrip && compareList.length > 0 && (
+            <motion.div
+              initial={{ opacity: 0, y: 12 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="mt-6"
+            >
+              <FlightCompareWidget
+                compareList={compareList}
+                onRemove={(id) => setCompareList(prev => prev.filter(f => f.id !== id))}
+              />
+            </motion.div>
+          )}
 
           {/* Cross-sell: Hotels & Cars — desktop only */}
           {!isMobile && !isLoading && filtered.length > 0 && (

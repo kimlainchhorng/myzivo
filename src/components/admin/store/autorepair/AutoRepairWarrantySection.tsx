@@ -11,7 +11,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { ShieldAlert, Plus, Network, Search } from "lucide-react";
+import { ShieldAlert, Plus, Network, Search, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import { WARRANTY_NETWORKS, getWarrantyNetwork } from "@/config/warrantyNetworks";
 import WarrantyNetworkLogo from "./WarrantyNetworkLogo";
@@ -23,6 +23,7 @@ export default function AutoRepairWarrantySection({ storeId }: Props) {
   const [open, setOpen] = useState(false);
   const [networkFilter, setNetworkFilter] = useState<string>("all");
   const [networkQuery, setNetworkQuery] = useState("");
+  const [warrantySearch, setWarrantySearch] = useState("");
   const [form, setForm] = useState({
     workorder_id: "",
     service_name: "",
@@ -59,9 +60,14 @@ export default function AutoRepairWarrantySection({ storeId }: Props) {
   }, [orders]);
 
   const filteredWarranties = useMemo(() => {
-    if (networkFilter === "all") return warranties;
-    return warranties.filter((w: any) => (w.notes ?? "").includes(`[network:${networkFilter}]`));
-  }, [warranties, networkFilter]);
+    let list = warranties;
+    if (networkFilter !== "all") list = list.filter((w: any) => (w.notes ?? "").includes(`[network:${networkFilter}]`));
+    if (warrantySearch.trim()) {
+      const s = warrantySearch.toLowerCase();
+      list = list.filter((w: any) => `${w.service_name ?? ""} ${w.notes ?? ""}`.toLowerCase().includes(s));
+    }
+    return list;
+  }, [warranties, networkFilter, warrantySearch]);
 
   const filteredNetworks = useMemo(() => {
     const q = networkQuery.trim().toLowerCase();
@@ -100,6 +106,18 @@ export default function AutoRepairWarrantySection({ storeId }: Props) {
       setForm({ workorder_id: "", service_name: "", period_days: 90, mileage_limit: 6000, notes: "", network_id: "", claim_number: "" });
     },
     onError: (e: any) => toast.error(e.message ?? "Failed"),
+  });
+
+  const deleteWarranty = useMutation({
+    mutationFn: async (id: string) => {
+      const { error } = await supabase.from("ar_warranties" as any).delete().eq("id", id);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      toast.success("Warranty removed");
+      qc.invalidateQueries({ queryKey: ["ar-warranties", storeId] });
+    },
+    onError: (e: any) => toast.error(e.message),
   });
 
   const toggleComeback = useMutation({
@@ -152,8 +170,13 @@ export default function AutoRepairWarrantySection({ storeId }: Props) {
       </div>
 
       <Card>
-        <CardHeader><CardTitle className="text-sm">Active Warranties</CardTitle></CardHeader>
-        <CardContent>
+        <CardHeader className="pb-2"><CardTitle className="text-sm">Active Warranties</CardTitle></CardHeader>
+        <CardContent className="space-y-3">
+          <div className="relative">
+            <Search className="absolute left-2.5 top-2.5 w-4 h-4 text-muted-foreground" />
+            <Input placeholder="Search by service name…" className="pl-9 h-9" value={warrantySearch}
+              onChange={(e) => setWarrantySearch(e.target.value)} />
+          </div>
           {filteredWarranties.length === 0 ? (
             <p className="text-sm text-muted-foreground text-center py-6">No warranties on file.</p>
           ) : (
@@ -161,9 +184,10 @@ export default function AutoRepairWarrantySection({ storeId }: Props) {
               {filteredWarranties.map((w: any) => {
                 const net = extractNetwork(w.notes);
                 const claim = extractClaim(w.notes);
+                const isExpired = w.expires_at && new Date(w.expires_at) < new Date();
                 return (
-                  <div key={w.id} className="flex items-center justify-between border border-border rounded-lg p-3">
-                    <div className="flex items-center gap-2.5 min-w-0">
+                  <div key={w.id} className={`flex items-center justify-between border rounded-lg p-3 gap-3 ${isExpired ? "border-destructive/40 bg-destructive/5" : "border-border"}`}>
+                    <div className="flex items-center gap-2.5 min-w-0 flex-1">
                       {net && <WarrantyNetworkLogo network={net} size="md" />}
                       <div className="min-w-0">
                         <p className="font-semibold text-sm truncate">{w.service_name}</p>
@@ -174,7 +198,16 @@ export default function AutoRepairWarrantySection({ storeId }: Props) {
                         </p>
                       </div>
                     </div>
-                    <Badge variant="outline" className="shrink-0">{w.expires_at ?? "—"}</Badge>
+                    <div className="flex items-center gap-2 shrink-0">
+                      {isExpired
+                        ? <Badge variant="destructive" className="text-[10px]">Expired</Badge>
+                        : <Badge variant="outline" className="text-[10px]">{w.expires_at ?? "—"}</Badge>
+                      }
+                      <Button size="icon" variant="ghost" className="h-7 w-7 text-destructive"
+                        onClick={() => { if (confirm("Remove this warranty?")) deleteWarranty.mutate(w.id); }}>
+                        <Trash2 className="w-3.5 h-3.5" />
+                      </Button>
+                    </div>
                   </div>
                 );
               })}

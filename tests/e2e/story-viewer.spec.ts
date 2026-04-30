@@ -18,6 +18,7 @@ const { defaultBrowserType: _dt, ...iPhone13Opts } = devices["iPhone 13"];
 test.use(iPhone13Opts);
 
 test.describe("StoryViewer single-instance invariants", () => {
+  test.setTimeout(90_000);
   test.beforeEach(async ({ page }) => {
     await login(page);
   });

@@ -60,6 +60,12 @@ import TrendingUp from "lucide-react/dist/esm/icons/trending-up";
 import Settings2 from "lucide-react/dist/esm/icons/settings-2";
 import Search from "lucide-react/dist/esm/icons/search";
 import Trash2 from "lucide-react/dist/esm/icons/trash-2";
+import Plane from "lucide-react/dist/esm/icons/plane";
+import Hotel from "lucide-react/dist/esm/icons/hotel";
+import Car from "lucide-react/dist/esm/icons/car";
+import UtensilsCrossed from "lucide-react/dist/esm/icons/utensils-crossed";
+import Crown from "lucide-react/dist/esm/icons/crown";
+import Package from "lucide-react/dist/esm/icons/package";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 const AlertDialog = lazy(() => import("@/components/ui/alert-dialog").then(m => ({ default: m.AlertDialog })));
 const AlertDialogAction = lazy(() => import("@/components/ui/alert-dialog").then(m => ({ default: m.AlertDialogAction })));
@@ -1269,7 +1275,7 @@ export default function ReelsFeedPage() {
             ) : (
             <div className="divide-y divide-border/20">
               {filteredItems.map((item, idx) => (
-                <div key={item.id}>
+                <div key={item.id} data-testid={`feed-post-card-${item.id}`}>
                   {item.source === "poll" && item.poll ? (
                     <div className="px-3 py-2">
                       <Suspense fallback={<div className="h-44 rounded-2xl bg-muted/30 animate-pulse" />}>
@@ -1493,8 +1499,50 @@ export default function ReelsFeedPage() {
 
         </PullToRefresh>
 
-        {/* Desktop RIGHT rail */}
-        <aside className="hidden xl:flex flex-col w-[280px] shrink-0 sticky top-[4.5rem] h-[calc(100vh-4.5rem)] overflow-y-auto py-4 px-3 gap-4 border-l border-border/20 bg-background/40 backdrop-blur-sm">
+        {/* Desktop RIGHT rail — hidden when chat panel is open to avoid overflow */}
+        <aside className={cn(
+          "hidden xl:flex flex-col w-[280px] shrink-0 sticky top-[4.5rem] h-[calc(100vh-4.5rem)] overflow-y-auto py-4 px-3 gap-4 border-l border-border/20 bg-background/40 backdrop-blur-sm",
+          chatOpen && "!hidden"
+        )}>
+
+          {/* Quick Access — service shortcuts */}
+          <div>
+            <h3 className="text-[11px] font-semibold text-muted-foreground/60 uppercase tracking-wider px-1 mb-2">Quick Access</h3>
+            <div className="grid grid-cols-3 gap-1.5">
+              {[
+                { label: "Flights", icon: Plane, path: "/flights", color: "bg-sky-500/10 text-sky-600" },
+                { label: "Hotels", icon: Hotel, path: "/hotels", color: "bg-amber-500/10 text-amber-600" },
+                { label: "Rides", icon: Car, path: "/rides", color: "bg-emerald-500/10 text-emerald-600" },
+                { label: "Eats", icon: UtensilsCrossed, path: "/eats", color: "bg-orange-500/10 text-orange-600" },
+                { label: "Delivery", icon: Package, path: "/delivery", color: "bg-violet-500/10 text-violet-600" },
+                { label: "Explore", icon: Globe, path: "/explore", color: "bg-primary/10 text-primary" },
+              ].map(({ label, icon: Icon, path, color }) => (
+                <button
+                  key={label}
+                  onClick={() => navigate(path)}
+                  className="flex flex-col items-center gap-1 p-2 rounded-xl hover:bg-muted/60 transition-colors group"
+                >
+                  <div className={cn("h-9 w-9 rounded-xl flex items-center justify-center", color)}>
+                    <Icon className="h-4 w-4" />
+                  </div>
+                  <span className="text-[10px] font-medium text-muted-foreground group-hover:text-foreground transition-colors">{label}</span>
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* Suggested Users */}
+          {userId && (
+            <div>
+              <div className="flex items-center justify-between mb-2 px-1">
+                <h3 className="text-sm font-semibold text-foreground">Suggested for you</h3>
+                <button onClick={() => navigate("/explore")} className="text-[11px] text-primary hover:underline">See all</button>
+              </div>
+              <Suspense fallback={null}>
+                <SuggestedUsersCarousel />
+              </Suspense>
+            </div>
+          )}
 
           {/* Contacts */}
           {sidebarContacts.length > 0 && (
@@ -1540,14 +1588,36 @@ export default function ReelsFeedPage() {
                 {trendingTags.map((tag) => (
                   <button
                     key={tag}
-                    onClick={() => navigate(`/search?q=${encodeURIComponent(tag)}`)}
-                    className="w-full flex items-center gap-2 px-2 py-1.5 rounded-lg hover:bg-muted/50 transition-colors text-left"
+                    onClick={() => {
+                      setSelectedHashtag(selectedHashtag === tag.replace("#", "") ? null : tag.replace("#", ""));
+                    }}
+                    className={cn(
+                      "w-full flex items-center gap-2 px-2 py-1.5 rounded-lg hover:bg-muted/50 transition-colors text-left",
+                      selectedHashtag === tag.replace("#", "") && "bg-primary/10"
+                    )}
                   >
                     <Hash className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
                     <span className="text-sm text-foreground truncate">{tag.replace("#", "")}</span>
                   </button>
                 ))}
               </div>
+            </div>
+          )}
+
+          {/* ZIVO+ upgrade card */}
+          {userId && (
+            <div className="rounded-2xl overflow-hidden border border-amber-500/20 bg-gradient-to-br from-amber-500/10 via-card to-primary/5 p-3">
+              <div className="flex items-center gap-1.5 mb-1">
+                <Crown className="h-4 w-4 text-amber-500" />
+                <h3 className="text-sm font-semibold text-foreground">ZIVO+</h3>
+              </div>
+              <p className="text-[11px] text-muted-foreground mb-2.5 leading-relaxed">Unlock exclusive features, locked content, chat tools, and more.</p>
+              <button
+                onClick={() => navigate("/zivo-plus")}
+                className="w-full py-1.5 rounded-lg bg-gradient-to-r from-amber-500 to-primary text-white text-[12px] font-semibold hover:opacity-90 transition-opacity active:scale-95"
+              >
+                Upgrade to ZIVO+
+              </button>
             </div>
           )}
 

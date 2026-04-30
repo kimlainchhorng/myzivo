@@ -29,6 +29,9 @@ export interface PartsSupplier {
   searchUrlTemplate?: string;
   /** Login flow shape — "two-step" suppliers ask username then password on a separate screen. */
   loginFlow?: "single" | "two-step";
+  /** If true, skip the iframe embed entirely and go straight to credential-launcher mode.
+   *  Set for suppliers that use Akamai/Cloudflare bot detection that blocks iframes. */
+  skipEmbed?: boolean;
 }
 
 export const PARTS_SUPPLIERS: PartsSupplier[] = [

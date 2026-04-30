@@ -58,6 +58,7 @@ interface ProfileFeedCardProps {
   onOpenMenu: (item: ProfileFeedItem) => void;
   onShare: (postId: string) => void;
   onSelectPost: (item: ProfileFeedItem) => void;
+  testId?: string;
 }
 
 export default function ProfileFeedCard({
@@ -71,6 +72,7 @@ export default function ProfileFeedCard({
   onOpenMenu,
   onShare,
   onSelectPost,
+  testId,
 }: ProfileFeedCardProps) {
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
@@ -170,7 +172,7 @@ export default function ProfileFeedCard({
   };
 
   return (
-    <div className="bg-card">
+    <div className="bg-card" data-testid={testId}>
       {item.isShared && item.sharedOrigin ? (
         <>
           {/* Sharer header */}

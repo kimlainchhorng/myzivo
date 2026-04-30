@@ -10,9 +10,10 @@ import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { supabase } from "@/integrations/supabase/client";
-import { FileText, Plus, DollarSign, Trash2, Receipt, ClipboardList, ArrowLeft, ScanSearch, Loader2, Check, CloudUpload, Wrench, Package, Stethoscope, Truck, KeyRound, Car, LogOut, Eye, ArrowRightLeft } from "lucide-react";
+import { FileText, Plus, DollarSign, Trash2, Receipt, ClipboardList, ArrowLeft, ScanSearch, Loader2, Check, CloudUpload, Wrench, Package, Stethoscope, Truck, KeyRound, Car, LogOut, Eye, ArrowRightLeft, BookOpen } from "lucide-react";
 import { toast } from "sonner";
 import AutoRepairDocPreviewDialog from "./AutoRepairDocPreviewDialog";
+import PartPickerDialog, { type PickedPart } from "./PartPickerDialog";
 import InvoiceKpiStrip from "./invoices/InvoiceKpiStrip";
 import InvoiceFilterBar, { type StatusFilter, type SortKey } from "./invoices/InvoiceFilterBar";
 import InvoiceListRow, { type RowDoc } from "./invoices/InvoiceListRow";
@@ -467,6 +468,8 @@ export default function AutoRepairInvoicesSection({ storeId }: Props) {
   const updateItem = (id: string, patch: Partial<LineItem>) =>
     setDraft(d => ({ ...d, items: d.items.map(i => i.id === id ? { ...i, ...patch } : i) }));
 
+  const [showPartPicker, setShowPartPicker] = useState(false);
+
   const addItem = (category: LineCategory = "labor") => setDraft(d => ({
     ...d,
     items: [
@@ -479,6 +482,24 @@ export default function AutoRepairInvoicesSection({ storeId }: Props) {
     ],
   }));
   const removeItem = (id: string) => setDraft(d => ({ ...d, items: d.items.filter(i => i.id !== id) }));
+
+  const addFromCatalog = (picked: PickedPart) => {
+    setDraft(d => ({
+      ...d,
+      items: [
+        ...d.items,
+        {
+          id: crypto.randomUUID(),
+          category: "part" as LineCategory,
+          description: picked.description,
+          qty: picked.qty,
+          price: picked.price,
+          discount: 0,
+          _partId: picked.partId,
+        },
+      ],
+    }));
+  };
 
   // ---- Hooks that must run on EVERY render (before any early return) ----
   // Build display rows from authoritative DB data + seed for the active tab.
@@ -744,14 +765,31 @@ export default function AutoRepairInvoicesSection({ storeId }: Props) {
                       <span className="text-sm font-semibold capitalize">
                         {cat === "labor" ? "Labor services" : cat === "part" ? "Parts & materials" : "Diagnosis & inspection"}
                       </span>
-                      <Button size="sm" variant="outline" onClick={() => addItem(cat)} className="h-8 gap-1">
-                        <Plus className="w-3.5 h-3.5" /> Add {cat === "part" ? "part" : cat === "labor" ? "labor" : "diagnosis"}
-                      </Button>
+                      <div className="flex gap-2">
+                        {cat === "part" && (
+                          <Button size="sm" variant="outline" onClick={() => setShowPartPicker(true)} className="h-8 gap-1 border-primary/50 text-primary hover:bg-primary/5">
+                            <BookOpen className="w-3.5 h-3.5" /> Pick from catalog
+                          </Button>
+                        )}
+                        <Button size="sm" variant="outline" onClick={() => addItem(cat)} className="h-8 gap-1">
+                          <Plus className="w-3.5 h-3.5" /> Add {cat === "part" ? "part" : cat === "labor" ? "labor" : "diagnosis"}
+                        </Button>
+                      </div>
                     </div>
 
                     {rows.length === 0 && (
-                      <div className="text-center py-8 text-xs text-muted-foreground border border-dashed border-border rounded-lg">
-                        No {cat === "part" ? "parts" : cat === "labor" ? "labor lines" : "diagnosis fees"} yet.
+                      <div className="text-center py-8 border border-dashed border-border rounded-lg space-y-2">
+                        <p className="text-xs text-muted-foreground">
+                          No {cat === "part" ? "parts" : cat === "labor" ? "labor lines" : "diagnosis fees"} yet.
+                        </p>
+                        {cat === "part" && (
+                          <button
+                            onClick={() => setShowPartPicker(true)}
+                            className="inline-flex items-center gap-1.5 text-xs text-primary font-semibold hover:underline"
+                          >
+                            <BookOpen className="w-3.5 h-3.5" /> Pick from your parts catalog
+                          </button>
+                        )}
                       </div>
                     )}
 
@@ -903,6 +941,12 @@ export default function AutoRepairInvoicesSection({ storeId }: Props) {
           </CardContent>
         </Card>
         <AutoRepairDocPreviewDialog open={!!previewDoc} onOpenChange={(v) => !v && setPreviewDoc(null)} doc={previewDoc} storeName={storeInfo.name} storeAddress={storeInfo.address} storePhone={storeInfo.phone} />
+        <PartPickerDialog
+          open={showPartPicker}
+          onOpenChange={setShowPartPicker}
+          storeId={storeId}
+          onPick={addFromCatalog}
+        />
       </div>
     );
   }

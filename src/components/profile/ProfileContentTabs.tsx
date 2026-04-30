@@ -880,6 +880,7 @@ export default function ProfileContentTabs({ userId }: { userId?: string }) {
           return (
             <button
               key={tab.id}
+              data-testid={`profile-tab-${tab.id}`}
               onClick={() => setActiveTab(tab.id)}
               className={cn(
                 "flex-1 flex items-center justify-center gap-1.5 py-2 rounded-lg text-xs font-semibold transition-all",
@@ -902,6 +903,7 @@ export default function ProfileContentTabs({ userId }: { userId?: string }) {
           {filtered.map((item) => (
             <ProfileFeedCard
               key={item.id}
+              testId={`profile-post-thumb-${item.id}`}
               item={{
                 ...item,
                 userId: profileOwnerId,
@@ -1007,6 +1009,7 @@ export default function ProfileContentTabs({ userId }: { userId?: string }) {
                 </div>
                 {profileOwnerId === user?.id && (
                   <button
+                    aria-label="Post options"
                     onClick={() => setShowPostMenu(!showPostMenu)}
                     className="text-white/70 hover:text-white p-2 rounded-full hover:bg-white/10 transition-colors"
                   >

@@ -63,8 +63,8 @@ const ZivoMobileNav = forwardRef<HTMLElement, Record<string, never>>((_props, re
 
   const tabs: NavTab[] = [
     { id: "live", labelKey: "nav.live", icon: Radio, path: gated("/live"), bg: navAlertsBg, cssVar: "var(--cars)" },
-    { id: "reel", labelKey: "nav.feed", icon: Newspaper, path: gated("/feed"), bg: navSearchBg, cssVar: "var(--flights)" },
-    { id: "feed", labelKey: "nav.reel", icon: Film, path: gated("/reels"), bg: navSearchBg, cssVar: "var(--flights)" },
+    { id: "feed", labelKey: "nav.feed", icon: Newspaper, path: gated("/feed"), bg: navSearchBg, cssVar: "var(--flights)" },
+    { id: "reels", labelKey: "nav.reel", icon: Film, path: gated("/reels"), bg: navSearchBg, cssVar: "var(--flights)" },
     { id: "home", labelKey: "nav.home", icon: Home, path: "/", bg: navHomeBg, cssVar: "var(--primary)" },
     { id: "map", labelKey: "nav.map", icon: MapPin, path: gated("/store-map"), bg: navTripsBg, cssVar: "var(--hotels)" },
     { id: "chat", labelKey: "nav.chat", icon: MessageCircle, path: gated("/chat"), bg: navAlertsBg, cssVar: "var(--cars)", badge: chatUnread },
@@ -74,8 +74,8 @@ const ZivoMobileNav = forwardRef<HTMLElement, Record<string, never>>((_props, re
   const getActiveTab = () => {
     const path = location.pathname;
     if (path === "/" || path === "") return "home";
-    if (path.startsWith("/reels")) return "feed";
-    if (path.startsWith("/feed")) return "reel";
+    if (path.startsWith("/reels")) return "reels";
+    if (path.startsWith("/feed")) return "feed";
     if (path.startsWith("/store-map") || path.startsWith("/map")) return "map";
     if (path.startsWith("/live") || path.startsWith("/go-live")) return "live";
     if (path.startsWith("/chat")) return "chat";

@@ -37,7 +37,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { ArrowLeft, Save, Store, Image, Package, Plus, Edit, Trash2, Loader2, Eye, Upload, Camera, MapPin, ExternalLink, Globe, Check, Percent, DollarSign, CalendarIcon, Tag, Gift, Video, ImagePlus, RefreshCw, Replace, CheckCircle2, XCircle, MinusCircle, AlertTriangle, Move, X, Ruler, MessageCircle, CreditCard, Banknote, QrCode, Building2, Smartphone, Wallet, Car, Heart, Clock, Send, Users, Shield, Bell, Info, Copy, GripVertical, Hotel, BedDouble, CalendarRange, KeyRound, PackagePlus, MessageSquareText, BarChart3, ListChecks } from "lucide-react";
+import { ArrowLeft, Save, Store, Image, Package, Plus, Edit, Trash2, Loader2, Eye, Upload, Camera, MapPin, ExternalLink, Globe, Check, Percent, DollarSign, CalendarIcon, Tag, Gift, Video, ImagePlus, RefreshCw, Replace, CheckCircle2, XCircle, MinusCircle, AlertTriangle, Move, X, Ruler, MessageCircle, CreditCard, Banknote, QrCode, Building2, Smartphone, Wallet, Car, Heart, Clock, Send, Users, Shield, Bell, Info, Copy, GripVertical, Hotel, BedDouble, CalendarRange, KeyRound, PackagePlus, MessageSquareText, BarChart3, ListChecks, LayoutDashboard, BookOpen } from "lucide-react";
 import StoreLiveChat from "@/components/grocery/StoreLiveChat";
 import StorePaymentSection from "@/components/admin/StorePaymentSection";
 import StoreCustomersSection from "@/components/admin/StoreCustomersSection";
@@ -66,6 +66,15 @@ import AutoRepairTiresSection from "@/components/admin/store/autorepair/AutoRepa
 import AutoRepairWarrantySection from "@/components/admin/store/autorepair/AutoRepairWarrantySection";
 import AutoRepairFleetSection from "@/components/admin/store/autorepair/AutoRepairFleetSection";
 import AutoRepairReportsSection from "@/components/admin/store/autorepair/AutoRepairReportsSection";
+import AutoRepairPartSuppliersSection from "@/components/admin/store/autorepair/AutoRepairPartSuppliersSection";
+import AutoRepairDashboardSection from "@/components/admin/store/autorepair/AutoRepairDashboardSection";
+import AutoRepairServiceCatalogSection from "@/components/admin/store/autorepair/AutoRepairServiceCatalogSection";
+import AutoRepairReviewsSection from "@/components/admin/store/autorepair/AutoRepairReviewsSection";
+import AutoRepairInboxSection from "@/components/admin/store/autorepair/AutoRepairInboxSection";
+import AutoRepairPromosSection from "@/components/admin/store/autorepair/AutoRepairPromosSection";
+import AutoRepairLoanersSection from "@/components/admin/store/autorepair/AutoRepairLoanersSection";
+import AutoRepairPhotosSection from "@/components/admin/store/autorepair/AutoRepairPhotosSection";
+import AutoRepairBookingLinkSection from "@/components/admin/store/autorepair/AutoRepairBookingLinkSection";
 import FinanceIncomeSection from "@/components/admin/store/autorepair/finance/FinanceIncomeSection";
 import FinanceExpensesSection from "@/components/admin/store/autorepair/finance/FinanceExpensesSection";
 import FinancePaymentsSection from "@/components/admin/store/autorepair/finance/FinancePaymentsSection";
@@ -550,6 +559,26 @@ export default function AdminStoreEditPage() {
     enabled: !!storeId,
   });
 
+  const { data: arStats } = useQuery({
+    queryKey: ["ar-overview-stats", storeId],
+    enabled: !!storeId && store?.category === "auto-repair",
+    staleTime: 60_000,
+    queryFn: async () => {
+      const [wos, invoices, vehicles] = await Promise.all([
+        supabase.from("ar_work_orders").select("id, status, total_cents").eq("store_id", storeId!),
+        supabase.from("ar_invoices").select("id, status, total_cents, amount_paid_cents").eq("store_id", storeId!),
+        supabase.from("ar_customer_vehicles").select("id").eq("store_id", storeId!),
+      ]);
+      const woData = wos.data || [];
+      const invData = invoices.data || [];
+      const openWOs = woData.filter((w) => ["awaiting", "in_progress", "on_hold", "qc"].includes(w.status)).length;
+      const unpaidInvoices = invData.filter((i) => i.status !== "paid");
+      const unpaidAmount = unpaidInvoices.reduce((s, i) => s + ((i.total_cents || 0) - (i.amount_paid_cents || 0)), 0);
+      const paidRevenue = invData.filter((i) => i.status === "paid").reduce((s, i) => s + (i.total_cents || 0), 0);
+      return { openWOs, unpaidCount: unpaidInvoices.length, unpaidAmount, vehicleCount: (vehicles.data || []).length, paidRevenue };
+    },
+  });
+
   const existingCategories = [...new Set(products.map((p: any) => p.category).filter(Boolean))] as string[];
 
   // Derive saved brands/categories from existing products
@@ -575,6 +604,7 @@ export default function AdminStoreEditPage() {
     booking_end_time: "5:00 PM",
     booking_duration: "30",
     booking_note: "",
+    ar_settings: {} as Record<string, any>,
   });
   const [isRepositioning, setIsRepositioning] = useState(false);
   const [dragStartY, setDragStartY] = useState<number | null>(null);
@@ -610,6 +640,7 @@ export default function AdminStoreEditPage() {
         booking_end_time: (store as any).booking_end_time || "5:00 PM",
         booking_duration: (store as any).booking_duration || "30",
         booking_note: (store as any).booking_note || "",
+        ar_settings: (store as any).ar_settings || {},
       });
     }
   }, [store]);
@@ -1830,6 +1861,7 @@ export default function AdminStoreEditPage() {
   });
 
   const updateField = (field: string, value: any) => setForm((p) => ({ ...p, [field]: value }));
+  const updateArSettings = (key: string, value: any) => setForm((p) => ({ ...p, ar_settings: { ...p.ar_settings, [key]: value } }));
   const updateProductField = (field: string, value: any) => setProductForm((p) => ({ ...p, [field]: value }));
 
   const logoInputRef = useRef<HTMLInputElement>(null);
@@ -2015,6 +2047,7 @@ export default function AdminStoreEditPage() {
   const isAutoRepair = normalizedCategory === "auto-repair";
   const isLodging = isLodgingStoreCategory(normalizedCategory);
   const autoRepairTitles: Record<string, string> = {
+    "customer-bookings": "Customer Bookings",
     "ar-invoices": "Invoices & Estimates",
     "ar-autocheck": "Auto Check (VIN)",
     "ar-parts": "Part Shop",
@@ -2033,6 +2066,9 @@ export default function AdminStoreEditPage() {
     "ar-fin-payments": "Finance — Payments Received",
     "ar-fin-pnl": "Finance — Profit & Loss",
     "ar-fin-tax": "Finance — Tax & Payouts",
+    "ar-parts-suppliers": "Parts Suppliers",
+    "ar-dashboard": "Shop Dashboard",
+    "ar-service-catalog": "Service Catalog",
   };
   const lodgingTitles: Record<string, string> = {
     "lodge-overview": "Hotel Overview",
@@ -2625,6 +2661,7 @@ export default function AdminStoreEditPage() {
 
         <Tabs value={activeTab} onValueChange={handleTabChange} className="space-y-4">
           {isAdmin && (
+            <>
             <TabsList>
               <TabsTrigger value="profile" className="gap-1.5"><Store className="h-3.5 w-3.5" /> {t("admin.store.profile")}</TabsTrigger>
               <TabsTrigger value="products" className="gap-1.5">
@@ -2641,10 +2678,60 @@ export default function AdminStoreEditPage() {
                 <TabsTrigger value="customer-bookings" className="gap-1.5"><CalendarIcon className="h-3.5 w-3.5" /> Customer Bookings</TabsTrigger>
               )}
             </TabsList>
+            {isAutoRepair && (
+              <div className="overflow-x-auto -mx-1 px-1">
+                <TabsList className="flex w-max gap-0.5 h-auto flex-wrap bg-muted/50 p-1">
+                  <TabsTrigger value="ar-dashboard" className="gap-1 text-xs h-7"><LayoutDashboard className="h-3 w-3" /> Dashboard</TabsTrigger>
+                  <TabsTrigger value="ar-service-catalog" className="gap-1 text-xs h-7"><BookOpen className="h-3 w-3" /> Price Book</TabsTrigger>
+                  <TabsTrigger value="ar-invoices" className="gap-1 text-xs h-7"><BarChart3 className="h-3 w-3" /> Invoices</TabsTrigger>
+                  <TabsTrigger value="ar-workorders" className="gap-1 text-xs h-7"><ListChecks className="h-3 w-3" /> Work Orders</TabsTrigger>
+                  <TabsTrigger value="ar-vehicles" className="gap-1 text-xs h-7"><Car className="h-3 w-3" /> Vehicles</TabsTrigger>
+                  <TabsTrigger value="ar-estimates" className="gap-1 text-xs h-7"><Package className="h-3 w-3" /> Estimates</TabsTrigger>
+                  <TabsTrigger value="ar-inspections" className="gap-1 text-xs h-7"><Shield className="h-3 w-3" /> Inspections</TabsTrigger>
+                  <TabsTrigger value="ar-techs" className="gap-1 text-xs h-7"><Users className="h-3 w-3" /> Technicians</TabsTrigger>
+                  <TabsTrigger value="ar-tires" className="gap-1 text-xs h-7"><Package className="h-3 w-3" /> Tires</TabsTrigger>
+                  <TabsTrigger value="ar-parts" className="gap-1 text-xs h-7"><Package className="h-3 w-3" /> Parts</TabsTrigger>
+                  <TabsTrigger value="ar-parts-suppliers" className="gap-1 text-xs h-7"><Package className="h-3 w-3" /> Suppliers</TabsTrigger>
+                  <TabsTrigger value="ar-fleet" className="gap-1 text-xs h-7"><Car className="h-3 w-3" /> Fleet</TabsTrigger>
+                  <TabsTrigger value="ar-warranty" className="gap-1 text-xs h-7"><Shield className="h-3 w-3" /> Warranty</TabsTrigger>
+                  <TabsTrigger value="ar-reminders" className="gap-1 text-xs h-7"><Bell className="h-3 w-3" /> Reminders</TabsTrigger>
+                  <TabsTrigger value="ar-autocheck" className="gap-1 text-xs h-7"><Car className="h-3 w-3" /> VIN Check</TabsTrigger>
+                  <TabsTrigger value="ar-reports" className="gap-1 text-xs h-7"><BarChart3 className="h-3 w-3" /> Reports</TabsTrigger>
+                  <TabsTrigger value="ar-fin-income" className="gap-1 text-xs h-7"><DollarSign className="h-3 w-3" /> Income</TabsTrigger>
+                  <TabsTrigger value="ar-fin-expenses" className="gap-1 text-xs h-7"><DollarSign className="h-3 w-3" /> Expenses</TabsTrigger>
+                  <TabsTrigger value="ar-fin-payments" className="gap-1 text-xs h-7"><CreditCard className="h-3 w-3" /> Payments</TabsTrigger>
+                  <TabsTrigger value="ar-fin-pnl" className="gap-1 text-xs h-7"><BarChart3 className="h-3 w-3" /> P&amp;L</TabsTrigger>
+                  <TabsTrigger value="ar-fin-tax" className="gap-1 text-xs h-7"><Percent className="h-3 w-3" /> Tax</TabsTrigger>
+                </TabsList>
+              </div>
+            )}
+            </>
           )}
 
 
           <TabsContent value="profile" className="space-y-4">
+            {/* ── Auto Repair Live Overview ── */}
+            {isAutoRepair && arStats && (
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                {[
+                  { label: "Open Work Orders", value: arStats.openWOs, sub: "in progress", color: "text-amber-500", tab: "ar-workorders" },
+                  { label: "Unpaid Invoices", value: arStats.unpaidCount, sub: `$${(arStats.unpaidAmount / 100).toFixed(0)} owed`, color: "text-rose-500", tab: "ar-invoices" },
+                  { label: "Vehicles on File", value: arStats.vehicleCount, sub: "customer vehicles", color: "text-blue-500", tab: "ar-vehicles" },
+                  { label: "Total Revenue", value: `$${(arStats.paidRevenue / 100).toLocaleString()}`, sub: "all-time paid", color: "text-emerald-500", tab: "ar-fin-income" },
+                ].map((stat) => (
+                  <button
+                    key={stat.tab}
+                    onClick={() => handleTabChange(stat.tab)}
+                    className="text-left p-4 rounded-2xl bg-muted/40 hover:bg-muted/70 active:scale-95 transition-all border border-border/10"
+                  >
+                    <p className={`text-2xl font-bold ${stat.color}`}>{stat.value}</p>
+                    <p className="text-sm font-medium mt-0.5">{stat.label}</p>
+                    <p className="text-[11px] text-muted-foreground">{stat.sub}</p>
+                  </button>
+                ))}
+              </div>
+            )}
+
             {/* ── Gallery Images ── */}
             <Card>
               <CardHeader className="pb-3">
@@ -3421,6 +3508,122 @@ export default function AdminStoreEditPage() {
               </CardContent>
             </Card>
 
+            {/* Auto Repair Settings */}
+            {isAutoRepair && (
+              <Card>
+                <CardHeader>
+                  <CardTitle className="text-base flex items-center gap-2">
+                    <Car className="h-4 w-4 text-primary" />
+                    Auto Repair Settings
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="space-y-1.5">
+                      <Label className="text-xs">Labor Rate ($/hr)</Label>
+                      <Input
+                        type="number"
+                        min={0}
+                        placeholder="e.g. 120"
+                        value={form.ar_settings?.labor_rate ?? ""}
+                        onChange={(e) => updateArSettings("labor_rate", parseFloat(e.target.value) || 0)}
+                      />
+                    </div>
+                    <div className="space-y-1.5">
+                      <Label className="text-xs">Service Bays</Label>
+                      <Input
+                        type="number"
+                        min={1}
+                        placeholder="e.g. 4"
+                        value={form.ar_settings?.service_bays ?? ""}
+                        onChange={(e) => updateArSettings("service_bays", parseInt(e.target.value) || 0)}
+                      />
+                    </div>
+                  </div>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="space-y-1.5">
+                      <Label className="text-xs">Booking Buffer (min)</Label>
+                      <Input
+                        type="number"
+                        min={0}
+                        placeholder="e.g. 15"
+                        value={form.ar_settings?.booking_buffer_mins ?? ""}
+                        onChange={(e) => updateArSettings("booking_buffer_mins", parseInt(e.target.value) || 0)}
+                      />
+                    </div>
+                    <div className="space-y-1.5">
+                      <Label className="text-xs">Tax Rate (%)</Label>
+                      <Input
+                        type="number"
+                        min={0}
+                        max={100}
+                        placeholder="e.g. 8.5"
+                        value={form.ar_settings?.tax_rate ?? ""}
+                        onChange={(e) => updateArSettings("tax_rate", parseFloat(e.target.value) || 0)}
+                      />
+                    </div>
+                  </div>
+                  <div className="space-y-1.5">
+                    <Label className="text-xs">Certifications (ASE, manufacturer, etc.)</Label>
+                    <Input
+                      placeholder="e.g. ASE Certified, Toyota Trained"
+                      value={form.ar_settings?.certifications ?? ""}
+                      onChange={(e) => updateArSettings("certifications", e.target.value)}
+                    />
+                  </div>
+                  <div className="space-y-1.5">
+                    <Label className="text-xs">Warranty Policy</Label>
+                    <Textarea
+                      placeholder="e.g. 12 months / 12,000 miles on parts and labor"
+                      rows={2}
+                      value={form.ar_settings?.warranty_policy ?? ""}
+                      onChange={(e) => updateArSettings("warranty_policy", e.target.value)}
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label className="text-xs">Service Categories</Label>
+                    <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+                      {["Oil Change", "Brakes", "Tires", "Engine", "Transmission", "AC / Heating", "Electrical", "Inspection", "Bodywork", "Fleet"].map((cat) => {
+                        const cats: string[] = form.ar_settings?.service_categories || [];
+                        const checked = cats.includes(cat);
+                        return (
+                          <label key={cat} className="flex items-center gap-2 text-xs cursor-pointer py-1.5 px-2.5 rounded-lg bg-muted/40 hover:bg-muted/60 transition-colors">
+                            <input
+                              type="checkbox"
+                              className="rounded"
+                              checked={checked}
+                              onChange={() => updateArSettings("service_categories", checked ? cats.filter((c) => c !== cat) : [...cats, cat])}
+                            />
+                            {cat}
+                          </label>
+                        );
+                      })}
+                    </div>
+                  </div>
+                  <div className="flex items-center justify-between py-2 px-3 rounded-xl bg-muted/40">
+                    <div>
+                      <p className="text-sm font-medium">Accept Fleet Accounts</p>
+                      <p className="text-[11px] text-muted-foreground">Allow businesses to open fleet accounts</p>
+                    </div>
+                    <Switch
+                      checked={form.ar_settings?.fleet_enabled ?? false}
+                      onCheckedChange={(v) => updateArSettings("fleet_enabled", v)}
+                    />
+                  </div>
+                  <div className="flex items-center justify-between py-2 px-3 rounded-xl bg-muted/40">
+                    <div>
+                      <p className="text-sm font-medium">Digital Vehicle Inspections</p>
+                      <p className="text-[11px] text-muted-foreground">Send photo inspection reports to customers</p>
+                    </div>
+                    <Switch
+                      checked={form.ar_settings?.dvi_enabled ?? true}
+                      onCheckedChange={(v) => updateArSettings("dvi_enabled", v)}
+                    />
+                  </div>
+                </CardContent>
+              </Card>
+            )}
+
             {/* Danger Zone */}
             <Card className="border-destructive/30">
               <CardHeader>
@@ -3756,8 +3959,8 @@ export default function AdminStoreEditPage() {
               <TabsContent value="ar-invoices"><div><AutoRepairInvoicesSection storeId={storeId!} /></div></TabsContent>
               <TabsContent value="ar-autocheck"><div><AutoRepairAutoCheckSection storeId={storeId!} /></div></TabsContent>
               <TabsContent value="ar-parts"><div><AutoRepairPartShopSection storeId={storeId!} /></div></TabsContent>
-              <TabsContent value="ar-inspections"><div><AutoRepairInspectionsSection storeId={storeId!} /></div></TabsContent>
-              <TabsContent value="ar-vehicles"><div><AutoRepairVehiclesSection storeId={storeId!} /></div></TabsContent>
+              <TabsContent value="ar-inspections"><div><AutoRepairInspectionsSection storeId={storeId!} onCreateEstimate={(vehicleLabel) => { handleTabChange("ar-estimates"); toast.info(`Opening Estimates — create one for ${vehicleLabel || "this vehicle"}`); }} /></div></TabsContent>
+              <TabsContent value="ar-vehicles"><div><AutoRepairVehiclesSection storeId={storeId!} onNewEstimate={(v) => { handleTabChange("ar-estimates"); toast.info(`Create estimate for ${[v.year, v.make, v.model].filter(Boolean).join(" ")}`); }} onViewWorkOrders={(v) => { handleTabChange("ar-workorders"); toast.info(`Showing Work Orders — search "${[v.year, v.make, v.model].filter(Boolean).join(" ")}"`); }} /></div></TabsContent>
               <TabsContent value="ar-estimates"><div><AutoRepairEstimatesSection storeId={storeId!} /></div></TabsContent>
               <TabsContent value="ar-workorders"><div><AutoRepairWorkOrdersSection storeId={storeId!} /></div></TabsContent>
               <TabsContent value="ar-techs"><div><AutoRepairTechniciansSection storeId={storeId!} /></div></TabsContent>
@@ -3765,12 +3968,24 @@ export default function AdminStoreEditPage() {
               <TabsContent value="ar-tires"><div><AutoRepairTiresSection storeId={storeId!} /></div></TabsContent>
               <TabsContent value="ar-warranty"><div><AutoRepairWarrantySection storeId={storeId!} /></div></TabsContent>
               <TabsContent value="ar-fleet"><div><AutoRepairFleetSection storeId={storeId!} /></div></TabsContent>
+              <TabsContent value="ar-loaners"><div><AutoRepairLoanersSection storeId={storeId!} /></div></TabsContent>
+              <TabsContent value="ar-photos"><div><AutoRepairPhotosSection storeId={storeId!} /></div></TabsContent>
+              <TabsContent value="ar-reviews"><div><AutoRepairReviewsSection storeId={storeId!} /></div></TabsContent>
+              <TabsContent value="ar-inbox"><div><AutoRepairInboxSection storeId={storeId!} /></div></TabsContent>
+              <TabsContent value="ar-promos"><div><AutoRepairPromosSection storeId={storeId!} /></div></TabsContent>
+              <TabsContent value="ar-campaigns"><div><StoreMarketingSection storeId={storeId!} /></div></TabsContent>
+              <TabsContent value="ar-gift-cards"><div><StoreMarketingSection storeId={storeId!} /></div></TabsContent>
+              <TabsContent value="ar-booking-link"><div><AutoRepairBookingLinkSection storeId={storeId!} /></div></TabsContent>
+              <TabsContent value="ar-qr"><div><AutoRepairBookingLinkSection storeId={storeId!} /></div></TabsContent>
               <TabsContent value="ar-reports"><div><AutoRepairReportsSection storeId={storeId!} /></div></TabsContent>
               <TabsContent value="ar-fin-income"><div><FinanceIncomeSection storeId={storeId!} /></div></TabsContent>
               <TabsContent value="ar-fin-expenses"><div><FinanceExpensesSection storeId={storeId!} /></div></TabsContent>
               <TabsContent value="ar-fin-payments"><div><FinancePaymentsSection storeId={storeId!} /></div></TabsContent>
               <TabsContent value="ar-fin-pnl"><div><FinanceProfitLossSection storeId={storeId!} /></div></TabsContent>
               <TabsContent value="ar-fin-tax"><div><FinanceTaxPayoutsSection storeId={storeId!} /></div></TabsContent>
+              <TabsContent value="ar-parts-suppliers"><div><AutoRepairPartSuppliersSection storeId={storeId!} /></div></TabsContent>
+              <TabsContent value="ar-dashboard"><AutoRepairDashboardSection storeId={storeId!} /></TabsContent>
+              <TabsContent value="ar-service-catalog"><AutoRepairServiceCatalogSection storeId={storeId!} /></TabsContent>
             </>
           )}
 

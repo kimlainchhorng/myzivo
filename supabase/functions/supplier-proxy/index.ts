@@ -170,13 +170,127 @@ Deno.serve(async (req) => {
       return new Response(html, { status: upstream.status, headers: respHeaders });
     }
     const baseHref = `${targetUrl.protocol}//${targetUrl.host}`;
+    const fakeOrigin = `${targetUrl.protocol}//${targetUrl.host}`;
+    const fakePath = targetUrl.pathname + targetUrl.search + targetUrl.hash;
 
-    // Inject <base> + a small script that rewrites in-page navigation
+    // Inject <base> + a script that spoofs window.location via Location.prototype overrides.
+    // KEY INSIGHT: window.location itself is non-configurable in all browsers so
+    // Object.defineProperty(window,'location',...) always throws. BUT the individual
+    // property getters on Location.prototype ARE configurable and CAN be overridden.
+    // We check the *real* href to detect we are in the proxy context, then return fake values.
     const injection = `
 <base href="${baseHref}/">
 <script>
 (function(){
   var PROXY = ${JSON.stringify(proxyBase)};
+  // Save real parent BEFORE any spoofing (window.parent override may fail later but try anyway)
+  var _realParent = (function(){ try { return window.parent !== window ? window.parent : null; } catch(e){ return null; } })();
+
+  // ===== Fake location values for this proxied page =====
+  var _fakeHref = ${JSON.stringify(targetUrl.href)};
+  var _fakeOrigin = ${JSON.stringify(fakeOrigin)};
+  var _fakePath = ${JSON.stringify(fakePath)};
+  var _fakeHost = ${JSON.stringify(targetUrl.host)};
+  var _fakeHostname = ${JSON.stringify(targetUrl.hostname)};
+  var _fakePort = ${JSON.stringify(targetUrl.port)};
+  var _fakeProtocol = ${JSON.stringify(targetUrl.protocol)};
+  var _fakeSearch = ${JSON.stringify(targetUrl.search)};
+  var _fakeHash = ${JSON.stringify(targetUrl.hash)};
+
+  function _updateFakeLoc(u) {
+    try {
+      var p = new URL(u, _fakeOrigin);
+      _fakeHref = p.href; _fakePath = p.pathname + p.search + p.hash;
+      _fakeSearch = p.search; _fakeHash = p.hash;
+    } catch(e) {}
+  }
+  function _send(msg) { try { if (_realParent) _realParent.postMessage(msg, '*'); } catch(e){} }
+
+  // ===== Location.prototype property override =====
+  // Override each getter on Location.prototype so that when supplier JS reads
+  // window.location.hostname (etc.) it gets the supplier domain, not the proxy domain.
+  var _origLocDesc = {};
+  ['href','origin','protocol','host','hostname','port','pathname','search','hash'].forEach(function(p){
+    _origLocDesc[p] = Object.getOwnPropertyDescriptor(Location.prototype, p);
+  });
+  // This script only ever runs inside proxy-served pages (either direct or via blob URL),
+  // so we can unconditionally return true instead of trying to read location.href
+  // (which throws for blob:null/ origins due to null-origin security restrictions).
+  function _isProxy() { return true; }
+
+  var _fakeGetters = {
+    href: function(){ return _fakeHref; },
+    origin: function(){ return _fakeOrigin; },
+    protocol: function(){ return _fakeProtocol; },
+    host: function(){ return _fakeHost; },
+    hostname: function(){ return _fakeHostname; },
+    port: function(){ return _fakePort; },
+    pathname: function(){ return _fakePath.split('?')[0].split('#')[0]; },
+    search: function(){ return _fakeSearch; },
+    hash: function(){ return _fakeHash; },
+  };
+  Object.keys(_fakeGetters).forEach(function(prop){
+    try {
+      var orig = _origLocDesc[prop];
+      var fake = _fakeGetters[prop];
+      Object.defineProperty(Location.prototype, prop, {
+        get: function(){
+          return fake();
+        },
+        set: function(v){
+          if (prop === 'href') {
+            _updateFakeLoc(v);
+            _send({ type: 'zivo-supplier-navigate', url: rewrite(v), method: 'GET' });
+          } else if (orig && orig.set) {
+            orig.set.call(this, v);
+          }
+        },
+        configurable: true,
+      });
+    } catch(e){}
+  });
+  // Override Location.prototype methods so navigation stays in-proxy
+  try {
+    Location.prototype.replace = function(u){ _updateFakeLoc(u); _send({ type: 'zivo-supplier-navigate', url: rewrite(u), method: 'GET' }); };
+    Location.prototype.assign = function(u){ _updateFakeLoc(u); _send({ type: 'zivo-supplier-navigate', url: rewrite(u), method: 'GET' }); };
+    Location.prototype.reload = function(){};
+  } catch(e){}
+  // Override document.URL / documentURI
+  try { Object.defineProperty(Document.prototype, 'URL', { get: function(){ return _fakeHref; }, configurable: true }); } catch(e){}
+  try { Object.defineProperty(Document.prototype, 'documentURI', { get: function(){ return _fakeHref; }, configurable: true }); } catch(e){}
+  // Override document.referrer
+  try { Object.defineProperty(Document.prototype, 'referrer', { get: function(){ return _fakeOrigin + '/'; }, configurable: true }); } catch(e){}
+
+  // ===== iframe detection bypass (best-effort — may fail for cross-origin iframes) =====
+  try { Object.defineProperty(window, 'top', { get: function(){ return window; }, configurable: true }); } catch(e){}
+  try { Object.defineProperty(window, 'parent', { get: function(){ return window; }, configurable: true }); } catch(e){}
+  try { Object.defineProperty(window, 'frameElement', { get: function(){ return null; }, configurable: true }); } catch(e){}
+
+  // ===== history API =====
+  var _origPush = history.pushState.bind(history);
+  var _origReplace = history.replaceState.bind(history);
+  history.pushState = function(state, title, u) {
+    if (!u) return;
+    var prev = _fakePath.split('?')[0].split('#')[0];
+    _updateFakeLoc(String(u));
+    try { _origPush(state, title, u); } catch(e){}
+    // Only navigate iframe if the path actually changed (avoids infinite loops)
+    if (_fakePath.split('?')[0].split('#')[0] !== prev) {
+      _send({ type: 'zivo-supplier-navigate', url: rewrite(String(u)), method: 'GET' });
+    }
+  };
+  history.replaceState = function(state, title, u) {
+    if (u) { _updateFakeLoc(String(u)); try { _origReplace(state, title, u); } catch(e){} }
+  };
+
+  // Signal to Zivo parent that the proxy page is loaded and spoofs are active
+  var _signaled = false;
+  function _signalReady() {
+    if (_signaled) return; _signaled = true;
+    _send({ type: 'zivo-proxy-ready', origin: _fakeOrigin });
+  }
+  window.addEventListener('load', _signalReady);
+  setTimeout(_signalReady, 800);
   function abs(u){ try { return new URL(u, document.baseURI).toString(); } catch(e){ return u; } }
   function isAllowed(u){
     try {
@@ -197,17 +311,17 @@ Deno.serve(async (req) => {
     var href = t.getAttribute('href');
     if (!href || href.startsWith('#') || href.startsWith('javascript:')) return;
     e.preventDefault();
-    parent.postMessage({ type: 'zivo-supplier-navigate', url: rewrite(href), method: 'GET' }, '*');
+    _realParent.postMessage({ type: 'zivo-supplier-navigate', url: rewrite(href), method: 'GET' }, '*');
   }, true);
   function submitFormThroughProxy(f){
     var method = (f.method || 'GET').toUpperCase();
     var action = rewrite(f.action);
     var params = new URLSearchParams(new FormData(f));
     if (method === 'GET') {
-      parent.postMessage({ type: 'zivo-supplier-navigate', url: action + (action.indexOf('?') >= 0 ? '&' : '?') + params.toString(), method: 'GET' }, '*');
+      _realParent.postMessage({ type: 'zivo-supplier-navigate', url: action + (action.indexOf('?') >= 0 ? '&' : '?') + params.toString(), method: 'GET' }, '*');
       return;
     }
-    parent.postMessage({ type: 'zivo-supplier-navigate', url: action, method: method, body: params.toString(), contentType: 'application/x-www-form-urlencoded' }, '*');
+    _realParent.postMessage({ type: 'zivo-supplier-navigate', url: action, method: method, body: params.toString(), contentType: 'application/x-www-form-urlencoded' }, '*');
   }
   // Rewrite form submissions after the supplier app's own handlers have run.
   document.addEventListener('submit', function(e){
@@ -440,7 +554,7 @@ Deno.serve(async (req) => {
         if (did || attempts >= 12) clearInterval(submitter);
       }, 250);
     }
-    parent.postMessage({ type: 'zivo-autofill-result', filled: ok }, '*');
+    _realParent.postMessage({ type: 'zivo-autofill-result', filled: ok }, '*');
   });
 })();
 </script>`;
@@ -460,6 +574,25 @@ Deno.serve(async (req) => {
         htmlHeaders.append("Set-Cookie", v.replace(/;\s*Domain=[^;]+/i, "").replace(/;\s*SameSite=[^;]+/i, "; SameSite=None"));
       }
     });
+    // ?format=json — return the processed HTML as a JSON payload so the browser
+    // doesn't trigger Supabase/Cloudflare's content-type override + sandbox CSP
+    // that gets injected onto text/html responses from edge functions.
+    // The React app fetches this, creates a Blob URL, and points the iframe there.
+    if (url.searchParams.get("format") === "json") {
+      const jsonHeaders = new Headers(dynamicCorsHeaders);
+      jsonHeaders.set("content-type", "application/json");
+      jsonHeaders.set("cache-control", "no-store");
+      upstream.headers.forEach((v, k) => {
+        if (k.toLowerCase() === "set-cookie") {
+          jsonHeaders.append("Set-Cookie", v.replace(/;\s*Domain=[^;]+/i, "").replace(/;\s*SameSite=[^;]+/i, "; SameSite=None"));
+        }
+      });
+      return new Response(JSON.stringify({ html, status: upstream.status }), {
+        status: 200,
+        headers: jsonHeaders,
+      });
+    }
+
     return new Response(html, { status: upstream.status, headers: htmlHeaders });
   }
 

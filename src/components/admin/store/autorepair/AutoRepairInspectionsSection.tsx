@@ -19,6 +19,8 @@ import Plus from "lucide-react/dist/esm/icons/plus";
 import Send from "lucide-react/dist/esm/icons/send";
 import Link2 from "lucide-react/dist/esm/icons/link-2";
 import Trash2 from "lucide-react/dist/esm/icons/trash-2";
+import Printer from "lucide-react/dist/esm/icons/printer";
+import FileText from "lucide-react/dist/esm/icons/file-text";
 import { toast } from "sonner";
 
 const POINTS = [
@@ -36,7 +38,10 @@ const COLORS: Record<Status, string> = {
 };
 const ICONS: Record<Status, any> = { good: CheckCircle2, attention: AlertTriangle, urgent: XCircle };
 
-interface Props { storeId: string }
+interface Props {
+  storeId: string;
+  onCreateEstimate?: (vehicleLabel: string) => void;
+}
 type Inspection = {
   id: string;
   vehicle_label: string | null;
@@ -49,11 +54,13 @@ type Inspection = {
   created_at: string;
 };
 
-export default function AutoRepairInspectionsSection({ storeId }: Props) {
+export default function AutoRepairInspectionsSection({ storeId, onCreateEstimate }: Props) {
   const qc = useQueryClient();
   const [open, setOpen] = useState(false);
   const [editId, setEditId] = useState<string | null>(null);
   const [vehicleLabel, setVehicleLabel] = useState("");
+  const [customerName, setCustomerName] = useState("");
+  const [customerPhone, setCustomerPhone] = useState("");
   const [techName, setTechName] = useState("");
   const [summary, setSummary] = useState("");
   const [statuses, setStatuses] = useState<Record<string, Status>>(() =>
@@ -79,7 +86,8 @@ export default function AutoRepairInspectionsSection({ storeId }: Props) {
   }, {} as Record<Status, number>), [statuses]);
 
   const reset = () => {
-    setEditId(null); setVehicleLabel(""); setTechName(""); setSummary("");
+    setEditId(null); setVehicleLabel(""); setCustomerName(""); setCustomerPhone("");
+    setTechName(""); setSummary("");
     setStatuses(Object.fromEntries(POINTS.map(p => [p, "good" as Status])));
   };
 
@@ -88,6 +96,8 @@ export default function AutoRepairInspectionsSection({ storeId }: Props) {
       const payload: any = {
         store_id: storeId,
         vehicle_label: vehicleLabel || null,
+        customer_name: customerName || null,
+        customer_phone: customerPhone || null,
         technician_name: techName || null,
         checklist: statuses,
         summary: summary || null,
@@ -124,11 +134,37 @@ export default function AutoRepairInspectionsSection({ storeId }: Props) {
   const startEdit = (i: Inspection) => {
     setEditId(i.id);
     setVehicleLabel(i.vehicle_label ?? "");
+    setCustomerName((i as any).customer_name ?? "");
+    setCustomerPhone((i as any).customer_phone ?? "");
     setTechName(i.technician_name ?? "");
     setSummary(i.summary ?? "");
     const merged = Object.fromEntries(POINTS.map(p => [p, (i.checklist?.[p] ?? "good") as Status]));
     setStatuses(merged);
     setOpen(true);
+  };
+
+  const printInspection = (i: Inspection) => {
+    const cl = (i.checklist || {}) as Record<string, Status>;
+    const statusLabel = { good: "✅ Good", attention: "⚠️ Attention", urgent: "🔴 Urgent" };
+    const html = `<html><head><title>Inspection — ${i.vehicle_label || "Vehicle"}</title>
+    <style>body{font-family:sans-serif;padding:24px;color:#111}h1{font-size:18px}table{width:100%;border-collapse:collapse;margin-top:12px}th,td{text-align:left;padding:6px 8px;border-bottom:1px solid #ddd}th{font-size:11px;text-transform:uppercase;color:#666}.summary{margin-top:16px;padding:12px;background:#f5f5f5;border-radius:6px;font-size:13px}</style>
+    </head><body>
+    <h1>Digital Vehicle Inspection</h1>
+    <p><b>Vehicle:</b> ${i.vehicle_label || "—"}</p>
+    ${(i as any).customer_name ? `<p><b>Customer:</b> ${(i as any).customer_name}${(i as any).customer_phone ? ` · ${(i as any).customer_phone}` : ""}</p>` : ""}
+    ${i.technician_name ? `<p><b>Technician:</b> ${i.technician_name}</p>` : ""}
+    <p><b>Date:</b> ${new Date(i.created_at).toLocaleDateString()}</p>
+    <table><tr><th>Inspection point</th><th>Status</th></tr>
+    ${POINTS.map(p => `<tr><td>${p}</td><td>${statusLabel[cl[p] ?? "good"]}</td></tr>`).join("")}
+    </table>
+    ${i.summary ? `<div class="summary"><b>Summary / Recommendations:</b><br>${i.summary}</div>` : ""}
+    </body></html>`;
+    const w = window.open("", "_blank");
+    if (!w) return;
+    w.document.write(html);
+    w.document.close();
+    w.focus();
+    setTimeout(() => w.print(), 400);
   };
 
   const copyShare = (token: string | null) => {
@@ -184,9 +220,17 @@ export default function AutoRepairInspectionsSection({ storeId }: Props) {
                     </div>
                   </div>
                   <div className="flex gap-1 shrink-0">
+                    <Button size="icon" variant="ghost" className="h-8 w-8" title="Print report" onClick={() => printInspection(i)}>
+                      <Printer className="w-4 h-4" />
+                    </Button>
                     <Button size="icon" variant="ghost" className="h-8 w-8" onClick={() => copyShare(i.share_token)} title="Copy customer link">
                       <Link2 className="w-4 h-4" />
                     </Button>
+                    {onCreateEstimate && ((c.attention || 0) + (c.urgent || 0) > 0) && (
+                      <Button size="sm" variant="outline" className="h-8 gap-1 text-amber-600 border-amber-500/40 hover:bg-amber-500/10" title="Create estimate from inspection findings" onClick={() => onCreateEstimate(i.vehicle_label || "")}>
+                        <FileText className="w-3.5 h-3.5" /> Estimate
+                      </Button>
+                    )}
                     <Button size="sm" variant="outline" className="h-8" onClick={() => startEdit(i)}>Open</Button>
                     <Button size="icon" variant="ghost" className="h-8 w-8 text-destructive" onClick={() => { if (confirm("Delete inspection?")) remove.mutate(i.id); }}>
                       <Trash2 className="w-4 h-4" />
@@ -204,8 +248,10 @@ export default function AutoRepairInspectionsSection({ storeId }: Props) {
           <DialogHeader><DialogTitle>{editId ? "Edit Inspection" : "New Inspection"}</DialogTitle></DialogHeader>
           <div className="space-y-3">
             <div className="grid grid-cols-2 gap-2">
-              <Input placeholder="Vehicle (e.g. 2019 Honda Civic — VIN1234567890)" value={vehicleLabel} onChange={e => setVehicleLabel(e.target.value)} />
+              <Input placeholder="Vehicle (e.g. 2019 Honda Civic)" value={vehicleLabel} onChange={e => setVehicleLabel(e.target.value)} />
               <Input placeholder="Technician name" value={techName} onChange={e => setTechName(e.target.value)} />
+              <Input placeholder="Customer name" value={customerName} onChange={e => setCustomerName(e.target.value)} />
+              <Input placeholder="Customer phone" value={customerPhone} onChange={e => setCustomerPhone(e.target.value)} />
             </div>
             <div className="flex gap-2 flex-wrap">
               <Badge variant="outline" className="text-emerald-600 border-emerald-500/40"><CheckCircle2 className="w-3 h-3 mr-1" /> Good · {counts.good || 0}</Badge>

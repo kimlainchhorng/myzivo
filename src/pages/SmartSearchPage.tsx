@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback } from "react";
+import { useQuery } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card } from "@/components/ui/card";
@@ -11,8 +12,6 @@ import { motion } from "framer-motion";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import SEOHead from "@/components/SEOHead";
-
-const TRENDING = ["#travel", "#photography", "#food", "#fitness", "#tech", "#music"];
 
 interface UserResult { id: string; name: string; username: string | null; bio: string | null; avatar: string | null; }
 interface PostResult { id: string; author: string; content: string; }
@@ -36,6 +35,22 @@ export default function SmartSearchPage() {
   const [loading, setLoading] = useState(false);
   const [recentSearches, setRecentSearches] = useState<string[]>(() => {
     try { return JSON.parse(localStorage.getItem("zivo_recent_searches") ?? "[]"); } catch { return []; }
+  });
+
+  const { data: trendingTags = [] } = useQuery({
+    queryKey: ["smart-search-trending-tags"],
+    queryFn: async () => {
+      const { data } = await (supabase as any)
+        .from("user_posts").select("caption").order("created_at", { ascending: false }).limit(200);
+      const counts: Record<string, number> = {};
+      (data || []).forEach((p: any) => {
+        ((p.caption || "").match(/#[\w一-鿿؀-ۿ]+/g) || []).forEach((t: string) => {
+          counts[t.toLowerCase()] = (counts[t.toLowerCase()] || 0) + 1;
+        });
+      });
+      return Object.entries(counts).sort((a, b) => b[1] - a[1]).slice(0, 8).map(([t]) => t);
+    },
+    staleTime: 5 * 60_000,
   });
 
   useEffect(() => {
@@ -165,7 +180,7 @@ export default function SmartSearchPage() {
               <TrendingUp className="h-4 w-4" /> Trending
             </h3>
             <div className="flex flex-wrap gap-2">
-              {TRENDING.map((tag) => (
+              {(trendingTags.length > 0 ? trendingTags : ["#travel", "#photography", "#food", "#fitness", "#tech", "#music"]).map((tag) => (
                 <Badge key={tag} variant="outline" className="cursor-pointer" onClick={() => handleSelectSearch(tag.replace("#", ""))}>{tag}</Badge>
               ))}
             </div>

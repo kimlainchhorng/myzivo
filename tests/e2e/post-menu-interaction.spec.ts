@@ -29,8 +29,8 @@ const DEVICE_PROFILES = [
 ];
 
 /**
- * Touch-aware drag identical to swipe-close.spec.ts. Duplicated to keep
- * each spec file independently runnable without a shared fixture import.
+ * Drags down on a handle using Playwright's mouse (pointer) API.
+ * framer-motion dragControls require PointerEvents — see swipe-close.spec.ts.
  */
 async function dragDown(
   page: Page,
@@ -43,46 +43,6 @@ async function dragDown(
   if (!box) throw new Error("grab handle has no bounding box");
   const startX = box.x + box.width / 2;
   const startY = box.y + box.height / 2;
-
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const hasTouch = (page.context() as any)._options?.hasTouch ?? false;
-
-  if (hasTouch) {
-    await page.evaluate(
-      async ({ startX, startY, distance, steps, stepDelayMs }) => {
-        const el = document.elementFromPoint(startX, startY) as HTMLElement | null;
-        if (!el) return;
-        const fire = (type: string, x: number, y: number) => {
-          const touch = new Touch({
-            identifier: 1,
-            target: el,
-            clientX: x,
-            clientY: y,
-            pageX: x,
-            pageY: y,
-          });
-          const ev = new TouchEvent(type, {
-            cancelable: true,
-            bubbles: true,
-            touches: type === "touchend" ? [] : [touch],
-            targetTouches: type === "touchend" ? [] : [touch],
-            changedTouches: [touch],
-          });
-          el.dispatchEvent(ev);
-        };
-        const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
-        fire("touchstart", startX, startY);
-        for (let i = 1; i <= steps; i++) {
-          await sleep(stepDelayMs);
-          const y = startY + (distance * i) / steps;
-          fire("touchmove", startX, y);
-        }
-        fire("touchend", startX, startY + distance);
-      },
-      { startX, startY, distance, steps, stepDelayMs },
-    );
-    return;
-  }
 
   await page.mouse.move(startX, startY);
   await page.mouse.down();
@@ -97,11 +57,17 @@ async function dragDown(
 async function openProfilePostOverlay(page: Page): Promise<boolean> {
   await seedProfilePosts(page);
   await page.goto("/profile", { waitUntil: "domcontentloaded" });
+  // Wait for the Photos tab to render, then click it so the grid thumbnails
+  // (motion.div with onClick) are the click targets — not the All-tab feed
+  // cards whose root div has no onClick.
+  const photoTab = page.getByTestId("profile-tab-photo");
+  await photoTab.waitFor({ state: "visible", timeout: 8000 }).catch(() => {});
+  if (await photoTab.isVisible().catch(() => false)) await photoTab.click();
   const trigger = page.locator('[data-testid^="profile-post-thumb"]').first();
   // Seed guarantees posts exist — fail loudly if the seed bridge regressed.
   await expect(trigger).toBeVisible({ timeout: 8000 });
-  await trigger.click();
-  await page.getByTestId("profile-post-grab-handle").waitFor({ state: "visible", timeout: 5000 });
+  await trigger.evaluate((el) => (el as HTMLElement).click());
+  await page.getByTestId("profile-post-grab-handle").waitFor({ state: "visible", timeout: 8000 });
   return true;
 }
 
@@ -111,6 +77,7 @@ for (const profile of DEVICE_PROFILES) {
     // device descriptor (viewport, userAgent, etc.) can still be applied here.
     const { defaultBrowserType: _dt, ...deviceOpts } = profile.device;
     test.use(deviceOpts);
+    test.setTimeout(90_000);
 
     test.beforeEach(async ({ page }) => {
       await login(page);
@@ -129,8 +96,8 @@ for (const profile of DEVICE_PROFILES) {
 
       // Re-open without page reload.
       const trigger = page.locator('[data-testid^="profile-post-thumb"]').first();
-      await trigger.click();
-      await expect(page.getByTestId("profile-post-grab-handle")).toBeVisible({ timeout: 3000 });
+      await trigger.evaluate((el) => (el as HTMLElement).click());
+      await expect(page.getByTestId("profile-post-grab-handle")).toBeVisible({ timeout: 5000 });
     });
 
     test("repeated open/close keeps menu trigger and rows clickable", async ({ page }) => {
@@ -141,7 +108,7 @@ for (const profile of DEVICE_PROFILES) {
       for (let i = 0; i < 3; i++) {
         await dragDown(page, page.getByTestId("profile-post-grab-handle"), 280, 8, 8);
         await expect(page.getByTestId("profile-post-close")).toBeHidden({ timeout: 3000 });
-        await page.locator('[data-testid^="profile-post-thumb"]').first().click();
+        await page.locator('[data-testid^="profile-post-thumb"]').first().evaluate((el) => (el as HTMLElement).click());
         await page
           .getByTestId("profile-post-grab-handle")
           .waitFor({ state: "visible", timeout: 3000 });

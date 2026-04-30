@@ -15,6 +15,8 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 import { motion } from "framer-motion";
 import { useAuth } from "@/contexts/AuthContext";
 import { useLoyaltyPoints } from "@/hooks/useLoyaltyPoints";
+import { useQuery } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
 import SEOHead from "@/components/SEOHead";
 import MobileBottomNav from "@/components/shared/MobileBottomNav";
 import {
@@ -37,6 +39,98 @@ export default function RewardsPage() {
     if (oldTier === 'bronze') return 'traveler';
     return 'explorer';
   };
+
+  /* ── Streak: count consecutive active days from loyalty_transactions ── */
+  const { data: streakData } = useQuery({
+    queryKey: ["rewards-streak", user?.id],
+    queryFn: async () => {
+      if (!user?.id) return { streak: 0, activeDays: [] as string[] };
+      const { data } = await (supabase as any)
+        .from("loyalty_transactions")
+        .select("created_at")
+        .eq("user_id", user.id)
+        .order("created_at", { ascending: false })
+        .limit(60);
+      if (!data || data.length === 0) return { streak: 0, activeDays: [] };
+      const uniqueDays = [...new Set((data as any[]).map((r: any) =>
+        new Date(r.created_at).toISOString().slice(0, 10)
+      ))].sort().reverse();
+      let streak = 0;
+      const today = new Date().toISOString().slice(0, 10);
+      let cursor = today;
+      for (const day of uniqueDays) {
+        if (day === cursor) { streak++; const d = new Date(cursor); d.setDate(d.getDate() - 1); cursor = d.toISOString().slice(0, 10); }
+        else if (day < cursor) break;
+      }
+      return { streak, activeDays: uniqueDays.slice(0, 7) };
+    },
+    enabled: !!user,
+    staleTime: 5 * 60_000,
+  });
+
+  /* ── Challenges from achievements table ── */
+  const { data: challenges = [] } = useQuery({
+    queryKey: ["rewards-challenges"],
+    queryFn: async () => {
+      const { data } = await (supabase as any)
+        .from("achievements")
+        .select("id, name, description, points_reward, icon, target_count")
+        .eq("is_active", true)
+        .order("sort_order", { ascending: true })
+        .limit(3);
+      return data || [];
+    },
+    staleTime: 10 * 60_000,
+  });
+
+  /* ── Leaderboard: top users by lifetime points ── */
+  const { data: leaderboard = [] } = useQuery({
+    queryKey: ["rewards-leaderboard"],
+    queryFn: async () => {
+      const { data } = await (supabase as any)
+        .from("loyalty_points")
+        .select("user_id, lifetime_points, profiles:user_id(full_name, username, avatar_url)")
+        .order("lifetime_points", { ascending: false })
+        .limit(3);
+      return data || [];
+    },
+    staleTime: 5 * 60_000,
+  });
+
+  /* ── Points history: last 6 months ── */
+  const { data: monthlyPoints = [] } = useQuery({
+    queryKey: ["rewards-monthly-points", user?.id],
+    queryFn: async () => {
+      if (!user?.id) return [];
+      const sixMonthsAgo = new Date(); sixMonthsAgo.setMonth(sixMonthsAgo.getMonth() - 6);
+      const { data } = await (supabase as any)
+        .from("loyalty_transactions")
+        .select("points_earned, created_at")
+        .eq("user_id", user.id)
+        .gte("created_at", sixMonthsAgo.toISOString())
+        .gt("points_earned", 0);
+      const monthly: Record<string, number> = {};
+      (data || []).forEach((r: any) => {
+        const key = new Date(r.created_at).toLocaleString("en", { month: "short" });
+        monthly[key] = (monthly[key] || 0) + (r.points_earned || 0);
+      });
+      return Object.entries(monthly).map(([month, pts]) => ({ month, pts }));
+    },
+    enabled: !!user,
+    staleTime: 5 * 60_000,
+  });
+
+  const streak = streakData?.streak ?? 0;
+  const activeDays = streakData?.activeDays ?? [];
+
+  /* week-of-day helpers for the streak display */
+  const DAYS = ["S","M","T","W","T","F","S"];
+  const todayDow = new Date().getDay();
+  const weekDays = DAYS.map((d, i) => {
+    const offset = i - todayDow;
+    const date = new Date(); date.setDate(date.getDate() + offset);
+    return { label: d, dateStr: date.toISOString().slice(0, 10) };
+  });
 
   if (!authLoading && !user) {
     return <Navigate to="/login?redirect=/rewards" replace />;
@@ -145,14 +239,19 @@ export default function RewardsPage() {
             <CardContent className="p-4">
               <div className="flex items-center gap-2 mb-3">
                 <Flame className="w-4 h-4 text-amber-500" />
-                <p className="text-xs font-bold text-foreground">12-Day Earning Streak 🔥</p>
+                <p className="text-xs font-bold text-foreground">
+                  {streak > 0 ? `${streak}-Day Earning Streak 🔥` : "Start Your Streak"}
+                </p>
               </div>
               <div className="flex gap-1">
-                {["M","T","W","T","F","S","S"].map((d, i) => (
-                  <div key={i} className={cn("flex-1 text-center py-1.5 rounded-lg text-[9px] font-bold", i < 5 ? "bg-amber-500/20 text-amber-500" : "bg-muted/50 text-muted-foreground")}>
-                    {d}
-                  </div>
-                ))}
+                {weekDays.map(({ label, dateStr }, i) => {
+                  const active = activeDays.includes(dateStr);
+                  return (
+                    <div key={i} className={cn("flex-1 text-center py-1.5 rounded-lg text-[9px] font-bold", active ? "bg-amber-500/20 text-amber-500" : "bg-muted/50 text-muted-foreground")}>
+                      {label}
+                    </div>
+                  );
+                })}
               </div>
               <p className="text-[10px] text-muted-foreground mt-2">Keep your streak! Book or search daily to earn bonus points.</p>
             </CardContent>
@@ -160,78 +259,88 @@ export default function RewardsPage() {
         </motion.div>
 
         {/* Active Challenges */}
-        <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.12 }}>
-          <h2 className="text-sm font-bold mb-3 flex items-center gap-2"><Target className="w-4 h-4 text-violet-500" /> Active Challenges</h2>
-          <div className="space-y-2">
-            {[
-              { name: "Weekend Warrior", desc: "Book 2 trips this month", progress: 1, total: 2, reward: "500 pts", icon: Zap, color: "text-amber-500" },
-              { name: "Explorer", desc: "Search 5 destinations", progress: 3, total: 5, reward: "200 pts", icon: TrendingUp, color: "text-sky-500" },
-              { name: "First Review", desc: "Rate your last trip", progress: 0, total: 1, reward: "100 pts", icon: Star, color: "text-emerald-500" },
-            ].map(c => (
-              <Card key={c.name} className="border-border/40">
-                <CardContent className="p-3 flex items-center gap-3">
-                  <div className={cn("w-9 h-9 rounded-xl bg-muted/50 flex items-center justify-center")}>
-                    <c.icon className={cn("w-4 h-4", c.color)} />
-                  </div>
-                  <div className="flex-1">
-                    <div className="flex items-center justify-between">
-                      <p className="text-xs font-bold text-foreground">{c.name}</p>
-                      <Badge className="bg-amber-500/10 text-amber-500 border-0 text-[8px]">{c.reward}</Badge>
+        {challenges.length > 0 && (
+          <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.12 }}>
+            <h2 className="text-sm font-bold mb-3 flex items-center gap-2"><Target className="w-4 h-4 text-violet-500" /> Active Challenges</h2>
+            <div className="space-y-2">
+              {challenges.map((c: any) => (
+                <Card key={c.id} className="border-border/40">
+                  <CardContent className="p-3 flex items-center gap-3">
+                    <div className="w-9 h-9 rounded-xl bg-muted/50 flex items-center justify-center">
+                      <Zap className="w-4 h-4 text-amber-500" />
                     </div>
-                    <p className="text-[10px] text-muted-foreground">{c.desc}</p>
-                    <div className="h-1.5 rounded-full bg-muted/50 mt-1.5 overflow-hidden">
-                      <motion.div initial={{ width: 0 }} animate={{ width: `${(c.progress / c.total) * 100}%` }} transition={{ duration: 0.8 }} className="h-full rounded-full bg-primary" />
+                    <div className="flex-1">
+                      <div className="flex items-center justify-between">
+                        <p className="text-xs font-bold text-foreground">{c.name}</p>
+                        {c.points_reward && <Badge className="bg-amber-500/10 text-amber-500 border-0 text-[8px]">{c.points_reward} pts</Badge>}
+                      </div>
+                      <p className="text-[10px] text-muted-foreground">{c.description}</p>
+                      <div className="h-1.5 rounded-full bg-muted/50 mt-1.5 overflow-hidden">
+                        <motion.div initial={{ width: 0 }} animate={{ width: "0%" }} transition={{ duration: 0.8 }} className="h-full rounded-full bg-primary" />
+                      </div>
                     </div>
-                    <p className="text-[9px] text-muted-foreground mt-0.5">{c.progress}/{c.total} completed</p>
-                  </div>
-                </CardContent>
-              </Card>
-            ))}
-          </div>
-        </motion.div>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          </motion.div>
+        )}
 
         {/* Points History Chart */}
-        <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.14 }}>
-          <Card className="border-border/40">
-            <CardContent className="p-4">
-              <p className="text-xs font-bold text-foreground mb-3 flex items-center gap-2"><BarChart3 className="w-3.5 h-3.5 text-primary" /> Points Earned (Last 6 Months)</p>
-              <div className="flex items-end gap-1.5 h-16">
-                {[120, 250, 80, 340, 190, 420].map((val, i) => (
-                  <div key={i} className="flex-1 flex flex-col items-center gap-0.5">
-                    <motion.div initial={{ height: 0 }} animate={{ height: `${(val / 500) * 100}%` }} transition={{ duration: 0.6, delay: i * 0.08 }}
-                      className={cn("w-full rounded-t", i === 5 ? "bg-primary" : "bg-primary/20")} />
-                    <span className="text-[8px] text-muted-foreground">{["Oct","Nov","Dec","Jan","Feb","Mar"][i]}</span>
-                  </div>
-                ))}
-              </div>
-              <div className="flex justify-between mt-2 text-[10px] text-muted-foreground">
-                <span>Total: <b className="text-foreground">1,400 pts</b></span>
-                <span className="text-emerald-500">↑ 121% vs prev</span>
-              </div>
-            </CardContent>
-          </Card>
-        </motion.div>
+        {monthlyPoints.length > 0 && (
+          <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.14 }}>
+            <Card className="border-border/40">
+              <CardContent className="p-4">
+                <p className="text-xs font-bold text-foreground mb-3 flex items-center gap-2"><BarChart3 className="w-3.5 h-3.5 text-primary" /> Points Earned (Last 6 Months)</p>
+                <div className="flex items-end gap-1.5 h-16">
+                  {monthlyPoints.map(({ month, pts }, i) => {
+                    const maxPts = Math.max(...monthlyPoints.map(m => m.pts), 1);
+                    return (
+                      <div key={month} className="flex-1 flex flex-col items-center gap-0.5">
+                        <motion.div initial={{ height: 0 }} animate={{ height: `${(pts / maxPts) * 100}%` }} transition={{ duration: 0.6, delay: i * 0.08 }}
+                          className={cn("w-full rounded-t", i === monthlyPoints.length - 1 ? "bg-primary" : "bg-primary/20")} />
+                        <span className="text-[8px] text-muted-foreground">{month}</span>
+                      </div>
+                    );
+                  })}
+                </div>
+                <div className="flex justify-between mt-2 text-[10px] text-muted-foreground">
+                  <span>Total: <b className="text-foreground">{monthlyPoints.reduce((s, m) => s + m.pts, 0).toLocaleString()} pts</b></span>
+                </div>
+              </CardContent>
+            </Card>
+          </motion.div>
+        )}
 
         {/* Leaderboard */}
-        <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.16 }}>
-          <h2 className="text-sm font-bold mb-3 flex items-center gap-2"><Award className="w-4 h-4 text-amber-500" /> Community Leaderboard</h2>
-          <Card className="border-border/40">
-            <CardContent className="p-3 space-y-1.5">
-              {[
-                { rank: 1, name: "Alex M.", pts: "12,450", badge: "🥇" },
-                { rank: 2, name: "Sarah K.", pts: "11,200", badge: "🥈" },
-                { rank: 3, name: "Mike R.", pts: "9,800", badge: "🥉" },
-                { rank: 4, name: "You", pts: String(points.lifetime_points || 420), badge: "🎯", isYou: true },
-              ].map(r => (
-                <div key={r.rank} className={cn("flex items-center gap-3 p-2 rounded-lg", r.isYou && "bg-primary/5 border border-primary/20")}>
-                  <span className="text-sm">{r.badge}</span>
-                  <span className="text-xs font-bold text-foreground flex-1">{r.name}</span>
-                  <span className="text-xs text-muted-foreground">{r.pts} pts</span>
-                </div>
-              ))}
-            </CardContent>
-          </Card>
-        </motion.div>
+        {leaderboard.length > 0 && (
+          <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.16 }}>
+            <h2 className="text-sm font-bold mb-3 flex items-center gap-2"><Award className="w-4 h-4 text-amber-500" /> Community Leaderboard</h2>
+            <Card className="border-border/40">
+              <CardContent className="p-3 space-y-1.5">
+                {leaderboard.map((r: any, i: number) => {
+                  const medals = ["🥇", "🥈", "🥉"];
+                  const isYou = r.user_id === user?.id;
+                  const name = (r.profiles as any)?.full_name || (r.profiles as any)?.username || "User";
+                  return (
+                    <div key={r.user_id} className={cn("flex items-center gap-3 p-2 rounded-lg", isYou && "bg-primary/5 border border-primary/20")}>
+                      <span className="text-sm">{medals[i] ?? "🎯"}</span>
+                      <span className="text-xs font-bold text-foreground flex-1 truncate">{isYou ? "You" : name}</span>
+                      <span className="text-xs text-muted-foreground">{(r.lifetime_points || 0).toLocaleString()} pts</span>
+                    </div>
+                  );
+                })}
+                {user && !leaderboard.find((r: any) => r.user_id === user.id) && (
+                  <div className="flex items-center gap-3 p-2 rounded-lg bg-primary/5 border border-primary/20">
+                    <span className="text-sm">🎯</span>
+                    <span className="text-xs font-bold text-foreground flex-1">You</span>
+                    <span className="text-xs text-muted-foreground">{(points.lifetime_points || 0).toLocaleString()} pts</span>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          </motion.div>
+        )}
 
         {/* Milestone Rewards */}
         <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.18 }}>

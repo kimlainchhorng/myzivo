@@ -1186,6 +1186,7 @@ export default function PublicProfilePage() {
                   {filteredPosts.map((post: any) => (
                     <motion.button
                       key={post.id}
+                      data-testid={`public-post-thumb-${post.id}`}
                       initial={{ opacity: 0 }}
                       animate={{ opacity: 1 }}
                       onClick={() => {

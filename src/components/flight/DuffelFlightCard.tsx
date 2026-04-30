@@ -9,10 +9,11 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
   Clock, ChevronRight, ChevronDown, Briefcase, ShieldCheck, ShieldX,
-  ArrowRight, Repeat, Plane, ExternalLink, RefreshCw
+  ArrowRight, Repeat, Plane, ExternalLink, RefreshCw, Scale
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { type DuffelOffer, type DuffelSegment } from "@/hooks/useDuffelFlights";
+import { type CompareFlight } from "@/components/flight/FlightCompareWidget";
 import { getAllInPrice } from "@/utils/flightPricing";
 import { AirlineLogo } from "@/components/flight/AirlineLogo";
 import SeatMapPreview from "@/components/flight/SeatMapPreview";
@@ -30,6 +31,8 @@ interface DuffelFlightCardProps {
   hasReturn: boolean;
   onSelect: (offer: DuffelOffer) => void;
   searchDestination?: string;
+  onCompare?: (flight: CompareFlight) => void;
+  inCompare?: boolean;
 }
 
 const sortBadgeConfig: Record<string, { label: string; className: string }> = {
@@ -291,6 +294,8 @@ export default function DuffelFlightCard({
   hasReturn,
   onSelect,
   searchDestination,
+  onCompare,
+  inCompare,
 }: DuffelFlightCardProps) {
   const [expanded, setExpanded] = useState(false);
   const [selectedVariantIdx, setSelectedVariantIdx] = useState(0);
@@ -531,31 +536,67 @@ export default function DuffelFlightCard({
             )}
           </div>
 
-          <Button
-            size="sm"
-            className={cn(
-              "h-8 px-4 text-[11px] font-bold shadow-sm active:scale-95 transition-all gap-1 shrink-0",
-              "bg-[hsl(var(--flights))] hover:bg-[hsl(var(--flights))]/90 text-primary-foreground"
+          <div className="flex items-center gap-1.5 shrink-0">
+            {onCompare && (
+              <Button
+                size="sm"
+                variant="outline"
+                className={cn(
+                  "h-8 px-2.5 text-[11px] font-semibold gap-1 transition-all active:scale-95",
+                  inCompare
+                    ? "border-[hsl(var(--flights))] bg-[hsl(var(--flights))]/10 text-[hsl(var(--flights))]"
+                    : "text-muted-foreground hover:border-[hsl(var(--flights))]/50 hover:text-[hsl(var(--flights))]"
+                )}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  const amenities: string[] = [];
+                  if (displayBaggage?.carryOnIncluded) amenities.push("Carry-on");
+                  if (displayBaggage?.checkedBagsIncluded) amenities.push(`${displayBaggage.checkedBagQuantity} Checked`);
+                  if (displayConditions?.refundable) amenities.push("Refundable");
+                  if (displayConditions?.changeable) amenities.push("Changeable");
+                  onCompare({
+                    id: displayOfferId,
+                    airline: offer.airline,
+                    route: `${offer.departure.code} → ${offer.arrival.code}`,
+                    price: Math.round(getAllInPrice(activeVariantPricePerPerson)),
+                    duration: offer.duration,
+                    stops: offer.stops,
+                    departure: offer.departure.time,
+                    arrival: offer.arrival.time,
+                    amenities,
+                  });
+                }}
+              >
+                <Scale className="w-3 h-3" />
+                {inCompare ? "Added" : "Compare"}
+              </Button>
             )}
-            onClick={(e) => {
-              e.stopPropagation();
-              onSelect({
-                ...offer,
-                id: displayOfferId,
-                price: activeVariant?.price ?? offer.price,
-                pricePerPerson: activeVariantPricePerPerson,
-                currency: activeVariant?.currency ?? offer.currency,
-                fareBrandName: displayFareName,
-                cabinClass: activeVariant?.cabinClass ?? offer.cabinClass,
-                conditions: displayConditions,
-                baggageDetails: displayBaggage,
-                baggageIncluded: activeVariant?.baggageIncluded ?? offer.baggageIncluded,
-              });
-            }}
-          >
-            Select
-            <ChevronRight className="w-3.5 h-3.5" />
-          </Button>
+            <Button
+              size="sm"
+              className={cn(
+                "h-8 px-4 text-[11px] font-bold shadow-sm active:scale-95 transition-all gap-1 shrink-0",
+                "bg-[hsl(var(--flights))] hover:bg-[hsl(var(--flights))]/90 text-primary-foreground"
+              )}
+              onClick={(e) => {
+                e.stopPropagation();
+                onSelect({
+                  ...offer,
+                  id: displayOfferId,
+                  price: activeVariant?.price ?? offer.price,
+                  pricePerPerson: activeVariantPricePerPerson,
+                  currency: activeVariant?.currency ?? offer.currency,
+                  fareBrandName: displayFareName,
+                  cabinClass: activeVariant?.cabinClass ?? offer.cabinClass,
+                  conditions: displayConditions,
+                  baggageDetails: displayBaggage,
+                  baggageIncluded: activeVariant?.baggageIncluded ?? offer.baggageIncluded,
+                });
+              }}
+            >
+              Select
+              <ChevronRight className="w-3.5 h-3.5" />
+            </Button>
+          </div>
         </div>
 
         {/* Expand toggle */}

@@ -3,6 +3,7 @@
  * Premium ZIVO super-app style with map, scheduling, and confirmation
  */
 import { useState, useEffect } from "react";
+import { useQuery } from "@tanstack/react-query";
 import { useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { ArrowLeft, MapPin, Package, Loader2, Clock, DollarSign, CreditCard, Shield, CheckCircle, Zap, Scale, Ruler, Box, Truck, Navigation, AlertTriangle, Calendar, Camera, PartyPopper, Phone, MessageSquare, Gift, Tag, Copy, Share2, Star, RefreshCw, Bell, Users, RotateCcw, Percent, ThumbsUp, Award, ChevronRight, History, X, Info, Plus, Thermometer, Lock as LockIcon, BarChart3 } from "lucide-react";
@@ -260,8 +261,25 @@ export default function DeliveryPage() {
   const [recipientPhone, setRecipientPhone] = useState("");
   const [recipientEmail, setRecipientEmail] = useState("");
   const [showDeliveryHistory, setShowDeliveryHistory] = useState(false);
-  // TODO: replace with real query of the user's delivery history
-  const [pastDeliveries] = useState<Array<{ id: string; to: string; status: string; date: string; tracking: string }>>([]);
+  const { data: pastDeliveries = [] } = useQuery({
+    queryKey: ["past-deliveries", user?.id],
+    enabled: !!user?.id,
+    queryFn: async () => {
+      const { data } = await supabase
+        .from("deliveries")
+        .select("id, dropoff_location, status, created_at")
+        .eq("customer_user_id", user!.id)
+        .order("created_at", { ascending: false })
+        .limit(10);
+      return (data || []).map((d: any) => ({
+        id: d.id,
+        to: (d.dropoff_location as any)?.address ?? "—",
+        status: d.status === "delivered" ? "Delivered" : d.status === "pending" ? "Pending" : d.status ?? "—",
+        date: d.created_at ? new Date(d.created_at).toLocaleDateString() : "—",
+        tracking: d.id.slice(0, 8).toUpperCase(),
+      }));
+    },
+  });
   const [expressPickup, setExpressPickup] = useState(false);
   const [holdAtFacility, setHoldAtFacility] = useState(false);
   const [saturdayDelivery, setSaturdayDelivery] = useState(false);
@@ -270,7 +288,6 @@ export default function DeliveryPage() {
   // === NEW: Roadie-inspired features ===
   const [peerDelivery, setPeerDelivery] = useState(false);
   const [showDriverBids, setShowDriverBids] = useState(false);
-  // TODO: replace with real bids from the peer-delivery marketplace API
   const [driverBids] = useState<Array<{ id: string; name: string; rating: number; vehicle: string; price: number; eta: string; trips: number }>>([]);
   const [selectedBid, setSelectedBid] = useState<string | null>(null);
   const [vehicleTypeForDelivery, setVehicleTypeForDelivery] = useState<"any" | "sedan" | "suv" | "truck" | "van">("any");
