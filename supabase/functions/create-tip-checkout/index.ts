@@ -5,6 +5,7 @@
 import { createClient } from "../_shared/deps.ts";
 import { getCorsHeaders } from "../_shared/cors.ts";
 import Stripe from "../_shared/stripe.ts";
+import { scanContentForLinks } from "../_shared/contentLinkValidation.ts";
 
 Deno.serve(async (req) => {
   const cors = getCorsHeaders(req);
@@ -45,6 +46,10 @@ Deno.serve(async (req) => {
         status: 400,
         headers: { ...cors, "Content-Type": "application/json" },
       });
+    }
+    if (typeof message === "string") {
+      const linkScan = scanContentForLinks(message);
+      if (!linkScan.ok) return new Response(JSON.stringify({ error: "blocked_link", code: "blocked_link", urls: linkScan.blocked }), { status: 422, headers: { ...cors, "Content-Type": "application/json" } });
     }
 
     if (creator_id === user.id) {

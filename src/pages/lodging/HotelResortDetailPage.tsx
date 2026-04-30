@@ -9,9 +9,14 @@
  */
 import { useEffect, useMemo, useState } from "react";
 import { Helmet } from "react-helmet-async";
+<<<<<<< HEAD
 import { useNavigate, useParams } from "react-router-dom";
 import SafeCaption from "@/components/social/SafeCaption";
+=======
+import { useNavigate, useParams, useSearchParams } from "react-router-dom";
+>>>>>>> 4f5c9381f83c04cedd52b5edfbf95b784f58af56
 import { motion } from "framer-motion";
+import { format, addDays, differenceInCalendarDays, parseISO, isValid } from "date-fns";
 import ArrowLeft from "lucide-react/dist/esm/icons/arrow-left";
 import Hotel from "lucide-react/dist/esm/icons/hotel";
 import MapPin from "lucide-react/dist/esm/icons/map-pin";
@@ -33,6 +38,7 @@ import CalendarRange from "lucide-react/dist/esm/icons/calendar-range";
 import CheckCircle2 from "lucide-react/dist/esm/icons/check-circle-2";
 import ExternalLink from "lucide-react/dist/esm/icons/external-link";
 import Settings from "lucide-react/dist/esm/icons/settings";
+import Users from "lucide-react/dist/esm/icons/users";
 
 import { supabase } from "@/integrations/supabase/client";
 import { useQuery } from "@tanstack/react-query";
@@ -41,7 +47,10 @@ import { useLodgeRooms } from "@/hooks/lodging/useLodgeRooms";
 import { useOwnerStoreProfile } from "@/hooks/useOwnerStoreProfile";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { Calendar } from "@/components/ui/calendar";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Skeleton } from "@/components/ui/skeleton";
+import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 
 interface StoreRow {
@@ -54,6 +63,7 @@ interface StoreRow {
   description: string | null;
   phone: string | null;
   setup_complete: boolean | null;
+  slug?: string | null;
 }
 
 const AMENITY_ICON_MAP: Record<string, React.ComponentType<{ className?: string }>> = {
@@ -115,6 +125,18 @@ const humanizeLabel = (raw: string) =>
     .trim()
     .replace(/\b\w/g, (c) => c.toUpperCase());
 
+const todayUTC = () => {
+  const d = new Date();
+  d.setHours(0, 0, 0, 0);
+  return d;
+};
+
+const parseParamDate = (s: string | null) => {
+  if (!s) return null;
+  const d = parseISO(s);
+  return isValid(d) ? d : null;
+};
+
 interface PromoInfo {
   type: "percent" | "fixed";
   value: number;
@@ -134,7 +156,7 @@ export default function HotelResortDetailPage() {
     queryFn: async (): Promise<StoreRow | null> => {
       const { data, error } = await (supabase as any)
         .from("store_profiles")
-        .select("id, name, category, address, logo_url, banner_url, description, phone, setup_complete")
+        .select("id, name, category, address, logo_url, banner_url, description, phone, setup_complete, slug")
         .eq("id", storeId)
         .maybeSingle();
       if (error) throw error;
@@ -212,8 +234,15 @@ export default function HotelResortDetailPage() {
 
   const minDeal = useMemo(() => applyPromo(minPriceCents), [minPriceCents, promo]);
 
-  const [bookingOpen, setBookingOpen] = useState(false);
+  const [searchParams] = useSearchParams();
+  const [checkIn, setCheckIn] = useState<Date>(() => parseParamDate(searchParams.get("ci")) ?? todayUTC());
+  const [checkOut, setCheckOut] = useState<Date>(() => parseParamDate(searchParams.get("co")) ?? addDays(todayUTC(), 1));
+  const [adults, setAdults] = useState<number>(() => Number(searchParams.get("adults")) || 2);
+  const [children, setChildren] = useState<number>(() => Number(searchParams.get("children")) || 0);
+  const [datesOpen, setDatesOpen] = useState(false);
+  const [guestsOpen, setGuestsOpen] = useState(false);
   const [allRoomsOpen, setAllRoomsOpen] = useState(false);
+  const nights = Math.max(1, differenceInCalendarDays(checkOut, checkIn));
 
   // Identify the cheapest active room for a deterministic "Top pick" badge
   const topPickRoomId = useMemo(() => {
@@ -249,6 +278,13 @@ export default function HotelResortDetailPage() {
     } catch {
       toast.error("Could not share link");
     }
+  };
+
+  const handleCheckAvailability = () => {
+    const ciStr = format(checkIn, "yyyy-MM-dd");
+    const coStr = format(checkOut, "yyyy-MM-dd");
+    const dest = store?.slug || storeId;
+    navigate(`/store/${dest}?ci=${ciStr}&co=${coStr}&adults=${adults}&children=${children}`);
   };
 
   const isLoading = storeQuery.isLoading || profileQuery.isLoading;
@@ -421,10 +457,70 @@ export default function HotelResortDetailPage() {
         <Button
           size="lg"
           className="h-12 rounded-2xl flex-1 font-semibold bg-gradient-to-r from-emerald-500 to-emerald-600 hover:from-emerald-600 hover:to-emerald-700 text-white shadow-md shadow-emerald-500/20"
-          onClick={() => setBookingOpen(true)}
+          onClick={handleCheckAvailability}
         >
           <CalendarRange className="w-4 h-4 mr-2" /> Check Availability
         </Button>
+      </div>
+
+      {/* Date + Guests picker */}
+      <div className="px-4 mt-3 grid grid-cols-2 gap-2">
+        <Popover open={datesOpen} onOpenChange={setDatesOpen}>
+          <PopoverTrigger asChild>
+            <button className="h-11 rounded-2xl border border-border bg-card shadow-sm text-left px-3 flex items-center gap-2 active:scale-[0.98] transition">
+              <CalendarRange className="w-4 h-4 text-primary shrink-0" />
+              <div className="min-w-0 flex-1">
+                <p className="text-[10px] uppercase tracking-wide text-muted-foreground leading-none">
+                  {nights} night{nights > 1 ? "s" : ""}
+                </p>
+                <p className="text-[12px] font-semibold text-foreground truncate leading-tight">
+                  {format(checkIn, "MMM d")} – {format(checkOut, "MMM d")}
+                </p>
+              </div>
+            </button>
+          </PopoverTrigger>
+          <PopoverContent className="w-auto p-0 max-w-[92vw]" align="start">
+            <div className="p-2 border-b">
+              <p className="text-[11px] font-semibold text-muted-foreground">Pick check-in & check-out</p>
+            </div>
+            <Calendar
+              mode="range"
+              selected={{ from: checkIn, to: checkOut }}
+              onSelect={(range) => {
+                if (range?.from) setCheckIn(range.from);
+                if (range?.to) {
+                  setCheckOut(range.to);
+                  setDatesOpen(false);
+                }
+              }}
+              numberOfMonths={1}
+              disabled={(d) => d < todayUTC()}
+              initialFocus
+              className={cn("p-3 pointer-events-auto")}
+            />
+          </PopoverContent>
+        </Popover>
+
+        <Popover open={guestsOpen} onOpenChange={setGuestsOpen}>
+          <PopoverTrigger asChild>
+            <button className="h-11 rounded-2xl border border-border bg-card shadow-sm text-left px-3 flex items-center gap-2 active:scale-[0.98] transition">
+              <Users className="w-4 h-4 text-primary shrink-0" />
+              <div className="min-w-0 flex-1">
+                <p className="text-[10px] uppercase tracking-wide text-muted-foreground leading-none">Guests</p>
+                <p className="text-[12px] font-semibold text-foreground truncate leading-tight">
+                  {adults} adult{adults > 1 ? "s" : ""}{children > 0 ? ` · ${children} child${children > 1 ? "ren" : ""}` : ""}
+                </p>
+              </div>
+            </button>
+          </PopoverTrigger>
+          <PopoverContent className="w-64 p-3" align="end">
+            <div className="space-y-3">
+              <DetailStepper label="Adults" value={adults} min={1} max={20} onChange={setAdults} />
+              <DetailStepper label="Children" value={children} min={0} max={10} onChange={setChildren} />
+              <Button className="w-full h-9" onClick={() => setGuestsOpen(false)}>Done</Button>
+            </div>
+          </PopoverContent>
+        </Popover>
       </div>
 
       {/* Description */}
@@ -646,57 +742,12 @@ export default function HotelResortDetailPage() {
           <Button
             size="lg"
             className="h-12 rounded-2xl flex-[2] font-semibold bg-gradient-to-r from-emerald-500 to-emerald-600 hover:from-emerald-600 hover:to-emerald-700 text-white shadow-md shadow-emerald-500/20"
-            onClick={() => setBookingOpen(true)}
+            onClick={handleCheckAvailability}
           >
             <CalendarRange className="w-4 h-4 mr-2" /> Check Availability
           </Button>
         </div>
       </div>
-
-      {/* Booking sheet (lightweight inline modal) */}
-      {bookingOpen && (
-        <div
-          className="fixed inset-0 z-40 bg-black/40 flex items-end md:items-center justify-center"
-          onClick={() => setBookingOpen(false)}
-        >
-          <motion.div
-            initial={{ y: 60, opacity: 0 }}
-            animate={{ y: 0, opacity: 1 }}
-            className="w-full max-w-md md:max-w-lg bg-card rounded-t-3xl md:rounded-3xl p-5 pb-[max(env(safe-area-inset-bottom),20px)] md:pb-5 shadow-2xl"
-            onClick={(e) => e.stopPropagation()}
-          >
-            <div className="mx-auto h-1.5 w-10 rounded-full bg-muted mb-3" />
-            <h3 className="text-base font-bold text-foreground">Booking opens soon</h3>
-            <p className="mt-1 text-sm text-muted-foreground">
-              Online booking for {store?.name || "this property"} is launching shortly. Reach out below to
-              reserve a room directly with the property.
-            </p>
-            <div className="mt-4 grid gap-2">
-              {profile?.contact?.phone && (
-                <Button asChild>
-                  <a href={`tel:${profile.contact.phone}`}>
-                    <Phone className="w-4 h-4 mr-1.5" /> Call property
-                  </a>
-                </Button>
-              )}
-              {profile?.contact?.whatsapp && (
-                <Button variant="outline" asChild>
-                  <a
-                    href={`https://wa.me/${profile.contact.whatsapp.replace(/[^\d]/g, "")}`}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                  >
-                    <MessageCircle className="w-4 h-4 mr-1.5" /> WhatsApp
-                  </a>
-                </Button>
-              )}
-              <Button variant="ghost" onClick={() => setBookingOpen(false)}>
-                Close
-              </Button>
-            </div>
-          </motion.div>
-        </div>
-      )}
 
       {/* All rooms sheet */}
       {allRoomsOpen && (
@@ -799,6 +850,23 @@ function Stat({ label, value }: { label: string; value: string | number }) {
     <div className="rounded-xl bg-muted/50 py-2 md:py-2.5">
       <p className="text-sm md:text-lg font-bold text-foreground leading-none">{value}</p>
       <p className="mt-0.5 text-[10px] md:text-xs text-muted-foreground">{label}</p>
+    </div>
+  );
+}
+
+function DetailStepper({
+  label, value, min, max, onChange,
+}: {
+  label: string; value: number; min: number; max: number; onChange: (v: number) => void;
+}) {
+  return (
+    <div className="flex items-center justify-between">
+      <span className="text-sm font-semibold text-foreground">{label}</span>
+      <div className="flex items-center gap-2">
+        <button type="button" onClick={() => onChange(Math.max(min, value - 1))} disabled={value <= min} className="h-8 w-8 rounded-full border border-border text-foreground disabled:opacity-40 active:bg-muted" aria-label={`Decrease ${label}`}>–</button>
+        <span className="w-6 text-center text-sm font-bold tabular-nums">{value}</span>
+        <button type="button" onClick={() => onChange(Math.min(max, value + 1))} disabled={value >= max} className="h-8 w-8 rounded-full border border-border text-foreground disabled:opacity-40 active:bg-muted" aria-label={`Increase ${label}`}>+</button>
+      </div>
     </div>
   );
 }

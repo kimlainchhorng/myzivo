@@ -11,10 +11,17 @@
  * green in CI environments without a seeded session.
  */
 import { test, expect, devices } from "@playwright/test";
+import { login } from "./fixtures/login";
 
-test.use({ ...devices["iPhone 13"] });
+// defaultBrowserType (webkit) can't be honoured in a chromium-only project — strip it.
+const { defaultBrowserType: _dt, ...iPhone13Opts } = devices["iPhone 13"];
+test.use(iPhone13Opts);
 
 test.describe("StoryViewer single-instance invariants", () => {
+  test.beforeEach(async ({ page }) => {
+    await login(page);
+  });
+
   test("Profile story opens with exactly one header / close / pause", async ({ page }) => {
     await page.goto("/profile", { waitUntil: "domcontentloaded" });
 

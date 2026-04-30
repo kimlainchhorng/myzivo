@@ -48,6 +48,10 @@ Deno.serve(async (req) => {
     if (!page_id || !message?.trim()) {
       return json({ error: "page_id and message are required" }, 400);
     }
+    const linkScan = scanContentForLinks(message);
+    if (!linkScan.ok) {
+      return json({ error: "blocked_link", code: "blocked_link", urls: linkScan.blocked }, 422);
+    }
 
     // Use token from request body if provided, otherwise look up from store_ad_pages
     let pageToken = page_access_token?.trim() || "";

@@ -24,6 +24,8 @@ interface Trip {
   time: string;
   pickup: string;
   dropoff: string;
+  dropoffLat?: number;
+  dropoffLng?: number;
   driver: string;
   driverInitials: string;
   driverRating: number;
@@ -43,7 +45,11 @@ const statusColors: Record<TripStatus, string> = {
   disputed: "bg-amber-500/10 text-amber-500",
 };
 
-export default function RideTripHistory() {
+interface RideTripHistoryProps {
+  onRebook?: (dropoffAddress: string, dropoffLat?: number, dropoffLng?: number) => void;
+}
+
+export default function RideTripHistory({ onRebook }: RideTripHistoryProps = {}) {
   const { user } = useAuth();
   const [trips, setTrips] = useState<Trip[]>([]);
   const [loading, setLoading] = useState(true);
@@ -58,7 +64,7 @@ export default function RideTripHistory() {
     const fetchTrips = async () => {
       const { data: rides } = await supabase
         .from("ride_requests")
-        .select("id, created_at, pickup_address, dropoff_address, assigned_driver_id, payment_amount, distance_miles, duration_minutes, status, payment_status")
+        .select("id, created_at, pickup_address, dropoff_address, dropoff_lat, dropoff_lng, assigned_driver_id, payment_amount, distance_miles, duration_minutes, status, payment_status")
         .eq("user_id", user.id)
         .order("created_at", { ascending: false })
         .limit(50);
@@ -107,6 +113,8 @@ export default function RideTripHistory() {
           duration: r.duration_minutes ? `${r.duration_minutes} min` : "—",
           status: mapStatus(r.status),
           paymentMethod: r.payment_status === "paid" ? "Card on file" : r.payment_status || "—",
+          dropoffLat: r.dropoff_lat ?? undefined,
+          dropoffLng: r.dropoff_lng ?? undefined,
         };
       });
 
@@ -202,7 +210,18 @@ export default function RideTripHistory() {
                             Request refund
                           </Button>
                         </div>
-                        <Button variant="outline" size="sm" className="w-full h-8 text-xs rounded-xl gap-1.5" onClick={() => toast.info("Rebooking this route...")}>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          className="w-full h-8 text-xs rounded-xl gap-1.5"
+                          onClick={() => {
+                            if (onRebook) {
+                              onRebook(trip.dropoff, trip.dropoffLat, trip.dropoffLng);
+                            } else {
+                              toast.info("Rebooking this route...");
+                            }
+                          }}
+                        >
                           <RotateCcw className="w-3 h-3" /> Rebook this trip
                         </Button>
                       </div>

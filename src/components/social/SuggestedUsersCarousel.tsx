@@ -42,7 +42,7 @@ const SuggestedUsersCarousel = memo(forwardRef<HTMLDivElement, SuggestedUsersCar
       // Over-fetch so we still get 12 even if many results are filtered out.
       const { data, error } = await (supabase as any)
         .from("profiles")
-        .select("id, full_name, avatar_url, bio, is_verified")
+        .select("id, full_name, avatar_url, bio, is_verified, follower_count, posts_count")
         .neq("id", user?.id || "")
         .limit(40);
       if (error) throw error;
@@ -185,10 +185,24 @@ const SuggestedUsersCarousel = memo(forwardRef<HTMLDivElement, SuggestedUsersCar
                 </div>
 
                 {profile.bio && (
+<<<<<<< HEAD
                   <p className="text-[9px] text-muted-foreground line-clamp-2 mb-1.5 leading-tight">
                     <SafeCaption text={profile.bio} />
+=======
+                  <p className="text-[9px] text-muted-foreground line-clamp-2 mb-0.5 leading-tight">
+                    {profile.bio}
+>>>>>>> 4f5c9381f83c04cedd52b5edfbf95b784f58af56
                   </p>
                 )}
+
+                {/* Follower / posts hint */}
+                <p className="text-[9px] text-muted-foreground/70 mb-1.5">
+                  {profile.follower_count > 0
+                    ? `${profile.follower_count >= 1000 ? `${(profile.follower_count / 1000).toFixed(1)}k` : profile.follower_count} followers`
+                    : profile.posts_count > 0
+                    ? `${profile.posts_count} posts`
+                    : "New member"}
+                </p>
               </div>
 
               {/* Follow button */}

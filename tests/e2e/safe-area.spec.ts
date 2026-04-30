@@ -15,6 +15,7 @@
  */
 
 import { test, expect, type Page } from "@playwright/test";
+import { login } from "./fixtures/login";
 
 interface Profile {
   name: string;
@@ -60,7 +61,10 @@ async function expectClear(page: Page, selector: string, floor: number, label: s
 
 for (const p of PROFILES) {
   test.describe(`safe-area @ ${p.name} (inset=${p.inset}px)`, () => {
-    test.beforeEach(async ({ page }) => applyProfile(page, p));
+    test.beforeEach(async ({ page }) => {
+      await login(page);
+      await applyProfile(page, p);
+    });
 
     test("feed sticky header clears status bar", async ({ page }) => {
       await page.goto("/feed");

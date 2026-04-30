@@ -277,12 +277,14 @@
   :root {
     --zivo-safe-top: env(safe-area-inset-top, 0px);
     --zivo-safe-bottom: env(safe-area-inset-bottom, 0px);
+    /* Derived variables chain through --zivo-safe-top so E2E tests can inject
+       a simulated inset by overriding only the root variable. */
     /* Fullscreen overlays (post-detail header, ReelSlide close button) */
-    --zivo-safe-top-overlay: max(env(safe-area-inset-top, 0px), 60px);
+    --zivo-safe-top-overlay: max(var(--zivo-safe-top, 0px), 60px);
     /* Bottom-sheet headers (Comments, Share, post menu, etc.) */
-    --zivo-safe-top-sheet: max(env(safe-area-inset-top, 0px), 44px);
+    --zivo-safe-top-sheet: max(var(--zivo-safe-top, 0px), 44px);
     /* Sticky sub-headers (feed, search) */
-    --zivo-safe-top-sticky: max(calc(env(safe-area-inset-top, 0px) + 0.625rem), 48px);
+    --zivo-safe-top-sticky: max(calc(var(--zivo-safe-top, 0px) + 0.625rem), 48px);
   }
 }
 

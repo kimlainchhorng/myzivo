@@ -13,8 +13,13 @@ import Gift from "lucide-react/dist/esm/icons/gift";
 import Coins from "lucide-react/dist/esm/icons/coins";
 import ScanLine from "lucide-react/dist/esm/icons/scan-line";
 import FileUp from "lucide-react/dist/esm/icons/file-up";
+<<<<<<< HEAD
 import BarChart3 from "lucide-react/dist/esm/icons/bar-chart-3";
 import UserSquare from "lucide-react/dist/esm/icons/user-square";
+=======
+import BarChart2 from "lucide-react/dist/esm/icons/bar-chart-2";
+import Contact from "lucide-react/dist/esm/icons/contact";
+>>>>>>> 4f5c9381f83c04cedd52b5edfbf95b784f58af56
 import { useZivoPlus } from "@/contexts/ZivoPlusContext";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
@@ -33,7 +38,10 @@ interface ChatAttachMenuProps {
   onScanDocument?: () => void;
   onFileSelect?: () => void;
   onCreatePoll?: () => void;
+<<<<<<< HEAD
   onShareContact?: () => void;
+=======
+>>>>>>> 4f5c9381f83c04cedd52b5edfbf95b784f58af56
   disappearingEnabled: boolean;
 }
 
@@ -43,8 +51,13 @@ const menuItems = [
   { id: "file", label: "File", icon: FileUp, color: "bg-sky-500" },
   { id: "scan", label: "Scan", icon: ScanLine, color: "bg-cyan-500" },
   { id: "location", label: "Location", icon: MapPin, color: "bg-blue-500" },
+<<<<<<< HEAD
   { id: "contact", label: "Contact", icon: UserSquare, color: "bg-indigo-500" },
   { id: "poll", label: "Poll", icon: BarChart3, color: "bg-fuchsia-500" },
+=======
+  { id: "poll", label: "Poll", icon: BarChart2, color: "bg-indigo-500" },
+  { id: "contact", label: "Contact", icon: Contact, color: "bg-teal-500" },
+>>>>>>> 4f5c9381f83c04cedd52b5edfbf95b784f58af56
   { id: "gift", label: "Gift", icon: Gift, color: "bg-gradient-to-br from-amber-500 to-pink-500" },
   { id: "money", label: "Money", icon: Coins, color: "bg-gradient-to-br from-emerald-500 to-teal-500" },
   { id: "locked", label: "Locked", icon: Lock, color: "bg-rose-500" },
@@ -56,7 +69,11 @@ const LOCK_UNLOCK_PLANS = new Set(["chat", "pro"]);
 
 export default function ChatAttachMenu({
   open, onClose, onImageSelect, onVideoSelect, onLocationShare, onToggleDisappearing, onLockedImageSelect,
+<<<<<<< HEAD
   onSendGift, onOpenWallet, onScanDocument, onFileSelect, onCreatePoll, onShareContact, disappearingEnabled,
+=======
+  onSendGift, onOpenWallet, onScanDocument, onFileSelect, onCreatePoll, disappearingEnabled,
+>>>>>>> 4f5c9381f83c04cedd52b5edfbf95b784f58af56
 }: ChatAttachMenuProps) {
   const { isPlus, plan } = useZivoPlus();
   const navigate = useNavigate();
@@ -93,7 +110,11 @@ export default function ChatAttachMenu({
         break;
       case "file": onFileSelect?.(); break;
       case "poll": onCreatePoll?.(); break;
+<<<<<<< HEAD
       case "contact": onShareContact?.(); break;
+=======
+      case "contact": toast("Share Contact — coming soon"); onClose(); return;
+>>>>>>> 4f5c9381f83c04cedd52b5edfbf95b784f58af56
       case "image": onImageSelect(); break;
       case "video": onVideoSelect(); break;
       case "location": onLocationShare(); break;
