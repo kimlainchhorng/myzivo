@@ -29472,6 +29472,7 @@ export type Database = {
           bed_config: Json
           beds: string | null
           breakfast_included: boolean | null
+          breakfast_rate_cents: number | null
           cancellation_policy: string
           check_in_time: string | null
           check_out_time: string | null
@@ -29490,6 +29491,7 @@ export type Database = {
           monthly_discount_pct: number | null
           name: string
           no_arrival_weekdays: number[]
+          original_rate_cents: number | null
           photos: Json | null
           room_type: string | null
           seasonal_rates: Json
@@ -29511,6 +29513,7 @@ export type Database = {
           bed_config?: Json
           beds?: string | null
           breakfast_included?: boolean | null
+          breakfast_rate_cents?: number | null
           cancellation_policy?: string
           check_in_time?: string | null
           check_out_time?: string | null
@@ -29529,6 +29532,7 @@ export type Database = {
           monthly_discount_pct?: number | null
           name: string
           no_arrival_weekdays?: number[]
+          original_rate_cents?: number | null
           photos?: Json | null
           room_type?: string | null
           seasonal_rates?: Json
@@ -29550,6 +29554,7 @@ export type Database = {
           bed_config?: Json
           beds?: string | null
           breakfast_included?: boolean | null
+          breakfast_rate_cents?: number | null
           cancellation_policy?: string
           check_in_time?: string | null
           check_out_time?: string | null
@@ -29568,6 +29573,7 @@ export type Database = {
           monthly_discount_pct?: number | null
           name?: string
           no_arrival_weekdays?: number[]
+          original_rate_cents?: number | null
           photos?: Json | null
           room_type?: string | null
           seasonal_rates?: Json
