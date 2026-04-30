@@ -16,9 +16,11 @@ import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Label } from "@/components/ui/label";
 import {
   Hammer, Plus, Search, LayoutGrid, List, Trash2, AlertOctagon,
-  User, Pencil, Receipt, Timer, CheckCheck, Link2,
+  User, Pencil, Receipt, Timer, CheckCheck, Link2, BookOpen,
 } from "lucide-react";
 import { toast } from "sonner";
+import LaborGuidePickerDialog from "./LaborGuidePickerDialog";
+import type { LaborGuideEntry } from "@/lib/laborGuide";
 
 interface Props { storeId: string }
 
@@ -49,6 +51,7 @@ export default function AutoRepairWorkOrdersSection({ storeId }: Props) {
   const [open, setOpen] = useState(false);
   const [editId, setEditId] = useState<string | null>(null);
   const [form, setForm] = useState(blankForm);
+  const [guideOpen, setGuideOpen] = useState(false);
 
   const { data: orders = [], isLoading } = useQuery({
     queryKey: ["ar-work-orders", storeId],
@@ -416,6 +419,22 @@ export default function AutoRepairWorkOrdersSection({ storeId }: Props) {
         </CardContent>
       </Card>
 
+      <LaborGuidePickerDialog
+        open={guideOpen}
+        onOpenChange={setGuideOpen}
+        title="Labor Guide — set hours"
+        onSelect={(entry: LaborGuideEntry) => {
+          setForm(f => ({
+            ...f,
+            labor_hours: String(entry.baseHours),
+            notes: f.notes
+              ? `${f.notes}\n${entry.service} (${entry.baseHours}h std)`
+              : `${entry.service} (${entry.baseHours}h std)${entry.notes ? " — " + entry.notes : ""}`,
+          }));
+          toast.info(`Labor hours set to ${entry.baseHours}h for "${entry.service}"`);
+        }}
+      />
+
       <Dialog open={open} onOpenChange={(v) => { setOpen(v); if (!v) resetForm(); }}>
         <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
           <DialogHeader>
@@ -457,7 +476,16 @@ export default function AutoRepairWorkOrdersSection({ storeId }: Props) {
 
             <div className="grid grid-cols-2 gap-2">
               <div className="space-y-1">
-                <Label className="text-xs">Labor hours</Label>
+                <div className="flex items-center justify-between">
+                  <Label className="text-xs">Labor hours</Label>
+                  <button
+                    type="button"
+                    onClick={() => setGuideOpen(true)}
+                    className="flex items-center gap-1 text-[11px] text-primary font-medium hover:underline"
+                  >
+                    <BookOpen className="w-3 h-3" /> Labor Guide
+                  </button>
+                </div>
                 <Input type="number" min="0" step="0.5" placeholder="e.g. 2.5" value={form.labor_hours}
                   onChange={(e) => setForm({ ...form, labor_hours: e.target.value })} />
               </div>

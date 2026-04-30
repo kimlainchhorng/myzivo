@@ -75,6 +75,7 @@ import AutoRepairPromosSection from "@/components/admin/store/autorepair/AutoRep
 import AutoRepairLoanersSection from "@/components/admin/store/autorepair/AutoRepairLoanersSection";
 import AutoRepairPhotosSection from "@/components/admin/store/autorepair/AutoRepairPhotosSection";
 import AutoRepairBookingLinkSection from "@/components/admin/store/autorepair/AutoRepairBookingLinkSection";
+import AutoRepairLaborTimeSection from "@/components/admin/store/autorepair/AutoRepairLaborTimeSection";
 import FinanceIncomeSection from "@/components/admin/store/autorepair/finance/FinanceIncomeSection";
 import FinanceExpensesSection from "@/components/admin/store/autorepair/finance/FinanceExpensesSection";
 import FinancePaymentsSection from "@/components/admin/store/autorepair/finance/FinancePaymentsSection";
@@ -3963,6 +3964,7 @@ export default function AdminStoreEditPage() {
               <TabsContent value="ar-vehicles"><div><AutoRepairVehiclesSection storeId={storeId!} onNewEstimate={(v) => { handleTabChange("ar-estimates"); toast.info(`Create estimate for ${[v.year, v.make, v.model].filter(Boolean).join(" ")}`); }} onViewWorkOrders={(v) => { handleTabChange("ar-workorders"); toast.info(`Showing Work Orders — search "${[v.year, v.make, v.model].filter(Boolean).join(" ")}"`); }} /></div></TabsContent>
               <TabsContent value="ar-estimates"><div><AutoRepairEstimatesSection storeId={storeId!} /></div></TabsContent>
               <TabsContent value="ar-workorders"><div><AutoRepairWorkOrdersSection storeId={storeId!} /></div></TabsContent>
+              <TabsContent value="ar-labor-time"><div><AutoRepairLaborTimeSection storeId={storeId!} /></div></TabsContent>
               <TabsContent value="ar-techs"><div><AutoRepairTechniciansSection storeId={storeId!} /></div></TabsContent>
               <TabsContent value="ar-reminders"><div><AutoRepairRemindersSection storeId={storeId!} /></div></TabsContent>
               <TabsContent value="ar-tires"><div><AutoRepairTiresSection storeId={storeId!} /></div></TabsContent>

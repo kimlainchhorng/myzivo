@@ -17,7 +17,7 @@ import {
   Inbox, BadgeCheck, Star, Building2, Tag, Tv, Briefcase, BookOpen, UserCog, Banknote, Download,
   Moon, ScrollText, Receipt, TrendingUp, Bell, Zap,
   UtensilsCrossed, Gift, AlarmClock, WashingMachine, MessageCircleWarning,
-  Camera, Globe, QrCode,
+  Camera, Globe, QrCode, Timer,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -171,6 +171,7 @@ export default function StoreOwnerLayout({ children, title, storeId, storeName, 
       { id: "ar-autocheck", label: "Auto Check (VIN)", icon: ScanSearch },
       { id: "_ar_shopfloor_label", label: "SHOP FLOOR", icon: Wrench, divider: true },
       { id: "ar-workorders", label: "Work Orders", icon: Hammer },
+      { id: "ar-labor-time", label: "Labor Time", icon: Timer },
       { id: "ar-inspections", label: "Inspections", icon: ClipboardCheck },
       { id: "ar-techs", label: "Technicians & Bays", icon: HardHat },
       { id: "ar-reminders", label: "Reminders & Recalls", icon: BellRing },
