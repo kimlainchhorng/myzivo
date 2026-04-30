@@ -44,6 +44,12 @@ export function withErrorHandling(handler: EdgeHandler, fnName?: string): EdgeHa
     } catch (err) {
       const tag = fnName ? `[${fnName}]` : "[edge]";
       if (err instanceof UnauthorizedError) {
+        const code = (err as unknown as { code?: string }).code;
+        // MFA-required errors return 403 + a machine-readable code so the
+        // client can prompt for a TOTP challenge and re-call.
+        if (code === "mfa_required") {
+          return jsonResponse({ error: err.message, code }, 403, cors);
+        }
         return jsonResponse({ error: err.message }, 401, cors);
       }
       if (err instanceof ValidationError) {

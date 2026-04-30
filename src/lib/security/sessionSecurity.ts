@@ -79,9 +79,56 @@ export function setupActivityTracking(onExpire: () => void): () => void {
 }
 
 export function clearSessionArtifacts(): void {
-  // Clear from both storages
   sessionStorage.removeItem(SESSION_START_KEY);
   sessionStorage.removeItem(LAST_ACTIVITY_KEY);
   localStorage.removeItem(SESSION_START_KEY);
   localStorage.removeItem(LAST_ACTIVITY_KEY);
+  // Clear concurrent-session tab token
+  sessionStorage.removeItem(TAB_TOKEN_KEY);
+}
+
+// ── Concurrent-session / tab detection ───────────────────────────────────────
+
+const TAB_TOKEN_KEY    = "zivo_tab_token";
+const ACTIVE_TAB_KEY   = "zivo_active_tab";
+
+/**
+ * Register this tab as the active session holder.
+ * Returns a cleanup function to call on tab close / sign-out.
+ *
+ * When multiple tabs are open and one signs out, others receive a storage
+ * event via the broadcast and can react accordingly.
+ */
+export function registerTabSession(onConcurrentSignOut: () => void): () => void {
+  // Generate a unique token for this tab
+  const tabToken = crypto.randomUUID();
+  sessionStorage.setItem(TAB_TOKEN_KEY, tabToken);
+  localStorage.setItem(ACTIVE_TAB_KEY, tabToken);
+
+  const storageHandler = (e: StorageEvent) => {
+    if (e.key !== ACTIVE_TAB_KEY) return;
+    // Another tab has taken over or signed out (value cleared)
+    if (!e.newValue) {
+      onConcurrentSignOut();
+    }
+  };
+
+  window.addEventListener("storage", storageHandler);
+
+  return () => {
+    window.removeEventListener("storage", storageHandler);
+    // Only clear the global marker if we own it
+    if (localStorage.getItem(ACTIVE_TAB_KEY) === tabToken) {
+      localStorage.removeItem(ACTIVE_TAB_KEY);
+    }
+    sessionStorage.removeItem(TAB_TOKEN_KEY);
+  };
+}
+
+/**
+ * Broadcast sign-out to all open tabs by clearing the active-tab marker.
+ * Each tab's storage listener will call its onConcurrentSignOut callback.
+ */
+export function broadcastSignOut(): void {
+  localStorage.removeItem(ACTIVE_TAB_KEY);
 }

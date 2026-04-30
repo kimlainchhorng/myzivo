@@ -7,6 +7,7 @@ import { BedDouble, CalendarRange, CheckCircle2, Download, Hotel, KeyRound, List
 import { useOwnerStoreProfile } from "@/hooks/useOwnerStoreProfile";
 import { useLodgingOpsData } from "@/components/admin/store/lodging/LodgingOperationsShared";
 import { useStoreChangeRequestInbox } from "@/hooks/lodging/useReservationChangeRequests";
+import { useLodgingPhase5Counts } from "@/hooks/lodging/useLodgingPhase5Counts";
 import { getLodgingCompletion } from "@/lib/lodging/lodgingCompletion";
 import { getFrontDeskOperationalStats } from "@/lib/lodging/frontDeskQa";
 import { runLodgingQa } from "@/lib/lodging/lodgingQa";
@@ -18,8 +19,21 @@ export default function AdminLodgingCompletionVerificationPage() {
   const storeId = ownerStore?.isLodging ? ownerStore.id : "";
   const ops = useLodgingOpsData(storeId);
   const { data: guestRequests = [] } = useStoreChangeRequestInbox(storeId);
+  const phase5 = useLodgingPhase5Counts(storeId);
   const stats = useMemo(() => getFrontDeskOperationalStats(ops.reservations, guestRequests.length), [ops.reservations, guestRequests.length]);
-  const completion = getLodgingCompletion({ rooms: ops.rooms, profile: ops.profile, addons: ops.addons, reservationsCount: ops.reservations.length, guestRequestsCount: guestRequests.length, housekeepingCount: 0, maintenanceReady: true, reportsReady: ops.reservations.length > 0 || ops.rooms.length > 0 });
+  const completion = getLodgingCompletion({
+    rooms: ops.rooms, profile: ops.profile, addons: ops.addons,
+    reservationsCount: ops.reservations.length,
+    guestRequestsCount: guestRequests.length,
+    housekeepingCount: phase5.housekeepingCount,
+    maintenanceReady: true,
+    reportsReady: ops.reservations.length > 0 || ops.rooms.length > 0,
+    mealPlansCount: phase5.mealPlansCount,
+    staffCount: phase5.staffCount,
+    channelConnectionsCount: phase5.channelConnectionsCount,
+    promotionsCount: phase5.promotionsCount,
+    reviewsAwaitingReply: phase5.reviewsAwaitingReply,
+  });
   const qa = useMemo(() => runLodgingQa({ storeId, storeName: ownerStore?.name, storeCategory: ownerStore?.category, completion, frontDeskStats: stats, baseUrl: window.location.origin }), [storeId, ownerStore?.name, ownerStore?.category, completion, stats]);
   const systemFailures = qa.checks.filter((check) => check.status === "fail" && check.category !== "setup");
   const setupWarnings = qa.checks.filter((check) => check.status === "warning" || check.category === "setup");

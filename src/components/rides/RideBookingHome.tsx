@@ -166,7 +166,6 @@ type ViewStep =
   | "tracking"
   | "complete";
 
-type RideTab = "book" | "reserve" | "map" | "history";
 
 /* ─── Data ─── */
 /* Saved places & recent destinations now loaded from Supabase */
@@ -743,7 +742,6 @@ export default function RideBookingHome({ initialSchedule = false, initialDestin
   const [userLocation, setUserLocation] = useState<{ lat: number; lng: number } | null>(null);
 
   const [viewStep, setViewStep] = useState<ViewStep>("search");
-  const [activeTab, setActiveTab] = useState<RideTab>("book");
   const [pickup, setPickup] = useState<PlaceData | null>(null);
   const [destination, setDestination] = useState<PlaceData | null>(null);
 
@@ -1641,12 +1639,6 @@ export default function RideBookingHome({ initialSchedule = false, initialDestin
       setPromoValidating(false);
     }
   }, [promoInput, currentPrice, user?.id, user?.email]);
-
-  const handleTabChange = (tab: RideTab) => {
-    setActiveTab(tab);
-    if (tab === "reserve") navigate("/rides/reserve");
-    else if (tab === "history") navigate("/rides/history");
-  };
 
   /* ─── Back navigation ─── */
   const handleBack = () => {

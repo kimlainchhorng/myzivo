@@ -128,7 +128,7 @@ export default function PrivacySettingsPage() {
         </section>
 
         {/* Toggles */}
-        <section className="space-y-3">
+        <section id="receipts" style={{ scrollMarginTop: 80 }} className="space-y-3">
           <h3 className="text-sm font-semibold text-foreground flex items-center gap-2">
             <MessageSquare className="h-4 w-4 text-primary" /> Communication
           </h3>

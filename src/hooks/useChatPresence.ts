@@ -6,6 +6,7 @@
 import { useState, useEffect, useCallback, useRef } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { formatDistanceToNow } from "date-fns";
+import { topicForPairSync } from "@/lib/security/channelName";
 
 interface PresenceState {
   isTyping: boolean;
@@ -92,7 +93,7 @@ export function useChatPresence(userId: string | undefined, recipientId: string)
   useEffect(() => {
     if (!userId) return;
 
-    const roomName = `presence-${[userId, recipientId].sort().join("-")}`;
+    const roomName = topicForPairSync(userId, recipientId, "presence");
     const channel = supabase.channel(roomName, { config: { presence: { key: userId } } });
     channelRef.current = channel;
 

@@ -10,15 +10,30 @@ const goTab = (tab: string) => window.dispatchEvent(new CustomEvent("lodge-set-t
 
 export type LodgingSetupItem = LodgingCompletionItem;
 
-export function getLodgingSetupItems({ rooms, profile, addons, housekeepingCount, maintenanceReady, reportsReady }: {
+export function getLodgingSetupItems({
+  rooms, profile, addons, housekeepingCount, maintenanceReady, reportsReady,
+  mealPlansCount, staffCount, channelConnectionsCount, promotionsCount,
+  reviewsAwaitingReply, reservationsCount, guestRequestsCount,
+}: {
   rooms: LodgeRoom[];
   profile: LodgePropertyProfile | null | undefined;
   addons: { active?: boolean; disabled?: boolean }[];
   housekeepingCount?: number;
   maintenanceReady?: boolean;
   reportsReady?: boolean;
+  mealPlansCount?: number;
+  staffCount?: number;
+  channelConnectionsCount?: number;
+  promotionsCount?: number;
+  reviewsAwaitingReply?: number;
+  reservationsCount?: number;
+  guestRequestsCount?: number;
 }): LodgingSetupItem[] {
-  return getLodgingCompletion({ rooms, profile, addons, housekeepingCount, maintenanceReady, reportsReady }).items;
+  return getLodgingCompletion({
+    rooms, profile, addons, housekeepingCount, maintenanceReady, reportsReady,
+    mealPlansCount, staffCount, channelConnectionsCount, promotionsCount,
+    reviewsAwaitingReply, reservationsCount, guestRequestsCount,
+  }).items;
 }
 
 export function setupProgress(items: LodgingSetupItem[]) {

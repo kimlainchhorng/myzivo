@@ -4,6 +4,7 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
+import { signedUrlFor } from "@/lib/security/signedMedia";
 import ArrowLeft from "lucide-react/dist/esm/icons/arrow-left";
 import Send from "lucide-react/dist/esm/icons/send";
 import Loader2 from "lucide-react/dist/esm/icons/loader-2";
@@ -550,16 +551,18 @@ export default function GroupChat({ groupId, groupName, groupAvatar, onClose }: 
           .from("chat-media-files")
           .upload(path, file, { contentType: file.type, upsert: true, cacheControl: "3600" });
         if (upErr) throw upErr;
-        const { data: urlData } = supabase.storage.from("chat-media-files").getPublicUrl(path);
+        // Sender sees a short-lived signed URL; DB row stores the storage path
+        // so receivers can re-sign on view (URLs would otherwise expire).
+        const signedUrl = await signedUrlFor("chat-media-files", path, "display");
         setMessages((prev) => prev.map((m) => m.id === optimisticId
-          ? { ...m, image_url: urlData.publicUrl }
+          ? { ...m, image_url: signedUrl }
           : m));
         const insertData: GroupMessageInsert = {
           group_id: groupId,
           sender_id: user.id,
           message: "",
           message_type: "image",
-          image_url: urlData.publicUrl,
+          image_url: path, // storage path, not URL
         };
         if (currentReply) insertData.reply_to_id = currentReply.id;
         const { error: insErr } = await dbFrom("group_messages").insert(insertData);

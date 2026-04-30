@@ -132,13 +132,10 @@ export default function ChatPersonalization({ open, onClose, chatPartnerId, chat
         .from("chat-media-files")
         .upload(path, file, { contentType: file.type });
       if (uploadError) throw uploadError;
-      const { data: urlData } = supabase.storage
-        .from("chat-media-files")
-        .getPublicUrl(path);
-      const newUrl = urlData.publicUrl;
-      const updated = customPhotos.includes(newUrl) ? customPhotos : [...customPhotos, newUrl];
+      // Store the storage path (not a public URL) — signed URLs are minted on render.
+      const updated = customPhotos.includes(path) ? customPhotos : [...customPhotos, path];
       setCustomPhotos(updated);
-      setWallpaper(`custom:${newUrl}`);
+      setWallpaper(`custom:${path}`);
       toast.success("Wallpaper added!");
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : "Unknown error";

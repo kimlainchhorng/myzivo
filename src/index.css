@@ -2245,3 +2245,41 @@ body[data-story-open="true"] [data-zivo-mobile-nav] {
 /* Utility: hide horizontal scrollbar but keep scrolling */
 .no-scrollbar { scrollbar-width: none; -ms-overflow-style: none; }
 .no-scrollbar::-webkit-scrollbar { display: none; }
+
+/* ── Accessibility preferences (driven by useAccessibilityPrefs) ── */
+:root {
+  --font-scale: 1;
+}
+html {
+  font-size: calc(16px * var(--font-scale));
+}
+
+/* Reduce motion: kill animations & transitions */
+html.reduce-motion *,
+html.reduce-motion *::before,
+html.reduce-motion *::after {
+  animation-duration: 0.01ms !important;
+  animation-iteration-count: 1 !important;
+  transition-duration: 0.01ms !important;
+  scroll-behavior: auto !important;
+}
+
+/* High contrast: bolder borders, stronger text */
+html.high-contrast {
+  --border: 0 0% 30%;
+  --muted-foreground: 0 0% 25%;
+}
+html.dark.high-contrast {
+  --border: 0 0% 70%;
+  --muted-foreground: 0 0% 80%;
+}
+html.high-contrast :focus-visible {
+  outline: 2px solid hsl(var(--primary)) !important;
+  outline-offset: 2px !important;
+}
+
+/* Always underline links */
+html.underline-links a:not([class*="no-underline"]):not(button) {
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}

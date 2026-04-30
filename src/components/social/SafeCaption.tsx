@@ -5,8 +5,11 @@
  */
 import { useMemo, useState } from "react";
 import { ShieldAlert, ShieldCheck, ExternalLink } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 import { assessLinkSync, type LinkRiskLevel } from "@/hooks/useLinkRisk";
 import { openExternalUrl } from "@/lib/openExternalUrl";
+import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
 import {
   Dialog,
   DialogContent,
@@ -23,40 +26,55 @@ interface SafeCaptionProps {
   className?: string;
 }
 
-// Match http(s) URLs and bare domains (e.g. t.me/foo, maps.app.goo.gl/abc)
-const URL_REGEX = /\b((?:https?:\/\/|www\.)[^\s<>"]+|(?:[a-z0-9-]+\.)+[a-z]{2,}\/[^\s<>"]*)/gi;
+// Combined matcher: URLs (or bare domains), hashtags, and @mentions.
+// The capture groups let the consumer figure out which alternative matched.
+//   group 1: full URL/domain
+//   group 2: hashtag word (without leading #)
+//   group 3: mention word (without leading @)
+// Hashtags/mentions require a non-word char (or start of string) to the left
+// so we don't pick up `email@host` or `array#index`.
+const TOKEN_REGEX = /(?:^|(?<=[^\w]))(?:((?:https?:\/\/|www\.)[^\s<>"]+|(?:[a-z0-9-]+\.)+[a-z]{2,}\/[^\s<>"]*)|#([a-zA-Z0-9_]{2,30})|@([a-zA-Z0-9_.]{2,30}))/g;
 
 interface Segment {
-  type: "text" | "link";
+  type: "text" | "link" | "hashtag" | "mention";
   value: string;
   href?: string;
   risk?: LinkRiskLevel;
   warnings?: string[];
+  /** Hashtag/mention payload without the # or @ prefix */
+  token?: string;
 }
 
 function tokenize(text: string): Segment[] {
   const segments: Segment[] = [];
   let lastIdx = 0;
 
-  for (const match of text.matchAll(URL_REGEX)) {
+  for (const match of text.matchAll(TOKEN_REGEX)) {
     const idx = match.index ?? 0;
     if (idx > lastIdx) {
       segments.push({ type: "text", value: text.slice(lastIdx, idx) });
     }
-    const raw = match[0];
-    // Strip trailing punctuation that's likely not part of the URL
-    const cleaned = raw.replace(/[.,;:!?)"']+$/g, "");
-    const trail = raw.slice(cleaned.length);
-    const href = cleaned.startsWith("http") ? cleaned : `https://${cleaned}`;
-    const assessment = assessLinkSync(href);
-    segments.push({
-      type: "link",
-      value: cleaned,
-      href,
-      risk: assessment.level,
-      warnings: assessment.warnings,
-    });
-    if (trail) segments.push({ type: "text", value: trail });
+    const [raw, urlGroup, hashtagGroup, mentionGroup] = match;
+
+    if (urlGroup) {
+      // Strip trailing punctuation that's likely not part of the URL
+      const cleaned = raw.replace(/[.,;:!?)"']+$/g, "");
+      const trail = raw.slice(cleaned.length);
+      const href = cleaned.startsWith("http") ? cleaned : `https://${cleaned}`;
+      const assessment = assessLinkSync(href);
+      segments.push({
+        type: "link",
+        value: cleaned,
+        href,
+        risk: assessment.level,
+        warnings: assessment.warnings,
+      });
+      if (trail) segments.push({ type: "text", value: trail });
+    } else if (hashtagGroup) {
+      segments.push({ type: "hashtag", value: `#${hashtagGroup}`, token: hashtagGroup });
+    } else if (mentionGroup) {
+      segments.push({ type: "mention", value: `@${mentionGroup}`, token: mentionGroup });
+    }
     lastIdx = idx + raw.length;
   }
   if (lastIdx < text.length) {
@@ -75,6 +93,7 @@ const LINK_STYLES: Record<LinkRiskLevel, string> = {
 export default function SafeCaption({ text, className }: SafeCaptionProps) {
   const segments = useMemo(() => tokenize(text), [text]);
   const [pendingLink, setPendingLink] = useState<Segment | null>(null);
+  const navigate = useNavigate();
 
   const handleLinkClick = (e: React.MouseEvent, seg: Segment) => {
     e.stopPropagation();
@@ -87,6 +106,33 @@ export default function SafeCaption({ text, className }: SafeCaptionProps) {
     if (seg.href) openExternalUrl(seg.href);
   };
 
+  const handleHashtagClick = (e: React.MouseEvent, tag: string) => {
+    e.stopPropagation();
+    e.preventDefault();
+    navigate(`/explore?tag=${encodeURIComponent(tag)}`);
+  };
+
+  const handleMentionClick = async (e: React.MouseEvent, username: string) => {
+    e.stopPropagation();
+    e.preventDefault();
+    // Resolve @username → user_id via the usernames table, then navigate.
+    // Falls back to a toast if the handle has no claim.
+    try {
+      const { data } = await (supabase as any)
+        .from("usernames")
+        .select("user_id")
+        .eq("username", username.toLowerCase())
+        .maybeSingle();
+      if (data?.user_id) {
+        navigate(`/user/${data.user_id}`);
+      } else {
+        toast.info(`@${username} isn't on ZIVO`);
+      }
+    } catch {
+      toast.error("Couldn't open that mention");
+    }
+  };
+
   const proceed = () => {
     if (pendingLink?.href) openExternalUrl(pendingLink.href);
     setPendingLink(null);
@@ -97,6 +143,30 @@ export default function SafeCaption({ text, className }: SafeCaptionProps) {
       <span className={cn("whitespace-pre-wrap break-words", className)}>
         {segments.map((seg, i) => {
           if (seg.type === "text") return <span key={i}>{seg.value}</span>;
+          if (seg.type === "hashtag") {
+            return (
+              <button
+                key={i}
+                type="button"
+                onClick={(e) => handleHashtagClick(e, seg.token!)}
+                className="text-primary font-medium hover:underline active:opacity-70 inline"
+              >
+                {seg.value}
+              </button>
+            );
+          }
+          if (seg.type === "mention") {
+            return (
+              <button
+                key={i}
+                type="button"
+                onClick={(e) => handleMentionClick(e, seg.token!)}
+                className="text-primary font-medium hover:underline active:opacity-70 inline"
+              >
+                {seg.value}
+              </button>
+            );
+          }
           const risk = seg.risk ?? "neutral";
           return (
             <a

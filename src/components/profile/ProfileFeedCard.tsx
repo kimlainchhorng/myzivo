@@ -7,7 +7,7 @@ import { useState, useRef, useEffect, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   Heart, MessageCircle, Send, Play, Bookmark, Globe, MoreVertical,
-  Volume2, VolumeX, Eye,
+  Volume2, VolumeX, Eye, MapPin,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useNavigate, useSearchParams } from "react-router-dom";
@@ -44,6 +44,7 @@ export type ProfileFeedItem = {
   } | null;
   createdAt?: string;
   userId?: string;
+  location?: string | null;
 };
 
 interface ProfileFeedCardProps {
@@ -308,11 +309,21 @@ export default function ProfileFeedCard({
                 <p className="text-[13px] font-semibold text-foreground truncate inline-flex items-center gap-1">
                   <span className="truncate">{item.user.name}</span>
                   {isBlueVerified(item.user.isVerified) && <VerifiedBadge size={14} interactive={false} />}
+                  {item.location && (
+                    <>
+                      <span className="text-[10px] text-muted-foreground font-normal"> is in </span>
+                      <span className="text-[12px] text-foreground font-semibold truncate">{item.location}</span>
+                    </>
+                  )}
                 </p>
                 <div className="flex items-center gap-1">
                   <p className="text-[10px] text-muted-foreground">{timeAgo}</p>
                   <span className="text-[10px] text-muted-foreground">·</span>
-                  <Globe className="h-2.5 w-2.5 text-muted-foreground" />
+                  {item.location ? (
+                    <MapPin className="h-2.5 w-2.5 text-muted-foreground" />
+                  ) : (
+                    <Globe className="h-2.5 w-2.5 text-muted-foreground" />
+                  )}
                 </div>
               </div>
             </button>

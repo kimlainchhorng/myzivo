@@ -1,4 +1,5 @@
 import { createClient } from "npm:@supabase/supabase-js@2.49.1";
+import { enforceAal2 } from "../_shared/aalCheck.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -18,6 +19,10 @@ Deno.serve(async (req) => {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
+
+    // Step-up MFA — privileged user creation requires an AAL2 session
+    const mfaErr = enforceAal2(authHeader, corsHeaders);
+    if (mfaErr) return mfaErr;
 
     // Verify the caller can manage accounts
     const supabaseUrl = Deno.env.get("SUPABASE_URL")!;

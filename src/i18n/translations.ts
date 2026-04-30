@@ -53,6 +53,8 @@ const TRANSLATIONS: Record<string, Record<string, string>> = {
     "ride.tab_book": "Book",
     "ride.tab_reserve": "Reserve",
     "ride.tab_map": "Map",
+    "ride.tab_search": "Search",
+    "ride.tab_calendar": "Calendar",
     "ride.tab_history": "History",
     "ride.tab_insights": "Insights",
     "ride.tab_live": "Live Trip",

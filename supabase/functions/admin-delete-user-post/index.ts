@@ -1,5 +1,6 @@
 import { createClient } from "npm:@supabase/supabase-js@2.49.1";
 import { getCorsHeaders } from "../_shared/cors.ts";
+import { enforceAal2 } from "../_shared/aalCheck.ts";
 
 const ALLOWED_ROLES = ["admin", "super_admin", "support"];
 
@@ -22,6 +23,10 @@ Deno.serve(async (req) => {
     if (!authHeader) {
       return jsonResponse({ error: "Missing authorization" }, 401, corsHeaders);
     }
+
+    // Step-up MFA — destructive admin action requires an AAL2 session
+    const mfaErr = enforceAal2(authHeader, corsHeaders);
+    if (mfaErr) return mfaErr;
 
     const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
     const supabaseAnonKey = Deno.env.get("SUPABASE_ANON_KEY")!;

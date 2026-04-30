@@ -37,7 +37,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { ArrowLeft, Save, Store, Image, Package, Plus, Edit, Trash2, Loader2, Eye, Upload, Camera, MapPin, ExternalLink, Globe, Check, Percent, DollarSign, CalendarIcon, Tag, Gift, Video, ImagePlus, RefreshCw, Replace, CheckCircle2, XCircle, MinusCircle, AlertTriangle, Move, X, Ruler, MessageCircle, CreditCard, Banknote, QrCode, Building2, Smartphone, Wallet, Car, Heart, Clock, Send, Users, Shield, Bell, Info, Copy, GripVertical, Hotel, BedDouble, CalendarRange, KeyRound, PackagePlus, MessageSquareText, BarChart3, ListChecks } from "lucide-react";
+import { ArrowLeft, Save, Store, Image, Package, Plus, Edit, Trash2, Loader2, Eye, Upload, Camera, MapPin, ExternalLink, Globe, Check, Percent, DollarSign, CalendarIcon, Tag, Gift, Video, ImagePlus, RefreshCw, Replace, CheckCircle2, XCircle, MinusCircle, AlertTriangle, Move, X, Ruler, MessageCircle, CreditCard, Banknote, QrCode, Building2, Smartphone, Wallet, Car, Heart, Clock, Send, Users, Shield, Bell, Info, Copy, GripVertical, Hotel, BedDouble, CalendarRange, KeyRound, PackagePlus, MessageSquareText, BarChart3, ListChecks, Utensils, Sparkles } from "lucide-react";
 import StoreLiveChat from "@/components/grocery/StoreLiveChat";
 import StorePaymentSection from "@/components/admin/StorePaymentSection";
 import StoreCustomersSection from "@/components/admin/StoreCustomersSection";
@@ -118,6 +118,7 @@ import { getLodgingCompletion } from "@/lib/lodging/lodgingCompletion";
 import { LODGING_TAB_IDS, resolveStoreTab, resolveStoreTabFromSearch } from "@/lib/admin/storeTabRouting";
 import { useLodgeRooms } from "@/hooks/lodging/useLodgeRooms";
 import { useLodgePropertyProfile } from "@/hooks/lodging/useLodgePropertyProfile";
+import { useLodgingPhase5Counts } from "@/hooks/lodging/useLodgingPhase5Counts";
 import { isLodgingStoreCategory } from "@/hooks/useOwnerStoreProfile";
 import ManagedTagDropdown from "@/components/admin/ManagedTagDropdown";
 import { cn } from "@/lib/utils";
@@ -132,7 +133,12 @@ const LODGING_QUICK_TABS = [
   { id: "lodge-rate-plans", label: "Rates", icon: DollarSign },
   { id: "lodge-reservations", label: "Reservations", icon: CalendarRange },
   { id: "lodge-frontdesk", label: "Front Desk", icon: KeyRound },
+  { id: "lodge-housekeeping", label: "Housekeeping", icon: Sparkles },
   { id: "lodge-addons", label: "Add-ons", icon: PackagePlus },
+  { id: "lodge-dining", label: "Dining", icon: Utensils },
+  { id: "lodge-staff", label: "Staff", icon: Users },
+  { id: "lodge-promos", label: "Promos", icon: Tag },
+  { id: "lodge-channels", label: "Channels", icon: Globe },
   { id: "lodge-guest-requests", label: "Requests", icon: MessageSquareText },
   { id: "lodge-reports", label: "Reports", icon: BarChart3 },
   { id: "qa-checklist", label: "QA Checklist", icon: ListChecks },
@@ -531,14 +537,20 @@ export default function AdminStoreEditPage() {
 
   const lodgingRoomsQuery = useLodgeRooms(storeId || "");
   const lodgingProfileQuery = useLodgePropertyProfile(storeId || "");
+  const lodgingPhase5 = useLodgingPhase5Counts(storeId || "");
   const lodgingAddons = (lodgingRoomsQuery.data || []).flatMap((room: any) => room.addons || []);
   const lodgingSetup = getLodgingCompletion({
     rooms: lodgingRoomsQuery.data || [],
     profile: lodgingProfileQuery.data,
     addons: lodgingAddons,
-    housekeepingCount: 0,
+    housekeepingCount: lodgingPhase5.housekeepingCount,
     maintenanceReady: true,
     reportsReady: Boolean((lodgingRoomsQuery.data || []).length),
+    mealPlansCount: lodgingPhase5.mealPlansCount,
+    staffCount: lodgingPhase5.staffCount,
+    channelConnectionsCount: lodgingPhase5.channelConnectionsCount,
+    promotionsCount: lodgingPhase5.promotionsCount,
+    reviewsAwaitingReply: lodgingPhase5.reviewsAwaitingReply,
   });
 
   const { data: posts = [], isLoading: loadingPosts } = useQuery({

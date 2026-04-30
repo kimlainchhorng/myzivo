@@ -4,6 +4,7 @@
  */
 import { useState, useRef, useCallback, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import { topicForGroupSync } from "@/lib/security/channelName";
 
 const ICE_SERVERS: RTCConfiguration = {
   iceServers: [
@@ -103,7 +104,7 @@ export function useGroupCall({
       // ICE candidates — broadcast via Supabase Realtime
       pc.onicecandidate = (e) => {
         if (!e.candidate) return;
-        const channel = supabase.channel(`group-signal-${groupCallId}`);
+        const channel = supabase.channel(topicForGroupSync(groupCallId, "group-signal"));
         channel.send({
           type: "broadcast",
           event: "ice-candidate",
@@ -129,7 +130,7 @@ export function useGroupCall({
       if (isInitiator) {
         const offer = await pc.createOffer();
         await pc.setLocalDescription(offer);
-        const channel = supabase.channel(`group-signal-${groupCallId}`);
+        const channel = supabase.channel(topicForGroupSync(groupCallId, "group-signal"));
         channel.send({
           type: "broadcast",
           event: "offer",
@@ -356,7 +357,7 @@ export function useGroupCall({
   // Leave call
   const leaveCall = useCallback(async () => {
     // Notify others
-    const channel = supabase.channel(`group-signal-${groupCallId}`);
+    const channel = supabase.channel(topicForGroupSync(groupCallId, "group-signal"));
     channel.send({
       type: "broadcast",
       event: "participant-left",

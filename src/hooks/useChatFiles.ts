@@ -42,38 +42,41 @@ export function useChatFiles() {
         return null;
       }
 
+      // Short-lived signed URL for the sender to embed; receivers re-sign on view.
       const { data: signed } = await supabase.storage
         .from("chat-files")
-        .createSignedUrl(path, 60 * 60 * 24 * 365); // 1 year
+        .createSignedUrl(path, 60 * 60); // 1 hour
       const url = signed?.signedUrl ?? "";
 
       let thumbUrl: string | null = null;
+      let thumbPath: string | null = null;
       if (opts.thumbnail) {
-        const tPath = `${user.id}/thumbs/${ts}-thumb.jpg`;
+        thumbPath = `${user.id}/thumbs/${ts}-thumb.jpg`;
         const { error: tErr } = await supabase.storage
           .from("chat-files")
-          .upload(tPath, opts.thumbnail, { contentType: "image/jpeg", upsert: false });
+          .upload(thumbPath, opts.thumbnail, { contentType: "image/jpeg", upsert: false });
         if (!tErr) {
           const { data: tSigned } = await supabase.storage
             .from("chat-files")
-            .createSignedUrl(tPath, 60 * 60 * 24 * 365);
+            .createSignedUrl(thumbPath, 60 * 60 * 6); // 6 hours
           thumbUrl = tSigned?.signedUrl ?? null;
         }
       }
 
       const size = (file as File).size ?? (file as Blob).size ?? 0;
+      // Persist storage paths (not signed URLs). Consumers mint fresh URLs on view.
       const { data: row, error: insErr } = await (supabase as any)
         .from("chat_files")
         .insert({
           user_id: user.id,
           conversation_id: opts.conversationId ?? null,
           storage_path: path,
-          url,
+          url: path, // legacy column — store path so it doesn't expire
           filename: opts.filename,
           mime_type: opts.mimeType,
           size,
           page_count: opts.pageCount ?? null,
-          thumbnail_url: thumbUrl,
+          thumbnail_url: thumbPath,
           source: opts.source ?? "upload",
         })
         .select("id")

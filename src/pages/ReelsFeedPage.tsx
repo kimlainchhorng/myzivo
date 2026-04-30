@@ -84,11 +84,13 @@ const CommentsSheet = lazy(() => import("@/components/social/CommentsSheet"));
 const FeedStoryRing = lazy(() => import("@/components/social/FeedStoryRing"));
 const SuggestedUsersCarousel = lazy(() => import("@/components/social/SuggestedUsersCarousel"));
 const CreatePostModal = lazy(() => import("@/components/social/CreatePostModal"));
+const PollPostCard = lazy(() => import("@/components/social/PollPostCard"));
 const SafeCaption = lazy(() => import("@/components/social/SafeCaption"));
 import CollapsibleCaption from "@/components/social/CollapsibleCaption";
 import VerifiedBadge from "@/components/VerifiedBadge";
 import { isBlueVerified } from "@/lib/verification";
 import { formatCount, commentsLinkLabel } from "@/lib/social/formatCount";
+import { shouldSendLikeNotification } from "@/lib/social/likeNotificationGuard";
 import { EngagementSkeleton } from "@/components/social/EngagementSkeleton";
 import SwipeableSheet from "@/components/social/SwipeableSheet";
 const FeedSidebar = lazy(() => import("@/components/social/FeedSidebar"));
@@ -167,9 +169,19 @@ function PostDetailOverlay({
   );
 }
 
+interface PollPayload {
+  question: string;
+  options: { text: string; votes: number }[];
+  poll_type: "poll" | "quiz";
+  correct_option_index?: number | null;
+  total_votes: number;
+  expires_at?: string | null;
+}
+
 interface FeedItem {
   id: string;
-  source: "store" | "user";
+  source: "store" | "user" | "poll";
+  poll?: PollPayload;
   media_urls: string[];
   media_type: "image" | "video";
   caption: string | null;
@@ -183,6 +195,7 @@ interface FeedItem {
   author_is_verified?: boolean;
   store_slug?: string;
   created_at: string;
+  location?: string | null;
   // Share tracking
   shared_from_post_id?: string | null;
   shared_from_user_id?: string | null;
@@ -240,13 +253,25 @@ export default function ReelsFeedPage() {
   const [showSearch, setShowSearch] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [searchResults, setSearchResults] = useState<any[]>([]);
+  const [storeSearchResults, setStoreSearchResults] = useState<any[]>([]);
   const [searchLoading, setSearchLoading] = useState(false);
   const [feedFilter, setFeedFilter] = useState<"all" | "photos" | "videos" | "text">("all");
+<<<<<<< HEAD
   const [feedTab, setFeedTab] = useState<"For You" | "Friends" | "Following">("For You");
   const [sidebarContacts, setSidebarContacts] = useState<Array<{ id: string; name: string; avatar: string | null }>>([]);
   const [trendingTags, setTrendingTags] = useState<string[]>([]);
   const [friendIds, setFriendIds] = useState<Set<string>>(new Set());
   const [followingIds, setFollowingIds] = useState<Set<string>>(new Set());
+=======
+  const [feedMode, setFeedMode] = useState<"foryou" | "following">("foryou");
+  const [followingIds, setFollowingIds] = useState<Set<string>>(new Set());
+  const PAGE_INCREMENT = 25;
+  const PAGE_MAX = 500;
+  const [pageSize, setPageSize] = useState(50);
+  const loadMoreRef = useRef<HTMLDivElement>(null);
+  const feedTopRef = useRef<HTMLDivElement>(null);
+  const [newPostsCount, setNewPostsCount] = useState(0);
+>>>>>>> 855443b0719159d83ad7f6c5c749111be5296ccd
   const searchInputRef = useRef<HTMLInputElement>(null);
   const searchTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const location = useLocation();
@@ -288,6 +313,8 @@ export default function ReelsFeedPage() {
 
   useEffect(() => {
     const refreshFeed = () => {
+      setPageSize(50);
+      setNewPostsCount(0);
       queryClient.invalidateQueries({ queryKey: ["reels-feed-grid"] });
     };
 
@@ -326,6 +353,7 @@ export default function ReelsFeedPage() {
     });
   }, []);
 
+<<<<<<< HEAD
   // Sidebar contacts + trending tags
   useEffect(() => {
     if (!userId) return;
@@ -369,20 +397,74 @@ export default function ReelsFeedPage() {
     })();
   }, [userId]);
 
+=======
+  // Load followed user IDs for "Following" tab filtering
+  useEffect(() => {
+    if (!userId) { setFollowingIds(new Set()); return; }
+    let alive = true;
+    (supabase as any)
+      .from("user_followers")
+      .select("following_id")
+      .eq("follower_id", userId)
+      .then(({ data }: any) => {
+        if (!alive) return;
+        setFollowingIds(new Set((data || []).map((r: any) => r.following_id)));
+      });
+    return () => { alive = false; };
+  }, [userId]);
+
+  // Realtime: count new posts and prompt the user to refresh.
+  // We don't auto-prepend because that's jarring while they're mid-scroll —
+  // Twitter-style banner instead. Skips the user's own posts and skips
+  // anything they're not following when on the "Following" tab.
+  useEffect(() => {
+    const channel = supabase
+      .channel("feed-new-posts")
+      .on(
+        // postgres_changes typing varies between supabase-js versions
+        "postgres_changes" as any,
+        { event: "INSERT", schema: "public", table: "user_posts" },
+        (payload: any) => {
+          const post = payload?.new;
+          if (!post || post.is_published === false) return;
+          if (post.user_id && post.user_id === userId) return;
+          if (feedMode === "following" && (!post.user_id || !followingIds.has(post.user_id))) return;
+          setNewPostsCount((n) => Math.min(n + 1, 99));
+        },
+      )
+      .subscribe();
+    return () => { void supabase.removeChannel(channel); };
+    // followingIds.size used as a stable proxy so we don't tear the channel
+    // down on every Set identity change.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [userId, feedMode, followingIds.size]);
+
+  const handleNewPostsTap = useCallback(() => {
+    setNewPostsCount(0);
+    setPageSize(50);
+    queryClient.invalidateQueries({ queryKey: ["reels-feed-grid"] });
+    feedTopRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+  }, [queryClient]);
+
+>>>>>>> 855443b0719159d83ad7f6c5c749111be5296ccd
   // User search with debounce
   const handleSearchChange = (q: string) => {
     setSearchQuery(q);
     if (searchTimerRef.current) clearTimeout(searchTimerRef.current);
-    if (!q.trim()) { setSearchResults([]); return; }
+    if (!q.trim()) { setSearchResults([]); setStoreSearchResults([]); return; }
     setSearchLoading(true);
     searchTimerRef.current = setTimeout(async () => {
       try {
         const words = q.trim().toLowerCase().split(/\s+/);
-        let query = supabase.from("public_profiles" as any).select("id, full_name, avatar_url").limit(20);
-        words.forEach((w) => { query = query.ilike("full_name", `%${w}%`); });
-        const { data } = await query;
-        setSearchResults(data || []);
-      } catch { setSearchResults([]); }
+        let profileQuery = supabase.from("public_profiles" as any).select("id, full_name, avatar_url").limit(15);
+        words.forEach((w) => { profileQuery = profileQuery.ilike("full_name", `%${w}%`); });
+        const [{ data: profileData }, { data: storeData }] = await Promise.all([
+          profileQuery,
+          supabase.from("store_profiles" as any).select("id, name, logo_url, slug, category").ilike("name", `%${q.trim()}%`).limit(10),
+        ]);
+        setSearchResults(profileData || []);
+        setStoreSearchResults(storeData || []);
+      } catch { setSearchResults([]); setStoreSearchResults([]); }
       setSearchLoading(false);
     }, 300);
   };
@@ -391,8 +473,8 @@ export default function ReelsFeedPage() {
     if (showSearch) searchInputRef.current?.focus();
   }, [showSearch]);
 
-  const { data: items = [], isLoading } = useQuery({
-    queryKey: ["reels-feed-grid"],
+  const { data: items = [], isLoading, isFetching } = useQuery({
+    queryKey: ["reels-feed-grid", pageSize],
     queryFn: async () => {
       const allItems: FeedItem[] = [];
 
@@ -402,7 +484,7 @@ export default function ReelsFeedPage() {
         .select("id, media_urls, media_type, caption, likes_count, comments_count, shares_count, view_count, created_at, store_id")
         .eq("is_published", true)
         .order("created_at", { ascending: false })
-        .limit(50);
+        .limit(pageSize);
 
       if (storePosts?.length) {
         const storeIds = [...new Set(storePosts.map((p: any) => p.store_id))];
@@ -441,10 +523,10 @@ export default function ReelsFeedPage() {
       try {
         const { data: userPosts } = await (supabase as any)
           .from("user_posts")
-          .select("id, media_url, media_urls, media_type, caption, likes_count, comments_count, shares_count, views_count, created_at, user_id, shared_from_post_id, shared_from_user_id")
+          .select("id, media_url, media_urls, media_type, caption, likes_count, comments_count, shares_count, views_count, created_at, user_id, shared_from_post_id, shared_from_user_id, location")
           .eq("is_published", true)
           .order("created_at", { ascending: false })
-          .limit(50);
+          .limit(pageSize);
 
         if (userPosts?.length) {
           const userIds = [...new Set(userPosts.map((p: any) => p.user_id))] as string[];
@@ -579,6 +661,7 @@ export default function ReelsFeedPage() {
               hide_like_counts: profileSettings?.hide_like_counts ?? false,
               allow_sharing: profileSettings?.allow_sharing ?? true,
               allow_mentions: profileSettings?.allow_mentions ?? true,
+              location: post.location || null,
             });
           }
         }
@@ -701,6 +784,80 @@ export default function ReelsFeedPage() {
         // Fall back to denormalized counters if interaction tables are unavailable.
       }
 
+      // Fetch poll posts and aggregate per-option vote counts so the
+      // PollPostCard can render filled progress bars without re-querying.
+      try {
+        const { data: pollRows } = await (supabase as any)
+          .from("poll_posts")
+          .select("id, user_id, question, poll_type, options, correct_option_index, expires_at, total_votes, created_at")
+          .order("created_at", { ascending: false })
+          .limit(Math.max(20, Math.floor(pageSize / 2)));
+
+        if (pollRows?.length) {
+          const pollIds = pollRows.map((p: any) => p.id);
+          const pollUserIds = [...new Set(pollRows.map((p: any) => p.user_id))] as string[];
+
+          const [{ data: voteRows }, { data: pollProfiles }] = await Promise.all([
+            (supabase as any).from("poll_votes").select("poll_id, option_index").in("poll_id", pollIds),
+            (supabase as any).from("public_profiles").select("id, user_id, full_name, avatar_url").in("user_id", pollUserIds),
+          ]);
+
+          const pollProfileMap = new Map<string, any>();
+          (pollProfiles || []).forEach((p: any) => {
+            if (p?.id) pollProfileMap.set(p.id, p);
+            if (p?.user_id) pollProfileMap.set(p.user_id, p);
+          });
+
+          // Aggregate vote counts: pollId -> optionIndex -> count
+          const voteCounts = new Map<string, Map<number, number>>();
+          for (const row of voteRows || []) {
+            const pid = String((row as any).poll_id || "");
+            const idx = Number((row as any).option_index ?? -1);
+            if (!pid || idx < 0) continue;
+            if (!voteCounts.has(pid)) voteCounts.set(pid, new Map());
+            const inner = voteCounts.get(pid)!;
+            inner.set(idx, (inner.get(idx) || 0) + 1);
+          }
+
+          for (const poll of pollRows as any[]) {
+            const profile = pollProfileMap.get(poll.user_id);
+            const rawOptions: { text: string; votes?: number }[] = Array.isArray(poll.options) ? poll.options : [];
+            const counts = voteCounts.get(poll.id);
+            const enrichedOptions = rawOptions.map((opt, i) => ({
+              text: typeof opt === "string" ? opt : (opt?.text || ""),
+              votes: counts?.get(i) ?? (typeof opt === "object" ? (opt as any).votes ?? 0 : 0),
+            }));
+            const totalVotes = enrichedOptions.reduce((s, o) => s + (o.votes || 0), 0) || (poll.total_votes || 0);
+
+            allItems.push({
+              id: `p-${poll.id}`,
+              source: "poll",
+              media_urls: [],
+              media_type: "image",
+              caption: null,
+              likes_count: 0,
+              comments_count: 0,
+              shares_count: 0,
+              views_count: 0,
+              author_name: profile?.full_name?.trim() || "User",
+              author_avatar: optimizeAvatar(profile?.avatar_url, 96) || profile?.avatar_url || null,
+              author_id: poll.user_id,
+              created_at: poll.created_at,
+              poll: {
+                question: poll.question,
+                options: enrichedOptions,
+                poll_type: poll.poll_type === "quiz" ? "quiz" : "poll",
+                correct_option_index: poll.correct_option_index ?? null,
+                total_votes: totalVotes,
+                expires_at: poll.expires_at,
+              },
+            });
+          }
+        }
+      } catch {
+        // Polls are optional — if the table is missing in this environment, skip silently.
+      }
+
       // Facebook-style algorithmic feed: blend engagement + recency + randomness
       const now = Date.now();
       const ONE_HOUR = 3_600_000;
@@ -714,8 +871,10 @@ export default function ReelsFeedPage() {
         const ageHours = (now - new Date(item.created_at).getTime()) / ONE_HOUR;
         // Recency decay: posts lose value over time (half-life ~6h)
         const recencyScore = 1 / (1 + ageHours / 6);
-        // Engagement signal: normalized log of interactions
-        const totalEngagement = (item.likes_count || 0) + (item.comments_count || 0) * 2 + (item.shares_count || 0) * 3;
+        // Engagement signal: normalized log of interactions.
+        // Polls count each vote as 2× because casting a vote is higher-intent than a like.
+        const pollVotes = item.source === "poll" ? (item.poll?.total_votes || 0) * 2 : 0;
+        const totalEngagement = (item.likes_count || 0) + (item.comments_count || 0) * 2 + (item.shares_count || 0) * 3 + pollVotes;
         const engagementScore = Math.log2(1 + totalEngagement) / 10;
         // Boost videos slightly
         const mediaBoost = item.media_type === "video" ? 0.05 : 0;
@@ -768,8 +927,28 @@ export default function ReelsFeedPage() {
   }, [reelsStartIndex]);
 
   const handlePullRefresh = useCallback(async () => {
+    setPageSize(50);
+    setNewPostsCount(0);
     await queryClient.invalidateQueries({ queryKey: ["reels-feed-grid"] });
   }, [queryClient]);
+
+  // Infinite scroll — observe the sentinel and bump pageSize when reached.
+  // Skips while a fetch is in flight to avoid flooding the server.
+  useEffect(() => {
+    const node = loadMoreRef.current;
+    if (!node) return;
+    if (pageSize >= PAGE_MAX) return;
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting && !isFetching) {
+          setPageSize((prev) => Math.min(prev + PAGE_INCREMENT, PAGE_MAX));
+        }
+      },
+      { rootMargin: "400px 0px 0px 0px", threshold: 0 },
+    );
+    observer.observe(node);
+    return () => observer.disconnect();
+  }, [pageSize, isFetching, items.length]);
 
   // Listen for chat panel state to adjust layout
   const [chatOpen, setChatOpen] = useState(false);
@@ -801,6 +980,7 @@ export default function ReelsFeedPage() {
         {/* Main Feed Content */}
         <PullToRefresh onRefresh={handlePullRefresh} className="min-h-screen bg-background pb-20 lg:pb-0 flex-1 lg:max-w-2xl lg:mx-auto">
           {/* Header — hidden on desktop since the global NavBar already provides search */}
+<<<<<<< HEAD
           <div data-testid="feed-sticky-header" className="lg:hidden sticky z-40 bg-background/95 backdrop-blur-xl border-b border-border/30 px-4 py-2.5 flex items-center gap-3 lg:pt-3 pt-safe" style={{ top: 'var(--zivo-safe-top, 0px)' }}>
             <h1 className="text-lg font-bold text-foreground shrink-0 lg:hidden">Feed</h1>
             <div className="flex-1 relative">
@@ -815,8 +995,63 @@ export default function ReelsFeedPage() {
               {searchQuery && (
                 <button onClick={() => { setSearchQuery(""); setSearchResults([]); }} className="absolute right-3 top-1/2 -translate-y-1/2">
                   <XIcon className="h-4 w-4 text-muted-foreground" />
+=======
+          <div data-testid="feed-sticky-header" className="lg:hidden sticky top-0 z-40 bg-background/95 backdrop-blur-xl border-b border-border/30 pt-safe">
+            <div className="flex items-center gap-3 px-4 py-2.5">
+              <h1 className="text-lg font-bold text-foreground shrink-0 lg:hidden">Feed</h1>
+              <div className="flex-1 relative">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />
+                <input
+                  value={searchQuery}
+                  onChange={(e) => handleSearchChange(e.target.value)}
+                  onFocus={() => setShowSearch(true)}
+                  placeholder="Search people, shops..."
+                  className="w-full pl-9 pr-8 py-2 rounded-full bg-muted/40 border border-border/30 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 transition-colors"
+                />
+                {searchQuery && (
+                  <button onClick={() => { setSearchQuery(""); setSearchResults([]); setStoreSearchResults([]); }} className="absolute right-3 top-1/2 -translate-y-1/2">
+                    <XIcon className="h-4 w-4 text-muted-foreground" />
+                  </button>
+                )}
+              </div>
+            </div>
+            {/* For You / Following segmented control */}
+            {userId && (
+              <div className="flex justify-center gap-6 px-4 pb-1">
+                {(["foryou", "following"] as const).map((mode) => (
+                  <button
+                    key={mode}
+                    onClick={() => setFeedMode(mode)}
+                    className={cn(
+                      "relative py-1.5 text-sm font-bold transition-colors",
+                      feedMode === mode ? "text-foreground" : "text-muted-foreground"
+                    )}
+                  >
+                    {mode === "foryou" ? "For You" : "Following"}
+                    {feedMode === mode && (
+                      <span className="absolute -bottom-0.5 left-1/2 -translate-x-1/2 w-6 h-0.5 rounded-full bg-primary" />
+                    )}
+                  </button>
+                ))}
+              </div>
+            )}
+            {/* Feed filter tabs */}
+            <div className="flex gap-1.5 px-4 pb-2.5 overflow-x-auto scrollbar-none">
+              {(["all", "photos", "videos"] as const).map((f) => (
+                <button
+                  key={f}
+                  onClick={() => setFeedFilter(f)}
+                  className={cn(
+                    "shrink-0 px-4 py-1.5 rounded-full text-xs font-semibold transition-all",
+                    feedFilter === f
+                      ? "bg-primary text-primary-foreground shadow-sm"
+                      : "bg-muted/40 text-muted-foreground hover:bg-muted"
+                  )}
+                >
+                  {f === "all" ? "All" : f === "photos" ? "Photos" : "Videos"}
+>>>>>>> 855443b0719159d83ad7f6c5c749111be5296ccd
                 </button>
-              )}
+              ))}
             </div>
           </div>
 
@@ -861,29 +1096,65 @@ export default function ReelsFeedPage() {
                       <Search className="h-8 w-8 mb-2" />
                       <p className="text-sm">Search for people by name</p>
                     </div>
-                  ) : searchResults.length === 0 ? (
+                  ) : (searchResults.length === 0 && storeSearchResults.length === 0) ? (
                     <div className="flex flex-col items-center justify-center h-32 text-muted-foreground/50">
                       <p className="text-sm">No results found</p>
                     </div>
                   ) : (
-                    <div className="divide-y divide-border/20">
-                      {searchResults.map((p: any) => (
-                        <button
-                          key={p.id}
-                          onClick={() => { setShowSearch(false); setSearchQuery(""); setSearchResults([]); navigate(`/user/${p.id}`); }}
-                          className="w-full flex items-center gap-3 px-4 py-3 hover:bg-muted/30 transition-colors"
-                        >
-                          <Avatar className="h-11 w-11 border-2 border-border/30">
-                            <AvatarImage src={p.avatar_url || undefined} />
-                            <AvatarFallback className="text-xs font-bold bg-muted text-muted-foreground">
-                              {(p.full_name || "U").split(" ").map((n: string) => n[0]).join("").toUpperCase().slice(0, 2)}
-                            </AvatarFallback>
-                          </Avatar>
-                          <div className="text-left min-w-0">
-                            <p className="text-sm font-semibold text-foreground truncate">{p.full_name || "Unknown"}</p>
-                          </div>
-                        </button>
-                      ))}
+                    <div>
+                      {storeSearchResults.length > 0 && (
+                        <div>
+                          <p className="px-4 py-2 text-[11px] font-bold text-muted-foreground uppercase tracking-wider bg-muted/30">Shops</p>
+                          {storeSearchResults.map((s: any) => (
+                            <button
+                              key={s.id}
+                              onClick={() => { setShowSearch(false); setSearchQuery(""); setSearchResults([]); setStoreSearchResults([]); navigate(`/grocery/shop/${s.slug}`); }}
+                              className="w-full flex items-center gap-3 px-4 py-3 hover:bg-muted/30 transition-colors border-b border-border/10"
+                            >
+                              <div className="h-11 w-11 rounded-full overflow-hidden bg-muted border border-border/30 shrink-0 flex items-center justify-center">
+                                {s.logo_url ? (
+                                  <img src={s.logo_url} alt="" className="h-full w-full object-cover" />
+                                ) : (
+                                  <span className="text-xs font-bold text-muted-foreground">{(s.name || "S")[0].toUpperCase()}</span>
+                                )}
+                              </div>
+                              <div className="text-left min-w-0">
+                                <p className="text-sm font-semibold text-foreground truncate">{s.name}</p>
+                                {s.category && <p className="text-[11px] text-muted-foreground">{s.category}</p>}
+                              </div>
+                            </button>
+                          ))}
+                        </div>
+                      )}
+                      {searchResults.length > 0 && (
+                        <div>
+                          {storeSearchResults.length > 0 && (
+                            <p className="px-4 py-2 text-[11px] font-bold text-muted-foreground uppercase tracking-wider bg-muted/30">People</p>
+                          )}
+                          {searchResults.map((p: any) => (
+                            <button
+                              key={p.id}
+                              onClick={() => { setShowSearch(false); setSearchQuery(""); setSearchResults([]); setStoreSearchResults([]); navigate(`/user/${p.id}`); }}
+                              className="w-full flex items-center gap-3 px-4 py-3 hover:bg-muted/30 transition-colors border-b border-border/10"
+                            >
+                              <Avatar className="h-11 w-11 border-2 border-border/30">
+                                <AvatarImage src={p.avatar_url || undefined} />
+                                <AvatarFallback className="text-xs font-bold bg-muted text-muted-foreground">
+                                  {(p.full_name || "U").split(" ").map((n: string) => n[0]).join("").toUpperCase().slice(0, 2)}
+                                </AvatarFallback>
+                              </Avatar>
+                              <div className="text-left min-w-0">
+                                <p className="text-sm font-semibold text-foreground truncate">{p.full_name || "Unknown"}</p>
+                              </div>
+                            </button>
+                          ))}
+                        </div>
+                      )}
+                      {searchResults.length === 0 && storeSearchResults.length === 0 && searchQuery.trim() && !searchLoading && (
+                        <div className="flex flex-col items-center justify-center h-32 text-muted-foreground/50">
+                          <p className="text-sm">No results found</p>
+                        </div>
+                      )}
                     </div>
                   )}
                 </div>
@@ -933,6 +1204,27 @@ export default function ReelsFeedPage() {
             </div>
           )}
 
+          {/* Anchor for scroll-to-top after tapping the new-posts banner */}
+          <div ref={feedTopRef} aria-hidden="true" />
+
+          {/* Realtime new-posts banner */}
+          <AnimatePresence>
+            {newPostsCount > 0 && (
+              <motion.button
+                key="new-posts-banner"
+                type="button"
+                onClick={handleNewPostsTap}
+                initial={{ opacity: 0, y: -8, scale: 0.96 }}
+                animate={{ opacity: 1, y: 0, scale: 1 }}
+                exit={{ opacity: 0, y: -8, scale: 0.96 }}
+                transition={{ type: "spring", damping: 24, stiffness: 320 }}
+                className="sticky top-[52px] lg:top-3 z-30 mx-auto my-2 flex items-center gap-2 rounded-full bg-primary text-primary-foreground px-4 py-1.5 text-xs font-semibold shadow-lg shadow-primary/30 active:scale-95"
+              >
+                <span className="inline-flex h-1.5 w-1.5 rounded-full bg-primary-foreground animate-pulse" />
+                {newPostsCount} new {newPostsCount === 1 ? "post" : "posts"} — tap to refresh
+              </motion.button>
+            )}
+          </AnimatePresence>
 
           {/* Live Now Banner */}
           <button
@@ -1006,6 +1298,7 @@ export default function ReelsFeedPage() {
               )}
             </div>
           ) : (() => {
+<<<<<<< HEAD
             const tabItems = feedTab === "Friends"
               ? items.filter(i => i.author_id && friendIds.has(i.author_id))
               : feedTab === "Following"
@@ -1015,6 +1308,32 @@ export default function ReelsFeedPage() {
               : feedFilter === "photos" ? tabItems.filter(i => i.media_type === "image" && i.media_urls.length > 0)
               : feedFilter === "videos" ? tabItems.filter(i => i.media_type === "video")
               : tabItems.filter(i => !i.media_urls.length || !i.media_urls[0]);
+=======
+            // Apply feed mode (For You vs Following) first
+            const modeItems = feedMode === "following" && userId
+              ? items.filter(i => i.author_id && followingIds.has(i.author_id))
+              : items;
+            const filteredItems = feedFilter === "all" ? modeItems
+              : feedFilter === "photos" ? modeItems.filter(i => i.media_type === "image" && i.media_urls.length > 0)
+              : feedFilter === "videos" ? modeItems.filter(i => i.media_type === "video")
+              : modeItems.filter(i => !i.media_urls.length || !i.media_urls[0]);
+            // Empty Following state — distinct from no filter results
+            if (feedMode === "following" && modeItems.length === 0 && userId) {
+              return (
+                <div className="flex flex-col items-center justify-center py-16 text-center px-6 gap-3">
+                  <Users className="h-12 w-12 text-muted-foreground/30" />
+                  <p className="text-base font-bold text-foreground">No posts from people you follow</p>
+                  <p className="text-sm text-muted-foreground max-w-[280px]">Follow creators to see their latest posts here. Switch to "For You" to discover new people.</p>
+                  <button
+                    onClick={() => setFeedMode("foryou")}
+                    className="mt-1 px-5 py-2 rounded-full bg-primary text-primary-foreground text-sm font-semibold active:scale-95 transition-transform"
+                  >
+                    Discover creators
+                  </button>
+                </div>
+              );
+            }
+>>>>>>> 855443b0719159d83ad7f6c5c749111be5296ccd
             return filteredItems.length === 0 ? (
               <div className="flex flex-col items-center justify-center h-40 text-muted-foreground/50">
                 <p className="text-sm">No {feedFilter} posts found</p>
@@ -1023,20 +1342,55 @@ export default function ReelsFeedPage() {
             <div className="divide-y divide-border/20">
               {filteredItems.map((item, idx) => (
                 <div key={item.id}>
-                  <FeedCard item={item} currentUserId={userId} onOpenFullscreen={() => {
-                    if (item.media_type === 'video') {
-                      // Find the correct index in video-only list
-                      const videoItems = filteredItems.filter(it => it.media_type === 'video');
-                      const videoIdx = videoItems.findIndex(v => v.id === item.id);
-                      setReelsStartIndex(videoIdx >= 0 ? videoIdx : 0);
-                    } else {
-                      setFullscreenIndex(idx);
-                    }
-                  }} />
+                  {item.source === "poll" && item.poll ? (
+                    <div className="px-3 py-2">
+                      <Suspense fallback={<div className="h-44 rounded-2xl bg-muted/30 animate-pulse" />}>
+                        <PollPostCard
+                          id={item.id.replace(/^p-/, "")}
+                          question={item.poll.question}
+                          options={item.poll.options}
+                          pollType={item.poll.poll_type}
+                          correctOptionIndex={item.poll.correct_option_index ?? undefined}
+                          totalVotes={item.poll.total_votes}
+                          expiresAt={item.poll.expires_at ?? null}
+                          createdAt={item.created_at}
+                          authorName={item.author_name}
+                          authorAvatar={item.author_avatar}
+                        />
+                      </Suspense>
+                    </div>
+                  ) : (
+                    <FeedCard item={item} currentUserId={userId} onOpenFullscreen={() => {
+                      if (item.media_type === 'video') {
+                        // Find the correct index in video-only list
+                        const videoItems = filteredItems.filter(it => it.media_type === 'video');
+                        const videoIdx = videoItems.findIndex(v => v.id === item.id);
+                        setReelsStartIndex(videoIdx >= 0 ? videoIdx : 0);
+                      } else {
+                        setFullscreenIndex(idx);
+                      }
+                    }} />
+                  )}
                   {/* Inject suggested users after 3rd post */}
                   {idx === 2 && <Suspense fallback={null}><SuggestedUsersCarousel variant="inline" /></Suspense>}
                 </div>
               ))}
+              {/* Load-more sentinel — observed to trigger infinite scroll */}
+              {pageSize < PAGE_MAX && filteredItems.length >= 10 && (
+                <div ref={loadMoreRef} className="py-6 flex justify-center" aria-hidden="true">
+                  {isFetching && !isLoading ? (
+                    <div className="flex items-center gap-2 text-muted-foreground text-xs">
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                      <span>Loading more posts…</span>
+                    </div>
+                  ) : (
+                    <div className="h-6" />
+                  )}
+                </div>
+              )}
+              {pageSize >= PAGE_MAX && filteredItems.length >= 20 && (
+                <p className="py-6 text-center text-[11px] text-muted-foreground/70">You're all caught up</p>
+              )}
               {/* Spacer so last post clears the fixed bottom nav */}
               <div className="md:hidden" style={{ height: 'max(calc(env(safe-area-inset-bottom, 0px) + 6rem), 6rem)' }} aria-hidden="true" />
             </div>
@@ -1062,7 +1416,14 @@ export default function ReelsFeedPage() {
                   setShowCreate(false);
                   setShareForPost(null);
                   setCommerceDraft(null);
+                  setPageSize(50);
+                  setNewPostsCount(0);
                   queryClient.invalidateQueries({ queryKey: ["reels-feed-grid"] });
+                  // Land the user at the top of the feed so they see the post
+                  // they just published, not wherever they were scrolling.
+                  requestAnimationFrame(() => {
+                    feedTopRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+                  });
                 }}
               />
             )}
@@ -1417,8 +1778,11 @@ function ReelSlide({ item, currentUserId, onClose }: { item: FeedItem; currentUs
   }, [currentUserId, interactionPostId, likesTable]);
 
   const mediaUrl = item.media_urls[0];
+  const viewTracked = useRef(false);
 
-  // Auto-play when visible via IntersectionObserver
+  // Auto-play when visible via IntersectionObserver.
+  // Also fires a one-shot view-count bump the first time the slide becomes
+  // visible (different RPC depending on whether it's a store or user post).
   useEffect(() => {
     if (!containerRef.current) return;
     const observer = new IntersectionObserver(
@@ -1426,6 +1790,15 @@ function ReelSlide({ item, currentUserId, onClose }: { item: FeedItem; currentUs
         if (entry.isIntersecting) {
           videoRef.current?.play().catch(() => {});
           setIsPlaying(true);
+          if (!viewTracked.current) {
+            viewTracked.current = true;
+            if (item.source === "user") {
+              const rawId = item.id.startsWith("u-") ? item.id.slice(2) : item.id;
+              supabase.rpc("increment_user_post_view_count" as any, { p_post_id: rawId }).then(() => {});
+            } else {
+              supabase.rpc("increment_store_post_view_count" as any, { p_post_id: item.id }).then(() => {});
+            }
+          }
         } else {
           videoRef.current?.pause();
           setIsPlaying(false);
@@ -1435,7 +1808,7 @@ function ReelSlide({ item, currentUserId, onClose }: { item: FeedItem; currentUs
     );
     observer.observe(containerRef.current);
     return () => observer.disconnect();
-  }, []);
+  }, [item.id, item.source]);
 
   const togglePlay = () => {
     if (!videoRef.current) return;
@@ -1464,8 +1837,8 @@ function ReelSlide({ item, currentUserId, onClose }: { item: FeedItem; currentUs
           .from(likesTable)
           .insert({ post_id: interactionPostId, user_id: currentUserId });
         if (error) throw error;
-        // Push notification to post author
-        if (item.author_id && item.author_id !== currentUserId) {
+        // Push notification to post author — once per post per session.
+        if (item.author_id && item.author_id !== currentUserId && shouldSendLikeNotification(item.id)) {
           try {
             const { data: sp } = await supabase.from("profiles").select("full_name").eq("user_id", currentUserId).single();
             await supabase.functions.invoke("send-push-notification", {
@@ -2035,6 +2408,22 @@ function FeedCard({ item, currentUserId, onOpenFullscreen, autoPlayVideo, detail
     };
   }, [currentUserId, interactionPostId, likesTable]);
 
+  // Load initial bookmark state
+  useEffect(() => {
+    if (!currentUserId) return;
+    let alive = true;
+    (supabase as any)
+      .from("bookmarks")
+      .select("id")
+      .eq("user_id", currentUserId)
+      .eq("item_id", item.id)
+      .maybeSingle()
+      .then(({ data }: any) => {
+        if (alive && data) setSaved(true);
+      });
+    return () => { alive = false; };
+  }, [currentUserId, item.id]);
+
   // Check follow status
   useEffect(() => {
     if (!currentUserId || !item.author_id || isOwner) return;
@@ -2214,8 +2603,8 @@ function FeedCard({ item, currentUserId, onOpenFullscreen, autoPlayVideo, detail
           .from(likesTable)
           .insert({ post_id: interactionPostId, user_id: currentUserId });
         if (error) throw error;
-        // Push notification to post author
-        if (item.author_id && item.author_id !== currentUserId) {
+        // Push notification to post author — once per post per session.
+        if (item.author_id && item.author_id !== currentUserId && shouldSendLikeNotification(item.id)) {
           try {
             const { data: sp } = await supabase.from("profiles").select("full_name").eq("user_id", currentUserId).single();
             await supabase.functions.invoke("send-push-notification", {
@@ -2344,25 +2733,44 @@ function FeedCard({ item, currentUserId, onOpenFullscreen, autoPlayVideo, detail
     setShowShareSheet(false);
   };
 
+  const savingBookmark = useRef(false);
   const handleSave = async () => {
     if (!currentUserId) {
       toast.error("Please sign in to bookmark posts");
       return;
     }
+    // Prevent rapid double-tap from triggering two writes — the second
+    // INSERT would 409 against the unique (user_id, item_id) constraint.
+    if (savingBookmark.current) return;
+    savingBookmark.current = true;
     const newSaved = !saved;
     setSaved(newSaved);
-    if (newSaved) {
-      await (supabase as any).from("bookmarks").insert({
-        user_id: currentUserId,
-        item_id: item.id,
-        item_type: "post",
-        title: item.caption || `Post by ${item.author_name}`,
-        collection_name: "Posts",
-      });
-      toast.success("Saved to bookmarks");
-    } else {
-      await (supabase as any).from("bookmarks").delete().eq("user_id", currentUserId).eq("item_id", item.id);
-      toast.success("Removed from bookmarks");
+    try {
+      if (newSaved) {
+        const { error } = await (supabase as any).from("bookmarks").upsert(
+          {
+            user_id: currentUserId,
+            item_id: item.id,
+            item_type: "post",
+            title: item.caption || `Post by ${item.author_name}`,
+            collection_name: "Posts",
+          },
+          { onConflict: "user_id,item_id", ignoreDuplicates: true },
+        );
+        if (error && !String(error.message || "").toLowerCase().includes("duplicate")) {
+          throw error;
+        }
+        toast.success("Saved to bookmarks");
+      } else {
+        await (supabase as any).from("bookmarks").delete().eq("user_id", currentUserId).eq("item_id", item.id);
+        toast.success("Removed from bookmarks");
+      }
+    } catch {
+      // Roll back optimistic toggle on real failure.
+      setSaved(!newSaved);
+      toast.error("Couldn't update bookmark");
+    } finally {
+      savingBookmark.current = false;
     }
   };
 
@@ -2670,8 +3078,22 @@ function FeedCard({ item, currentUserId, onOpenFullscreen, autoPlayVideo, detail
                   <p className="text-[13px] font-semibold text-foreground truncate flex items-center gap-1">
                     <span className="truncate">{item.author_name}</span>
                     {isBlueVerified(item.author_is_verified) && <VerifiedBadge size={13} />}
+                    {item.location && (
+                      <>
+                        <span className="text-[10px] text-muted-foreground font-normal"> is in </span>
+                        <span className="text-[12px] text-foreground font-semibold truncate">{item.location}</span>
+                      </>
+                    )}
                   </p>
-                  <p className="text-[10px] text-muted-foreground">{timeAgo}</p>
+                  <div className="flex items-center gap-1">
+                    <p className="text-[10px] text-muted-foreground">{timeAgo}</p>
+                    {item.location && (
+                      <>
+                        <span className="text-[10px] text-muted-foreground">·</span>
+                        <MapPin className="h-2.5 w-2.5 text-muted-foreground" />
+                      </>
+                    )}
+                  </div>
                 </div>
               </button>
               {/* Follow button */}

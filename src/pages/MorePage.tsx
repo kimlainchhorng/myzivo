@@ -19,7 +19,13 @@ import {
   Gem, Rocket, Layers, CircleDot, User, CreditCard, Map, Package,
   Clock, Receipt, Ticket, ShieldCheck, Flame, AlertCircle, Inbox,
   Search, Vote, Clapperboard, GraduationCap, Trophy, Banknote, ArrowLeft,
-  Sun, Moon, Trash2, X,
+  Sun, Moon, Trash2, X, Phone, Hash, Tv, Mic, Activity, Dumbbell, Brain,
+  Languages, Database, KeyRound, UserPlus, Film, MessageSquare, Hotel,
+  Hammer, Sliders, FileSignature, Cookie, BookMarked, Stethoscope,
+  ClipboardList, Building, Tag, ScrollText, History, ArrowDownToLine,
+  Fingerprint, Pin, AtSign, Image as ImageIcon, MicVocal, Volume2,
+  Mailbox, ExternalLink, Boxes, Hourglass, Pencil, ListChecks,
+  Headset, MessagesSquare, BarChart, Cpu, GanttChart, Network, Pill,
 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import {
@@ -101,6 +107,14 @@ const quickLinksMain: QuickLink[] = [
   { icon: Award, label: "Badges", href: "/badges", description: "Achievements", accent: "hsl(38 92% 50%)" },
   { icon: CreditCard, label: "Payment Methods", href: "/account/wallet", description: "Cards & banks", accent: "hsl(199 89% 48%)" },
   { icon: Inbox, label: "Inbox", href: "/notification-center", description: "All alerts", accent: "hsl(45 93% 58%)" },
+  { icon: Bell, label: "Notifications", href: "/account/notifications", description: "Alerts feed", accent: "hsl(45 93% 58%)" },
+  { icon: Plane, label: "My Trips", href: "/my-trips", description: "Travel history", accent: "hsl(199 89% 48%)" },
+  { icon: Receipt, label: "Receipts", href: "/account/receipts", description: "Past payments", accent: "hsl(215 16% 47%)" },
+  { icon: Hash, label: "QR Profile", href: "/qr-profile", description: "Share & scan", accent: "hsl(263 70% 58%)" },
+  { icon: Star, label: "My Reviews", href: "/account/reviews", description: "Ratings given", accent: "hsl(45 93% 58%)" },
+  { icon: ScrollText, label: "Subscriptions", href: "/account/subscriptions", description: "Plans & renewals", accent: "hsl(263 70% 58%)" },
+  { icon: BadgeCheck, label: "Verification", href: "/account/verification", description: "Get verified", accent: "hsl(221 83% 53%)" },
+  { icon: Calendar, label: "Bookings", href: "/booking-management", description: "Manage all", accent: "hsl(199 89% 48%)" },
 ];
 
 const quickLinksCreator: QuickLink[] = [
@@ -114,6 +128,15 @@ const quickLinksCreator: QuickLink[] = [
   { icon: Target, label: "Drafts", href: "/drafts", description: "Unpublished", accent: "hsl(215 16% 47%)" },
   { icon: Vote, label: "Story Polls", href: "/story-polls", description: "Engage fans", accent: "hsl(340 75% 55%)" },
   { icon: Share2, label: "Link Hub", href: "/link-hub", description: "All your links", accent: "hsl(221 83% 53%)" },
+  { icon: Sparkles, label: "Creator Setup", href: "/creator/setup", description: "Get started", accent: "hsl(263 70% 58%)" },
+  { icon: DollarSign, label: "Live Earnings", href: "/creator/live-earnings", description: "Real-time payouts", accent: "hsl(142 71% 45%)" },
+  { icon: Hash, label: "Channels", href: "/channels", description: "Build your channel", accent: "hsl(221 83% 53%)" },
+  { icon: ImageIcon, label: "Media Library", href: "/media-library", description: "All your assets", accent: "hsl(199 89% 48%)" },
+  { icon: MicVocal, label: "Sound Library", href: "/explore", description: "Trending audio", accent: "hsl(340 75% 55%)" },
+  { icon: Megaphone, label: "Promote Posts", href: "/promote", description: "Boost reach", accent: "hsl(38 92% 50%)" },
+  { icon: GanttChart, label: "Brand Deals", href: "/brand-deals", description: "Sponsorships", accent: "hsl(263 70% 58%)" },
+  { icon: BookMarked, label: "Content Library", href: "/library", description: "Saved drafts", accent: "hsl(172 66% 50%)" },
+  { icon: ListChecks, label: "Goals", href: "/creator/goals", description: "Milestones", accent: "hsl(45 93% 58%)" },
 ];
 
 const quickLinksTravel: QuickLink[] = [
@@ -128,6 +151,15 @@ const quickLinksTravel: QuickLink[] = [
   { icon: Map, label: "City Guides", href: "/guides", description: "Expert tips", accent: "hsl(172 66% 50%)" },
   { icon: Package, label: "Delivery", href: "/delivery", description: "Send packages", accent: "hsl(215 16% 47%)" },
   { icon: Flame, label: "Deals", href: "/deals", description: "Hot offers", accent: "hsl(0 84% 60%)", badge: "Hot" },
+  { icon: Plane, label: "Book Flight", href: "/flights", description: "Search flights", accent: "hsl(199 89% 48%)" },
+  { icon: Hotel, label: "Book Hotel", href: "/hotels", description: "Find stays", accent: "hsl(263 70% 58%)" },
+  { icon: Car, label: "Book a Ride", href: "/rides/hub", description: "Get a ride", accent: "hsl(221 83% 53%)" },
+  { icon: UtensilsCrossed, label: "Order Food", href: "/eats", description: "Restaurants near you", accent: "hsl(25 95% 53%)" },
+  { icon: ShoppingBag, label: "Grocery", href: "/grocery", description: "Shop essentials", accent: "hsl(142 71% 45%)" },
+  { icon: Boxes, label: "Marketplace", href: "/marketplace", description: "Buy & sell", accent: "hsl(38 92% 50%)" },
+  { icon: Receipt, label: "Marketplace Orders", href: "/marketplace/orders", description: "Item orders", accent: "hsl(215 16% 47%)" },
+  { icon: Pin, label: "Saved Addresses", href: "/account/addresses", description: "Home & work", accent: "hsl(0 84% 60%)" },
+  { icon: ExternalLink, label: "Track Package", href: "/track", description: "Live tracking", accent: "hsl(199 89% 48%)" },
 ];
 
 const quickLinksSocial: QuickLink[] = [
@@ -141,6 +173,17 @@ const quickLinksSocial: QuickLink[] = [
   { icon: Music, label: "Sound Library", href: "/explore", description: "Trending", accent: "hsl(340 75% 55%)" },
   { icon: Clapperboard, label: "Watch Party", href: "/watch-party", description: "Watch together", accent: "hsl(199 89% 48%)" },
   { icon: Bookmark, label: "Bookmarks", href: "/saved", description: "Saved posts", accent: "hsl(25 95% 53%)" },
+  { icon: Heart, label: "Dating", href: "/dating", description: "Find connections", accent: "hsl(340 75% 55%)" },
+  { icon: Hash, label: "Channels", href: "/channels", description: "Follow channels", accent: "hsl(221 83% 53%)" },
+  { icon: UserPlus, label: "Find Contacts", href: "/chat/find-contacts", description: "Add friends", accent: "hsl(142 71% 45%)" },
+  { icon: MessagesSquare, label: "Group Chats", href: "/chat", description: "Conversations", accent: "hsl(263 70% 58%)" },
+  { icon: Phone, label: "Group Calls", href: "/chat/contacts", description: "Voice & video", accent: "hsl(199 89% 48%)" },
+  { icon: MapPin, label: "Nearby Chat", href: "/chat/nearby", description: "People around you", accent: "hsl(38 92% 50%)" },
+  { icon: Lock, label: "Secret Chats", href: "/chat/contacts", description: "Encrypted", accent: "hsl(142 71% 45%)" },
+  { icon: Mailbox, label: "Broadcasts", href: "/chat/broadcasts", description: "Send to many", accent: "hsl(45 93% 58%)" },
+  { icon: Search, label: "Smart Search", href: "/smart-search", description: "AI search", accent: "hsl(263 70% 58%)", badge: "AI" },
+  { icon: Pencil, label: "Whiteboard", href: "/whiteboard", description: "Collaborate", accent: "hsl(199 89% 48%)" },
+  { icon: Tv, label: "Live Stream", href: "/live", description: "Watch live", accent: "hsl(0 84% 60%)" },
 ];
 
 const quickLinksBusiness: QuickLink[] = [
@@ -152,6 +195,26 @@ const quickLinksBusiness: QuickLink[] = [
   { icon: Wrench, label: "Store Setup", href: "/store/setup", description: "Configure", accent: "hsl(0 84% 60%)" },
   { icon: BarChart3, label: "Business Insights", href: "/business/insights", description: "Data analytics", accent: "hsl(198 93% 59%)" },
   { icon: GraduationCap, label: "Marketplace", href: "/marketplace", description: "Buy & sell", accent: "hsl(38 92% 50%)" },
+  { icon: Package, label: "Shop Products", href: "/shop-dashboard/products", description: "Manage catalog", accent: "hsl(199 89% 48%)" },
+  { icon: ShoppingBag, label: "Shop Orders", href: "/shop-dashboard/orders", description: "Customer orders", accent: "hsl(221 83% 53%)" },
+  { icon: BarChart, label: "Shop Analytics", href: "/shop-dashboard/analytics", description: "Sales reports", accent: "hsl(263 70% 58%)" },
+  { icon: Tag, label: "Promotions", href: "/shop-dashboard/promotions", description: "Discounts & offers", accent: "hsl(0 84% 60%)" },
+  { icon: Truck, label: "Shop Delivery", href: "/shop-dashboard/delivery", description: "Logistics", accent: "hsl(38 92% 50%)" },
+  { icon: Users, label: "Employees", href: "/shop-dashboard/employees", description: "Manage team", accent: "hsl(172 66% 50%)" },
+  { icon: DollarSign, label: "Payroll", href: "/shop-dashboard/payroll", description: "Pay employees", accent: "hsl(142 71% 45%)" },
+  { icon: Clock, label: "Time Clock", href: "/shop-dashboard/time-clock", description: "Track hours", accent: "hsl(199 89% 48%)" },
+  { icon: Calendar, label: "Employee Schedule", href: "/shop-dashboard/employee-schedule", description: "Staff shifts", accent: "hsl(263 70% 58%)" },
+  { icon: TrendingUp, label: "Merchant ROI", href: "/shop-dashboard/roi", description: "Performance", accent: "hsl(198 93% 59%)" },
+  { icon: Truck, label: "Truck Dashboard", href: "/shop-dashboard/truck", description: "Fleet view", accent: "hsl(221 83% 53%)" },
+  { icon: Network, label: "Sales Attribution", href: "/shop-dashboard/attribution", description: "Track sources", accent: "hsl(45 93% 58%)" },
+  { icon: Cpu, label: "Sandbox Mode", href: "/shop-dashboard/sandbox", description: "Test features", accent: "hsl(215 16% 47%)" },
+  { icon: Gift, label: "Refer a Shop", href: "/shop-dashboard/refer", description: "Earn referrals", accent: "hsl(142 71% 45%)" },
+  { icon: Truck, label: "Driver Earnings", href: "/driver/earnings", description: "Trip income", accent: "hsl(142 71% 45%)" },
+  { icon: Banknote, label: "Driver Payouts", href: "/driver/payouts", description: "Cash out", accent: "hsl(199 89% 48%)" },
+  { icon: ClipboardList, label: "Driver Orders", href: "/driver/orders", description: "Active jobs", accent: "hsl(221 83% 53%)" },
+  { icon: Activity, label: "Driver Performance", href: "/driver/performance", description: "Stats", accent: "hsl(263 70% 58%)" },
+  { icon: FileSignature, label: "Driver Onboarding", href: "/driver/onboarding/documents", description: "Submit docs", accent: "hsl(38 92% 50%)" },
+  { icon: UtensilsCrossed, label: "Eats Driver", href: "/eats/driver-deliveries", description: "Food delivery", accent: "hsl(25 95% 53%)" },
 ];
 
 const quickLinksAccount: QuickLink[] = [
@@ -171,6 +234,65 @@ const quickLinksAccount: QuickLink[] = [
   { icon: Lock, label: "Two-Factor Auth", href: "/account/security", description: "Extra security", accent: "hsl(142 71% 45%)" },
   { icon: Users, label: "Blocked Users", href: "/account/privacy#blocked", description: "Manage blocks", accent: "hsl(0 84% 60%)" },
   { icon: Trash2, label: "Delete Account", href: "/profile/delete-account", description: "Permanently remove", accent: "hsl(0 84% 60%)" },
+  { icon: BarChart3, label: "Account Analytics", href: "/account/analytics", description: "Your stats", accent: "hsl(198 93% 59%)" },
+  { icon: History, label: "Activity Log", href: "/account/activity-log", description: "Detailed history", accent: "hsl(215 16% 47%)" },
+  { icon: ArrowDownToLine, label: "Export Data", href: "/account/export", description: "Download your data", accent: "hsl(199 89% 48%)" },
+  { icon: Database, label: "Storage", href: "/chat/settings/storage", description: "Manage space", accent: "hsl(263 70% 58%)" },
+  { icon: KeyRound, label: "Passcode", href: "/chat/settings/passcode", description: "Lock app", accent: "hsl(142 71% 45%)" },
+  { icon: Fingerprint, label: "Biometrics", href: "/account/security", description: "Face & fingerprint", accent: "hsl(263 70% 58%)" },
+  { icon: Bell, label: "Login Alerts", href: "/chat/settings/login-alerts", description: "New device alerts", accent: "hsl(45 93% 58%)" },
+  { icon: Shield, label: "Privacy Hub", href: "/chat/settings/privacy-hub", description: "All controls", accent: "hsl(199 89% 48%)" },
+  { icon: ShieldCheck, label: "Two-Step Setup", href: "/chat/settings/two-step", description: "Enable 2FA", accent: "hsl(142 71% 45%)" },
+  { icon: Cookie, label: "Cookie Settings", href: "/account/cookies", description: "Tracking prefs", accent: "hsl(38 92% 50%)" },
+  { icon: Languages, label: "Translation", href: "/account/translation", description: "Auto-translate", accent: "hsl(172 66% 50%)" },
+  { icon: Sliders, label: "Accessibility", href: "/account/accessibility", description: "Adjust UI", accent: "hsl(263 70% 58%)" },
+  { icon: AtSign, label: "Email & Phone", href: "/account/contact", description: "Update contact", accent: "hsl(199 89% 48%)" },
+  { icon: Building, label: "Tax Info", href: "/account/tax", description: "1099 & docs", accent: "hsl(215 16% 47%)" },
+  { icon: Headset, label: "Contact Support", href: "/support", description: "Get help", accent: "hsl(221 83% 53%)" },
+];
+
+const quickLinksJobs: QuickLink[] = [
+  { icon: Briefcase, label: "Jobs Hub", href: "/personal-dashboard", description: "Career home", accent: "hsl(221 83% 53%)" },
+  { icon: Target, label: "Apply for Jobs", href: "/personal/apply-job", description: "Find work", accent: "hsl(199 89% 48%)" },
+  { icon: UserPlus, label: "Find Employees", href: "/personal/find-employee", description: "Hire talent", accent: "hsl(263 70% 58%)" },
+  { icon: FileSignature, label: "Create CV", href: "/personal/create-cv", description: "Build resume", accent: "hsl(142 71% 45%)" },
+  { icon: ClipboardList, label: "My Applications", href: "/personal/my-applications", description: "Track status", accent: "hsl(38 92% 50%)" },
+  { icon: Building, label: "Employer Hub", href: "/personal/employer", description: "Post & hire", accent: "hsl(215 16% 47%)" },
+  { icon: Users, label: "My Employees", href: "/personal/employees", description: "Team list", accent: "hsl(172 66% 50%)" },
+  { icon: Calendar, label: "My Schedule", href: "/personal/schedule", description: "Work shifts", accent: "hsl(199 89% 48%)" },
+  { icon: Hourglass, label: "Timesheet", href: "/personal/timesheet", description: "Hours logged", accent: "hsl(45 93% 58%)" },
+  { icon: Banknote, label: "Pay Stubs", href: "/personal/pay-stubs", description: "Payment history", accent: "hsl(142 71% 45%)" },
+  { icon: Globe, label: "Connect Website", href: "/personal/connect-website", description: "Link portfolio", accent: "hsl(263 70% 58%)" },
+  { icon: Bell, label: "Job Alerts", href: "/personal/notifications", description: "New matches", accent: "hsl(45 93% 58%)" },
+  { icon: HelpCircle, label: "Career Help", href: "/personal/help", description: "Tips & FAQ", accent: "hsl(var(--muted-foreground))" },
+  { icon: Settings, label: "Career Settings", href: "/personal/settings", description: "Preferences", accent: "hsl(215 16% 47%)" },
+];
+
+const quickLinksLive: QuickLink[] = [
+  { icon: Tv, label: "Live Streams", href: "/live", description: "Watch live", accent: "hsl(0 84% 60%)" },
+  { icon: Video, label: "Go Live", href: "/go-live", description: "Start broadcasting", accent: "hsl(340 75% 55%)", badge: "New" },
+  { icon: Radio, label: "Audio Spaces", href: "/spaces", description: "Voice rooms", accent: "hsl(300 70% 55%)" },
+  { icon: Clapperboard, label: "Watch Party", href: "/watch-party", description: "Watch with friends", accent: "hsl(199 89% 48%)" },
+  { icon: Camera, label: "Reels", href: "/reels", description: "Short videos", accent: "hsl(340 75% 55%)" },
+  { icon: Film, label: "Feed", href: "/feed", description: "Endless reels", accent: "hsl(263 70% 58%)" },
+  { icon: Mic, label: "Podcasts", href: "/podcasts", description: "Listen on the go", accent: "hsl(45 93% 58%)" },
+  { icon: Megaphone, label: "Events", href: "/events", description: "Upcoming streams", accent: "hsl(38 92% 50%)" },
+  { icon: Hash, label: "Channels Directory", href: "/channels", description: "Discover channels", accent: "hsl(221 83% 53%)" },
+  { icon: Volume2, label: "Sound Effects", href: "/sounds", description: "Audio library", accent: "hsl(172 66% 50%)" },
+  { icon: DollarSign, label: "Stream Earnings", href: "/creator/live-earnings", description: "Tips & gifts", accent: "hsl(142 71% 45%)" },
+  { icon: Pencil, label: "Whiteboard", href: "/whiteboard", description: "Draw together", accent: "hsl(199 89% 48%)" },
+  { icon: Cpu, label: "AR Filters", href: "/filters", description: "Effects studio", accent: "hsl(263 70% 58%)" },
+];
+
+const quickLinksWellness: QuickLink[] = [
+  { icon: Activity, label: "Activity Tracker", href: "/wellness/activity", description: "Daily stats", accent: "hsl(142 71% 45%)" },
+  { icon: Dumbbell, label: "Workouts", href: "/wellness/workouts", description: "Plans & guides", accent: "hsl(0 84% 60%)" },
+  { icon: Heart, label: "Health Vitals", href: "/wellness/vitals", description: "HR, BP, sleep", accent: "hsl(340 75% 55%)" },
+  { icon: Brain, label: "Mindfulness", href: "/wellness/mindfulness", description: "Meditation", accent: "hsl(263 70% 58%)" },
+  { icon: Stethoscope, label: "Telehealth", href: "/wellness/telehealth", description: "Talk to a doctor", accent: "hsl(199 89% 48%)" },
+  { icon: Pill, label: "Medications", href: "/wellness/meds", description: "Reminders", accent: "hsl(38 92% 50%)" },
+  { icon: UtensilsCrossed, label: "Nutrition", href: "/wellness/nutrition", description: "Track meals", accent: "hsl(25 95% 53%)" },
+  { icon: Trophy, label: "Goals", href: "/wellness/goals", description: "Set targets", accent: "hsl(45 93% 58%)" },
 ];
 
 const sections = [
@@ -178,7 +300,10 @@ const sections = [
   { title: "Creator Studio", icon: Sparkles, links: quickLinksCreator },
   { title: "Travel & Orders", icon: Plane, links: quickLinksTravel },
   { title: "Social", icon: Users, links: quickLinksSocial },
-  { title: "Business", icon: Briefcase, links: quickLinksBusiness },
+  { title: "Live & Streaming", icon: Tv, links: quickLinksLive },
+  { title: "Jobs & Career", icon: Briefcase, links: quickLinksJobs },
+  { title: "Business", icon: Building2, links: quickLinksBusiness },
+  { title: "Health & Wellness", icon: Heart, links: quickLinksWellness },
   { title: "Account & Support", icon: Settings, links: quickLinksAccount },
 ];
 

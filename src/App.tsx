@@ -143,6 +143,7 @@ const BroadcastListsPage = lazy(() => import("./pages/chat/BroadcastListsPage"))
 const NewBroadcastPage = lazy(() => import("./pages/chat/NewBroadcastPage"));
 const StorageManagerPage = lazy(() => import("./pages/chat/settings/StorageManagerPage"));
 const AppLockGate = lazy(() => import("./components/chat/settings/AppLockGate"));
+const MfaChallengeDialog = lazy(() => import("./components/auth/MfaChallengeDialog"));
 const GroupCallEntryPage = lazy(() => import("./pages/chat/GroupCallEntryPage"));
 const ChannelsDirectoryPage = lazy(() => import("./pages/channels/ChannelsDirectoryPage"));
 const NewChannelPage = lazy(() => import("./pages/channels/NewChannelPage"));
@@ -183,6 +184,7 @@ const StoryPollsPage = lazy(() => import("./pages/StoryPollsPage"));
 
 const BadgesPage = lazy(() => import("./pages/BadgesPage"));
 const LeaderboardPage = lazy(() => import("./pages/LeaderboardPage"));
+const WellnessPage = lazy(() => import("./pages/WellnessPage"));
 const AppSettingsPage = lazy(() => import("./pages/AppSettingsPage"));
 const WatchPartyPage = lazy(() => import("./pages/WatchPartyPage"));
 const WhiteboardPage = lazy(() => import("./pages/WhiteboardPage"));
@@ -418,6 +420,7 @@ const AITripPlanner = lazy(() => import("./pages/AITripPlanner"));
 const MultiCityBuilder = lazy(() => import("./pages/MultiCityBuilder"));
 const ZivoPlus = lazy(() => import("./pages/ZivoPlus"));
 const MembershipPage = lazy(() => import("./pages/MembershipPage"));
+const ComingSoonPage = lazy(() => import("./pages/ComingSoonPage"));
 const Vision = lazy(() => import("./pages/Vision"));
 const BrandMission = lazy(() => import("./pages/BrandMission"));
 const CompanyProfile = lazy(() => import("./pages/CompanyProfile"));
@@ -625,6 +628,7 @@ function RouteAwareGlobalUI() {
       <InAppBrowserInterstitial />
       <SpatialCursor />
       <RuntimeSecurityGuard />
+      {user && <MfaChallengeDialog />}
       {user && <IncomingCallListener />}
       {user && <ChatNotificationListener />}
       {user && <AppLockGate />}
@@ -821,6 +825,8 @@ const App = () => (
                 
                 <Route path="/badges" element={<BadgesPage />} />
                 <Route path="/leaderboard" element={<LeaderboardPage />} />
+                <Route path="/wellness" element={<ProtectedRoute><WellnessPage /></ProtectedRoute>} />
+                <Route path="/wellness/:section" element={<ProtectedRoute><WellnessPage /></ProtectedRoute>} />
                 <Route path="/settings" element={<ProtectedRoute><AppSettingsPage /></ProtectedRoute>} />
                 <Route path="/account/privacy" element={<ProtectedRoute><PrivacySettingsPage /></ProtectedRoute>} />
                 <Route path="/watch-party" element={<WatchPartyPage />} />
@@ -1005,7 +1011,7 @@ const App = () => (
                 <Route path="/account/linked-devices" element={<ProtectedRoute><LinkedDevicesPage /></ProtectedRoute>} />
                 <Route path="/account/link-device" element={<ProtectedRoute><LinkDevicePage /></ProtectedRoute>} />
                 <Route path="/account/scan-device" element={<ProtectedRoute><ScanDevicePage /></ProtectedRoute>} />
-                <Route path="/account/privacy" element={<ProtectedRoute><PrivacyControls /></ProtectedRoute>} />
+                <Route path="/account/data-rights" element={<ProtectedRoute><PrivacyControls /></ProtectedRoute>} />
                 <Route path="/account/notifications" element={<ProtectedRoute><NotificationSettings /></ProtectedRoute>} />
                 <Route path="/account/referrals" element={<ProtectedRoute><AccountReferralsPage /></ProtectedRoute>} />
                 <Route path="/account/wallet" element={<ProtectedRoute><AccountWalletPage /></ProtectedRoute>} />
@@ -1019,6 +1025,26 @@ const App = () => (
                 <Route path="/account/preferences" element={<ProtectedRoute><PreferencesPage /></ProtectedRoute>} />
                 <Route path="/account/promos" element={<ProtectedRoute><PromosPage /></ProtectedRoute>} />
                 <Route path="/account/membership" element={<ProtectedRoute><MembershipPage /></ProtectedRoute>} />
+                <Route path="/account/invoices" element={<ProtectedRoute><AccountInvoicesPage /></ProtectedRoute>} />
+
+                {/* Other ComingSoon placeholders */}
+                <Route path="/filters" element={<ComingSoonPage title="AR Filters" description="Browse and apply AR effects in stories, reels, and live streams." />} />
+                <Route path="/promote" element={<ProtectedRoute><ComingSoonPage title="Promote Posts" description="Boost reach for your posts, reels, and stories." /></ProtectedRoute>} />
+                <Route path="/brand-deals" element={<ProtectedRoute><ComingSoonPage title="Brand Deals" description="Connect with brands for sponsorships and partnerships." /></ProtectedRoute>} />
+                <Route path="/library" element={<ProtectedRoute><ComingSoonPage title="Content Library" description="All your saved drafts, snippets, and templates." /></ProtectedRoute>} />
+                <Route path="/podcasts" element={<ComingSoonPage title="Podcasts" description="Listen to ZIVO podcasts on the go." />} />
+                <Route path="/sounds" element={<ComingSoonPage title="Sound Effects" description="Audio & sound effects library for creators." />} />
+                <Route path="/media-library" element={<ProtectedRoute><ComingSoonPage title="Media Library" description="All your photos, videos, and assets." /></ProtectedRoute>} />
+                <Route path="/creator/goals" element={<ProtectedRoute><ComingSoonPage title="Creator Goals" description="Track milestones and creator achievements." /></ProtectedRoute>} />
+                <Route path="/track" element={<ProtectedRoute><ComingSoonPage title="Track Package" description="Live tracking for deliveries and shipments." /></ProtectedRoute>} />
+                <Route path="/account/cookies" element={<ProtectedRoute><ComingSoonPage title="Cookie Settings" description="Tracking & cookie preferences." /></ProtectedRoute>} />
+                <Route path="/account/translation" element={<ProtectedRoute><ComingSoonPage title="Auto-Translate" description="Translate messages and posts automatically." /></ProtectedRoute>} />
+                <Route path="/account/accessibility" element={<ProtectedRoute><ComingSoonPage title="Accessibility" description="Adjust the UI for vision, hearing, and motor needs." /></ProtectedRoute>} />
+                <Route path="/account/contact" element={<ProtectedRoute><ComingSoonPage title="Email & Phone" description="Update your contact information." /></ProtectedRoute>} />
+                <Route path="/account/tax" element={<ProtectedRoute><ComingSoonPage title="Tax Info" description="Tax forms, 1099s, and reporting." /></ProtectedRoute>} />
+                <Route path="/account/receipts" element={<ProtectedRoute><ComingSoonPage title="Receipts" description="Past payments and order receipts." /></ProtectedRoute>} />
+                <Route path="/account/reviews" element={<ProtectedRoute><ComingSoonPage title="My Reviews" description="Ratings and reviews you've left." /></ProtectedRoute>} />
+                <Route path="/account/subscriptions" element={<ProtectedRoute><ComingSoonPage title="Subscriptions" description="Active plans and renewals." /></ProtectedRoute>} />
 
                 {/* Trip Itineraries */}
                 <Route path="/trips" element={<ProtectedRoute><TripsListPage /></ProtectedRoute>} />

@@ -35,21 +35,83 @@ export default function AccountAnalyticsPage() {
     queryKey: ["account-analytics", user?.id, period],
     queryFn: async () => {
       if (!user) return null;
-      const [{ count: followers }, { count: following }, { count: posts }] = await Promise.all([
+
+      const since = new Date();
+      if (period === "7d") since.setDate(since.getDate() - 7);
+      else if (period === "30d") since.setDate(since.getDate() - 30);
+      else since.setDate(since.getDate() - 90);
+      const sinceISO = since.toISOString();
+
+      const [
+        { count: followers },
+        { count: following },
+        { count: posts },
+        { count: profileViews },
+        { data: myPostIds },
+      ] = await Promise.all([
         (supabase as any).from("follows").select("*", { count: "exact", head: true }).eq("following_id", user.id),
         (supabase as any).from("follows").select("*", { count: "exact", head: true }).eq("follower_id", user.id),
         (supabase as any).from("user_posts").select("*", { count: "exact", head: true }).eq("user_id", user.id),
+        (supabase as any).from("profile_views").select("*", { count: "exact", head: true }).eq("profile_id", user.id).gte("viewed_at", sinceISO),
+        (supabase as any).from("user_posts").select("id").eq("user_id", user.id).limit(500),
       ]);
+
+      let totalLikes = 0;
+      const ids = (myPostIds || []).map((p: any) => p.id);
+      if (ids.length > 0) {
+        const { count: likeCount } = await (supabase as any)
+          .from("post_likes")
+          .select("*", { count: "exact", head: true })
+          .in("post_id", ids)
+          .gte("created_at", sinceISO);
+        totalLikes = likeCount || 0;
+      }
+
+      const followerCount = followers || 1;
+      const engagementRate = ((totalLikes / followerCount) * 100).toFixed(1);
+
       return {
         followers: followers || 0,
         following: following || 0,
         posts: posts || 0,
-        profileViews: Math.floor(Math.random() * 500) + 50,
-        totalLikes: Math.floor(Math.random() * 2000) + 100,
-        engagementRate: (Math.random() * 5 + 1).toFixed(1),
+        profileViews: profileViews || 0,
+        totalLikes,
+        engagementRate,
       };
     },
     enabled: !!user,
+  });
+
+  // Follower growth bucketed over the selected period
+  const { data: growthData } = useQuery({
+    queryKey: ["follower-growth", user?.id, period],
+    queryFn: async () => {
+      if (!user) return [];
+      const buckets = period === "7d" ? 7 : period === "30d" ? 15 : 12;
+      const days = period === "7d" ? 7 : period === "30d" ? 30 : 90;
+      const since = new Date();
+      since.setDate(since.getDate() - days);
+
+      const { data } = await (supabase as any)
+        .from("follows")
+        .select("created_at")
+        .eq("following_id", user.id)
+        .gte("created_at", since.toISOString())
+        .order("created_at", { ascending: true });
+
+      if (!data || data.length === 0) return Array(buckets).fill(0);
+
+      const bucketMs = (days * 24 * 60 * 60 * 1000) / buckets;
+      const counts: number[] = Array(buckets).fill(0);
+      for (const row of data) {
+        const t = new Date(row.created_at).getTime() - since.getTime();
+        const idx = Math.min(Math.floor(t / bucketMs), buckets - 1);
+        counts[idx]++;
+      }
+      return counts;
+    },
+    enabled: !!user,
+    staleTime: 60_000,
   });
 
   // Top posts by selected metric + bucket (local-tz)
@@ -244,15 +306,26 @@ export default function AccountAnalyticsPage() {
           </div>
         </section>
 
-        {/* Growth chart placeholder */}
+        {/* Follower Growth chart */}
         <div className="p-4 rounded-2xl bg-card border border-border/40">
           <h3 className="text-sm font-semibold text-foreground mb-3">Follower Growth</h3>
           <div className="h-32 flex items-end gap-1">
-            {Array.from({ length: period === "7d" ? 7 : period === "30d" ? 15 : 12 }).map((_, i) => {
-              const h = 20 + Math.random() * 80;
-              return <div key={i} className="flex-1 rounded-t bg-primary/25" style={{ height: `${h}%` }} />;
+            {(growthData && growthData.length > 0 ? growthData : Array(period === "7d" ? 7 : period === "30d" ? 15 : 12).fill(0)).map((count: number, i: number) => {
+              const maxCount = Math.max(...(growthData || [1]), 1);
+              const h = Math.max(4, (count / maxCount) * 100);
+              return (
+                <div
+                  key={i}
+                  className={cn("flex-1 rounded-t transition-all", count > 0 ? "bg-primary/60" : "bg-muted/40")}
+                  style={{ height: `${h}%` }}
+                  title={`${count} new follower${count !== 1 ? "s" : ""}`}
+                />
+              );
             })}
           </div>
+          {(!growthData || growthData.every((v: number) => v === 0)) && (
+            <p className="text-[11px] text-muted-foreground text-center mt-2">No new followers in this period</p>
+          )}
         </div>
       </div>
 

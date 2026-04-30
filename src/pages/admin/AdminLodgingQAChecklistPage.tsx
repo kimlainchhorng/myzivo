@@ -7,6 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { CheckCircle2, ClipboardCheck, Download, ExternalLink, Hotel, KeyRound, ListChecks, Printer, ShieldCheck, Wrench, XCircle } from "lucide-react";
 import { useOwnerStoreProfile } from "@/hooks/useOwnerStoreProfile";
 import { useLodgingOpsData } from "@/components/admin/store/lodging/LodgingOperationsShared";
+import { useLodgingPhase5Counts } from "@/hooks/lodging/useLodgingPhase5Counts";
 import { getLodgingCompletion } from "@/lib/lodging/lodgingCompletion";
 import { LODGING_TAB_IDS } from "@/lib/admin/storeTabRouting";
 import { runLodgingQa, type LodgingQaResult } from "@/lib/lodging/lodgingQa";
@@ -20,7 +21,18 @@ export default function AdminLodgingQAChecklistPage() {
   const { data: ownerStore, isLoading: storeLoading } = useOwnerStoreProfile();
   const storeId = ownerStore?.isLodging ? ownerStore.id : "";
   const { rooms, profile, addons, reservations, isLoading } = useLodgingOpsData(storeId);
-  const completion = getLodgingCompletion({ rooms, profile, addons, reservationsCount: reservations.length, housekeepingCount: 0, maintenanceReady: true });
+  const phase5 = useLodgingPhase5Counts(storeId);
+  const completion = getLodgingCompletion({
+    rooms, profile, addons,
+    reservationsCount: reservations.length,
+    housekeepingCount: phase5.housekeepingCount,
+    maintenanceReady: true,
+    mealPlansCount: phase5.mealPlansCount,
+    staffCount: phase5.staffCount,
+    channelConnectionsCount: phase5.channelConnectionsCount,
+    promotionsCount: phase5.promotionsCount,
+    reviewsAwaitingReply: phase5.reviewsAwaitingReply,
+  });
   const [qaResult, setQaResult] = useState<LodgingQaResult | null>(null);
   const [qaRunning, setQaRunning] = useState(false);
   const report = useMemo(() => qaResult || runLodgingQa({ storeId, storeName: ownerStore?.name, storeCategory: ownerStore?.category, completion }), [qaResult, storeId, ownerStore?.name, ownerStore?.category, completion]);

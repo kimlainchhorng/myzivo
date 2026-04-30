@@ -29,13 +29,24 @@ const SuggestedUsersCarousel = memo(forwardRef<HTMLDivElement, SuggestedUsersCar
   const { data: suggestions = [] } = useQuery({
     queryKey: ["suggested-users", user?.id],
     queryFn: async () => {
+      // Pull the user's existing follows first so we can exclude them.
+      // Otherwise "Suggested for you" surfaces people the user already
+      // follows, which feels broken.
+      const { data: follows } = await (supabase as any)
+        .from("user_followers")
+        .select("following_id")
+        .eq("follower_id", user?.id || "");
+      const followedIds = new Set<string>((follows || []).map((r: any) => r.following_id));
+
+      // Over-fetch so we still get 12 even if many results are filtered out.
       const { data, error } = await (supabase as any)
         .from("profiles")
         .select("id, full_name, avatar_url, bio, is_verified, follower_count, posts_count")
         .neq("id", user?.id || "")
-        .limit(20);
+        .limit(40);
       if (error) throw error;
-      return (data || []).sort(() => Math.random() - 0.5).slice(0, 12);
+      const filtered = (data || []).filter((p: any) => !followedIds.has(p.id));
+      return filtered.sort(() => Math.random() - 0.5).slice(0, 12);
     },
     enabled: !!user,
     staleTime: 5 * 60_000,

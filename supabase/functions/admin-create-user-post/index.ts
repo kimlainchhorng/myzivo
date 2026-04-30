@@ -1,6 +1,7 @@
 import { createClient } from "npm:@supabase/supabase-js@2.49.1";
 import { decode } from "https://deno.land/std@0.208.0/encoding/base64.ts";
 import { getCorsHeaders } from "../_shared/cors.ts";
+import { enforceAal2 } from "../_shared/aalCheck.ts";
 
 type UploadFileInput = {
   base64?: string;
@@ -44,6 +45,10 @@ Deno.serve(async (req) => {
     if (!authHeader) {
       return jsonResponse({ error: "Missing authorization" }, 401, corsHeaders);
     }
+
+    // Step-up MFA — privileged user creation requires an AAL2 session
+    const mfaErr = enforceAal2(authHeader, corsHeaders);
+    if (mfaErr) return mfaErr;
 
     const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
     const supabaseAnonKey = Deno.env.get("SUPABASE_ANON_KEY")!;

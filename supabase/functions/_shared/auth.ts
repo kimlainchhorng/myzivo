@@ -81,3 +81,31 @@ export function getServiceRoleClient(): SupabaseClient {
     auth: { autoRefreshToken: false, persistSession: false },
   });
 }
+
+/**
+ * Enforce that the caller's session is at AAL2 (i.e. they have completed an
+ * MFA challenge in this session). Throws UnauthorizedError otherwise.
+ *
+ * Use on sensitive endpoints: payouts, withdrawals, account deletion, admin ops,
+ * profile-PII edits. JWTs at AAL1 (password-only) are rejected with a hint that
+ * the caller should issue an `mfa.challenge()` and re-call.
+ *
+ * Reference: Supabase JWT custom claim `aal` ∈ {"aal1","aal2","aal3"}
+ */
+export function requireAal2(claims: Record<string, unknown>): void {
+  const aal = typeof claims.aal === "string" ? claims.aal : null;
+  if (aal !== "aal2" && aal !== "aal3") {
+    const err = new UnauthorizedError("Step-up MFA required");
+    (err as unknown as { code: string }).code = "mfa_required";
+    throw err;
+  }
+}
+
+/**
+ * Convenience: authenticate AND enforce AAL2 in one call.
+ */
+export async function requireUserMfa(req: Request): Promise<AuthContext> {
+  const ctx = await requireUser(req);
+  requireAal2(ctx.claims);
+  return ctx;
+}

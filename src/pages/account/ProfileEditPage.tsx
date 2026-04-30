@@ -81,11 +81,24 @@ function SocialLinksEditor({ profile, updateProfile }: { profile: any; updatePro
   const handleEdit = (key: SocialKey) => { setEditing(key); setInputValue(profile?.[key] || ""); };
   const handleSave = async (key: SocialKey) => {
     setSaving(true);
-    try { await updateProfile.mutateAsync({ [key]: inputValue.trim() || null } as any); setEditing(null); toast.success("Social link saved"); } catch {} finally { setSaving(false); }
+    try {
+      await updateProfile.mutateAsync({ [key]: inputValue.trim() || null } as any);
+      setEditing(null);
+      toast.success("Social link saved");
+    } catch (e: any) {
+      toast.error(e?.message || "Failed to save social link");
+    } finally { setSaving(false); }
   };
   const handleDelete = async (key: SocialKey) => {
     setSaving(true);
-    try { await updateProfile.mutateAsync({ [key]: null } as any); setEditing(null); setInputValue(""); toast.success("Social link removed"); } catch {} finally { setSaving(false); }
+    try {
+      await updateProfile.mutateAsync({ [key]: null } as any);
+      setEditing(null);
+      setInputValue("");
+      toast.success("Social link removed");
+    } catch (e: any) {
+      toast.error(e?.message || "Failed to remove social link");
+    } finally { setSaving(false); }
   };
 
   const linksVisible = profile?.social_links_visible !== false;
@@ -98,7 +111,10 @@ function SocialLinksEditor({ profile, updateProfile }: { profile: any; updatePro
         </h3>
         <div className="flex items-center gap-2">
           <span className="text-[11px] text-muted-foreground">{linksVisible ? "Visible" : "Hidden"}</span>
-          <Switch checked={linksVisible} onCheckedChange={async (checked) => { try { await updateProfile.mutateAsync({ social_links_visible: checked }); } catch {} }} disabled={updateProfile.isPending} />
+          <Switch checked={linksVisible} onCheckedChange={async (checked) => {
+            try { await updateProfile.mutateAsync({ social_links_visible: checked }); }
+            catch (e: any) { toast.error(e?.message || "Failed to update visibility"); }
+          }} disabled={updateProfile.isPending} />
         </div>
       </div>
       <p className="text-[11px] text-muted-foreground -mt-2">Add your social media links. Toggle to show or hide them on your profile.</p>
@@ -418,7 +434,11 @@ export default function ProfileEditPage() {
                   const isActive = current === opt.value;
                   const Icon = opt.icon;
                   return (
-                    <button key={opt.value} type="button" disabled={updateProfile.isPending} onClick={async () => { if (isActive) return; try { await updateProfile.mutateAsync({ profile_visibility: opt.value }); } catch {} }} className={`w-full flex items-center gap-3 p-3 rounded-xl border transition-all text-left ${isActive ? `${opt.bg} ${opt.border} border` : "border-border/30 hover:bg-muted/30"}`}>
+                    <button key={opt.value} type="button" disabled={updateProfile.isPending} onClick={async () => {
+                      if (isActive) return;
+                      try { await updateProfile.mutateAsync({ profile_visibility: opt.value }); }
+                      catch (e: any) { toast.error(e?.message || "Failed to update visibility"); }
+                    }} className={`w-full flex items-center gap-3 p-3 rounded-xl border transition-all text-left ${isActive ? `${opt.bg} ${opt.border} border` : "border-border/30 hover:bg-muted/30"}`}>
                       <div className={`h-9 w-9 rounded-full ${opt.bg} flex items-center justify-center shrink-0`}><Icon className={`h-4 w-4 ${opt.color}`} /></div>
                       <div className="flex-1 min-w-0">
                         <p className={`text-sm font-semibold ${isActive ? "text-foreground" : "text-muted-foreground"}`}>{opt.label}</p>
@@ -437,7 +457,10 @@ export default function ProfileEditPage() {
                     <p className="text-[11px] text-muted-foreground">Drivers and shops can't view your profile</p>
                   </div>
                 </div>
-                <Switch checked={!!profile?.hide_from_drivers} onCheckedChange={async (checked) => { try { await updateProfile.mutateAsync({ hide_from_drivers: checked }); } catch {} }} disabled={updateProfile.isPending} />
+                <Switch checked={!!profile?.hide_from_drivers} onCheckedChange={async (checked) => {
+                  try { await updateProfile.mutateAsync({ hide_from_drivers: checked }); }
+                  catch (e: any) { toast.error(e?.message || "Failed to update setting"); }
+                }} disabled={updateProfile.isPending} />
               </div>
               <div className="flex items-center justify-between pt-2 border-t border-border/30">
                 <div className="flex items-center gap-3">
@@ -447,7 +470,12 @@ export default function ProfileEditPage() {
                     <p className="text-[11px] text-muted-foreground">Let employers find you in the Find Talent directory</p>
                   </div>
                 </div>
-                <Switch checked={!!(profile as any)?.open_to_work} onCheckedChange={async (checked) => { try { await updateProfile.mutateAsync({ open_to_work: checked } as any); toast.success(checked ? "You're now visible to employers" : "Removed from talent directory"); } catch {} }} disabled={updateProfile.isPending} />
+                <Switch checked={!!(profile as any)?.open_to_work} onCheckedChange={async (checked) => {
+                  try {
+                    await updateProfile.mutateAsync({ open_to_work: checked } as any);
+                    toast.success(checked ? "You're now visible to employers" : "Removed from talent directory");
+                  } catch (e: any) { toast.error(e?.message || "Failed to update setting"); }
+                }} disabled={updateProfile.isPending} />
               </div>
             </div>
 
@@ -469,7 +497,11 @@ export default function ProfileEditPage() {
                     const isActive = current === opt.value;
                     const Icon = opt.icon;
                     return (
-                      <button key={opt.value} type="button" disabled={updateProfile.isPending} onClick={async () => { if (isActive) return; try { await updateProfile.mutateAsync({ comment_control: opt.value }); } catch {} }} className={`w-full flex items-center gap-3 p-2.5 rounded-xl border transition-all text-left ${isActive ? `${opt.bg} ${opt.border} border` : "border-border/30 hover:bg-muted/30"}`}>
+                      <button key={opt.value} type="button" disabled={updateProfile.isPending} onClick={async () => {
+                        if (isActive) return;
+                        try { await updateProfile.mutateAsync({ comment_control: opt.value }); }
+                        catch (e: any) { toast.error(e?.message || "Failed to update setting"); }
+                      }} className={`w-full flex items-center gap-3 p-2.5 rounded-xl border transition-all text-left ${isActive ? `${opt.bg} ${opt.border} border` : "border-border/30 hover:bg-muted/30"}`}>
                         <div className={`h-8 w-8 rounded-full ${opt.bg} flex items-center justify-center shrink-0`}><Icon className={`h-3.5 w-3.5 ${opt.color}`} /></div>
                         <div className="flex-1 min-w-0">
                           <p className={`text-[13px] font-semibold ${isActive ? "text-foreground" : "text-muted-foreground"}`}>{opt.label}</p>
@@ -500,7 +532,10 @@ export default function ProfileEditPage() {
                         <p className="text-[10px] text-muted-foreground">{ctrl.desc}</p>
                       </div>
                     </div>
-                    <Switch checked={checked} onCheckedChange={async (val) => { try { await updateProfile.mutateAsync({ [ctrl.key]: val } as any); } catch {} }} disabled={updateProfile.isPending} />
+                    <Switch checked={checked} onCheckedChange={async (val) => {
+                      try { await updateProfile.mutateAsync({ [ctrl.key]: val } as any); }
+                      catch (e: any) { toast.error(e?.message || "Failed to update setting"); }
+                    }} disabled={updateProfile.isPending} />
                   </div>
                 );
               })}

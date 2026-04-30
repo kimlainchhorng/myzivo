@@ -15,8 +15,10 @@ type SendMessageOptions = {
  */
 import { useState, useEffect, useRef, useCallback, useMemo, lazy, Suspense } from "react";
 import { createPortal } from "react-dom";
+import { App as CapacitorApp } from "@capacitor/app";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
+import { signedUrlFor } from "@/lib/security/signedMedia";
 import ArrowLeft from "lucide-react/dist/esm/icons/arrow-left";
 import Send from "lucide-react/dist/esm/icons/send";
 import Loader2 from "lucide-react/dist/esm/icons/loader-2";
@@ -358,6 +360,13 @@ export default function PersonalChat({ recipientId, recipientName, recipientAvat
 
   const timelineLengthRef = useRef(0);
   const visibleTimelineCountRef = useRef(INITIAL_VISIBLE_TIMELINE_ITEMS);
+  const latestMessageCreatedAtRef = useRef<string | null>(null);
+
+  useEffect(() => {
+    latestMessageCreatedAtRef.current = messages.length > 0
+      ? messages[messages.length - 1].created_at
+      : null;
+  }, [messages]);
 
   const handleScroll = useCallback(() => {
     const el = scrollRef.current;
@@ -634,6 +643,75 @@ export default function PersonalChat({ recipientId, recipientName, recipientAvat
     return () => { supabase.removeChannel(channel); };
   }, [user?.id, recipientId, scrollToBottom]);
 
+  // Fallback refresh: if websocket/realtime misses events (common on mobile
+  // app background/foreground transitions), poll for new rows and merge.
+  useEffect(() => {
+    if (!user?.id || !recipientId) return;
+
+    const msgColumns = "id,sender_id,receiver_id,message,image_url,video_url,voice_url,message_type,delivered_at,reply_to_id,location_lat,location_lng,location_label,is_pinned,expires_at,created_at,is_read,locked_price_cents,edited_at,file_payload,gift_payload";
+
+    const tick = async () => {
+      const latestCreatedAt = latestMessageCreatedAtRef.current;
+      let query = dbFrom("direct_messages")
+        .select(msgColumns)
+        .or(`and(sender_id.eq.${user.id},receiver_id.eq.${recipientId}),and(sender_id.eq.${recipientId},receiver_id.eq.${user.id})`)
+        .order("created_at", { ascending: true })
+        .limit(30);
+
+      if (latestCreatedAt) {
+        query = query.gt("created_at", latestCreatedAt);
+      }
+
+      const { data } = await query;
+      const rows = (data || []) as Message[];
+      if (rows.length === 0) return;
+
+      setMessages((prev) => {
+        const existing = new Set(prev.map((m) => m.id));
+        const incoming = rows.filter((m) => !existing.has(m.id));
+        if (incoming.length === 0) return prev;
+        return [...prev, ...incoming];
+      });
+
+      const unreadIds = rows
+        .filter((m) => m.receiver_id === user.id && !m.is_read)
+        .map((m) => m.id);
+      if (unreadIds.length > 0) {
+        void dbFrom("direct_messages")
+          .update({ is_read: true, delivered_at: new Date().toISOString() })
+          .in("id", unreadIds);
+      }
+
+      scrollToBottom();
+    };
+
+    // Run once immediately so newly arrived rows appear without waiting.
+    void tick();
+
+    const id = window.setInterval(() => {
+      void tick();
+    }, 2000);
+
+    const onVisibility = () => {
+      if (document.visibilityState === "visible") {
+        void tick();
+      }
+    };
+    document.addEventListener("visibilitychange", onVisibility);
+
+    const appResumeListener = CapacitorApp.addListener("appStateChange", ({ isActive }) => {
+      if (isActive) {
+        void tick();
+      }
+    });
+
+    return () => {
+      window.clearInterval(id);
+      document.removeEventListener("visibilitychange", onVisibility);
+      appResumeListener.then((l) => l.remove());
+    };
+  }, [recipientId, scrollToBottom, user?.id]);
+
   useEffect(() => {
     if (!user?.id) return;
 
@@ -666,7 +744,8 @@ export default function PersonalChat({ recipientId, recipientName, recipientAvat
     const text = input.trim();
     const { imageUrl, voiceUrl, videoUrl, locationLat, locationLng, locationLabel, filePayload } = opts || {};
     if (!text && !imageUrl && !voiceUrl && !videoUrl && !filePayload && locationLat == null) return;
-    if (!user?.id || sending) return;
+    const isComplexSend = Boolean(imageUrl || voiceUrl || videoUrl || filePayload || locationLat != null);
+    if (!user?.id || (sending && isComplexSend)) return;
 
     const msgType = voiceUrl
       ? "voice"
@@ -682,7 +761,7 @@ export default function PersonalChat({ recipientId, recipientName, recipientAvat
     setReplyTo(null);
     const burnSec = selfDestructSec;
     if (selfDestructSec) setSelfDestructSec(null);
-    setSending(true);
+    if (isComplexSend) setSending(true);
 
     const optimisticId = `opt-${Date.now()}`;
     const optimisticMsg: Message = {
@@ -751,7 +830,7 @@ export default function PersonalChat({ recipientId, recipientName, recipientAvat
       setMessages((prev) => prev.filter((m) => m.id !== optimisticId));
       toast.error("Failed to send message");
     }
-    setSending(false);
+    if (isComplexSend) setSending(false);
     inputRef.current?.focus();
   };
   handleSendRef.current = handleSend;
@@ -1047,10 +1126,11 @@ export default function PersonalChat({ recipientId, recipientName, recipientAvat
           .from("chat-media-files")
           .upload(path, file, { contentType: file.type, upsert: true, cacheControl: "3600" });
         if (upErr) throw upErr;
-        const { data: urlData } = supabase.storage.from("chat-media-files").getPublicUrl(path);
-        // Swap local blob URL for the real one so the bubble becomes "real".
+        // Mint a short-lived signed URL for the sender's bubble; store the
+        // path in the DB so receivers can re-sign on view (avoids expiring URLs).
+        const signedUrl = await signedUrlFor("chat-media-files", path, "display");
         setMessages((prev) => prev.map((m) => m.id === optimisticId
-          ? { ...m, image_url: kind === "image" ? urlData.publicUrl : null, video_url: kind === "video" ? urlData.publicUrl : null }
+          ? { ...m, image_url: kind === "image" ? signedUrl : null, video_url: kind === "video" ? signedUrl : null }
           : m));
         const insertData: DirectMessageInsert = {
           sender_id: user.id,
@@ -1058,8 +1138,8 @@ export default function PersonalChat({ recipientId, recipientName, recipientAvat
           message: "",
           message_type: kind,
         };
-        if (kind === "image") insertData.image_url = urlData.publicUrl;
-        if (kind === "video") insertData.video_url = urlData.publicUrl;
+        if (kind === "image") insertData.image_url = path;
+        if (kind === "video") insertData.video_url = path;
         if (currentReply) insertData.reply_to_id = currentReply.id;
         const { error: insErr } = await dbFrom("direct_messages").insert(insertData);
         if (insErr) throw insErr;
@@ -1117,7 +1197,7 @@ export default function PersonalChat({ recipientId, recipientName, recipientAvat
       const path = `${user.id}/locked_${Date.now()}.${ext}`;
       const { error } = await supabase.storage.from("chat-media-files").upload(path, file, { contentType: file.type });
       if (error) throw error;
-      const { data: urlData } = supabase.storage.from("chat-media-files").getPublicUrl(path);
+      const signedUrl = await signedUrlFor("chat-media-files", path, "display");
       const messageType = isVideo ? "locked_video" : "locked_image";
       const priceLabel = `$${(priceCents / 100).toFixed(2)}`;
       const label = isVideo ? `🔒 Locked Video · ${priceLabel}` : `🔒 Locked Photo · ${priceLabel}`;
@@ -1129,8 +1209,8 @@ export default function PersonalChat({ recipientId, recipientName, recipientAvat
       const optimisticMsg: Message = {
         id: optimisticId, sender_id: user.id, receiver_id: recipientId,
         message: text || label,
-        image_url: isVideo ? null : urlData.publicUrl,
-        video_url: isVideo ? urlData.publicUrl : null,
+        image_url: isVideo ? null : signedUrl,
+        video_url: isVideo ? signedUrl : null,
         voice_url: null, message_type: messageType,
         reply_to_id: null, location_lat: null, location_lng: null, location_label: null,
         is_pinned: false, expires_at: null, created_at: new Date().toISOString(), is_read: false,
@@ -1143,8 +1223,8 @@ export default function PersonalChat({ recipientId, recipientName, recipientAvat
         .insert({
           sender_id: user.id, receiver_id: recipientId,
           message: text || label,
-          image_url: isVideo ? null : urlData.publicUrl,
-          video_url: isVideo ? urlData.publicUrl : null,
+          image_url: isVideo ? null : path,
+          video_url: isVideo ? path : null,
           message_type: messageType,
           locked_price_cents: priceCents,
         });

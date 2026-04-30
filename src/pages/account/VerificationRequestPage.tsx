@@ -130,9 +130,13 @@ export default function VerificationRequestPage() {
   };
 
   const categories = [
-    { value: "personal", label: "Personal", desc: "Public figure, athlete, influencer" },
-    { value: "business", label: "Business", desc: "Brand, company, organization" },
+    { value: "personal", label: "Personal", desc: "Public figure or notable individual" },
+    { value: "business", label: "Business", desc: "Brand, company, or organization" },
     { value: "creator", label: "Creator", desc: "Artist, musician, content creator" },
+    { value: "athlete", label: "Athlete", desc: "Professional or competitive athlete" },
+    { value: "media", label: "Media", desc: "News outlet, publisher, or journalist" },
+    { value: "government", label: "Government", desc: "Official government or public agency" },
+    { value: "nonprofit", label: "Nonprofit", desc: "Registered charity or NGO" },
   ];
 
   return (

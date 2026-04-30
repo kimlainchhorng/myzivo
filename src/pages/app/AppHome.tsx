@@ -72,6 +72,10 @@ import Activity from "lucide-react/dist/esm/icons/activity";
 import Bell from "lucide-react/dist/esm/icons/bell";
 import Sparkles from "lucide-react/dist/esm/icons/sparkles";
 import UtensilsCrossed from "lucide-react/dist/esm/icons/utensils-crossed";
+import Tv from "lucide-react/dist/esm/icons/tv";
+import Rocket from "lucide-react/dist/esm/icons/rocket";
+import Gem from "lucide-react/dist/esm/icons/gem";
+import Dumbbell from "lucide-react/dist/esm/icons/dumbbell";
 import { Progress } from "@/components/ui/progress";
 import { useLoyaltyPoints } from "@/hooks/useLoyaltyPoints";
 import { useUserRewards } from "@/hooks/useUserRewards";
@@ -95,6 +99,8 @@ import { useDeviceIntegrityCheck } from "@/hooks/useDeviceIntegrityCheck";
 import { useOwnerStoreProfile } from "@/hooks/useOwnerStoreProfile";
 import { useLodgeRooms } from "@/hooks/lodging/useLodgeRooms";
 import { useLodgePropertyProfile } from "@/hooks/lodging/useLodgePropertyProfile";
+import { useLodgeReservations } from "@/hooks/lodging/useLodgeReservations";
+import { useLodgingPhase5Counts } from "@/hooks/lodging/useLodgingPhase5Counts";
 import { getLodgingSetupItems, setupProgress } from "@/components/admin/store/lodging/LodgingSetupChecklist";
 
 import tabFlightsBg from "@/assets/tab-flights-bg.jpg";
@@ -272,15 +278,24 @@ const AppHome = () => {
   const { recommended, favorites, orderAgain } = usePersonalizedHome();
   const { data: profile } = useUserProfile();
   const { data: ownerStore, isLoading: ownerStoreLoading } = useOwnerStoreProfile();
-  const lodgingRooms = useLodgeRooms(ownerStore?.isLodging ? ownerStore.id : "");
-  const lodgingProfile = useLodgePropertyProfile(ownerStore?.isLodging ? ownerStore.id : "");
+  const lodgingStoreId = ownerStore?.isLodging ? ownerStore.id : "";
+  const lodgingRooms = useLodgeRooms(lodgingStoreId);
+  const lodgingProfile = useLodgePropertyProfile(lodgingStoreId);
+  const lodgingReservations = useLodgeReservations(lodgingStoreId, "all");
+  const lodgingPhase5 = useLodgingPhase5Counts(lodgingStoreId);
   const lodgingProgress = ownerStore?.isLodging ? setupProgress(getLodgingSetupItems({
     rooms: lodgingRooms.data || [],
     profile: lodgingProfile.data,
     addons: (lodgingRooms.data || []).flatMap((room: any) => room.addons || []),
-    housekeepingCount: 0,
+    housekeepingCount: lodgingPhase5.housekeepingCount,
     maintenanceReady: true,
-    reportsReady: Boolean((lodgingRooms.data || []).length),
+    reportsReady: Boolean((lodgingRooms.data || []).length) || (lodgingReservations.data?.length ?? 0) > 0,
+    mealPlansCount: lodgingPhase5.mealPlansCount,
+    staffCount: lodgingPhase5.staffCount,
+    channelConnectionsCount: lodgingPhase5.channelConnectionsCount,
+    promotionsCount: lodgingPhase5.promotionsCount,
+    reviewsAwaitingReply: lodgingPhase5.reviewsAwaitingReply,
+    reservationsCount: lodgingReservations.data?.length ?? 0,
   })) : null;
   const { data: deals = [] } = useRecommendedDeals("all", 6);
   const { items: recentItems } = useRecentlyViewed();
@@ -530,7 +545,7 @@ const AppHome = () => {
                     <Button size="sm" className="h-9" onClick={(e) => { e.stopPropagation(); navigate(`/admin/stores/${ownerStore.id}?tab=lodge-overview`); }}>Open Ops <ArrowRight className="ml-1.5 h-3.5 w-3.5" /></Button>
                     <Button size="sm" variant="outline" className="h-9" onClick={(e) => { e.stopPropagation(); navigate("/admin/lodging/qa-checklist"); }}>Run QA</Button>
                     <Button size="sm" variant="outline" className="h-9" onClick={(e) => { e.stopPropagation(); navigate("/hotel-admin"); }}>Operations Hub</Button>
-                    <Button size="sm" variant="outline" className="h-9" onClick={(e) => { e.stopPropagation(); navigate("/admin/lodging/qa-checklist"); }}>View QA Report</Button>
+                    <Button size="sm" variant="outline" className="h-9" onClick={(e) => { e.stopPropagation(); navigate("/admin/lodging/completion-verification"); }}>View QA Report</Button>
                   </div>
                 </div>
               </motion.div>
@@ -590,6 +605,45 @@ const AppHome = () => {
           </div>
 
 
+
+          {/* ─── DISCOVER (gradient cards) ─── */}
+          <div className="pb-5">
+            <div className="flex items-center justify-between mb-3 px-5">
+              <h2 className="text-base font-bold text-foreground">Discover</h2>
+              <button onClick={() => navigate("/more")} className="w-8 h-8 flex items-center justify-center touch-manipulation rounded-full hover:bg-muted/50 transition-colors">
+                <ArrowRight className="w-4.5 h-4.5 text-muted-foreground" />
+              </button>
+            </div>
+            <div className="flex gap-3 overflow-x-auto scrollbar-hide pb-1 px-5" style={{ WebkitOverflowScrolling: "touch" }}>
+              {[
+                { icon: Briefcase, label: "Jobs", desc: "Find work", href: "/personal-dashboard", gradient: "from-blue-500 via-indigo-500 to-violet-500" },
+                { icon: Tv, label: "Live", desc: "Watch live", href: "/live", gradient: "from-rose-500 via-red-500 to-orange-400" },
+                { icon: Rocket, label: "Creator Hub", desc: "Grow & earn", href: "/creator-dashboard", gradient: "from-violet-500 via-purple-500 to-fuchsia-500" },
+                { icon: Heart, label: "Wellness", desc: "Stay healthy", href: "/wellness/activity", gradient: "from-emerald-500 via-teal-400 to-cyan-400" },
+                { icon: Crown, label: "ZIVO Plus", desc: "Premium perks", href: "/zivo-plus", gradient: "from-amber-500 via-yellow-400 to-orange-400" },
+                { icon: Gem, label: "Rewards", desc: "Earn points", href: "/rewards", gradient: "from-pink-500 via-fuchsia-500 to-purple-500" },
+                { icon: Sparkles, label: "Marketplace", desc: "Buy & sell", href: "/marketplace", gradient: "from-sky-500 via-blue-500 to-indigo-500" },
+                { icon: Dumbbell, label: "Workouts", desc: "Train daily", href: "/wellness/workouts", gradient: "from-lime-500 via-green-500 to-emerald-500" },
+              ].map((card, i) => (
+                <motion.button
+                  key={card.label}
+                  whileTap={{ scale: 0.95 }}
+                  onClick={() => navigate(card.href)}
+                  className={cn(
+                    "shrink-0 w-[128px] h-[96px] rounded-[20px] bg-gradient-to-br p-3 flex flex-col justify-between shadow-lg touch-manipulation text-left",
+                    card.gradient
+                  )}
+                  style={{ animationDelay: `${i * 60}ms` }}
+                >
+                  <card.icon className="w-5 h-5 text-white/90" />
+                  <div>
+                    <p className="text-white font-bold text-[12px] leading-tight">{card.label}</p>
+                    <p className="text-white/75 text-[10px] mt-0.5">{card.desc}</p>
+                  </div>
+                </motion.button>
+              ))}
+            </div>
+          </div>
 
           {/* 3D Section Divider */}
           <div className="h-3 relative overflow-hidden">

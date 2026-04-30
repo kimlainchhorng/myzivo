@@ -4,6 +4,8 @@
 import { useState, useRef, useCallback, type ReactNode } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
+import { signedUrlFor, SIGNED_URL_TTL } from "@/lib/security/signedMedia";
+import { validateFileClient, type FileCategory } from "@/lib/security/fileUploadSecurity";
 import Image from "lucide-react/dist/esm/icons/image";
 import FileText from "lucide-react/dist/esm/icons/file-text";
 import Film from "lucide-react/dist/esm/icons/film";
@@ -72,6 +74,13 @@ export function ChatMediaUploader({ recipientId, onMediaSent, renderTrigger }: C
       return;
     }
 
+    // Defence-in-depth: extension + MIME + size validation before upload
+    const securityCheck = validateFileClient(file, category as FileCategory);
+    if (!securityCheck.ok) {
+      toast.error(securityCheck.error ?? "File rejected");
+      return;
+    }
+
     // Preview
     if (file.type.startsWith("image")) {
       const url = URL.createObjectURL(file);
@@ -101,12 +110,14 @@ export function ChatMediaUploader({ recipientId, onMediaSent, renderTrigger }: C
       if (error) throw error;
 
       setProgress(100);
-      const { data: urlData } = supabase.storage.from("chat-media-files").getPublicUrl(path);
+      // Mint a short-lived signed URL for the sender to embed in the message.
+      // The DB stores the storage path (file_url) so receivers can re-sign on view.
+      const signedUrl = await signedUrlFor("chat-media-files", path, "display");
 
       await (supabase as any).from("chat_media").insert({
         sender_id: user.id,
         chat_partner_id: recipientId,
-        file_url: urlData.publicUrl,
+        file_url: path, // storage path, not URL — receivers re-sign on view
         file_name: file.name,
         file_type: category,
         file_size_bytes: file.size,
@@ -114,12 +125,12 @@ export function ChatMediaUploader({ recipientId, onMediaSent, renderTrigger }: C
       });
 
       if (category === "image") {
-        onMediaSent({ imageUrl: urlData.publicUrl });
+        onMediaSent({ imageUrl: signedUrl });
       } else if (category === "video") {
-        onMediaSent({ videoUrl: urlData.publicUrl });
+        onMediaSent({ videoUrl: signedUrl });
       } else {
         onMediaSent({
-          fileUrl: urlData.publicUrl,
+          fileUrl: signedUrl,
           fileName: file.name,
           fileType: file.type,
           fileSize: file.size,
