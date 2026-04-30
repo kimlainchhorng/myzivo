@@ -261,11 +261,26 @@ export default function ReelsFeedPage() {
   const [storeSearchResults, setStoreSearchResults] = useState<any[]>([]);
   const [searchLoading, setSearchLoading] = useState(false);
   const [feedFilter, setFeedFilter] = useState<"all" | "photos" | "videos" | "text">("all");
+<<<<<<< HEAD
   const [feedTab, setFeedTab] = useState<"For You" | "Friends" | "Following">("For You");
   const [sidebarContacts, setSidebarContacts] = useState<Array<{ id: string; name: string; avatar: string | null }>>([]);
   const [trendingTags, setTrendingTags] = useState<string[]>([]);
   const [friendIds, setFriendIds] = useState<Set<string>>(new Set());
   const [followingIds, setFollowingIds] = useState<Set<string>>(new Set());
+=======
+  const [feedMode, setFeedMode] = useState<"foryou" | "following">("foryou");
+  const [followingIds, setFollowingIds] = useState<Set<string>>(new Set());
+  const [friendIds, setFriendIds] = useState<Set<string>>(new Set());
+  const [sidebarContacts, setSidebarContacts] = useState<Array<{ id: string; name: string; avatar: string | null }>>([]);
+  const [trendingTags, setTrendingTags] = useState<string[]>([]);
+  const [selectedHashtag, setSelectedHashtag] = useState<string | null>(null);
+  const PAGE_INCREMENT = 25;
+  const PAGE_MAX = 500;
+  const [pageSize, setPageSize] = useState(50);
+  const loadMoreRef = useRef<HTMLDivElement>(null);
+  const feedTopRef = useRef<HTMLDivElement>(null);
+  const [newPostsCount, setNewPostsCount] = useState(0);
+>>>>>>> 716cc08ee549516371a6a5d93f3b5d895434aef7
   const searchInputRef = useRef<HTMLInputElement>(null);
   const searchTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const location = useLocation();
@@ -347,9 +362,26 @@ export default function ReelsFeedPage() {
     });
   }, []);
 
+<<<<<<< HEAD
   // Sidebar contacts + trending tags
   useEffect(() => {
     if (!userId) return;
+=======
+  // Load followed + friend IDs, sidebar contacts, trending tags
+  useEffect(() => {
+    if (!userId) { setFollowingIds(new Set()); setFriendIds(new Set()); return; }
+    let alive = true;
+    // Following IDs
+    (supabase as any)
+      .from("user_followers")
+      .select("following_id")
+      .eq("follower_id", userId)
+      .then(({ data }: any) => {
+        if (!alive) return;
+        setFollowingIds(new Set((data || []).map((r: any) => r.following_id)));
+      });
+    // Friend IDs + sidebar contacts
+>>>>>>> 716cc08ee549516371a6a5d93f3b5d895434aef7
     (async () => {
       const { data: fships } = await (supabase as any)
         .from("friendships")
@@ -357,7 +389,11 @@ export default function ReelsFeedPage() {
         .eq("status", "accepted")
         .or(`user_id.eq.${userId},friend_id.eq.${userId}`)
         .limit(10);
+<<<<<<< HEAD
       if (!fships?.length) return;
+=======
+      if (!alive || !fships?.length) return;
+>>>>>>> 716cc08ee549516371a6a5d93f3b5d895434aef7
       const fIds = fships.map((r: any) => r.user_id === userId ? r.friend_id : r.user_id);
       setFriendIds(new Set(fIds));
       const { data: profs } = await supabase
@@ -365,6 +401,7 @@ export default function ReelsFeedPage() {
         .select("user_id, full_name, avatar_url")
         .in("user_id", fIds)
         .limit(8);
+<<<<<<< HEAD
       if (profs) setSidebarContacts(profs.map((p: any) => ({ id: p.user_id, name: p.full_name || "User", avatar: p.avatar_url || null })));
     })();
     (async () => {
@@ -374,13 +411,22 @@ export default function ReelsFeedPage() {
         .eq("follower_id", userId);
       if (flData) setFollowingIds(new Set(flData.map((r: any) => r.following_id)));
     })();
+=======
+      if (alive && profs) setSidebarContacts(profs.map((p: any) => ({ id: p.user_id, name: p.full_name || "User", avatar: p.avatar_url || null })));
+    })();
+    // Trending hashtags
+>>>>>>> 716cc08ee549516371a6a5d93f3b5d895434aef7
     (async () => {
       const { data: posts } = await (supabase as any)
         .from("user_posts")
         .select("caption")
         .order("created_at", { ascending: false })
         .limit(100);
+<<<<<<< HEAD
       if (!posts) return;
+=======
+      if (!alive || !posts) return;
+>>>>>>> 716cc08ee549516371a6a5d93f3b5d895434aef7
       const tagCounts: Record<string, number> = {};
       posts.forEach((p: any) => {
         const tags = (p.caption || "").match(/#[\w一-鿿؀-ۿ]+/g) || [];
@@ -388,10 +434,40 @@ export default function ReelsFeedPage() {
       });
       setTrendingTags(Object.entries(tagCounts).sort((a, b) => b[1] - a[1]).slice(0, 8).map(([t]) => t));
     })();
+<<<<<<< HEAD
   }, [userId]);
 
   // Active live-stream count — drives the visibility + label of the Live Now
   // banner so we don't promote a discovery surface that has nothing to show.
+=======
+    return () => { alive = false; };
+  }, [userId]);
+
+  // Realtime new-posts banner (Twitter-style — don't auto-prepend mid-scroll)
+  useEffect(() => {
+    const channel = supabase
+      .channel("feed-new-posts")
+      .on("postgres_changes" as any, { event: "INSERT", schema: "public", table: "user_posts" }, (payload: any) => {
+        const post = payload?.new;
+        if (!post || post.is_published === false) return;
+        if (post.user_id && post.user_id === userId) return;
+        if (feedMode === "following" && (!post.user_id || !followingIds.has(post.user_id))) return;
+        setNewPostsCount((n) => Math.min(n + 1, 99));
+      })
+      .subscribe();
+    return () => { void supabase.removeChannel(channel); };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [userId, feedMode, followingIds.size]);
+
+  const handleNewPostsTap = useCallback(() => {
+    setNewPostsCount(0);
+    setPageSize(50);
+    queryClient.invalidateQueries({ queryKey: ["reels-feed-grid"] });
+    feedTopRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+  }, [queryClient]);
+
+  // Active live-stream count
+>>>>>>> 716cc08ee549516371a6a5d93f3b5d895434aef7
   const { data: liveStreamsCount = 0 } = useQuery({
     queryKey: ["feed-live-count"],
     queryFn: async () => {
@@ -404,7 +480,10 @@ export default function ReelsFeedPage() {
     refetchInterval: 30_000,
     refetchOnWindowFocus: false,
   });
+<<<<<<< HEAD
 
+=======
+>>>>>>> 716cc08ee549516371a6a5d93f3b5d895434aef7
   // User search with debounce
   const handleSearchChange = (q: string) => {
     setSearchQuery(q);
@@ -938,6 +1017,7 @@ export default function ReelsFeedPage() {
         {/* Main Feed Content */}
         <PullToRefresh onRefresh={handlePullRefresh} className="min-h-screen bg-background pb-20 lg:pb-0 flex-1 lg:max-w-2xl lg:mx-auto">
           {/* Header — hidden on desktop since the global NavBar already provides search */}
+<<<<<<< HEAD
           <div data-testid="feed-sticky-header" className="lg:hidden sticky z-40 bg-background/95 backdrop-blur-xl border-b border-border/30 px-4 py-2.5 flex items-center gap-3 lg:pt-3 pt-safe" style={{ top: 'var(--zivo-safe-top, 0px)' }}>
             <h1 className="text-lg font-bold text-foreground shrink-0 lg:hidden">Feed</h1>
             <div className="flex-1 relative">
@@ -952,6 +1032,61 @@ export default function ReelsFeedPage() {
               {searchQuery && (
                 <button onClick={() => { setSearchQuery(""); setSearchResults([]); }} className="absolute right-3 top-1/2 -translate-y-1/2">
                   <XIcon className="h-4 w-4 text-muted-foreground" />
+=======
+          <div data-testid="feed-sticky-header" className="lg:hidden sticky top-0 z-40 bg-background/95 backdrop-blur-xl border-b border-border/30 pt-safe">
+            <div className="flex items-center gap-3 px-4 py-2.5">
+              <h1 className="text-lg font-bold text-foreground shrink-0 lg:hidden">Feed</h1>
+              <div className="flex-1 relative">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />
+                <input
+                  value={searchQuery}
+                  onChange={(e) => handleSearchChange(e.target.value)}
+                  onFocus={() => setShowSearch(true)}
+                  placeholder="Search people, shops..."
+                  className="w-full pl-9 pr-8 py-2 rounded-full bg-muted/40 border border-border/30 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 transition-colors"
+                />
+                {searchQuery && (
+                  <button onClick={() => { setSearchQuery(""); setSearchResults([]); setStoreSearchResults([]); }} className="absolute right-3 top-1/2 -translate-y-1/2">
+                    <XIcon className="h-4 w-4 text-muted-foreground" />
+                  </button>
+                )}
+              </div>
+            </div>
+            {/* For You / Following segmented control */}
+            {userId && (
+              <div className="flex justify-center gap-6 px-4 pb-1">
+                {(["foryou", "following"] as const).map((mode) => (
+                  <button
+                    key={mode}
+                    onClick={() => setFeedMode(mode)}
+                    className={cn(
+                      "relative py-1.5 text-sm font-bold transition-colors",
+                      feedMode === mode ? "text-foreground" : "text-muted-foreground"
+                    )}
+                  >
+                    {mode === "foryou" ? "For You" : "Following"}
+                    {feedMode === mode && (
+                      <span className="absolute -bottom-0.5 left-1/2 -translate-x-1/2 w-6 h-0.5 rounded-full bg-primary" />
+                    )}
+                  </button>
+                ))}
+              </div>
+            )}
+            {/* Feed filter tabs */}
+            <div className="flex gap-1.5 px-4 pb-2.5 overflow-x-auto scrollbar-none">
+              {(["all", "photos", "videos"] as const).map((f) => (
+                <button
+                  key={f}
+                  onClick={() => setFeedFilter(f)}
+                  className={cn(
+                    "shrink-0 px-4 py-1.5 rounded-full text-xs font-semibold transition-all",
+                    feedFilter === f
+                      ? "bg-primary text-primary-foreground shadow-sm"
+                      : "bg-muted/40 text-muted-foreground hover:bg-muted"
+                  )}
+                >
+                  {f === "all" ? "All" : f === "photos" ? "Photos" : "Videos"}
+>>>>>>> 716cc08ee549516371a6a5d93f3b5d895434aef7
                 </button>
               )}
             </div>
@@ -1171,23 +1306,25 @@ export default function ReelsFeedPage() {
            {/* Suggested Users */}
            <Suspense fallback={null}><SuggestedUsersCarousel /></Suspense>
 
-          {/* Feed filter tabs */}
-          <div className="sticky top-0 lg:top-[60px] z-20 bg-background/95 backdrop-blur-xl border-b border-border/20 flex">
-            {(["For You", "Friends", "Following"] as const).map((tab) => (
-              <button
-                key={tab}
-                onClick={() => setFeedTab(tab)}
-                className={cn(
-                  "flex-1 py-2.5 text-[13px] font-semibold transition-colors",
-                  feedTab === tab
-                    ? "text-primary border-b-2 border-primary"
-                    : "text-muted-foreground hover:text-foreground"
-                )}
-              >
-                {tab}
-              </button>
-            ))}
-          </div>
+          {/* Feed mode tabs — desktop only (mobile uses the sticky header tabs) */}
+          {userId && (
+            <div className="hidden lg:flex sticky lg:top-[60px] z-20 bg-background/95 backdrop-blur-xl border-b border-border/20">
+              {([["foryou", "For You"], ["following", "Following"]] as const).map(([mode, label]) => (
+                <button
+                  key={mode}
+                  onClick={() => setFeedMode(mode)}
+                  className={cn(
+                    "flex-1 py-2.5 text-[13px] font-semibold transition-colors",
+                    feedMode === mode
+                      ? "text-primary border-b-2 border-primary"
+                      : "text-muted-foreground hover:text-foreground"
+                  )}
+                >
+                  {label}
+                </button>
+              ))}
+            </div>
+          )}
 
           {/* Posts */}
           {isLoading ? (
@@ -1221,6 +1358,7 @@ export default function ReelsFeedPage() {
               )}
             </div>
           ) : (() => {
+<<<<<<< HEAD
             const tabItems = feedTab === "Friends"
               ? items.filter(i => i.author_id && friendIds.has(i.author_id))
               : feedTab === "Following"
@@ -1230,6 +1368,36 @@ export default function ReelsFeedPage() {
               : feedFilter === "photos" ? tabItems.filter(i => i.media_type === "image" && i.media_urls.length > 0)
               : feedFilter === "videos" ? tabItems.filter(i => i.media_type === "video")
               : tabItems.filter(i => !i.media_urls.length || !i.media_urls[0]);
+=======
+            // Apply feed mode (For You vs Following) first
+            let modeItems = feedMode === "following" && userId
+              ? items.filter(i => i.author_id && followingIds.has(i.author_id))
+              : items;
+            // Then apply trending-hashtag filter, if any
+            if (selectedHashtag) {
+              modeItems = modeItems.filter(i => postHasHashtag(i.caption, selectedHashtag));
+            }
+            const filteredItems = feedFilter === "all" ? modeItems
+              : feedFilter === "photos" ? modeItems.filter(i => i.media_type === "image" && i.media_urls.length > 0)
+              : feedFilter === "videos" ? modeItems.filter(i => i.media_type === "video")
+              : modeItems.filter(i => !i.media_urls.length || !i.media_urls[0]);
+            // Empty Following state — distinct from no filter results
+            if (feedMode === "following" && modeItems.length === 0 && userId) {
+              return (
+                <div className="flex flex-col items-center justify-center py-16 text-center px-6 gap-3">
+                  <Users className="h-12 w-12 text-muted-foreground/30" />
+                  <p className="text-base font-bold text-foreground">No posts from people you follow</p>
+                  <p className="text-sm text-muted-foreground max-w-[280px]">Follow creators to see their latest posts here. Switch to "For You" to discover new people.</p>
+                  <button
+                    onClick={() => setFeedMode("foryou")}
+                    className="mt-1 px-5 py-2 rounded-full bg-primary text-primary-foreground text-sm font-semibold active:scale-95 transition-transform"
+                  >
+                    Discover creators
+                  </button>
+                </div>
+              );
+            }
+>>>>>>> 716cc08ee549516371a6a5d93f3b5d895434aef7
             return filteredItems.length === 0 ? (
               selectedHashtag ? (
                 <div className="flex flex-col items-center justify-center py-16 text-center px-6 gap-3">

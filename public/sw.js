@@ -120,21 +120,97 @@ self.addEventListener('push', (event) => {
 self.addEventListener('notificationclick', (event) => {
   event.notification.close();
 
-  const data = event.notification.data;
+  const data = event.notification.data || {};
+  const type = data.type || data.notification_type || '';
   let urlToOpen = '/';
 
-  switch (data?.type) {
+  switch (type) {
+    // Rides
+    case 'driver_assigned':
+    case 'driver_en_route':
+    case 'driver_arrived':
+    case 'trip_started':
+      urlToOpen = data.trip_id ? `/rides/hub?tab=tracking` : '/rides/hub?tab=tracking';
+      break;
+    case 'trip_completed':
+    case 'ride_completed':
+      urlToOpen = '/rides/hub?tab=history';
+      break;
+    case 'ride_cancelled':
+    case 'ride_no_drivers':
+      urlToOpen = '/rides/hub';
+      break;
+
+    // Chat & Calls
+    case 'chat_message':
+    case 'new_message':
+      urlToOpen = data.sender_id ? `/chat?with=${data.sender_id}` : '/chat';
+      break;
+    case 'incoming_call':
+      urlToOpen = data.sender_id ? `/chat?with=${data.sender_id}&call=1` : '/chat';
+      break;
+
+    // Orders / Eats
+    case 'order_placed':
+    case 'order_status_update':
+    case 'order_ready':
+    case 'order_delivered':
+      urlToOpen = data.order_id ? `/eats/order/${data.order_id}` : '/eats';
+      break;
+
+    // Flights & Travel
     case 'price_drop':
+    case 'flight_price_alert':
+    case 'flight_status_update':
       urlToOpen = data.url || '/flights';
       break;
+
+    // Hotels & Lodging
     case 'booking_update':
-      urlToOpen = `/trips/${data.booking_id}`;
+    case 'reservation_confirmed':
+    case 'check_in_reminder':
+      urlToOpen = data.booking_id ? `/bookings/${data.booking_id}` : '/bookings';
       break;
+
+    // Payments & Wallet
+    case 'payment_update':
+    case 'payment_failed':
+    case 'wallet_credited':
+      urlToOpen = '/rides/hub?tab=wallet';
+      break;
+
+    // Loyalty & Rewards
+    case 'loyalty_reward':
+    case 'miles_earned':
+    case 'promo_code':
+      urlToOpen = '/rides/hub?tab=loyalty';
+      break;
+
+    // Delivery
+    case 'delivery_placed':
+    case 'delivery_picked_up':
+    case 'delivery_en_route':
+    case 'delivery_completed':
+      urlToOpen = data.delivery_id ? `/delivery/${data.delivery_id}` : '/delivery';
+      break;
+
+    // Support
     case 'support_reply':
-      urlToOpen = `/support/tickets/${data.ticket_id}`;
+      urlToOpen = data.ticket_id ? `/support/tickets/${data.ticket_id}` : '/support';
       break;
+
+    // Admin Broadcast
+    case 'admin_broadcast':
+      urlToOpen = data.url || '/';
+      break;
+
+    // Grocery / Store
+    case 'store_order_update':
+      urlToOpen = data.order_id ? `/orders/${data.order_id}` : '/grocery';
+      break;
+
     default:
-      urlToOpen = data?.url || '/';
+      urlToOpen = data.url || '/';
   }
 
   event.waitUntil(

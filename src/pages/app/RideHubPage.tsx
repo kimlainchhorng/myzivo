@@ -255,6 +255,7 @@ export default function RideHubPage() {
     { id: "travel", label: "Travel", icon: Plane, category: "business" },
   ];
 
+<<<<<<< HEAD
   const primaryTabs = [
     { id: "book",     label: t("ride.tab_book"),    icon: Zap },
     { id: "reserve",  label: t("ride.tab_reserve"),  icon: CalendarDays },
@@ -266,6 +267,8 @@ export default function RideHubPage() {
     { id: "features", label: "Features",             icon: Grid3x3 },
   ];
 
+=======
+>>>>>>> 716cc08ee549516371a6a5d93f3b5d895434aef7
   const categories: { id: TabCategory | "all"; label: string }[] = [
     { id: "all", label: "All" },
     { id: "book", label: "Book" },
@@ -453,6 +456,11 @@ export default function RideHubPage() {
               </div>
             )}
 
+<<<<<<< HEAD
+=======
+            {activeTab === "search" && <div className="p-4"><RideQuickSearch /></div>}
+
+>>>>>>> 716cc08ee549516371a6a5d93f3b5d895434aef7
             {/* ── Live Tracker ── */}
             {activeTab === "tracking" && <div className="p-4"><LiveTripTracker /></div>}
 

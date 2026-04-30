@@ -290,9 +290,14 @@ export const usePushNotifications = () => {
     checkSupport();
 
     if (!Capacitor.isNativePlatform()) {
-      // For web: auto-register if user is logged in
+      // Web: only auto-register if the user has already granted permission.
+      // Never call register() silently — it would trigger the browser permission
+      // prompt without the user asking. Explicit "Enable Notifications" buttons
+      // in Settings call register() directly.
       if (user?.id && "serviceWorker" in navigator && "PushManager" in window) {
-        register();
+        if (typeof Notification !== "undefined" && Notification.permission === "granted") {
+          register();
+        }
       }
       return;
     }

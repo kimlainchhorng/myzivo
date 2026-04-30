@@ -1894,12 +1894,12 @@ function CommentSheet({
   });
 
   const { data: comments = [], isLoading } = useQuery({
-    queryKey: ["post-comments", postId],
+    queryKey: ["post-comments", targetTable, rawPostId],
     queryFn: async () => {
-      const { data: rawComments, error } = await supabase
-        .from("store_post_comments")
+      const { data: rawComments, error } = await (supabase as any)
+        .from(targetTable)
         .select("*")
-        .eq("post_id", postId)
+        .eq("post_id", rawPostId)
         .order("created_at", { ascending: true });
       if (error) throw error;
       if (!rawComments || rawComments.length === 0) return [];

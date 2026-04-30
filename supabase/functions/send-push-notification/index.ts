@@ -12,6 +12,7 @@ const corsHeaders = {
 
 interface PushRequest {
   user_id?: string;
+  user_ids?: string[];  // batch: send to multiple users in one call
   device_token_id?: string;
   notification_type: string;
   title: string;
@@ -56,7 +57,7 @@ serve(async (req) => {
       );
     }
 
-    const { user_id, device_token_id, notification_type, title, body, data, image_url } = payload;
+    const { user_id, user_ids, device_token_id, notification_type, title, body, data, image_url } = payload;
 
     if (!title || !notification_type) {
       return new Response(
@@ -67,7 +68,7 @@ serve(async (req) => {
 
     // Get device tokens from device_tokens table
     let tokens: any[] = [];
-    
+
     if (device_token_id) {
       const { data: token } = await supabase
         .from("device_tokens")
@@ -75,28 +76,34 @@ serve(async (req) => {
         .eq("id", device_token_id)
         .eq("is_active", true)
         .single();
-      
       if (token) tokens = [token];
+    } else if (user_ids && user_ids.length > 0) {
+      // Batch: fetch tokens for all users in one query
+      const { data: batchTokens } = await supabase
+        .from("device_tokens")
+        .select("*")
+        .in("user_id", user_ids)
+        .eq("is_active", true);
+      tokens = batchTokens || [];
     } else if (user_id) {
       const { data: userTokens } = await supabase
         .from("device_tokens")
         .select("*")
         .eq("user_id", user_id)
         .eq("is_active", true);
-      
       tokens = userTokens || [];
     }
 
-    // Also get web push subscriptions from push_subscriptions table
+    // Also get web push subscriptions (VAPID)
     let webSubscriptions: any[] = [];
-    if (user_id) {
+    const targetUserIds = user_ids && user_ids.length > 0 ? user_ids : user_id ? [user_id] : [];
+    if (targetUserIds.length > 0) {
       const { data: subs } = await supabase
         .from("push_subscriptions")
         .select("*")
-        .eq("user_id", user_id)
+        .in("user_id", targetUserIds)
         .eq("is_active", true)
         .eq("platform", "web");
-      
       webSubscriptions = subs || [];
     }
 

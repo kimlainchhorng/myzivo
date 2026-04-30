@@ -3,6 +3,20 @@ import { supabase } from "@/integrations/supabase/client";
 import { useLodgingCatalog } from "./useLodgingCatalog";
 import { useLodgeHousekeeping } from "./useLodgeHousekeeping";
 
+/**
+ * Count rows that are active (default true). Pure function — exported for tests.
+ */
+export function countActive(rows: { active?: boolean }[] | undefined | null): number {
+  return (rows || []).filter((r) => r.active !== false).length;
+}
+
+/**
+ * Count reviews that haven't been replied to. Pure function — exported for tests.
+ */
+export function countAwaitingReply(rows: { reply?: string | null }[] | undefined | null): number {
+  return (rows || []).filter((r) => !r.reply).length;
+}
+
 export interface LodgingPhase5Counts {
   mealPlansCount: number;
   staffCount: number;
@@ -34,22 +48,13 @@ export function useLodgingPhase5Counts(storeId: string): LodgingPhase5Counts {
     },
   });
 
-  const activeRows = (rows: { active?: boolean }[] | undefined) =>
-    (rows || []).filter((r) => r.active !== false).length;
-
-  const reviewsAwaitingReply = (reviews.list.data || []).filter(
-    (r: any) => !r.reply,
-  ).length;
-
-  const housekeepingCount = (housekeeping.data || []).length;
-
   return {
-    mealPlansCount: activeRows(mealPlans.list.data),
+    mealPlansCount: countActive(mealPlans.list.data),
     staffCount: staff.data ?? 0,
-    channelConnectionsCount: activeRows(channels.list.data),
-    promotionsCount: activeRows(promotions.list.data),
-    housekeepingCount,
-    reviewsAwaitingReply,
+    channelConnectionsCount: countActive(channels.list.data),
+    promotionsCount: countActive(promotions.list.data),
+    housekeepingCount: (housekeeping.data || []).length,
+    reviewsAwaitingReply: countAwaitingReply(reviews.list.data),
     isLoading:
       mealPlans.list.isLoading ||
       promotions.list.isLoading ||
