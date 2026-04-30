@@ -77,7 +77,8 @@ function timeAgo(dateStr: string) {
 
 export default function RideNotificationCenter() {
   const { user } = useAuth();
-  const { isSubscribed, subscribe, unsubscribe, permission } = useWebPush();
+  const { subscription, subscribe, unsubscribe, permission } = useWebPush();
+  const isSubscribed = !!subscription;
   const [activeTab, setActiveTab] = useState<NotifTab>("feed");
   const [notifs, setNotifs] = useState<DBNotif[]>([]);
   const [loading, setLoading] = useState(true);

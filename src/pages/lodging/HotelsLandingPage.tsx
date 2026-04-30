@@ -280,6 +280,16 @@ export default function HotelsLandingPage() {
     });
   }, [all, search, activeFilter, activeTags, amenitiesMap]);
 
+  const sorted = useMemo(() => {
+    if (sortBy === "price_asc") {
+      return [...filtered].sort((a, b) => (minRates[a.id]?.base ?? Infinity) - (minRates[b.id]?.base ?? Infinity));
+    }
+    if (sortBy === "price_desc") {
+      return [...filtered].sort((a, b) => (minRates[b.id]?.base ?? 0) - (minRates[a.id]?.base ?? 0));
+    }
+    return filtered;
+  }, [filtered, sortBy, minRates]);
+
   const toggleTag = (id: string) => {
     setActiveTags((prev) => (prev.includes(id) ? prev.filter((t) => t !== id) : [...prev, id]));
   };
