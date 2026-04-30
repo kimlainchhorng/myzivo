@@ -936,6 +936,29 @@ export default function ReelsFeedPage() {
     return () => window.removeEventListener("zivo-chat-state", handler as EventListener);
   }, []);
 
+  // Facebook-style auto-hide header on scroll down, show on scroll up (mobile)
+  const [headerHidden, setHeaderHidden] = useState(false);
+  const lastScrollYRef = useRef(0);
+  useEffect(() => {
+    const SCROLL_THRESHOLD = 8; // ignore tiny jitter
+    const TOP_SAFE_ZONE = 80;   // always show near the top
+    const onScroll = () => {
+      const y = window.scrollY || window.pageYOffset || 0;
+      const dy = y - lastScrollYRef.current;
+      if (Math.abs(dy) < SCROLL_THRESHOLD) return;
+      if (y < TOP_SAFE_ZONE) {
+        setHeaderHidden(false);
+      } else if (dy > 0) {
+        setHeaderHidden(true);
+      } else {
+        setHeaderHidden(false);
+      }
+      lastScrollYRef.current = y;
+    };
+    window.addEventListener("scroll", onScroll, { passive: true });
+    return () => window.removeEventListener("scroll", onScroll);
+  }, []);
+
   return (
     <>
       <SEOHead
