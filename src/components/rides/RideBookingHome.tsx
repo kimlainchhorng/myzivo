@@ -2287,7 +2287,7 @@ export default function RideBookingHome({ initialSchedule = false, initialDestin
   const filteredVehiclesByCategory = vehicleOptions.filter((v) => v.category === rideCategory);
 
   return (
-    <div className="relative h-full safe-area-top overflow-hidden bg-background flex flex-col">
+    <div className="relative h-full overflow-hidden bg-background flex flex-col">
 
       {/* ═══════ GPS Permission Prompt ═══════ */}
       {locationPermission === "prompt" && (
