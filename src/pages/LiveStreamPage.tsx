@@ -48,7 +48,7 @@ import MicVocal from "lucide-react/dist/esm/icons/mic-vocal";
 import Hammer from "lucide-react/dist/esm/icons/hammer";
 import BookOpen from "lucide-react/dist/esm/icons/book-open";
 import Target from "lucide-react/dist/esm/icons/target";
-import Pin from "lucide-react/dist/esm/icons/pin";
+
 import Coins from "lucide-react/dist/esm/icons/coins";
 import Clock from "lucide-react/dist/esm/icons/clock";
 import Cake from "lucide-react/dist/esm/icons/cake";
@@ -137,8 +137,6 @@ function LiveWatcher({ stream, onLeave }: { stream: LiveStream; onLeave: () =>vo
  const verifiedCacheRef = useRef<Map<string, boolean>>(new Map());
  const [elapsed, setElapsed] = useState(0);
  const [streamEnded, setStreamEnded] = useState(stream.status === "ended");
- const [pinnedDismissed, setPinnedDismissed] = useState(false);
- const [followed, setFollowed] = useState(false);
 
  const lastTapRef = useRef<number>(0);
  const chatEndRef = useRef<HTMLDivElement>(null);
