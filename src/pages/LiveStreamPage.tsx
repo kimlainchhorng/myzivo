@@ -471,50 +471,12 @@ function LiveWatcher({ stream, onLeave }: { stream: LiveStream; onLeave: () =>vo
  {stream.host_name} has ended this live stream. Thanks for watching!
 </p>
 
-{/* Recommended next streams */}
-<div className="w-full max-w-md mb-6">
-  <p className="text-[11px] font-bold text-white/60 uppercase tracking-wider mb-2 text-center">Watch next</p>
-  <div className="grid grid-cols-2 gap-2">
-    {[
-      { name: "Maya Chen", topic: "Music", viewers: 12453, img: "https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?w=400&q=70&auto=format&fit=crop" },
-      { name: "Jin Park", topic: "Gaming", viewers: 8521, img: "https://images.unsplash.com/photo-1542751371-adc38448a05e?w=400&q=70&auto=format&fit=crop" },
-      { name: "Lily Wong", topic: "Beauty", viewers: 6210, img: "https://images.unsplash.com/photo-1487412947147-5cebf100ffc2?w=400&q=70&auto=format&fit=crop" },
-      { name: "Sofia G.", topic: "Fitness", viewers: 3942, img: "https://images.unsplash.com/photo-1517836357463-d25dfeac3438?w=400&q=70&auto=format&fit=crop" },
-    ].map((r) => (
-      <button
-        key={r.name}
-        onClick={onLeave}
-        className="rounded-2xl overflow-hidden bg-white/5 border border-white/10 active:scale-[0.97] transition-transform text-left"
-      >
-        <div className="relative aspect-[3/4]">
-          <img src={r.img} alt="" className="absolute inset-0 w-full h-full object-cover" />
-          <div className="absolute inset-0 bg-gradient-to-t from-black via-transparent to-transparent" />
-          <Badge className="absolute top-1.5 left-1.5 bg-red-500 text-white border-0 text-[8px] gap-0.5 animate-pulse">
-            <Radio className="w-1.5 h-1.5" />LIVE
-          </Badge>
-          <div className="absolute top-1.5 right-1.5 flex items-center gap-0.5 bg-black/60 rounded-full px-1.5 py-0.5">
-            <Eye className="w-2 h-2 text-white/80" />
-            <span className="text-[8px] text-white font-semibold">{(r.viewers / 1000).toFixed(1)}K</span>
-          </div>
-          <div className="absolute bottom-1.5 left-1.5 right-1.5">
-            <p className="text-white text-[10px] font-bold leading-tight drop-shadow truncate">{r.name}</p>
-            <p className="text-white/70 text-[8px]">{r.topic}</p>
-          </div>
-        </div>
-      </button>
-    ))}
-  </div>
-</div>
-
 <div className="flex gap-2">
   <button
     onClick={onLeave}
     className="px-5 py-2.5 rounded-full bg-white text-black font-semibold text-sm active:scale-95 transition-transform"
   >
     Back to Live
-  </button>
-  <button className="px-5 py-2.5 rounded-full bg-rose-500 text-white font-semibold text-sm active:scale-95 transition-transform">
-    Follow {stream.host_name.split(" ")[0]}
   </button>
 </div>
 </div>
