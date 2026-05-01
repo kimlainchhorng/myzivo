@@ -83,13 +83,13 @@ export default function FeaturedCarsSection() {
         </motion.div>
 
         <div className="flex gap-2 mb-8 overflow-x-auto scrollbar-hide pb-1">
-          {(useLive ? liveTypes : FILTER_TYPES).map((f) => (
+          {(useLive ? liveTypes : FILTER_TYPES).map((f: any) => (
             <button
-              key={f}
-              onClick={() => setActive(f)}
+              key={String(f)}
+              onClick={() => setActive(String(f))}
               className={cn(active === f ? "chip-active" : "chip-inactive", "whitespace-nowrap hover:-translate-y-0.5 active:scale-95 transition-all touch-manipulation min-h-[36px]")}
             >
-              {f}
+              {String(f)}
             </button>
           ))}
         </div>
