@@ -14,6 +14,7 @@ import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import SEOHead from "@/components/SEOHead";
 import FlightSearchSchema from "@/components/seo/FlightSearchSchema";
+import { BreadcrumbSchema } from "@/components/seo";
 import TravelFAQ from "@/components/shared/TravelFAQ";
 import GlobalTrustBar from "@/components/shared/GlobalTrustBar";
 import PartnerLogosStrip from "@/components/shared/PartnerLogosStrip";
@@ -80,12 +81,33 @@ export default function FlightToCity() {
   return (
     <div className="min-h-screen bg-background">
       {/* SEO Meta */}
-      <SEOHead 
-        title={pageTitle} 
+      <SEOHead
+        title={pageTitle}
         description={pageDescription}
         canonical={`https://hizivo.com/flights/to-${citySlug}`}
+        ogImage="/og-flights.jpg"
+        appLink={`zivo://flights/to/${citySlug}`}
+        structuredData={{
+          "@context": "https://schema.org",
+          "@type": "TravelAction",
+          "agent": { "@type": "Organization", "name": "ZIVO", "url": "https://hizivo.com" },
+          "toLocation": {
+            "@type": "City",
+            "name": cityName,
+            "url": `https://hizivo.com/flights/to-${citySlug}`,
+          },
+          "actionStatus": "https://schema.org/PotentialActionStatus",
+          "target": `https://hizivo.com${searchUrl}`,
+        }}
       />
       <FlightSearchSchema destination={cityName} />
+      <BreadcrumbSchema
+        items={[
+          { name: "Home", url: "/" },
+          { name: "Flights", url: "/flights" },
+          { name: `Flights to ${cityName}`, url: `/flights/to-${citySlug}` },
+        ]}
+      />
       
       <Header />
 

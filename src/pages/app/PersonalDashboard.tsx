@@ -1,34 +1,100 @@
 /**
- * PersonalDashboard — Employee hub (Facebook-style compact layout).
+ * PersonalDashboard — Employee + Career hub (Facebook-style compact layout).
  * Clock In/Out requires QR code scanning.
  */
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import {
-  ArrowLeft, Clock, Users, LogIn, LogOut, Calendar, Timer,
+  ArrowLeft, Clock, Users, Calendar, Timer,
   CheckCircle2, ChevronRight, FileText, Bell, HelpCircle, Settings, Briefcase,
-  QrCode, ScanLine,
+  QrCode, ScanLine, PlusCircle, Send, Search, IdCard, RefreshCw, DollarSign,
+  Sunrise, Sun, Moon, BarChart3, MessageCircle, Award, Trophy, Bookmark, Flame,
+  Building2, UserPlus, Target, TrendingUp, Wifi, Sparkles,
 } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { cn } from "@/lib/utils";
 import AppLayout from "@/components/app/AppLayout";
 import { QRScannerModal } from "@/components/clock/QRScannerModal";
 import { EmployeeQRDisplay } from "@/components/clock/EmployeeQRDisplay";
 import { toast } from "sonner";
+import { format, startOfWeek, startOfMonth, addDays, isAfter, isEqual, differenceInDays } from "date-fns";
+
+const DAILY_HOURS_TARGET = 8;
+
+const SHIFT_META: Record<string, { label: string; icon: typeof Sunrise; color: string; bg: string }> = {
+  morning: { label: "Morning", icon: Sunrise, color: "text-amber-500", bg: "bg-amber-500/10" },
+  afternoon: { label: "Afternoon", icon: Sun, color: "text-sky-500", bg: "bg-sky-500/10" },
+  evening: { label: "Evening", icon: Moon, color: "text-violet-500", bg: "bg-violet-500/10" },
+  full: { label: "Full Day", icon: Clock, color: "text-emerald-500", bg: "bg-emerald-500/10" },
+  split: { label: "Split", icon: BarChart3, color: "text-rose-500", bg: "bg-rose-500/10" },
+};
+
+type WorkAssignment = {
+  id: string; employeeId: string;
+  startDate: string; endDate: string;
+  shiftType: string; shiftStart: string; shiftEnd: string;
+  workDays: number[]; note?: string;
+};
+
+type DayOff = {
+  id: string; employeeId: string;
+  date: string; reason: string; note?: string;
+};
+
+type NotificationPreview = {
+  id: string;
+  title: string | null;
+  body: string | null;
+  created_at: string;
+};
 
 type ClockStatus = "clocked-out" | "clocked-in";
 
+type MenuItem = {
+  icon: typeof Clock;
+  label: string;
+  description: string;
+  onClick: () => void;
+  color: string;
+  bg: string;
+  badge?: number | string;
+};
+
+type MenuSection = {
+  title: string;
+  items: MenuItem[];
+};
+
 const PersonalDashboard = () => {
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
   const { user } = useAuth();
   const [clockStatus, setClockStatus] = useState<ClockStatus>("clocked-out");
   const [clockInTime, setClockInTime] = useState<Date | null>(null);
   const [totalHoursToday, setTotalHoursToday] = useState(0);
   const [scannerOpen, setScannerOpen] = useState(false);
   const [showMyQR, setShowMyQR] = useState(false);
+  const [refreshing, setRefreshing] = useState(false);
+  const [, setNowTick] = useState(0);
+
+  // Profile (avatar + name)
+  const { data: profile } = useQuery({
+    queryKey: ["my-profile-dashboard", user?.id],
+    enabled: !!user,
+    queryFn: async () => {
+      if (!user) return null;
+      const { data } = await supabase
+        .from("profiles")
+        .select("avatar_url, full_name")
+        .or(`id.eq.${user.id},user_id.eq.${user.id}`)
+        .limit(1)
+        .maybeSingle();
+      return data;
+    },
+  });
 
   // Fetch employee record
   const { data: empRecord } = useQuery({
@@ -37,7 +103,7 @@ const PersonalDashboard = () => {
       if (!user) return null;
       const { data: byUserId } = await supabase
         .from("store_employees")
-        .select("id, store_id, name, role")
+        .select("id, store_id, name, role, hourly_rate, pay_type")
         .eq("user_id", user.id)
         .eq("status", "active")
         .limit(1)
@@ -46,7 +112,7 @@ const PersonalDashboard = () => {
       if (user.email) {
         const { data: byEmail } = await supabase
           .from("store_employees")
-          .select("id, store_id, name, role")
+          .select("id, store_id, name, role, hourly_rate, pay_type")
           .eq("email", user.email)
           .eq("status", "active")
           .limit(1)
@@ -59,6 +125,176 @@ const PersonalDashboard = () => {
       return null;
     },
     enabled: !!user,
+  });
+
+  // Schedule data — used for upcoming shift + week summary
+  const { data: scheduleData } = useQuery({
+    queryKey: ["personal-dashboard-schedule", empRecord?.store_id],
+    enabled: !!empRecord?.store_id,
+    queryFn: async () => {
+      const key = `schedule_data_${empRecord!.store_id}`;
+      const { data } = await supabase.from("app_settings").select("value").eq("key", key).maybeSingle();
+      const value = (data?.value && typeof data.value === "object" ? (data.value as any) : {}) as {
+        assignments?: WorkAssignment[];
+        daysOff?: DayOff[];
+      };
+      return {
+        assignments: Array.isArray(value.assignments) ? value.assignments : [],
+        daysOff: Array.isArray(value.daysOff) ? value.daysOff : [],
+      };
+    },
+  });
+
+  // Recent unread notifications (top 3)
+  const { data: recentNotifs } = useQuery({
+    queryKey: ["personal-dashboard-recent-notifs", user?.id],
+    enabled: !!user,
+    queryFn: async (): Promise<NotificationPreview[]> => {
+      if (!user) return [];
+      const { data } = await (supabase as any)
+        .from("notifications")
+        .select("id, title, body, created_at")
+        .eq("user_id", user.id)
+        .eq("is_read", false)
+        .order("created_at", { ascending: false })
+        .limit(3);
+      return Array.isArray(data) ? data : [];
+    },
+  });
+
+  // Career stats — applications submitted, jobs posted, unread notifications
+  const { data: stats } = useQuery({
+    queryKey: ["personal-dashboard-stats", user?.id],
+    enabled: !!user,
+    queryFn: async () => {
+      if (!user) return { applications: 0, postedJobs: 0, notifications: 0 };
+      const [appsRes, jobsRes, notifRes] = await Promise.all([
+        (supabase as any)
+          .from("career_applications")
+          .select("id", { count: "exact", head: true })
+          .eq("applicant_id", user.id),
+        (supabase as any)
+          .from("career_jobs")
+          .select("id", { count: "exact", head: true })
+          .eq("posted_by", user.id)
+          .eq("status", "open"),
+        (supabase as any)
+          .from("notifications")
+          .select("id", { count: "exact", head: true })
+          .eq("user_id", user.id)
+          .eq("is_read", false),
+      ]);
+      return {
+        applications: appsRes?.count ?? 0,
+        postedJobs: jobsRes?.count ?? 0,
+        notifications: notifRes?.count ?? 0,
+      };
+    },
+  });
+
+  // Recommended (latest) open jobs — top 3
+  const { data: recommendedJobs } = useQuery({
+    queryKey: ["personal-dashboard-recommended-jobs"],
+    queryFn: async () => {
+      const { data } = await (supabase as any)
+        .from("career_jobs")
+        .select("id, title, location, is_remote, employment_type, career_companies(name, logo_url)")
+        .eq("status", "open")
+        .order("created_at", { ascending: false })
+        .limit(3);
+      return Array.isArray(data) ? data : [];
+    },
+  });
+
+  // Recent applicants on jobs the user has posted (employer side)
+  const { data: recentApplicants } = useQuery({
+    queryKey: ["personal-dashboard-recent-applicants", user?.id],
+    enabled: !!user,
+    queryFn: async () => {
+      if (!user) return [];
+      const { data } = await (supabase as any)
+        .from("career_applications")
+        .select("id, status, created_at, applicant_id, career_jobs!inner(id, title, posted_by)")
+        .eq("career_jobs.posted_by", user.id)
+        .order("created_at", { ascending: false })
+        .limit(3);
+      return Array.isArray(data) ? data : [];
+    },
+  });
+
+  // Clock-in streak — consecutive days with at least one clock_in, ending today or yesterday
+  const { data: streak } = useQuery({
+    queryKey: ["personal-dashboard-streak", empRecord?.id],
+    enabled: !!empRecord?.id,
+    queryFn: async () => {
+      const since = new Date();
+      since.setDate(since.getDate() - 60);
+      since.setHours(0, 0, 0, 0);
+      const { data } = await (supabase as any)
+        .from("store_time_entries")
+        .select("clock_in")
+        .eq("employee_id", empRecord!.id)
+        .gte("clock_in", since.toISOString())
+        .order("clock_in", { ascending: false });
+      const days = new Set<string>();
+      for (const e of (data ?? []) as Array<{ clock_in: string }>) {
+        days.add(format(new Date(e.clock_in), "yyyy-MM-dd"));
+      }
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      const yesterday = addDays(today, -1);
+      const todayStr = format(today, "yyyy-MM-dd");
+      const yStr = format(yesterday, "yyyy-MM-dd");
+      let cursor: Date;
+      if (days.has(todayStr)) cursor = today;
+      else if (days.has(yStr)) cursor = yesterday;
+      else return 0;
+      let count = 0;
+      while (days.has(format(cursor, "yyyy-MM-dd"))) {
+        count += 1;
+        cursor = addDays(cursor, -1);
+      }
+      return count;
+    },
+  });
+
+  // This-month worked hours + estimated earnings
+  const { data: monthlyTotals } = useQuery({
+    queryKey: ["personal-dashboard-month", empRecord?.id],
+    enabled: !!empRecord?.id,
+    queryFn: async () => {
+      const start = startOfMonth(new Date());
+      const { data } = await (supabase as any)
+        .from("store_time_entries")
+        .select("clock_in, clock_out")
+        .eq("employee_id", empRecord!.id)
+        .gte("clock_in", start.toISOString());
+      const entries: Array<{ clock_in: string; clock_out: string | null }> = Array.isArray(data) ? data : [];
+      const hours = entries
+        .filter((e) => e.clock_out)
+        .reduce((sum, e) => sum + (new Date(e.clock_out!).getTime() - new Date(e.clock_in).getTime()) / 3600000, 0);
+      const rate = (empRecord as any)?.hourly_rate ?? 0;
+      const payType = (empRecord as any)?.pay_type ?? "hourly";
+      const earnings = payType === "hourly" ? hours * rate : rate; // monthly = flat rate
+      return { hours, earnings, rate, payType };
+    },
+  });
+
+  // Coworkers currently clocked in at the same store (excluding self)
+  const { data: coworkersOnline } = useQuery({
+    queryKey: ["personal-dashboard-coworkers", empRecord?.store_id, empRecord?.id],
+    enabled: !!empRecord?.store_id,
+    queryFn: async () => {
+      const { data } = await (supabase as any)
+        .from("store_time_entries")
+        .select("id, clock_in, employee_id, store_employees!inner(id, name, role, store_id)")
+        .eq("store_employees.store_id", empRecord!.store_id)
+        .is("clock_out", null)
+        .order("clock_in", { ascending: false })
+        .limit(8);
+      const rows: any[] = Array.isArray(data) ? data : [];
+      return rows.filter((r) => r.employee_id !== empRecord?.id);
+    },
   });
 
   // Check if already clocked in today
@@ -102,6 +338,13 @@ const PersonalDashboard = () => {
       cancelled = true;
     };
   }, [empRecord?.id]);
+
+  // Live timer while clocked in — interval, not setTimeout-in-render
+  useEffect(() => {
+    if (clockStatus !== "clocked-in") return;
+    const id = setInterval(() => setNowTick((t) => t + 1), 1000);
+    return () => clearInterval(id);
+  }, [clockStatus]);
 
   const handleQRScan = async (token: string): Promise<{ success: boolean; message: string; action?: string }> => {
     try {
@@ -147,35 +390,329 @@ const PersonalDashboard = () => {
     return `${h}:${m}:${s}`;
   };
 
-  const [, setTick] = useState(0);
-  if (clockStatus === "clocked-in") {
-    setTimeout(() => setTick((t) => t + 1), 1000);
-  }
+  // Upcoming shift — find next assigned working day for this employee
+  const upcomingShift = useMemo(() => {
+    if (!empRecord?.id || !scheduleData) return null;
+    const myAssignments = scheduleData.assignments.filter((a) => a.employeeId === empRecord.id);
+    const myDaysOff = scheduleData.daysOff.filter((d) => d.employeeId === empRecord.id);
+    if (myAssignments.length === 0) return null;
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    for (let i = 0; i < 14; i++) {
+      const date = addDays(today, i);
+      const dateStr = format(date, "yyyy-MM-dd");
+      if (myDaysOff.some((d) => d.date === dateStr)) continue;
+      const dow = (date.getDay() + 6) % 7; // Monday-indexed
+      const a = myAssignments.find(
+        (x) =>
+          x.workDays.includes(dow) &&
+          (isAfter(date, new Date(x.startDate)) || isEqual(date, new Date(x.startDate))) &&
+          (isAfter(new Date(x.endDate), date) || isEqual(new Date(x.endDate), date))
+      );
+      if (a) {
+        return {
+          date,
+          shiftType: a.shiftType,
+          shiftStart: a.shiftStart,
+          shiftEnd: a.shiftEnd,
+          isToday: i === 0,
+          daysAway: i,
+        };
+      }
+    }
+    return null;
+  }, [empRecord?.id, scheduleData]);
 
-  const menuItems = [
-    { icon: Users, label: "Employees", description: "Manage team members", onClick: () => navigate("/personal/employees"), color: "text-blue-500", bg: "bg-blue-500/10" },
-    { icon: Briefcase, label: "Apply Job", description: "Create CV & apply", onClick: () => navigate("/personal/apply-job"), color: "text-indigo-500", bg: "bg-indigo-500/10" },
-    { icon: Calendar, label: "Schedule", description: "View work schedule", onClick: () => navigate("/personal/schedule"), color: "text-purple-500", bg: "bg-purple-500/10" },
-    { icon: Timer, label: "Timesheet", description: "View hours history", onClick: () => navigate("/personal/timesheet"), color: "text-amber-500", bg: "bg-amber-500/10" },
-    { icon: FileText, label: "Pay Stubs", description: "Earnings & deductions", onClick: () => navigate("/personal/pay-stubs"), color: "text-emerald-500", bg: "bg-emerald-500/10" },
-    { icon: Bell, label: "Notifications", description: "Alerts & reminders", onClick: () => navigate("/personal/notifications"), color: "text-rose-500", bg: "bg-rose-500/10" },
-    { icon: HelpCircle, label: "Help & Support", description: "FAQs & contact", onClick: () => navigate("/personal/help"), color: "text-sky-500", bg: "bg-sky-500/10" },
-    { icon: Settings, label: "Settings", description: "Account preferences", onClick: () => navigate("/personal/settings"), color: "text-muted-foreground", bg: "bg-muted/60" },
+  // Week summary — hours assigned this week + estimated earnings
+  const weekSummary = useMemo(() => {
+    if (!empRecord?.id || !scheduleData) return null;
+    const myAssignments = scheduleData.assignments.filter((a) => a.employeeId === empRecord.id);
+    const myDaysOff = scheduleData.daysOff.filter((d) => d.employeeId === empRecord.id);
+    const weekStart = startOfWeek(new Date(), { weekStartsOn: 1 });
+    let shifts = 0;
+    let hours = 0;
+    for (let i = 0; i < 7; i++) {
+      const date = addDays(weekStart, i);
+      const dateStr = format(date, "yyyy-MM-dd");
+      if (myDaysOff.some((d) => d.date === dateStr)) continue;
+      const dow = (date.getDay() + 6) % 7;
+      const a = myAssignments.find(
+        (x) =>
+          x.workDays.includes(dow) &&
+          (isAfter(date, new Date(x.startDate)) || isEqual(date, new Date(x.startDate))) &&
+          (isAfter(new Date(x.endDate), date) || isEqual(new Date(x.endDate), date))
+      );
+      if (a) {
+        shifts += 1;
+        const [sh, sm] = (a.shiftStart || "09:00").split(":").map(Number);
+        const [eh, em] = (a.shiftEnd || "17:00").split(":").map(Number);
+        let h = eh - sh + (em - sm) / 60;
+        if (h < 0) h += 24;
+        hours += h;
+      }
+    }
+    const rate = (empRecord as any).hourly_rate ?? 0;
+    const payType = (empRecord as any).pay_type ?? "hourly";
+    const earnings =
+      payType === "monthly"
+        ? (rate / 4.33) * (shifts > 0 ? shifts / 5 : 0)
+        : hours * rate;
+    return { shifts, hours, earnings, payType, rate };
+  }, [empRecord, scheduleData]);
+
+  // Today's schedule status — working / day off / not scheduled
+  const todayStatus = useMemo(() => {
+    if (!empRecord?.id || !scheduleData) return null;
+    const myAssignments = scheduleData.assignments.filter((a) => a.employeeId === empRecord.id);
+    const myDaysOff = scheduleData.daysOff.filter((d) => d.employeeId === empRecord.id);
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const todayStr = format(today, "yyyy-MM-dd");
+    const off = myDaysOff.find((d) => d.date === todayStr);
+    if (off) return { type: "off" as const, reason: off.reason || "Day off" };
+    const dow = (today.getDay() + 6) % 7;
+    const a = myAssignments.find(
+      (x) =>
+        x.workDays.includes(dow) &&
+        (isAfter(today, new Date(x.startDate)) || isEqual(today, new Date(x.startDate))) &&
+        (isAfter(new Date(x.endDate), today) || isEqual(new Date(x.endDate), today))
+    );
+    if (a) return { type: "shift" as const, shiftStart: a.shiftStart, shiftEnd: a.shiftEnd, shiftType: a.shiftType };
+    if (myAssignments.length === 0) return null;
+    return { type: "free" as const };
+  }, [empRecord?.id, scheduleData]);
+
+  const handleRefresh = async () => {
+    setRefreshing(true);
+    await Promise.all([
+      queryClient.invalidateQueries({ queryKey: ["personal-dashboard-stats"] }),
+      queryClient.invalidateQueries({ queryKey: ["personal-dashboard-schedule"] }),
+      queryClient.invalidateQueries({ queryKey: ["personal-dashboard-recent-notifs"] }),
+      queryClient.invalidateQueries({ queryKey: ["personal-dashboard-recommended-jobs"] }),
+      queryClient.invalidateQueries({ queryKey: ["personal-dashboard-recent-applicants"] }),
+      queryClient.invalidateQueries({ queryKey: ["personal-dashboard-streak"] }),
+      queryClient.invalidateQueries({ queryKey: ["personal-dashboard-month"] }),
+      queryClient.invalidateQueries({ queryKey: ["personal-dashboard-coworkers"] }),
+      queryClient.invalidateQueries({ queryKey: ["my-employee-record-dashboard"] }),
+      queryClient.invalidateQueries({ queryKey: ["my-profile-dashboard"] }),
+    ]);
+    setRefreshing(false);
+    toast.success("Dashboard refreshed");
+  };
+
+  const greeting = (() => {
+    const h = new Date().getHours();
+    if (h < 12) return "Good morning";
+    if (h < 18) return "Good afternoon";
+    return "Good evening";
+  })();
+
+  const displayName =
+    profile?.full_name?.trim() ||
+    empRecord?.name ||
+    user?.email?.split("@")[0] ||
+    "there";
+  const initials = displayName
+    .split(/\s+/)
+    .map((p) => p[0])
+    .filter(Boolean)
+    .slice(0, 2)
+    .join("")
+    .toUpperCase();
+
+  // Profile completion — checks loaded fields; only meaningful once profile data has fetched
+  const profileChecks = [
+    { label: "Avatar", done: !!profile?.avatar_url },
+    { label: "Full name", done: !!profile?.full_name?.trim() },
+    { label: "Application", done: (stats?.applications ?? 0) > 0 },
+  ];
+  const profileDone = profileChecks.filter((c) => c.done).length;
+  const profilePct = Math.round((profileDone / profileChecks.length) * 100);
+  const profileNeedsWork = profile !== undefined && profilePct < 100;
+
+  const sections: MenuSection[] = [
+    {
+      title: "Career",
+      items: [
+        { icon: Briefcase, label: "Apply for Jobs", description: "Browse openings & apply", onClick: () => navigate("/personal/apply-job"), color: "text-indigo-500", bg: "bg-indigo-500/10" },
+        { icon: Send, label: "My Applications", description: "Track submitted applications", onClick: () => navigate("/personal/my-applications"), color: "text-blue-500", bg: "bg-blue-500/10", badge: stats?.applications || undefined },
+        { icon: IdCard, label: "Create / Edit CV", description: "Build your resume", onClick: () => navigate("/personal/create-cv"), color: "text-fuchsia-500", bg: "bg-fuchsia-500/10" },
+        { icon: Search, label: "Find Employees", description: "Hire talent for your shop", onClick: () => navigate("/personal/find-employee"), color: "text-cyan-500", bg: "bg-cyan-500/10" },
+        { icon: PlusCircle, label: "Post a Job", description: "Open positions at your shop", onClick: () => navigate("/personal/employer"), color: "text-emerald-500", bg: "bg-emerald-500/10", badge: stats?.postedJobs || undefined },
+      ],
+    },
+    {
+      title: "Workplace",
+      items: [
+        { icon: Users, label: "Employees", description: "Manage team members", onClick: () => navigate("/personal/employees"), color: "text-blue-500", bg: "bg-blue-500/10" },
+        { icon: Calendar, label: "Schedule", description: "View work schedule", onClick: () => navigate("/personal/schedule"), color: "text-purple-500", bg: "bg-purple-500/10" },
+        { icon: Timer, label: "Timesheet", description: "View hours history", onClick: () => navigate("/personal/timesheet"), color: "text-amber-500", bg: "bg-amber-500/10" },
+        { icon: FileText, label: "Pay Stubs", description: "Earnings & deductions", onClick: () => navigate("/personal/pay-stubs"), color: "text-emerald-500", bg: "bg-emerald-500/10" },
+      ],
+    },
+    {
+      title: "Engage",
+      items: [
+        { icon: MessageCircle, label: "Team Chat", description: "Message coworkers & managers", onClick: () => navigate("/chat"), color: "text-teal-500", bg: "bg-teal-500/10" },
+        { icon: Bookmark, label: "Saved Jobs", description: "Bookmarked listings", onClick: () => navigate("/saved"), color: "text-orange-500", bg: "bg-orange-500/10" },
+        { icon: Award, label: "Badges", description: "Achievements you've earned", onClick: () => navigate("/badges"), color: "text-yellow-500", bg: "bg-yellow-500/10" },
+        { icon: Trophy, label: "Rewards", description: "Redeem points & perks", onClick: () => navigate("/rewards"), color: "text-pink-500", bg: "bg-pink-500/10" },
+      ],
+    },
+    {
+      title: "Account",
+      items: [
+        { icon: Bell, label: "Notifications", description: "Alerts & reminders", onClick: () => navigate("/personal/notifications"), color: "text-rose-500", bg: "bg-rose-500/10", badge: stats?.notifications || undefined },
+        { icon: HelpCircle, label: "Help & Support", description: "FAQs & contact", onClick: () => navigate("/personal/help"), color: "text-sky-500", bg: "bg-sky-500/10" },
+        { icon: Settings, label: "Settings", description: "Account preferences", onClick: () => navigate("/personal/settings"), color: "text-muted-foreground", bg: "bg-muted/60" },
+      ],
+    },
   ];
 
   return (
     <AppLayout title="Personal" hideHeader>
       <div className="flex flex-col px-4 pb-24" style={{ paddingTop: "max(calc(env(safe-area-inset-top, 0px) + 0.75rem), 12px)" }}>
         {/* Header */}
-        <div className="flex items-center gap-2.5 mb-4">
+        <div className="flex items-center gap-2.5 mb-3">
           <button
             onClick={() => navigate(-1)}
             className="w-8 h-8 rounded-full bg-muted/60 flex items-center justify-center touch-manipulation active:scale-90 transition-transform"
           >
             <ArrowLeft className="w-4 h-4" />
           </button>
-          <h1 className="font-bold text-[17px]">Personal Account</h1>
+          <h1 className="font-bold text-[17px] flex-1">Personal Account</h1>
+          <button
+            onClick={handleRefresh}
+            disabled={refreshing}
+            aria-label="Refresh"
+            className="w-8 h-8 rounded-full bg-muted/60 flex items-center justify-center touch-manipulation active:scale-90 transition-transform disabled:opacity-50"
+          >
+            <RefreshCw className={cn("w-3.5 h-3.5", refreshing && "animate-spin")} />
+          </button>
         </div>
+
+        {/* Greeting + profile */}
+        <motion.div
+          initial={{ opacity: 0, y: 6 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="flex items-center gap-3 mb-3"
+        >
+          <div className="w-11 h-11 rounded-full bg-gradient-to-br from-primary to-primary/60 flex items-center justify-center text-white font-semibold text-[14px] overflow-hidden shrink-0">
+            {profile?.avatar_url ? (
+              <img src={profile.avatar_url} alt="" className="w-full h-full object-cover" />
+            ) : (
+              <span>{initials || "U"}</span>
+            )}
+          </div>
+          <div className="flex-1 min-w-0">
+            <p className="text-[11px] text-muted-foreground leading-tight">{greeting},</p>
+            <p className="font-bold text-[15px] truncate leading-tight">{displayName}</p>
+            {empRecord?.role && (
+              <p className="text-[11px] text-muted-foreground truncate leading-tight">
+                {empRecord.role}
+              </p>
+            )}
+          </div>
+          {streak && streak > 0 ? (
+            <div className="flex items-center gap-1 px-2 py-1 rounded-full bg-orange-500/10 border border-orange-500/20 shrink-0">
+              <Flame className="w-3 h-3 text-orange-500" />
+              <span className="text-[11px] font-bold text-orange-600 dark:text-orange-400 leading-none">
+                {streak}d
+              </span>
+            </div>
+          ) : null}
+        </motion.div>
+
+        {/* Profile completion banner */}
+        {profileNeedsWork && (
+          <motion.button
+            initial={{ opacity: 0, y: 6 }}
+            animate={{ opacity: 1, y: 0 }}
+            onClick={() => navigate("/personal/settings")}
+            className="w-full text-left rounded-xl p-3 mb-3 border border-primary/20 bg-primary/5 active:bg-primary/10 transition-colors"
+          >
+            <div className="flex items-center gap-2 mb-1.5">
+              <Sparkles className="w-3.5 h-3.5 text-primary" />
+              <p className="text-[12px] font-semibold flex-1">Complete your profile</p>
+              <span className="text-[11px] font-bold text-primary">{profilePct}%</span>
+            </div>
+            <div className="h-1.5 w-full rounded-full bg-muted overflow-hidden">
+              <div
+                className="h-full bg-primary transition-all"
+                style={{ width: `${profilePct}%` }}
+              />
+            </div>
+            <p className="text-[10px] text-muted-foreground mt-1.5">
+              {profileChecks.filter((c) => !c.done).map((c) => c.label).join(" · ")} pending
+            </p>
+          </motion.button>
+        )}
+
+        {/* Quick Actions row */}
+        <div className="grid grid-cols-4 gap-2 mb-3">
+          {[
+            { icon: ScanLine, label: "Scan", onClick: () => setScannerOpen(true), color: "text-emerald-500", bg: "bg-emerald-500/10" },
+            { icon: MessageCircle, label: "Chat", onClick: () => navigate("/chat"), color: "text-teal-500", bg: "bg-teal-500/10" },
+            { icon: Briefcase, label: "Jobs", onClick: () => navigate("/personal/apply-job"), color: "text-indigo-500", bg: "bg-indigo-500/10" },
+            { icon: HelpCircle, label: "Help", onClick: () => navigate("/personal/help"), color: "text-sky-500", bg: "bg-sky-500/10" },
+          ].map((qa) => (
+            <button
+              key={qa.label}
+              onClick={qa.onClick}
+              className="flex flex-col items-center gap-1 p-2 rounded-xl border border-border/40 bg-card active:bg-muted/40 transition-colors"
+            >
+              <div className={cn("w-8 h-8 rounded-full flex items-center justify-center", qa.bg)}>
+                <qa.icon className={cn("w-4 h-4", qa.color)} />
+              </div>
+              <span className="text-[10.5px] font-medium leading-none">{qa.label}</span>
+            </button>
+          ))}
+        </div>
+
+        {/* Today's status banner */}
+        {todayStatus && (
+          <div
+            className={cn(
+              "rounded-xl px-3 py-2 mb-3 border flex items-center gap-2.5",
+              todayStatus.type === "off"
+                ? "bg-orange-500/5 border-orange-500/20"
+                : todayStatus.type === "shift"
+                ? "bg-emerald-500/5 border-emerald-500/20"
+                : "bg-muted/40 border-border/40"
+            )}
+          >
+            <div
+              className={cn(
+                "w-7 h-7 rounded-full flex items-center justify-center shrink-0",
+                todayStatus.type === "off"
+                  ? "bg-orange-500/15"
+                  : todayStatus.type === "shift"
+                  ? "bg-emerald-500/15"
+                  : "bg-muted/60"
+              )}
+            >
+              {todayStatus.type === "off" ? (
+                <Sunrise className="w-3.5 h-3.5 text-orange-500" />
+              ) : todayStatus.type === "shift" ? (
+                <Calendar className="w-3.5 h-3.5 text-emerald-500" />
+              ) : (
+                <Calendar className="w-3.5 h-3.5 text-muted-foreground" />
+              )}
+            </div>
+            <div className="flex-1 min-w-0">
+              <p className="text-[11px] text-muted-foreground uppercase tracking-wide leading-tight">
+                Today · {format(new Date(), "EEE, MMM d")}
+              </p>
+              <p className="text-[12.5px] font-semibold leading-tight">
+                {todayStatus.type === "off"
+                  ? `Day off · ${todayStatus.reason}`
+                  : todayStatus.type === "shift"
+                  ? `Working ${todayStatus.shiftStart}–${todayStatus.shiftEnd}`
+                  : "Not scheduled today"}
+              </p>
+            </div>
+          </div>
+        )}
 
         {/* Clock Card */}
         <motion.div
@@ -208,6 +745,30 @@ const PersonalDashboard = () => {
           <div className="text-center mb-3">
             <p className="text-2xl font-mono font-bold tracking-wider">{formatElapsed()}</p>
             <p className="text-[11px] text-muted-foreground">Today: {totalHoursToday.toFixed(1)}h logged</p>
+          </div>
+
+          {/* Today's goal progress */}
+          <div className="mb-3">
+            <div className="flex items-center justify-between mb-1">
+              <div className="flex items-center gap-1">
+                <Target className="w-3 h-3 text-muted-foreground" />
+                <span className="text-[10.5px] font-medium text-muted-foreground">Daily goal</span>
+              </div>
+              <span className="text-[10.5px] text-muted-foreground">
+                {Math.min(totalHoursToday, DAILY_HOURS_TARGET).toFixed(1)} / {DAILY_HOURS_TARGET}h
+              </span>
+            </div>
+            <div className="h-1.5 w-full rounded-full bg-muted overflow-hidden">
+              <div
+                className={cn(
+                  "h-full transition-all",
+                  totalHoursToday >= DAILY_HOURS_TARGET ? "bg-emerald-500" : "bg-primary"
+                )}
+                style={{
+                  width: `${Math.min(100, (totalHoursToday / DAILY_HOURS_TARGET) * 100)}%`,
+                }}
+              />
+            </div>
           </div>
 
           {/* QR-based Clock In/Out buttons */}
@@ -254,28 +815,368 @@ const PersonalDashboard = () => {
           )}
         </motion.div>
 
-        {/* Menu List */}
-        <div className="rounded-xl border border-border/40 bg-card overflow-hidden divide-y divide-border/30">
-          {menuItems.map((item, i) => (
+        {/* Quick stats strip */}
+        <div className="grid grid-cols-3 gap-2 mb-3">
+          <button
+            onClick={() => navigate("/personal/my-applications")}
+            className="rounded-xl border border-border/40 bg-card p-2.5 text-left active:bg-muted/40 transition-colors"
+          >
+            <p className="text-[10px] text-muted-foreground uppercase tracking-wide">Applied</p>
+            <p className="text-lg font-bold leading-tight">{stats?.applications ?? "—"}</p>
+            <p className="text-[10px] text-muted-foreground">jobs</p>
+          </button>
+          <button
+            onClick={() => navigate("/personal/employer")}
+            className="rounded-xl border border-border/40 bg-card p-2.5 text-left active:bg-muted/40 transition-colors"
+          >
+            <p className="text-[10px] text-muted-foreground uppercase tracking-wide">Posted</p>
+            <p className="text-lg font-bold leading-tight">{stats?.postedJobs ?? "—"}</p>
+            <p className="text-[10px] text-muted-foreground">openings</p>
+          </button>
+          <button
+            onClick={() => navigate("/personal/timesheet")}
+            className="rounded-xl border border-border/40 bg-card p-2.5 text-left active:bg-muted/40 transition-colors"
+          >
+            <p className="text-[10px] text-muted-foreground uppercase tracking-wide">Today</p>
+            <p className="text-lg font-bold leading-tight">{totalHoursToday.toFixed(1)}h</p>
+            <p className="text-[10px] text-muted-foreground">worked</p>
+          </button>
+        </div>
+
+        {/* Upcoming shift */}
+        {upcomingShift && (() => {
+          const meta = SHIFT_META[upcomingShift.shiftType] || SHIFT_META.full;
+          const Icon = meta.icon;
+          const whenLabel = upcomingShift.isToday
+            ? "Today"
+            : upcomingShift.daysAway === 1
+            ? "Tomorrow"
+            : format(upcomingShift.date, "EEE, MMM d");
+          return (
             <motion.button
-              key={item.label}
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              transition={{ delay: 0.05 + i * 0.03 }}
-              onClick={item.onClick}
-              className="w-full flex items-center gap-3 px-3.5 py-3 hover:bg-muted/30 transition-colors touch-manipulation active:bg-muted/50 text-left"
+              initial={{ opacity: 0, y: 6 }}
+              animate={{ opacity: 1, y: 0 }}
+              onClick={() => navigate("/personal/schedule")}
+              className="w-full text-left rounded-xl p-3 mb-3 border border-border/40 bg-card flex items-center gap-3 active:bg-muted/40 transition-colors"
             >
-              <div className={cn("w-8 h-8 rounded-full flex items-center justify-center shrink-0", item.bg)}>
-                <item.icon className={cn("w-4 h-4", item.color)} />
+              <div className={cn("w-9 h-9 rounded-full flex items-center justify-center shrink-0", meta.bg)}>
+                <Icon className={cn("w-4 h-4", meta.color)} />
               </div>
               <div className="flex-1 min-w-0">
-                <p className="font-medium text-[13px] leading-tight">{item.label}</p>
-                <p className="text-[11px] text-muted-foreground leading-tight">{item.description}</p>
+                <p className="text-[11px] text-muted-foreground uppercase tracking-wide leading-tight">
+                  Next Shift · {whenLabel}
+                </p>
+                <p className="font-semibold text-[13px] leading-tight truncate">
+                  {meta.label} · {upcomingShift.shiftStart}–{upcomingShift.shiftEnd}
+                </p>
               </div>
               <ChevronRight className="w-3.5 h-3.5 text-muted-foreground/40 shrink-0" />
             </motion.button>
-          ))}
-        </div>
+          );
+        })()}
+
+        {/* Week summary */}
+        {weekSummary && weekSummary.shifts > 0 && (
+          <motion.button
+            initial={{ opacity: 0, y: 6 }}
+            animate={{ opacity: 1, y: 0 }}
+            onClick={() => navigate("/personal/schedule")}
+            className="w-full text-left rounded-xl p-3 mb-3 border border-border/40 bg-card active:bg-muted/40 transition-colors"
+          >
+            <div className="flex items-center justify-between mb-2">
+              <p className="text-[11px] text-muted-foreground uppercase tracking-wide">This Week</p>
+              <span className="text-[10px] text-muted-foreground">tap to view</span>
+            </div>
+            <div className="grid grid-cols-3 gap-2">
+              <div>
+                <p className="text-[10px] text-muted-foreground">Shifts</p>
+                <p className="text-base font-bold">{weekSummary.shifts}</p>
+              </div>
+              <div>
+                <p className="text-[10px] text-muted-foreground">Hours</p>
+                <p className="text-base font-bold">{weekSummary.hours.toFixed(1)}</p>
+              </div>
+              <div>
+                <p className="text-[10px] text-muted-foreground flex items-center gap-0.5">
+                  <DollarSign className="w-2.5 h-2.5" /> Est.
+                </p>
+                <p className="text-base font-bold">
+                  {weekSummary.rate > 0 ? `$${weekSummary.earnings.toFixed(0)}` : "—"}
+                </p>
+              </div>
+            </div>
+          </motion.button>
+        )}
+
+        {/* This Month earnings */}
+        {monthlyTotals && monthlyTotals.hours > 0 && (
+          <motion.button
+            initial={{ opacity: 0, y: 6 }}
+            animate={{ opacity: 1, y: 0 }}
+            onClick={() => navigate("/personal/pay-stubs")}
+            className="w-full text-left rounded-xl p-3 mb-3 border border-border/40 bg-gradient-to-br from-emerald-500/10 to-transparent active:bg-emerald-500/15 transition-colors"
+          >
+            <div className="flex items-center justify-between mb-1">
+              <div className="flex items-center gap-1.5">
+                <TrendingUp className="w-3.5 h-3.5 text-emerald-500" />
+                <p className="text-[11px] text-muted-foreground uppercase tracking-wide">This Month</p>
+              </div>
+              <span className="text-[10px] text-muted-foreground">
+                {format(new Date(), "MMM yyyy")}
+              </span>
+            </div>
+            <div className="flex items-end gap-3">
+              <div>
+                <p className="text-[10px] text-muted-foreground">Hours worked</p>
+                <p className="text-lg font-bold leading-tight">{monthlyTotals.hours.toFixed(1)}h</p>
+              </div>
+              <div className="border-l border-border/40 pl-3">
+                <p className="text-[10px] text-muted-foreground flex items-center gap-0.5">
+                  <DollarSign className="w-2.5 h-2.5" /> Earned
+                </p>
+                <p className="text-lg font-bold leading-tight text-emerald-600 dark:text-emerald-400">
+                  {monthlyTotals.rate > 0 ? `$${monthlyTotals.earnings.toFixed(0)}` : "—"}
+                </p>
+              </div>
+            </div>
+          </motion.button>
+        )}
+
+        {/* Coworkers online now */}
+        {coworkersOnline && coworkersOnline.length > 0 && (
+          <div className="mb-3">
+            <div className="flex items-center justify-between mb-1.5 px-1">
+              <div className="flex items-center gap-1.5">
+                <Wifi className="w-3 h-3 text-emerald-500" />
+                <p className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">
+                  Online Now
+                </p>
+                <span className="text-[10px] text-emerald-600 dark:text-emerald-400 font-bold">
+                  {coworkersOnline.length}
+                </span>
+              </div>
+              <button
+                onClick={() => navigate("/personal/employees")}
+                className="text-[11px] text-primary font-medium"
+              >
+                Team
+              </button>
+            </div>
+            <div className="rounded-xl border border-border/40 bg-card p-2.5">
+              <div className="flex flex-wrap gap-2">
+                {coworkersOnline.map((c: any) => {
+                  const name = c.store_employees?.name || "Coworker";
+                  const ini = name
+                    .split(/\s+/)
+                    .map((p: string) => p[0])
+                    .filter(Boolean)
+                    .slice(0, 2)
+                    .join("")
+                    .toUpperCase();
+                  return (
+                    <div
+                      key={c.id}
+                      className="flex items-center gap-1.5 pl-1 pr-2 py-1 rounded-full bg-muted/40 border border-border/30"
+                    >
+                      <div className="relative">
+                        <div className="w-5 h-5 rounded-full bg-gradient-to-br from-primary to-primary/60 flex items-center justify-center text-white text-[9px] font-bold">
+                          {ini || "?"}
+                        </div>
+                        <div className="absolute -bottom-0.5 -right-0.5 w-2 h-2 rounded-full bg-emerald-500 border border-card" />
+                      </div>
+                      <span className="text-[11px] font-medium leading-none truncate max-w-[80px]">
+                        {name.split(" ")[0]}
+                      </span>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Recent unread notifications */}
+        {recentNotifs && recentNotifs.length > 0 && (
+          <div className="mb-3">
+            <div className="flex items-center justify-between mb-1.5 px-1">
+              <p className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">
+                Recent Alerts
+              </p>
+              <button
+                onClick={() => navigate("/personal/notifications")}
+                className="text-[11px] text-primary font-medium"
+              >
+                View all
+              </button>
+            </div>
+            <div className="rounded-xl border border-border/40 bg-card overflow-hidden divide-y divide-border/30">
+              {recentNotifs.map((n) => (
+                <button
+                  key={n.id}
+                  onClick={() => navigate("/personal/notifications")}
+                  className="w-full flex items-start gap-2.5 px-3 py-2.5 hover:bg-muted/30 active:bg-muted/50 transition-colors text-left"
+                >
+                  <div className="w-1.5 h-1.5 rounded-full bg-rose-500 mt-1.5 shrink-0" />
+                  <div className="flex-1 min-w-0">
+                    <p className="font-medium text-[12px] leading-tight truncate">
+                      {n.title || "Notification"}
+                    </p>
+                    {n.body && (
+                      <p className="text-[11px] text-muted-foreground leading-tight truncate mt-0.5">
+                        {n.body}
+                      </p>
+                    )}
+                  </div>
+                  <p className="text-[10px] text-muted-foreground shrink-0 mt-0.5">
+                    {(() => {
+                      const days = differenceInDays(new Date(), new Date(n.created_at));
+                      if (days === 0) return "today";
+                      if (days === 1) return "1d";
+                      return `${days}d`;
+                    })()}
+                  </p>
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* Recommended Jobs preview */}
+        {recommendedJobs && recommendedJobs.length > 0 && (
+          <div className="mb-3">
+            <div className="flex items-center justify-between mb-1.5 px-1">
+              <p className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">
+                Latest Jobs
+              </p>
+              <button
+                onClick={() => navigate("/personal/find-employee")}
+                className="text-[11px] text-primary font-medium"
+              >
+                Browse all
+              </button>
+            </div>
+            <div className="rounded-xl border border-border/40 bg-card overflow-hidden divide-y divide-border/30">
+              {recommendedJobs.map((j: any) => (
+                <button
+                  key={j.id}
+                  onClick={() => navigate(`/personal/jobs/${j.id}`)}
+                  className="w-full flex items-center gap-3 px-3 py-2.5 hover:bg-muted/30 active:bg-muted/50 transition-colors text-left"
+                >
+                  <div className="w-9 h-9 rounded-lg bg-muted flex items-center justify-center shrink-0 overflow-hidden">
+                    {j.career_companies?.logo_url ? (
+                      <img src={j.career_companies.logo_url} alt="" className="w-full h-full object-cover" />
+                    ) : (
+                      <Building2 className="w-4 h-4 text-muted-foreground" />
+                    )}
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="font-medium text-[12.5px] leading-tight truncate">{j.title}</p>
+                    <p className="text-[11px] text-muted-foreground leading-tight truncate">
+                      {j.career_companies?.name || "Company"}
+                      {j.location ? ` · ${j.location}` : ""}
+                      {j.is_remote ? " · Remote" : ""}
+                    </p>
+                  </div>
+                  {j.employment_type && (
+                    <span className="text-[10px] uppercase tracking-wide px-1.5 py-0.5 rounded bg-muted/60 text-muted-foreground shrink-0">
+                      {String(j.employment_type).replace("_", " ")}
+                    </span>
+                  )}
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* Recent applicants (employer) */}
+        {recentApplicants && recentApplicants.length > 0 && (
+          <div className="mb-3">
+            <div className="flex items-center justify-between mb-1.5 px-1">
+              <p className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">
+                Recent Applicants
+              </p>
+              <button
+                onClick={() => navigate("/personal/employer")}
+                className="text-[11px] text-primary font-medium"
+              >
+                Manage
+              </button>
+            </div>
+            <div className="rounded-xl border border-border/40 bg-card overflow-hidden divide-y divide-border/30">
+              {recentApplicants.map((a: any) => (
+                <button
+                  key={a.id}
+                  onClick={() =>
+                    a.career_jobs?.id &&
+                    navigate(`/personal/employer/jobs/${a.career_jobs.id}/applicants`)
+                  }
+                  className="w-full flex items-center gap-3 px-3 py-2.5 hover:bg-muted/30 active:bg-muted/50 transition-colors text-left"
+                >
+                  <div className="w-9 h-9 rounded-full bg-emerald-500/10 flex items-center justify-center shrink-0">
+                    <UserPlus className="w-4 h-4 text-emerald-500" />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="font-medium text-[12.5px] leading-tight truncate">
+                      New applicant
+                    </p>
+                    <p className="text-[11px] text-muted-foreground leading-tight truncate">
+                      {a.career_jobs?.title || "Your job posting"}
+                    </p>
+                  </div>
+                  <span
+                    className={cn(
+                      "text-[10px] uppercase tracking-wide px-1.5 py-0.5 rounded shrink-0",
+                      a.status === "shortlisted"
+                        ? "bg-emerald-500/15 text-emerald-600"
+                        : a.status === "rejected"
+                        ? "bg-rose-500/15 text-rose-600"
+                        : a.status === "hired"
+                        ? "bg-blue-500/15 text-blue-600"
+                        : "bg-muted/60 text-muted-foreground"
+                    )}
+                  >
+                    {a.status || "submitted"}
+                  </span>
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* Sectioned menu */}
+        {sections.map((section, sIdx) => (
+          <div key={section.title} className={cn(sIdx > 0 && "mt-3")}>
+            <p className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground px-1 mb-1.5">
+              {section.title}
+            </p>
+            <div className="rounded-xl border border-border/40 bg-card overflow-hidden divide-y divide-border/30">
+              {section.items.map((item, i) => (
+                <motion.button
+                  key={item.label}
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  transition={{ delay: 0.03 + i * 0.02 }}
+                  onClick={item.onClick}
+                  className="w-full flex items-center gap-3 px-3.5 py-3 hover:bg-muted/30 transition-colors touch-manipulation active:bg-muted/50 text-left"
+                >
+                  <div className={cn("w-8 h-8 rounded-full flex items-center justify-center shrink-0", item.bg)}>
+                    <item.icon className={cn("w-4 h-4", item.color)} />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="font-medium text-[13px] leading-tight">{item.label}</p>
+                    <p className="text-[11px] text-muted-foreground leading-tight">{item.description}</p>
+                  </div>
+                  {item.badge ? (
+                    <span className="min-w-[18px] h-[18px] px-1.5 rounded-full bg-primary text-primary-foreground text-[10px] font-bold flex items-center justify-center">
+                      {item.badge}
+                    </span>
+                  ) : null}
+                  <ChevronRight className="w-3.5 h-3.5 text-muted-foreground/40 shrink-0" />
+                </motion.button>
+              ))}
+            </div>
+          </div>
+        ))}
       </div>
 
       {/* QR Scanner Modal */}

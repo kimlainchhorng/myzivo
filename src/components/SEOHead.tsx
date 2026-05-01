@@ -115,11 +115,9 @@ export default function SEOHead({
     }
 
     return () => {
-      document.title = 'ZIVO – Super-App for Travel, Social, Shops, Jobs & Creators';
-      const meta = document.querySelector('meta[name="description"]');
-      if (meta) meta.setAttribute('content', 'ZIVO is the all-in-one super-app: flights, hotels & cars, rides & food, social feed & reels, creator subscriptions, shops, and more.');
-      const cl = document.querySelector('link[rel="canonical"]');
-      if (cl) cl.setAttribute('href', SITE_URL + '/');
+      // Only clean up the JSON-LD blob this instance owns; let the next route's SEOHead
+      // (or the homepage's static <title>/<meta>) overwrite the rest. Hardcoding a reset
+      // here causes back-navigation to flash stale strings into <head>.
       document.getElementById(SCRIPT_ID)?.remove();
     };
   }, [title, description, canonical, type, noIndex, ogImage, structuredData, publishedTime, modifiedTime, appLink, location.pathname]);

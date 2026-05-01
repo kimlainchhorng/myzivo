@@ -240,6 +240,25 @@ const getReelsSharePostId = (item: FeedItem): string => stripFeedUserPrefix(item
 const getFeedInteractionPostId = (item: FeedItem): string => item.source === "user" ? stripFeedUserPrefix(item.id) : item.id;
 const getFeedLikesTable = (item: FeedItem): "post_likes" | "store_post_likes" => item.source === "user" ? "post_likes" : "store_post_likes";
 
+// Per-session dedup set for FeedCard view tracking — one bump per post per
+// session. Lives at module scope so navigating between feed tabs without a
+// full reload doesn't double-count.
+const recordedFeedViews = new Set<string>();
+
+// Best-effort wrapper around the record_post_share RPC. The RPC logs the
+// share + bumps shares_count atomically; failures are swallowed so a flaky
+// network never blocks the UX or breaks the share itself.
+type ShareChannel = "copy_link" | "native" | "email" | "sms" | "whatsapp" | "telegram" | "facebook" | "x" | "other";
+const recordShareForFeedItem = (item: FeedItem, channel: ShareChannel) => {
+  if (item.source === "poll") return; // post_shares.source CHECK only allows store/user
+  const postId = getFeedInteractionPostId(item);
+  void (supabase as any).rpc("record_post_share", {
+    _post_id: postId,
+    _source: item.source,
+    _channel: channel,
+  });
+};
+
 export default function ReelsFeedPage() {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
@@ -1874,12 +1893,11 @@ function ReelSlide({ item, currentUserId, onClose }: { item: FeedItem; currentUs
           setIsPlaying(true);
           if (!viewTracked.current) {
             viewTracked.current = true;
-            if (item.source === "user") {
-              const rawId = item.id.startsWith("u-") ? item.id.slice(2) : item.id;
-              supabase.rpc("increment_user_post_view_count" as any, { p_post_id: rawId }).then(() => {});
-            } else {
-              supabase.rpc("increment_store_post_view_count" as any, { p_post_id: item.id }).then(() => {});
-            }
+            const rawId = interactionPostId;
+            const rpc = item.source === "user" ? "increment_user_post_views" : "increment_store_post_views";
+            supabase.rpc(rpc as any, { _post_id: rawId }).then(({ error }: any) => {
+              if (error) viewTracked.current = false;
+            });
           }
         } else {
           videoRef.current?.pause();
@@ -1970,6 +1988,7 @@ function ReelSlide({ item, currentUserId, onClose }: { item: FeedItem; currentUs
       document.execCommand("copy");
       document.body.removeChild(ta);
       toast.success("Link copied!");
+      recordShareForFeedItem(item, "copy_link");
     } catch {
       toast.info("Long-press URL bar to copy");
     }
@@ -2345,6 +2364,7 @@ function ReelSlide({ item, currentUserId, onClose }: { item: FeedItem; currentUs
               shareMediaUrl={mediaUrl}
               shareMediaType={item.media_type === "video" ? "video" : "image"}
               sharePostId={item.shared_from_post_id ? item.shared_from_post_id : item.id.replace(/^u-/, "")}
+              postSource={item.shared_from_source ?? (item.source === "store" ? "store" : "user")}
               sharePostAuthorId={item.shared_from_user_id || item.author_id}
               sharePostAuthorName={item.shared_from_user_name || item.author_name}
               onClose={() => setShowShareSheet(false)}
@@ -2490,21 +2510,40 @@ function FeedCard({ item, currentUserId, onOpenFullscreen, autoPlayVideo, detail
     };
   }, [currentUserId, interactionPostId, likesTable]);
 
-  // Load initial bookmark state
+  // Load initial bookmark state from post_bookmarks (matches usePostActions hook).
+  // Polls aren't bookmarkable yet — the table's source CHECK only allows store/user.
   useEffect(() => {
-    if (!currentUserId) return;
+    if (!currentUserId || item.source === "poll") return;
     let alive = true;
     (supabase as any)
-      .from("bookmarks")
+      .from("post_bookmarks")
       .select("id")
       .eq("user_id", currentUserId)
-      .eq("item_id", item.id)
+      .eq("post_id", interactionPostId)
+      .eq("source", item.source)
       .maybeSingle()
       .then(({ data }: any) => {
         if (alive && data) setSaved(true);
       });
     return () => { alive = false; };
-  }, [currentUserId, item.id]);
+  }, [currentUserId, interactionPostId, item.source]);
+
+  // Hydrate this user's existing emoji reaction for this post (post_reactions)
+  useEffect(() => {
+    if (!currentUserId || item.source === "poll") return;
+    let alive = true;
+    (supabase as any)
+      .from("post_reactions")
+      .select("emoji")
+      .eq("user_id", currentUserId)
+      .eq("post_id", interactionPostId)
+      .eq("source", item.source)
+      .maybeSingle()
+      .then(({ data }: any) => {
+        if (alive && data?.emoji) setSelectedReaction(data.emoji);
+      });
+    return () => { alive = false; };
+  }, [currentUserId, interactionPostId, item.source]);
 
   // Check follow status
   useEffect(() => {
@@ -2658,6 +2697,26 @@ function FeedCard({ item, currentUserId, onOpenFullscreen, autoPlayVideo, detail
     return () => observer.disconnect();
   }, [item.media_type, autoPlayVideo]);
 
+  // Record a view after 1.5s of continuous play (matches the SQL function's
+  // expected dwell threshold). Per-session dedup via the module-level set so
+  // scrolling away and back doesn't double-count.
+  useEffect(() => {
+    if (!isPlaying) return;
+    if (item.media_type !== "video") return;
+    if (item.source === "poll") return;
+    if (recordedFeedViews.has(item.id)) return;
+
+    const timer = setTimeout(() => {
+      recordedFeedViews.add(item.id);
+      const rpc = item.source === "user" ? "increment_user_post_views" : "increment_store_post_views";
+      (supabase as any).rpc(rpc, { _post_id: interactionPostId }).then(({ error }: any) => {
+        if (error) recordedFeedViews.delete(item.id);
+      });
+    }, 1500);
+
+    return () => clearTimeout(timer);
+  }, [isPlaying, item.id, item.media_type, item.source, interactionPostId]);
+
   const togglePlay = useCallback(() => {
     if (!videoRef.current) return;
     if (videoRef.current.paused) {
@@ -2702,8 +2761,9 @@ function FeedCard({ item, currentUserId, onOpenFullscreen, autoPlayVideo, detail
           .eq("user_id", currentUserId);
         if (error) throw error;
       }
-
-      await queryClient.invalidateQueries({ queryKey: ["reels-feed-grid"] });
+      // Local liked + likes-count are already updated optimistically above —
+      // no need to invalidate the entire feed (which yanked every other reel
+      // off-screen mid-scroll).
     } catch {
       setLiked(!newLiked);
       setLocalLikes((prev) => Math.max(0, prev - (newLiked ? 1 : -1)));
@@ -2722,12 +2782,44 @@ function FeedCard({ item, currentUserId, onOpenFullscreen, autoPlayVideo, detail
     lastTapRef.current = now;
   };
 
-  // Emoji reactions
-  const REACTIONS = ["❤️", "😂", "😮", "😢", "🔥", "👏"];
-  const handleReaction = (emoji: string) => {
-    setSelectedReaction(selectedReaction === emoji ? null : emoji);
+  // Emoji reactions — persisted to post_reactions (matches usePostReactions hook).
+  // Emojis are constrained by the DB CHECK: ❤️ 😂 😮 😢 😡 🔥 (👏 is not allowed).
+  const REACTIONS = ["❤️", "😂", "😮", "😢", "😡", "🔥"];
+  const handleReaction = async (emoji: string) => {
+    if (!currentUserId) {
+      toast.error("Please sign in to react");
+      return;
+    }
+    if (item.source === "poll") {
+      toast.info("Reactions on polls coming soon");
+      return;
+    }
+    const previous = selectedReaction;
+    const next = previous === emoji ? null : emoji;
+    setSelectedReaction(next);
     setShowReactionPicker(false);
-    toast.success(`Reacted with ${emoji}`);
+    try {
+      if (next == null) {
+        const { error } = await (supabase as any)
+          .from("post_reactions")
+          .delete()
+          .eq("user_id", currentUserId)
+          .eq("post_id", interactionPostId)
+          .eq("source", item.source);
+        if (error) throw error;
+      } else {
+        const { error } = await (supabase as any)
+          .from("post_reactions")
+          .upsert(
+            { user_id: currentUserId, post_id: interactionPostId, source: item.source, emoji: next },
+            { onConflict: "user_id,post_id,source" },
+          );
+        if (error) throw error;
+      }
+    } catch {
+      setSelectedReaction(previous);
+      toast.error("Couldn't save reaction");
+    }
   };
 
   const handleShare = async () => {
@@ -2735,6 +2827,7 @@ function FeedCard({ item, currentUserId, onOpenFullscreen, autoPlayVideo, detail
     try {
       if (typeof navigator !== "undefined" && (navigator as any).share) {
         await (navigator as any).share({ title: "ZIVO", text, url: shareUrl });
+        recordShareForFeedItem(item, "native");
         return;
       }
     } catch (e: any) {
@@ -2809,6 +2902,7 @@ function FeedCard({ item, currentUserId, onOpenFullscreen, autoPlayVideo, detail
       document.execCommand("copy");
       document.body.removeChild(ta);
       toast.success("Link copied!");
+      recordShareForFeedItem(item, "copy_link");
     } catch {
       toast.info("Long-press URL bar to copy");
     }
@@ -2821,30 +2915,32 @@ function FeedCard({ item, currentUserId, onOpenFullscreen, autoPlayVideo, detail
       toast.error("Please sign in to bookmark posts");
       return;
     }
+    if (item.source === "poll") {
+      toast.info("Polls can't be saved yet");
+      return;
+    }
     // Prevent rapid double-tap from triggering two writes — the second
-    // INSERT would 409 against the unique (user_id, item_id) constraint.
+    // INSERT would 409 against the unique (user_id, post_id, source) constraint.
     if (savingBookmark.current) return;
     savingBookmark.current = true;
     const newSaved = !saved;
     setSaved(newSaved);
     try {
       if (newSaved) {
-        const { error } = await (supabase as any).from("bookmarks").upsert(
-          {
-            user_id: currentUserId,
-            item_id: item.id,
-            item_type: "post",
-            title: item.caption || `Post by ${item.author_name}`,
-            collection_name: "Posts",
-          },
-          { onConflict: "user_id,item_id", ignoreDuplicates: true },
-        );
+        const { error } = await (supabase as any).from("post_bookmarks").insert({
+          user_id: currentUserId,
+          post_id: interactionPostId,
+          source: item.source,
+        });
         if (error && !String(error.message || "").toLowerCase().includes("duplicate")) {
           throw error;
         }
         toast.success("Saved to bookmarks");
       } else {
-        await (supabase as any).from("bookmarks").delete().eq("user_id", currentUserId).eq("item_id", item.id);
+        await (supabase as any).from("post_bookmarks").delete()
+          .eq("user_id", currentUserId)
+          .eq("post_id", interactionPostId)
+          .eq("source", item.source);
         toast.success("Removed from bookmarks");
       }
     } catch {
@@ -3584,6 +3680,7 @@ function FeedCard({ item, currentUserId, onOpenFullscreen, autoPlayVideo, detail
               shareMediaUrl={item.media_urls[0] || undefined}
               shareMediaType={item.media_type === "video" ? "video" : "image"}
               sharePostId={item.shared_from_post_id ? item.shared_from_post_id : item.id.replace(/^u-/, "")}
+              postSource={item.shared_from_source ?? (item.source === "store" ? "store" : "user")}
               sharePostAuthorId={item.shared_from_user_id || item.author_id}
               sharePostAuthorName={item.shared_from_user_name || item.author_name}
               onClose={() => setShowShareSheet(false)}
@@ -3777,7 +3874,29 @@ function FeedCard({ item, currentUserId, onOpenFullscreen, autoPlayVideo, detail
               })().map((sub) => (
                 <button
                   key={sub.label}
-                  onClick={() => setReportStep("submitted")}
+                  onClick={async () => {
+                    // Step to the success screen first so the UI feels instant.
+                    // The DB write is best-effort — failures only toast,
+                    // they never strand the user on the sub screen.
+                    setReportStep("submitted");
+                    if (!currentUserId) {
+                      toast.error("Please sign in to submit reports");
+                      return;
+                    }
+                    if (item.source === "poll") {
+                      // post_reports.post_source CHECK only allows store/user
+                      return;
+                    }
+                    // Reason text is capped at 200 chars by the table CHECK constraint.
+                    const reason = `${reportCategory}: ${sub.label}`.slice(0, 200);
+                    const { error } = await (supabase as any).from("post_reports").insert({
+                      reporter_id: currentUserId,
+                      post_id: interactionPostId,
+                      post_source: item.source,
+                      reason,
+                    });
+                    if (error) toast.error("Couldn't submit report");
+                  }}
                   className="flex items-center justify-between w-full px-4 py-3.5 hover:bg-muted/50 rounded-xl min-h-[48px] text-left"
                 >
                   <span className="text-sm font-medium text-foreground">{sub.label}</span>

@@ -27,7 +27,6 @@ import { useUserProfile, useUpdateUserProfile, useUploadAvatar } from "@/hooks/u
 import { useUsername } from "@/hooks/useUsername";
 import { useMerchantRole } from "@/hooks/useMerchantRole";
 import { useOwnerStoreProfile } from "@/hooks/useOwnerStoreProfile";
-import { useAffiliateAttribution } from "@/hooks/useAffiliateAttribution";
 import { useZivoPlus } from "@/contexts/ZivoPlusContext";
 import { MERCHANT_APP_URL } from "@/lib/eatsTables";
 import ZivoMobileNav from "@/components/app/ZivoMobileNav";
@@ -43,6 +42,16 @@ import { stripTrackingParams } from "@/lib/linkSafetyExtras";
 import ProfileContentTabs from "@/components/profile/ProfileContentTabs";
 import ProfileStories from "@/components/profile/ProfileStories";
 import SocialListModal from "@/components/profile/SocialListModal";
+import ProfileCompletenessCard from "@/components/profile/ProfileCompletenessCard";
+import ProfileQuickLinksCard from "@/components/profile/ProfileQuickLinksCard";
+import { DEFAULT_QUICK_LINKS } from "@/components/profile/quickLinks";
+import ProfileWalletCard from "@/components/profile/ProfileWalletCard";
+import ProfileReferralCard from "@/components/profile/ProfileReferralCard";
+import ProfileTripsCard from "@/components/profile/ProfileTripsCard";
+import { useCoinBalance } from "@/hooks/useCoinBalance";
+import { useWalletSummary } from "@/hooks/useZivoWallet";
+import { useReferrals } from "@/hooks/useReferrals";
+import { useBookingHistory } from "@/hooks/useBookingHistory";
 import PullToRefresh from "@/components/shared/PullToRefresh";
 import { useNotifications } from "@/hooks/useNotifications";
 import { formatDistanceToNowStrict } from "date-fns";
@@ -231,8 +240,11 @@ const Profile = () => {
   }, [user]);
   
   const totalNotifCount = notifUnreadCount + socialCount;
-  const affiliateAttribution = useAffiliateAttribution();
   const { isPlus, plan } = useZivoPlus();
+  const { balance: coinBalance, loading: coinLoading } = useCoinBalance();
+  const { data: walletSummary, isLoading: walletLoading } = useWalletSummary();
+  const { referralCode, isLoading: referralsLoading, copyReferralLink, shareReferral } = useReferrals();
+  const { bookings, isLoading: bookingsLoading } = useBookingHistory();
   const updateProfile = useUpdateUserProfile();
   const uploadAvatar = useUploadAvatar();
   const langTriggerRef = useRef<HTMLButtonElement>(null);
@@ -340,11 +352,6 @@ const Profile = () => {
 
   const profileTilt = use3DTilt(profileCardRef);
 
-  // Friend & Follow state
-  const [friendStatus, setFriendStatus] = useState<"none" | "pending" | "accepted">("none");
-  const [friendLoading, setFriendLoading] = useState(false);
-  const [isFollowing, setIsFollowing] = useState(false);
-  const [followLoading, setFollowLoading] = useState(false);
   const [friendCount, setFriendCount] = useState(0);
   const [followerCount, setFollowerCount] = useState(0);
   const [followingCount, setFollowingCount] = useState(0);
@@ -420,77 +427,6 @@ const Profile = () => {
   useEffect(() => {
     setBioDraft(profile?.bio ?? "");
   }, [profile?.bio]);
-
-  const handleAddFriend = async () => {
-    if (!user?.id) return;
-    setFriendLoading(true);
-    try {
-      if (friendStatus === "none") {
-        // Send friend request (on own profile this is a demo — real usage is on other users' profiles)
-        const { error } = await supabase
-          .from("friendships" as any)
-          .insert({ user_id: user.id, friend_id: user.id } as any);
-        if (error && !error.message?.includes("no_self_friend")) {
-          throw error;
-        }
-        // For demo on own profile, just show pending
-        setFriendStatus("pending");
-        toast.info("Friend request sent!");
-      } else if (friendStatus === "pending") {
-        // Cancel pending request
-        await supabase
-          .from("friendships" as any)
-          .delete()
-          .eq("user_id", user.id);
-        setFriendStatus("none");
-        toast.info("Friend request cancelled");
-      } else if (friendStatus === "accepted") {
-        // Unfriend
-        await supabase
-          .from("friendships" as any)
-          .delete()
-          .or(`user_id.eq.${user.id},friend_id.eq.${user.id}`);
-        setFriendStatus("none");
-        setFriendCount((c) => Math.max(0, c - 1));
-        toast.info("Unfriended");
-      }
-    } catch (err: any) {
-      toast.error(err.message || "Failed to update friendship");
-    } finally {
-      setFriendLoading(false);
-    }
-  };
-
-  const handleFollow = async () => {
-    if (!user?.id) return;
-    setFollowLoading(true);
-    try {
-      if (isFollowing) {
-        // Unfollow
-        await supabase
-          .from("followers" as any)
-          .delete()
-          .eq("follower_id", user.id)
-          .eq("following_id", user.id);
-        setIsFollowing(false);
-        setFollowerCount((c) => Math.max(0, c - 1));
-        toast.success("Unfollowed");
-      } else {
-        // Follow
-        const { error } = await supabase
-          .from("followers" as any)
-          .insert({ follower_id: user.id, following_id: user.id } as any);
-        if (error && !error.message?.includes("no_self_follow")) throw error;
-        setIsFollowing(true);
-        setFollowerCount((c) => c + 1);
-        toast.success("Following!");
-      }
-    } catch (err: any) {
-      toast.error(err.message || "Failed to update follow");
-    } finally {
-      setFollowLoading(false);
-    }
-  };
 
   // Scroll to top on mount/navigation
   useEffect(() => {
@@ -1372,6 +1308,70 @@ const Profile = () => {
 
               {/* ZIVO+ upgrade moved to /more page */}
 
+              {/* ── Wallet Preview ── */}
+              {user && (
+                <ParallaxSection index={1.1}>
+                  <ProfileWalletCard
+                    balance={coinBalance}
+                    credits={walletSummary?.availableCredits ?? 0}
+                    transactionCount={walletSummary?.transactionCount ?? 0}
+                    loading={coinLoading || walletLoading}
+                    onOpenWallet={() => { selectionChanged(); navigate("/wallet"); }}
+                    onBuyCoins={() => { selectionChanged(); navigate("/wallet?tab=coins"); }}
+                  />
+                </ParallaxSection>
+              )}
+
+              {/* ── Recent Trips ── */}
+              {user && (bookingsLoading || bookings.length > 0) && (
+                <ParallaxSection index={1.15}>
+                  <ProfileTripsCard
+                    bookings={bookings}
+                    loading={bookingsLoading}
+                    onViewAll={() => { selectionChanged(); navigate("/trips"); }}
+                    onOpen={(b) => { selectionChanged(); navigate(`/trips?booking=${b.id}`); }}
+                  />
+                </ParallaxSection>
+              )}
+
+              {/* ── Profile Completeness Meter ── */}
+              {user && (
+                <ParallaxSection index={1.2}>
+                  <ProfileCompletenessCard
+                    profile={profile}
+                    username={claimedUsername}
+                    isVerified={!!profile?.is_verified}
+                    verificationPending={latestVerificationRequest?.status === "pending"}
+                    onPickAvatar={() => avatarInputRef.current?.click()}
+                    onPickCover={() => coverInputRef.current?.click()}
+                    onEditBio={() => {
+                      setBioDraft(profile?.bio ?? "");
+                      setBioEditing(true);
+                      window.scrollTo({ top: 0, behavior: "smooth" });
+                    }}
+                    onEditPhone={() => navigate("/account/profile-edit?focus=phone")}
+                    onEditUsername={() => navigate("/account/profile-edit?focus=username")}
+                    onEditName={() => navigate("/account/profile-edit?focus=name")}
+                    onEditSocials={() => navigate("/account/profile-edit?focus=socials")}
+                    onStartVerification={() => navigate("/account/verification")}
+                  />
+                </ParallaxSection>
+              )}
+
+              {/* ── Referral Program ── */}
+              {user && (
+                <ParallaxSection index={1.3}>
+                  <ProfileReferralCard
+                    code={referralCode?.code ?? null}
+                    totalReferrals={referralCode?.total_referrals ?? 0}
+                    totalEarnings={referralCode?.total_earnings ?? 0}
+                    loading={referralsLoading}
+                    onCopy={() => { selectionChanged(); void copyReferralLink(); }}
+                    onShare={() => { selectionChanged(); void shareReferral(); }}
+                  />
+                </ParallaxSection>
+              )}
+
               {/* ── Phone Required Card ── */}
               {!profile?.phone?.trim() && (
                 <ParallaxSection index={1.5}>
@@ -1398,6 +1398,19 @@ const Profile = () => {
 
           {/* Notifications panel moved into the sticky header (Facebook-style popover) */}
 
+              {/* ── Account Quick Links ── */}
+              {user && (
+                <ParallaxSection index={2.2}>
+                  <ProfileQuickLinksCard
+                    onNavigate={(to) => { selectionChanged(); navigate(to); }}
+                    links={DEFAULT_QUICK_LINKS.map((l) =>
+                      l.key === "activity" && totalNotifCount > 0
+                        ? { ...l, badge: totalNotifCount }
+                        : l,
+                    )}
+                  />
+                </ParallaxSection>
+              )}
 
               {/* ── Social Content Tabs (Posts, Videos, Live, Status) ── */}
               <ParallaxSection index={2.5}>
@@ -1446,7 +1459,7 @@ const Profile = () => {
             {[
               { id: "personal", label: "Personal", desc: "Your everyday account", icon: UserIcon, route: "/profile" },
               { id: "business", label: "Business", desc: "Manage company travel & teams", icon: Briefcase, route: "/business" },
-              { id: "driver", label: "Driver", desc: "Go online and accept rides", icon: Car, route: "/driver" },
+              { id: "driver", label: "Driver", desc: "Go online and accept rides", icon: Car, route: "/driver/home" },
               { id: "shop", label: "Shop Partner", desc: "Open your store dashboard", icon: Store, route: getShopDashboardPath() },
             ].map((m) => {
               const active = activeMode === m.id;
