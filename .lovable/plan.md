@@ -1,49 +1,36 @@
-## Problem
+# Clean up duplicates on Profile (Account) page
 
-Two issues visible in your screenshots:
+The Profile page currently shows widgets that are already available inside the **/more** page (opened via the `…` icon in the top-right). This causes duplication and visual clutter on mobile.
 
-1. **IMG_2328 (top of feed):** The composer card ("What's on your mind?" + Photo/Video / Feeling / Check In / Live) is hidden BEHIND the sticky header instead of sitting below it. It looks like a huge empty white space because the translucent header covers the avatar + input row.
+## What to remove from `src/pages/Profile.tsx`
 
-2. **IMG_2329 (scrolled down):** The iOS status bar clock ("2:06") overlaps the "Feed" title and Search bar — the safe-area top padding is collapsing to zero in this state.
+1. **"Your wallet" card** — `ProfileWalletCard` block (lines ~1311–1323).
+   Already in /more → "Wallet" quick link + Account Status Strip.
 
-## Root Cause
+2. **"Complete your profile" card** — `ProfileCompletenessCard` block (lines ~1337–1359).
+   Profile editing entry points exist in /more → Account section.
 
-The sticky header is wrapped inside `<PullToRefresh>`, whose inner `motion.div` applies a `transform: translateY(...)` to the entire feed content. On iOS WebKit, when a `position: sticky` element ALSO has its own `transform` (from our show/hide animation `-translate-y-full` / `translate-y-0`) AND lives inside a transformed parent AND has `will-change: transform`, the sticky element gets promoted to its own compositor layer. This breaks sticky positioning — the element no longer reserves flow space (so following content slides under it) and the safe-area padding inset is computed against the wrong containing block (so it collapses).
+3. **"Invite friends, earn credits" card** — `ProfileReferralCard` block (lines ~1361–1373).
+   Already in /more → "Refer a Friend".
 
-In short: stacking `transform` on the sticky header inside a transformed `PullToRefresh` parent is breaking iOS sticky behavior.
+4. **"Account" Quick Links grid** (Shop / Employees / Mode / Monetization style row) — `ProfileQuickLinksCard` block (lines ~1401–1413).
+   All these destinations exist in /more.
 
-## Fix
+5. **Settings gear icon in the header** (lines ~824–835).
+   Settings is already accessible from /more (and the `…` button right next to it opens /more). The gear is redundant.
 
-Stop animating the header with a CSS `transform`. Use top offset instead, which doesn't promote the element to its own layer and is compatible with `position: sticky` on iOS.
+Also remove now-unused imports: `ProfileWalletCard`, `ProfileCompletenessCard`, `ProfileReferralCard`, `ProfileQuickLinksCard`, `DEFAULT_QUICK_LINKS`, and the `Settings` icon import (only if no longer referenced elsewhere in the file).
 
-### Changes in `src/pages/ReelsFeedPage.tsx`
+## What stays
+- Header: back arrow, avatar+name, notifications bell, `…` (More) button.
+- Cover photo, profile info, bio, follower stats, action chips row (Shop/Employees/Mode/Monetization chips that sit directly under the bio — these are part of the profile identity, not the duplicated grid).
+- Recent Trips card.
+- Phone Required warning card.
+- Stories row.
+- Social Content Tabs (Posts / Videos / Live / Status).
 
-1. **Replace transform-based hide/show with a `top` offset** on the sticky Feed header:
-   - Remove `transition-transform`, `will-change-transform`, `-translate-y-full`, `translate-y-0`.
-   - Keep `sticky top-0 z-40`.
-   - When `headerHidden` is true, animate `transform: translateY(-100%)` via inline style with `transform-origin` set so it doesn't conflict — OR, simpler and safer: use a `marginTop` negative value via state (e.g. `marginTop: hidden ? '-120px' : '0'` with a CSS transition on `margin-top`). This keeps the element in flow and preserves sticky + safe-area behavior on iOS.
+## Result
+Profile becomes a clean social profile (identity + content), and all account/wallet/referral/settings actions live in one place: the **More** page reached via the `…` button.
 
-2. **Move `paddingTop` (safe area) to a dedicated wrapper inside the sticky box** so it can't be collapsed by transform layer promotion:
-   ```tsx
-   <div className="lg:hidden sticky top-0 z-40 bg-background/95 backdrop-blur-xl border-b border-border/30">
-     <div style={{ paddingTop: 'var(--zivo-safe-top-sticky, 0px)' }}>
-       <div className="px-3 py-1 flex items-center gap-1.5"> ... </div>
-     </div>
-   </div>
-   ```
-
-3. **Add a small spacer above the composer** so the first row of "What's on your mind?" never visually touches the sticky header bottom border. (`mt-1` on the composer card.)
-
-4. **Auto-hide animation:** keep the scroll listener but apply the visibility via a wrapper `<div>` that uses `max-height` + `opacity` transitions (collapses smoothly without breaking sticky). The outer sticky box itself stays in place; only its inner content collapses to 0 height.
-
-### Expected Result
-
-- At scroll=0: composer ("What's on your mind?" / Photo-Video row / story ring) visibly sits BELOW the Feed header — no more giant white gap.
-- When scrolling down: header content collapses smoothly (Facebook-style) without leaving an empty stuck bar.
-- When scrolled (IMG_2329 case): the iOS status bar no longer overlaps the "Feed" title — safe-area padding stays applied.
-
-### Files Touched
-
-- `src/pages/ReelsFeedPage.tsx` (header markup around lines 984–1047)
-
-No CSS token changes needed; `--zivo-safe-top-sticky` is already correctly defined.
+## Files touched
+- `src/pages/Profile.tsx` (single-file change)
