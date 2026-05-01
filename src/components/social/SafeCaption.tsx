@@ -144,12 +144,15 @@ export default function SafeCaption({ text, className }: SafeCaptionProps) {
         {segments.map((seg, i) => {
           if (seg.type === "text") return <span key={i}>{seg.value}</span>;
           if (seg.type === "hashtag") {
+            // Per product direction: hashtags in feed/reel render as plain
+            // inline text (no emerald highlight, no underline) but remain
+            // clickable so users can still tap through to /tag/<token>.
             return (
               <button
                 key={i}
                 type="button"
                 onClick={(e) => handleHashtagClick(e, seg.token!)}
-                className="text-primary font-medium hover:underline active:opacity-70 inline"
+                className="inline text-inherit font-normal active:opacity-70"
               >
                 {seg.value}
               </button>
