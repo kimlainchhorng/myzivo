@@ -1,36 +1,58 @@
-# Clean up duplicates on Profile (Account) page
+# Replace mock data on the Live page with real data
 
-The Profile page currently shows widgets that are already available inside the **/more** page (opened via the `…` icon in the top-right). This causes duplication and visual clutter on mobile.
+`src/pages/LiveStreamPage.tsx` (3,453 lines) currently shows ~40 hard-coded sections (Maya Chen, DiamondKing88, etc.). The only section already wired to real data is the main `live_streams` grid. Everything else under the **Community / Discover / Daily / Battles / Categories** tabs is mock.
 
-## What to remove from `src/pages/Profile.tsx`
+This plan converts the page in two layers: (1) wire sections that already have backing tables to real queries, and (2) hide sections with no real data until those features ship.
 
-1. **"Your wallet" card** — `ProfileWalletCard` block (lines ~1311–1323).
-   Already in /more → "Wallet" quick link + Account Status Strip.
+## Layer 1 — Sections to wire to real data (tables already exist)
 
-2. **"Complete your profile" card** — `ProfileCompletenessCard` block (lines ~1337–1359).
-   Profile editing entry points exist in /more → Account section.
+| Section (line) | Source table / query |
+|---|---|
+| Recently Watched (1804) | `live_viewers` joined to `profiles` for the current user — last 5 distinct hosts watched, ordered by `joined_at desc`. Live flag from `live_streams.status='live'`. |
+| Top Gifters — This week (1848) | `live_gifts` aggregated by `sender_id` over last 7 days, sum of `coin_value`, top 5. Join `profiles` for name/avatar. |
+| Top Gifters — All-time leaderboard (referenced by "See all" → `/leaderboard`) | Same query without time window. |
+| Featured / Trending hosts grids (1280, 2049, 2092, 2275, 2325, 2422, 2698, 3233, 3309) | All driven by `live_streams` filtered by `status`, ordered by `viewer_count`, `started_at`, etc. Reuse the existing `useLive` displayItems, just sort/slice for each section. |
+| Floating hearts / chat preview (already real, lines 199–211, 740) | No change. |
 
-3. **"Invite friends, earn credits" card** — `ProfileReferralCard` block (lines ~1361–1373).
-   Already in /more → "Refer a Friend".
+## Layer 2 — Sections to hide until backed by real features
 
-4. **"Account" Quick Links grid** (Shop / Employees / Mode / Monetization style row) — `ProfileQuickLinksCard` block (lines ~1401–1413).
-   All these destinations exist in /more.
+These have **no DB tables** today. Hide their UI behind a `FEATURE_FLAGS` check (default `false`) so the page stays clean and we can re-enable them per feature when the backend ships:
 
-5. **Settings gear icon in the header** (lines ~824–835).
-   Settings is already accessible from /more (and the `…` button right next to it opens /more). The gear is redundant.
+- Karaoke Rooms (1898)
+- Birthday Celebrations (1941)
+- PK Battles (1434)
+- Voice Rooms (1500, 1534)
+- Spotlight / Awards / Highlights blocks (1619, 1664, 1705, 2152, 2193, 2369, 2421, 2484, 2522, 2563, 2610, 2656, 2747)
+- Coming Soon "Daily" section with hardcoded "2 days / 3 days / 1 week" chips visible in the screenshot
 
-Also remove now-unused imports: `ProfileWalletCard`, `ProfileCompletenessCard`, `ProfileReferralCard`, `ProfileQuickLinksCard`, `DEFAULT_QUICK_LINKS`, and the `Settings` icon import (only if no longer referenced elsewhere in the file).
+Each block gets wrapped:
 
-## What stays
-- Header: back arrow, avatar+name, notifications bell, `…` (More) button.
-- Cover photo, profile info, bio, follower stats, action chips row (Shop/Employees/Mode/Monetization chips that sit directly under the bio — these are part of the profile identity, not the duplicated grid).
-- Recent Trips card.
-- Phone Required warning card.
-- Stories row.
-- Social Content Tabs (Posts / Videos / Live / Status).
+```tsx
+{FEATURE_FLAGS.liveKaraoke && ( /* existing markup */ )}
+```
 
-## Result
-Profile becomes a clean social profile (identity + content), and all account/wallet/referral/settings actions live in one place: the **More** page reached via the `…` button.
+Centralised flags file: `src/config/liveFeatureFlags.ts`.
+
+## Layer 3 — Empty states
+
+For the wired sections (Recently Watched, Top Gifters), if the real query returns 0 rows, render a small empty state ("No watch history yet" / "Be the first to send a gift") instead of hiding the section, so the page doesn't collapse for new accounts.
 
 ## Files touched
-- `src/pages/Profile.tsx` (single-file change)
+
+- **New:** `src/config/liveFeatureFlags.ts` — single source of truth for which mock-only blocks are visible.
+- **New:** `src/hooks/useRecentlyWatchedLive.ts` — query last 5 hosts the current user watched.
+- **New:** `src/hooks/useTopLiveGifters.ts` — top 5 gifters this week.
+- **Edited:** `src/pages/LiveStreamPage.tsx` —
+  - Replace inline arrays in Recently Watched (1815–1820) and Top Gifters (1860–1865) with the new hooks.
+  - Wrap the 13+ feature-flagged blocks with `FEATURE_FLAGS.*` checks.
+  - Remove the hardcoded "2 days / 3 days / 1 week" Daily chips (lines around 540–560 in the Daily tab) — they're not data, just placeholder labels.
+
+## Out of scope
+
+- Building Karaoke / Birthdays / PK Battles backend tables — separate feature work.
+- Migrating the in-stream overlay (gifts/comments) — already real.
+- The `/leaderboard` destination page — reuse existing if present.
+
+## Result
+
+Live page will only show real, working sections: live stream grid, Recently Watched (real history), Top Gifters (real coin totals). Aspirational sections stay in code behind a flag, ready to flip on once their backend lands.
