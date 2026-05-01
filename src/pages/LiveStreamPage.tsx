@@ -2591,6 +2591,7 @@ export default function LiveStreamPage() {
  })}
 </div>
 </div>
+</>)}
 
  {/* ─── Recommended for you / Multi-guest preview ─── */}
 <div className="px-4 pt-4 pb-2">
