@@ -14,7 +14,11 @@ const NotFound = () => {
 
   return (
     <div className="flex min-h-screen items-center justify-center bg-background relative overflow-hidden safe-area-top safe-area-bottom">
-      <SEOHead title="Page Not Found | ZIVO" description="The page you're looking for doesn't exist. Explore flights, hotels, and car rentals on ZIVO." />
+      <SEOHead
+        title="Page Not Found | ZIVO"
+        description="The page you're looking for doesn't exist. Explore flights, hotels, and car rentals on ZIVO."
+        noIndex
+      />
       {/* Enhanced background effects */}
       <div className="absolute inset-0 bg-gradient-radial from-primary/10 via-transparent to-transparent opacity-40" />
       <div className="absolute top-1/4 right-1/4 w-[250px] sm:w-[400px] h-[250px] sm:h-[400px] bg-gradient-to-bl from-eats/10 to-orange-500/5 rounded-full blur-3xl" />

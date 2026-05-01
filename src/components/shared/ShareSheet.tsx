@@ -21,6 +21,9 @@ interface ShareSheetProps {
   shareMediaType?: "image" | "video";
   /** Original post ID being shared */
   sharePostId?: string;
+  /** Original post's source table — needed so record_post_share knows
+   *  whether to bump store_posts or user_posts. Defaults to "user". */
+  postSource?: "store" | "user";
   /** Original post author's user ID */
   sharePostAuthorId?: string;
   /** Original post author's display name */
@@ -31,6 +34,25 @@ interface ShareSheetProps {
   visitProfileLabel?: string;
 }
 
+type ShareChannel =
+  | "copy_link" | "native" | "email" | "sms"
+  | "whatsapp" | "telegram" | "facebook" | "x" | "other";
+
+// Map UnifiedShareSheet's external-button labels to the channel strings
+// allowed by post_shares.channel CHECK constraint.
+const CHANNEL_FROM_LABEL: Record<string, ShareChannel> = {
+  whatsapp: "whatsapp",
+  telegram: "telegram",
+  facebook: "facebook",
+  x: "x",
+  email: "email",
+  sms: "sms",
+};
+const toChannel = (label: string | undefined): ShareChannel => {
+  const k = (label || "").toLowerCase();
+  return CHANNEL_FROM_LABEL[k] ?? "other";
+};
+
 export default function ShareSheet({
   shareUrl,
   shareText,
@@ -40,11 +62,28 @@ export default function ShareSheet({
   shareMediaUrl,
   shareMediaType,
   sharePostId,
+  postSource = "user",
   sharePostAuthorId,
   sharePostAuthorName,
   onVisitProfile,
   visitProfileLabel,
 }: ShareSheetProps) {
+  // Best-effort: log + bump shares_count via the record_post_share RPC.
+  // Errors are swallowed so a failed share-count update never blocks the UX.
+  const recordShare = (channel: ShareChannel) => {
+    if (!sharePostId) return;
+    void (supabase as any).rpc("record_post_share", {
+      _post_id: sharePostId,
+      _source: postSource,
+      _channel: channel,
+    }).then?.(({ error }: any) => {
+      if (error) {
+        // Surface as analytics only — never as a toast — to avoid
+        // alarming the user when the share itself succeeded.
+        track("share_count_failed", { post_id: sharePostId, channel, reason: error.message || "rpc_failed" });
+      }
+    });
+  };
   const [showMoreOptions, setShowMoreOptions] = useState(false);
   const [sharingToProfile, setSharingToProfile] = useState(false);
   const navigate = useNavigate();
@@ -86,6 +125,7 @@ export default function ShareSheet({
       document.body.removeChild(ta);
       toast.success("Link copied!");
       track("share_completed", { post_id: sharePostId, author_id: sharePostAuthorId, channel: "copy_link" });
+      recordShare("copy_link");
     } catch (e: any) {
       toast.info("Long-press URL bar to copy");
       track("share_failed", { post_id: sharePostId, author_id: sharePostAuthorId, channel: "copy_link", reason: e?.message || "copy_failed" });
@@ -106,12 +146,14 @@ export default function ShareSheet({
         }, 400);
       }
       track("share_completed", { post_id: sharePostId, author_id: sharePostAuthorId, channel });
+      recordShare(toChannel(opt.label));
     } else {
       onClose();
       import("@/lib/openExternalUrl")
         .then(({ openExternalUrl }) => {
           openExternalUrl(opt.url);
           track("share_completed", { post_id: sharePostId, author_id: sharePostAuthorId, channel });
+          recordShare(toChannel(opt.label));
         })
         .catch((e) => {
           track("share_failed", { post_id: sharePostId, author_id: sharePostAuthorId, channel, reason: e?.message || "external_open_failed" });
@@ -148,19 +190,9 @@ export default function ShareSheet({
       const { error: insertError } = await (supabase as any).from("user_posts").insert(insertData);
       if (insertError) throw insertError;
 
-      // Increment shares_count on the original post
-      if (sharePostId) {
-        // Try user_posts first, then store_posts
-        const { data: up } = await (supabase as any).from("user_posts").select("shares_count").eq("id", sharePostId).single();
-        if (up) {
-          await (supabase as any).from("user_posts").update({ shares_count: (up.shares_count || 0) + 1 }).eq("id", sharePostId);
-        } else {
-          const { data: sp } = await supabase.from("store_posts").select("shares_count").eq("id", sharePostId).single();
-          if (sp) {
-            await supabase.from("store_posts").update({ shares_count: ((sp as any).shares_count || 0) + 1 } as any).eq("id", sharePostId);
-          }
-        }
-      }
+      // Bump shares_count + log the share via record_post_share RPC.
+      // (The RPC unifies what used to be a try-user-posts-then-store-posts dance.)
+      recordShare("other");
 
       // Push notification to original post author about the share
       if (sharePostAuthorId && sharePostAuthorId !== data.user.id) {

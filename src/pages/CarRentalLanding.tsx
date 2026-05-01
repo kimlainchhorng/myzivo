@@ -9,7 +9,7 @@ import UserTestimonials from "@/components/shared/UserTestimonials";
 import VehicleTypeGallery from "@/components/shared/VehicleTypeGallery";
 import PhotoDestinationGrid from "@/components/shared/PhotoDestinationGrid";
 import PartnerLogosStrip from "@/components/shared/PartnerLogosStrip";
-import { InternalLinkGrid } from "@/components/seo";
+import { InternalLinkGrid, BreadcrumbSchema } from "@/components/seo";
 import { CarSearchFormPro } from "@/components/search";
 import { cn } from "@/lib/utils";
 import { heroPhotos, serviceOverlays } from "@/config/photos";
@@ -41,7 +41,27 @@ export default function CarRentalLanding() {
 
   return (
     <div className="min-h-screen bg-background">
-      <SEOHead title={pageTitle} description={pageDescription} />
+      <SEOHead
+        title={pageTitle}
+        description={pageDescription}
+        canonical={formattedLocation ? `/rent-car/${location}` : "/rent-car"}
+        ogImage="/og-cars.jpg"
+        appLink="zivo://cars"
+      />
+      <BreadcrumbSchema
+        items={
+          formattedLocation
+            ? [
+                { name: "Home", url: "/" },
+                { name: "Car Rental", url: "/rent-car" },
+                { name: formattedLocation, url: `/rent-car/${location}` },
+              ]
+            : [
+                { name: "Home", url: "/" },
+                { name: "Car Rental", url: "/rent-car" },
+              ]
+        }
+      />
       <Header />
       
       <main className="pt-16">

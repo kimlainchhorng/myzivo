@@ -77,8 +77,8 @@
     <link rel="dns-prefetch" href="https://api.duffel.com" />
     <link rel="dns-prefetch" href="https://js.stripe.com" />
     
-    <title>ZIVO – Super-App for Travel, Social, Shops, Jobs & Creators</title>
-    <meta name="description" content="ZIVO is the all-in-one super-app: flights, hotels & cars, rides & food, social feed & reels, creator subscriptions, shops & POS, jobs & hiring, chat, calls, and more — one account for everything.">
+    <title>ZIVO – Free Super-App: Travel, Social, Shop, Jobs & Creators</title>
+    <meta name="description" content="All-in-one free app: book flights, hotels & cars, order rides & food, share reels, follow creators, open a shop, post or apply for jobs, chat & call. Join free.">
 
     <meta name="author" content="ZIVO" />
     <meta name="keywords" content="ZIVO, hizivo, ZIVO LLC, super app, social network, short video, reels, creator platform, fan subscriptions, online shop, POS, business tools, jobs, hiring, find employees, apply for jobs, flights, hotels, car rentals, ride share, food delivery, chat, video call" />
@@ -131,6 +131,9 @@
     <meta property="og:image:alt" content="ZIVO - Compare Flights, Hotels & Car Rentals" />
     <meta property="og:site_name" content="ZIVO" />
     <meta property="og:locale" content="en_US" />
+    <meta property="og:locale:alternate" content="km_KH" />
+    <meta property="og:locale:alternate" content="ar_AR" />
+    <meta property="og:locale:alternate" content="fr_FR" />
 
     <!-- Twitter Card - Enhanced -->
     <meta name="twitter:card" content="summary_large_image" />
@@ -233,6 +236,46 @@
     }
     </script>
 
+    <!-- WebApplication Schema — companion to MobileApplication so Google ranks ZIVO
+         for "web app" / "browser" queries and surfaces it in PWA listings. -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "WebApplication",
+      "name": "ZIVO",
+      "alternateName": "ZIVO Web App",
+      "url": "https://hizivo.com",
+      "browserRequirements": "Requires JavaScript. Requires HTML5.",
+      "applicationCategory": "LifestyleApplication",
+      "applicationSubCategory": "Super App – Travel, Social, Commerce, Jobs",
+      "operatingSystem": "Any",
+      "isAccessibleForFree": true,
+      "offers": {
+        "@type": "Offer",
+        "price": "0",
+        "priceCurrency": "USD"
+      },
+      "featureList": [
+        "Flight search and booking",
+        "Hotel search and booking",
+        "Car rental comparison",
+        "Ride booking",
+        "Food delivery ordering",
+        "Grocery delivery",
+        "Social feed and short-form video reels",
+        "Creator subscriptions and live streaming",
+        "Online shop and POS for merchants",
+        "Jobs board with apply and hiring tools",
+        "Chat with voice and video calls"
+      ],
+      "screenshot": "https://hizivo.com/og-image.png",
+      "publisher": {
+        "@type": "Organization",
+        "name": "ZIVO"
+      }
+    }
+    </script>
+
     <!-- SocialMediaPosting / Service catalog -->
     <script type="application/ld+json">
     {
@@ -304,10 +347,21 @@
     </script>
 
   <link rel="icon" type="image/png" href="/pwa-icons/icon-192x192.png" />
-  <meta property="og:title" content="ZIVO – Compare Flights, Hotels & Car Rentals" />
-  <meta name="twitter:title" content="ZIVO – Compare Flights, Hotels & Car Rentals" />
-  <meta property="og:description" content="Compare flights, hotels, and car rentals from 500+ trusted partners. Book rides, order food, and plan every journey on ZIVO." />
-  <meta name="twitter:description" content="Compare flights, hotels, and car rentals from 500+ trusted partners. Book rides, order food, and plan every journey on ZIVO." />
+
+  <!-- Open Graph & Twitter titles — kept consistent with the main <title> so social previews
+       (FB, IG, X, LinkedIn, WhatsApp, iMessage) advertise the full super-app, not just travel. -->
+  <meta property="og:title" content="ZIVO – Free Super-App: Travel, Social, Shop, Jobs & Creators" />
+  <meta name="twitter:title" content="ZIVO – Free Super-App: Travel, Social, Shop, Jobs & Creators" />
+  <meta property="og:description" content="One free app for everything: book flights, hotels & cars, order rides & food, share reels, follow creators, open a shop, post or apply for jobs, chat & call. Join free." />
+  <meta name="twitter:description" content="One free app for everything: flights, hotels, cars, rides, food, reels, creators, shops, jobs, chat & calls. Join ZIVO free." />
+
+  <!-- hreflang — language alternates so Google can serve ZIVO to non-English searchers
+       (Khmer, Arabic, French audiences are explicitly supported per Organization schema). -->
+  <link rel="alternate" hreflang="x-default" href="https://hizivo.com/" />
+  <link rel="alternate" hreflang="en" href="https://hizivo.com/" />
+  <link rel="alternate" hreflang="km" href="https://hizivo.com/?lang=km" />
+  <link rel="alternate" hreflang="ar" href="https://hizivo.com/?lang=ar" />
+  <link rel="alternate" hreflang="fr" href="https://hizivo.com/?lang=fr" />
 </head>
 
   <body>

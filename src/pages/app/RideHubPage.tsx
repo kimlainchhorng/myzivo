@@ -385,7 +385,12 @@ export default function RideHubPage() {
       fixedHeight={isFullScreen}
       hideHeader={activeTab === "book"}
       hideNav={activeTab === "book"}
-      className={activeTab === "book" ? "overflow-hidden !pb-0" : isFullScreen ? "overflow-hidden" : ""}
+      className={cn(
+        // Cap width on tablet+/desktop so 57 horizontal tabs + content stay
+        // readable as a clean centered panel instead of stretching full-screen.
+        activeTab !== "book" && !isFullScreen && "md:max-w-3xl lg:max-w-4xl xl:max-w-5xl mx-auto",
+        activeTab === "book" ? "overflow-hidden !pb-0" : isFullScreen ? "overflow-hidden" : "",
+      )}
     >
       {/* Tab bar — hidden when in full-screen book mode */}
       {activeTab !== "book" && (

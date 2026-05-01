@@ -216,7 +216,7 @@ function PayForm({
   );
 }
 
-export default function CoinRechargeSheet({ open, onClose, currentBalance }: CoinRechargeSheetProps) {
+export default function CoinRechargeSheet({ open, onClose, currentBalance, onPurchase }: CoinRechargeSheetProps) {
   const { user } = useAuth();
   const [selected, setSelected] = useState<CoinPackage | null>(null);
   const [intent, setIntent] = useState<IntentInfo | null>(null);
@@ -395,7 +395,12 @@ export default function CoinRechargeSheet({ open, onClose, currentBalance }: Coi
                   selected={selected}
                   intent={intent}
                   onBack={reset}
-                  onSuccess={() => {
+                  onSuccess={async (coins) => {
+                    try {
+                      await onPurchase?.(coins);
+                    } catch {
+                      // Realtime balance subscription will reconcile; don't block the close.
+                    }
                     reset();
                     onClose();
                   }}

@@ -1,49 +1,36 @@
 ## Problem
 
-Two issues visible in your screenshots:
+In both Feed (`/feed`) and Reel (`/reels`), only posts from one store ("Mommy Seafood") show up. Posts from other people are missing.
 
-1. **IMG_2328 (top of feed):** The composer card ("What's on your mind?" + Photo/Video / Feeling / Check In / Live) is hidden BEHIND the sticky header instead of sitting below it. It looks like a huge empty white space because the translucent header covers the avatar + input row.
+## Root cause
 
-2. **IMG_2329 (scrolled down):** The iOS status bar clock ("2:06") overlaps the "Feed" title and Search bar — the safe-area top padding is collapsing to zero in this state.
+The Feed and Reel pages query the `user_posts` table and select a `location` column. That column does not exist in the database. Supabase returns a 400 error, so the entire `user_posts` fetch fails and only `store_posts` render.
 
-## Root Cause
+Verified directly:
+- `SELECT location FROM user_posts` → `ERROR: column "location" does not exist`
+- DB has 17 published `user_posts` from 10 different authors that should be showing.
+- The Create Post modal also writes `location` and `visibility` to `user_posts`, both of which are missing — so any post created with a location or non-default visibility silently loses that data (or fails when the column is required).
 
-The sticky header is wrapped inside `<PullToRefresh>`, whose inner `motion.div` applies a `transform: translateY(...)` to the entire feed content. On iOS WebKit, when a `position: sticky` element ALSO has its own `transform` (from our show/hide animation `-translate-y-full` / `translate-y-0`) AND lives inside a transformed parent AND has `will-change: transform`, the sticky element gets promoted to its own compositor layer. This breaks sticky positioning — the element no longer reserves flow space (so following content slides under it) and the safe-area padding inset is computed against the wrong containing block (so it collapses).
-
-In short: stacking `transform` on the sticky header inside a transformed `PullToRefresh` parent is breaking iOS sticky behavior.
+Affected reads:
+- `src/pages/ReelsFeedPage.tsx` line ~516 (selects `location`)
+- `src/pages/FeedPage.tsx` lines ~482 and ~3482 (select `location`)
+Affected write:
+- `src/components/social/CreatePostModal.tsx` line ~331 (writes `location`), and `visibility` is always written.
 
 ## Fix
 
-Stop animating the header with a CSS `transform`. Use top offset instead, which doesn't promote the element to its own layer and is compatible with `position: sticky` on iOS.
+Add the missing columns to `user_posts` so the existing read/write code works as designed.
 
-### Changes in `src/pages/ReelsFeedPage.tsx`
+```text
+ALTER TABLE public.user_posts
+  ADD COLUMN IF NOT EXISTS location text,
+  ADD COLUMN IF NOT EXISTS visibility text NOT NULL DEFAULT 'public';
+```
 
-1. **Replace transform-based hide/show with a `top` offset** on the sticky Feed header:
-   - Remove `transition-transform`, `will-change-transform`, `-translate-y-full`, `translate-y-0`.
-   - Keep `sticky top-0 z-40`.
-   - When `headerHidden` is true, animate `transform: translateY(-100%)` via inline style with `transform-origin` set so it doesn't conflict — OR, simpler and safer: use a `marginTop` negative value via state (e.g. `marginTop: hidden ? '-120px' : '0'` with a CSS transition on `margin-top`). This keeps the element in flow and preserves sticky + safe-area behavior on iOS.
+That's the only change needed. No frontend changes required — once the columns exist, the user_posts query stops 400-ing and posts from all 10 authors (xixi24362, rarest_fact, MD Movie, AB Complete Car Care, ZIVO Platform, Nerissa, secon_de_gold, vivienne, Shiela Vidal, carajasan.rej) will show up alongside the store posts in both Feed and Reel.
 
-2. **Move `paddingTop` (safe area) to a dedicated wrapper inside the sticky box** so it can't be collapsed by transform layer promotion:
-   ```tsx
-   <div className="lg:hidden sticky top-0 z-40 bg-background/95 backdrop-blur-xl border-b border-border/30">
-     <div style={{ paddingTop: 'var(--zivo-safe-top-sticky, 0px)' }}>
-       <div className="px-3 py-1 flex items-center gap-1.5"> ... </div>
-     </div>
-   </div>
-   ```
+## Verification after fix
 
-3. **Add a small spacer above the composer** so the first row of "What's on your mind?" never visually touches the sticky header bottom border. (`mt-1` on the composer card.)
-
-4. **Auto-hide animation:** keep the scroll listener but apply the visibility via a wrapper `<div>` that uses `max-height` + `opacity` transitions (collapses smoothly without breaking sticky). The outer sticky box itself stays in place; only its inner content collapses to 0 height.
-
-### Expected Result
-
-- At scroll=0: composer ("What's on your mind?" / Photo-Video row / story ring) visibly sits BELOW the Feed header — no more giant white gap.
-- When scrolling down: header content collapses smoothly (Facebook-style) without leaving an empty stuck bar.
-- When scrolled (IMG_2329 case): the iOS status bar no longer overlaps the "Feed" title — safe-area padding stays applied.
-
-### Files Touched
-
-- `src/pages/ReelsFeedPage.tsx` (header markup around lines 984–1047)
-
-No CSS token changes needed; `--zivo-safe-top-sticky` is already correctly defined.
+1. Reload `/feed` — list shows posts from many authors, not just Mommy Seafood.
+2. Reload `/reels` — vertical scroller shows multiple authors.
+3. Create a new post with a location pin — location persists.

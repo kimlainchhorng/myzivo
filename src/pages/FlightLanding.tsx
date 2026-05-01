@@ -543,7 +543,13 @@ const FlightLanding = () => {
   if (isMobile) {
     return (
       <>
-        <SEOHead title="Search Flights – ZIVO" description="Search and compare flights from 500+ airlines." />
+        <SEOHead
+          title="Search Flights – ZIVO | Compare 500+ Airlines"
+          description="Find the best flight deals from 500+ airlines worldwide. Compare prices, book flights, and track price drops — all on ZIVO."
+          canonical="/flights"
+          ogImage="/og-flights.jpg"
+          appLink="zivo://flights"
+        />
         <AppLayout title="Flights" headerRightAction={undefined}>
           <Flight3DSkyHeader className="-mt-1" />
           <div className="relative overflow-hidden">
@@ -563,19 +569,47 @@ const FlightLanding = () => {
         canonical="/flights"
         ogImage="/og-flights.jpg"
         appLink="zivo://flights"
-        structuredData={{
-          "@context": "https://schema.org",
-          "@type": "WebPage",
-          "name": "Search Flights – ZIVO",
-          "description": "Find the best flight deals from 500+ airlines worldwide.",
-          "url": "https://hizivo.com/flights",
-          "isPartOf": { "@type": "WebSite", "url": "https://hizivo.com", "name": "ZIVO" },
-          "potentialAction": {
-            "@type": "SearchAction",
-            "target": "https://hizivo.com/flights/results?origin={origin}&destination={destination}&date={date}",
-            "query-input": "required name=origin required name=destination required name=date"
+        structuredData={[
+          {
+            "@context": "https://schema.org",
+            "@type": "WebPage",
+            "name": "Search Flights – ZIVO",
+            "description": "Find the best flight deals from 500+ airlines worldwide.",
+            "url": "https://hizivo.com/flights",
+            "isPartOf": { "@type": "WebSite", "url": "https://hizivo.com", "name": "ZIVO" },
+            "potentialAction": {
+              "@type": "SearchAction",
+              "target": "https://hizivo.com/flights/results?origin={origin}&destination={destination}&date={date}",
+              "query-input": "required name=origin required name=destination required name=date"
+            }
+          },
+          {
+            "@context": "https://schema.org",
+            "@type": "BreadcrumbList",
+            "itemListElement": [
+              { "@type": "ListItem", "position": 1, "name": "Home", "item": "https://hizivo.com/" },
+              { "@type": "ListItem", "position": 2, "name": "Flights", "item": "https://hizivo.com/flights" }
+            ]
+          },
+          {
+            "@context": "https://schema.org",
+            "@type": "ItemList",
+            "name": "Popular flight destinations on ZIVO",
+            "itemListOrder": "https://schema.org/ItemListOrderAscending",
+            "itemListElement": [
+              { "@type": "ListItem", "position": 1,  "name": "New York",    "url": "https://hizivo.com/flights/to-new-york" },
+              { "@type": "ListItem", "position": 2,  "name": "Los Angeles", "url": "https://hizivo.com/flights/to-los-angeles" },
+              { "@type": "ListItem", "position": 3,  "name": "London",      "url": "https://hizivo.com/flights/to-london" },
+              { "@type": "ListItem", "position": 4,  "name": "Paris",       "url": "https://hizivo.com/flights/to-paris" },
+              { "@type": "ListItem", "position": 5,  "name": "Tokyo",       "url": "https://hizivo.com/flights/to-tokyo" },
+              { "@type": "ListItem", "position": 6,  "name": "Dubai",       "url": "https://hizivo.com/flights/to-dubai" },
+              { "@type": "ListItem", "position": 7,  "name": "Bangkok",     "url": "https://hizivo.com/flights/to-bangkok" },
+              { "@type": "ListItem", "position": 8,  "name": "Singapore",   "url": "https://hizivo.com/flights/to-singapore" },
+              { "@type": "ListItem", "position": 9,  "name": "Bali",        "url": "https://hizivo.com/flights/to-bali" },
+              { "@type": "ListItem", "position": 10, "name": "Sydney",      "url": "https://hizivo.com/flights/to-sydney" }
+            ]
           }
-        }}
+        ]}
       />
       <Header />
       <main className="pt-16 sm:pt-20">

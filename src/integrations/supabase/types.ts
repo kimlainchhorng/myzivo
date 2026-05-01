@@ -57004,6 +57004,7 @@ export type Database = {
           id: string
           is_published: boolean | null
           likes_count: number | null
+          location: string | null
           media_type: string
           media_url: string | null
           media_urls: string[] | null
@@ -57013,6 +57014,7 @@ export type Database = {
           updated_at: string | null
           user_id: string
           views_count: number | null
+          visibility: string
         }
         Insert: {
           audio_name?: string | null
@@ -57023,6 +57025,7 @@ export type Database = {
           id?: string
           is_published?: boolean | null
           likes_count?: number | null
+          location?: string | null
           media_type?: string
           media_url?: string | null
           media_urls?: string[] | null
@@ -57032,6 +57035,7 @@ export type Database = {
           updated_at?: string | null
           user_id: string
           views_count?: number | null
+          visibility?: string
         }
         Update: {
           audio_name?: string | null
@@ -57042,6 +57046,7 @@ export type Database = {
           id?: string
           is_published?: boolean | null
           likes_count?: number | null
+          location?: string | null
           media_type?: string
           media_url?: string | null
           media_urls?: string[] | null
@@ -57051,6 +57056,7 @@ export type Database = {
           updated_at?: string | null
           user_id?: string
           views_count?: number | null
+          visibility?: string
         }
         Relationships: []
       }

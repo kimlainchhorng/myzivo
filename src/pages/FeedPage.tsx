@@ -427,15 +427,20 @@ function ReelCard({
           following_id: authorId,
         });
         setIsFollowing(true);
-        // Notify new follower
+        // Notify new follower (best-effort — failure here must not roll back the follow)
         try {
           const { data: sp } = await supabase.from("profiles").select("full_name, avatar_url").eq("user_id", userId).single();
           await supabase.functions.invoke("send-push-notification", {
             body: { user_id: authorId, notification_type: "new_follower", title: "New Follower 🔔", body: `${sp?.full_name || "Someone"} started following you`, data: { type: "new_follower", follower_id: userId, avatar_url: sp?.avatar_url, action_url: `/user/${userId}` } },
           });
-        } catch {}
+        } catch (notifyErr) {
+          console.warn("[ReelCard] follow push notify failed", notifyErr);
+        }
       }
-    } catch { /* ignore */ } finally {
+    } catch (err) {
+      console.error("[ReelCard] follow toggle failed", err);
+      toast.error("Couldn't update follow. Try again.");
+    } finally {
       setFollowLoading(false);
     }
   };
@@ -513,12 +518,20 @@ function ReelCard({
   useEffect(() => {
     if (!isActive || viewTracked.current) return;
     viewTracked.current = true;
-    if (post.source === "user") {
-      const rawId = post.id.startsWith("u-") ? post.id.slice(2) : post.id;
-      supabase.rpc("increment_user_post_view_count" as any, { p_post_id: rawId }).then(() => {});
-    } else {
-      supabase.rpc("increment_store_post_view_count" as any, { p_post_id: post.id }).then(() => {});
-    }
+    (async () => {
+      try {
+        if (post.source === "user") {
+          const rawId = post.id.startsWith("u-") ? post.id.slice(2) : post.id;
+          const { error } = await supabase.rpc("increment_user_post_view_count" as any, { p_post_id: rawId });
+          if (error) console.warn("[ReelCard] user view-count rpc error", error);
+        } else {
+          const { error } = await supabase.rpc("increment_store_post_view_count" as any, { p_post_id: post.id });
+          if (error) console.warn("[ReelCard] store view-count rpc error", error);
+        }
+      } catch (err) {
+        console.warn("[ReelCard] view-count rpc failed", err);
+      }
+    })();
   }, [isActive, post.id, post.source]);
 
   // Bridge the top-right Speed/PiP buttons (page-level) to the active reel
@@ -756,7 +769,9 @@ function ReelCard({
           { onConflict: "user_id,item_id", ignoreDuplicates: true },
         );
         if (error && !String(error.message || "").toLowerCase().includes("duplicate")) throw error;
-        toast.success("Saved");
+        toast.success("Saved", {
+          action: { label: "View", onClick: () => navigate("/saved") },
+        });
       } else {
         await (supabase as any).from("bookmarks").delete().eq("user_id", userId).eq("item_id", post.id);
         toast.success("Removed from saved");
@@ -2040,14 +2055,21 @@ function ReelCard({
                   <span className="text-sm font-medium text-foreground">Picture-in-picture</span>
                 </button>
                 <button
-                  onClick={() => { setShowMoreMenu(false); toast.success("You'll see fewer reels like this"); }}
+                  onClick={() => {
+                    setShowMoreMenu(false);
+                    window.dispatchEvent(new CustomEvent("zivo-reel-hide", { detail: { postId: post.id } }));
+                  }}
                   className="flex items-center gap-4 w-full px-4 py-3.5 hover:bg-muted/50 rounded-xl"
                 >
                   <EyeOff className="h-5 w-5 text-foreground" />
                   <span className="text-sm font-medium text-foreground">Not interested</span>
                 </button>
                 <button
-                  onClick={() => { setShowMoreMenu(false); toast.success("Thanks — we'll review this reel"); }}
+                  onClick={() => {
+                    setShowMoreMenu(false);
+                    if (!userId) { toast.error("Please sign in to report"); return; }
+                    window.dispatchEvent(new CustomEvent("zivo-reel-report", { detail: { postId: post.id } }));
+                  }}
                   className="flex items-center gap-4 w-full px-4 py-3.5 hover:bg-muted/50 rounded-xl"
                 >
                   <Flag className="h-5 w-5 text-destructive" />
@@ -2301,7 +2323,17 @@ function CommentSheet({
     if (replyTo) insertPayload.parent_id = replyTo.id;
     const { error } = await (supabase as any).from(targetTable).insert(insertPayload);
     if (error) {
-      toast.error("Failed to post comment");
+      console.error("[CommentSheet] insert failed", error);
+      const msg = (error.message || "").toLowerCase();
+      if (msg.includes("auth") || msg.includes("permission") || msg.includes("rls")) {
+        toast.error("You need to be signed in to comment");
+      } else if (msg.includes("network") || msg.includes("fetch")) {
+        toast.error("Network error. Check your connection.");
+      } else if (msg.includes("rate") || msg.includes("too many")) {
+        toast.error("Too many comments — wait a moment and try again");
+      } else {
+        toast.error("Couldn't post comment. Try again.");
+      }
     } else {
       setCommentText("");
       // Auto-expand the thread we just replied into so the new reply is visible
@@ -3045,12 +3077,16 @@ function DiscoverPeopleOverlay({ onClose, onNavigate }: { onClose: () => void; o
   const handleFollow = async (profileId: string) => {
     if (!userId) return;
     try {
-      await (supabase as any).from("user_followers").insert({
+      const { error } = await (supabase as any).from("user_followers").insert({
         follower_id: userId,
         following_id: profileId,
       });
+      if (error) throw error;
       setFollowingIds((prev) => new Set([...prev, profileId]));
-    } catch {}
+    } catch (err) {
+      console.warn("[DiscoverPeopleOverlay] follow failed", err);
+      toast.error("Couldn't follow. Try again.");
+    }
   };
 
   return (
@@ -3123,6 +3159,111 @@ function DiscoverPeopleOverlay({ onClose, onNavigate }: { onClose: () => void; o
   );
 }
 
+// ── Report Dialog ─────────────────────────────────────────────────────────────
+
+const REPORT_REASONS = [
+  "Spam or misleading",
+  "Sexual content",
+  "Hate speech or harassment",
+  "Violence or dangerous acts",
+  "Misinformation",
+  "Intellectual property",
+  "Other",
+];
+
+function ReelReportDialog({
+  postId,
+  reporterId,
+  onClose,
+  onReported,
+}: {
+  postId: string;
+  reporterId: string;
+  onClose: () => void;
+  onReported: () => void;
+}) {
+  const [reason, setReason] = useState<string | null>(null);
+  const [submitting, setSubmitting] = useState(false);
+
+  const submit = async () => {
+    if (!reason || submitting) return;
+    setSubmitting(true);
+    try {
+      const rawId = postId.startsWith("u-") ? postId.slice(2) : postId;
+      const { error } = await (supabase as any).from("post_reports").insert({
+        post_id: rawId,
+        reporter_id: reporterId,
+        reason,
+      });
+      if (error) throw error;
+      toast.success("Report submitted. Thank you.");
+      onReported();
+    } catch (err) {
+      console.error("[ReelReportDialog] submit failed", err);
+      toast.error("Couldn't submit report. Try again.");
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  return (
+    <motion.div
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
+      onClick={(e) => { e.stopPropagation(); onClose(); }}
+      className="fixed inset-0 z-[80] flex items-end justify-center bg-black/60"
+    >
+      <motion.div
+        initial={{ y: 80 }}
+        animate={{ y: 0 }}
+        exit={{ y: 80 }}
+        onClick={(e) => e.stopPropagation()}
+        className="w-full max-w-md bg-background rounded-t-2xl border-t border-border/30"
+        style={{ paddingBottom: "calc(env(safe-area-inset-bottom, 0px) + 16px)" }}
+      >
+        <div className="flex items-center justify-between px-4 py-3 border-b border-border">
+          <span className="font-semibold text-foreground">Report post</span>
+          <button
+            type="button"
+            onClick={onClose}
+            className="w-8 h-8 rounded-full flex items-center justify-center hover:bg-muted"
+            aria-label="Close report dialog"
+          >
+            <XIcon className="w-4 h-4 text-muted-foreground" />
+          </button>
+        </div>
+        <p className="px-4 pt-3 text-xs text-muted-foreground">Why are you reporting this post?</p>
+        <div className="px-2 py-2">
+          {REPORT_REASONS.map((r) => (
+            <button
+              key={r}
+              type="button"
+              onClick={() => setReason(r)}
+              className={cn(
+                "w-full text-left px-3 py-3 rounded-xl text-sm transition-colors",
+                reason === r ? "bg-primary/10 text-primary font-semibold" : "text-foreground hover:bg-muted/40",
+              )}
+            >
+              {r}
+            </button>
+          ))}
+        </div>
+        <div className="px-4 pt-2 pb-3">
+          <button
+            type="button"
+            disabled={!reason || submitting}
+            onClick={submit}
+            className="w-full h-11 rounded-xl bg-destructive text-destructive-foreground font-semibold disabled:opacity-40"
+          >
+            {submitting ? "Submitting…" : "Submit report"}
+          </button>
+        </div>
+      </motion.div>
+    </motion.div>
+  );
+}
+
 
 export default function FeedPage() {
   const { t } = useI18n();
@@ -3191,6 +3332,8 @@ export default function FeedPage() {
   const [followingIds, setFollowingIds] = useState<Set<string>>(new Set());
   const [showSwipeHint, setShowSwipeHint] = useState(false);
   const [showShortcutsHelp, setShowShortcutsHelp] = useState(false);
+  // Twitter-style "double-tap active tab to refresh + scroll to top".
+  const lastTabTapRef = useRef<{ mode: string; at: number }>({ mode: "", at: 0 });
   const [isOnline, setIsOnline] = useState<boolean>(() => typeof navigator === "undefined" ? true : navigator.onLine);
   // Listen for connectivity changes so we can show a banner when offline +
   // a brief toast when reconnecting. Useful on flaky cellular / subway wifi.
@@ -3239,6 +3382,8 @@ export default function FeedPage() {
   const [pageMultiplier, setPageMultiplier] = useState(1);
   // Posts the user just blocked, removed from view immediately
   const [hiddenAuthorIds, setHiddenAuthorIds] = useState<Set<string>>(new Set());
+  // Active report dialog (set by `zivo-reel-report` event from a card's More menu)
+  const [reportPostId, setReportPostId] = useState<string | null>(null);
   const { data: ownerStore } = useOwnerStoreProfile();
   const lodgingRooms = useLodgeRooms(ownerStore?.isLodging ? ownerStore.id : "");
   const lodgingProfile = useLodgePropertyProfile(ownerStore?.isLodging ? ownerStore.id : "");
@@ -3552,7 +3697,9 @@ export default function FeedPage() {
           await supabase.functions.invoke("send-push-notification", {
             body: { user_id: authorId, notification_type: "post_liked", title: "New Like ❤️", body: `${sp?.full_name || "Someone"} liked your post`, data: { type: "post_liked", post_id: postId, liker_id: userId, action_url: `/feed?post=${postId}` } },
           });
-        } catch {}
+        } catch (notifyErr) {
+          console.warn("[FeedPage] like push notify failed", notifyErr);
+        }
       }
     }
     queryClient.invalidateQueries({ queryKey: ["customer-feed"] });
@@ -3579,6 +3726,33 @@ export default function FeedPage() {
       window.removeEventListener("zivo-reel-prev", onPrev);
     };
   }, [activeIndex, visiblePosts.length]);
+
+  // Reel-card overflow menu bridge: Not interested → hide locally;
+  // Report → open the centralized report dialog.
+  useEffect(() => {
+    const onHide = (e: Event) => {
+      const postId = (e as CustomEvent<{ postId: string }>).detail?.postId;
+      if (!postId) return;
+      setDeletedPostIds((prev) => {
+        if (prev.has(postId)) return prev;
+        const next = new Set(prev);
+        next.add(postId);
+        return next;
+      });
+      toast.success("We'll show fewer posts like this");
+    };
+    const onReport = (e: Event) => {
+      const postId = (e as CustomEvent<{ postId: string }>).detail?.postId;
+      if (!postId) return;
+      setReportPostId(postId);
+    };
+    window.addEventListener("zivo-reel-hide", onHide);
+    window.addEventListener("zivo-reel-report", onReport);
+    return () => {
+      window.removeEventListener("zivo-reel-hide", onHide);
+      window.removeEventListener("zivo-reel-report", onReport);
+    };
+  }, []);
 
   // Keyboard shortcuts for the reel viewer (desktop power-user).
   // Skipped while typing in any input/textarea so we don't hijack typing.
@@ -3844,6 +4018,20 @@ export default function FeedPage() {
               key={mode}
               type="button"
               onClick={() => {
+                const now = Date.now();
+                // Double-tap the SAME tab within 400ms → refresh + scroll to top
+                if (
+                  feedMode === mode &&
+                  lastTabTapRef.current.mode === mode &&
+                  now - lastTabTapRef.current.at < 400
+                ) {
+                  lastTabTapRef.current = { mode: "", at: 0 };
+                  void queryClient.invalidateQueries({ queryKey: ["customer-feed"] });
+                  cardRefs.current[0]?.scrollIntoView({ behavior: "smooth", block: "start" });
+                  toast.success("Refreshing…");
+                  return;
+                }
+                lastTabTapRef.current = { mode, at: now };
                 setFeedMode(mode);
                 setActiveIndex(0);
                 requestAnimationFrame(() => cardRefs.current[0]?.scrollIntoView({ block: "start" }));
@@ -4060,10 +4248,32 @@ export default function FeedPage() {
                   ref={(el) => { cardRefs.current[index] = el; }}
                   className="w-full h-full snap-start"
                 >
-                  <MemoReelCard
-                    post={post}
-                    isActive={activeIndex === index}
-                    shouldPreload={index === activeIndex + 1 || index === activeIndex - 1}
+                  <ErrorBoundary
+                    fallback={
+                      <div className="w-full h-full bg-black flex items-center justify-center px-6">
+                        <div className="text-center max-w-xs">
+                          <div className="w-14 h-14 rounded-full bg-white/10 flex items-center justify-center mx-auto mb-4 border border-white/15">
+                            <span className="text-2xl">⚠️</span>
+                          </div>
+                          <p className="text-white font-semibold mb-1">This reel couldn't load</p>
+                          <p className="text-white/60 text-sm mb-4">Something went wrong rendering this reel. Swipe to keep watching.</p>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              cardRefs.current[index + 1]?.scrollIntoView({ behavior: "smooth", block: "start" });
+                            }}
+                            className="px-4 py-2 rounded-full bg-white text-black text-sm font-bold active:scale-95"
+                          >
+                            Skip to next
+                          </button>
+                        </div>
+                      </div>
+                    }
+                  >
+                    <MemoReelCard
+                      post={post}
+                      isActive={activeIndex === index}
+                      shouldPreload={index === activeIndex + 1 || index === activeIndex - 1}
                     globalMuted={globalMuted}
                     onToggleMute={() => setGlobalMuted((m) => !m)}
                     onNavigate={(slug) => slug.startsWith("__user__") ? navigate(`/user/${slug.replace("__user__", "")}`) : navigate(`/grocery/shop/${slug}`)}
@@ -4114,7 +4324,8 @@ export default function FeedPage() {
                         cardRefs.current[next]?.scrollIntoView({ behavior: "smooth", block: "start" });
                       });
                     }}
-                  />
+                    />
+                  </ErrorBoundary>
                 </div>
               </div>
             ))}
@@ -4362,6 +4573,29 @@ export default function FeedPage() {
           />
         );
       })()}
+
+      {/* Report dialog (opened by `zivo-reel-report` event from a reel's overflow menu) */}
+      <AnimatePresence>
+        {reportPostId && userId && (
+          <ReelReportDialog
+            postId={reportPostId}
+            reporterId={userId}
+            onClose={() => setReportPostId(null)}
+            onReported={() => {
+              const id = reportPostId;
+              setReportPostId(null);
+              if (id) {
+                setDeletedPostIds((prev) => {
+                  if (prev.has(id)) return prev;
+                  const next = new Set(prev);
+                  next.add(id);
+                  return next;
+                });
+              }
+            }}
+          />
+        )}
+      </AnimatePresence>
 
       {/* Sound overlay */}
       <AnimatePresence>
