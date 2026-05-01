@@ -1935,6 +1935,7 @@ export default function LiveStreamPage() {
 </button>
  ))}
 </div>
+</div>
 )}
 
  {/* ─── Birthday Celebrations (no backend yet — flagged off) ─── */}
@@ -1975,6 +1976,7 @@ export default function LiveStreamPage() {
 </p>
 </button>
  ))}
+</div>
 </div>
 )}
 
