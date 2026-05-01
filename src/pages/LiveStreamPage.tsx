@@ -529,15 +529,6 @@ function LiveWatcher({ stream, onLeave }: { stream: LiveStream; onLeave: () =>vo
 </p>
 <p className="text-white/50 text-[10px] leading-tight">{stream.topic}</p>
 </div>
-<button
-  onClick={() => setFollowed((v) => !v)}
-  className={cn(
-    "shrink-0 px-2.5 h-7 rounded-full text-[11px] font-bold transition-all active:scale-95",
-    followed ? "bg-white/15 text-white border border-white/20" : "bg-rose-500 text-white shadow-md shadow-rose-500/30",
-  )}
->
-  {followed ? "Following" : "+ Follow"}
-</button>
 </div>
 
 <div className="flex items-center gap-1 bg-black/40 backdrop-blur-sm rounded-full px-2 py-1">
@@ -557,55 +548,6 @@ function LiveWatcher({ stream, onLeave }: { stream: LiveStream; onLeave: () =>vo
 </div>
 </div>
 
-{/* Slim Gift Goal progress bar — directly below LIVE row */}
-<div className="relative z-10 px-4 mt-1.5">
-  <div className="flex items-center gap-2 bg-black/35 backdrop-blur-sm rounded-full pl-2 pr-2.5 py-1 border border-amber-500/30">
-    <Target className="h-3 w-3 text-amber-300 shrink-0" />
-    <div className="flex-1 h-1 rounded-full bg-white/10 overflow-hidden">
-      <div className="h-full bg-gradient-to-r from-amber-400 via-orange-500 to-rose-500 transition-all duration-700" style={{ width: "42.8%" }} />
-    </div>
-    <span className="text-[10px] font-mono font-bold text-amber-200 tabular-nums shrink-0">4,280<span className="text-amber-200/50">/10K</span></span>
-  </div>
-</div>
-
-{/* Dismissible pinned message */}
-{!pinnedDismissed && (
-  <div className="relative z-10 px-4 mt-1.5">
-    <div className="flex items-center gap-2 bg-amber-500/15 backdrop-blur-md border border-amber-500/30 rounded-full pl-2 pr-1 py-1">
-      <Pin className="h-3 w-3 text-amber-300 shrink-0" />
-      <p className="text-[11px] text-amber-100 font-medium truncate flex-1">
-        Welcome — hit follow if you're new
-      </p>
-      <button
-        onClick={() => setPinnedDismissed(true)}
-        className="w-5 h-5 rounded-full hover:bg-white/10 flex items-center justify-center shrink-0"
-        aria-label="Dismiss pinned message"
-      >
-        <X className="h-3 w-3 text-amber-200/70" />
-      </button>
-    </div>
-  </div>
-)}
-
-{/* Top Fans overlay (top-right floating) */}
-<div className="absolute right-3 z-20 flex items-center gap-1.5 bg-black/45 backdrop-blur-sm rounded-full pl-2 pr-2 py-1" style={{ top: "calc(env(safe-area-inset-top, 0px) + 56px)" }}>
-  <Crown className="h-3 w-3 text-amber-300" />
-  <span className="text-[9px] font-bold text-amber-200 uppercase tracking-wider">Top</span>
-  <div className="flex -space-x-1.5">
-    <Avatar className="h-5 w-5 ring-1.5 ring-amber-400">
-      <AvatarImage src="https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=120&q=70&auto=format&fit=crop" />
-      <AvatarFallback className="text-[8px]">1</AvatarFallback>
-    </Avatar>
-    <Avatar className="h-5 w-5 ring-1.5 ring-zinc-300">
-      <AvatarImage src="https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=120&q=70&auto=format&fit=crop" />
-      <AvatarFallback className="text-[8px]">2</AvatarFallback>
-    </Avatar>
-    <Avatar className="h-5 w-5 ring-1.5 ring-orange-500">
-      <AvatarImage src="https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=120&q=70&auto=format&fit=crop" />
-      <AvatarFallback className="text-[8px]">3</AvatarFallback>
-    </Avatar>
-  </div>
-</div>
 
  {/* Floating like hearts */}
 <div className="absolute right-4 bottom-48 z-30 w-14 pointer-events-none">
