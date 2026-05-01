@@ -12,7 +12,7 @@ import {
   User, ArrowLeft, Loader2, Sparkles, Camera, ImagePlus, Check, X, MoveVertical,
   Shield, Star, ChevronRight, UserPlus, BadgeCheck,
   Wallet, Store, ExternalLink, Users, Globe, ChevronDown, Crown, MapPin, ShoppingBag,
-  Settings, Handshake, Car, Wrench, UtensilsCrossed, Building2, Truck, Phone, AlertCircle, Bell, MoreHorizontal,
+  Handshake, Car, Wrench, UtensilsCrossed, Building2, Truck, Phone, AlertCircle, Bell, MoreHorizontal,
   Pencil, RotateCcw, Share2, BarChart3, Link as LinkIcon, QrCode, Copy,
   Repeat, DollarSign, Briefcase, User as UserIcon,
 } from "lucide-react";
@@ -42,11 +42,7 @@ import { stripTrackingParams } from "@/lib/linkSafetyExtras";
 import ProfileContentTabs from "@/components/profile/ProfileContentTabs";
 import ProfileStories from "@/components/profile/ProfileStories";
 import SocialListModal from "@/components/profile/SocialListModal";
-import ProfileCompletenessCard from "@/components/profile/ProfileCompletenessCard";
-import ProfileQuickLinksCard from "@/components/profile/ProfileQuickLinksCard";
-import { DEFAULT_QUICK_LINKS } from "@/components/profile/quickLinks";
-import ProfileWalletCard from "@/components/profile/ProfileWalletCard";
-import ProfileReferralCard from "@/components/profile/ProfileReferralCard";
+// Wallet, Completeness, Referral & QuickLinks cards moved to /more page
 import ProfileTripsCard from "@/components/profile/ProfileTripsCard";
 import { useCoinBalance } from "@/hooks/useCoinBalance";
 import { useWalletSummary } from "@/hooks/useZivoWallet";
