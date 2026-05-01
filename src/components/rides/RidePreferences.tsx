@@ -2,6 +2,7 @@
  * RidePreferences — Personalization hub with ride settings, favorite drivers, ride notes
  */
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { Volume2, VolumeX, Thermometer, Music, MessageSquare, Heart, Star, Settings, ChevronRight, Check, Sparkles, StickyNote, UserCheck } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -28,10 +29,12 @@ const favoriteDrivers = [
 ];
 
 export default function RidePreferences() {
+  const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState<Tab>("preferences");
   const [prefs, setPrefs] = useState(defaultPrefs);
   const [rideNote, setRideNote] = useState("");
   const [savedNotes, setSavedNotes] = useState<string[]>(["I have a small dog with me", "Please use the side entrance"]);
+  const [favDrivers, setFavDrivers] = useState(favoriteDrivers);
 
   const tabs = [
     { id: "preferences" as const, label: "Settings", icon: Settings },
@@ -140,7 +143,7 @@ export default function RidePreferences() {
           {activeTab === "favorites" && (
             <div className="space-y-3">
               <p className="text-[10px] text-muted-foreground px-1">Request your favorite drivers when available</p>
-              {favoriteDrivers.map((driver, i) => (
+              {favDrivers.map((driver, i) => (
                 <motion.div key={driver.id} initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.06 }} className="rounded-2xl bg-card border border-border/40 p-4">
                   <div className="flex items-center gap-3">
                     <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center">
@@ -159,10 +162,10 @@ export default function RidePreferences() {
                     <Heart className="w-5 h-5 text-red-500 fill-red-500 shrink-0" />
                   </div>
                   <div className="flex gap-2 mt-3">
-                    <Button variant="outline" size="sm" className="flex-1 h-8 text-[10px] rounded-lg font-bold" onClick={() => toast.success(`Requesting ${driver.name}...`)}>
+                    <Button variant="outline" size="sm" className="flex-1 h-8 text-[10px] rounded-lg font-bold" onClick={() => navigate("/rides", { state: { preferredDriverId: driver.id, preferredDriverName: driver.name } })}>
                       Request Driver
                     </Button>
-                    <Button variant="outline" size="sm" className="h-8 text-[10px] rounded-lg font-bold text-red-500 border-red-500/20 hover:bg-red-500/5" onClick={() => toast.info(`Removed ${driver.name}`)}>
+                    <Button variant="outline" size="sm" className="h-8 text-[10px] rounded-lg font-bold text-red-500 border-red-500/20 hover:bg-red-500/5" onClick={() => { setFavDrivers(prev => prev.filter(d => d.id !== driver.id)); toast.success(`${driver.name} removed`); }}>
                       Remove
                     </Button>
                   </div>

@@ -1,6 +1,6 @@
 // Auto-post scheduled Facebook posts.
 // Reads page config + scheduled posts from feedback_submissions, posts due ones to Graph API.
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
+import { createClient } from "../_shared/deps.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",

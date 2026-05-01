@@ -1,7 +1,8 @@
 // Post a message/photo to a Facebook Page.
 // Accepts page_access_token directly in the request body (no OAuth required),
 // or falls back to the stored token in store_ad_pages.
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
+import { createClient } from "../_shared/deps.ts";
+import { decryptToken } from "../_shared/tokenCrypto.ts";
 import { scanContentForLinks, logBlockedAttempt, isAbuseThresholdExceeded, isIpAbuseThresholdExceeded, getRequestIpHash } from "../_shared/contentLinkValidation.ts";
 import { isLikelyMaliciousBot } from "../_shared/botDetection.ts";
 
@@ -80,7 +81,7 @@ Deno.serve(async (req) => {
       if (!pageRow?.access_token) {
         return json({ error: "No Page Access Token provided or stored. Enter your token in the Facebook Page settings." }, 400);
       }
-      pageToken = pageRow.access_token;
+      pageToken = await decryptToken(pageRow.access_token);
       resolvedPageName = pageRow.name || resolvedPageName;
     }
 

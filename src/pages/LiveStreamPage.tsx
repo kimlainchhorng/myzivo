@@ -879,6 +879,11 @@ export default function LiveStreamPage() {
  const [rewardClaimed, setRewardClaimed] = useState(false);
  const [completedMissions, setCompletedMissions] = useState<number[]>([0, 1]);
  const [reminded, setReminded] = useState<string[]>(["maya"]);
+ const [wavedNames, setWavedNames] = useState<Set<string>>(new Set());
+ const [matchedNames, setMatchedNames] = useState<Set<string>>(new Set());
+ const [notifiedOffline, setNotifiedOffline] = useState<Set<string>>(() => {
+   try { return new Set(JSON.parse(localStorage.getItem("zivo_live_notify") || "[]")); } catch { return new Set(); }
+ });
  const [followedCreators, setFollowedCreators] = useState<string[]>([]);
  const [feedbackToast, setFeedbackToast] = useState(false);
  const [eventReminders, setEventReminders] = useState<string[]>([]);
@@ -1531,11 +1536,19 @@ export default function LiveStreamPage() {
 </div>
 </button>
 <div className="p-2 flex gap-1.5">
-<button onClick={() =>toast.info(`Waved at ${d.name}!`)} className="flex-1 py-1.5 rounded-full bg-pink-500/15 text-pink-600 dark:text-pink-400 text-[10px] font-bold active:scale-95 transition-transform">
- Wave
+<button
+  disabled={wavedNames.has(d.name)}
+  onClick={() => { setWavedNames(prev => new Set([...prev, d.name])); toast.success(`Waved at ${d.name}! 👋`); }}
+  className={cn("flex-1 py-1.5 rounded-full text-[10px] font-bold transition-all", wavedNames.has(d.name) ? "bg-pink-500/5 text-pink-400/50 cursor-default" : "bg-pink-500/15 text-pink-600 dark:text-pink-400 active:scale-95")}
+>
+  {wavedNames.has(d.name) ? "Waved ✓" : "Wave"}
 </button>
-<button onClick={() =>toast.info(`Match request sent to ${d.name}!`)} className="flex-1 py-1.5 rounded-full bg-pink-500 text-white text-[10px] font-bold active:scale-95 transition-transform">
- Match
+<button
+  disabled={matchedNames.has(d.name)}
+  onClick={() => { setMatchedNames(prev => new Set([...prev, d.name])); toast.success(`Match request sent to ${d.name}!`); }}
+  className={cn("flex-1 py-1.5 rounded-full text-[10px] font-bold transition-all", matchedNames.has(d.name) ? "bg-pink-400 text-white/60 cursor-default" : "bg-pink-500 text-white active:scale-95")}
+>
+  {matchedNames.has(d.name) ? "Sent ✓" : "Match"}
 </button>
 </div>
 </div>
@@ -1837,7 +1850,7 @@ export default function LiveStreamPage() {
  ].map((p, i) =>(
 <button
  key={i}
- onClick={() =>toast.success(`Watching ${p.name}'s pet stream`, { description: `${p.viewers.toLocaleString()} viewers · @${p.host}` })}
+ onClick={() => { setSearchQuery("pet"); window.scrollTo({ top: 0, behavior: "smooth" }); }}
  className="shrink-0 w-[150px] rounded-2xl overflow-hidden bg-card border border-border/30 active:scale-[0.97] hover:shadow-md transition-all shadow-sm text-left"
  >
 <div className="relative aspect-square">
@@ -1879,7 +1892,7 @@ export default function LiveStreamPage() {
  ].map((t, i) =>(
 <button
  key={i}
- onClick={() =>toast.success(`Joining travel stream from ${t.city}`, { description: `@${t.host} · ${t.viewers.toLocaleString()} watching` })}
+ onClick={() => { setSearchQuery("travel"); window.scrollTo({ top: 0, behavior: "smooth" }); }}
  className="shrink-0 w-[180px] rounded-2xl overflow-hidden bg-card border border-border/30 active:scale-[0.97] hover:shadow-md transition-all shadow-sm text-left"
  >
 <div className="relative h-[110px]">
@@ -1923,7 +1936,7 @@ export default function LiveStreamPage() {
  ].map((n, i) =>(
 <button
  key={i}
- onClick={() =>toast.success(`Watching: ${n.title}`, { description: `${n.host} · ${n.viewers.toLocaleString()} watching now` })}
+ onClick={() => { setSearchQuery("news"); window.scrollTo({ top: 0, behavior: "smooth" }); }}
  className="w-full flex items-center gap-3 p-2 rounded-2xl bg-card border border-border/30 active:scale-[0.99] transition-transform shadow-sm text-left"
  >
 <div className="relative w-20 h-20 rounded-xl overflow-hidden shrink-0">
@@ -1971,7 +1984,7 @@ export default function LiveStreamPage() {
  ].map((s, i) =>(
 <button
  key={i}
- onClick={() =>toast.success(`Joined ${s.teams}`, { description: `${s.league} · ${s.score} (${s.minute})` })}
+ onClick={() => { setSearchQuery("sports"); window.scrollTo({ top: 0, behavior: "smooth" }); }}
  className="shrink-0 w-[200px] rounded-2xl overflow-hidden bg-card border border-border/30 active:scale-[0.97] hover:shadow-md transition-all shadow-sm text-left"
  >
 <div className="relative h-[110px]">
@@ -2039,7 +2052,7 @@ export default function LiveStreamPage() {
 </button>
  ))}
 </div>
-<button onClick={() =>toast.info("Browse all 12 signs & tarot readings")} className="mt-2 w-full py-2 rounded-full bg-violet-500/10 border border-violet-500/20 text-[11px] font-bold text-violet-600 dark:text-violet-400">
+<button onClick={() => { setSearchQuery("astrology"); window.scrollTo({ top: 0, behavior: "smooth" }); }} className="mt-2 w-full py-2 rounded-full bg-violet-500/10 border border-violet-500/20 text-[11px] font-bold text-violet-600 dark:text-violet-400">
  Browse all 12 signs & tarot
 </button>
 </div>
@@ -2061,7 +2074,7 @@ export default function LiveStreamPage() {
  ].map((d, i) =>(
 <button
  key={i}
- onClick={() =>toast.success(`Joining ${d.dj}'s set`, { description: `${d.set} · ${d.bpm} BPM · ${d.listeners} listeners` })}
+ onClick={() => { setSearchQuery("music"); window.scrollTo({ top: 0, behavior: "smooth" }); }}
  className="shrink-0 w-[180px] rounded-2xl overflow-hidden active:scale-[0.97] hover:shadow-xl transition-all shadow-md text-left relative"
  >
 <div className="relative h-[150px]">
@@ -2105,7 +2118,7 @@ export default function LiveStreamPage() {
  ].map((c, i) =>(
 <button
  key={i}
- onClick={() =>toast.success(`Watching ${c.name}'s comedy set`, { description: `@${c.host} · ${c.lol}` })}
+ onClick={() => { setSearchQuery("comedy"); window.scrollTo({ top: 0, behavior: "smooth" }); }}
  className="shrink-0 w-[160px] rounded-2xl overflow-hidden bg-card border border-border/30 active:scale-[0.97] hover:shadow-md transition-all shadow-sm text-left"
  >
 <div className="relative h-[90px]">
@@ -2186,7 +2199,7 @@ export default function LiveStreamPage() {
 </h2>
 </div>
 <button
- onClick={() =>toast.success("Joining Maya Chen's spotlight stream", { description: "12.4K viewers · 89.2K hearts · 4.1M coins" })}
+ onClick={() => { setSearchQuery("music"); window.scrollTo({ top: 0, behavior: "smooth" }); }}
  className="w-full relative rounded-2xl overflow-hidden h-[150px] active:scale-[0.99] transition-transform shadow-lg shadow-amber-500/20"
  >
 <img src="https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=800&q=70&auto=format&fit=crop" alt="" className="absolute inset-0 w-full h-full object-cover" />
@@ -2301,7 +2314,7 @@ export default function LiveStreamPage() {
  ].map((c, i) =>(
 <button
  key={i}
- onClick={() =>toast.success(`Joining ${c.host}'s ${c.character} cosplay`, { description: `${c.viewers.toLocaleString()} viewers` })}
+ onClick={() => { setSearchQuery("cosplay"); window.scrollTo({ top: 0, behavior: "smooth" }); }}
  className="shrink-0 w-[150px] rounded-2xl overflow-hidden bg-card border border-border/30 active:scale-[0.97] hover:shadow-md transition-all shadow-sm text-left"
  >
 <div className="relative aspect-[4/5]">
@@ -2386,7 +2399,7 @@ export default function LiveStreamPage() {
  return (
 <button
  key={i}
- onClick={() =>toast.success(`Joining ${t.name}`, { description: `@${t.host} · ${t.change} · ${t.viewers.toLocaleString()} watching` })}
+ onClick={() => { setSearchQuery("trading"); window.scrollTo({ top: 0, behavior: "smooth" }); }}
  className="w-full flex items-center gap-3 p-2.5 rounded-2xl bg-card border border-border/30 active:scale-[0.99] transition-transform shadow-sm text-left"
  >
 <div className={cn(
@@ -2431,7 +2444,7 @@ export default function LiveStreamPage() {
  ].map((m, i) =>(
 <button
  key={i}
- onClick={() =>toast.success(`Joining ${m.trick}`, { description: `@${m.host} · ${m.viewers.toLocaleString()} watching` })}
+ onClick={() => { setSearchQuery("magic"); window.scrollTo({ top: 0, behavior: "smooth" }); }}
  className="shrink-0 w-[160px] rounded-2xl overflow-hidden bg-card border border-fuchsia-500/30 active:scale-[0.97] hover:shadow-md transition-all shadow-sm text-left"
  >
 <div className="relative aspect-square">
@@ -2625,14 +2638,23 @@ export default function LiveStreamPage() {
  ].map((s, i) =>(
 <motion.div key={s.name} initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.05 }}>
 <button
- onClick={() =>toast.info("This creator isn't live yet — be the first to know when they go live.")}
+ onClick={() => {
+   const isNotified = notifiedOffline.has(s.name);
+   setNotifiedOffline(prev => {
+     const next = new Set(prev);
+     isNotified ? next.delete(s.name) : next.add(s.name);
+     localStorage.setItem("zivo_live_notify", JSON.stringify([...next]));
+     return next;
+   });
+   toast.success(isNotified ? `Notification removed for ${s.name}` : `You'll be notified when ${s.name} goes live!`);
+ }}
  className="w-full text-left bg-card rounded-2xl border border-border/30 overflow-hidden hover:border-red-500/30 transition-all group shadow-sm hover:shadow-xl hover:-translate-y-1 duration-300 opacity-90"
  >
 <div className="relative aspect-[3/4] overflow-hidden bg-muted">
 <img src={s.photo} alt={s.title} loading="lazy" className="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-500 grayscale-[20%]" />
 <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/20 to-black/40" />
-<Badge className="absolute top-3 left-3 bg-zinc-700/90 backdrop-blur-sm text-white border-0 text-[10px] gap-1">
-<span className="h-1.5 w-1.5 rounded-full bg-zinc-300" />Soon
+<Badge className={cn("absolute top-3 left-3 backdrop-blur-sm text-white border-0 text-[10px] gap-1", notifiedOffline.has(s.name) ? "bg-primary/90" : "bg-zinc-700/90")}>
+<span className={cn("h-1.5 w-1.5 rounded-full", notifiedOffline.has(s.name) ? "bg-white" : "bg-zinc-300")} />{notifiedOffline.has(s.name) ? "Notify set ✓" : "Soon"}
 </Badge>
  {s.hot && (
 <Badge className="absolute top-3 left-[68px] bg-gradient-to-r from-orange-500 to-amber-500 text-white border-0 text-[10px] gap-0.5 shadow-lg">

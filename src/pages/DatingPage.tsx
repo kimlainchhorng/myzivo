@@ -39,16 +39,45 @@ export default function DatingPage() {
 
   const currentProfile = profiles[currentIndex];
 
+  const likeMutation = useMutation({
+    mutationFn: async ({ targetId, action }: { targetId: string; action: "like" | "skip" }) => {
+      if (!user?.id) return;
+      await (supabase as any)
+        .from("user_connections")
+        .upsert(
+          { user_id: user.id, target_user_id: targetId, connection_type: `dating_${action}`, created_at: new Date().toISOString() },
+          { onConflict: "user_id,target_user_id" }
+        );
+      if (action === "like") {
+        const { data: mutual } = await (supabase as any)
+          .from("user_connections")
+          .select("id")
+          .eq("user_id", targetId)
+          .eq("target_user_id", user.id)
+          .eq("connection_type", "dating_like")
+          .maybeSingle();
+        if (mutual) {
+          toast.success("It's a match! 🎉 Say hi in chat.", { duration: 5000 });
+        }
+      }
+    },
+  });
+
   const handleSwipe = useCallback((dir: "left" | "right") => {
     setDirection(dir);
-    if (dir === "right" && currentProfile) {
-      toast.success(`Liked ${currentProfile.full_name}!`, { icon: "❤️" });
+    if (currentProfile) {
+      if (dir === "right") {
+        toast.success(`Liked ${currentProfile.full_name}!`, { icon: "❤️" });
+        likeMutation.mutate({ targetId: currentProfile.id, action: "like" });
+      } else {
+        likeMutation.mutate({ targetId: currentProfile.id, action: "skip" });
+      }
     }
     setTimeout(() => {
       setDirection(null);
       setCurrentIndex((prev) => prev + 1);
     }, 300);
-  }, [currentProfile]);
+  }, [currentProfile, likeMutation]);
 
   const x = useMotionValue(0);
   const rotate = useTransform(x, [-200, 200], [-15, 15]);

@@ -2,7 +2,7 @@
 // `Idempotency-Key` for 24 hours. Subsequent identical-keyed calls return the
 // cached response unchanged, preventing duplicate side effects (charges, orders).
 
-import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.57.2';
+import { createClient } from './deps.ts';
 
 const TTL_HOURS = 24;
 

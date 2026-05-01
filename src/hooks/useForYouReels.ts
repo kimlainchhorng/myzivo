@@ -53,7 +53,7 @@ export function useForYouReels() {
       const db = supabase as any;
       const { data } = await db
         .from("store_orders")
-        .select("store_id, store_profiles(category, store_name)")
+        .select("store_id, store_profiles(category, name)")
         .eq("user_id", user.id)
         .in("status", ["completed", "delivered"])
         .order("created_at", { ascending: false })
@@ -80,7 +80,7 @@ export function useForYouReels() {
       const db = supabase as any;
       const { data } = await db
         .from("posts")
-        .select("id, store_id, store_profiles(id, store_name, latitude, longitude, category)")
+        .select("id, store_id, store_profiles(id, name, latitude, longitude, category)")
         .not("store_id", "is", null)
         .eq("is_published", true)
         .order("created_at", { ascending: false })
@@ -89,7 +89,7 @@ export function useForYouReels() {
       return (data || []).map((post: any) => ({
         postId: post.id,
         storeId: post.store_id,
-        storeName: (post.store_profiles as any)?.store_name || "Shop",
+        storeName: (post.store_profiles as any)?.name || "Shop",
         lat: (post.store_profiles as any)?.latitude,
         lng: (post.store_profiles as any)?.longitude,
         category: ((post.store_profiles as any)?.category || "").toLowerCase(),

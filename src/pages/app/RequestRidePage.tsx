@@ -2109,7 +2109,7 @@ export default function RequestRidePage() {
                       <p className="text-xs font-bold text-foreground">{d.name}</p>
                       <p className="text-[10px] text-muted-foreground">{d.vehicle} · ★ {d.rating} · {d.rides} rides</p>
                     </div>
-                    <button onClick={() => toast.success(`Requesting ${d.name}...`)} className="text-[10px] font-bold text-primary bg-primary/10 px-2 py-1 rounded-full">Request</button>
+                    <button onClick={() => navigate("/rides", { state: { preferredDriverId: d.name, preferredDriverName: d.name } })} className="text-[10px] font-bold text-primary bg-primary/10 px-2 py-1 rounded-full">Request</button>
                   </div>
                   <div className="flex flex-wrap gap-1">
                     {d.preferences.map(p => <span key={p} className="px-2 py-0.5 rounded-full bg-muted/50 text-[8px] text-muted-foreground">{p}</span>)}

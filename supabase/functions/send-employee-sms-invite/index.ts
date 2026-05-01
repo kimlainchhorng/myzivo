@@ -4,7 +4,7 @@
  * Body: { storeEmployeeId: uuid, phone: string (E.164), storeName?: string, role?: string }
  * The caller's JWT must own the store associated with the employee row.
  */
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
+import { createClient } from "../_shared/deps.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",

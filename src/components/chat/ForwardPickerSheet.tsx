@@ -19,7 +19,7 @@ interface Contact {
 }
 
 interface ContactProfileRow {
-  display_name: string | null;
+  full_name: string | null;
   username: string | null;
   avatar_url: string | null;
 }
@@ -57,7 +57,7 @@ export default function ForwardPickerSheet({ open, onOpenChange, onConfirm }: Pr
         .from("user_contacts" as any)
         .select(`
           id, contact_user_id, custom_name,
-          profiles:contact_user_id (display_name, username, avatar_url)
+          profiles:contact_user_id (full_name, username, avatar_url)
         `)
         .eq("user_id", user.id);
 
@@ -68,7 +68,7 @@ export default function ForwardPickerSheet({ open, onOpenChange, onConfirm }: Pr
           return {
           id: c.id,
           contact_user_id: c.contact_user_id,
-          display_name: c.custom_name || profile?.display_name,
+          display_name: c.custom_name || profile?.full_name,
           username: profile?.username,
           avatar_url: profile?.avatar_url,
         };

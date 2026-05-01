@@ -1,4 +1,4 @@
-import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
+import { createClient } from "../_shared/deps.ts";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -57,7 +57,7 @@ Deno.serve(async (req) => {
       });
     }
 
-    console.log('Found user:', userId, 'for email:', email);
+    console.log('Found user for store lookup');
 
     // Find stores owned by this user (service role bypasses RLS)
     const { data: stores, error: storeError } = await supabase

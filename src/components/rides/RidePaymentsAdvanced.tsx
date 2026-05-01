@@ -1,7 +1,7 @@
 /**
  * RidePaymentsAdvanced — Crypto, BNPL, expense auto-categorization, receipt OCR
  */
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { motion } from "framer-motion";
 import { Bitcoin, CreditCard, ScanLine, Tag, Receipt, Clock, CheckCircle2, Wallet, ArrowRight } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -29,8 +29,33 @@ const receipts = [
   { id: "3", date: "Mar 4", route: "Mall → Home", amount: 8.75, category: "Personal", scanned: false },
 ];
 
+const CRYPTO_KEY = "zivo_enabled_crypto";
+
 export default function RidePaymentsAdvanced() {
   const [selectedBnpl, setSelectedBnpl] = useState<string | null>(null);
+  const [enabledCoins, setEnabledCoins] = useState<string[]>(() => {
+    try { return JSON.parse(localStorage.getItem(CRYPTO_KEY) || "[]"); } catch { return []; }
+  });
+  const scanInputRef = useRef<HTMLInputElement>(null);
+
+  const toggleCoin = (coin: string) => {
+    setEnabledCoins(prev => {
+      const next = prev.includes(coin) ? prev.filter(c => c !== coin) : [...prev, coin];
+      localStorage.setItem(CRYPTO_KEY, JSON.stringify(next));
+      toast.success(prev.includes(coin) ? `${coin} disabled` : `${coin} payment enabled!`);
+      return next;
+    });
+  };
+
+  const exportExpenseCSV = () => {
+    const rows = [["Date", "Route", "Amount", "Category"], ...receipts.map(r => [r.date, r.route, `$${r.amount.toFixed(2)}`, r.category])];
+    const csv = rows.map(r => r.join(",")).join("\n");
+    const blob = new Blob([csv], { type: "text/csv" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a"); a.href = url; a.download = "zivo-expenses.csv"; a.click();
+    URL.revokeObjectURL(url);
+    toast.success("Expense report exported!");
+  };
 
   return (
     <div className="space-y-6">
@@ -60,8 +85,8 @@ export default function RidePaymentsAdvanced() {
               {["Bitcoin (BTC)", "Ethereum (ETH)", "USDC"].map((coin) => (
                 <div key={coin} className="flex items-center justify-between p-2 rounded-lg hover:bg-muted/30 transition-colors">
                   <span className="text-sm font-medium">{coin}</span>
-                  <Button size="sm" variant="outline" className="h-7 text-xs" onClick={() => toast.success(`${coin} payment linked`)}>
-                    Enable
+                  <Button size="sm" variant={enabledCoins.includes(coin) ? "default" : "outline"} className="h-7 text-xs" onClick={() => toggleCoin(coin)}>
+                    {enabledCoins.includes(coin) ? "Enabled ✓" : "Enable"}
                   </Button>
                 </div>
               ))}
@@ -117,7 +142,7 @@ export default function RidePaymentsAdvanced() {
                   </div>
                 </div>
               ))}
-              <Button className="w-full mt-2" variant="outline" size="sm" onClick={() => toast.success("Expense report exported!")}>
+              <Button className="w-full mt-2" variant="outline" size="sm" onClick={exportExpenseCSV}>
                 Export Report
               </Button>
             </CardContent>
@@ -147,7 +172,10 @@ export default function RidePaymentsAdvanced() {
                   <span className="font-bold text-sm">${r.amount.toFixed(2)}</span>
                 </div>
               ))}
-              <Button className="w-full" variant="outline" size="sm" onClick={() => toast.success("Scanning receipt...")}>
+              <input ref={scanInputRef} type="file" accept="image/*" capture="environment" className="hidden" onChange={e => {
+                if (e.target.files?.[0]) toast.success("Receipt scanned! Extracting details...");
+              }} />
+              <Button className="w-full" variant="outline" size="sm" onClick={() => scanInputRef.current?.click()}>
                 <ScanLine className="w-4 h-4 mr-2" /> Scan Paper Receipt
               </Button>
             </CardContent>

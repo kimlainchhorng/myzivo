@@ -21,7 +21,7 @@ const programs = [
   { title: "ZIVO Eats Referral", desc: "Share food delivery. You earn $3 per order.", commission: "$3 per order", icon: "🍔", status: "active", accent: "hsl(25 95% 53%)" },
   { title: "ZIVO Shop Affiliate", desc: "Promote shop products. Earn 5% commission.", commission: "5% per sale", icon: "🛍️", status: "active", accent: "hsl(142 71% 45%)" },
   { title: "ZIVO Flights Affiliate", desc: "Share flight deals. Earn $2 per booking.", commission: "$2 per booking", icon: "✈️", status: "active", accent: "hsl(199 89% 48%)" },
-  { title: "ZIVO Hotels Affiliate", desc: "Recommend hotels. Earn 3% of booking value.", commission: "3% per booking", icon: "🏨", status: "coming_soon", accent: "hsl(263 70% 58%)" },
+  { title: "ZIVO Hotels Affiliate", desc: "Recommend hotels. Earn 3% of booking value.", commission: "3% per booking", icon: "🏨", status: "active", accent: "hsl(263 70% 58%)" },
   { title: "Creator Program", desc: "Top creators get custom commission rates.", commission: "Custom rates", icon: "⭐", status: "invite_only", accent: "hsl(38 92% 50%)" },
 ];
 

@@ -270,6 +270,112 @@ export default function GoLivePage() {
  const [newPollQ, setNewPollQ] = useState<string>("");
  const [voiceEffect, setVoiceEffect] = useState<string>("none");
  const [autoClip, setAutoClip] = useState<boolean>(true);
+
+ const playSFX = useCallback((label: string) => {
+   try {
+     const ctx = new (window.AudioContext || (window as any).webkitAudioContext)();
+     const gain = ctx.createGain();
+     gain.connect(ctx.destination);
+     const now = ctx.currentTime;
+
+     if (label === "Ding") {
+       const osc = ctx.createOscillator();
+       osc.connect(gain);
+       osc.frequency.setValueAtTime(1047, now);
+       osc.frequency.exponentialRampToValueAtTime(523, now + 0.8);
+       gain.gain.setValueAtTime(0.5, now);
+       gain.gain.exponentialRampToValueAtTime(0.001, now + 0.9);
+       osc.start(now); osc.stop(now + 0.9);
+     } else if (label === "Air horn") {
+       const osc = ctx.createOscillator();
+       osc.type = "sawtooth";
+       osc.connect(gain);
+       osc.frequency.setValueAtTime(220, now);
+       osc.frequency.linearRampToValueAtTime(440, now + 0.15);
+       gain.gain.setValueAtTime(0.6, now);
+       gain.gain.exponentialRampToValueAtTime(0.001, now + 0.8);
+       osc.start(now); osc.stop(now + 0.8);
+     } else if (label === "Boom") {
+       const buf = ctx.createBuffer(1, ctx.sampleRate * 0.6, ctx.sampleRate);
+       const d = buf.getChannelData(0);
+       for (let i = 0; i < d.length; i++) d[i] = (Math.random() * 2 - 1) * Math.pow(1 - i / d.length, 3);
+       const src = ctx.createBufferSource();
+       const lp = ctx.createBiquadFilter();
+       lp.type = "lowpass"; lp.frequency.value = 120;
+       src.buffer = buf;
+       src.connect(lp); lp.connect(gain);
+       gain.gain.setValueAtTime(1.2, now);
+       gain.gain.exponentialRampToValueAtTime(0.001, now + 0.6);
+       src.start(now);
+     } else if (label === "Drum roll") {
+       for (let i = 0; i < 16; i++) {
+         const t = now + i * 0.04;
+         const buf = ctx.createBuffer(1, ctx.sampleRate * 0.06, ctx.sampleRate);
+         const d = buf.getChannelData(0);
+         for (let j = 0; j < d.length; j++) d[j] = (Math.random() * 2 - 1) * Math.pow(1 - j / d.length, 2);
+         const src = ctx.createBufferSource();
+         const hp = ctx.createBiquadFilter();
+         hp.type = "highpass"; hp.frequency.value = 2000;
+         src.buffer = buf; src.connect(hp); hp.connect(gain);
+         gain.gain.setValueAtTime(0.3 + i * 0.04, t);
+         src.start(t);
+       }
+     } else if (label === "Applause") {
+       for (let i = 0; i < 6; i++) {
+         const t = now + i * 0.07;
+         const buf = ctx.createBuffer(1, ctx.sampleRate * 0.12, ctx.sampleRate);
+         const d = buf.getChannelData(0);
+         for (let j = 0; j < d.length; j++) d[j] = (Math.random() * 2 - 1) * Math.pow(1 - j / d.length, 1.5);
+         const src = ctx.createBufferSource();
+         const bp = ctx.createBiquadFilter();
+         bp.type = "bandpass"; bp.frequency.value = 1200; bp.Q.value = 0.6;
+         src.buffer = buf; src.connect(bp); bp.connect(gain);
+         gain.gain.setValueAtTime(0.45, t);
+         src.start(t);
+       }
+     } else if (label === "Laugh") {
+       const freqs = [350, 420, 380, 440, 360];
+       freqs.forEach((freq, i) => {
+         const osc = ctx.createOscillator();
+         osc.type = "sine";
+         osc.connect(gain);
+         const t = now + i * 0.1;
+         osc.frequency.setValueAtTime(freq, t);
+         osc.frequency.linearRampToValueAtTime(freq * 0.85, t + 0.08);
+         gain.gain.setValueAtTime(0.3, t);
+         gain.gain.exponentialRampToValueAtTime(0.001, t + 0.1);
+         osc.start(t); osc.stop(t + 0.12);
+       });
+     } else if (label === "Boo") {
+       const osc = ctx.createOscillator();
+       osc.type = "sawtooth";
+       osc.connect(gain);
+       osc.frequency.setValueAtTime(180, now);
+       osc.frequency.linearRampToValueAtTime(120, now + 0.7);
+       gain.gain.setValueAtTime(0.4, now);
+       gain.gain.exponentialRampToValueAtTime(0.001, now + 0.8);
+       osc.start(now); osc.stop(now + 0.8);
+     } else if (label === "Crickets") {
+       for (let i = 0; i < 3; i++) {
+         const t = now + i * 0.25;
+         for (let k = 0; k < 4; k++) {
+           const osc = ctx.createOscillator();
+           osc.type = "square";
+           osc.connect(gain);
+           const chirpT = t + k * 0.05;
+           osc.frequency.setValueAtTime(4200 + Math.random() * 400, chirpT);
+           gain.gain.setValueAtTime(0.08, chirpT);
+           gain.gain.exponentialRampToValueAtTime(0.001, chirpT + 0.04);
+           osc.start(chirpT); osc.stop(chirpT + 0.05);
+         }
+       }
+     }
+
+     setTimeout(() => ctx.close(), 2000);
+   } catch {
+     // AudioContext may be blocked — silent fail
+   }
+ }, []);
  const [pushFollowers, setPushFollowers] = useState<boolean>(true);
  const [moderators, setModerators] = useState<string[]>([]);
  const [streamTemplate, setStreamTemplate] = useState<string | null>(null);
@@ -1535,7 +1641,7 @@ export default function GoLivePage() {
  ].map((s) =>(
 <button
  key={s.label}
- onClick={() =>toast.info(`SFX: ${s.label} ${s.emoji}`)}
+ onClick={() => playSFX(s.label)}
  className="aspect-square rounded-2xl bg-gradient-to-br from-white/10 to-white/5 border border-white/15 flex flex-col items-center justify-center gap-0.5 active:scale-90 transition-transform"
  >
 <span className="text-2xl">{s.emoji}</span>

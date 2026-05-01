@@ -1,7 +1,7 @@
 // pair-go-live: lets a paired phone (no auth) start/end live streams as the store owner.
 // Validates the pair token against live_pair_sessions (must be confirmed + not expired/revoked)
 // then performs the action server-side using the service role.
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
+import { createClient } from "../_shared/deps.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",

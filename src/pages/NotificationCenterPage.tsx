@@ -1,17 +1,18 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, Fragment } from "react";
 import { Button } from "@/components/ui/button";
-import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import {
   ArrowLeft, Heart, MessageCircle, UserPlus, ShoppingBag, Bell, Check, Trash2,
   Briefcase, Tv, Activity, Rocket, Plane, AlertTriangle, Tag, DollarSign, AtSign,
+  ChevronDown,
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
-import { formatDistanceToNow } from "date-fns";
+import { formatDistanceToNow, isToday, isYesterday, isThisWeek } from "date-fns";
 import { toast } from "sonner";
+import ZivoMobileNav from "@/components/app/ZivoMobileNav";
 
 type NotifType =
   | "like" | "comment" | "follow" | "mention"
@@ -24,26 +25,16 @@ interface Notification {
   type: NotifType;
   title: string;
   message: string;
-  time: string;
+  createdAt: Date;
   isRead: boolean;
   action_url?: string | null;
 }
 
 const ICON_MAP: Record<NotifType, any> = {
-  like: Heart,
-  comment: MessageCircle,
-  follow: UserPlus,
-  mention: AtSign,
-  order: ShoppingBag,
-  payment: DollarSign,
-  deal: Tag,
-  job: Briefcase,
-  live: Tv,
-  wellness: Activity,
-  creator: Rocket,
-  travel: Plane,
-  alert: AlertTriangle,
-  system: Bell,
+  like: Heart, comment: MessageCircle, follow: UserPlus, mention: AtSign,
+  order: ShoppingBag, payment: DollarSign, deal: Tag,
+  job: Briefcase, live: Tv, wellness: Activity, creator: Rocket, travel: Plane,
+  alert: AlertTriangle, system: Bell,
 };
 
 const COLOR_MAP: Record<NotifType, string> = {
@@ -72,46 +63,136 @@ function categoryToType(category: string): NotifType {
   if (c.includes("payment") || c.includes("payout") || c.includes("invoice") || c.includes("refund")) return "payment";
   if (c.includes("order") || c.includes("purchase") || c.includes("delivery") || c.includes("shipping")) return "order";
   if (c.includes("deal") || c.includes("promo") || c.includes("discount") || c.includes("coupon")) return "deal";
-  if (c.includes("job") || c.includes("application") || c.includes("hiring") || c.includes("interview") || c.includes("career")) return "job";
+  if (c.includes("job") || c.includes("application") || c.includes("hiring") || c.includes("career")) return "job";
   if (c.includes("live") || c.includes("stream") || c.includes("broadcast") || c.includes("space")) return "live";
-  if (c.includes("wellness") || c.includes("workout") || c.includes("fitness") || c.includes("med") || c.includes("vital") || c.includes("health")) return "wellness";
-  if (c.includes("creator") || c.includes("monetization") || c.includes("earning") || c.includes("brand")) return "creator";
+  if (c.includes("wellness") || c.includes("workout") || c.includes("fitness") || c.includes("health")) return "wellness";
+  if (c.includes("creator") || c.includes("monetization") || c.includes("earning")) return "creator";
   if (c.includes("trip") || c.includes("flight") || c.includes("hotel") || c.includes("ride") || c.includes("travel") || c.includes("booking")) return "travel";
-  if (c.includes("alert") || c.includes("warning") || c.includes("error") || c.includes("security")) return "alert";
+  if (c.includes("alert") || c.includes("warning") || c.includes("security")) return "alert";
   return "system";
 }
+
+function getDateLabel(date: Date): string {
+  if (isToday(date)) return "Today";
+  if (isYesterday(date)) return "Yesterday";
+  if (isThisWeek(date)) return "This Week";
+  return "Older";
+}
+
+function groupByDate(items: Notification[]): { label: string; items: Notification[] }[] {
+  const order = ["Today", "Yesterday", "This Week", "Older"];
+  const groups: Record<string, Notification[]> = {};
+  items.forEach(n => {
+    const label = getDateLabel(n.createdAt);
+    if (!groups[label]) groups[label] = [];
+    groups[label].push(n);
+  });
+  return order.filter(l => groups[l]?.length).map(l => ({ label: l, items: groups[l] }));
+}
+
+const PAGE_SIZE = 30;
+
+const TAB_TYPES: Record<string, NotifType[]> = {
+  all: [], unread: [],
+  social: ["like", "comment", "follow", "mention"],
+  orders: ["order", "payment", "deal"],
+  travel: ["travel"],
+  jobs: ["job"],
+  live: ["live"],
+  creator: ["creator"],
+  wellness: ["wellness"],
+  alerts: ["alert"],
+  system: ["system"],
+};
+
+const TABS: { key: string; label: string; icon?: any }[] = [
+  { key: "all", label: "All" },
+  { key: "unread", label: "Unread" },
+  { key: "social", label: "Social", icon: Heart },
+  { key: "orders", label: "Orders", icon: ShoppingBag },
+  { key: "travel", label: "Travel", icon: Plane },
+  { key: "jobs", label: "Jobs", icon: Briefcase },
+  { key: "live", label: "Live", icon: Tv },
+  { key: "creator", label: "Creator", icon: Rocket },
+  { key: "wellness", label: "Wellness", icon: Activity },
+  { key: "alerts", label: "Alerts", icon: AlertTriangle },
+  { key: "system", label: "System", icon: Bell },
+];
 
 export default function NotificationCenterPage() {
   const navigate = useNavigate();
   const { user } = useAuth();
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [loading, setLoading] = useState(true);
+  const [loadingMore, setLoadingMore] = useState(false);
+  const [hasMore, setHasMore] = useState(false);
+  const [offset, setOffset] = useState(0);
   const [activeTab, setActiveTab] = useState("all");
+
+  const mapRow = (n: any): Notification => ({
+    id: n.id,
+    type: categoryToType(n.category ?? ""),
+    title: n.title ?? "",
+    message: n.body ?? "",
+    createdAt: new Date(n.created_at),
+    isRead: n.is_read ?? false,
+    action_url: n.action_url,
+  });
 
   const load = useCallback(async () => {
     if (!user) { setLoading(false); return; }
-    const { data } = await supabase
+    const { data, count } = await supabase
       .from("notifications")
-      .select("id, title, body, category, is_read, created_at, action_url")
+      .select("id, title, body, category, is_read, created_at, action_url", { count: "exact" })
       .eq("user_id", user.id)
       .order("created_at", { ascending: false })
-      .limit(60);
+      .range(0, PAGE_SIZE - 1);
 
     if (data) {
-      setNotifications(data.map(n => ({
-        id: n.id,
-        type: categoryToType(n.category ?? ""),
-        title: n.title,
-        message: n.body,
-        time: formatDistanceToNow(new Date(n.created_at), { addSuffix: true }),
-        isRead: n.is_read ?? false,
-        action_url: n.action_url,
-      })));
+      setNotifications(data.map(mapRow));
+      setOffset(PAGE_SIZE);
+      setHasMore((count ?? 0) > PAGE_SIZE);
     }
     setLoading(false);
   }, [user]);
 
+  const loadMore = useCallback(async () => {
+    if (!user || loadingMore) return;
+    setLoadingMore(true);
+    const { data, count } = await supabase
+      .from("notifications")
+      .select("id, title, body, category, is_read, created_at, action_url", { count: "exact" })
+      .eq("user_id", user.id)
+      .order("created_at", { ascending: false })
+      .range(offset, offset + PAGE_SIZE - 1);
+
+    if (data) {
+      setNotifications(prev => [...prev, ...data.map(mapRow)]);
+      const newOffset = offset + PAGE_SIZE;
+      setOffset(newOffset);
+      setHasMore((count ?? 0) > newOffset);
+    }
+    setLoadingMore(false);
+  }, [user, offset, loadingMore]);
+
   useEffect(() => { load(); }, [load]);
+
+  // Real-time: prepend new notifications as they arrive
+  useEffect(() => {
+    if (!user) return;
+    const channel = supabase
+      .channel("notif-center-rt")
+      .on("postgres_changes", {
+        event: "INSERT",
+        schema: "public",
+        table: "notifications",
+        filter: `user_id=eq.${user.id}`,
+      }, (payload) => {
+        setNotifications(prev => [mapRow(payload.new), ...prev]);
+      })
+      .subscribe();
+    return () => { supabase.removeChannel(channel); };
+  }, [user]);
 
   const unreadCount = notifications.filter(n => !n.isRead).length;
 
@@ -119,6 +200,7 @@ export default function NotificationCenterPage() {
     if (!user) return;
     await supabase.from("notifications").update({ is_read: true }).eq("user_id", user.id).eq("is_read", false);
     setNotifications(prev => prev.map(n => ({ ...n, isRead: true })));
+    toast.success("All notifications marked as read");
   };
 
   const markRead = async (id: string) => {
@@ -126,68 +208,54 @@ export default function NotificationCenterPage() {
     setNotifications(prev => prev.map(n => n.id === id ? { ...n, isRead: true } : n));
   };
 
-  const deleteNotification = async (id: string) => {
+  const deleteNotif = async (id: string) => {
     await supabase.from("notifications").delete().eq("id", id);
     setNotifications(prev => prev.filter(n => n.id !== id));
   };
 
-  const TAB_TYPES: Record<string, NotifType[]> = {
-    all: [],
-    unread: [],
-    social: ["like", "comment", "follow", "mention"],
-    orders: ["order", "payment", "deal"],
-    travel: ["travel"],
-    jobs: ["job"],
-    live: ["live"],
-    creator: ["creator"],
-    wellness: ["wellness"],
-    alerts: ["alert"],
-    system: ["system"],
+  const filtered =
+    activeTab === "all" ? notifications
+    : activeTab === "unread" ? notifications.filter(n => !n.isRead)
+    : notifications.filter(n => TAB_TYPES[activeTab]?.includes(n.type));
+
+  const grouped = groupByDate(filtered);
+
+  const tabUnreadCount = (key: string) => {
+    if (key === "unread") return unreadCount;
+    if (key === "all") return 0;
+    return notifications.filter(n => !n.isRead && TAB_TYPES[key]?.includes(n.type)).length;
   };
 
-  const TABS: { key: string; label: string; icon?: any }[] = [
-    { key: "all", label: "All" },
-    { key: "unread", label: "Unread" },
-    { key: "social", label: "Social", icon: Heart },
-    { key: "orders", label: "Orders", icon: ShoppingBag },
-    { key: "travel", label: "Travel", icon: Plane },
-    { key: "jobs", label: "Jobs", icon: Briefcase },
-    { key: "live", label: "Live", icon: Tv },
-    { key: "creator", label: "Creator", icon: Rocket },
-    { key: "wellness", label: "Wellness", icon: Activity },
-    { key: "alerts", label: "Alerts", icon: AlertTriangle },
-    { key: "system", label: "System", icon: Bell },
-  ];
-
-  const filtered =
-    activeTab === "all"
-      ? notifications
-      : activeTab === "unread"
-      ? notifications.filter((n) => !n.isRead)
-      : notifications.filter((n) => TAB_TYPES[activeTab]?.includes(n.type));
-
   return (
-    <div className="min-h-screen bg-background pb-20">
-      <div className="sticky top-0 safe-area-top z-10 bg-background/95 backdrop-blur-sm border-b border-border p-4">
-        <div className="flex items-center justify-between mb-3">
+    <div className="min-h-screen bg-background pb-24">
+      {/* Header */}
+      <div className="sticky top-0 z-30 bg-background/95 backdrop-blur-xl border-b border-border/40"
+        style={{ paddingTop: "var(--zivo-safe-top-sticky, env(safe-area-inset-top, 0px))" }}>
+        <div className="flex items-center justify-between px-4 py-2.5">
           <div className="flex items-center gap-2">
-            <Button aria-label="Back" variant="ghost" size="icon" onClick={() => navigate(-1)}><ArrowLeft className="h-5 w-5" /></Button>
-            <h1 className="text-xl font-bold">Notifications</h1>
-            {unreadCount > 0 && <Badge className="bg-primary text-primary-foreground">{unreadCount}</Badge>}
+            <Button aria-label="Back" variant="ghost" size="icon" className="rounded-full" onClick={() => navigate(-1)}>
+              <ArrowLeft className="h-5 w-5" />
+            </Button>
+            <h1 className="text-[17px] font-bold">Notifications</h1>
+            {unreadCount > 0 && (
+              <Badge className="bg-destructive text-destructive-foreground text-[10px] h-5 px-1.5">
+                {unreadCount > 99 ? "99+" : unreadCount}
+              </Badge>
+            )}
           </div>
           {unreadCount > 0 && (
-            <Button variant="ghost" size="sm" className="text-xs gap-1" onClick={markAllRead}>
-              <Check className="h-3 w-3" /> Mark all read
+            <Button variant="ghost" size="sm" className="text-xs gap-1 rounded-full" onClick={markAllRead}>
+              <Check className="h-3.5 w-3.5" /> Mark all read
             </Button>
           )}
         </div>
-        <div className="flex gap-1.5 overflow-x-auto scrollbar-hide -mx-4 px-4 pb-1" style={{ WebkitOverflowScrolling: "touch" }}>
+
+        {/* Tab bar */}
+        <div className="flex gap-1.5 overflow-x-auto scrollbar-hide px-4 pb-2.5"
+          style={{ WebkitOverflowScrolling: "touch" }}>
           {TABS.map((tab) => {
             const isActive = activeTab === tab.key;
-            const tabUnread =
-              tab.key === "all" || tab.key === "unread"
-                ? 0
-                : notifications.filter((n) => !n.isRead && TAB_TYPES[tab.key]?.includes(n.type)).length;
+            const badge = tabUnreadCount(tab.key);
             return (
               <button
                 key={tab.key}
@@ -195,19 +263,14 @@ export default function NotificationCenterPage() {
                 className={`shrink-0 flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold border transition-all touch-manipulation ${
                   isActive
                     ? "bg-primary text-primary-foreground border-primary"
-                    : "bg-muted/40 text-muted-foreground border-border hover:bg-muted/70"
+                    : "bg-muted/40 text-muted-foreground border-border/40 hover:bg-muted/70"
                 }`}
               >
                 {tab.icon && <tab.icon className="h-3.5 w-3.5" />}
                 <span>{tab.label}</span>
-                {tab.key === "unread" && unreadCount > 0 && (
-                  <span className={`text-[10px] font-bold rounded-full px-1.5 ${isActive ? "bg-primary-foreground/20" : "bg-primary text-primary-foreground"}`}>
-                    {unreadCount}
-                  </span>
-                )}
-                {tabUnread > 0 && (
-                  <span className={`text-[10px] font-bold rounded-full px-1.5 ${isActive ? "bg-primary-foreground/20" : "bg-primary/15 text-primary"}`}>
-                    {tabUnread}
+                {badge > 0 && (
+                  <span className={`text-[10px] font-bold rounded-full px-1.5 ${isActive ? "bg-primary-foreground/25 text-primary-foreground" : "bg-primary text-primary-foreground"}`}>
+                    {badge}
                   </span>
                 )}
               </button>
@@ -216,7 +279,8 @@ export default function NotificationCenterPage() {
         </div>
       </div>
 
-      <div className="divide-y divide-border">
+      {/* List */}
+      <div className="divide-y divide-border/30">
         {loading && (
           <div className="space-y-0">
             {[1,2,3,4,5].map(i => (
@@ -232,43 +296,88 @@ export default function NotificationCenterPage() {
         )}
 
         {!loading && filtered.length === 0 && (
-          <div className="text-center py-16">
+          <div className="text-center py-20">
             <Bell className="h-12 w-12 text-muted-foreground/20 mx-auto mb-3" />
-            <p className="text-muted-foreground">No notifications yet</p>
+            <p className="text-muted-foreground text-sm">No notifications</p>
           </div>
         )}
 
-        {!loading && filtered.map((notif, i) => {
-          const Icon = ICON_MAP[notif.type];
-          const colorClass = COLOR_MAP[notif.type];
-          return (
-            <motion.div key={notif.id}
-              initial={{ opacity: 0, x: -8 }} animate={{ opacity: 1, x: 0 }}
-              transition={{ delay: i * 0.02 }}
-              onClick={() => {
-                markRead(notif.id);
-                if (notif.action_url) navigate(notif.action_url);
-              }}
-              className={`flex items-start gap-3 px-4 py-3 cursor-pointer transition-colors hover:bg-accent/50 ${!notif.isRead ? "bg-primary/5" : ""}`}>
-              <div className={`h-10 w-10 rounded-full flex items-center justify-center shrink-0 ${colorClass}`}>
-                <Icon className="h-5 w-5" />
-              </div>
-              <div className="flex-1 min-w-0">
-                <p className="text-sm font-semibold text-foreground">{notif.title}</p>
-                <p className="text-xs text-muted-foreground mt-0.5 line-clamp-2">{notif.message}</p>
-                <p className="text-[10px] text-muted-foreground mt-1">{notif.time}</p>
-              </div>
-              <div className="flex items-center gap-1 shrink-0">
-                {!notif.isRead && <div className="w-2 h-2 rounded-full bg-primary" />}
-                <button onClick={e => { e.stopPropagation(); deleteNotification(notif.id); }}
-                  className="p-1 rounded hover:bg-destructive/10 transition-colors opacity-0 group-hover:opacity-100">
-                  <Trash2 className="h-3.5 w-3.5 text-muted-foreground hover:text-destructive" />
-                </button>
-              </div>
-            </motion.div>
-          );
-        })}
+        {!loading && grouped.map(({ label, items }) => (
+          <Fragment key={label}>
+            {/* Date group header */}
+            <div className="px-4 pt-4 pb-1.5">
+              <p className="text-[11px] font-bold text-muted-foreground uppercase tracking-wider">{label}</p>
+            </div>
+
+            <AnimatePresence>
+              {items.map((notif, i) => {
+                const Icon = ICON_MAP[notif.type];
+                const colorClass = COLOR_MAP[notif.type];
+                return (
+                  <motion.div
+                    key={notif.id}
+                    layout
+                    initial={{ opacity: 0, x: -8 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    exit={{ opacity: 0, height: 0, overflow: "hidden" }}
+                    transition={{ delay: i * 0.02, duration: 0.2 }}
+                    className={`group flex items-start gap-3 px-4 py-3 cursor-pointer transition-colors hover:bg-accent/40 ${!notif.isRead ? "bg-primary/[0.04]" : ""}`}
+                    onClick={() => {
+                      markRead(notif.id);
+                      if (notif.action_url) navigate(notif.action_url);
+                    }}
+                  >
+                    <div className={`h-10 w-10 rounded-full flex items-center justify-center shrink-0 ${colorClass}`}>
+                      <Icon className="h-5 w-5" />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className={`text-sm leading-snug ${!notif.isRead ? "font-semibold text-foreground" : "font-medium text-foreground/90"}`}>
+                        {notif.title}
+                      </p>
+                      {notif.message && (
+                        <p className="text-xs text-muted-foreground mt-0.5 line-clamp-2">{notif.message}</p>
+                      )}
+                      <p className="text-[10px] text-muted-foreground mt-1">
+                        {formatDistanceToNow(notif.createdAt, { addSuffix: true })}
+                      </p>
+                    </div>
+                    <div className="flex items-center gap-1.5 shrink-0 pt-0.5">
+                      {!notif.isRead && <div className="w-2 h-2 rounded-full bg-primary" />}
+                      <button
+                        onClick={e => { e.stopPropagation(); deleteNotif(notif.id); }}
+                        className="p-1.5 rounded-lg hover:bg-destructive/10 transition-colors opacity-0 group-hover:opacity-100 focus-visible:opacity-100"
+                        aria-label="Delete notification"
+                      >
+                        <Trash2 className="h-3.5 w-3.5 text-muted-foreground hover:text-destructive" />
+                      </button>
+                    </div>
+                  </motion.div>
+                );
+              })}
+            </AnimatePresence>
+          </Fragment>
+        ))}
+
+        {/* Load more */}
+        {!loading && hasMore && (
+          <div className="px-4 py-4">
+            <Button
+              variant="outline"
+              className="w-full rounded-xl text-sm gap-2"
+              onClick={loadMore}
+              disabled={loadingMore}
+            >
+              {loadingMore ? (
+                <span className="animate-pulse">Loading…</span>
+              ) : (
+                <><ChevronDown className="h-4 w-4" /> Load more</>
+              )}
+            </Button>
+          </div>
+        )}
       </div>
+
+      <ZivoMobileNav />
     </div>
   );
 }

@@ -1,5 +1,6 @@
 // Universal OAuth callback handler. Exchanges code for token, persists account, redirects to picker page.
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
+import { createClient } from "../_shared/deps.ts";
+import { encryptToken } from "../_shared/tokenCrypto.ts";
 
 const PREVIEW_FALLBACK = "https://id-preview--72f99340-9c9f-453a-acff-60e5a9b25774.lovable.app";
 
@@ -80,6 +81,8 @@ Deno.serve(async (req) => {
       const meRes = await fetch(`https://graph.facebook.com/v21.0/me?access_token=${userToken}`);
       const me = await meRes.json();
 
+      const encryptedUserToken = await encryptToken(userToken);
+
       const { data: account, error: upErr } = await admin
         .from("store_ad_accounts")
         .upsert(
@@ -87,7 +90,7 @@ Deno.serve(async (req) => {
             store_id: stateRow.store_id,
             platform: stateRow.platform,
             status: "connected",
-            access_token: userToken,
+            access_token: encryptedUserToken,
             token_expires_at: new Date(Date.now() + expiresIn * 1000).toISOString(),
             scopes: "pages_show_list,pages_manage_metadata,pages_read_engagement,instagram_basic,ads_management,business_management",
             user_external_id: me.id,
@@ -118,7 +121,7 @@ Deno.serve(async (req) => {
           external_id: pg.id,
           name: pg.name,
           picture_url: pg.picture?.data?.url || null,
-          access_token: pg.access_token || null,
+          access_token: pg.access_token ? await encryptToken(pg.access_token) : null,
         });
         if (pg.instagram_business_account) {
           rows.push({

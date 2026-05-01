@@ -11,25 +11,35 @@ Deno.serve(async (req) => {
     return new Response("ok", { headers: corsH });
   }
 
+  // Require authenticated user — device integrity is per-user, not public
+  const authHeader = req.headers.get("Authorization");
+  if (!authHeader?.startsWith("Bearer ")) {
+    return new Response(JSON.stringify({ valid: true }), {
+      headers: { ...corsH, "Content-Type": "application/json" },
+    });
+  }
+  const { data: { user }, error: authErr } = await createClient(
+    Deno.env.get("SUPABASE_URL")!,
+    Deno.env.get("SUPABASE_ANON_KEY") ?? "",
+    { global: { headers: { Authorization: authHeader } } }
+  ).auth.getUser();
+  if (authErr || !user) {
+    return new Response(JSON.stringify({ valid: true }), {
+      headers: { ...corsH, "Content-Type": "application/json" },
+    });
+  }
+
   try {
-    const { user_id, user_agent } = await req.json();
-
-    if (!user_id) {
-      return new Response(JSON.stringify({ valid: true }), {
-        headers: { ...corsH, "Content-Type": "application/json" },
-      });
-    }
-
     const supabase = createClient(
       Deno.env.get("SUPABASE_URL")!,
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!
     );
 
-    // Check if this device/user combo has risk events
+    // Check risk events for the authenticated user only
     const { data: riskEvents } = await supabase
       .from("risk_events")
       .select("id")
-      .eq("user_id", user_id)
+      .eq("user_id", user.id)
       .eq("status", "open")
       .limit(5);
 

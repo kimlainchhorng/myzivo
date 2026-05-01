@@ -9,6 +9,7 @@ import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { useVerificationRealtime } from "@/hooks/useVerificationRealtime";
+import { useOTAUpdate } from "@/hooks/useOTAUpdate";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, Navigate, useLocation, useSearchParams } from "react-router-dom";
 import { ThemeProvider } from "next-themes";
@@ -78,6 +79,10 @@ const ShopPayrollPage = lazy(() => import("./pages/app/shop/ShopPayrollPage"));
 const ShopEmployeeSchedulePage = lazy(() => import("./pages/app/shop/ShopEmployeeSchedulePage"));
 const ShopTimeClockPage = lazy(() => import("./pages/app/shop/ShopTimeClockPage"));
 const ShopEmployeeRulesPage = lazy(() => import("./pages/app/shop/ShopEmployeeRulesPage"));
+const ShopAttendancePage = lazy(() => import("./pages/app/shop/ShopAttendancePage"));
+const ShopTrainingPage = lazy(() => import("./pages/app/shop/ShopTrainingPage"));
+const ShopPerformancePage = lazy(() => import("./pages/app/shop/ShopPerformancePage"));
+const ShopDocumentsPage = lazy(() => import("./pages/app/shop/ShopDocumentsPage"));
 const TruckDashboardPage = lazy(() => import("./pages/app/shop/TruckDashboardPage"));
 const SalesAttributionPage = lazy(() => import("./pages/app/shop/SalesAttributionPage"));
 const SandboxModePage = lazy(() => import("./pages/app/shop/SandboxModePage"));
@@ -168,6 +173,7 @@ const LiveStreamPage = lazy(() => import("./pages/LiveStreamPage"));
 const GoLivePage = lazy(() => import("./pages/GoLivePage"));
 const EventsPage = lazy(() => import("./pages/EventsPage"));
 const CommunitiesPage = lazy(() => import("./pages/CommunitiesPage"));
+const CommunityDetailPage = lazy(() => import("./pages/CommunityDetailPage"));
 const MarketplacePage = lazy(() => import("./pages/MarketplacePage"));
 const ContentAnalyticsPage = lazy(() => import("./pages/ContentAnalyticsPage"));
 const MarketplaceOrdersPage = lazy(() => import("./pages/MarketplaceOrdersPage"));
@@ -653,6 +659,11 @@ const VerificationRealtimeBridge = () => {
   return null;
 };
 
+function OTAUpdateBootstrap() {
+  useOTAUpdate();
+  return null;
+}
+
 function AuthBackgroundServices() {
   const { user } = useAuth();
   const ready = useAfterFirstPaint(2200);
@@ -683,6 +694,7 @@ const App = () => (
                 
                 <DeferredPageViewTracker />
                 <DeferredGeoDetector />
+                <OTAUpdateBootstrap />
                 <Suspense fallback={null}><RoutePrefetcher /></Suspense>
                 <AuthProvider>
                   <AuthBackgroundServices />
@@ -736,6 +748,10 @@ const App = () => (
                 <Route path="/shop-dashboard/employee-schedule" element={<ProtectedRoute><ShopEmployeeSchedulePage /></ProtectedRoute>} />
                 <Route path="/shop-dashboard/time-clock" element={<ProtectedRoute><ShopTimeClockPage /></ProtectedRoute>} />
                 <Route path="/shop-dashboard/employee-rules" element={<ProtectedRoute><ShopEmployeeRulesPage /></ProtectedRoute>} />
+                <Route path="/shop-dashboard/attendance" element={<ProtectedRoute><ShopAttendancePage /></ProtectedRoute>} />
+                <Route path="/shop-dashboard/training" element={<ProtectedRoute><ShopTrainingPage /></ProtectedRoute>} />
+                <Route path="/shop-dashboard/performance" element={<ProtectedRoute><ShopPerformancePage /></ProtectedRoute>} />
+                <Route path="/shop-dashboard/documents" element={<ProtectedRoute><ShopDocumentsPage /></ProtectedRoute>} />
                 <Route path="/shop-dashboard/truck" element={<ProtectedRoute><TruckDashboardPage /></ProtectedRoute>} />
                 <Route path="/shop-dashboard/attribution" element={<ProtectedRoute><SalesAttributionPage /></ProtectedRoute>} />
                 <Route path="/shop-dashboard/sandbox" element={<ProtectedRoute><SandboxModePage /></ProtectedRoute>} />
@@ -825,6 +841,7 @@ const App = () => (
                 <Route path="/monetization/program/:programId" element={<ProtectedRoute><ProgramDetailPage /></ProtectedRoute>} />
                 <Route path="/events" element={<EventsPage />} />
                 <Route path="/communities" element={<CommunitiesPage />} />
+                <Route path="/communities/:id" element={<CommunityDetailPage />} />
                 <Route path="/marketplace" element={<MarketplacePage />} />
                 <Route path="/marketplace/orders" element={<ProtectedRoute><MarketplaceOrdersPage /></ProtectedRoute>} />
                 <Route path="/content-analytics" element={<ProtectedRoute><ContentAnalyticsPage /></ProtectedRoute>} />
@@ -833,8 +850,8 @@ const App = () => (
                 <Route path="/smart-search" element={<SmartSearchPage />} />
                 <Route path="/notification-center" element={<ProtectedRoute><NotificationCenterPage /></ProtectedRoute>} />
                 <Route path="/activity" element={<ProtectedRoute><ActivityFeedPage /></ProtectedRoute>} />
-                <Route path="/admin/moderation" element={<ProtectedRoute><AdminModerationPage /></ProtectedRoute>} />
-                <Route path="/admin/launch" element={<ProtectedRoute><AdminLaunchDashboard /></ProtectedRoute>} />
+                <Route path="/admin/moderation" element={<ProtectedRoute requireAdmin={true}><AdminModerationPage /></ProtectedRoute>} />
+                <Route path="/admin/launch" element={<ProtectedRoute requireAdmin={true}><AdminLaunchDashboard /></ProtectedRoute>} />
                 <Route path="/content-scheduler" element={<ProtectedRoute><ContentSchedulerPage /></ProtectedRoute>} />
                 <Route path="/story-polls" element={<ProtectedRoute><StoryPollsPage /></ProtectedRoute>} />
                 
@@ -881,66 +898,66 @@ const App = () => (
                 <Route path="/driver/earnings" element={<DriverEarningsPage />} />
                 <Route path="/driver/payouts" element={<ProtectedRoute><DriverPayoutsPage /></ProtectedRoute>} />
                 <Route path="/driver/onboarding/documents" element={<ProtectedRoute><DriverOnboardingDocumentsPage /></ProtectedRoute>} />
-                <Route path="/admin/ads/google" element={<ProtectedRoute><AdminGoogleAdsPage /></ProtectedRoute>} />
-                <Route path="/admin/ads/meta" element={<ProtectedRoute><AdminMetaAdsPage /></ProtectedRoute>} />
-                <Route path="/admin/ads/analytics" element={<ProtectedRoute><AdminAdsAnalyticsPage /></ProtectedRoute>} />
-                <Route path="/admin/marketing/campaigns" element={<ProtectedRoute><AdminMarketingCampaignsPage /></ProtectedRoute>} />
-                <Route path="/admin/marketing/promo-codes" element={<ProtectedRoute><AdminPromoCodesPage /></ProtectedRoute>} />
-                <Route path="/admin/marketing/broadcast" element={<ProtectedRoute><AdminBroadcastPage /></ProtectedRoute>} />
-                <Route path="/admin/feedback" element={<ProtectedRoute><AdminFeedbackReplyPage /></ProtectedRoute>} />
-                <Route path="/admin/stores/verification" element={<ProtectedRoute><AdminStoreVerificationPage /></ProtectedRoute>} />
-                <Route path="/admin/finance/summary" element={<ProtectedRoute><AdminFinanceSummaryPage /></ProtectedRoute>} />
-                <Route path="/admin/payments/webhook-status" element={<ProtectedRoute><AdminWebhookStatusPage /></ProtectedRoute>} />
-                <Route path="/admin/drivers/verification" element={<ProtectedRoute><AdminDriverVerificationPage /></ProtectedRoute>} />
-                <Route path="/admin/drivers/moderation" element={<ProtectedRoute><AdminDriverModerationPage /></ProtectedRoute>} />
-                <Route path="/admin/operations/heatmap" element={<ProtectedRoute><AdminTripHeatmapPage /></ProtectedRoute>} />
-                <Route path="/admin/payments/refunds" element={<ProtectedRoute><AdminRefundsPage /></ProtectedRoute>} />
-                <Route path="/admin/moderation/messages" element={<ProtectedRoute><AdminMessageModerationPage /></ProtectedRoute>} />
-                <Route path="/admin/operations/call-closures" element={<ProtectedRoute><AdminCallClosuresPage /></ProtectedRoute>} />
-                <Route path="/admin/qa/moderation" element={<ProtectedRoute><AdminModerationQAPage /></ProtectedRoute>} />
-                <Route path="/admin/qa/marketing-responsive" element={<ProtectedRoute><AdminMarketingResponsiveQA /></ProtectedRoute>} />
+                <Route path="/admin/ads/google" element={<ProtectedRoute requireAdmin={true}><AdminGoogleAdsPage /></ProtectedRoute>} />
+                <Route path="/admin/ads/meta" element={<ProtectedRoute requireAdmin={true}><AdminMetaAdsPage /></ProtectedRoute>} />
+                <Route path="/admin/ads/analytics" element={<ProtectedRoute requireAdmin={true}><AdminAdsAnalyticsPage /></ProtectedRoute>} />
+                <Route path="/admin/marketing/campaigns" element={<ProtectedRoute requireAdmin={true}><AdminMarketingCampaignsPage /></ProtectedRoute>} />
+                <Route path="/admin/marketing/promo-codes" element={<ProtectedRoute requireAdmin={true}><AdminPromoCodesPage /></ProtectedRoute>} />
+                <Route path="/admin/marketing/broadcast" element={<ProtectedRoute requireAdmin={true}><AdminBroadcastPage /></ProtectedRoute>} />
+                <Route path="/admin/feedback" element={<ProtectedRoute requireAdmin={true}><AdminFeedbackReplyPage /></ProtectedRoute>} />
+                <Route path="/admin/stores/verification" element={<ProtectedRoute requireAdmin={true}><AdminStoreVerificationPage /></ProtectedRoute>} />
+                <Route path="/admin/finance/summary" element={<ProtectedRoute requireAdmin={true}><AdminFinanceSummaryPage /></ProtectedRoute>} />
+                <Route path="/admin/payments/webhook-status" element={<ProtectedRoute requireAdmin={true}><AdminWebhookStatusPage /></ProtectedRoute>} />
+                <Route path="/admin/drivers/verification" element={<ProtectedRoute requireAdmin={true}><AdminDriverVerificationPage /></ProtectedRoute>} />
+                <Route path="/admin/drivers/moderation" element={<ProtectedRoute requireAdmin={true}><AdminDriverModerationPage /></ProtectedRoute>} />
+                <Route path="/admin/operations/heatmap" element={<ProtectedRoute requireAdmin={true}><AdminTripHeatmapPage /></ProtectedRoute>} />
+                <Route path="/admin/payments/refunds" element={<ProtectedRoute requireAdmin={true}><AdminRefundsPage /></ProtectedRoute>} />
+                <Route path="/admin/moderation/messages" element={<ProtectedRoute requireAdmin={true}><AdminMessageModerationPage /></ProtectedRoute>} />
+                <Route path="/admin/operations/call-closures" element={<ProtectedRoute requireAdmin={true}><AdminCallClosuresPage /></ProtectedRoute>} />
+                <Route path="/admin/qa/moderation" element={<ProtectedRoute requireAdmin={true}><AdminModerationQAPage /></ProtectedRoute>} />
+                <Route path="/admin/qa/marketing-responsive" element={<ProtectedRoute requireAdmin={true}><AdminMarketingResponsiveQA /></ProtectedRoute>} />
                 <Route path="/track/:token" element={<SharedTripPage />} />
                 <Route path="/driver/performance" element={<DriverPerformancePage />} />
                 <Route path="/driver/map" element={<DriverMapPage />} />
                 <Route path="/package-delivery" element={<PreserveQueryRedirect to="/delivery" />} />
-                <Route path="/admin/shopping-orders" element={<AdminShoppingOrders />} />
-                <Route path="/admin/analytics" element={<ProtectedRoute><AdminAnalyticsDashboard /></ProtectedRoute>} />
-                <Route path="/admin/stories-funnel" element={<ProtectedRoute><AdminStoriesFunnelPage /></ProtectedRoute>} />
-                <Route path="/admin/users" element={<ProtectedRoute><AdminUsersPage /></ProtectedRoute>} />
-                <Route path="/admin/pricing" element={<ProtectedRoute><AdminPricingPage /></ProtectedRoute>} />
-                <Route path="/admin/remote-config" element={<ProtectedRoute><AdminRemoteConfigPage /></ProtectedRoute>} />
-                <Route path="/admin/flight-orders" element={<ProtectedRoute><AdminFlightOrders /></ProtectedRoute>} />
-                <Route path="/admin/flight-searches" element={<ProtectedRoute><AdminFlightSearchAnalytics /></ProtectedRoute>} />
-                <Route path="/admin/flight-api" element={<ProtectedRoute><AdminFlightApiMonitoring /></ProtectedRoute>} />
-                <Route path="/admin/flight-price-alerts" element={<ProtectedRoute><AdminFlightPriceAlerts /></ProtectedRoute>} />
-                <Route path="/admin/stores" element={<ProtectedRoute><AdminStoresPage /></ProtectedRoute>} />
-                <Route path="/admin/stores/:storeId" element={<ProtectedRoute><AdminStoreEditPage /></ProtectedRoute>} />
-                <Route path="/admin/stores/:storeId/upload-check" element={<ProtectedRoute><StoreAssetsUploadCheck /></ProtectedRoute>} />
-                <Route path="/admin/stores/:storeId/lodging/reservations/:reservationId" element={<ProtectedRoute><AdminLodgingReservationDetailPage /></ProtectedRoute>} />
-                <Route path="/admin/lodging/qa-checklist" element={<ProtectedRoute><AdminLodgingQAChecklistPage /></ProtectedRoute>} />
-                <Route path="/admin/lodging/completion-verification" element={<ProtectedRoute><AdminLodgingCompletionVerificationPage /></ProtectedRoute>} />
-                <Route path="/admin/security/blocked-links" element={<ProtectedRoute><AdminBlockedLinksPage /></ProtectedRoute>} />
-                <Route path="/admin/lodging/wiring-check" element={<ProtectedRoute><AdminLodgingWiringCheckPage /></ProtectedRoute>} />
-                <Route path="/admin/lodging/webhook-events" element={<ProtectedRoute><AdminLodgingWebhookEventsPage /></ProtectedRoute>} />
+                <Route path="/admin/shopping-orders" element={<ProtectedRoute requireAdmin={true}><AdminShoppingOrders /></ProtectedRoute>} />
+                <Route path="/admin/analytics" element={<ProtectedRoute requireAdmin={true}><AdminAnalyticsDashboard /></ProtectedRoute>} />
+                <Route path="/admin/stories-funnel" element={<ProtectedRoute requireAdmin={true}><AdminStoriesFunnelPage /></ProtectedRoute>} />
+                <Route path="/admin/users" element={<ProtectedRoute requireAdmin={true}><AdminUsersPage /></ProtectedRoute>} />
+                <Route path="/admin/pricing" element={<ProtectedRoute requireAdmin={true}><AdminPricingPage /></ProtectedRoute>} />
+                <Route path="/admin/remote-config" element={<ProtectedRoute requireAdmin={true}><AdminRemoteConfigPage /></ProtectedRoute>} />
+                <Route path="/admin/flight-orders" element={<ProtectedRoute requireAdmin={true}><AdminFlightOrders /></ProtectedRoute>} />
+                <Route path="/admin/flight-searches" element={<ProtectedRoute requireAdmin={true}><AdminFlightSearchAnalytics /></ProtectedRoute>} />
+                <Route path="/admin/flight-api" element={<ProtectedRoute requireAdmin={true}><AdminFlightApiMonitoring /></ProtectedRoute>} />
+                <Route path="/admin/flight-price-alerts" element={<ProtectedRoute requireAdmin={true}><AdminFlightPriceAlerts /></ProtectedRoute>} />
+                <Route path="/admin/stores" element={<ProtectedRoute requireAdmin={true}><AdminStoresPage /></ProtectedRoute>} />
+                <Route path="/admin/stores/:storeId" element={<ProtectedRoute requireAdmin={true}><AdminStoreEditPage /></ProtectedRoute>} />
+                <Route path="/admin/stores/:storeId/upload-check" element={<ProtectedRoute requireAdmin={true}><StoreAssetsUploadCheck /></ProtectedRoute>} />
+                <Route path="/admin/stores/:storeId/lodging/reservations/:reservationId" element={<ProtectedRoute requireAdmin={true}><AdminLodgingReservationDetailPage /></ProtectedRoute>} />
+                <Route path="/admin/lodging/qa-checklist" element={<ProtectedRoute requireAdmin={true}><AdminLodgingQAChecklistPage /></ProtectedRoute>} />
+                <Route path="/admin/lodging/completion-verification" element={<ProtectedRoute requireAdmin={true}><AdminLodgingCompletionVerificationPage /></ProtectedRoute>} />
+                <Route path="/admin/security/blocked-links" element={<ProtectedRoute requireAdmin={true}><AdminBlockedLinksPage /></ProtectedRoute>} />
+                <Route path="/admin/lodging/wiring-check" element={<ProtectedRoute requireAdmin={true}><AdminLodgingWiringCheckPage /></ProtectedRoute>} />
+                <Route path="/admin/lodging/webhook-events" element={<ProtectedRoute requireAdmin={true}><AdminLodgingWebhookEventsPage /></ProtectedRoute>} />
                 <Route path="/store/setup" element={<ProtectedRoute><StoreSetup /></ProtectedRoute>} />
                 <Route path="/business/new" element={<ProtectedRoute><BusinessPageWizard /></ProtectedRoute>} />
-                <Route path="/admin/employees" element={<ProtectedRoute><AdminEmployeesPage /></ProtectedRoute>} />
-                <Route path="/admin/wallet" element={<ProtectedRoute><AdminWalletPage /></ProtectedRoute>} />
-                <Route path="/admin/system-health" element={<ProtectedRoute><AdminSystemHealth /></ProtectedRoute>} />
-                <Route path="/admin/app-store-assets" element={<ProtectedRoute><AdminAppStoreAssets /></ProtectedRoute>} />
-                <Route path="/admin/android-verification" element={<ProtectedRoute><AdminAndroidVerification /></ProtectedRoute>} />
-                <Route path="/admin/support" element={<ProtectedRoute><AdminSupportDashboard /></ProtectedRoute>} />
-                <Route path="/admin/user-accounts" element={<ProtectedRoute><AdminUserAccounts /></ProtectedRoute>} />
+                <Route path="/admin/employees" element={<ProtectedRoute requireAdmin={true}><AdminEmployeesPage /></ProtectedRoute>} />
+                <Route path="/admin/wallet" element={<ProtectedRoute requireAdmin={true}><AdminWalletPage /></ProtectedRoute>} />
+                <Route path="/admin/system-health" element={<ProtectedRoute requireAdmin={true}><AdminSystemHealth /></ProtectedRoute>} />
+                <Route path="/admin/app-store-assets" element={<ProtectedRoute requireAdmin={true}><AdminAppStoreAssets /></ProtectedRoute>} />
+                <Route path="/admin/android-verification" element={<ProtectedRoute requireAdmin={true}><AdminAndroidVerification /></ProtectedRoute>} />
+                <Route path="/admin/support" element={<ProtectedRoute requireAdmin={true}><AdminSupportDashboard /></ProtectedRoute>} />
+                <Route path="/admin/user-accounts" element={<ProtectedRoute requireAdmin={true}><AdminUserAccounts /></ProtectedRoute>} />
                 <Route path="/shop-dashboard/boost" element={<ProtectedRoute><AdBoostBidding /></ProtectedRoute>} />
                 <Route path="/shop-dashboard/boost-engine" element={<ProtectedRoute><MerchantBoostEngine /></ProtectedRoute>} />
                 <Route path="/shop-dashboard/ai-creative" element={<ProtectedRoute><AiCreativeSuite /></ProtectedRoute>} />
                 <Route path="/shop-dashboard/ai-content" element={<ProtectedRoute><AiContentSuite /></ProtectedRoute>} />
                 <Route path="/shop-dashboard/wallet" element={<ProtectedRoute><MerchantWalletPage /></ProtectedRoute>} />
                 <Route path="/shop-dashboard/tax-reports" element={<ProtectedRoute><MerchantTaxReportPage /></ProtectedRoute>} />
-                <Route path="/admin/god-view" element={<ProtectedRoute><AdminGodView /></ProtectedRoute>} />
-                <Route path="/admin/chat-security" element={<ProtectedRoute><AdminChatSecurityPage /></ProtectedRoute>} />
-                <Route path="/admin/security-sentinel" element={<ProtectedRoute><AdminSecuritySentinelPage /></ProtectedRoute>} />
-                <Route path="/admin/auth-shield" element={<ProtectedRoute><AdminAuthShieldPage /></ProtectedRoute>} />
+                <Route path="/admin/god-view" element={<ProtectedRoute requireAdmin={true}><AdminGodView /></ProtectedRoute>} />
+                <Route path="/admin/chat-security" element={<ProtectedRoute requireAdmin={true}><AdminChatSecurityPage /></ProtectedRoute>} />
+                <Route path="/admin/security-sentinel" element={<ProtectedRoute requireAdmin={true}><AdminSecuritySentinelPage /></ProtectedRoute>} />
+                <Route path="/admin/auth-shield" element={<ProtectedRoute requireAdmin={true}><AdminAuthShieldPage /></ProtectedRoute>} />
                 <Route path="/events" element={<PreserveQueryRedirect to="/things-to-do" />} />
                 <Route path="/ground-transport" element={<PreserveQueryRedirect to="/car-rental" />} />
                 <Route path="/insurance" element={<PreserveQueryRedirect to="/travel-insurance" />} />

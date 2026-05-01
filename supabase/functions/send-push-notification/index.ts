@@ -27,6 +27,15 @@ serve(async (req) => {
     return new Response(null, { headers: corsHeaders });
   }
 
+  // Internal-only: require service role key
+  const authHeader = req.headers.get("Authorization");
+  const serviceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
+  if (!authHeader || !serviceKey || authHeader !== `Bearer ${serviceKey}`) {
+    return new Response(JSON.stringify({ error: "Authentication required" }), {
+      status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" },
+    });
+  }
+
   try {
     const supabaseUrl = Deno.env.get("SUPABASE_URL");
     const supabaseKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
@@ -293,7 +302,7 @@ async function sendVAPIDWebPush(
 
   try {
     // Import web-push dynamically
-    const webpush = await import("https://esm.sh/web-push@3.6.7");
+    const webpush = await import("npm:web-push@3.6.7");
     
     webpush.setVapidDetails(vapidSubject, vapidPublicKey, vapidPrivateKey);
 

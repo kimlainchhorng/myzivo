@@ -1,5 +1,6 @@
 import { serve, createClient } from "../_shared/deps.ts";
 import { getCorsHeaders } from "../_shared/cors.ts";
+import { rateLimitDb, rateLimitHeaders } from "../_shared/rateLimiter.ts";
 
 /**
  * AI Smart Deal Finder v3 — Cache-First, Instant Global Delivery
@@ -139,6 +140,29 @@ serve(async (req: Request) => {
   const corsHeaders = getCorsHeaders(req);
   if (req.method === 'OPTIONS') {
     return new Response(null, { status: 204, headers: corsHeaders });
+  }
+
+  const authHeader = req.headers.get("Authorization");
+  if (!authHeader?.startsWith("Bearer ")) {
+    return new Response(JSON.stringify({ error: "Authentication required" }), {
+      status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" },
+    });
+  }
+  const { data: { user }, error: authErr } = await createClient(
+    Deno.env.get("SUPABASE_URL") ?? "",
+    Deno.env.get("SUPABASE_ANON_KEY") ?? "",
+    { global: { headers: { Authorization: authHeader } } }
+  ).auth.getUser();
+  if (authErr || !user) {
+    return new Response(JSON.stringify({ error: "Authentication required" }), {
+      status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" },
+    });
+  }
+  const rl = await rateLimitDb(user.id, "api_general");
+  if (!rl.allowed) {
+    return new Response(JSON.stringify({ error: "Too many requests. Please try again later." }), {
+      status: 429, headers: { ...corsHeaders, "Content-Type": "application/json", ...rateLimitHeaders(rl, "api_general") },
+    });
   }
 
   try {

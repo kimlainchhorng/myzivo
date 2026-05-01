@@ -12,9 +12,7 @@ import { toast } from "sonner";
 
 type Talent = {
   user_id: string;
-  display_name: string | null;
-  first_name: string | null;
-  last_name: string | null;
+  full_name: string | null;
   avatar_url: string | null;
   bio: string | null;
   city: string | null;
@@ -33,7 +31,7 @@ export default function FindTalentTab() {
       setLoading(true);
       const { data } = await (supabase as any)
         .from("profiles")
-        .select("user_id,display_name,first_name,last_name,avatar_url,bio,city,country")
+        .select("user_id,full_name,avatar_url,bio,city,country")
         .eq("open_to_work", true)
         .order("updated_at", { ascending: false })
         .limit(60);
@@ -49,13 +47,13 @@ export default function FindTalentTab() {
     const s = q.trim().toLowerCase();
     if (!s) return talents;
     return talents.filter(t => {
-      const name = `${t.display_name ?? ""} ${t.first_name ?? ""} ${t.last_name ?? ""}`.toLowerCase();
+      const name = (t.full_name ?? "").toLowerCase();
       return name.includes(s) || (t.bio ?? "").toLowerCase().includes(s) || (t.city ?? "").toLowerCase().includes(s);
     });
   }, [q, talents]);
 
   const inviteToApply = (t: Talent) => {
-    toast.success(`Invite sent to ${t.display_name ?? t.first_name ?? "talent"}`);
+    toast.success(`Invite sent to ${t.full_name ?? "talent"}`);
     // Hook into notification/email pipeline as needed
   };
 
@@ -79,7 +77,7 @@ export default function FindTalentTab() {
       )}
       <div className="grid gap-2 sm:grid-cols-2">
         {filtered.map(t => {
-          const name = t.display_name || `${t.first_name ?? ""} ${t.last_name ?? ""}`.trim() || "Talent";
+          const name = t.full_name || "Talent";
           return (
             <Card key={t.user_id} className="p-3">
               <div className="flex gap-3">

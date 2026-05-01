@@ -6,9 +6,17 @@ Deno.serve(async (req) => {
   const cors = getCorsHeaders(req);
   if (req.method === "OPTIONS") return new Response(null, { headers: cors });
 
+  // Internal-only: require service role key
+  const authHeader = req.headers.get("Authorization");
+  const serviceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
+  if (!authHeader || !serviceKey || authHeader !== `Bearer ${serviceKey}`) {
+    return new Response(JSON.stringify({ error: "Authentication required" }), {
+      status: 401, headers: { ...cors, "Content-Type": "application/json" },
+    });
+  }
+
   try {
     const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
-    const serviceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
     const mapsKey = Deno.env.get("GOOGLE_MAPS_API_KEY")!;
     const admin = createClient(supabaseUrl, serviceKey);
 

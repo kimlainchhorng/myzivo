@@ -214,7 +214,11 @@ export default function RideLoyaltyCard() {
                     <Copy className="w-4 h-4 text-primary" />
                   </button>
                 </div>
-                <Button className="mt-4 h-10 rounded-xl text-xs font-bold gap-2" onClick={() => toast.success("Share link copied!")}>
+                <Button className="mt-4 h-10 rounded-xl text-xs font-bold gap-2" onClick={() => {
+                  const msg = "Join me on ZIVO and get $10 off your first ride! Use code ZIVO-AK7M";
+                  if (navigator.share) { navigator.share({ title: "ZIVO Referral", text: msg }).catch(() => {}); }
+                  else { navigator.clipboard.writeText(msg).then(() => toast.success("Share link copied!")); }
+                }}>
                   <Share2 className="w-3.5 h-3.5" /> Share with Friends
                 </Button>
               </div>

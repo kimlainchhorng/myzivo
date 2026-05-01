@@ -1,6 +1,6 @@
-import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
-import { createClient } from "npm:@supabase/supabase-js@2.57.2";
+import { serve, createClient } from "../_shared/deps.ts";
 import { enforceAal2 } from "../_shared/aalCheck.ts";
+import { rateLimitDb, rateLimitHeaders } from "../_shared/rateLimiter.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -33,6 +33,13 @@ serve(async (req) => {
     if (userError || !userData.user) throw new Error("Invalid auth token");
     const userId = userData.user.id;
 
+    const rl = await rateLimitDb(userId, "payment");
+    if (rl && !rl.allowed) {
+      return new Response(JSON.stringify({ error: "Too many requests. Please try again later." }), {
+        status: 429, headers: { ...corsHeaders, "Content-Type": "application/json", ...rateLimitHeaders(rl, "payment") },
+      });
+    }
+
     // Parse & validate input
     const { amount_cents, method, note, payout_method_id } = await req.json();
 
@@ -56,9 +63,10 @@ serve(async (req) => {
         .eq("user_id", userId)
         .single();
       if (pm) {
+        const maskAcct = (s: string) => s.length > 4 ? `****${s.slice(-4)}` : "****";
         payoutDetails = pm.method_type === "aba"
-          ? `\nABA ID: ${pm.aba_account_id}\nHolder: ${pm.account_holder_name || "—"}`
-          : `\nBank: ${pm.bank_name || "—"}\nAcct: ${pm.account_number || "—"}\nHolder: ${pm.account_holder_name || "—"}`;
+          ? `\nABA ID: ${maskAcct(String(pm.aba_account_id || ""))}`
+          : `\nBank: ${pm.bank_name || "—"}\nAcct: ${maskAcct(String(pm.account_number || ""))}`
       }
     }
 

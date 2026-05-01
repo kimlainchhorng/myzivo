@@ -1,5 +1,5 @@
-import Stripe from "npm:stripe@18.5.0";
-import { createClient } from "npm:@supabase/supabase-js@2";
+import Stripe from "../_shared/stripe.ts";
+import { createClient } from "../_shared/deps.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -47,12 +47,12 @@ Deno.serve(async (req) => {
       );
     }
     const user = userData.user;
-    logStep("User authenticated", { userId: user.id, email: user.email });
+    logStep("User authenticated", { userId: user.id });
 
     // Admin override — full access for specific accounts
     const ADMIN_EMAILS = new Set(["chhorngkimlain1@gmail.com"]);
     if (ADMIN_EMAILS.has(user.email!.toLowerCase())) {
-      logStep("Admin override — granting pro access", { email: user.email });
+      logStep("Admin override — granting pro access");
       return new Response(
         JSON.stringify({
           subscribed: true,

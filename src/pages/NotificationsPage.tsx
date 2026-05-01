@@ -417,11 +417,11 @@ const NotificationsPage = () => {
                 </div>
                 {unreadCount > 0 && (
                   <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.92 }}>
-                    <Button 
-                      variant="ghost" 
-                      size="sm" 
+                    <Button
+                      variant="ghost"
+                      size="sm"
                       className="h-9 text-xs font-bold rounded-2xl text-primary hover:bg-primary/8"
-                      onClick={markAllAsRead}
+                      onClick={() => { markAllAsRead(); markAllSocialRead(); }}
                     >
                       <CheckCheck className="h-4 w-4 mr-1" />
                       {t('notif.read_all')}
@@ -595,7 +595,8 @@ const NotificationsPage = () => {
                     index={i}
                     onClick={() => {
                       if (!sn.is_read) markSocialRead([sn.id]);
-                      if (sn.entity_type === 'post' && sn.entity_id) navigate(`/reels`);
+                      if (sn.entity_type === 'post' && sn.entity_id) navigate(`/feed`);
+                      else if (sn.entity_type === 'user' && sn.entity_id) navigate(`/u/${sn.entity_id}`);
                     }}
                   />
                 ))}
@@ -639,11 +640,16 @@ const NotificationsPage = () => {
                   <Bell className="w-3.5 h-3.5 text-primary" /> This Week's Summary
                 </p>
                 <div className="grid grid-cols-3 gap-2">
-                  {[
-                    { label: "Total", value: String(notifications.length), icon: "📬" },
-                    { label: "Unread", value: String(unreadCount), icon: "🔴" },
-                    { label: "Actions", value: String(notifications.filter(n => n.action_url).length), icon: "⚡" },
-                  ].map(s => (
+                  {(() => {
+                    const weekAgo = new Date();
+                    weekAgo.setDate(weekAgo.getDate() - 7);
+                    const thisWeek = notifications.filter(n => new Date(n.created_at) >= weekAgo);
+                    return [
+                      { label: "This week", value: String(thisWeek.length), icon: "📬" },
+                      { label: "Unread", value: String(unreadCount), icon: "🔴" },
+                      { label: "Actions", value: String(thisWeek.filter(n => n.action_url).length), icon: "⚡" },
+                    ];
+                  })().map(s => (
                     <motion.div
                       key={s.label}
                       whileHover={{ scale: 1.06, y: -2 }}

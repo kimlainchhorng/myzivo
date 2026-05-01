@@ -1,6 +1,7 @@
 import { createClient } from "../_shared/deps.ts";
 import { getCorsHeaders } from "../_shared/cors.ts";
 import Stripe from "../_shared/stripe.ts";
+import { rateLimitDb, rateLimitHeaders } from "../_shared/rateLimiter.ts";
 
 Deno.serve(async (req) => {
   const cors = getCorsHeaders(req);
@@ -31,6 +32,14 @@ Deno.serve(async (req) => {
       return new Response(JSON.stringify({ error: "Unauthorized" }), {
         status: 401,
         headers: { ...cors, "Content-Type": "application/json" },
+      });
+    }
+
+    const rl = await rateLimitDb(user.id, "payment");
+    if (!rl.allowed) {
+      return new Response(JSON.stringify({ error: "Too many requests. Please try again shortly." }), {
+        status: 429,
+        headers: { ...cors, "Content-Type": "application/json", ...rateLimitHeaders(rl, "payment") },
       });
     }
 

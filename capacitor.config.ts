@@ -1,6 +1,12 @@
 import type { CapacitorConfig } from '@capacitor/cli';
 
-const devServerUrl = process.env.CAPACITOR_DEV_SERVER_URL;
+// Only allow a dev-server override in explicit development mode.
+// NODE_ENV=production (set automatically by all CI/CD and release build tools)
+// prevents this from ever being baked into a store release.
+const devServerUrl =
+  process.env.NODE_ENV !== 'production'
+    ? process.env.CAPACITOR_DEV_SERVER_URL
+    : undefined;
 
 const config: CapacitorConfig = {
   appId: 'com.myzivo.app',
@@ -15,6 +21,11 @@ const config: CapacitorConfig = {
       }
     : {}),
   plugins: {
+    CapacitorUpdater: {
+      autoUpdate: false,   // we check manually via useOTAUpdate hook
+      statsUrl: "",        // no Capgo cloud reporting
+      channelUrl: "",      // no Capgo cloud channel
+    },
     StatusBar: {
       // Edge-to-edge: webview extends under the native status bar so cover
       // photos, gradients, and headers reach the very top of the screen.

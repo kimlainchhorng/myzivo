@@ -277,7 +277,14 @@ export default function AiContentSuite() {
                   </div>
 
                   <div className="flex gap-2 pt-2">
-                    <Button variant="outline" className="flex-1 rounded-xl gap-1.5" onClick={() => toast.info("Download will be available when AI generation is live")}>
+                    <Button variant="outline" className="flex-1 rounded-xl gap-1.5" onClick={() => {
+                      const draft = { mood: selectedMood, scenes: GENERATED_SCENES[selectedMood!], track: MUSIC_TRACKS[selectedMood!][selectedTrack], overlays: TEXT_OVERLAYS[selectedMood!], photoCount: photos.length, createdAt: new Date().toISOString() };
+                      const blob = new Blob([JSON.stringify(draft, null, 2)], { type: "application/json" });
+                      const url = URL.createObjectURL(blob);
+                      const a = document.createElement("a"); a.href = url; a.download = `ai-reel-draft-${Date.now()}.json`; a.click();
+                      setTimeout(() => URL.revokeObjectURL(url), 30_000);
+                      toast.success("Draft saved!");
+                    }}>
                       <Download className="h-4 w-4" /> Save Draft
                     </Button>
                     <Button className="flex-1 rounded-xl gap-1.5" onClick={() => { navigate("/create-post"); toast.success("Opening Reel editor..."); }}>

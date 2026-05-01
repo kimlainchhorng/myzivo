@@ -4002,7 +4002,7 @@ export default function RideBookingHome({ initialSchedule = false, initialDestin
             <Button
               variant="outline"
               className="flex-1 h-10 rounded-xl gap-1.5 text-sm"
-              onClick={() => toast.info("Opening chat...")}
+              onClick={() => navigate("/chat", { state: { openChat: { userId: assignedDriver.id, name: assignedDriver.name } } })}
             >
               <MessageSquare className="w-4 h-4" />
               {t("ride.message")}
@@ -4010,7 +4010,7 @@ export default function RideBookingHome({ initialSchedule = false, initialDestin
             <Button
               variant="outline"
               className="flex-1 h-10 rounded-xl gap-1.5 text-sm"
-              onClick={() => toast.info("Calling driver...")}
+              onClick={() => assignedDriver.phone ? window.location.href = `tel:${assignedDriver.phone}` : toast.info("Driver phone not available")}
             >
               <Phone className="w-4 h-4" />
               {t("ride.call")}
@@ -4052,7 +4052,7 @@ export default function RideBookingHome({ initialSchedule = false, initialDestin
             <Button
               variant="outline"
               className="flex-1 h-10 rounded-xl gap-1.5 text-sm"
-              onClick={() => toast.info("Opening chat...")}
+              onClick={() => navigate("/chat", { state: { openChat: { userId: assignedDriver.id, name: assignedDriver.name } } })}
             >
               <MessageSquare className="w-4 h-4" />
               {t("ride.message")}
@@ -4060,7 +4060,7 @@ export default function RideBookingHome({ initialSchedule = false, initialDestin
             <Button
               variant="outline"
               className="flex-1 h-10 rounded-xl gap-1.5 text-sm"
-              onClick={() => toast.info("Calling driver...")}
+              onClick={() => assignedDriver.phone ? window.location.href = `tel:${assignedDriver.phone}` : toast.info("Driver phone not available")}
             >
               <Phone className="w-4 h-4" />
               {t("ride.call")}
@@ -4105,7 +4105,10 @@ export default function RideBookingHome({ initialSchedule = false, initialDestin
             <Button
               variant="outline"
               className="flex-1 h-10 rounded-xl gap-1.5 text-sm"
-              onClick={() => toast.info("Trip link copied!")}
+              onClick={() => {
+                const link = `${window.location.origin}/rides/track/${rideRequestId ?? ""}`;
+                navigator.clipboard.writeText(link).then(() => toast.success("Trip link copied!")).catch(() => toast.info(link));
+              }}
             >
               <Route className="w-4 h-4" />
               Share Trip
@@ -4113,7 +4116,7 @@ export default function RideBookingHome({ initialSchedule = false, initialDestin
             <Button
               variant="outline"
               className="flex-1 h-10 rounded-xl gap-1.5 text-sm"
-              onClick={() => toast.info("Calling driver...")}
+              onClick={() => assignedDriver.phone ? window.location.href = `tel:${assignedDriver.phone}` : toast.info("Driver phone not available")}
             >
               <Phone className="w-4 h-4" />
               Call
@@ -4121,7 +4124,7 @@ export default function RideBookingHome({ initialSchedule = false, initialDestin
             <Button
               variant="outline"
               className="flex-1 h-10 rounded-xl gap-1.5 text-sm"
-              onClick={() => toast.info("Safety center opened")}
+              onClick={() => navigate("/safety")}
             >
               <Shield className="w-4 h-4" />
               Safety

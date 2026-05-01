@@ -1,7 +1,7 @@
 /**
  * GroupChat — Group conversation with multiple participants
  */
-import { useState, useEffect, useRef, useCallback } from "react";
+import { useState, useEffect, useRef, useCallback, lazy, Suspense } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { signedUrlFor } from "@/lib/security/signedMedia";
@@ -17,6 +17,16 @@ import Mic from "lucide-react/dist/esm/icons/mic";
 import Square from "lucide-react/dist/esm/icons/square";
 import Phone from "lucide-react/dist/esm/icons/phone";
 import Video from "lucide-react/dist/esm/icons/video";
+import Reply from "lucide-react/dist/esm/icons/reply";
+import Copy from "lucide-react/dist/esm/icons/copy";
+import Forward from "lucide-react/dist/esm/icons/forward";
+import Trash2 from "lucide-react/dist/esm/icons/trash-2";
+import MoreVertical from "lucide-react/dist/esm/icons/more-vertical";
+import BellOff from "lucide-react/dist/esm/icons/bell-off";
+import Bell from "lucide-react/dist/esm/icons/bell";
+import Search from "lucide-react/dist/esm/icons/search";
+import LogOut from "lucide-react/dist/esm/icons/log-out";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { motion, AnimatePresence } from "framer-motion";
 import { format, isToday, isYesterday } from "date-fns";
@@ -24,14 +34,18 @@ import { toast } from "sonner";
 import VoiceMessagePlayer from "./VoiceMessagePlayer";
 import VoiceMessageBubble from "./VoiceMessageBubble";
 import HoldToRecordMic from "./HoldToRecordMic";
+import ChatAttachMenu from "./ChatAttachMenu";
 import { useVoiceRecorder } from "@/hooks/useVoiceRecorder";
 import { blobToDataUrl, shouldInlineVoiceBlob, uploadVoiceWithProgress, retryWithBackoff, UploadAbortedError, UploadHttpError } from "@/lib/voiceUpload";
 import { vlog, vwarn } from "@/lib/voiceDebug";
 import GroupMembersSheet from "./GroupMembersSheet";
 import GroupInviteSheet from "./GroupInviteSheet";
+import MessageReactionsBar from "./MessageReactionsBar";
 import GroupCallLauncher from "./call/GroupCallLauncher";
 import { primeCallAudio } from "@/lib/callAudio";
 import Link2 from "lucide-react/dist/esm/icons/link-2";
+const StickerKeyboard = lazy(() => import("./StickerKeyboard"));
+import type { StickerSendPayload } from "./StickerKeyboard";
 
 interface GroupChatProps {
   groupId: string;
@@ -121,6 +135,17 @@ export default function GroupChat({ groupId, groupName, groupAvatar, onClose }: 
   const [showMembers, setShowMembers] = useState(false);
   const [showInvites, setShowInvites] = useState(false);
   const [groupCall, setGroupCall] = useState<"audio" | "video" | null>(null);
+  const [showAttachMenu, setShowAttachMenu] = useState(false);
+  const [showStickerKeyboard, setShowStickerKeyboard] = useState(false);
+  const [disappearingSec, setDisappearingSec] = useState<number | null>(null);
+  const videoInputRef = useRef<HTMLInputElement>(null);
+  const [actionTarget, setActionTarget] = useState<GroupMessage | null>(null);
+  const [showGroupSearch, setShowGroupSearch] = useState(false);
+  const [groupSearchQ, setGroupSearchQ] = useState("");
+  const [isMuted, setIsMuted] = useState(() => {
+    try { return localStorage.getItem(`zivo:group-muted:${groupId}`) === "1"; } catch { return false; }
+  });
+  const [showLeaveConfirm, setShowLeaveConfirm] = useState(false);
   const voice = useVoiceRecorder();
   const voiceUploadInFlightRef = useRef(false);
   const voiceJobsRef = useRef<Map<string, {
@@ -578,6 +603,104 @@ export default function GroupChat({ groupId, groupName, groupAvatar, onClose }: 
     if (fileInputRef.current) fileInputRef.current.value = "";
   };
 
+  const handleVideoSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file || !user?.id) return;
+    if (file.size > 25 * 1024 * 1024) { toast.error("Video must be under 25MB"); return; }
+    const localUrl = URL.createObjectURL(file);
+    const optimisticId = `opt-vid-${Date.now()}`;
+    const optimisticMsg: GroupMessage = {
+      id: optimisticId, group_id: groupId, sender_id: user.id,
+      message: "", image_url: null, voice_url: null, message_type: "video",
+      reply_to_id: replyTo?.id || null, created_at: new Date().toISOString(),
+    };
+    setMessages((prev) => [...prev, optimisticMsg]);
+    scrollToBottom();
+    void (async () => {
+      try {
+        const ext = file.name.split(".").pop() || "mp4";
+        const path = `${user.id}/${Date.now()}.${ext}`;
+        const { error: upErr } = await supabase.storage.from("chat-media-files").upload(path, file, { contentType: file.type, upsert: true, cacheControl: "3600" });
+        if (upErr) throw upErr;
+        const signedUrl = await signedUrlFor("chat-media-files", path, "display");
+        setMessages((prev) => prev.map((m) => m.id === optimisticId ? { ...m, image_url: signedUrl } : m));
+        const { error: insErr } = await dbFrom("group_messages").insert({ group_id: groupId, sender_id: user.id, message: "", message_type: "video", image_url: path });
+        if (insErr) throw insErr;
+      } catch { setMessages((prev) => prev.filter((m) => m.id !== optimisticId)); toast.error("Failed to send video"); }
+      finally { setTimeout(() => URL.revokeObjectURL(localUrl), 30000); }
+    })();
+    if (videoInputRef.current) videoInputRef.current.value = "";
+  };
+
+  const handleStickerSend = useCallback(async (payload: StickerSendPayload) => {
+    if (!user?.id || !payload.text?.trim()) return;
+    const text = payload.text.trim();
+    const msgType = payload.messageType === "sticker" || payload.messageType === "gif" ? payload.messageType : "text";
+    const optimisticId = `opt-sticker-${Date.now()}`;
+    const optimisticMsg: GroupMessage = {
+      id: optimisticId, group_id: groupId, sender_id: user.id,
+      message: text, image_url: null, voice_url: null, message_type: msgType,
+      reply_to_id: null, created_at: new Date().toISOString(),
+    };
+    setMessages((prev) => [...prev, optimisticMsg]);
+    scrollToBottom();
+    try {
+      const { error } = await dbFrom("group_messages").insert({ group_id: groupId, sender_id: user.id, message: text, message_type: msgType });
+      if (error) throw error;
+    } catch { setMessages((prev) => prev.filter((m) => m.id !== optimisticId)); toast.error("Failed to send"); }
+    setShowStickerKeyboard(false);
+  }, [groupId, scrollToBottom, user?.id]);
+
+  const handleDeleteMsg = useCallback(async (msgId: string) => {
+    if (!user?.id) return;
+    setMessages((prev) => prev.filter((m) => m.id !== msgId));
+    try {
+      await dbFrom("group_messages").delete().eq("id", msgId).eq("sender_id", user.id);
+      toast.success("Message deleted");
+    } catch { toast.error("Failed to delete"); }
+  }, [user?.id]);
+
+  const handleLocationShare = () => {
+    if (!navigator.geolocation) { toast.error("Location not supported"); return; }
+    toast.loading("Getting location...", { id: "loc-g" });
+    navigator.geolocation.getCurrentPosition(
+      async (pos) => {
+        toast.dismiss("loc-g");
+        const msg = `📍 Location: https://maps.google.com/?q=${pos.coords.latitude},${pos.coords.longitude}`;
+        if (!user?.id) return;
+        const optimisticId = `opt-loc-${Date.now()}`;
+        const optimisticMsg: GroupMessage = { id: optimisticId, group_id: groupId, sender_id: user.id, message: msg, image_url: null, voice_url: null, message_type: "text", reply_to_id: null, created_at: new Date().toISOString() };
+        setMessages((prev) => [...prev, optimisticMsg]);
+        scrollToBottom();
+        try {
+          const { error } = await dbFrom("group_messages").insert({ group_id: groupId, sender_id: user.id, message: msg, message_type: "text" });
+          if (error) throw error;
+        } catch { setMessages((prev) => prev.filter((m) => m.id !== optimisticId)); toast.error("Failed to share location"); }
+      },
+      () => { toast.dismiss("loc-g"); toast.error("Location access denied"); },
+      { enableHighAccuracy: true, timeout: 10000 }
+    );
+  };
+
+  const toggleMute = () => {
+    const next = !isMuted;
+    setIsMuted(next);
+    try { localStorage.setItem(`zivo:group-muted:${groupId}`, next ? "1" : "0"); } catch { /* ignore */ }
+    toast.success(next ? "Notifications muted" : "Notifications unmuted");
+  };
+
+  const handleLeaveGroup = async () => {
+    if (!user?.id) return;
+    const { error } = await dbFrom("chat_group_members").delete().eq("group_id", groupId).eq("user_id", user.id);
+    if (error) { toast.error("Could not leave group"); return; }
+    toast.success("You left the group");
+    onClose();
+  };
+
+  const filteredMessages = groupSearchQ.trim()
+    ? messages.filter((m) => m.message?.toLowerCase().includes(groupSearchQ.toLowerCase()))
+    : messages;
+
   const initials = (groupName || "G").split(" ").map((n) => n[0]).join("").toUpperCase().slice(0, 2);
 
   return (
@@ -622,14 +745,6 @@ export default function GroupChat({ groupId, groupName, groupAvatar, onClose }: 
               <Phone className="h-[19px] w-[19px] text-emerald-500" />
             </button>
             <button
-              onClick={() => setShowInvites(true)}
-              className="min-h-[40px] min-w-[40px] flex items-center justify-center rounded-full hover:bg-muted/50"
-              aria-label="Invite links"
-              title="Invite links"
-            >
-              <Link2 className="h-4 w-4 text-muted-foreground" />
-            </button>
-            <button
               onClick={() => setShowMembers(true)}
               className="min-h-[40px] min-w-[40px] flex items-center justify-center rounded-full hover:bg-muted/50"
               aria-label="Members"
@@ -637,10 +752,53 @@ export default function GroupChat({ groupId, groupName, groupAvatar, onClose }: 
             >
               <Users className="h-4 w-4 text-muted-foreground" />
             </button>
-            <span className="text-xs text-muted-foreground pr-1">{members.length}</span>
+            <span className="text-xs text-muted-foreground">{members.length}</span>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <button className="min-h-[40px] min-w-[40px] flex items-center justify-center rounded-full hover:bg-muted/50" aria-label="More options" title="More options">
+                  <MoreVertical className="h-4 w-4 text-muted-foreground" />
+                </button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-48">
+                <DropdownMenuItem onClick={() => { setShowGroupSearch(true); setGroupSearchQ(""); }}>
+                  <Search className="mr-2 h-4 w-4" /> Search in chat
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={toggleMute}>
+                  {isMuted ? <Bell className="mr-2 h-4 w-4" /> : <BellOff className="mr-2 h-4 w-4" />}
+                  {isMuted ? "Unmute" : "Mute"} notifications
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => setShowInvites(true)}>
+                  <Link2 className="mr-2 h-4 w-4" /> Invite link
+                </DropdownMenuItem>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem onClick={() => setShowLeaveConfirm(true)} className="text-destructive focus:text-destructive">
+                  <LogOut className="mr-2 h-4 w-4" /> Leave group
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
           </div>
         </div>
       </div>
+
+      {/* In-group search bar */}
+      <AnimatePresence>
+        {showGroupSearch && (
+          <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: "auto", opacity: 1 }} exit={{ height: 0, opacity: 0 }}
+            className="border-b border-border/30 overflow-hidden">
+            <div className="flex items-center gap-2 px-3 py-2">
+              <Search className="h-4 w-4 text-muted-foreground shrink-0" />
+              <input autoFocus value={groupSearchQ} onChange={(e) => setGroupSearchQ(e.target.value)}
+                placeholder="Search messages..." className="flex-1 text-sm bg-transparent outline-none" />
+              <button onClick={() => { setShowGroupSearch(false); setGroupSearchQ(""); }} className="h-7 w-7 flex items-center justify-center rounded-full hover:bg-muted/60">
+                <X className="h-3.5 w-3.5 text-muted-foreground" />
+              </button>
+            </div>
+            {groupSearchQ.trim() && (
+              <p className="px-3 pb-2 text-[11px] text-muted-foreground">{filteredMessages.length} result{filteredMessages.length !== 1 ? "s" : ""}</p>
+            )}
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       {/* Messages */}
       <div
@@ -666,21 +824,37 @@ export default function GroupChat({ groupId, groupName, groupAvatar, onClose }: 
         ) : (
           <>
           <AnimatePresence initial={false}>
-          {messages.map((msg) => {
+          {filteredMessages.map((msg, idx) => {
             const isMe = msg.sender_id === user?.id;
             const senderName = getSenderName(msg.sender_id);
             const senderAvatar = getSenderAvatar(msg.sender_id);
             const repliedMsg = msg.reply_to_id ? messages.find((m) => m.id === msg.reply_to_id) : null;
             const isOptimistic = msg.id.startsWith("opt-");
+            const msgDate = new Date(msg.created_at).toDateString();
+            const prevMsgDate = idx > 0 ? new Date(filteredMessages[idx - 1].created_at).toDateString() : null;
+            const showDateSep = msgDate !== prevMsgDate;
+            const dateLabel = (() => {
+              const d = new Date(msg.created_at);
+              if (isToday(d)) return "Today";
+              if (isYesterday(d)) return "Yesterday";
+              return format(d, "MMMM d, yyyy");
+            })();
 
             return (
+              <div key={msg.id}>
+                {showDateSep && (
+                  <div className="flex items-center gap-2 py-2 px-2">
+                    <div className="h-px flex-1 bg-border/30" />
+                    <span className="text-[10px] font-semibold text-muted-foreground/60 bg-background/80 px-2 py-0.5 rounded-full border border-border/20">{dateLabel}</span>
+                    <div className="h-px flex-1 bg-border/30" />
+                  </div>
+                )}
               <motion.div
-                key={msg.id}
                 initial={{ opacity: 0, y: 10, scale: 0.97 }}
                 animate={{ opacity: 1, y: 0, scale: 1 }}
                 transition={{ type: "spring", damping: 22, stiffness: 380, mass: 0.7 }}
                 className={`chat-no-callout flex ${isMe ? "justify-end" : "justify-start"} gap-1.5`}
-                onContextMenu={(e) => e.preventDefault()}
+                onContextMenu={(e) => { e.preventDefault(); if (!isOptimistic) setActionTarget(msg); }}
                 style={{ WebkitTouchCallout: "none" } as React.CSSProperties}
               >
                 {!isMe && (
@@ -690,12 +864,10 @@ export default function GroupChat({ groupId, groupName, groupAvatar, onClose }: 
                   </Avatar>
                 )}
                 <div className={`max-w-[75%] ${isOptimistic ? "opacity-60" : ""}`}>
-                  {/* Sender name for others */}
                   {!isMe && (
                     <p className="text-[10px] font-semibold text-primary mb-0.5 px-1">{senderName}</p>
                   )}
 
-                  {/* Replied message preview */}
                   {repliedMsg && (
                     <div className={`rounded-lg px-2.5 py-1.5 mb-0.5 border-l-2 border-primary/50 text-[10px] ${
                       isMe ? "bg-primary/20 text-primary-foreground/70" : "bg-muted/80 text-muted-foreground"
@@ -705,14 +877,12 @@ export default function GroupChat({ groupId, groupName, groupAvatar, onClose }: 
                     </div>
                   )}
 
-                  {/* Image */}
                   {msg.image_url && (
                     <div className={`rounded-2xl overflow-hidden mb-1 ${isMe ? "rounded-br-md" : "rounded-bl-md"}`}>
                       <img src={msg.image_url} alt="" className="max-w-full max-h-60 object-cover rounded-2xl" loading="lazy" />
                     </div>
                   )}
 
-                  {/* Voice */}
                   {msg.message_type === "voice" && msg.voice_url && (() => {
                     const csid = msg.file_payload?.client_send_id;
                     const isOpt = msg.id.startsWith("opt-");
@@ -736,16 +906,11 @@ export default function GroupChat({ groupId, groupName, groupAvatar, onClose }: 
                     );
                   })()}
 
-                  {/* Text */}
                   {msg.message && msg.message_type !== "voice" && (
                     <div
                       className={`px-3.5 py-2 rounded-2xl text-sm leading-relaxed ${
                         isMe ? "bg-primary text-primary-foreground rounded-br-md" : "bg-muted text-foreground rounded-bl-md"
                       }`}
-                      onContextMenu={(e) => {
-                        e.preventDefault();
-                        setReplyTo({ id: msg.id, message: msg.message, senderName });
-                      }}
                     >
                       <p className="whitespace-pre-wrap break-words">{msg.message}</p>
                       <span className={`text-[9px] block text-right mt-0.5 ${isMe ? "text-primary-foreground/60" : "text-muted-foreground"}`}>
@@ -753,8 +918,35 @@ export default function GroupChat({ groupId, groupName, groupAvatar, onClose }: 
                       </span>
                     </div>
                   )}
+
+                  {/* Reaction counts */}
+                  {!isOptimistic && (
+                    <MessageReactionsBar messageId={msg.id} align={isMe ? "right" : "left"} />
+                  )}
+
+                  {/* Quick reaction + action row */}
+                  {!isOptimistic && (
+                    <div className={`flex items-center gap-1 mt-0.5 ${isMe ? "justify-end" : "justify-start"}`}>
+                      {["❤️","😂","👍","😮"].map((emoji) => (
+                        <button key={emoji} onClick={async () => {
+                          if (!user?.id) return;
+                          try {
+                            const { data: ex } = await (supabase as any).from("message_reactions").select("id").eq("message_id", msg.id).eq("user_id", user.id).eq("emoji", emoji).maybeSingle();
+                            if (ex?.id) await (supabase as any).from("message_reactions").delete().eq("id", ex.id);
+                            else await (supabase as any).from("message_reactions").insert({ message_id: msg.id, user_id: user.id, emoji });
+                          } catch { /* ignore */ }
+                        }} className="text-base leading-none hover:scale-125 transition-transform active:scale-110" title={emoji}>
+                          {emoji}
+                        </button>
+                      ))}
+                      <button onClick={() => setActionTarget(msg)} className="h-5 w-5 rounded-full flex items-center justify-center hover:bg-muted/60 ml-0.5" aria-label="More actions">
+                        <MoreVertical className="h-3 w-3 text-muted-foreground" />
+                      </button>
+                    </div>
+                  )}
                 </div>
               </motion.div>
+              </div>
             );
           })}
           </AnimatePresence>
@@ -787,51 +979,129 @@ export default function GroupChat({ groupId, groupName, groupAvatar, onClose }: 
 
       {/* Voice recording overlay is rendered inside HoldToRecordMic (Round 5) */}
 
-      {/* Input */}
-      <div className="bg-background/80 backdrop-blur-2xl border-t border-border/5 px-2.5 py-2 flex items-end gap-1.5 relative" style={{ paddingBottom: "max(env(safe-area-inset-bottom, 0px), 0.5rem)" }}>
-        {/* Attach / image */}
-        <button
-          onClick={() => fileInputRef.current?.click()}
-          disabled={uploadingImage}
-          className="h-11 w-11 rounded-full flex items-center justify-center text-muted-foreground/60 hover:bg-muted/50 active:scale-90 transition-all shrink-0"
-          aria-label="Add image"
-          title="Add image"
-        >
-          {uploadingImage ? <Loader2 className="h-[18px] w-[18px] animate-spin" /> : <Plus className="h-5 w-5" />}
-        </button>
-        <input ref={fileInputRef} type="file" accept="image/*" className="hidden" onChange={handleImageSelect} title="Choose image" aria-label="Choose image" />
-
-        {/* Text input with emoji button */}
-        <div className="flex-1 relative">
-          <input
-            ref={inputRef}
-            value={input}
-            onChange={(e) => setInput(e.target.value)}
-            onKeyDown={(e) => e.key === "Enter" && !e.shiftKey && handleSend()}
-            placeholder="Message..."
-            className="w-full h-12 pl-4 pr-14 rounded-full text-[15px] text-foreground placeholder:text-muted-foreground/40 focus:outline-none bg-muted/30 border border-border/10 focus:ring-2 focus:ring-primary/15 focus:border-primary/20 transition-all"
-          />
-          <div className="absolute right-1.5 top-1/2 -translate-y-1/2">
-            <button className="h-9 w-9 rounded-full flex items-center justify-center text-muted-foreground/40 hover:text-muted-foreground transition-colors" aria-label="Emoji" title="Emoji">
-              <Smile className="h-5 w-5" />
-            </button>
-          </div>
-        </div>
-
-        {/* Send or mic */}
-        {input.trim() ? (
-          <button
-            onClick={() => handleSend()}
-            disabled={sending}
-            className="h-12 w-12 rounded-full bg-primary text-primary-foreground flex items-center justify-center disabled:opacity-40 active:scale-90 transition-all shrink-0 shadow-sm"
-            aria-label="Send message"
-            title="Send message"
-          >
-            {sending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-[17px] w-[17px]" />}
-          </button>
-        ) : (
-          <HoldToRecordMic voice={voice} />
+      {/* Sticker keyboard */}
+      <AnimatePresence>
+        {showStickerKeyboard && (
+          <Suspense fallback={null}>
+            <StickerKeyboard
+              open={showStickerKeyboard}
+              onClose={() => setShowStickerKeyboard(false)}
+              onSendSticker={(payload) => { void handleStickerSend(payload); }}
+              onStartVoice={() => voice.startRecording()}
+              onOpenCamera={() => fileInputRef.current?.click()}
+            />
+          </Suspense>
         )}
+      </AnimatePresence>
+
+      {/* Message action sheet */}
+      <AnimatePresence>
+        {actionTarget && (
+          <>
+            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+              className="fixed inset-0 z-[200] bg-black/40" onClick={() => setActionTarget(null)} />
+            <motion.div initial={{ y: 40, opacity: 0 }} animate={{ y: 0, opacity: 1 }} exit={{ y: 40, opacity: 0 }}
+              transition={{ type: "spring", damping: 26, stiffness: 400 }}
+              className="fixed bottom-0 left-0 right-0 z-[201] bg-background rounded-t-2xl px-4 pb-8 pt-3 shadow-2xl border-t border-border/20 max-w-lg mx-auto"
+            >
+              <div className="w-10 h-1 bg-muted rounded-full mx-auto mb-4" />
+              <p className="text-xs text-muted-foreground truncate mb-3 px-1">{actionTarget.message || "📷 Media"}</p>
+              <div className="grid grid-cols-4 gap-3">
+                {[
+                  { label: "Reply", icon: Reply, color: "bg-blue-500", action: () => { setReplyTo({ id: actionTarget.id, message: actionTarget.message || "📷 Media", senderName: getSenderName(actionTarget.sender_id) }); setActionTarget(null); } },
+                  { label: "Copy", icon: Copy, color: "bg-emerald-500", action: () => { navigator.clipboard?.writeText(actionTarget.message || "").then(() => toast.success("Copied")).catch(() => toast.error("Copy failed")); setActionTarget(null); } },
+                  { label: "Forward", icon: Forward, color: "bg-violet-500", action: () => { navigator.clipboard?.writeText(actionTarget.message || ""); toast.success("Copied to forward"); setActionTarget(null); } },
+                  { label: "Delete", icon: Trash2, color: "bg-red-500", action: () => { void handleDeleteMsg(actionTarget.id); setActionTarget(null); } },
+                ].map((item) => (
+                  <button key={item.label} onClick={item.action}
+                    className="flex flex-col items-center gap-2 active:scale-95 transition-transform">
+                    <div className={`w-12 h-12 rounded-2xl ${item.color} flex items-center justify-center shadow-sm`}>
+                      <item.icon className="w-5 h-5 text-white" />
+                    </div>
+                    <span className="text-[11px] font-medium text-muted-foreground">{item.label}</span>
+                  </button>
+                ))}
+              </div>
+            </motion.div>
+          </>
+        )}
+      </AnimatePresence>
+
+      {/* Input */}
+      <div className="bg-background/80 backdrop-blur-2xl border-t border-border/5 px-2.5 py-2 relative" style={{ paddingBottom: "max(env(safe-area-inset-bottom, 0px), 0.5rem)" }}>
+        <div className="flex items-end gap-1.5">
+          {/* Attach button with full attach menu */}
+          <div className="relative shrink-0">
+            <button
+              data-attach-trigger
+              onClick={() => setShowAttachMenu(!showAttachMenu)}
+              disabled={uploadingImage}
+              className={`h-11 w-11 rounded-full flex items-center justify-center transition-all shrink-0 ${
+                showAttachMenu ? "bg-primary text-primary-foreground rotate-45" : "text-muted-foreground/60 hover:bg-muted/50"
+              }`}
+              aria-label="Attachments"
+              title="Attachments"
+            >
+              {uploadingImage ? <Loader2 className="h-[18px] w-[18px] animate-spin" /> : <Plus className="h-5 w-5" />}
+            </button>
+            <ChatAttachMenu
+              open={showAttachMenu}
+              onClose={() => setShowAttachMenu(false)}
+              onImageSelect={() => fileInputRef.current?.click()}
+              onVideoSelect={() => videoInputRef.current?.click()}
+              onLocationShare={handleLocationShare}
+              onToggleDisappearing={() => {
+                const next = disappearingSec == null ? 24 * 60 * 60 : disappearingSec === 24 * 60 * 60 ? 7 * 24 * 60 * 60 : disappearingSec === 7 * 24 * 60 * 60 ? 30 * 24 * 60 * 60 : null;
+                setDisappearingSec(next);
+                toast.success(next == null ? "Auto-delete: Off" : next === 24*60*60 ? "Auto-delete: 1 day" : next === 7*24*60*60 ? "Auto-delete: 7 days" : "Auto-delete: 30 days");
+              }}
+              disappearingEnabled={disappearingSec != null}
+              disappearingLabel={disappearingSec == null ? "Off" : disappearingSec === 24*60*60 ? "1d" : disappearingSec === 7*24*60*60 ? "7d" : "30d"}
+            />
+          </div>
+
+          <input ref={fileInputRef} type="file" accept="image/*" className="hidden" onChange={handleImageSelect} title="Choose image" aria-label="Choose image" />
+          <input ref={videoInputRef} type="file" accept="video/*" className="hidden" onChange={handleVideoSelect} title="Choose video" aria-label="Choose video" />
+
+          {/* Text input */}
+          <div className="flex-1 relative">
+            <input
+              ref={inputRef}
+              value={input}
+              onChange={(e) => setInput(e.target.value)}
+              onKeyDown={(e) => e.key === "Enter" && !e.shiftKey && handleSend()}
+              placeholder={disappearingSec != null ? "Disappearing message..." : "Message..."}
+              className={`w-full h-12 pl-4 pr-14 rounded-full text-[15px] text-foreground placeholder:text-muted-foreground/40 focus:outline-none transition-all ${
+                disappearingSec != null ? "bg-amber-500/5 border border-amber-500/15 focus:ring-2 focus:ring-amber-500/10" : "bg-muted/30 border border-border/10 focus:ring-2 focus:ring-primary/15 focus:border-primary/20"
+              }`}
+            />
+            <div className="absolute right-1.5 top-1/2 -translate-y-1/2">
+              <button
+                onClick={() => setShowStickerKeyboard(!showStickerKeyboard)}
+                className={`h-9 w-9 rounded-full flex items-center justify-center transition-all active:scale-90 ${showStickerKeyboard ? "text-primary bg-primary/10" : "text-muted-foreground/40 hover:text-muted-foreground"}`}
+                aria-label="Open stickers"
+                title="Open stickers"
+              >
+                <Smile className="h-5 w-5" />
+              </button>
+            </div>
+          </div>
+
+          {/* Send or mic */}
+          {input.trim() ? (
+            <button
+              onClick={() => handleSend()}
+              disabled={sending}
+              className="h-12 w-12 rounded-full bg-primary text-primary-foreground flex items-center justify-center disabled:opacity-40 active:scale-90 transition-all shrink-0 shadow-sm"
+              aria-label="Send message"
+              title="Send message"
+            >
+              {sending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-[17px] w-[17px]" />}
+            </button>
+          ) : (
+            <HoldToRecordMic voice={voice} />
+          )}
+        </div>
       </div>
 
       {/* Phase 4 Track C — Group admin sheets */}
@@ -846,6 +1116,32 @@ export default function GroupChat({ groupId, groupName, groupAvatar, onClose }: 
         onOpenChange={setShowInvites}
         groupId={groupId}
       />
+
+      {/* Leave group confirmation */}
+      <AnimatePresence>
+        {showLeaveConfirm && (
+          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+            className="fixed inset-0 z-[300] flex items-center justify-center px-6" onClick={() => setShowLeaveConfirm(false)}>
+            <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" />
+            <motion.div initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.9, opacity: 0 }}
+              className="relative bg-background rounded-2xl p-6 w-full max-w-sm shadow-2xl" onClick={(e) => e.stopPropagation()}>
+              <div className="flex items-center gap-3 mb-4">
+                <div className="w-11 h-11 rounded-full bg-destructive/10 flex items-center justify-center">
+                  <LogOut className="w-5 h-5 text-destructive" />
+                </div>
+                <div>
+                  <h3 className="text-base font-bold">Leave group?</h3>
+                  <p className="text-xs text-muted-foreground">You'll need a new invite to rejoin.</p>
+                </div>
+              </div>
+              <div className="flex gap-3">
+                <button onClick={() => setShowLeaveConfirm(false)} className="flex-1 h-11 rounded-xl bg-muted text-sm font-semibold">Cancel</button>
+                <button onClick={() => { setShowLeaveConfirm(false); void handleLeaveGroup(); }} className="flex-1 h-11 rounded-xl bg-destructive text-destructive-foreground text-sm font-bold">Leave</button>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       {/* LiveKit-powered group call overlay */}
       {groupCall && (

@@ -13,6 +13,7 @@
 import { createClient } from "../_shared/deps.ts";
 import { getCorsHeaders } from "../_shared/cors.ts";
 import Stripe from "../_shared/stripe.ts";
+import { rateLimitDb, rateLimitHeaders } from "../_shared/rateLimiter.ts";
 
 interface Body {
   reservation_id: string;
@@ -65,6 +66,18 @@ Deno.serve(async (req) => {
       global: { headers: { Authorization: authHeader } },
     });
     const { data: { user } } = await userClient.auth.getUser();
+    if (!user) {
+      return new Response(JSON.stringify({ error: "Authentication required" }), {
+        status: 401, headers: { ...cors, "Content-Type": "application/json" },
+      });
+    }
+
+    const rl = await rateLimitDb(user.id, "payment");
+    if (!rl.allowed) {
+      return new Response(JSON.stringify({ error: "Too many requests. Please try again later." }), {
+        status: 429, headers: { ...cors, "Content-Type": "application/json", ...rateLimitHeaders(rl, "payment") },
+      });
+    }
 
     const body = (await req.json()) as Body;
     if (!body?.reservation_id || !body?.store_id) {

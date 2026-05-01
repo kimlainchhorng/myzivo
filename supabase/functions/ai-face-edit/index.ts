@@ -1,4 +1,6 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { createClient } from "npm:@supabase/supabase-js@2.49.1";
+import { rateLimitDb, rateLimitHeaders } from "../_shared/rateLimiter.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -12,12 +14,45 @@ serve(async (req) => {
   }
 
   try {
+    const authHeader = req.headers.get("Authorization");
+    if (!authHeader?.startsWith("Bearer ")) {
+      return new Response(JSON.stringify({ error: "Authentication required" }), {
+        status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+    const { data: { user }, error: authErr } = await createClient(
+      Deno.env.get("SUPABASE_URL") ?? "",
+      Deno.env.get("SUPABASE_ANON_KEY") ?? "",
+      { global: { headers: { Authorization: authHeader } } }
+    ).auth.getUser();
+    if (authErr || !user) {
+      return new Response(JSON.stringify({ error: "Authentication required" }), {
+        status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    // Face edit is expensive (vision model) — stricter limit
+    const rl = await rateLimitDb(user.id, "upload", { max: 10, windowSec: 60 });
+    if (!rl.allowed) {
+      return new Response(JSON.stringify({ error: "Too many requests. Please try again shortly." }), {
+        status: 429, headers: { ...corsHeaders, "Content-Type": "application/json", ...rateLimitHeaders(rl, "upload") },
+      });
+    }
+
     const { imageBase64, mode } = await req.json();
 
     if (!imageBase64 || !mode) {
       return new Response(
         JSON.stringify({ error: "Missing imageBase64 or mode" }),
         { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
+    // Reject oversized payloads (~10 MB base64 ≈ 7.5 MB image)
+    if (typeof imageBase64 !== "string" || imageBase64.length > 10_000_000) {
+      return new Response(
+        JSON.stringify({ error: "Image too large. Maximum size is 7.5 MB." }),
+        { status: 413, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
 

@@ -1,5 +1,5 @@
 // Upsert the calling device into user_devices on app boot / link.
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
+import { createClient } from "../_shared/deps.ts";
 import { corsHeaders } from "../_shared/cors.ts";
 
 Deno.serve(async (req) => {

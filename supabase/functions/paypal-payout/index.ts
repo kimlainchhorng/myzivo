@@ -1,5 +1,4 @@
-import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
-import { createClient } from "npm:@supabase/supabase-js@2.57.2";
+import { serve, createClient } from "../_shared/deps.ts";
 import { enforceAal2 } from "../_shared/aalCheck.ts";
 
 const corsHeaders = {
@@ -130,7 +129,10 @@ serve(async (req) => {
     const botToken = Deno.env.get("TELEGRAM_BOT_TOKEN");
     const chatId = Deno.env.get("TELEGRAM_CHAT_ID");
     if (botToken && chatId) {
-      const msg = `💸 *PayPal Payout*\nUser: ${user.id}\nAmount: $${amountStr}\nTo: ${paypal_email}\nBatch: ${payoutBatchId}\nStatus: ${status}`;
+      const maskedEmail = paypal_email.includes("@")
+        ? `${paypal_email[0]}****@${paypal_email.split("@")[1]}`
+        : "****";
+      const msg = `💸 *PayPal Payout*\nAmount: $${amountStr}\nTo: ${maskedEmail}\nBatch: ${payoutBatchId}\nStatus: ${status}`;
       try {
         await fetch(`https://api.telegram.org/bot${botToken}/sendMessage`, {
           method: "POST",

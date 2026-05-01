@@ -1,6 +1,7 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
-import Stripe from "https://esm.sh/stripe@18.5.0";
+import Stripe from "../_shared/stripe.ts";
 import { createClient } from "npm:@supabase/supabase-js@2.57.2";
+import { rateLimitDb, rateLimitHeaders } from "../_shared/rateLimiter.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -42,7 +43,15 @@ serve(async (req) => {
     const { data } = await supabaseClient.auth.getUser(token);
     const user = data.user;
     if (!user?.email) throw new Error("User not authenticated or email not available");
-    logStep("User authenticated", { email: user.email });
+    logStep("User authenticated", { userId: user.id });
+
+    const rl = await rateLimitDb(user.id, "payment");
+    if (!rl.allowed) {
+      return new Response(JSON.stringify({ error: "Too many requests. Please try again shortly." }), {
+        status: 429,
+        headers: { ...corsHeaders, "Content-Type": "application/json", ...rateLimitHeaders(rl, "payment") },
+      });
+    }
 
     const { plan } = await req.json();
     const priceId = PRICES[plan];

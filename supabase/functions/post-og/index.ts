@@ -1,4 +1,4 @@
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2.49.1";
+import { createClient } from "../_shared/deps.ts";
 
 const APP_ORIGIN = "https://zivollc.com";
 const SOCIAL_CRAWLER_UA = /facebookexternalhit|facebot|twitterbot|xbot|linkedinbot|slackbot|discordbot|telegrambot|whatsapp|skypeuripreview|pinterest|redditbot|embedly|meta-externalagent|meta-externalfetcher/i;

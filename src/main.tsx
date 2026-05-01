@@ -5,6 +5,15 @@ import "./index.css";
 // Render immediately — don't block on Capacitor or error handlers
 createRoot(document.getElementById("root")!).render(<App />);
 
+// Notify Capgo OTA updater that this version loaded successfully.
+// Must be called after render; if omitted Capgo rolls back to the previous bundle.
+import("@capacitor/core").then(({ Capacitor }) => {
+  if (!Capacitor.isNativePlatform()) return;
+  import("@capgo/capacitor-updater").then(({ CapacitorUpdater }) => {
+    CapacitorUpdater.notifyAppReady();
+  });
+});
+
 // Defer non-critical setup to after first paint
 const idle = window.requestIdleCallback || ((cb: () => void) => setTimeout(cb, 200));
 idle(() => {

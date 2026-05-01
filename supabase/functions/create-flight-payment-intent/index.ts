@@ -5,6 +5,7 @@
 import { createClient } from "../_shared/deps.ts";
 import { getCorsHeaders } from "../_shared/cors.ts";
 import Stripe from "../_shared/stripe.ts";
+import { rateLimitDb, rateLimitHeaders } from "../_shared/rateLimiter.ts";
 
 interface CheckoutRequest {
   userId: string;
@@ -47,7 +48,21 @@ Deno.serve(async (req) => {
     const userClient = createClient(supabaseUrl, anonKey, {
       global: { headers: { Authorization: authHeader } },
     });
-    const { data: { user } } = await userClient.auth.getUser();
+    const { data: { user }, error: authErr } = await userClient.auth.getUser();
+    if (authErr || !user) {
+      return new Response(JSON.stringify({ error: "Unauthorized" }), {
+        status: 401,
+        headers: { ...cors, "Content-Type": "application/json" },
+      });
+    }
+
+    const rl = await rateLimitDb(user.id, "payment");
+    if (!rl.allowed) {
+      return new Response(JSON.stringify({ error: "Too many requests. Please try again shortly." }), {
+        status: 429,
+        headers: { ...cors, "Content-Type": "application/json", ...rateLimitHeaders(rl, "payment") },
+      });
+    }
 
     const supabase = createClient(supabaseUrl, serviceKey);
 
@@ -106,6 +121,12 @@ Deno.serve(async (req) => {
       }
       if (!p.gender || !["m", "f"].includes(p.gender)) {
         throw new Error(`Passenger ${i + 1}: Gender is required`);
+      }
+      if (!/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(p.email)) {
+        throw new Error(`Passenger ${i + 1}: Invalid email address`);
+      }
+      if (p.phone_number && !/^\+?[0-9\s\-().]{7,20}$/.test(p.phone_number)) {
+        throw new Error(`Passenger ${i + 1}: Invalid phone number format`);
       }
     }
 

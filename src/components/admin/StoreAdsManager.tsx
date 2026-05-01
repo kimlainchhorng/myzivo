@@ -8,6 +8,7 @@
  *  - Sticky FAB + realtime via useStoreAdsOverview
  */
 import { useEffect, useMemo, useRef, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -92,6 +93,7 @@ const EMPTY_FORM: CampaignFormState = {
 };
 
 export default function StoreAdsManager({ storeId }: Props) {
+  const navigate = useNavigate();
   const { accounts, campaigns, stats, checklist, wallet, ledger, isLoading, invalidate } =
     useStoreAdsOverview(storeId);
 
@@ -108,7 +110,6 @@ export default function StoreAdsManager({ storeId }: Props) {
 
   const goToWallet = () => {
     document.getElementById("ads-wallet")?.scrollIntoView({ behavior: "smooth", block: "start" });
-    toast.info("Configure top-ups and auto-reload below.");
   };
 
   // ===== Mutations =====
@@ -430,9 +431,9 @@ export default function StoreAdsManager({ storeId }: Props) {
             wallet={wallet}
             ledger={ledger}
             stats={stats}
-            onAddFunds={() => toast.info("Opening wallet top-up… (link to AdsStudioWalletGuard)")}
-            onViewAll={() => toast.info("Opening full wallet ledger…")}
-            onToggleAutoReload={() => toast.info("Configure auto-reload in the wallet settings.")}
+            onAddFunds={() => navigate("/shop-dashboard/wallet")}
+            onViewAll={() => navigate("/shop-dashboard/wallet")}
+            onToggleAutoReload={() => navigate("/shop-dashboard/wallet")}
           />
         </div>
       )}

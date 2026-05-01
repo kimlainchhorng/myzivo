@@ -1,7 +1,3 @@
-/**
- * Connect Your Website
- * SEO-focused embed: drives backlinks, indexable travel content, and referral traffic.
- */
 import { useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Helmet } from "react-helmet-async";
@@ -28,15 +24,28 @@ const NICHES: { id: Niche; label: string; desc: string; icon: typeof Plane }[] =
   { id: "blog", label: "Travel Blog", desc: "SEO articles auto-feed", icon: Globe2 },
 ];
 
+const STORAGE_KEY = "zivo_connect_website_prefs";
+
+function loadPrefs() {
+  try { return JSON.parse(localStorage.getItem(STORAGE_KEY) || "{}"); }
+  catch { return {}; }
+}
+
+function savePrefs(patch: Record<string, unknown>) {
+  try { localStorage.setItem(STORAGE_KEY, JSON.stringify({ ...loadPrefs(), ...patch })); }
+  catch { /* non-critical */ }
+}
+
 const ConnectWebsitePage = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
   const [copied, setCopied] = useState(false);
-  const [status, setStatus] = useState<PublishStatus>("live");
+  const prefs = loadPrefs();
+  const [status, setStatus] = useState<PublishStatus>(prefs.status ?? "live");
   const [theme, setTheme] = useState<PreviewTheme>("light");
-  const [connected, setConnected] = useState(true);
-  const [niche, setNiche] = useState<Niche>("flights");
-  const [dofollow, setDofollow] = useState(true);
+  const [connected, setConnected] = useState<boolean>(prefs.connected ?? true);
+  const [niche, setNiche] = useState<Niche>(prefs.niche ?? "flights");
+  const [dofollow, setDofollow] = useState<boolean>(prefs.dofollow ?? true);
 
   const siteId = useMemo(
     () => (user?.id ? user.id.replace(/-/g, "").slice(0, 24) : "zivo-demo-site-0001"),
@@ -57,12 +66,31 @@ const ConnectWebsitePage = () => {
 
   const handleDisconnect = () => {
     setConnected(false);
+    savePrefs({ connected: false });
     toast.message("Widget disconnected", { description: "Your website will stop receiving updates." });
   };
 
   const handleReconnect = () => {
     setConnected(true);
+    savePrefs({ connected: true });
     toast.success("Widget reconnected");
+  };
+
+  const handleNicheChange = (n: Niche) => {
+    setNiche(n);
+    savePrefs({ niche: n });
+  };
+
+  const handleDofollowToggle = () => {
+    setDofollow((v) => {
+      savePrefs({ dofollow: !v });
+      return !v;
+    });
+  };
+
+  const handleStatusChange = (s: PublishStatus) => {
+    setStatus(s);
+    savePrefs({ status: s });
   };
 
   return (
@@ -130,7 +158,7 @@ const ConnectWebsitePage = () => {
                 {NICHES.map((n) => (
                   <button
                     key={n.id}
-                    onClick={() => setNiche(n.id)}
+                    onClick={() => handleNicheChange(n.id)}
                     className={cn(
                       "text-left p-3 rounded-xl border-2 transition-all flex gap-3 items-start",
                       niche === n.id
@@ -157,7 +185,7 @@ const ConnectWebsitePage = () => {
                 <div className="flex items-center justify-between gap-3">
                   <div className="font-semibold text-sm">Dofollow backlink</div>
                   <button
-                    onClick={() => setDofollow((v) => !v)}
+                    onClick={handleDofollowToggle}
                     className={cn(
                       "h-6 w-11 rounded-full transition-colors relative shrink-0",
                       dofollow ? "bg-primary" : "bg-muted"
@@ -233,7 +261,7 @@ const ConnectWebsitePage = () => {
               <h3 className="text-sm font-semibold mb-3">Publish status</h3>
               <div className="grid sm:grid-cols-2 gap-3">
                 <button
-                  onClick={() => setStatus("live")}
+                  onClick={() => handleStatusChange("live")}
                   className={cn(
                     "text-left p-4 rounded-xl border-2 transition-all",
                     status === "live"
@@ -253,7 +281,7 @@ const ConnectWebsitePage = () => {
                 </button>
 
                 <button
-                  onClick={() => setStatus("draft")}
+                  onClick={() => handleStatusChange("draft")}
                   className={cn(
                     "text-left p-4 rounded-xl border-2 transition-all",
                     status === "draft"

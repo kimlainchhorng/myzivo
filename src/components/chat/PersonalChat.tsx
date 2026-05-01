@@ -1626,6 +1626,12 @@ export default function PersonalChat({ recipientId, recipientName, recipientAvat
               <DropdownMenuItem onClick={() => setShowSecurity(true)} className="gap-3 text-[14px] font-medium rounded-lg px-3 py-2.5 cursor-pointer">
                 <Shield className="w-[18px] h-[18px] text-muted-foreground" /> Privacy
               </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => setShowScheduledSheet(true)} className="gap-3 text-[14px] font-medium rounded-lg px-3 py-2.5 cursor-pointer">
+                <Clock className="w-[18px] h-[18px] text-muted-foreground" /> Scheduled
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => setShowContactInfo(true)} className="gap-3 text-[14px] font-medium rounded-lg px-3 py-2.5 cursor-pointer">
+                <FileText className="w-[18px] h-[18px] text-muted-foreground" /> Contact Info
+              </DropdownMenuItem>
             </DropdownMenuContent>
             </DropdownMenu>
           </div>
@@ -1846,11 +1852,29 @@ export default function PersonalChat({ recipientId, recipientName, recipientAvat
               </div>
             )}
             <AnimatePresence initial={false}>
-            {visibleTimeline.map((item) => {
+            {visibleTimeline.map((item, idx) => {
+                const itemDate = new Date(item.created_at).toDateString();
+                const prevDate = idx > 0 ? new Date(visibleTimeline[idx - 1].created_at).toDateString() : null;
+                const showDateSep = itemDate !== prevDate;
+                const dateLabel = (() => {
+                  const d = new Date(item.created_at);
+                  if (isToday(d)) return "Today";
+                  if (isYesterday(d)) return "Yesterday";
+                  return format(d, "MMMM d, yyyy");
+                })();
+                const dateSep = showDateSep ? (
+                  <div key={`sep-${item.created_at}`} className="flex items-center gap-2 py-2 px-2">
+                    <div className="h-px flex-1 bg-border/30" />
+                    <span className="text-[10px] font-semibold text-muted-foreground/60 bg-background/80 px-2 py-0.5 rounded-full border border-border/20">{dateLabel}</span>
+                    <div className="h-px flex-1 bg-border/30" />
+                  </div>
+                ) : null;
+
                 if (isCallEvent(item)) {
                   return (
-                    <motion.div
-                      key={`call-${item.id}`}
+                    <div key={`call-${item.id}`}>
+                      {dateSep}
+                      <motion.div
                       initial={{ opacity: 0, y: 10 }}
                       animate={{ opacity: 1, y: 0 }}
                       transition={{ type: "spring", damping: 22, stiffness: 380, mass: 0.7 }}
@@ -1867,6 +1891,7 @@ export default function PersonalChat({ recipientId, recipientName, recipientAvat
                         onDeleteAll={handleCallDeleteAll}
                       />
                     </motion.div>
+                    </div>
                   );
                 }
 
@@ -1876,8 +1901,10 @@ export default function PersonalChat({ recipientId, recipientName, recipientAvat
                 const isHighlighted = highlightedMsgId === msg.id;
 
                 return (
+                  <div key={msg.id}>
+                  {dateSep}
                   <motion.div
-                    key={msg.id}
+                    key={`bubble-${msg.id}`}
                     ref={(el) => { if (el) messageRefs.current.set(msg.id, el as HTMLDivElement); }}
                     initial={{ opacity: 0, y: 12, scale: 0.97 }}
                     animate={{ opacity: 1, y: 0, scale: 1 }}
@@ -1993,6 +2020,7 @@ export default function PersonalChat({ recipientId, recipientName, recipientAvat
                       />
                     )}
                   </motion.div>
+                  </div>
                 );
             })}
             </AnimatePresence>

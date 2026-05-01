@@ -1,7 +1,7 @@
 // Edge-side feature flag evaluator. Reads from the public.feature_flags table,
 // caches results for 30 seconds per worker to keep cold-path overhead low.
 
-import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.57.2';
+import { createClient } from './deps.ts';
 
 interface FlagRow {
   name: string;

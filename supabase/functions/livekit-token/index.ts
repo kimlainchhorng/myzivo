@@ -3,8 +3,8 @@
 // Also creates the matching `video_call_sessions` row on first join (host),
 // and a `video_call_participants` row on every join.
 
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
-import { AccessToken } from "https://esm.sh/livekit-server-sdk@2.7.2";
+import { createClient } from "../_shared/deps.ts";
+import { AccessToken } from "npm:livekit-server-sdk@2.7.2";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",

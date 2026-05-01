@@ -3,8 +3,8 @@
 // Uses LiveKit Egress to record the room as mp4 and POST it to Supabase Storage
 // via signed-URL upload after the call ends.
 
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
-import { EgressClient, EncodedFileType } from "https://esm.sh/livekit-server-sdk@2.7.2";
+import { createClient } from "../_shared/deps.ts";
+import { EgressClient, EncodedFileType } from "npm:livekit-server-sdk@2.7.2";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",

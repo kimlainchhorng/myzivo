@@ -5,7 +5,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import ZivoMobileNav from "@/components/app/ZivoMobileNav";
-import { ArrowLeft, Plus, Search, Heart, MapPin, Tag, ShoppingBag, Filter, DollarSign, Eye, Grid3X3, LayoutList } from "lucide-react";
+import { ArrowLeft, Plus, Search, Heart, MapPin, Tag, ShoppingBag, DollarSign, Eye, Grid3X3, LayoutList, Camera, X as XIcon } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { useState } from "react";
@@ -23,6 +23,8 @@ export default function MarketplacePage() {
   const [showCreate, setShowCreate] = useState(false);
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
   const [newListing, setNewListing] = useState({ title: "", description: "", price: "", condition: "New", location: "", is_negotiable: false });
+  const [imageFiles, setImageFiles] = useState<File[]>([]);
+  const [imagePreviews, setImagePreviews] = useState<string[]>([]);
 
   const { data: listings = [], isLoading } = useQuery({
     queryKey: ["marketplace-listings", conditionFilter],
@@ -44,6 +46,17 @@ export default function MarketplacePage() {
       if (!user) throw new Error("Login required");
       const priceCents = Math.round(parseFloat(newListing.price) * 100);
       if (isNaN(priceCents) || priceCents <= 0) throw new Error("Invalid price");
+
+      const imageUrls: string[] = [];
+      for (const file of imageFiles) {
+        const ext = file.name.split(".").pop() ?? "jpg";
+        const path = `marketplace/${user.id}/${Date.now()}_${Math.random().toString(36).slice(2)}.${ext}`;
+        const { error: upErr } = await (supabase as any).storage.from("public-assets").upload(path, file, { upsert: false });
+        if (upErr) throw new Error(`Image upload failed: ${upErr.message}`);
+        const { data: urlData } = (supabase as any).storage.from("public-assets").getPublicUrl(path);
+        imageUrls.push(urlData.publicUrl as string);
+      }
+
       const { error } = await (supabase as any).from("marketplace_listings").insert({
         title: newListing.title,
         description: newListing.description || null,
@@ -54,6 +67,7 @@ export default function MarketplacePage() {
         seller_id: user.id,
         status: "active",
         currency: "USD",
+        images: imageUrls.length > 0 ? imageUrls : null,
       });
       if (error) throw error;
     },
@@ -62,6 +76,8 @@ export default function MarketplacePage() {
       toast.success("Listing created!");
       setShowCreate(false);
       setNewListing({ title: "", description: "", price: "", condition: "New", location: "", is_negotiable: false });
+      setImageFiles([]);
+      setImagePreviews([]);
     },
     onError: (e: Error) => toast.error(e.message),
   });
@@ -206,6 +222,50 @@ export default function MarketplacePage() {
               </div>
               <div className="px-5 space-y-4">
                 <h3 className="text-base font-bold">Create Listing</h3>
+
+                {/* Photo picker */}
+                <div>
+                  <p className="text-xs font-medium text-muted-foreground mb-2">Photos (up to 4)</p>
+                  <div className="flex gap-2 overflow-x-auto pb-1">
+                    {imagePreviews.map((src, idx) => (
+                      <div key={idx} className="relative shrink-0 w-20 h-20 rounded-xl overflow-hidden border border-border">
+                        <img src={src} alt="" className="w-full h-full object-cover" />
+                        <button
+                          onClick={() => {
+                            setImageFiles((f) => f.filter((_, i) => i !== idx));
+                            setImagePreviews((p) => p.filter((_, i) => i !== idx));
+                          }}
+                          className="absolute top-0.5 right-0.5 bg-black/60 rounded-full p-0.5"
+                        >
+                          <XIcon className="w-3 h-3 text-white" />
+                        </button>
+                      </div>
+                    ))}
+                    {imagePreviews.length < 4 && (
+                      <label className="shrink-0 w-20 h-20 rounded-xl border-2 border-dashed border-border flex flex-col items-center justify-center cursor-pointer hover:border-primary/50 transition-colors">
+                        <Camera className="w-5 h-5 text-muted-foreground mb-1" />
+                        <span className="text-[10px] text-muted-foreground">Add photo</span>
+                        <input
+                          type="file"
+                          accept="image/*"
+                          multiple
+                          className="hidden"
+                          onChange={(e) => {
+                            const files = Array.from(e.target.files ?? []).slice(0, 4 - imagePreviews.length);
+                            setImageFiles((prev) => [...prev, ...files]);
+                            files.forEach((file) => {
+                              const reader = new FileReader();
+                              reader.onload = (ev) => setImagePreviews((prev) => [...prev, ev.target?.result as string]);
+                              reader.readAsDataURL(file);
+                            });
+                            e.target.value = "";
+                          }}
+                        />
+                      </label>
+                    )}
+                  </div>
+                </div>
+
                 <input
                   value={newListing.title}
                   onChange={(e) => setNewListing({ ...newListing, title: e.target.value })}

@@ -155,7 +155,7 @@ Deno.serve(async (req) => {
       status: 'suppressed',
     })
 
-    console.log('Email suppressed', { effectiveRecipient, templateName })
+    console.log('Email suppressed', { templateName })
     return new Response(
       JSON.stringify({ success: false, reason: 'email_suppressed' }),
       {
@@ -356,7 +356,7 @@ Deno.serve(async (req) => {
       status: 'sent',
     })
 
-    console.log('Transactional email sent', { templateName, effectiveRecipient, resendId: result.id })
+    console.log('Transactional email sent', { templateName, resendId: result.id })
 
     return new Response(
       JSON.stringify({ success: true, sent: true }),

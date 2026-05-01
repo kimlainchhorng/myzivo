@@ -11,13 +11,16 @@ import MoreVertical from "lucide-react/dist/esm/icons/more-vertical";
 import Crown from "lucide-react/dist/esm/icons/crown";
 import Shield from "lucide-react/dist/esm/icons/shield";
 import LogOut from "lucide-react/dist/esm/icons/log-out";
+import BellOff from "lucide-react/dist/esm/icons/bell-off";
+import Bell from "lucide-react/dist/esm/icons/bell";
+import { DropdownMenuSeparator, DropdownMenuSub, DropdownMenuSubContent, DropdownMenuSubTrigger } from "@/components/ui/dropdown-menu";
 import { supabase } from "@/integrations/supabase/client";
 import { useGroupAdmin, type GroupMemberRow, type GroupRole } from "@/hooks/useGroupAdmin";
 import { useAuth } from "@/contexts/AuthContext";
 
 interface ProfileLite {
   user_id: string;
-  display_name: string | null;
+  full_name: string | null;
   username: string | null;
   avatar_url: string | null;
 }
@@ -47,7 +50,7 @@ const roleBadge = (role: GroupRole) => {
 
 export default function GroupMembersSheet({ open, onOpenChange, groupId, onLeft }: Props) {
   const { user } = useAuth();
-  const { members, isAdmin, isOwner, setRole, kick, leave } = useGroupAdmin(groupId);
+  const { members, isAdmin, isOwner, setRole, kick, muteUntil, leave } = useGroupAdmin(groupId);
   const [profiles, setProfiles] = useState<Record<string, ProfileLite>>({});
 
   useEffect(() => {
@@ -56,7 +59,7 @@ export default function GroupMembersSheet({ open, onOpenChange, groupId, onLeft 
       const ids = members.map((m) => m.user_id);
       const { data } = await (supabase as any)
         .from("profiles" as any)
-        .select("user_id, display_name, username, avatar_url")
+        .select("user_id, full_name, username, avatar_url")
         .in("user_id", ids);
       const map: Record<string, ProfileLite> = {};
       for (const p of (data || []) as ProfileLite[]) map[p.user_id] = p;
@@ -90,9 +93,10 @@ export default function GroupMembersSheet({ open, onOpenChange, groupId, onLeft 
         <div className="mt-3 flex-1 overflow-y-auto space-y-1">
           {sorted.map((m) => {
             const p = profiles[m.user_id];
-            const name = p?.display_name || p?.username || "Member";
+            const name = p?.full_name || p?.username || "Member";
             const isMe = m.user_id === user?.id;
             const canManage = isAdmin && !isMe && m.role !== "owner";
+            const isMuted = m.muted_until && new Date(m.muted_until) > new Date();
             return (
               <div
                 key={m.user_id}
@@ -103,11 +107,16 @@ export default function GroupMembersSheet({ open, onOpenChange, groupId, onLeft 
                   <AvatarFallback>{name[0]?.toUpperCase()}</AvatarFallback>
                 </Avatar>
                 <div className="flex-1 min-w-0">
-                  <div className="flex items-center gap-2">
+                  <div className="flex items-center gap-2 flex-wrap">
                     <span className="text-sm font-medium truncate">
                       {name}{isMe ? " (you)" : ""}
                     </span>
                     {roleBadge(m.role)}
+                    {isMuted && (
+                      <span className="inline-flex items-center gap-1 text-[10px] font-semibold px-1.5 py-0.5 rounded-full bg-muted text-muted-foreground">
+                        <BellOff className="w-2.5 h-2.5" /> Muted
+                      </span>
+                    )}
                   </div>
                   {p?.username && (
                     <div className="text-xs text-muted-foreground truncate">@{p.username}</div>
@@ -144,6 +153,32 @@ export default function GroupMembersSheet({ open, onOpenChange, groupId, onLeft 
                           <Crown className="w-4 h-4 mr-2" /> Transfer ownership
                         </DropdownMenuItem>
                       )}
+                      <DropdownMenuSeparator />
+                      {isMuted ? (
+                        <DropdownMenuItem onClick={() => muteUntil(m.user_id, null)}>
+                          <Bell className="w-4 h-4 mr-2" /> Unmute member
+                        </DropdownMenuItem>
+                      ) : (
+                        <DropdownMenuSub>
+                          <DropdownMenuSubTrigger>
+                            <BellOff className="w-4 h-4 mr-2" /> Mute member
+                          </DropdownMenuSubTrigger>
+                          <DropdownMenuSubContent>
+                            {[
+                              { label: "1 hour", ms: 3600_000 },
+                              { label: "8 hours", ms: 8 * 3600_000 },
+                              { label: "24 hours", ms: 24 * 3600_000 },
+                              { label: "1 week", ms: 7 * 24 * 3600_000 },
+                              { label: "Indefinitely", ms: 100 * 365 * 24 * 3600_000 },
+                            ].map(({ label, ms }) => (
+                              <DropdownMenuItem key={label} onClick={() => muteUntil(m.user_id, new Date(Date.now() + ms))}>
+                                {label}
+                              </DropdownMenuItem>
+                            ))}
+                          </DropdownMenuSubContent>
+                        </DropdownMenuSub>
+                      )}
+                      <DropdownMenuSeparator />
                       <DropdownMenuItem
                         className="text-destructive focus:text-destructive"
                         onClick={() => {

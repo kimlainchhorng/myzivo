@@ -2,6 +2,7 @@
  * RideRouteIntelligence — Smart commute, carpool matching, traffic routing, cost reports
  */
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import { Route, Users, Clock, DollarSign, TrendingDown, Zap, MapPin, ArrowRight, Brain, Lightbulb, BarChart3, Car } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -33,6 +34,7 @@ const costReport = {
 type Tab = "smart" | "carpool" | "costs";
 
 export default function RideRouteIntelligence() {
+  const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState<Tab>("smart");
 
   const tabs: { id: Tab; label: string; icon: typeof Route }[] = [
@@ -89,7 +91,7 @@ export default function RideRouteIntelligence() {
               key={route.id}
               whileTap={{ scale: 0.98 }}
               className="bg-card rounded-xl p-4 border border-border/30 space-y-2"
-              onClick={() => toast.info(`Optimizing ${route.name}...`)}
+              onClick={() => navigate("/rides", { state: { initialDestinationAddress: route.to, scheduledTime: route.bestTime } })}
             >
               <div className="flex items-center justify-between">
                 <p className="text-sm font-bold text-foreground">{route.name}</p>
@@ -145,7 +147,7 @@ export default function RideRouteIntelligence() {
                   <Clock className="w-3.5 h-3.5" /> {match.time}
                 </span>
                 <button
-                  onClick={() => toast.success(`Carpool request sent to ${match.name}!`)}
+                  onClick={() => navigate("/chat", { state: { openChat: { userId: match.id?.toString(), name: match.name } } })}
                   className="text-xs font-bold text-primary"
                 >
                   Request Match

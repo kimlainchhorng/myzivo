@@ -1,5 +1,5 @@
 // chat-send-gift — debit coins, insert gift message, log gift_transactions
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
+import { createClient } from "../_shared/deps.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",

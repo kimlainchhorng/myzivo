@@ -7,8 +7,8 @@
  *  - image: 100  (per image variant)
  *  - video_script: 50  (15s + 30s scripts)
  */
-import { serve } from "https://deno.land/std@0.224.0/http/server.ts";
-import { createClient } from "npm:@supabase/supabase-js@2.57.2";
+import { serve, createClient } from "../_shared/deps.ts";
+import { rateLimitDb, rateLimitHeaders } from "../_shared/rateLimiter.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -59,8 +59,19 @@ serve(async (req) => {
     const user = userData?.user;
     if (!user) return jsonResp({ error: "unauthenticated" }, 401);
 
+    const rl = await rateLimitDb(user.id, "api_general", { max: 10, windowSec: 60 });
+    if (!rl.allowed) {
+      return jsonResp({ error: "Too many requests. Please wait before generating again." }, 429);
+    }
+
     const body = (await req.json()) as Body;
     if (!body?.store_id) return jsonResp({ error: "store_id required" }, 400);
+
+    // Sanitize and cap user-supplied text to prevent prompt injection
+    if (typeof body.service_summary === "string") body.service_summary = body.service_summary.slice(0, 500);
+    if (typeof body.store_name === "string") body.store_name = body.store_name.slice(0, 100);
+    if (typeof body.goal === "string") body.goal = body.goal.slice(0, 200);
+    if (typeof body.store_city === "string") body.store_city = body.store_city.slice(0, 100);
 
     // Verify ownership
     const { data: store } = await admin

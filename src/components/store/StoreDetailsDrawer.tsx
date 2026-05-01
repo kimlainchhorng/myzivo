@@ -1,14 +1,15 @@
 /**
- * StoreDetailsDrawer — shared bottom-sheet showing full store info plus
- * primary actions (View, Ride, Directions, Share, Favorite) and an inline
- * promo code field. Used by both the Stores list and the Map page so the
- * experience is identical.
+ * StoreDetailsDrawer — shared bottom-sheet with full store info, actions,
+ * live pulse badge, km + walk time, trail planner hook, and check-in.
+ * Used by StoreMapPage and StoresListPage.
  */
 import { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   X, Star, MapPin, Clock, Phone, Store, Car, Share2, Heart,
-  Navigation, Tag, CheckCircle2, Map as MapIcon,
+  Navigation, Tag, CheckCircle2, Map as MapIcon, Route, Timer,
+  UserCheck,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -25,8 +26,18 @@ const CATEGORY_ICONS: Record<string, string> = {
 
 const PROMO_KEY = "zivo:pending-promo";
 
-function getIcon(c: string) {
-  return CATEGORY_ICONS[c] || CATEGORY_ICONS.default;
+function getIcon(c: string) { return CATEGORY_ICONS[c] || CATEGORY_ICONS.default; }
+
+function fmtKm(mi: number): string {
+  const km = mi * 1.609344;
+  return km < 1 ? `${Math.round(km * 1000)} m` : `${km.toFixed(1)} km`;
+}
+
+function fmtWalk(mi: number): string {
+  const mins = Math.ceil((mi * 1.609344 / 25) * 60);
+  if (mins < 2) return "< 1 min";
+  if (mins >= 60) return `~${Math.round(mins / 60)} h by tuk-tuk`;
+  return `~${mins} min by tuk-tuk`;
 }
 
 function savePendingPromo(code: string, store: StorePin) {
@@ -35,9 +46,7 @@ function savePendingPromo(code: string, store: StorePin) {
       PROMO_KEY,
       JSON.stringify({ code, storeId: store.id, storeSlug: store.slug, ts: Date.now() })
     );
-  } catch {
-    /* noop */
-  }
+  } catch { /* noop */ }
 }
 
 export interface StoreDetailsDrawerProps {
@@ -46,6 +55,7 @@ export interface StoreDetailsDrawerProps {
   categoryLabel: string;
   isFavorite: boolean;
   isAuthed: boolean;
+  isLive?: boolean;
   onClose: () => void;
   onView: (store: StorePin, promo: string | null) => void;
   onRide: (store: StorePin, promo: string | null) => void;
@@ -53,7 +63,7 @@ export interface StoreDetailsDrawerProps {
   onShare: (store: StorePin, distanceMi: number | null) => void;
   onToggleFavorite: (store: StorePin) => void;
   onOpenInMap?: (store: StorePin) => void;
-  /** Toast wrapper so callers control phrasing if they like. */
+  onAddToTrail?: (store: StorePin) => void;
   onPromoApplied?: (code: string) => void;
 }
 
@@ -63,6 +73,7 @@ export default function StoreDetailsDrawer({
   categoryLabel,
   isFavorite,
   isAuthed,
+  isLive,
   onClose,
   onView,
   onRide,
@@ -70,13 +81,15 @@ export default function StoreDetailsDrawer({
   onShare,
   onToggleFavorite,
   onOpenInMap,
+  onAddToTrail,
   onPromoApplied,
 }: StoreDetailsDrawerProps) {
+  const navigate = useNavigate();
   const [promoOpen, setPromoOpen] = useState(false);
   const [promoCode, setPromoCode] = useState("");
   const [promoApplied, setPromoApplied] = useState<string | null>(null);
+  const [checkingIn, setCheckingIn] = useState(false);
 
-  // Reset whenever a different store opens
   useEffect(() => {
     setPromoOpen(false);
     setPromoCode("");
@@ -85,7 +98,7 @@ export default function StoreDetailsDrawer({
 
   if (!store) return null;
 
-  const distance = userLoc
+  const distMi = userLoc
     ? distanceMiles(userLoc, { lat: store.latitude, lng: store.longitude })
     : null;
   const open = isOpenNow(store.hours);
@@ -97,6 +110,14 @@ export default function StoreDetailsDrawer({
     setPromoApplied(code);
     savePendingPromo(code, store);
     onPromoApplied?.(code);
+  };
+
+  const handleCheckIn = () => {
+    setCheckingIn(true);
+    setTimeout(() => {
+      onClose();
+      navigate(`/check-in?storeId=${store.id}&storeName=${encodeURIComponent(store.name)}&lat=${store.latitude}&lng=${store.longitude}`);
+    }, 350);
   };
 
   return (
@@ -121,13 +142,26 @@ export default function StoreDetailsDrawer({
         >
           <div className="mx-auto w-10 h-1 rounded-full bg-muted mb-4" />
 
+          {/* Live pulse banner */}
+          {isLive && (
+            <div className="mb-3 flex items-center gap-2 rounded-xl bg-emerald-50 border border-emerald-200 px-3 py-2">
+              <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse shrink-0" />
+              <p className="text-[12px] font-semibold text-emerald-800 flex-1">
+                Live activity — someone purchased here in the last 30 minutes
+              </p>
+            </div>
+          )}
+
           {/* Header */}
           <div className="flex items-start gap-3">
-            <div className="w-16 h-16 rounded-2xl flex items-center justify-center shrink-0 overflow-hidden bg-muted/40">
+            <div className="relative w-16 h-16 rounded-2xl flex items-center justify-center shrink-0 overflow-hidden bg-muted/40">
               {store.logo_url ? (
                 <img src={store.logo_url} alt={store.name} className="w-full h-full object-cover" />
               ) : (
                 <span className="text-3xl">{getIcon(store.category)}</span>
+              )}
+              {isLive && (
+                <span className="absolute top-0.5 right-0.5 w-3 h-3 rounded-full bg-emerald-500 border-2 border-card animate-pulse" />
               )}
             </div>
             <div className="flex-1 min-w-0">
@@ -142,23 +176,20 @@ export default function StoreDetailsDrawer({
                     {(store.rating ?? 0).toFixed(1)}
                   </span>
                 )}
-                {distance != null && (
-                  <span className="text-[12px] font-semibold text-muted-foreground">
-                    {distance < 0.1 ? "<0.1" : distance.toFixed(1)} mi away
-                  </span>
-                )}
                 {open != null && (
-                  <span
-                    className={`text-[10px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wide ${
-                      open
-                        ? "bg-emerald-100 text-emerald-700"
-                        : "bg-rose-100 text-rose-700"
-                    }`}
-                  >
+                  <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wide ${
+                    open ? "bg-emerald-100 text-emerald-700" : "bg-rose-100 text-rose-700"
+                  }`}>
                     {open ? "Open" : "Closed"}
                   </span>
                 )}
               </div>
+              {distMi != null && (
+                <div className="mt-1.5 flex items-center gap-1 text-[12px] font-semibold text-muted-foreground">
+                  <Timer className="w-3.5 h-3.5" />
+                  {fmtKm(distMi)} away · {fmtWalk(distMi)}
+                </div>
+              )}
             </div>
             <button
               onClick={onClose}
@@ -168,6 +199,30 @@ export default function StoreDetailsDrawer({
               <X className="w-4 h-4" />
             </button>
           </div>
+
+          {/* Photo carousel */}
+          {(() => {
+            const raw = (store as any).gallery_images;
+            const imgs: string[] = Array.isArray(raw)
+              ? (raw as unknown[]).filter((v): v is string => typeof v === "string" && v.startsWith("http"))
+              : [];
+            if (!imgs.length) return null;
+            return (
+              <div className="mt-4 -mx-4">
+                <div className="flex gap-2 overflow-x-auto scrollbar-hide px-4 pb-1">
+                  {imgs.map((src, i) => (
+                    <img
+                      key={i}
+                      src={src}
+                      alt={`${store.name} photo ${i + 1}`}
+                      className="h-44 w-auto max-w-[260px] rounded-2xl object-cover shrink-0 border border-border/20"
+                      loading="lazy"
+                    />
+                  ))}
+                </div>
+              </div>
+            );
+          })()}
 
           {/* Info rows */}
           <div className="mt-4 space-y-2.5">
@@ -184,10 +239,7 @@ export default function StoreDetailsDrawer({
               </div>
             )}
             {store.phone && (
-              <a
-                href={`tel:${store.phone}`}
-                className="flex items-center gap-2.5 text-[13px] font-semibold text-primary"
-              >
+              <a href={`tel:${store.phone}`} className="flex items-center gap-2.5 text-[13px] font-semibold text-primary">
                 <Phone className="w-4 h-4 shrink-0" />
                 {store.phone}
               </a>
@@ -246,16 +298,41 @@ export default function StoreDetailsDrawer({
             <Button variant="outline" onClick={() => onDirections(store)}>
               <Navigation className="w-4 h-4 mr-1.5" /> Directions
             </Button>
-            <Button variant="outline" onClick={() => onShare(store, distance)}>
+            <Button variant="outline" onClick={() => onShare(store, distMi)}>
               <Share2 className="w-4 h-4 mr-1.5" /> Share
             </Button>
+
+            {/* Check In */}
+            <motion.button
+              whileTap={{ scale: 0.95 }}
+              onClick={handleCheckIn}
+              disabled={checkingIn}
+              className="col-span-2 h-10 rounded-md border border-input bg-background px-4 text-sm font-medium flex items-center justify-center gap-1.5 hover:bg-accent hover:text-accent-foreground transition-colors disabled:opacity-70"
+            >
+              {checkingIn
+                ? <><CheckCircle2 className="w-4 h-4 mr-1.5 text-emerald-500 animate-pulse" /> Checking in…</>
+                : <><UserCheck className="w-4 h-4 mr-1.5" /> Check In Here</>
+              }
+            </motion.button>
+
+            {/* Add to Trail (shown only when caller supports it) */}
+            {onAddToTrail && (
+              <Button
+                variant="outline"
+                className="col-span-2 border-indigo-300 text-indigo-700 hover:bg-indigo-50"
+                onClick={() => { onAddToTrail(store); onClose(); }}
+              >
+                <Route className="w-4 h-4 mr-1.5" /> Add to Shopping Trail
+              </Button>
+            )}
+
             <Button
               variant={isFavorite ? "default" : "outline"}
-              className={`col-span-2 ${isFavorite ? "bg-rose-500 hover:bg-rose-600 text-white" : ""}`}
+              className={`col-span-2 ${isFavorite ? "bg-rose-500 hover:bg-rose-600 text-white border-rose-500" : ""}`}
               onClick={() => onToggleFavorite(store)}
             >
               <Heart className={`w-4 h-4 mr-1.5 ${isFavorite ? "fill-current" : ""}`} />
-              {isFavorite ? "Saved" : "Favorite"}
+              {isFavorite ? "Saved to Favorites" : "Save to Favorites"}
             </Button>
           </div>
 

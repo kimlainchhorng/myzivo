@@ -2,6 +2,7 @@
  * RideTravelIntegration — Multi-day trips, hotel pickups, airport transfers, itinerary sync
  */
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import { Plane, Hotel, Calendar, MapPin, Clock, ArrowRight, CheckCircle, Plus, Briefcase, Navigation } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -38,9 +39,15 @@ const airportServices = [
 
 type View = "trips" | "airport" | "sync";
 
+const SYNC_KEY = "zivo_travel_synced";
+
 export default function RideTravelIntegration() {
+  const navigate = useNavigate();
   const [view, setView] = useState<View>("trips");
   const [selectedServices, setSelectedServices] = useState<string[]>(["flight-track"]);
+  const [connectedSources, setConnectedSources] = useState<string[]>(() => {
+    try { return JSON.parse(localStorage.getItem(SYNC_KEY) || '["ZIVO Flights","ZIVO Hotels"]'); } catch { return ["ZIVO Flights", "ZIVO Hotels"]; }
+  });
 
   const views: { id: View; label: string; icon: typeof Plane }[] = [
     { id: "trips", label: "My Trips", icon: Briefcase },
@@ -50,6 +57,15 @@ export default function RideTravelIntegration() {
 
   const toggleService = (id: string) => {
     setSelectedServices((prev) => prev.includes(id) ? prev.filter((s) => s !== id) : [...prev, id]);
+  };
+
+  const toggleSource = (name: string) => {
+    setConnectedSources(prev => {
+      const next = prev.includes(name) ? prev.filter(s => s !== name) : [...prev, name];
+      localStorage.setItem(SYNC_KEY, JSON.stringify(next));
+      toast.success(prev.includes(name) ? `${name} disconnected` : `${name} connected!`);
+      return next;
+    });
   };
 
   return (
@@ -121,7 +137,7 @@ export default function RideTravelIntegration() {
             </div>
           ))}
           <button
-            onClick={() => toast.info("Opening trip planner...")}
+            onClick={() => navigate("/rides", { state: { planTrip: true } })}
             className="w-full py-2.5 bg-primary/10 rounded-xl text-sm font-bold text-primary flex items-center justify-center gap-2"
           >
             <Plus className="w-4 h-4" /> Plan New Trip Transfers
@@ -179,13 +195,13 @@ export default function RideTravelIntegration() {
                     <span className="text-sm font-semibold text-foreground">{source.name}</span>
                   </div>
                   <button
-                    onClick={() => toast.success(source.connected ? "Already connected" : `Connecting ${source.name}...`)}
+                    onClick={() => toggleSource(source.name)}
                     className={cn(
                       "text-xs font-bold px-3 py-1 rounded-lg",
-                      source.connected ? "bg-green-500/15 text-green-600" : "bg-primary/10 text-primary"
+                      connectedSources.includes(source.name) ? "bg-green-500/15 text-green-600" : "bg-primary/10 text-primary"
                     )}
                   >
-                    {source.connected ? "Connected" : "Connect"}
+                    {connectedSources.includes(source.name) ? "Connected ✓" : "Connect"}
                   </button>
                 </div>
               );

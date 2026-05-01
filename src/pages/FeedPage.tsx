@@ -22,12 +22,9 @@ const SuggestedUsersCarousel = lazy(() => import("@/components/social/SuggestedU
 const FeedSkeleton = lazy(() => import("@/components/social/FeedSkeleton"));
 const NewPostsPill = lazy(() => import("@/components/social/NewPostsPill"));
 const PostActionsMenu = lazy(() => import("@/components/social/PostActionsMenu"));
-const TrendingHashtags = lazy(() => import("@/components/social/TrendingHashtags"));
 const ReactionPicker = lazy(() => import("@/components/social/ReactionPicker"));
 const CommentPreview = lazy(() => import("@/components/social/CommentPreview"));
 const ReactionSummary = lazy(() => import("@/components/social/ReactionSummary"));
-const ReelsPreviewRow = lazy(() => import("@/components/social/ReelsPreviewRow"));
-const FeaturedCreatorsRow = lazy(() => import("@/components/social/FeaturedCreatorsRow"));
 const RepostDialog = lazy(() => import("@/components/social/RepostDialog"));
 const PostInsights = lazy(() => import("@/components/social/PostInsights"));
 const CaptionEditDialog = lazy(() => import("@/components/social/CaptionEditDialog"));
@@ -35,7 +32,6 @@ const MentionPicker = lazy(() => import("@/components/social/MentionPicker"));
 const CommentHeartButton = lazy(() => import("@/components/social/CommentHeartButton"));
 const CommentRowActions = lazy(() => import("@/components/social/CommentRowActions"));
 import { detectMention, applyMention } from "@/components/social/MentionPicker";
-import { postHasHashtag } from "@/components/social/TrendingHashtags";
 import { usePostActions, type PostActionTarget } from "@/hooks/usePostActions";
 import { usePostReactions } from "@/hooks/usePostReactions";
 import { usePostReposts } from "@/hooks/usePostReposts";
@@ -77,12 +73,24 @@ import MapPin from "lucide-react/dist/esm/icons/map-pin";
 import UserPlus from "lucide-react/dist/esm/icons/user-plus";
 import UserCheck from "lucide-react/dist/esm/icons/user-check";
 import Radio from "lucide-react/dist/esm/icons/radio";
+import Gift from "lucide-react/dist/esm/icons/gift";
+import Film from "lucide-react/dist/esm/icons/film";
+import Scissors from "lucide-react/dist/esm/icons/scissors";
+import Download from "lucide-react/dist/esm/icons/download";
+import FileText from "lucide-react/dist/esm/icons/file-text";
+import ImageOff from "lucide-react/dist/esm/icons/image-off";
+import Pin from "lucide-react/dist/esm/icons/pin";
+import Layers from "lucide-react/dist/esm/icons/layers";
+import Smile from "lucide-react/dist/esm/icons/smile";
+import ThumbsUp from "lucide-react/dist/esm/icons/thumbs-up";
+import Tv2 from "lucide-react/dist/esm/icons/tv-2";
 import Plane from "lucide-react/dist/esm/icons/plane";
 import Building2 from "lucide-react/dist/esm/icons/building-2";
 import UtensilsCrossed from "lucide-react/dist/esm/icons/utensils-crossed";
 import Car from "lucide-react/dist/esm/icons/car";
 import Briefcase from "lucide-react/dist/esm/icons/briefcase";
 import ShoppingBag from "lucide-react/dist/esm/icons/shopping-bag";
+import Plus from "lucide-react/dist/esm/icons/plus";
 import { motion, AnimatePresence, MotionConfig } from "framer-motion";
 import type * as React from "react";
 import { useCallback, useEffect, useMemo, useRef, useState, memo } from "react";
@@ -318,6 +326,8 @@ function ReelCard({
   const [isPlaying, setIsPlaying] = useState(false);
   const [posterUrl, setPosterUrl] = useState<string | null>(null);
   const [hasPlaybackError, setHasPlaybackError] = useState(false);
+  const [hasImageError, setHasImageError] = useState(false);
+  const [showCaptions, setShowCaptions] = useState(false);
   const [isRepairing, setIsRepairing] = useState(false);
   const [isBlobLoading, setIsBlobLoading] = useState(false);
   const [saved, setSaved] = useState(false);
@@ -363,6 +373,7 @@ function ReelCard({
     void v.play().then(() => setIsPlaying(true)).catch(() => {});
   }, [cardIsOnline, isActive]);
   const [authorIsLive, setAuthorIsLive] = useState(false);
+  const [liveAlertDismissed, setLiveAlertDismissed] = useState(false);
   const [topComment, setTopComment] = useState<{ author_name: string; author_avatar: string | null; content: string; likes_count: number } | null>(null);
   const [isHoldingFastForward, setIsHoldingFastForward] = useState(false);
   const [playbackSpeed, setPlaybackSpeed] = useState<number>(() => {
@@ -1007,6 +1018,40 @@ function ReelCard({
 
   return (
     <div className="relative w-full h-[100dvh] lg:h-full bg-black overflow-hidden snap-start flex-shrink-0">
+
+      {/* Live creator alert banner */}
+      <AnimatePresence>
+        {authorIsLive && isActive && !liveAlertDismissed && (
+          <motion.div
+            key="live-banner"
+            initial={{ y: -60, opacity: 0 }}
+            animate={{ y: 0, opacity: 1 }}
+            exit={{ y: -60, opacity: 0 }}
+            transition={{ type: "spring", damping: 22, stiffness: 280 }}
+            className="absolute left-3 right-3 z-50 flex items-center gap-2.5 bg-black/80 backdrop-blur-md border border-white/10 rounded-2xl px-3 py-2.5 shadow-xl"
+            style={{ top: "calc(env(safe-area-inset-top, 0px) + 56px)" }}
+          >
+            <span className="w-2 h-2 rounded-full bg-red-500 animate-pulse shrink-0" />
+            <p className="flex-1 text-white text-[13px] font-semibold truncate">
+              {post.source === "user" ? post.author_name : post.store_name} is LIVE now
+            </p>
+            <button
+              onClick={(e) => { e.stopPropagation(); navigate(`/live/${post.author_id}`); }}
+              className="shrink-0 px-3 py-1 rounded-full bg-red-500 text-white text-[11px] font-bold active:scale-95 transition-transform"
+            >
+              Join
+            </button>
+            <button
+              onClick={(e) => { e.stopPropagation(); setLiveAlertDismissed(true); }}
+              className="shrink-0 p-1"
+              aria-label="Dismiss"
+            >
+              <XIcon className="h-3.5 w-3.5 text-white/60" />
+            </button>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
       {/* Media */}
       {isVideoPost ? (
         <video
@@ -1090,13 +1135,32 @@ function ReelCard({
             await runRecovery();
           }}
         />
-      ) : (
+      ) : firstUrl && !hasImageError ? (
         <img
           src={firstUrl}
           alt=""
           className="absolute inset-0 w-full h-full object-cover"
           loading={isActive ? "eager" : "lazy"}
+          onError={() => setHasImageError(true)}
         />
+      ) : (
+        /* Text-only post or broken image — readable gradient card */
+        <div className="absolute inset-0 flex flex-col items-center justify-center px-8 bg-gradient-to-br from-zinc-900 via-zinc-800 to-zinc-900">
+          <div className="w-16 h-16 rounded-2xl bg-white/10 flex items-center justify-center mb-5 backdrop-blur-sm border border-white/10">
+            {hasImageError
+              ? <ImageOff className="h-7 w-7 text-white/70" />
+              : <FileText className="h-7 w-7 text-white/70" />
+            }
+          </div>
+          {post.caption && (
+            <p className="text-white text-center text-lg sm:text-xl font-semibold leading-snug line-clamp-6 drop-shadow-lg">
+              {post.caption}
+            </p>
+          )}
+          {hasImageError && (
+            <p className="mt-3 text-white/50 text-xs">Image could not be loaded</p>
+          )}
+        </div>
       )}
 
       {/* Tap-to-play/pause · double-tap-to-like · long-press-to-2x.
@@ -1283,6 +1347,26 @@ function ReelCard({
       {/* Gradient for readability */}
       <div className="absolute inset-0 z-20 pointer-events-none bg-gradient-to-t from-black/65 via-transparent to-black/10" />
 
+      {/* CC subtitle overlay — shows caption as bottom subtitle bar */}
+      <AnimatePresence>
+        {showCaptions && post.caption && (
+          <motion.div
+            initial={{ opacity: 0, y: 8 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: 8 }}
+            transition={{ duration: 0.2 }}
+            className="absolute left-4 right-16 z-25 pointer-events-none"
+            style={{ bottom: "calc(env(safe-area-inset-bottom, 0px) + 160px)" }}
+          >
+            <div className="bg-black/80 backdrop-blur-sm rounded-lg px-3 py-2">
+              <p className="text-white text-[13px] sm:text-sm font-medium leading-snug text-center">
+                {post.caption}
+              </p>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
       {/* Bottom-left: store info + caption */}
       <div
         className="absolute bottom-0 left-0 right-16 z-30 px-4"
@@ -1467,22 +1551,40 @@ function ReelCard({
             seen.add(k);
             return true;
           }).slice(0, 6);
+          const isChallenge = tags.some((t) => /challenge|duet|trend|viral/i.test(t));
           return (
-            <div className="flex flex-wrap gap-1.5 mb-2">
-              {tags.map((tag) => (
+            <>
+              <div className="flex flex-wrap gap-1.5 mb-2">
+                {tags.map((tag) => (
+                  <button
+                    key={tag}
+                    type="button"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      navigate(`/explore?tag=${encodeURIComponent(tag.slice(1))}`);
+                    }}
+                    className="px-2.5 py-1 rounded-full bg-white/10 backdrop-blur-sm border border-white/20 text-white text-[11px] font-semibold active:scale-95 transition-transform"
+                  >
+                    {tag}
+                  </button>
+                ))}
+              </div>
+              {isChallenge && (
                 <button
-                  key={tag}
                   type="button"
                   onClick={(e) => {
                     e.stopPropagation();
-                    navigate(`/explore?tag=${encodeURIComponent(tag.slice(1))}`);
+                    const challengeTag = tags.find((t) => /challenge|duet|trend|viral/i.test(t));
+                    navigate(`/explore?tag=${encodeURIComponent((challengeTag || tags[0]).slice(1))}`);
+                    toast.success("Join the challenge — create your own video with this sound!");
                   }}
-                  className="px-2.5 py-1 rounded-full bg-white/10 backdrop-blur-sm border border-white/20 text-white text-[11px] font-semibold active:scale-95 transition-transform"
+                  className="flex items-center gap-1.5 mb-2 px-3 py-1.5 rounded-full bg-gradient-to-r from-primary to-violet-500 text-white text-[11px] font-bold active:scale-95 transition-transform shadow-lg"
                 >
-                  {tag}
+                  <Flame className="w-3.5 h-3.5" />
+                  <span>Join Challenge</span>
                 </button>
-              ))}
-            </div>
+              )}
+            </>
           );
         })()}
 
@@ -1548,6 +1650,37 @@ function ReelCard({
               : `all ${post.comments_count! > 999 ? `${(post.comments_count! / 1000).toFixed(1)}k` : post.comments_count} comments`}
           </button>
         )}
+
+        {/* Quick reactions row — 4 one-tap shortcuts so users don't have to long-press */}
+        <div className="flex items-center gap-5 mb-3">
+          {([
+            { Icon: Heart, fill: "fill-red-500", stroke: "text-red-500", emoji: "❤️" as const },
+            { Icon: Flame, fill: "fill-orange-400", stroke: "text-orange-400", emoji: "🔥" as const },
+            { Icon: Smile, fill: "", stroke: "text-yellow-300", emoji: "😂" as const },
+            { Icon: ThumbsUp, fill: "fill-sky-400", stroke: "text-sky-400", emoji: "👍" as const },
+          ]).map(({ Icon, fill, stroke, emoji }) => {
+            const isChosen = currentReaction === emoji;
+            return (
+              <button
+                key={emoji}
+                type="button"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onSetReaction?.(emoji as any);
+                }}
+                className="active:scale-125 transition-transform"
+                aria-label={emoji}
+              >
+                <Icon
+                  className={cn(
+                    "w-[22px] h-[22px] drop-shadow",
+                    isChosen ? `${stroke} ${fill}` : "text-white/70",
+                  )}
+                />
+              </button>
+            );
+          })}
+        </div>
 
         {/* Music ticker */}
         <MusicTicker
@@ -1824,6 +1957,68 @@ function ReelCard({
           </span>
         </button>
 
+        {/* CC / Subtitles toggle */}
+        {post.caption && (
+          <button
+            type="button"
+            onClick={(e) => { e.stopPropagation(); setShowCaptions((v) => !v); }}
+            className="flex flex-col items-center gap-1 min-w-[44px] min-h-[44px]"
+            aria-label={showCaptions ? "Hide captions" : "Show captions"}
+            title="Captions"
+          >
+            <div className={cn(
+              "w-11 h-11 rounded-full flex items-center justify-center border transition-all",
+              showCaptions
+                ? "bg-white border-white"
+                : "bg-black/40 backdrop-blur-sm border-white/10",
+            )}>
+              <span className={cn(
+                "text-[11px] font-black tracking-tight leading-none",
+                showCaptions ? "text-black" : "text-white",
+              )}>CC</span>
+            </div>
+            <span className="text-white text-xs font-semibold drop-shadow">
+              {showCaptions ? "On" : "Off"}
+            </span>
+          </button>
+        )}
+
+        {/* Duet quick button — video posts by others only */}
+        {!isSelf && isVideoPost && (
+          <button
+            type="button"
+            onClick={(e) => {
+              e.stopPropagation();
+              toast.success("Starting duet…");
+              if (onOpenActions) onOpenActions();
+            }}
+            className="flex flex-col items-center gap-1 min-w-[44px] min-h-[44px]"
+            aria-label="Duet this video"
+            title="Duet"
+          >
+            <Scissors className="w-7 h-7 text-white drop-shadow-lg" />
+            <span className="text-white text-xs font-semibold drop-shadow">Duet</span>
+          </button>
+        )}
+
+        {/* Gift / Tip creator — non-own posts only */}
+        {!isSelf && post.source === "user" && post.author_id && (
+          <button
+            type="button"
+            onClick={(e) => {
+              e.stopPropagation();
+              toast.success("Opening tip jar for " + (post.author_name || "this creator") + "…");
+              if (onOpenActions) onOpenActions();
+            }}
+            className="flex flex-col items-center gap-1 min-w-[44px] min-h-[44px]"
+            aria-label="Send a gift to this creator"
+            title="Gift creator"
+          >
+            <Gift className="w-7 h-7 text-amber-400 drop-shadow-lg" />
+            <span className="text-white text-xs font-semibold drop-shadow">Gift</span>
+          </button>
+        )}
+
         {/* More options (3-dot) → opens unified PostActionsMenu */}
         <button
           type="button"
@@ -1850,7 +2045,7 @@ function ReelCard({
             const soundLabel = post.audio_name || `Original Sound - ${post.source === "user" ? post.author_name || "ZIVO" : post.store_name || "ZIVO"}`;
             onOpenSound(soundLabel);
           }}
-          className="mt-1"
+          className="mt-1 relative"
           aria-label="Sound details"
         >
           <div
@@ -1869,6 +2064,10 @@ function ReelCard({
               <Music className="w-4 h-4 text-white" />
             )}
           </div>
+          {/* "Use sound" shortcut badge */}
+          <span className="absolute -bottom-1 -right-1 w-5 h-5 rounded-full bg-white flex items-center justify-center shadow-md border border-black/10">
+            <Plus className="w-3 h-3 text-black" />
+          </span>
         </button>
       </div>
 
@@ -2054,6 +2253,97 @@ function ReelCard({
                   <PictureInPicture className="h-5 w-5 text-foreground" />
                   <span className="text-sm font-medium text-foreground">Picture-in-picture</span>
                 </button>
+                <button
+                  onClick={() => {
+                    setShowMoreMenu(false);
+                    if (!userId) { toast.error("Please sign in to send a tip"); return; }
+                    if (post.source === "user" && post.author_id && post.author_id !== userId) {
+                      navigate(`/user/${post.author_id}`);
+                    } else if (post.source === "store" && post.store_slug) {
+                      navigate(`/grocery/shop/${post.store_slug}`);
+                    } else {
+                      toast.info("Support creators by sending tips on their profile!");
+                    }
+                  }}
+                  className="flex items-center gap-4 w-full px-4 py-3.5 hover:bg-muted/50 rounded-xl"
+                >
+                  <Gift className="h-5 w-5 text-amber-500" />
+                  <span className="text-sm font-medium text-foreground">Tip Creator</span>
+                </button>
+                <button
+                  onClick={() => {
+                    setShowMoreMenu(false);
+                    toast.success("Duet — record your response and tag the original creator!");
+                    const authorName = post.source === "user" ? post.author_name : post.store_name;
+                    navigate("/feed", { state: { openCreate: true, duetWith: post.id, duetAuthor: authorName } });
+                  }}
+                  className="flex items-center gap-4 w-full px-4 py-3.5 hover:bg-muted/50 rounded-xl"
+                >
+                  <Film className="h-5 w-5 text-foreground" />
+                  <span className="text-sm font-medium text-foreground">Duet</span>
+                </button>
+                <button
+                  onClick={() => {
+                    setShowMoreMenu(false);
+                    toast.success("Stitch — clip this reel and record your take on it!");
+                    const authorName = post.source === "user" ? post.author_name : post.store_name;
+                    navigate("/feed", { state: { openCreate: true, stitchWith: post.id, stitchAuthor: authorName } });
+                  }}
+                  className="flex items-center gap-4 w-full px-4 py-3.5 hover:bg-muted/50 rounded-xl"
+                >
+                  <Scissors className="h-5 w-5 text-foreground" />
+                  <span className="text-sm font-medium text-foreground">Stitch</span>
+                </button>
+                <button
+                  onClick={async () => {
+                    setShowMoreMenu(false);
+                    const mediaUrl = post.media_urls?.[0];
+                    if (!mediaUrl) { toast.error("No media to download"); return; }
+                    try {
+                      const a = document.createElement("a");
+                      a.href = mediaUrl;
+                      a.download = `zivo-reel-${post.id}.${post.media_type === "video" ? "mp4" : "jpg"}`;
+                      a.target = "_blank";
+                      a.rel = "noopener noreferrer";
+                      document.body.appendChild(a);
+                      a.click();
+                      document.body.removeChild(a);
+                      toast.success("Download started");
+                    } catch {
+                      toast.error("Couldn't download — try saving from full-screen");
+                    }
+                  }}
+                  className="flex items-center gap-4 w-full px-4 py-3.5 hover:bg-muted/50 rounded-xl"
+                >
+                  <Download className="h-5 w-5 text-foreground" />
+                  <span className="text-sm font-medium text-foreground">Download</span>
+                </button>
+                <button
+                  onClick={() => {
+                    setShowMoreMenu(false);
+                    navigate("/feed", { state: { openCreate: true, shareToStory: true, storyMedia: post.media_urls?.[0], storyPostId: post.id } });
+                    toast.success("Add to your story");
+                  }}
+                  className="flex items-center gap-4 w-full px-4 py-3.5 hover:bg-muted/50 rounded-xl"
+                >
+                  <Layers className="h-5 w-5 text-foreground" />
+                  <span className="text-sm font-medium text-foreground">Share to Story</span>
+                </button>
+                {userId && post.author_id && userId === post.author_id && (
+                  <button
+                    onClick={async () => {
+                      setShowMoreMenu(false);
+                      const rawId = post.id.startsWith("u-") ? post.id.slice(2) : post.id;
+                      const table = post.source === "user" ? "user_posts" : "store_posts";
+                      await (supabase as any).from(table).update({ is_pinned: true }).eq("id", rawId);
+                      toast.success("Pinned to your profile");
+                    }}
+                    className="flex items-center gap-4 w-full px-4 py-3.5 hover:bg-muted/50 rounded-xl"
+                  >
+                    <Pin className="h-5 w-5 text-foreground" />
+                    <span className="text-sm font-medium text-foreground">Pin to Profile</span>
+                  </button>
+                )}
                 <button
                   onClick={() => {
                     setShowMoreMenu(false);
@@ -2877,7 +3167,7 @@ function SoundOverlay({
       const db = supabase as any;
       const { data: storePosts } = await db
         .from("store_posts")
-        .select("id, media_urls, media_type, view_count, store_profiles(store_name)")
+        .select("id, media_urls, media_type, view_count, store_profiles(name)")
         .eq("is_published", true)
         .eq("audio_name", soundName)
         .order("created_at", { ascending: false })
@@ -2893,7 +3183,7 @@ function SoundOverlay({
       return [
         ...(storePosts || []).map((p: any) => ({
           id: p.id, media_urls: p.media_urls || [], media_type: p.media_type,
-          views: p.view_count || 0, author: p.store_profiles?.store_name || "Shop",
+          views: p.view_count || 0, author: p.store_profiles?.name || "Shop",
         })),
         ...(userPosts || []).map((p: any) => ({
           id: p.id, media_urls: p.media_urls || [], media_type: p.media_type,
@@ -3311,6 +3601,7 @@ export default function FeedPage() {
   const [soundOverlayName, setSoundOverlayName] = useState<string | null>(null);
   const [showSearch, setShowSearch] = useState(false);
   const [showDiscover, setShowDiscover] = useState(false);
+  const [showCreatePost, setShowCreatePost] = useState(false);
   const [createWithAudio, setCreateWithAudio] = useState<string | null>(null);
   const queryClient = useQueryClient();
   const [userId, setUserId] = useState<string | null>(null);
@@ -3359,8 +3650,6 @@ export default function FeedPage() {
   const [isRefreshing, setIsRefreshing] = useState(false);
   const pullStartY = useRef<number | null>(null);
   const [pullDelta, setPullDelta] = useState(0);
-  // Trending-hashtag chip filter
-  const [selectedHashtag, setSelectedHashtag] = useState<string | null>(null);
   // Multi-emoji reactions
   const reactions = usePostReactions(userId);
   // Reposts
@@ -3586,9 +3875,6 @@ export default function FeedPage() {
     if (feedMode === "following" && userId) {
       list = list.filter((p) => p.author_id && followingIds.has(p.author_id));
     }
-    if (selectedHashtag) {
-      list = list.filter((p) => postHasHashtag(p.caption, selectedHashtag));
-    }
     if (hiddenAuthorIds.size > 0) {
       list = list.filter((p) => !p.author_id || !hiddenAuthorIds.has(p.author_id));
     }
@@ -3596,7 +3882,7 @@ export default function FeedPage() {
       list = list.filter((p) => !deletedPostIds.has(p.id));
     }
     return list;
-  }, [posts, feedMode, userId, followingIds, selectedHashtag, hiddenAuthorIds, deletedPostIds]);
+  }, [posts, feedMode, userId, followingIds, hiddenAuthorIds, deletedPostIds]);
 
   // Fetch user's liked post IDs
   useEffect(() => {
@@ -4054,19 +4340,6 @@ export default function FeedPage() {
         </div>
       )}
 
-      {/* Trending hashtags chip row */}
-      <Suspense fallback={null}>
-        <TrendingHashtags
-          posts={posts}
-          selected={selectedHashtag}
-          onSelect={(tag) => {
-            setSelectedHashtag(tag);
-            setActiveIndex(0);
-            requestAnimationFrame(() => cardRefs.current[0]?.scrollIntoView({ block: "start" }));
-          }}
-        />
-      </Suspense>
-
       {/* Discover + Search + Live buttons — hide on desktop.
           Wrapped in a centered container so on iPad (md+), where the reel
           sits in a 420-px-wide phone frame, the buttons hug the right edge
@@ -4107,6 +4380,17 @@ export default function FeedPage() {
         >
           <Search className="w-5 h-5 text-white" />
         </button>
+        {userId && (
+          <button
+            type="button"
+            onClick={() => setShowCreatePost(true)}
+            aria-label="Create post"
+            title="Create"
+            className="w-10 h-10 sm:w-11 sm:h-11 rounded-full bg-primary/90 backdrop-blur-sm flex items-center justify-center active:scale-95 transition-transform border border-primary/40 shadow-lg shadow-primary/30"
+          >
+            <Plus className="w-5 h-5 text-primary-foreground" />
+          </button>
+        )}
         {/* Playback speed — bridges to the active ReelCard via window event.
             Hidden on the smallest phones (<sm) so the 5-button row doesn't
             collide with the centered For You / Following tabs at 320px. The
@@ -4202,48 +4486,25 @@ export default function FeedPage() {
               <NewPostsPill count={newPostsCount} onClick={handleShowNewPosts} />
             </Suspense>
 
-            {/* Empty state when a hashtag filter or Following tab returns no results */}
-            {visiblePosts.length === 0 && (selectedHashtag || (feedMode === "following" && userId)) && (
+            {/* Empty state when Following tab returns no results */}
+            {visiblePosts.length === 0 && feedMode === "following" && userId && (
               <div className="w-full h-full snap-start flex flex-col items-center justify-center px-8 text-center bg-black">
-                <div className="text-5xl mb-4">{selectedHashtag ? "🔍" : "👥"}</div>
-                <p className="text-white font-semibold text-lg mb-1">
-                  {selectedHashtag ? `No posts tagged #${selectedHashtag}` : "Your following feed is empty"}
-                </p>
+                <div className="text-5xl mb-4">👥</div>
+                <p className="text-white font-semibold text-lg mb-1">Your following feed is empty</p>
                 <p className="text-white/60 text-sm max-w-xs">
-                  {selectedHashtag
-                    ? "Try clearing the filter or swipe back to the full feed."
-                    : "Follow some creators or shops and their posts will show up here."}
+                  Follow some creators or shops and their posts will show up here.
                 </p>
                 <button
-                  onClick={() => {
-                    if (selectedHashtag) setSelectedHashtag(null);
-                    else setShowDiscover(true);
-                  }}
+                  onClick={() => setShowDiscover(true)}
                   className="mt-5 rounded-full bg-emerald-500 px-5 py-2 text-sm font-semibold text-white"
                 >
-                  {selectedHashtag ? "Clear filter" : "Discover people"}
+                  Discover people
                 </button>
               </div>
             )}
 
             {visiblePosts.map((post, index) => (
               <div key={post.id} className="contents">
-                {/* Inject the reels preview after the 4th card */}
-                {index === 4 && (
-                  <div className="w-full h-full snap-start">
-                    <Suspense fallback={<div className="h-full w-full bg-black" />}>
-                      <ReelsPreviewRow />
-                    </Suspense>
-                  </div>
-                )}
-                {/* Inject featured creators after the 9th card */}
-                {index === 9 && (
-                  <div className="w-full h-full snap-start">
-                    <Suspense fallback={<div className="h-full w-full bg-black" />}>
-                      <FeaturedCreatorsRow />
-                    </Suspense>
-                  </div>
-                )}
                 <div
                   ref={(el) => { cardRefs.current[index] = el; }}
                   className="w-full h-full snap-start"
@@ -4613,6 +4874,22 @@ export default function FeedPage() {
               setCreateWithAudio(name);
             }}
             currentPosts={posts}
+          />
+        )}
+      </AnimatePresence>
+
+      {/* Create post modal — standalone FAB trigger */}
+      <AnimatePresence>
+        {showCreatePost && userId && (
+          <CreatePostModal
+            userId={userId}
+            userProfile={userProfile}
+            onClose={() => setShowCreatePost(false)}
+            onCreated={() => {
+              setShowCreatePost(false);
+              toast.success("Reel posted!");
+              void queryClient.invalidateQueries({ queryKey: ["customer-feed"] });
+            }}
           />
         )}
       </AnimatePresence>

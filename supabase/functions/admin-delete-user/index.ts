@@ -89,7 +89,7 @@ Deno.serve(async (req) => {
       });
     }
 
-    console.log("[admin-delete-user] Deleted user:", userId, "by:", caller.id);
+    console.log("[admin-delete-user] User deletion completed");
 
     return new Response(JSON.stringify({ success: true }), {
       status: 200,

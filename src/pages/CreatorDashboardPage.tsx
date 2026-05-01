@@ -64,6 +64,42 @@ export default function CreatorDashboardPage() {
     enabled: !!user,
   });
 
+  const { data: postCount = 0 } = useQuery({
+    queryKey: ["creator-post-count", user?.id],
+    queryFn: async () => {
+      const { count } = await (supabase as any)
+        .from("store_posts")
+        .select("id", { count: "exact", head: true })
+        .eq("user_id", user!.id);
+      return (count as number) || 0;
+    },
+    enabled: !!user,
+  });
+
+  const { data: followerCount = 0 } = useQuery({
+    queryKey: ["creator-followers", user?.id],
+    queryFn: async () => {
+      const { count } = await (supabase as any)
+        .from("follows")
+        .select("id", { count: "exact", head: true })
+        .eq("following_id", user!.id);
+      return (count as number) || 0;
+    },
+    enabled: !!user,
+  });
+
+  const { data: totalViews = 0 } = useQuery({
+    queryKey: ["creator-views", user?.id],
+    queryFn: async () => {
+      const { data } = await (supabase as any)
+        .from("store_posts")
+        .select("view_count")
+        .eq("user_id", user!.id);
+      return ((data as any[]) || []).reduce((s: number, p: any) => s + (p.view_count ?? 0), 0);
+    },
+    enabled: !!user,
+  });
+
   const totalTips = tips.reduce((sum: number, t: any) => sum + (t.amount_cents || 0), 0);
   const liveEarningsCents = liveEarnings?.earnings_cents ?? 0;
   const liveCoins = liveEarnings?.total_coins_received ?? 0;
@@ -75,7 +111,7 @@ export default function CreatorDashboardPage() {
     { label: "Tips", value: `$${(totalTips / 100).toFixed(2)}`, icon: Heart, accent: "hsl(340 75% 55%)" },
     { label: "Live Gifts", value: `$${(liveEarningsCents / 100).toFixed(2)}`, icon: Gift, accent: "hsl(25 95% 53%)" },
     { label: "Tier Plans", value: String(tiers.length), icon: Crown, accent: "hsl(38 92% 50%)" },
-    { label: "Views", value: "0", icon: Eye, accent: "hsl(263 70% 58%)" },
+    { label: "Views", value: totalViews >= 1000 ? `${(totalViews / 1000).toFixed(1)}K` : String(totalViews), icon: Eye, accent: "hsl(263 70% 58%)" },
   ];
 
   const quickActions = [
@@ -91,12 +127,12 @@ export default function CreatorDashboardPage() {
   ];
 
   const milestones = [
-    { label: "First Post", target: 1, current: 0, icon: Video, accent: "hsl(263 70% 58%)" },
-    { label: "10 Followers", target: 10, current: 0, icon: Users, accent: "hsl(221 83% 53%)" },
-    { label: "First Tip", target: 1, current: 0, icon: Heart, accent: "hsl(340 75% 55%)" },
-    { label: "First Sub", target: 1, current: 0, icon: Crown, accent: "hsl(38 92% 50%)" },
+    { label: "First Post", target: 1, current: postCount, icon: Video, accent: "hsl(263 70% 58%)" },
+    { label: "10 Followers", target: 10, current: followerCount, icon: Users, accent: "hsl(221 83% 53%)" },
+    { label: "First Tip", target: 1, current: tips.length > 0 ? 1 : 0, icon: Heart, accent: "hsl(340 75% 55%)" },
+    { label: "First Sub", target: 1, current: subscribers.length > 0 ? 1 : 0, icon: Crown, accent: "hsl(38 92% 50%)" },
     { label: "$100 Earned", target: 100, current: totalEarnings / 100, icon: DollarSign, accent: "hsl(142 71% 45%)" },
-    { label: "1K Views", target: 1000, current: 0, icon: Eye, accent: "hsl(263 70% 58%)" },
+    { label: "1K Views", target: 1000, current: totalViews, icon: Eye, accent: "hsl(263 70% 58%)" },
   ];
 
   const growthTips = [

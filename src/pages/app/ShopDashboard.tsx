@@ -24,6 +24,10 @@ const IMPLEMENTED_SHOP_ROUTES = new Set<string>([
   "/shop-dashboard/employee-schedule",
   "/shop-dashboard/time-clock",
   "/shop-dashboard/employee-rules",
+  "/shop-dashboard/attendance",
+  "/shop-dashboard/training",
+  "/shop-dashboard/performance",
+  "/shop-dashboard/documents",
   "/shop-dashboard/truck",
   "/shop-dashboard/attribution",
   "/shop-dashboard/sandbox",
@@ -73,16 +77,19 @@ const ShopDashboard = () => {
   const { data: storeStats } = useQuery({
     queryKey: ["shop-dashboard-stats", store?.id],
     queryFn: async () => {
-      const [ordersRes, productsRes, revenueRes] = await Promise.all([
+      const [ordersRes, productsRes, revenueRes, viewsRes] = await Promise.all([
         supabase.from("store_orders").select("id", { count: "exact", head: true }).eq("store_id", store!.id),
         supabase.from("store_products").select("id", { count: "exact", head: true }).eq("store_id", store!.id),
         supabase.from("store_orders").select("total_cents").eq("store_id", store!.id).eq("status", "delivered"),
+        (supabase as any).from("store_posts").select("view_count").eq("store_id", store!.id),
       ]);
       const revenue = (revenueRes.data ?? []).reduce((sum, o) => sum + (o.total_cents ?? 0), 0) / 100;
+      const views = ((viewsRes.data as any[]) ?? []).reduce((s: number, p: any) => s + (p.view_count ?? 0), 0);
       return {
         orders: ordersRes.count ?? 0,
         products: productsRes.count ?? 0,
         revenue,
+        views,
       };
     },
     enabled: !!store?.id,
@@ -91,7 +98,7 @@ const ShopDashboard = () => {
   const stats = [
     { icon: ShoppingBag, label: "Orders", value: String(storeStats?.orders ?? 0), color: "text-blue-500", bg: "bg-blue-500/10" },
     { icon: DollarSign, label: "Revenue", value: `$${(storeStats?.revenue ?? 0).toFixed(0)}`, color: "text-emerald-500", bg: "bg-emerald-500/10" },
-    { icon: TrendingUp, label: "Views", value: "0", color: "text-amber-500", bg: "bg-amber-500/10" },
+    { icon: TrendingUp, label: "Views", value: storeStats?.views != null ? (storeStats.views >= 1000 ? `${(storeStats.views / 1000).toFixed(1)}K` : String(storeStats.views)) : "0", color: "text-amber-500", bg: "bg-amber-500/10" },
     { icon: Box, label: "Products", value: String(storeStats?.products ?? 0), color: "text-purple-500", bg: "bg-purple-500/10" },
   ];
 

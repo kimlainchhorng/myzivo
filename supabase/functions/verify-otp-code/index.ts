@@ -9,6 +9,7 @@ import { serve, createClient } from "../_shared/deps.ts";
 import { withErrorHandling, HttpError } from "../_shared/errors.ts";
 import { parseBody, v } from "../_shared/validate.ts";
 import { ok, preflight } from "../_shared/respond.ts";
+import { rateLimit } from "../_shared/rateLimiter.ts";
 
 const Body = v.object({
   email: v.email,
@@ -17,6 +18,14 @@ const Body = v.object({
 
 const handler = withErrorHandling(async (req: Request): Promise<Response> => {
   if (req.method === "OPTIONS") return preflight(req);
+
+  const ip = req.headers.get("cf-connecting-ip") ?? req.headers.get("x-forwarded-for") ?? "unknown";
+  const ipRl = rateLimit(ip, "auth_otp");
+  if (!ipRl.allowed) {
+    throw new HttpError(429, "Too many verification attempts. Please wait before trying again.", {
+      retryAfter: ipRl.retryAfter,
+    });
+  }
 
   const body = await parseBody(req, Body);
   const normalizedEmail = (body.email as string).toLowerCase();

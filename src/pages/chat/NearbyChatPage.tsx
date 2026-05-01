@@ -69,7 +69,7 @@ export default function NearbyChatPage() {
               <p className="text-[11px] text-muted-foreground">{fmtDistance(u.distance_m)} away</p>
             </div>
             <button
-              onClick={() => nav(`/chat/personal/${u.user_id}`)}
+              onClick={() => nav("/chat", { state: { openChat: { recipientId: u.user_id, recipientName: u.profile?.full_name ?? u.profile?.username ?? "User", recipientAvatar: u.profile?.avatar_url ?? null } } })}
               className="h-9 w-9 rounded-full bg-primary text-primary-foreground flex items-center justify-center"
               aria-label="Message"
             >

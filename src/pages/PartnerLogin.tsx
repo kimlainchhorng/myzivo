@@ -62,7 +62,11 @@ export default function PartnerLogin() {
 
     if (error) {
       setIsLoading(false);
-      toast.error(error.message || "Failed to sign in");
+      if (error.message === "DRIVER_ACCOUNT") {
+        toast.error("This is a ZIVO Driver account and cannot access the partner portal. Please use the ZIVO Driver app.");
+      } else {
+        toast.error(error.message || "Failed to sign in");
+      }
       return;
     }
 

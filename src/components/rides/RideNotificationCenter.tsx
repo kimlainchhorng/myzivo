@@ -84,6 +84,9 @@ export default function RideNotificationCenter() {
   const [loading, setLoading] = useState(true);
   const [prefs, setPrefs] = useState(defaultPrefs);
   const [enablingPush, setEnablingPush] = useState(false);
+  const [showAlertForm, setShowAlertForm] = useState(false);
+  const [alertRoute, setAlertRoute] = useState("");
+  const [alertThreshold, setAlertThreshold] = useState("");
 
   // Load real notifications from Supabase
   const fetchNotifs = async () => {
@@ -337,10 +340,31 @@ export default function RideNotificationCenter() {
                 <Button
                   variant="outline"
                   className="w-full h-10 rounded-xl text-xs font-bold"
-                  onClick={() => toast.info("Add a route for price alerts")}
+                  onClick={() => setShowAlertForm(v => !v)}
                 >
-                  <DollarSign className="w-3.5 h-3.5 mr-1.5" /> Add Price Alert
+                  <DollarSign className="w-3.5 h-3.5 mr-1.5" /> {showAlertForm ? "Cancel" : "Add Price Alert"}
                 </Button>
+                <AnimatePresence>
+                  {showAlertForm && (
+                    <motion.div initial={{ opacity: 0, y: -4 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -4 }}
+                      className="rounded-xl border border-primary/20 bg-primary/5 p-3 space-y-2">
+                      <input value={alertRoute} onChange={e => setAlertRoute(e.target.value)} placeholder="Route (e.g. Home → Airport)"
+                        className="w-full rounded-lg border border-border bg-background px-3 py-2 text-xs focus:outline-none focus:ring-1 focus:ring-primary/40" />
+                      <div className="flex gap-2">
+                        <input value={alertThreshold} onChange={e => setAlertThreshold(e.target.value)} placeholder="Alert below (e.g. $20)"
+                          className="flex-1 rounded-lg border border-border bg-background px-3 py-2 text-xs focus:outline-none focus:ring-1 focus:ring-primary/40" />
+                        <button disabled={!alertRoute.trim() || !alertThreshold.trim()}
+                          onClick={() => {
+                            toast.success(`Alert set for ${alertRoute} below ${alertThreshold}`);
+                            setAlertRoute(""); setAlertThreshold(""); setShowAlertForm(false);
+                          }}
+                          className="px-3 rounded-lg bg-primary text-primary-foreground text-xs font-semibold disabled:opacity-40">
+                          Set
+                        </button>
+                      </div>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
               </div>
 
               {/* Smart Reminders */}

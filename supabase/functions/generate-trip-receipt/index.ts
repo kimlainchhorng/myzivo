@@ -1,5 +1,5 @@
 import { createClient } from "../_shared/deps.ts";
-import { PDFDocument, StandardFonts, rgb } from "https://esm.sh/pdf-lib@1.17.1";
+import { PDFDocument, StandardFonts, rgb } from "npm:pdf-lib@1.17.1";
 
 // Internal-only function. Idempotent. Generates a branded ZIVO PDF receipt for a completed ride,
 // uploads to private `trip-receipts` bucket, records in `receipts`, emails the rider.

@@ -1,6 +1,6 @@
 // marketing-automations-tick — pg_cron-driven enrollment + step advancement engine.
 // Guarded by CRON_SECRET (no JWT). Enrolls users matching trigger and advances enrollments.
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
+import { createClient } from "../_shared/deps.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",

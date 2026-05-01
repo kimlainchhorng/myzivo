@@ -1,18 +1,20 @@
 /**
  * StoreMiniMap — Interactive Google Map thumbnail for the store profile rail.
- * Customers can zoom in/out, pan, and tap the marker to open the full map page.
- * Falls back to a branded gradient when the API key or coordinates are missing.
+ * Features: light tile style matching the main store map, user location blue
+ * dot, zoom/recenter controls, and distance label.
  */
 import { useEffect, useRef, useState } from "react";
-import { MapPin, ExternalLink, Plus, Minus, Locate } from "lucide-react";
+import { MapPin, ExternalLink, Plus, Minus, Locate, Timer } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
+import { distanceMiles } from "@/hooks/useStorePins";
 
 interface StoreMiniMapProps {
   latitude?: number | null;
   longitude?: number | null;
   storeName: string;
   slug: string;
+  userLoc?: { lat: number; lng: number } | null;
 }
 
 let cachedKey: string | null = null;
@@ -22,13 +24,8 @@ async function getMapsKey(): Promise<string> {
   const envKey = (import.meta as any).env?.VITE_GOOGLE_MAPS_API_KEY || "";
   try {
     const { data, error } = await supabase.functions.invoke("maps-api-key");
-    if (!error && data?.key) {
-      cachedKey = data.key;
-      return data.key;
-    }
-  } catch {
-    /* fall through */
-  }
+    if (!error && data?.key) { cachedKey = data.key; return data.key; }
+  } catch { /* fallthrough */ }
   cachedKey = envKey;
   return envKey;
 }
@@ -39,15 +36,9 @@ async function loadGoogleMaps(apiKey: string): Promise<boolean> {
   if (existing) {
     return new Promise((resolve) => {
       const check = setInterval(() => {
-        if ((window as any).google?.maps) {
-          clearInterval(check);
-          resolve(true);
-        }
+        if ((window as any).google?.maps) { clearInterval(check); resolve(true); }
       }, 150);
-      setTimeout(() => {
-        clearInterval(check);
-        resolve(!!(window as any).google?.maps);
-      }, 8000);
+      setTimeout(() => { clearInterval(check); resolve(!!(window as any).google?.maps); }, 8000);
     });
   }
   return new Promise((resolve) => {
@@ -61,11 +52,46 @@ async function loadGoogleMaps(apiKey: string): Promise<boolean> {
   });
 }
 
-export default function StoreMiniMap({ latitude, longitude, storeName, slug }: StoreMiniMapProps) {
+const LIGHT_STYLES = [
+  { elementType: "geometry", stylers: [{ color: "#f5f5f5" }] },
+  { elementType: "labels.icon", stylers: [{ visibility: "off" }] },
+  { elementType: "labels.text.fill", stylers: [{ color: "#616161" }] },
+  { elementType: "labels.text.stroke", stylers: [{ color: "#f5f5f5" }] },
+  { featureType: "administrative", elementType: "geometry", stylers: [{ visibility: "off" }] },
+  { featureType: "poi", stylers: [{ visibility: "off" }] },
+  { featureType: "road", elementType: "geometry", stylers: [{ color: "#ffffff" }] },
+  { featureType: "road.highway", elementType: "geometry", stylers: [{ color: "#e8e8e8" }] },
+  { featureType: "transit", stylers: [{ visibility: "off" }] },
+  { featureType: "water", elementType: "geometry", stylers: [{ color: "#c9e8fc" }] },
+];
+
+function makeUserDot(): string {
+  const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 22 22">
+    <circle cx="11" cy="11" r="10" fill="rgba(66,133,244,0.15)"/>
+    <circle cx="11" cy="11" r="6" fill="#4285F4" stroke="#fff" stroke-width="2.5"/>
+  </svg>`;
+  return "data:image/svg+xml;charset=UTF-8," + encodeURIComponent(svg);
+}
+
+function fmtDistance(mi: number): string {
+  const km = mi * 1.609344;
+  if (km < 1) return `${Math.round(km * 1000)} m away`;
+  return `${km.toFixed(1)} km away`;
+}
+
+function fmtWalk(mi: number): string {
+  const mins = Math.ceil((mi * 1.609344 / 5) * 60);
+  if (mins < 2) return "< 1 min";
+  if (mins >= 60) return `${Math.round(mins / 60)} h walk`;
+  return `${mins} min walk`;
+}
+
+export default function StoreMiniMap({ latitude, longitude, storeName, slug, userLoc }: StoreMiniMapProps) {
   const hasCoords = typeof latitude === "number" && typeof longitude === "number";
   const navigate = useNavigate();
   const containerRef = useRef<HTMLDivElement>(null);
   const mapRef = useRef<any>(null);
+  const userDotRef = useRef<any>(null);
   const [ready, setReady] = useState(false);
   const [failed, setFailed] = useState(false);
 
@@ -75,15 +101,9 @@ export default function StoreMiniMap({ latitude, longitude, storeName, slug }: S
 
     (async () => {
       const key = await getMapsKey();
-      if (!key) {
-        setFailed(true);
-        return;
-      }
+      if (!key) { setFailed(true); return; }
       const ok = await loadGoogleMaps(key);
-      if (!ok || cancelled || !containerRef.current) {
-        setFailed(true);
-        return;
-      }
+      if (!ok || cancelled || !containerRef.current) { setFailed(true); return; }
 
       const google = (window as any).google;
       const center = { lat: latitude as number, lng: longitude as number };
@@ -94,27 +114,23 @@ export default function StoreMiniMap({ latitude, longitude, storeName, slug }: S
         zoomControl: false,
         gestureHandling: "greedy",
         clickableIcons: false,
-        styles: [
-          { featureType: "poi", stylers: [{ visibility: "off" }] },
-          { featureType: "transit", stylers: [{ visibility: "off" }] },
-        ],
+        backgroundColor: "#f5f5f5",
+        styles: LIGHT_STYLES,
       });
       mapRef.current = map;
 
-      // Simple emerald MapPin teardrop (Lucide-style) — small & clean
       const pinSvg = `
         <svg xmlns="http://www.w3.org/2000/svg" width="32" height="40" viewBox="0 0 32 40">
-          <defs>
-            <filter id="pinShadow" x="-50%" y="-50%" width="200%" height="200%">
-              <feDropShadow dx="0" dy="2" stdDeviation="1.5" flood-color="#000" flood-opacity="0.3"/>
-            </filter>
-          </defs>
-          <g filter="url(#pinShadow)">
-            <path d="M16 2 C9.4 2 4 7.4 4 14 c0 9 12 22 12 22 s12-13 12-22 C28 7.4 22.6 2 16 2 z"
+          <defs><filter id="ps" x="-50%" y="-50%" width="200%" height="200%">
+            <feDropShadow dx="0" dy="2" stdDeviation="1.5" flood-color="#000" flood-opacity="0.25"/>
+          </filter></defs>
+          <g filter="url(#ps)">
+            <path d="M16 2C9.4 2 4 7.4 4 14c0 9 12 22 12 22s12-13 12-22C28 7.4 22.6 2 16 2z"
                   fill="#10b981" stroke="#ffffff" stroke-width="2"/>
             <circle cx="16" cy="14" r="4.5" fill="#ffffff"/>
           </g>
         </svg>`;
+
       const marker = new google.maps.Marker({
         position: center,
         map,
@@ -127,40 +143,51 @@ export default function StoreMiniMap({ latitude, longitude, storeName, slug }: S
         animation: google.maps.Animation.DROP,
       });
 
-      marker.addListener("click", () => {
-        navigate(`/store-map?focus=${encodeURIComponent(slug)}`);
-      });
-
+      marker.addListener("click", () => navigate(`/store-map?focus=${encodeURIComponent(slug)}`));
       setReady(true);
     })();
 
-    return () => {
-      cancelled = true;
-    };
+    return () => { cancelled = true; };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [hasCoords, latitude, longitude]);
 
-  const zoomIn = () => {
-    const m = mapRef.current;
-    if (m) m.setZoom((m.getZoom() ?? 15) + 1);
-  };
-  const zoomOut = () => {
-    const m = mapRef.current;
-    if (m) m.setZoom((m.getZoom() ?? 15) - 1);
-  };
+  /* Update user dot whenever userLoc changes */
+  useEffect(() => {
+    const map = mapRef.current;
+    if (!map || !ready) return;
+    const google = (window as any).google;
+    if (!google?.maps) return;
+
+    if (userDotRef.current) { userDotRef.current.setMap(null); userDotRef.current = null; }
+    if (!userLoc) return;
+
+    userDotRef.current = new google.maps.Marker({
+      position: userLoc,
+      map,
+      icon: {
+        url: makeUserDot(),
+        scaledSize: new google.maps.Size(22, 22),
+        anchor: new google.maps.Point(11, 11),
+      },
+      title: "You",
+      zIndex: 999,
+    });
+  }, [ready, userLoc]);
+
+  const zoomIn = () => { const m = mapRef.current; if (m) m.setZoom((m.getZoom() ?? 15) + 1); };
+  const zoomOut = () => { const m = mapRef.current; if (m) m.setZoom((m.getZoom() ?? 15) - 1); };
   const recenter = () => {
     const m = mapRef.current;
-    if (m && hasCoords) {
-      m.panTo({ lat: latitude as number, lng: longitude as number });
-      m.setZoom(15);
-    }
+    if (m && hasCoords) { m.panTo({ lat: latitude as number, lng: longitude as number }); m.setZoom(15); }
   };
 
   const showFallback = !hasCoords || failed;
+  const dist = userLoc && hasCoords
+    ? distanceMiles(userLoc, { lat: latitude as number, lng: longitude as number })
+    : null;
 
   return (
     <div className="group relative block h-72 w-full overflow-hidden rounded-3xl border border-white/10 bg-card/70 backdrop-blur-2xl shadow-xl shadow-black/10 transition-all duration-500 hover:shadow-2xl hover:shadow-primary/20">
-      {/* Interactive map container */}
       {!showFallback && (
         <div
           ref={containerRef}
@@ -175,7 +202,7 @@ export default function StoreMiniMap({ latitude, longitude, storeName, slug }: S
         <div className="absolute inset-0 animate-pulse bg-gradient-to-br from-primary/15 via-emerald-500/10 to-sky-500/10" />
       )}
 
-      {/* Fallback gradient + pin */}
+      {/* Fallback */}
       {showFallback && (
         <>
           <div className="absolute inset-0">
@@ -199,34 +226,21 @@ export default function StoreMiniMap({ latitude, longitude, storeName, slug }: S
         </>
       )}
 
-      {/* Top inner highlight */}
       <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-white/25 to-transparent z-10" />
 
-      {/* Zoom controls (top-right) */}
+      {/* Zoom controls */}
       {!showFallback && (
         <div className="absolute top-3 right-3 z-20 flex flex-col gap-1.5">
-          <button
-            type="button"
-            onClick={zoomIn}
-            aria-label="Zoom in"
-            className="flex h-9 w-9 items-center justify-center rounded-full bg-background/90 backdrop-blur-xl text-foreground shadow-lg ring-1 ring-white/15 transition-all hover:bg-background hover:scale-105 active:scale-95"
-          >
+          <button type="button" onClick={zoomIn} aria-label="Zoom in"
+            className="flex h-9 w-9 items-center justify-center rounded-full bg-background/90 backdrop-blur-xl text-foreground shadow-lg ring-1 ring-white/15 transition-all hover:bg-background hover:scale-105 active:scale-95">
             <Plus className="h-4 w-4" />
           </button>
-          <button
-            type="button"
-            onClick={zoomOut}
-            aria-label="Zoom out"
-            className="flex h-9 w-9 items-center justify-center rounded-full bg-background/90 backdrop-blur-xl text-foreground shadow-lg ring-1 ring-white/15 transition-all hover:bg-background hover:scale-105 active:scale-95"
-          >
+          <button type="button" onClick={zoomOut} aria-label="Zoom out"
+            className="flex h-9 w-9 items-center justify-center rounded-full bg-background/90 backdrop-blur-xl text-foreground shadow-lg ring-1 ring-white/15 transition-all hover:bg-background hover:scale-105 active:scale-95">
             <Minus className="h-4 w-4" />
           </button>
-          <button
-            type="button"
-            onClick={recenter}
-            aria-label="Recenter on store"
-            className="flex h-9 w-9 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-lg shadow-primary/30 ring-1 ring-white/20 transition-all hover:scale-105 active:scale-95"
-          >
+          <button type="button" onClick={recenter} aria-label="Recenter on store"
+            className="flex h-9 w-9 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-lg shadow-primary/30 ring-1 ring-white/20 transition-all hover:scale-105 active:scale-95">
             <Locate className="h-4 w-4" />
           </button>
         </div>
@@ -235,10 +249,21 @@ export default function StoreMiniMap({ latitude, longitude, storeName, slug }: S
       {/* Bottom action row */}
       <div className="absolute bottom-3 left-3 right-3 z-20 flex items-center justify-between gap-2">
         <div className="flex items-center gap-1.5 rounded-full bg-background/85 backdrop-blur-xl px-3 py-1.5 shadow-lg ring-1 ring-white/10">
-          <MapPin className="h-3.5 w-3.5 text-primary" />
-          <span className="text-[11px] font-bold text-foreground tracking-tight">
-            {showFallback ? "View location" : "Drag • pinch to zoom"}
-          </span>
+          {dist !== null ? (
+            <>
+              <Timer className="h-3 w-3 text-primary" />
+              <span className="text-[11px] font-bold text-foreground tracking-tight">
+                {fmtDistance(dist)} · {fmtWalk(dist)}
+              </span>
+            </>
+          ) : (
+            <>
+              <MapPin className="h-3.5 w-3.5 text-primary" />
+              <span className="text-[11px] font-bold text-foreground tracking-tight">
+                {showFallback ? "View location" : "Drag • pinch to zoom"}
+              </span>
+            </>
+          )}
         </div>
         <button
           type="button"

@@ -1,6 +1,6 @@
 // Stripe Checkout for Ads Studio wallet top-up. Returns checkout URL.
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
-import Stripe from "https://esm.sh/stripe@18.5.0";
+import { createClient } from "../_shared/deps.ts";
+import Stripe from "../_shared/stripe.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",

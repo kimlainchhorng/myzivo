@@ -1,7 +1,7 @@
 // Claim a device-link token. Caller (the SCANNING device) must already be
 // signed in to the SAME account as the QR issuer. On success, the issuer
 // device's poll endpoint will report the link as claimed.
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
+import { createClient } from "../_shared/deps.ts";
 import { corsHeaders } from "../_shared/cors.ts";
 
 Deno.serve(async (req) => {

@@ -1165,6 +1165,38 @@ const Profile = () => {
 
                       </div>
 
+                      {/* ── Edit Profile / Share / Analytics row ── */}
+                      <div className="mt-3 flex items-center gap-2">
+                        <Button
+                          type="button"
+                          variant="outline"
+                          size="sm"
+                          onClick={() => { selectionChanged(); navigate("/account/profile-edit"); }}
+                          className="flex-1 rounded-full font-semibold border-border/60 h-9 text-sm"
+                        >
+                          <Pencil className="h-3.5 w-3.5 mr-1.5" />
+                          Edit profile
+                        </Button>
+                        <motion.button
+                          type="button"
+                          whileTap={{ scale: 0.93 }}
+                          onClick={() => { selectionChanged(); setShareOpen(true); }}
+                          aria-label="Share profile"
+                          className="h-9 w-9 flex items-center justify-center rounded-full border border-border/60 bg-muted/30 hover:bg-muted/50 transition-colors focus-visible:ring-2 focus-visible:ring-primary/60 focus-visible:outline-none"
+                        >
+                          <Share2 className="h-4 w-4 text-foreground" />
+                        </motion.button>
+                        <motion.button
+                          type="button"
+                          whileTap={{ scale: 0.93 }}
+                          onClick={() => { selectionChanged(); navigate("/account/analytics"); }}
+                          aria-label="Profile analytics"
+                          className="h-9 w-9 flex items-center justify-center rounded-full border border-border/60 bg-muted/30 hover:bg-muted/50 transition-colors focus-visible:ring-2 focus-visible:ring-primary/60 focus-visible:outline-none"
+                        >
+                          <BarChart3 className="h-4 w-4 text-foreground" />
+                        </motion.button>
+                      </div>
+
                       {/* Facebook-style inline stats row */}
                       <div className="mt-2 flex flex-wrap items-center gap-x-1.5 gap-y-1 text-sm">
                         <button
@@ -1385,6 +1417,7 @@ const Profile = () => {
               { id: "business", label: "Business", desc: "Manage company travel & teams", icon: Briefcase, route: "/business" },
               { id: "driver", label: "Driver", desc: "Go online and accept rides", icon: Car, route: "/driver/home" },
               { id: "shop", label: "Shop Partner", desc: "Open your store dashboard", icon: Store, route: getShopDashboardPath() },
+              { id: "creator", label: "Creator", desc: "Manage content & monetisation", icon: Sparkles, route: "/creator-dashboard" },
             ].map((m) => {
               const active = activeMode === m.id;
               const Icon = m.icon;
@@ -1416,9 +1449,6 @@ const Profile = () => {
               );
             })}
           </div>
-          <p className="mt-4 text-[11px] text-muted-foreground text-center">
-            More modes coming soon.
-          </p>
         </SheetContent>
       </Sheet>
 

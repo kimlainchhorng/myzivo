@@ -1,6 +1,6 @@
-import { serve } from "../_shared/deps.ts";
-import { createClient } from "../_shared/deps.ts";
+import { serve, createClient } from "../_shared/deps.ts";
 import Stripe from "../_shared/stripe.ts";
+import { rateLimitDb, rateLimitHeaders } from "../_shared/rateLimiter.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -46,6 +46,13 @@ serve(async (req) => {
     const { data: userData, error: userErr } = await supabaseAuth.auth.getUser(token);
     if (userErr || !userData.user) throw new Error("Not authenticated");
     const user = userData.user;
+
+    const rl = await rateLimitDb(user.id, "payment");
+    if (!rl.allowed) {
+      return new Response(JSON.stringify({ error: "Too many requests. Please try again later." }), {
+        status: 429, headers: { ...corsHeaders, "Content-Type": "application/json", ...rateLimitHeaders(rl, "payment") },
+      });
+    }
 
     const body = await req.json().catch(() => ({}));
     const sessionId = String(body?.session_id || "");

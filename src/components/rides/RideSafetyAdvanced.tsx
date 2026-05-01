@@ -44,6 +44,17 @@ export default function RideSafetyAdvanced() {
   ]);
 
   const [contactInput, setContactInput] = useState("");
+  const [showIncidentForm, setShowIncidentForm] = useState(false);
+  const [incidentType, setIncidentType] = useState("");
+  const [incidentDesc, setIncidentDesc] = useState("");
+
+  const submitIncident = () => {
+    if (!incidentType || !incidentDesc.trim()) return;
+    toast.success("Incident report submitted. We'll review within 24 hours.");
+    setIncidentType("");
+    setIncidentDesc("");
+    setShowIncidentForm(false);
+  };
 
   const sections = [
     { id: "dashcam" as const, label: "Dashcam", icon: Camera },
@@ -129,9 +140,30 @@ export default function RideSafetyAdvanced() {
           {/* Incident Reporting */}
           {section === "incidents" && (
             <div className="space-y-4">
-              <Button className="w-full h-12 rounded-xl text-sm font-bold gap-2 bg-destructive hover:bg-destructive/90" onClick={() => toast.info("Opening incident report form...")}>
-                <AlertTriangle className="w-4 h-4" /> Report New Incident
+              <Button className="w-full h-12 rounded-xl text-sm font-bold gap-2 bg-destructive hover:bg-destructive/90" onClick={() => setShowIncidentForm(v => !v)}>
+                <AlertTriangle className="w-4 h-4" /> {showIncidentForm ? "Cancel Report" : "Report New Incident"}
               </Button>
+              <AnimatePresence>
+                {showIncidentForm && (
+                  <motion.div initial={{ opacity: 0, y: -6 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -6 }}
+                    className="rounded-xl border border-destructive/20 bg-destructive/5 p-4 space-y-3">
+                    <div className="flex flex-wrap gap-1.5">
+                      {["Minor Collision", "Unsafe Driving", "Wrong Route", "Driver Misconduct", "Vehicle Issue", "Other"].map(t => (
+                        <button key={t} onClick={() => setIncidentType(t)}
+                          className={cn("text-[10px] px-2.5 py-1 rounded-full border transition-colors",
+                            incidentType === t ? "bg-destructive text-destructive-foreground border-destructive" : "border-border text-muted-foreground hover:border-destructive/40")}>
+                          {t}
+                        </button>
+                      ))}
+                    </div>
+                    <textarea value={incidentDesc} onChange={e => setIncidentDesc(e.target.value)} placeholder="Describe what happened..."
+                      className="w-full rounded-lg border border-border bg-background px-3 py-2 text-xs resize-none focus:outline-none focus:ring-1 focus:ring-destructive/40" rows={3} />
+                    <Button size="sm" variant="destructive" className="w-full" disabled={!incidentType || !incidentDesc.trim()} onClick={submitIncident}>
+                      Submit Report
+                    </Button>
+                  </motion.div>
+                )}
+              </AnimatePresence>
 
               <div className="space-y-2">
                 <h4 className="text-xs font-bold text-muted-foreground uppercase tracking-wider px-1">Recent Incidents</h4>
@@ -224,7 +256,7 @@ export default function RideSafetyAdvanced() {
                     </div>
                     <div className="flex items-center gap-2">
                       {c.autoNotify && <Badge variant="secondary" className="text-[8px] font-bold">Auto-Alert</Badge>}
-                      <button onClick={() => toast.info(`Calling ${c.name}...`)} className="p-2 rounded-full bg-primary/10 text-primary">
+                      <button onClick={() => { window.location.href = `tel:${c.phone.replace(/\D/g, "")}`; }} className="p-2 rounded-full bg-primary/10 text-primary">
                         <Phone className="w-3.5 h-3.5" />
                       </button>
                     </div>

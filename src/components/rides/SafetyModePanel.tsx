@@ -197,9 +197,9 @@ export default function SafetyModePanel({ onClose }: { onClose?: () => void }) {
             <Button
               variant="outline"
               className="w-full h-11 rounded-xl border-red-500/30 text-red-500 hover:bg-red-500/5 font-bold"
-              onClick={() => toast.info("Emergency services: Call 911")}
+              onClick={() => { window.location.href = "tel:911"; }}
             >
-              <AlertTriangle className="w-4 h-4 mr-2" /> Emergency SOS
+              <AlertTriangle className="w-4 h-4 mr-2" /> Emergency SOS — Call 911
             </Button>
           </div>
         </motion.div>

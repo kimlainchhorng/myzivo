@@ -91,8 +91,17 @@ export default function StoreProfilePage() {
   const [selectedCategory, setSelectedCategory] = useState<string | undefined>();
   const [likedProducts, setLikedProducts] = useState<Set<string>>(new Set());
   const [chatOpen, setChatOpen] = useState(searchParams.get("chat") === "open");
-  // Track selected size per product: productId -> variant index
   const [selectedSizes, setSelectedSizes] = useState<Record<string, number>>({});
+  const [userLoc, setUserLoc] = useState<{ lat: number; lng: number } | null>(null);
+
+  useEffect(() => {
+    if (!navigator.geolocation) return;
+    navigator.geolocation.getCurrentPosition(
+      (pos) => setUserLoc({ lat: pos.coords.latitude, lng: pos.coords.longitude }),
+      () => {},
+      { maximumAge: 300_000, timeout: 8000 }
+    );
+  }, []);
   const { t, currentLanguage } = useI18n();
 
   const { data: store, isLoading: loadingStore } = useStoreProfile(slug || "");
@@ -1265,6 +1274,7 @@ export default function StoreProfilePage() {
           roomsMinPriceCents={isLodging && rooms.length > 0 ? Math.min(...rooms.map(r => r.base_rate_cents).filter(n => n > 0)) : undefined}
           showBookService={store.category === "auto-repair"}
           onBookService={() => navigate(`/book/${slug}`)}
+          userLoc={userLoc}
         />
       </aside>
 

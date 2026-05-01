@@ -1,7 +1,7 @@
 import { serve } from "../_shared/deps.ts";
 import { createClient } from "../_shared/deps.ts";
 import Stripe from "../_shared/stripe.ts";
-import { z } from "https://esm.sh/zod@3.23.8";
+import { z } from "npm:zod@3.23.8";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",

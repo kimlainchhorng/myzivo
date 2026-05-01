@@ -3,7 +3,7 @@
 // secret_messages row has expired (expires_at <= now).
 // Scheduled via pg_cron every 5 minutes.
 
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
+import { createClient } from "../_shared/deps.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",

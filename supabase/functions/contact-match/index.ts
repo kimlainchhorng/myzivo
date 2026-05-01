@@ -1,7 +1,7 @@
 // contact-match — receive a list of SHA-256-hashed phone numbers (E.164,
 // lowercased), return the matching ZIVO user IDs. Privacy-preserving — we
 // never see raw phone numbers.
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
+import { createClient } from "../_shared/deps.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",

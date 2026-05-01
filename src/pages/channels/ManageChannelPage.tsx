@@ -43,14 +43,14 @@ export default function ManageChannelPage() {
     const ids = data.map((r) => r.user_id);
     const { data: profs } = await supabase
       .from("profiles")
-      .select("user_id, display_name, avatar_url")
+      .select("user_id, full_name, avatar_url")
       .in("user_id", ids.length ? ids : ["00000000-0000-0000-0000-000000000000"]);
     const map = new Map((profs ?? []).map((p: any) => [p.user_id, p]));
     setMembers(
       data.map((r: any) => ({
         user_id: r.user_id,
         role: r.role,
-        display_name: map.get(r.user_id)?.display_name,
+        display_name: map.get(r.user_id)?.full_name,
         avatar_url: map.get(r.user_id)?.avatar_url,
       }))
     );

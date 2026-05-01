@@ -695,6 +695,8 @@ function ProfileCard({
   const [deleting, setDeleting] = useState(false);
   const [postTab, setPostTab] = useState<"all" | "photos" | "reels">("all");
   const [newPostCaption, setNewPostCaption] = useState("");
+  const [newPostLocation, setNewPostLocation] = useState("");
+  const [showLocationInput, setShowLocationInput] = useState(false);
   const [newPostMedia, setNewPostMedia] = useState<File[]>([]);
   const [newPostPreviews, setNewPostPreviews] = useState<string[]>([]);
   const [activePreviewIndex, setActivePreviewIndex] = useState(0);
@@ -895,6 +897,8 @@ function ProfileCard({
     previewUrlsRef.current.forEach((url) => URL.revokeObjectURL(url));
     previewUrlsRef.current = [];
     setNewPostCaption("");
+    setNewPostLocation("");
+    setShowLocationInput(false);
     setNewPostMedia([]);
     setNewPostPreviews([]);
     setActivePreviewIndex(0);
@@ -958,10 +962,15 @@ function ProfileCard({
 
       setUploadProgress("Creating post...");
 
+      const captionWithLocation = [
+        newPostCaption.trim(),
+        newPostLocation.trim() ? `📍 ${newPostLocation.trim()}` : "",
+      ].filter(Boolean).join("\n") || null;
+
       const { data, error } = await supabase.functions.invoke("admin-create-user-post", {
         body: {
           userId: targetUserId,
-          caption: newPostCaption.trim() || null,
+          caption: captionWithLocation,
           files,
         },
       });
@@ -1683,15 +1692,37 @@ function ProfileCard({
                     </button>
                     <button
                       type="button"
-                      className="h-9 w-9 rounded-full hover:bg-red-500/10 flex items-center justify-center transition-colors"
-                      title="Location"
-                      onClick={() => toast({ title: "Coming soon", description: "Location tagging coming soon" })}
+                      className={`h-9 w-9 rounded-full flex items-center justify-center transition-colors ${showLocationInput ? "bg-red-500/20" : "hover:bg-red-500/10"}`}
+                      title="Add location"
+                      onClick={() => setShowLocationInput((v) => !v)}
                     >
-                      <MapPin className="h-5 w-5 text-red-500" />
+                      <MapPin className={`h-5 w-5 ${showLocationInput ? "text-red-600" : "text-red-500"}`} />
                     </button>
                   </div>
                 </div>
               </div>
+
+              {/* Location input */}
+              {showLocationInput && (
+                <div className="px-5 pb-3">
+                  <div className="flex items-center gap-2 rounded-xl border border-red-500/30 bg-red-500/5 px-3 py-2">
+                    <MapPin className="h-4 w-4 text-red-500 shrink-0" />
+                    <input
+                      type="text"
+                      value={newPostLocation}
+                      onChange={(e) => setNewPostLocation(e.target.value)}
+                      placeholder="Add location..."
+                      className="flex-1 bg-transparent text-sm text-foreground placeholder:text-muted-foreground outline-none"
+                      autoFocus
+                    />
+                    {newPostLocation && (
+                      <button onClick={() => setNewPostLocation("")} className="shrink-0">
+                        <X className="h-3.5 w-3.5 text-muted-foreground" />
+                      </button>
+                    )}
+                  </div>
+                </div>
+              )}
 
               {/* Post button */}
               <div className="px-5 pb-4">
@@ -1877,7 +1908,11 @@ function ProfileCard({
                     <button
                       type="button"
                       className="flex items-center gap-1.5 font-medium text-foreground hover:text-red-500 transition-colors"
-                      onClick={() => toast({ title: "Liked!", description: "Like registered (admin view)" })}
+                      onClick={async () => {
+                        const next = (selectedPost.likes_count || 0) + 1;
+                        await supabase.from("user_posts" as any).update({ likes_count: next }).eq("id", selectedPost.id);
+                        setSelectedPost(prev => prev ? { ...prev, likes_count: next } : prev);
+                      }}
                     >
                       <Heart className="h-4 w-4" />
                       {selectedPost.likes_count || 0}

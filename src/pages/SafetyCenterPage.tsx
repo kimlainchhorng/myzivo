@@ -1,9 +1,8 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Switch } from "@/components/ui/switch";
-import { Separator } from "@/components/ui/separator";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
 import {
@@ -14,6 +13,8 @@ import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import { toast } from "sonner";
 
+const STORAGE_KEY = "zivo_safety_prefs";
+
 interface SafetyToggle {
   id: string;
   label: string;
@@ -23,35 +24,94 @@ interface SafetyToggle {
   category: string;
 }
 
+const DEFAULT_TOGGLES: SafetyToggle[] = [
+  { id: "restricted", label: "Restricted Mode", description: "Hide potentially sensitive content", icon: Eye, enabled: false, category: "content" },
+  { id: "sensitive", label: "Sensitive Content Filter", description: "Blur images flagged as sensitive", icon: EyeOff, enabled: true, category: "content" },
+  { id: "dm_filter", label: "Message Requests Filter", description: "Filter messages from unknown users", icon: MessageSquareOff, enabled: true, category: "privacy" },
+  { id: "block_strangers", label: "Block Unknown Contacts", description: "Only friends can message you", icon: UserX, enabled: false, category: "privacy" },
+  { id: "hide_activity", label: "Hide Activity Status", description: "Don't show when you're online", icon: Clock, enabled: false, category: "privacy" },
+  { id: "parental", label: "Parental Controls", description: "Require PIN for age-restricted content", icon: Baby, enabled: false, category: "parental" },
+  { id: "safe_search", label: "Safe Search", description: "Filter explicit content from search", icon: Filter, enabled: true, category: "content" },
+  { id: "login_alerts", label: "Login Alerts", description: "Get notified of new device logins", icon: Bell, enabled: true, category: "security" },
+];
+
+function loadPrefs() {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if (!raw) return null;
+    return JSON.parse(raw) as { toggles: Record<string, boolean>; screenTime: string; contentFilter: string; hasPin: boolean };
+  } catch { return null; }
+}
+
+function savePrefs(prefs: { toggles: Record<string, boolean>; screenTime: string; contentFilter: string; hasPin: boolean }) {
+  try { localStorage.setItem(STORAGE_KEY, JSON.stringify(prefs)); } catch {}
+}
+
 export default function SafetyCenterPage() {
   const navigate = useNavigate();
+
   const [screenTimeLimit, setScreenTimeLimit] = useState("none");
   const [contentFilter, setContentFilter] = useState("standard");
   const [pin, setPin] = useState("");
+  const [hasPin, setHasPin] = useState(false);
 
-  const [toggles, setToggles] = useState<SafetyToggle[]>([
-    { id: "restricted", label: "Restricted Mode", description: "Hide potentially sensitive content", icon: Eye, enabled: false, category: "content" },
-    { id: "sensitive", label: "Sensitive Content Filter", description: "Blur images flagged as sensitive", icon: EyeOff, enabled: true, category: "content" },
-    { id: "dm_filter", label: "Message Requests Filter", description: "Filter messages from unknown users", icon: MessageSquareOff, enabled: true, category: "privacy" },
-    { id: "block_strangers", label: "Block Unknown Contacts", description: "Only friends can message you", icon: UserX, enabled: false, category: "privacy" },
-    { id: "hide_activity", label: "Hide Activity Status", description: "Don't show when you're online", icon: Clock, enabled: false, category: "privacy" },
-    { id: "parental", label: "Parental Controls", description: "Require PIN for age-restricted content", icon: Baby, enabled: false, category: "parental" },
-    { id: "safe_search", label: "Safe Search", description: "Filter explicit content from search", icon: Filter, enabled: true, category: "content" },
-    { id: "login_alerts", label: "Login Alerts", description: "Get notified of new device logins", icon: Bell, enabled: true, category: "security" },
-  ]);
+  const [toggles, setToggles] = useState<SafetyToggle[]>(() => {
+    const saved = loadPrefs();
+    if (!saved) return DEFAULT_TOGGLES;
+    return DEFAULT_TOGGLES.map(t => ({ ...t, enabled: saved.toggles[t.id] ?? t.enabled }));
+  });
+
+  // Load persisted screen-time & filter on mount
+  useEffect(() => {
+    const saved = loadPrefs();
+    if (!saved) return;
+    setScreenTimeLimit(saved.screenTime ?? "none");
+    setContentFilter(saved.contentFilter ?? "standard");
+    setHasPin(saved.hasPin ?? false);
+  }, []);
+
+  const persist = (updates?: Partial<{ screenTime: string; contentFilter: string; hasPin: boolean; toggleMap: Record<string, boolean> }>) => {
+    const toggleMap = updates?.toggleMap ?? Object.fromEntries(toggles.map(t => [t.id, t.enabled]));
+    savePrefs({
+      toggles: toggleMap,
+      screenTime: updates?.screenTime ?? screenTimeLimit,
+      contentFilter: updates?.contentFilter ?? contentFilter,
+      hasPin: updates?.hasPin ?? hasPin,
+    });
+  };
+
+  const handleScreenTimeChange = (val: string) => {
+    setScreenTimeLimit(val);
+    persist({ screenTime: val });
+  };
+
+  const handleContentFilterChange = (val: string) => {
+    setContentFilter(val);
+    persist({ contentFilter: val });
+  };
+
+  const handleSavePin = () => {
+    if (pin.length !== 4) return;
+    setHasPin(true);
+    setPin("");
+    persist({ hasPin: true });
+    toast.success("PIN saved");
+  };
 
   const toggleSetting = (id: string) => {
-    setToggles(prev => prev.map(t => {
-      if (t.id === id) {
+    setToggles(prev => {
+      const next = prev.map(t => {
+        if (t.id !== id) return t;
         const newState = !t.enabled;
-        if (id === "parental" && newState && !pin) {
+        if (id === "parental" && newState && !hasPin) {
           toast.error("Set a PIN first to enable parental controls");
           return t;
         }
         return { ...t, enabled: newState };
-      }
-      return t;
-    }));
+      });
+      persist({ toggleMap: Object.fromEntries(next.map(t => [t.id, t.enabled])) });
+      return next;
+    });
   };
 
   const categories = [
@@ -65,7 +125,9 @@ export default function SafetyCenterPage() {
     <div className="min-h-screen bg-background pb-20">
       <div className="sticky top-0 safe-area-top z-10 bg-background/95 backdrop-blur-sm border-b border-border p-4">
         <div className="flex items-center gap-2">
-          <Button aria-label="Back" variant="ghost" size="icon" onClick={() => navigate(-1)}><ArrowLeft className="h-5 w-5" /></Button>
+          <Button aria-label="Back" variant="ghost" size="icon" onClick={() => navigate(-1)}>
+            <ArrowLeft className="h-5 w-5" />
+          </Button>
           <Shield className="h-5 w-5 text-primary" />
           <h1 className="text-xl font-bold text-foreground">Safety Center</h1>
         </div>
@@ -83,7 +145,7 @@ export default function SafetyCenterPage() {
                 <p className="text-sm font-medium text-foreground">Daily Limit</p>
                 <p className="text-xs text-muted-foreground">Set a daily usage reminder</p>
               </div>
-              <Select value={screenTimeLimit} onValueChange={setScreenTimeLimit}>
+              <Select value={screenTimeLimit} onValueChange={handleScreenTimeChange}>
                 <SelectTrigger className="w-28"><SelectValue /></SelectTrigger>
                 <SelectContent>
                   <SelectItem value="none">None</SelectItem>
@@ -96,7 +158,7 @@ export default function SafetyCenterPage() {
             </div>
             {screenTimeLimit !== "none" && (
               <Badge variant="secondary" className="text-xs">
-                You'll get a reminder after {screenTimeLimit === "30" ? "30 minutes" : screenTimeLimit === "60" ? "1 hour" : screenTimeLimit === "120" ? "2 hours" : "3 hours"}
+                Reminder after {screenTimeLimit === "30" ? "30 minutes" : screenTimeLimit === "60" ? "1 hour" : screenTimeLimit === "120" ? "2 hours" : "3 hours"}
               </Badge>
             )}
           </Card>
@@ -114,8 +176,11 @@ export default function SafetyCenterPage() {
                 { value: "standard", label: "Standard", desc: "Recommended" },
                 { value: "strict", label: "Strict", desc: "Maximum safety" },
               ].map((level) => (
-                <button key={level.value} onClick={() => setContentFilter(level.value)}
-                  className={`flex-1 p-3 rounded-lg text-center border transition-colors ${contentFilter === level.value ? "border-primary bg-primary/10" : "border-border"}`}>
+                <button
+                  key={level.value}
+                  onClick={() => handleContentFilterChange(level.value)}
+                  className={`flex-1 p-3 rounded-lg text-center border transition-colors ${contentFilter === level.value ? "border-primary bg-primary/10" : "border-border"}`}
+                >
                   <p className="text-sm font-medium text-foreground">{level.label}</p>
                   <p className="text-xs text-muted-foreground">{level.desc}</p>
                 </button>
@@ -131,10 +196,21 @@ export default function SafetyCenterPage() {
           </h2>
           <Card className="p-4">
             <div className="flex gap-2">
-              <Input type="password" maxLength={4} placeholder="Set 4-digit PIN" value={pin}
-                onChange={(e) => setPin(e.target.value.replace(/\D/g, "").slice(0, 4))} className="w-40" />
-              <Button size="sm" disabled={pin.length !== 4} onClick={() => toast.success("PIN saved!")}>Save</Button>
+              <Input
+                type="password"
+                maxLength={4}
+                placeholder={hasPin ? "Change PIN" : "Set 4-digit PIN"}
+                value={pin}
+                onChange={(e) => setPin(e.target.value.replace(/\D/g, "").slice(0, 4))}
+                className="w-40"
+              />
+              <Button size="sm" disabled={pin.length !== 4} onClick={handleSavePin}>
+                {hasPin ? "Update" : "Save"}
+              </Button>
             </div>
+            {hasPin && (
+              <Badge variant="secondary" className="mt-2 text-xs">PIN active</Badge>
+            )}
             <p className="text-xs text-muted-foreground mt-2">Required to change safety settings when parental controls are on</p>
           </Card>
         </motion.div>

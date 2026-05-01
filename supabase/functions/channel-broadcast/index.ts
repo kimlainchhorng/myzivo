@@ -1,6 +1,6 @@
 // channel-broadcast — owner/admin posts a message to a channel, fans out push
 // notifications to all subscribers via the existing device_tokens table.
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
+import { createClient } from "../_shared/deps.ts";
 import { scanContentForLinks, logBlockedAttempt, isAbuseThresholdExceeded, isIpAbuseThresholdExceeded, getRequestIpHash } from "../_shared/contentLinkValidation.ts";
 import { isLikelyMaliciousBot } from "../_shared/botDetection.ts";
 

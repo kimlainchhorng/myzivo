@@ -1,5 +1,6 @@
 import { serve, createClient } from "../_shared/deps.ts";
 import { getCorsHeaders } from "../_shared/cors.ts";
+import { rateLimitDb, rateLimitHeaders } from "../_shared/rateLimiter.ts";
 
 serve(async (req) => {
   const corsHeaders = getCorsHeaders(req);
@@ -38,6 +39,13 @@ serve(async (req) => {
         JSON.stringify({ error: "Invalid authentication" }),
         { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
+    }
+
+    const rl = await rateLimitDb(user.id, "payment");
+    if (!rl.allowed) {
+      return new Response(JSON.stringify({ error: "Too many requests. Please try again later." }), {
+        status: 429, headers: { ...corsHeaders, "Content-Type": "application/json", ...rateLimitHeaders(rl, "payment") },
+      });
     }
 
     const supabase = createClient(supabaseUrl, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!);

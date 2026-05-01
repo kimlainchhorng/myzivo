@@ -1,4 +1,5 @@
 import { serve, createClient } from "../_shared/deps.ts";
+import { rateLimitDb, rateLimitHeaders } from "../_shared/rateLimiter.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -61,6 +62,14 @@ serve(async (req) => {
       return new Response(
         JSON.stringify({ error: "Invalid authentication" }),
         { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
+    const rl = await rateLimitDb(user.id, "api_general", { max: 20, windowSec: 60 });
+    if (!rl.allowed) {
+      return new Response(
+        JSON.stringify({ error: "Too many requests. Please try again shortly." }),
+        { status: 429, headers: { ...corsHeaders, "Content-Type": "application/json", ...rateLimitHeaders(rl, "api_general") } }
       );
     }
 

@@ -6,6 +6,9 @@ import { Fragment, useMemo, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { useQuery } from "@tanstack/react-query";
+import { useUsername } from "@/hooks/useUsername";
+import { useCoinBalance } from "@/hooks/useCoinBalance";
+import { formatCount } from "@/lib/social/formatCount";
 import { useTheme } from "next-themes";
 import { supabase } from "@/integrations/supabase/client";
 import {
@@ -45,6 +48,8 @@ import {
 } from "@/components/ui/sheet";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import VerifiedBadge from "@/components/VerifiedBadge";
+import { Badge } from "@/components/ui/badge";
+import { useZivoPlus } from "@/contexts/ZivoPlusContext";
 
 /* ============================================= */
 /*  PARTNER OPTIONS                              */
@@ -62,9 +67,11 @@ const partnerOptions = [
 /*  QUICK ACTIONS (horizontal row)               */
 /* ============================================= */
 const quickActions = [
+  { icon: User, label: "Profile", href: "/profile", accent: "hsl(199 89% 48%)" },
   { icon: Wallet, label: "Wallet", href: "/wallet", accent: "hsl(142 71% 45%)" },
   { icon: ShoppingBag, label: "Orders", href: "/grocery/orders", accent: "hsl(221 83% 53%)" },
   { icon: Heart, label: "Saved", href: "/saved", accent: "hsl(340 75% 55%)" },
+  { icon: UserPlus, label: "Friends", href: "/notifications?tab=requests", accent: "hsl(263 70% 58%)" },
   { icon: Ticket, label: "Support", href: "/support/tickets", accent: "hsl(38 92% 50%)" },
   { icon: QrCode, label: "QR Code", href: "/qr-profile", accent: "hsl(263 70% 58%)" },
   { icon: Gift, label: "Invite", href: "/referrals", accent: "hsl(199 89% 48%)" },
@@ -173,11 +180,9 @@ const quickLinksSocial: QuickLink[] = [
   { icon: Share2, label: "Share Profile", href: "/qr-profile", description: "QR & link", accent: "hsl(142 71% 45%)" },
   { icon: Megaphone, label: "Events", href: "/events", description: "Upcoming", accent: "hsl(38 92% 50%)" },
   { icon: Star, label: "Leaderboard", href: "/leaderboard", description: "Top creators", accent: "hsl(45 93% 58%)" },
-  { icon: Music, label: "Sound Library", href: "/explore", description: "Trending", accent: "hsl(340 75% 55%)" },
   { icon: Clapperboard, label: "Watch Party", href: "/watch-party", description: "Watch together", accent: "hsl(199 89% 48%)" },
   { icon: Bookmark, label: "Bookmarks", href: "/saved", description: "Saved posts", accent: "hsl(25 95% 53%)" },
   { icon: Heart, label: "Dating", href: "/dating", description: "Find connections", accent: "hsl(340 75% 55%)" },
-  { icon: Hash, label: "Channels", href: "/channels", description: "Follow channels", accent: "hsl(221 83% 53%)" },
   { icon: UserPlus, label: "Find Contacts", href: "/chat/find-contacts", description: "Add friends", accent: "hsl(142 71% 45%)" },
   { icon: MessagesSquare, label: "Group Chats", href: "/chat", description: "Conversations", accent: "hsl(263 70% 58%)" },
   { icon: Phone, label: "Group Calls", href: "/chat/contacts", description: "Voice & video", accent: "hsl(199 89% 48%)" },
@@ -325,6 +330,22 @@ export default function MorePage() {
 
   // Shared profile data — same source as /profile, so the name/badge stay in sync
   const { data: profile } = useUserProfile();
+  const { username: claimedUsername } = useUsername();
+  const { balance: coinBalance } = useCoinBalance();
+  const { isPlus, plan } = useZivoPlus();
+
+  // Real post count — matches /profile
+  const { data: postsCount = 0 } = useQuery({
+    queryKey: ["more-posts", user?.id],
+    queryFn: async () => {
+      const { count } = await (supabase as any)
+        .from("user_posts")
+        .select("*", { count: "exact", head: true })
+        .eq("user_id", user!.id);
+      return count || 0;
+    },
+    enabled: !!user,
+  });
 
   // Real friend count (accepted friendships) — matches /profile
   const { data: friendCount = 0 } = useQuery({
@@ -373,9 +394,10 @@ export default function MorePage() {
   const avatarUrl = profile?.avatar_url;
   const isVerified = profile?.is_verified;
 
-  const handle = (profile?.full_name?.trim() || user?.email?.split("@")[0] || "user")
-    .toLowerCase()
-    .replace(/\s+/g, "");
+  const handle = claimedUsername
+    || (profile?.full_name?.trim() || user?.email?.split("@")[0] || "user")
+        .toLowerCase()
+        .replace(/\s+/g, "");
 
   const VerifiedCheck = ({ size = 18 }: { size?: number }) => (
     <VerifiedBadge size={size} />
@@ -403,27 +425,44 @@ export default function MorePage() {
             {isVerified && <VerifiedCheck size={18} />}
           </div>
           <p className="text-[11px] text-muted-foreground truncate mt-0.5">@{handle}</p>
+          {isPlus && (
+            <Badge className="mt-1 bg-gradient-to-r from-amber-500/20 to-orange-500/20 text-amber-500 border-amber-500/30 font-semibold rounded-full px-2 py-0.5 text-[10px] w-fit">
+              <Crown className="w-2.5 h-2.5 mr-1" /> ZIVO+ {plan === "annual" ? "Annual" : "Monthly"}
+            </Badge>
+          )}
           <div className="flex gap-4 mt-1.5">
             <div className="text-center">
-              <p className="text-xs font-bold">{followerCount}</p>
+              <p className="text-xs font-bold">{formatCount(followerCount) ?? "0"}</p>
               <p className="text-[9px] text-muted-foreground">Followers</p>
             </div>
             <div className="text-center">
-              <p className="text-xs font-bold">{followingCount}</p>
+              <p className="text-xs font-bold">{formatCount(followingCount) ?? "0"}</p>
               <p className="text-[9px] text-muted-foreground">Following</p>
             </div>
             <div className="text-center">
-              <p className="text-xs font-bold">{friendCount}</p>
+              <p className="text-xs font-bold">{formatCount(postsCount) ?? "0"}</p>
+              <p className="text-[9px] text-muted-foreground">Posts</p>
+            </div>
+            <div className="text-center">
+              <p className="text-xs font-bold">{formatCount(friendCount) ?? "0"}</p>
               <p className="text-[9px] text-muted-foreground">Friends</p>
             </div>
           </div>
         </Link>
-        <Link
-          to="/account/profile-edit"
-          className="shrink-0 text-[11px] font-semibold px-2.5 py-1.5 rounded-full bg-primary/10 text-primary active:scale-95 transition-transform"
-        >
-          Edit
-        </Link>
+        <div className="flex flex-col gap-1.5 shrink-0">
+          <Link
+            to="/account/profile-edit"
+            className="text-[11px] font-semibold px-3 py-1.5 rounded-full bg-primary/10 text-primary active:scale-95 transition-transform text-center"
+          >
+            Edit profile
+          </Link>
+          <Link
+            to="/profile"
+            className="text-[11px] font-semibold px-3 py-1.5 rounded-full border border-border/50 text-muted-foreground active:scale-95 transition-transform text-center"
+          >
+            View
+          </Link>
+        </div>
       </div>
     </motion.div>
   );
@@ -434,11 +473,11 @@ export default function MorePage() {
       initial={{ opacity: 0, y: 6 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ delay: 0.04 }}
-      className="grid grid-cols-3 gap-2 mb-5"
+      className="grid grid-cols-2 gap-2 mb-5"
     >
       <Link
         to={isVerified ? "/profile" : "/account/verification"}
-        className="zivo-card-organic flex items-center gap-1.5 px-2.5 py-2 active:scale-[0.97] transition-transform"
+        className="zivo-card-organic flex items-center gap-2 px-3 py-2.5 active:scale-[0.97] transition-transform"
       >
         <VerifiedCheck size={20} />
         <div className="min-w-0">
@@ -450,22 +489,32 @@ export default function MorePage() {
       </Link>
       <Link
         to="/membership"
-        className="zivo-card-organic flex items-center gap-1.5 px-2.5 py-2 active:scale-[0.97] transition-transform"
+        className="zivo-card-organic flex items-center gap-2 px-3 py-2.5 active:scale-[0.97] transition-transform"
       >
         <Crown className="w-4 h-4 text-amber-500 shrink-0" />
         <div className="min-w-0">
           <p className="text-[11px] font-bold leading-tight truncate capitalize">{(profile as any)?.tier ?? "Explorer"}</p>
-          <p className="text-[9px] text-muted-foreground truncate">Tier</p>
+          <p className="text-[9px] text-muted-foreground truncate">Membership tier</p>
         </div>
       </Link>
       <Link
         to="/wallet"
-        className="zivo-card-organic flex items-center gap-1.5 px-2.5 py-2 active:scale-[0.97] transition-transform"
+        className="zivo-card-organic flex items-center gap-2 px-3 py-2.5 active:scale-[0.97] transition-transform"
       >
         <Wallet className="w-4 h-4 text-emerald-500 shrink-0" />
         <div className="min-w-0">
           <p className="text-[11px] font-bold leading-tight truncate">Wallet</p>
           <p className="text-[9px] text-muted-foreground truncate">View balance</p>
+        </div>
+      </Link>
+      <Link
+        to="/rewards"
+        className="zivo-card-organic flex items-center gap-2 px-3 py-2.5 active:scale-[0.97] transition-transform"
+      >
+        <Star className="w-4 h-4 text-amber-400 shrink-0" />
+        <div className="min-w-0">
+          <p className="text-[11px] font-bold leading-tight truncate">{coinBalance > 0 ? formatCount(coinBalance) : "0"} coins</p>
+          <p className="text-[9px] text-muted-foreground truncate">ZIVO coins</p>
         </div>
       </Link>
     </motion.div>
@@ -477,20 +526,20 @@ export default function MorePage() {
       initial={{ opacity: 0, y: 8 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ delay: 0.05 }}
-      className="grid grid-cols-6 gap-2 mb-5"
+      className="flex gap-3 overflow-x-auto scrollbar-hide pb-1 -mx-1 px-1 mb-5"
     >
       {quickActions.map((action, i) => (
-        <Link key={action.label} to={action.href} className="flex flex-col items-center gap-1.5">
+        <Link key={action.label} to={action.href} className="flex flex-col items-center gap-1.5 flex-shrink-0">
           <motion.div
             initial={{ scale: 0.8, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
             transition={{ delay: i * 0.04, type: "spring", stiffness: 300, damping: 22 }}
-            className="w-11 h-11 rounded-2xl flex items-center justify-center active:scale-90 transition-transform touch-manipulation"
+            className="w-12 h-12 rounded-2xl flex items-center justify-center active:scale-90 transition-transform touch-manipulation"
             style={{ background: `${action.accent}12`, color: action.accent }}
           >
             <action.icon className="w-5 h-5" />
           </motion.div>
-          <span className="text-[10px] font-medium text-muted-foreground text-center leading-tight">{action.label}</span>
+          <span className="text-[10px] font-medium text-muted-foreground text-center leading-tight w-14">{action.label}</span>
         </Link>
       ))}
     </motion.div>

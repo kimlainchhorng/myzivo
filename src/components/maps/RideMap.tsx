@@ -210,7 +210,7 @@ export default function RideMap({ pickupCoords, dropoffCoords, stopCoords, route
       }
 
       if (!key) {
-        if (!cancelled) handleFailure("Google Maps key is missing. Configure maps-api-key edge function or VITE_GOOGLE_MAPS_API_KEY.");
+        if (!cancelled) handleFailure("Map service unavailable. Please try again or contact support.");
         return;
       }
 

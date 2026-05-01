@@ -39,7 +39,7 @@ export default function MerchantWalletPage() {
       if (!user) return null;
       const { data } = await (supabase as any)
         .from("store_profiles")
-        .select("id, store_name")
+        .select("id, name")
         .eq("owner_id", user.id)
         .maybeSingle();
       return data;
@@ -131,7 +131,7 @@ export default function MerchantWalletPage() {
         </Button>
         <div>
           <h1 className="text-xl font-bold">Merchant Wallet</h1>
-          <p className="text-xs text-muted-foreground">{store?.store_name || "Your Store"}</p>
+          <p className="text-xs text-muted-foreground">{store?.name || "Your Store"}</p>
         </div>
       </div>
 

@@ -168,7 +168,8 @@ export default function CommunitiesPage() {
                 key={community.id}
                 initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: i * 0.04 }}
-                className="bg-card rounded-2xl border border-border/30 p-4"
+                className="bg-card rounded-2xl border border-border/30 p-4 cursor-pointer hover:bg-muted/10 transition-colors"
+                onClick={() => navigate(`/communities/${community.id}`)}
               >
                 <div className="flex items-start gap-3">
                   <Avatar className="h-12 w-12 rounded-xl">
@@ -208,7 +209,7 @@ export default function CommunitiesPage() {
 
                 {user && (
                   <button
-                    onClick={() => joinMutation.mutate(community.id)}
+                    onClick={(e) => { e.stopPropagation(); joinMutation.mutate(community.id); }}
                     disabled={joinMutation.isPending}
                     className={`w-full mt-3 py-2 rounded-xl text-xs font-semibold transition-all ${
                       isMember

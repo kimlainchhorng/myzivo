@@ -28,6 +28,21 @@ serve(async (req) => {
       );
     }
 
+    // Sanitize string fields — strip HTML chars, enforce length limits
+    const sanitize = (s: unknown, max: number) =>
+      typeof s === "string" ? s.replace(/[<>&"']/g, "").trim().slice(0, max) : undefined;
+    const safeRecipientEmail = sanitize(recipient_email, 254);
+    const safeRecipientName = sanitize(recipient_name, 100);
+    const safeMessage = sanitize(message, 500);
+    const safeSenderName = sanitize(sender_name, 100);
+
+    if (!safeRecipientEmail || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(safeRecipientEmail)) {
+      return new Response(
+        JSON.stringify({ error: "A valid recipient email is required." }),
+        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
     // Get user from auth header (optional — guests can buy gift cards too)
     const authHeader = req.headers.get("Authorization");
     let userId: string | null = null;
@@ -72,11 +87,11 @@ serve(async (req) => {
         current_balance: amount_cents / 100,
         is_active: false, // activated after payment verification
         purchaser_user_id: userId,
-        purchaser_email: userEmail || sender_name || null,
-        purchaser_name: sender_name || null,
-        recipient_email: recipient_email || null,
-        recipient_name: recipient_name || null,
-        message: message || null,
+        purchaser_email: userEmail || safeSenderName || null,
+        purchaser_name: safeSenderName || null,
+        recipient_email: safeRecipientEmail || null,
+        recipient_name: safeRecipientName || null,
+        message: safeMessage || null,
       })
       .select()
       .single();

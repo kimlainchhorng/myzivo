@@ -3,7 +3,7 @@
  * Features: search, trending grid, hashtag browsing, map toggle
  */
 import { useState, useCallback, useEffect } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { useNavigate, useSearchParams } from "react-router-dom";
@@ -23,18 +23,17 @@ type Tab = "trending" | "users" | "hashtags";
 export default function ExplorePage() {
   const { user } = useAuth();
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
   const [searchParams] = useSearchParams();
   const [search, setSearch] = useState("");
   const [activeTab, setActiveTab] = useState<Tab>("trending");
+  const [selectedTag, setSelectedTag] = useState<string | null>(null);
 
-  // Consume the ?tag=<word> query string from a hashtag tap in a caption.
-  // Switches to the Tags tab and pre-fills the search box so the user lands
-  // on relevant results instead of the generic trending grid.
   useEffect(() => {
     const tag = searchParams.get("tag");
     if (tag) {
       setActiveTab("hashtags");
-      setSearch(tag);
+      setSelectedTag(tag);
     }
   }, [searchParams]);
 
@@ -70,14 +69,73 @@ export default function ExplorePage() {
     enabled: search.length > 1,
   });
 
-  // Hashtags (from post captions)
-  const trendingHashtags = [
-    { tag: "travel", count: 1240 }, { tag: "food", count: 980 },
-    { tag: "zivo", count: 870 }, { tag: "adventure", count: 650 },
-    { tag: "photography", count: 540 }, { tag: "nature", count: 430 },
-    { tag: "citylife", count: 380 }, { tag: "sunset", count: 320 },
-    { tag: "foodie", count: 290 }, { tag: "wanderlust", count: 260 },
-  ];
+  // Suggested users for People tab
+  const { data: suggestedUsers = [], isLoading: loadingSuggested } = useQuery({
+    queryKey: ["explore-suggested-users", user?.id],
+    queryFn: async () => {
+      const { data } = await supabase
+        .from("profiles")
+        .select("id, full_name, avatar_url, is_verified, bio")
+        .not("id", "eq", user?.id ?? "")
+        .order("created_at", { ascending: false })
+        .limit(20);
+      return data || [];
+    },
+    enabled: activeTab === "users" && !search,
+  });
+
+  // Posts filtered by selected hashtag
+  const { data: taggedPosts = [], isLoading: loadingTagged } = useQuery({
+    queryKey: ["explore-tagged", selectedTag],
+    queryFn: async () => {
+      if (!selectedTag) return [];
+      const { data } = await supabase
+        .from("store_posts")
+        .select("id, media_urls, media_type, caption, likes_count")
+        .eq("is_published", true)
+        .ilike("caption", `%#${selectedTag}%`)
+        .order("likes_count", { ascending: false })
+        .limit(30);
+      return (data || []).map((p: any) => ({
+        ...p,
+        media_urls: Array.isArray(p.media_urls) ? p.media_urls : typeof p.media_urls === "string" ? [p.media_urls] : [],
+      }));
+    },
+    enabled: !!selectedTag,
+  });
+
+  // Hashtags — extracted from post captions via Supabase
+  const { data: trendingHashtags = [] } = useQuery({
+    queryKey: ["explore-hashtags"],
+    queryFn: async () => {
+      const { data } = await (supabase as any)
+        .from("store_posts")
+        .select("caption")
+        .eq("is_published", true)
+        .not("caption", "is", null)
+        .limit(500);
+      const counts: Record<string, number> = {};
+      (data || []).forEach((p: any) => {
+        const tags = (p.caption as string).match(/#(\w+)/g) ?? [];
+        tags.forEach((t: string) => {
+          const tag = t.slice(1).toLowerCase();
+          counts[tag] = (counts[tag] ?? 0) + 1;
+        });
+      });
+      return Object.entries(counts)
+        .sort((a, b) => b[1] - a[1])
+        .slice(0, 20)
+        .map(([tag, count]) => ({ tag, count }));
+    },
+    staleTime: 5 * 60 * 1000,
+    placeholderData: [
+      { tag: "travel", count: 1240 }, { tag: "food", count: 980 },
+      { tag: "zivo", count: 870 }, { tag: "adventure", count: 650 },
+      { tag: "photography", count: 540 }, { tag: "nature", count: 430 },
+      { tag: "citylife", count: 380 }, { tag: "sunset", count: 320 },
+      { tag: "foodie", count: 290 }, { tag: "wanderlust", count: 260 },
+    ],
+  });
 
   const tabs: { id: Tab; label: string; icon: typeof TrendingUp }[] = [
     { id: "trending", label: "Trending", icon: TrendingUp },
@@ -136,7 +194,13 @@ export default function ExplorePage() {
         </div>
       </div>
 
-      <PullToRefresh onRefresh={async () => {}}>
+      <PullToRefresh onRefresh={async () => {
+        await Promise.all([
+          queryClient.invalidateQueries({ queryKey: ["explore-trending"] }),
+          queryClient.invalidateQueries({ queryKey: ["explore-hashtags"] }),
+          queryClient.invalidateQueries({ queryKey: ["explore-suggested-users"] }),
+        ]);
+      }}>
         {/* Search results */}
         {search.length > 1 && (
           <div className="p-4 space-y-2">
@@ -182,7 +246,7 @@ export default function ExplorePage() {
                     isLarge && "col-span-2 row-span-2"
                   )}
                   whileTap={{ scale: 0.97 }}
-                  onClick={() => navigate(`/reels`)}
+                  onClick={() => navigate(`/reels/${post.id}`)}
                 >
                   {url && (
                     post.media_type === "video" ? (
@@ -204,18 +268,79 @@ export default function ExplorePage() {
 
         {/* People tab */}
         {!search && activeTab === "users" && (
-          <div className="p-4">
+          <div className="p-4 space-y-2">
             <h3 className="text-sm font-semibold text-foreground mb-3">Suggested for you</h3>
-            <p className="text-xs text-muted-foreground">Search for people to discover new connections</p>
+            {loadingSuggested && <Loader2 className="h-5 w-5 animate-spin mx-auto text-muted-foreground" />}
+            {suggestedUsers.map((u: any) => (
+              <button
+                key={u.id}
+                onClick={() => navigate(`/profile/${u.id}`)}
+                className="w-full flex items-center gap-3 p-3 rounded-xl bg-card border border-border/40 hover:bg-accent/50 transition-colors text-left"
+              >
+                <Avatar className="h-10 w-10 shrink-0">
+                  <AvatarImage src={u.avatar_url} />
+                  <AvatarFallback>{(u.full_name || "U")[0]}</AvatarFallback>
+                </Avatar>
+                <div className="min-w-0 flex-1">
+                  <span className="text-sm font-medium text-foreground inline-flex items-center gap-1">
+                    <span className="truncate">{u.full_name || "Unknown"}</span>
+                    {isBlueVerified((u as any).is_verified) && <VerifiedBadge size={13} interactive={false} />}
+                  </span>
+                  {u.bio && <p className="text-xs text-muted-foreground truncate mt-0.5">{u.bio}</p>}
+                </div>
+              </button>
+            ))}
+            {!loadingSuggested && suggestedUsers.length === 0 && (
+              <p className="text-center text-sm text-muted-foreground py-8">No suggestions yet</p>
+            )}
           </div>
         )}
 
         {/* Hashtags tab */}
         {!search && activeTab === "hashtags" && (
           <div className="p-4 space-y-2">
-            {trendingHashtags.map((h) => (
+            {selectedTag && (
+              <div className="mb-3">
+                <div className="flex items-center justify-between mb-2">
+                  <h3 className="text-sm font-semibold text-foreground">#{selectedTag}</h3>
+                  <button
+                    onClick={() => setSelectedTag(null)}
+                    className="text-xs text-muted-foreground flex items-center gap-1 hover:text-foreground transition-colors"
+                  >
+                    <X className="h-3.5 w-3.5" /> Clear
+                  </button>
+                </div>
+                {loadingTagged && <Loader2 className="h-5 w-5 animate-spin mx-auto text-muted-foreground" />}
+                {!loadingTagged && taggedPosts.length === 0 && (
+                  <p className="text-sm text-muted-foreground text-center py-4">No posts found for #{selectedTag}</p>
+                )}
+                {taggedPosts.length > 0 && (
+                  <div className="grid grid-cols-3 gap-0.5 -mx-4">
+                    {taggedPosts.map((post: any) => {
+                      const url = post.media_urls[0] ? normalizeStorePostMediaUrl(post.media_urls[0]) : "";
+                      return (
+                        <motion.button
+                          key={post.id}
+                          className="relative aspect-square bg-muted overflow-hidden"
+                          whileTap={{ scale: 0.97 }}
+                          onClick={() => navigate(`/reels/${post.id}`)}
+                        >
+                          {url && (post.media_type === "video"
+                            ? <video src={`${url}#t=0.1`} muted className="w-full h-full object-cover" />
+                            : <img src={url} alt="" className="w-full h-full object-cover" loading="lazy" />
+                          )}
+                          {!url && <div className="w-full h-full flex items-center justify-center"><Grid3X3 className="h-6 w-6 text-muted-foreground/30" /></div>}
+                        </motion.button>
+                      );
+                    })}
+                  </div>
+                )}
+              </div>
+            )}
+            {!selectedTag && trendingHashtags.map((h) => (
               <button
                 key={h.tag}
+                onClick={() => setSelectedTag(h.tag)}
                 className="w-full flex items-center gap-3 p-3 rounded-xl bg-card border border-border/40 hover:bg-accent/50 transition-colors text-left"
               >
                 <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center">

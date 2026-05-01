@@ -249,6 +249,25 @@ const Signup = () => {
               Log In
             </Link>
           </p>
+
+          <div className="flex items-center gap-2 pt-1">
+            <div className="flex-1 h-px bg-white/10" />
+            <span className="text-[11px] text-white/30 uppercase tracking-wider">or</span>
+            <div className="flex-1 h-px bg-white/10" />
+          </div>
+
+          <p className="text-center text-xs text-white/50">
+            Want to drive with ZIVO?{" "}
+            <a
+              href="https://apps.apple.com/us/app/zivodrivers/id6759507131"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="font-semibold text-emerald-400/80 hover:text-emerald-300"
+            >
+              Apply as a Driver
+            </a>
+            {" — "}driver accounts are separate.
+          </p>
         </form>
         </div>
 

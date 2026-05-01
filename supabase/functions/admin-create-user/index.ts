@@ -57,10 +57,9 @@ Deno.serve(async (req) => {
     const callerRoles = (roleRows ?? []).map(({ role }) => role);
     const canManageAccounts = callerRoles.some((role) => allowedRoleSet.has(role));
 
-    console.log("[admin-create-user] caller:", caller.id, "roles:", callerRoles, "canManageAccounts:", canManageAccounts, "roleError:", roleError);
-
     if (!canManageAccounts) {
-      return new Response(JSON.stringify({ error: "Admin access required", debug: { callerId: caller.id, callerRoles, canManageAccounts, roleError: roleError?.message } }), {
+      console.warn("[admin-create-user] unauthorized attempt by:", caller.id);
+      return new Response(JSON.stringify({ error: "Admin access required" }), {
         status: 403,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });

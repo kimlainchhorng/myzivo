@@ -1,4 +1,5 @@
-import { serve } from "../_shared/deps.ts";
+import { serve, createClient } from "../_shared/deps.ts";
+import { rateLimitDb, rateLimitHeaders } from "../_shared/rateLimiter.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -21,6 +22,29 @@ serve(async (req) => {
   // Handle CORS preflight
   if (req.method === "OPTIONS") {
     return new Response("ok", { headers: corsHeaders });
+  }
+
+  const authHeader = req.headers.get("Authorization");
+  if (!authHeader?.startsWith("Bearer ")) {
+    return new Response(JSON.stringify({ error: "Authentication required" }), {
+      status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" },
+    });
+  }
+  const { data: { user }, error: authErr } = await createClient(
+    Deno.env.get("SUPABASE_URL") ?? "",
+    Deno.env.get("SUPABASE_ANON_KEY") ?? "",
+    { global: { headers: { Authorization: authHeader } } }
+  ).auth.getUser();
+  if (authErr || !user) {
+    return new Response(JSON.stringify({ error: "Authentication required" }), {
+      status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" },
+    });
+  }
+  const rl = await rateLimitDb(user.id, "search");
+  if (!rl.allowed) {
+    return new Response(JSON.stringify({ error: "Too many requests. Please wait before searching again." }), {
+      status: 429, headers: { ...corsHeaders, "Content-Type": "application/json", ...rateLimitHeaders(rl, "search") },
+    });
   }
 
   try {

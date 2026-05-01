@@ -1,5 +1,6 @@
 // Google Ads OAuth callback. Exchanges code, stores tokens in store_ad_platform_connections.
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
+import { createClient } from "../_shared/deps.ts";
+import { encryptToken } from "../_shared/tokenCrypto.ts";
 
 const PREVIEW_FALLBACK = "https://id-preview--72f99340-9c9f-453a-acff-60e5a9b25774.lovable.app";
 
@@ -63,13 +64,16 @@ Deno.serve(async (req) => {
       ? new Date(Date.now() + Number(tokens.expires_in) * 1000).toISOString()
       : null;
 
+    const encAccessToken = await encryptToken(tokens.access_token);
+    const encRefreshToken = tokens.refresh_token ? await encryptToken(tokens.refresh_token) : null;
+
     const { error: upErr } = await admin.from("store_ad_platform_connections").upsert(
       {
         store_id: stateRow.store_id,
         platform: "google",
         account_name: accountName,
-        access_token: tokens.access_token,
-        refresh_token: tokens.refresh_token ?? null,
+        access_token: encAccessToken,
+        refresh_token: encRefreshToken,
         token_expires_at: expiresAt,
         scopes: tokens.scope ?? null,
         status: "connected",
@@ -86,7 +90,7 @@ Deno.serve(async (req) => {
         store_id: stateRow.store_id,
         platform: "google",
         status: "connected",
-        access_token: tokens.access_token,
+        access_token: encAccessToken,
         token_expires_at: expiresAt,
         scopes: tokens.scope ?? null,
         display_name: accountName,

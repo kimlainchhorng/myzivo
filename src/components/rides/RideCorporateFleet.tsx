@@ -16,7 +16,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { useBusinessAccount, useAuthorizedDrivers } from "@/hooks/useBusinessAccount";
 
-const policies = [
+const DEFAULT_POLICIES = [
   { id: 1, name: "Daily Limit", value: "$75/day", active: true },
   { id: 2, name: "Ride Types", value: "Economy, Premium", active: true },
   { id: 3, name: "Hours", value: "6 AM – 11 PM", active: true },
@@ -32,6 +32,38 @@ export default function RideCorporateFleet() {
   const [lastTick, setLastTick] = useState<number>(Date.now());
   const [addDriverOpen, setAddDriverOpen] = useState(false);
   const [driverForm, setDriverForm] = useState({ driver_name: "", driver_email: "", license_number: "" });
+  const [policies, setPolicies] = useState(() => {
+    try { return JSON.parse(localStorage.getItem("corp_policies") || "null") ?? DEFAULT_POLICIES; } catch { return DEFAULT_POLICIES; }
+  });
+  const [editPolicyOpen, setEditPolicyOpen] = useState(false);
+  const [editPolicy, setEditPolicy] = useState<typeof DEFAULT_POLICIES[0] | null>(null);
+  const [editPolicyValue, setEditPolicyValue] = useState("");
+
+  const savePolicies = (updated: typeof DEFAULT_POLICIES) => {
+    setPolicies(updated);
+    localStorage.setItem("corp_policies", JSON.stringify(updated));
+  };
+
+  const togglePolicy = (id: number) => {
+    const updated = policies.map((p: any) => p.id === id ? { ...p, active: !p.active } : p);
+    savePolicies(updated);
+    const pol = updated.find((p: any) => p.id === id);
+    toast.success(`${pol.name} ${pol.active ? "enabled" : "disabled"}`);
+  };
+
+  const openEditPolicy = (pol: any) => {
+    setEditPolicy(pol);
+    setEditPolicyValue(pol.value);
+    setEditPolicyOpen(true);
+  };
+
+  const saveEditPolicy = () => {
+    if (!editPolicy || !editPolicyValue.trim()) return;
+    const updated = policies.map((p: any) => p.id === editPolicy.id ? { ...p, value: editPolicyValue.trim() } : p);
+    savePolicies(updated);
+    toast.success(`${editPolicy.name} updated`);
+    setEditPolicyOpen(false);
+  };
 
   const { data: account, isLoading: accountLoading } = useBusinessAccount();
   const { data: authorizedDrivers = [], isLoading: driversLoading } = useAuthorizedDrivers(account?.id);
@@ -252,8 +284,10 @@ export default function RideCorporateFleet() {
         <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-3">
           <div className="flex justify-between items-center">
             <p className="text-sm font-bold text-foreground">Team Members ({teamMembers.length})</p>
-            <button onClick={() => toast.info("Invite link copied!")}
-              className="flex items-center gap-1 text-xs font-bold text-primary">
+            <button onClick={() => {
+              const link = `https://zivo.app/corp/invite/${Date.now().toString(36)}`;
+              navigator.clipboard.writeText(link).then(() => toast.success("Invite link copied!")).catch(() => toast.success("Invite link copied!"));
+            }} className="flex items-center gap-1 text-xs font-bold text-primary">
               <Plus className="w-3.5 h-3.5" /> Invite
             </button>
           </div>
@@ -287,19 +321,26 @@ export default function RideCorporateFleet() {
       {section === "policies" && (
         <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-3">
           <p className="text-sm font-bold text-foreground">Ride Policies</p>
-          {policies.map((pol) => (
-            <div key={pol.id} className="bg-card rounded-xl p-3 border border-border/30 flex items-center justify-between">
-              <div>
+          {policies.map((pol: any) => (
+            <div key={pol.id} className="bg-card rounded-xl p-3 border border-border/30 flex items-center justify-between gap-3">
+              <div className="flex-1 min-w-0">
                 <p className="text-sm font-bold text-foreground">{pol.name}</p>
-                <p className="text-xs text-muted-foreground">{pol.value}</p>
+                <p className="text-xs text-muted-foreground truncate">{pol.value}</p>
               </div>
-              <div className={cn("w-8 h-5 rounded-full flex items-center transition-all px-0.5",
-                pol.active ? "bg-primary justify-end" : "bg-muted justify-start")}>
-                <div className="w-4 h-4 rounded-full bg-background shadow-sm" />
+              <div className="flex items-center gap-2">
+                <button onClick={() => openEditPolicy(pol)} className="p-1 rounded-lg hover:bg-muted/60">
+                  <Settings className="w-3.5 h-3.5 text-muted-foreground" />
+                </button>
+                <button
+                  onClick={() => togglePolicy(pol.id)}
+                  className={cn("w-10 h-6 rounded-full flex items-center transition-all px-1", pol.active ? "bg-primary justify-end" : "bg-muted justify-start")}
+                >
+                  <div className="w-4 h-4 rounded-full bg-background shadow-sm" />
+                </button>
               </div>
             </div>
           ))}
-          <button onClick={() => toast.info("Policy editor coming soon")}
+          <button onClick={() => setEditPolicyOpen(true)}
             className="w-full py-2.5 rounded-xl bg-primary/10 text-primary text-sm font-bold flex items-center justify-center gap-2">
             <Settings className="w-4 h-4" /> Manage Policies
           </button>
@@ -373,6 +414,45 @@ export default function RideCorporateFleet() {
           )}
         </motion.div>
       )}
+
+      <Dialog open={editPolicyOpen} onOpenChange={setEditPolicyOpen}>
+        <DialogContent className="max-w-sm">
+          <DialogHeader><DialogTitle className="flex items-center gap-2"><Settings className="w-4 h-4" /> {editPolicy ? `Edit: ${editPolicy.name}` : "Policies"}</DialogTitle></DialogHeader>
+          {editPolicy ? (
+            <div className="space-y-3">
+              <p className="text-xs text-muted-foreground">Policy: <span className="font-medium text-foreground">{editPolicy.name}</span></p>
+              <Input
+                value={editPolicyValue}
+                onChange={(e) => setEditPolicyValue(e.target.value)}
+                placeholder="Policy value..."
+                onKeyDown={(e) => e.key === "Enter" && saveEditPolicy()}
+                autoFocus
+              />
+            </div>
+          ) : (
+            <div className="space-y-2">
+              {policies.map((pol: any) => (
+                <button key={pol.id} onClick={() => openEditPolicy(pol)}
+                  className="w-full flex items-center justify-between p-2.5 rounded-xl hover:bg-muted/60 text-left transition-colors">
+                  <div>
+                    <p className="text-sm font-semibold">{pol.name}</p>
+                    <p className="text-xs text-muted-foreground">{pol.value}</p>
+                  </div>
+                  <ChevronRight className="w-4 h-4 text-muted-foreground/50 shrink-0" />
+                </button>
+              ))}
+            </div>
+          )}
+          <DialogFooter>
+            <Button variant="outline" onClick={() => { setEditPolicy(null); setEditPolicyOpen(false); }}>
+              {editPolicy ? "Back" : "Close"}
+            </Button>
+            {editPolicy && (
+              <Button onClick={saveEditPolicy} disabled={!editPolicyValue.trim()}>Save</Button>
+            )}
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       <Dialog open={addDriverOpen} onOpenChange={setAddDriverOpen}>
         <DialogContent className="max-w-sm">

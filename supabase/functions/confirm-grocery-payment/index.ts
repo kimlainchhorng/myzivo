@@ -8,6 +8,23 @@ Deno.serve(async (req) => {
     return new Response(null, { headers: cors });
   }
 
+  const authHeader = req.headers.get("Authorization");
+  if (!authHeader?.startsWith("Bearer ")) {
+    return new Response(JSON.stringify({ error: "Authentication required" }), {
+      status: 401, headers: { ...cors, "Content-Type": "application/json" },
+    });
+  }
+  const { data: { user }, error: authErr } = await createClient(
+    Deno.env.get("SUPABASE_URL") ?? "",
+    Deno.env.get("SUPABASE_ANON_KEY") ?? "",
+    { global: { headers: { Authorization: authHeader } } }
+  ).auth.getUser();
+  if (authErr || !user) {
+    return new Response(JSON.stringify({ error: "Authentication required" }), {
+      status: 401, headers: { ...cors, "Content-Type": "application/json" },
+    });
+  }
+
   try {
     const stripeKey = Deno.env.get("STRIPE_SECRET_KEY");
     if (!stripeKey) {
@@ -47,6 +64,18 @@ Deno.serve(async (req) => {
       Deno.env.get("SUPABASE_URL")!,
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!,
     );
+
+    // Verify caller owns this order
+    const { data: orderRecord } = await admin
+      .from("shopping_orders")
+      .select("user_id")
+      .eq("id", order_id)
+      .maybeSingle();
+    if (!orderRecord || orderRecord.user_id !== user.id) {
+      return new Response(JSON.stringify({ error: "Order not found or access denied" }), {
+        status: 403, headers: { ...cors, "Content-Type": "application/json" },
+      });
+    }
 
     const { error: updateError } = await admin
       .from("shopping_orders")

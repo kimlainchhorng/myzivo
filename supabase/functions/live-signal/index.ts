@@ -11,7 +11,7 @@
  *   { stream_id, from_role, to_role, type, payload? }
  */
 // @ts-ignore - Deno std
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2.57.0";
+import { createClient } from "../_shared/deps.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",

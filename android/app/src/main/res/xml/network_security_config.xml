@@ -1,60 +1,20 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!--
-  Android Network Security Config — locks the app to HTTPS-only with a minimum
-  TLS profile and pins the certificate authorities used by our backends.
+  Android Network Security Config — enforces HTTPS-only traffic for all hosts.
 
-  Pin policy:
-  * Pins are SHA-256 SubjectPublicKeyInfo (SPKI) hashes — not certificate hashes.
-    They survive certificate rotation as long as the issuing CA's public key
-    doesn't change.
-  * Two pins per host are required by IETF RFC 7469 — the live pin plus a
-    backup. Replace BACKUP_PLACEHOLDER with the actual SPKI hash before
-    shipping a release build.
-
-  How to compute a pin:
-    openssl s_client -servername example.com -connect example.com:443 \
-      | openssl x509 -pubkey -noout \
-      | openssl pkey -pubin -outform der \
-      | openssl dgst -sha256 -binary | openssl enc -base64
+  Certificate pinning was removed because Supabase runs on Cloudflare infrastructure
+  that rotates TLS certificates regularly. Pinning to specific leaf/intermediate
+  SPKI hashes causes ALL network requests to fail after a rotation, making the app
+  appear to crash on launch. HTTPS enforcement via system trust anchors provides
+  strong transport security without the brittleness of manual pin management.
 
   Reference: https://developer.android.com/training/articles/security-config
 -->
 <network-security-config>
-    <!-- Default: HTTPS only, no cleartext traffic to any host -->
+    <!-- Enforce HTTPS for all hosts; reject cleartext HTTP -->
     <base-config cleartextTrafficPermitted="false">
         <trust-anchors>
             <certificates src="system" />
         </trust-anchors>
     </base-config>
-
-    <!-- Pin our Supabase project — SPKI pins computed 2026-04-29 -->
-    <domain-config>
-        <domain includeSubdomains="true">slirphzzwcogdbkeicff.supabase.co</domain>
-        <domain includeSubdomains="true">myzivo.com</domain>
-        <pin-set expiration="2027-04-29">
-            <!-- Primary: leaf cert SPKI -->
-            <pin digest="SHA-256">GU2W4j1P24T3sqlI+o6YTnidzz0PI8fB/Gvd2ITfSZE=</pin>
-            <!-- Backup: intermediate CA SPKI -->
-            <pin digest="SHA-256">kIdp6NNEd8wsugYyyIYFsi1ylMCED3hZbSR8ZFsa/A4=</pin>
-        </pin-set>
-        <trust-anchors>
-            <certificates src="system" />
-        </trust-anchors>
-    </domain-config>
-
-    <!-- Stripe (cardholder data) — SPKI pins computed 2026-04-29 -->
-    <domain-config>
-        <domain includeSubdomains="true">stripe.com</domain>
-        <domain includeSubdomains="true">api.stripe.com</domain>
-        <domain includeSubdomains="true">js.stripe.com</domain>
-        <pin-set expiration="2027-04-29">
-            <!-- Primary: api.stripe.com leaf SPKI -->
-            <pin digest="SHA-256">xUUBOliw6Rgb7It2YbiSOg0ifTHlP3Lv6MXMkw//uLM=</pin>
-            <!-- Backup: api.stripe.com intermediate SPKI -->
-            <pin digest="SHA-256">Ld64SpoeXjpLjc+/7Wahk6p5+KVyzVSUptciuWsyxeY=</pin>
-        </pin-set>
-        <trust-anchors>
-            <certificates src="system" />
-        </trust-anchors>
-    </domain-config>
 </network-security-config>

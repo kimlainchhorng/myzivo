@@ -1,6 +1,6 @@
 // Issue a short-lived device-link token (the QR payload) for the caller.
 // Caller must be authenticated. Returns { token, expiresAt }.
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
+import { createClient } from "../_shared/deps.ts";
 import { corsHeaders } from "../_shared/cors.ts";
 
 Deno.serve(async (req) => {

@@ -1,6 +1,7 @@
 import "jsr:@supabase/functions-js/edge-runtime.d.ts";
-import Stripe from "https://esm.sh/stripe@18.5.0";
+import Stripe from "../_shared/stripe.ts";
 import { createClient } from "npm:@supabase/supabase-js@2.57.2";
+import { rateLimitDb, rateLimitHeaders } from "../_shared/rateLimiter.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -23,6 +24,14 @@ Deno.serve(async (req) => {
     const token = authHeader.replace("Bearer ", "");
     const { data: { user } } = await supabase.auth.getUser(token);
     if (!user?.email) throw new Error("Not authenticated");
+
+    const rl = await rateLimitDb(user.id, "payment");
+    if (!rl.allowed) {
+      return new Response(JSON.stringify({ error: "Too many requests. Please try again shortly." }), {
+        status: 429,
+        headers: { ...corsHeaders, "Content-Type": "application/json", ...rateLimitHeaders(rl, "payment") },
+      });
+    }
 
     const { order_id, amount_cents } = await req.json();
     if (!order_id || !amount_cents || amount_cents < 50) {

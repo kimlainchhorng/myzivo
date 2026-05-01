@@ -4,7 +4,7 @@
 //   x-zivo-nonce:     <random 16+ chars>
 //   x-zivo-signature: hex(hmac_sha256(secret, `${ts}.${nonce}.${method}.${path}.${bodyHash}`))
 
-import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.57.2';
+import { createClient } from './deps.ts';
 
 const REPLAY_WINDOW_SECONDS = 300;
 

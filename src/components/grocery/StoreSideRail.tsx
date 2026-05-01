@@ -47,6 +47,7 @@ interface StoreSideRailProps {
   // Auto-repair Book CTA
   showBookService?: boolean;
   onBookService?: () => void;
+  userLoc?: { lat: number; lng: number } | null;
 }
 
 export default function StoreSideRail({
@@ -64,6 +65,7 @@ export default function StoreSideRail({
   roomsMinPriceCents,
   showBookService,
   onBookService,
+  userLoc,
 }: StoreSideRailProps) {
   const navigate = useNavigate();
   const [copied, setCopied] = useState(false);
@@ -149,6 +151,7 @@ export default function StoreSideRail({
           longitude={store.longitude}
           storeName={store.name}
           slug={store.slug}
+          userLoc={userLoc}
         />
       )}
 

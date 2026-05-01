@@ -51,7 +51,7 @@ export default function NeighborhoodHeatmap({ map, visible, onToggle }: Props) {
       // Fetch stores with recent activity
       const { data: stores } = await (supabase as any)
         .from("store_profiles")
-        .select("id, store_name, latitude, longitude")
+        .select("id, name, latitude, longitude")
         .not("latitude", "is", null)
         .not("longitude", "is", null)
         .limit(50);
@@ -74,7 +74,7 @@ export default function NeighborhoodHeatmap({ map, visible, onToggle }: Props) {
             lng: store.longitude + (Math.random() - 0.5) * 0.003,
             intensity: reelIntensity,
             type: "reel",
-            label: store.store_name,
+            label: store.name,
           });
           reelCount++;
         }
@@ -84,7 +84,7 @@ export default function NeighborhoodHeatmap({ map, visible, onToggle }: Props) {
             lng: store.longitude + (Math.random() - 0.5) * 0.002,
             intensity: saleIntensity,
             type: "sale",
-            label: store.store_name,
+            label: store.name,
           });
           saleCount++;
         }

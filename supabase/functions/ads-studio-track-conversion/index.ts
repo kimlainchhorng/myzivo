@@ -1,6 +1,6 @@
 // Conversion attribution: called after a successful order to link it back to an ad click.
 // Updates the food_orders row with click_id/creative_id/variant_id/platform and logs a conversion event.
-import { createClient } from "npm:@supabase/supabase-js@2.45.0";
+import { createClient } from "npm:@supabase/supabase-js@2.49.1";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -23,11 +23,34 @@ Deno.serve(async (req) => {
   const key = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
   const admin = createClient(url, key);
 
+  const authHeader = req.headers.get("Authorization");
+  if (!authHeader?.startsWith("Bearer ")) {
+    return new Response(JSON.stringify({ error: "Authentication required" }), {
+      status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" },
+    });
+  }
+  const { data: { user }, error: authErr } = await createClient(url, Deno.env.get("SUPABASE_ANON_KEY")!, {
+    global: { headers: { Authorization: authHeader } },
+  }).auth.getUser();
+  if (authErr || !user) {
+    return new Response(JSON.stringify({ error: "Authentication required" }), {
+      status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" },
+    });
+  }
+
   let body: Body;
   try { body = await req.json(); } catch {
     return new Response(JSON.stringify({ error: "invalid json" }), { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } });
   }
   if (!body.order_id) return new Response(JSON.stringify({ error: "order_id required" }), { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+
+  // Verify caller owns the order
+  const { data: orderCheck } = await admin.from("food_orders").select("user_id").eq("id", body.order_id).maybeSingle();
+  if (!orderCheck || orderCheck.user_id !== user.id) {
+    return new Response(JSON.stringify({ error: "Order not found or access denied" }), {
+      status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" },
+    });
+  }
 
   // Update the order with attribution
   const update: any = {};

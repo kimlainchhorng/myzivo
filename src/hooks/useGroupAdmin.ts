@@ -85,6 +85,19 @@ export function useGroupAdmin(groupId: string | null) {
     return true;
   }, [groupId, refresh]);
 
+  const muteUntil = useCallback(async (targetUserId: string, until: Date | null) => {
+    if (!groupId) return false;
+    const { error } = await (supabase as any)
+      .from("chat_group_members")
+      .update({ muted_until: until ? until.toISOString() : null })
+      .eq("group_id", groupId)
+      .eq("user_id", targetUserId);
+    if (error) { toast.error(error.message || "Could not mute member"); return false; }
+    toast.success(until ? `Member muted until ${until.toLocaleString()}` : "Member unmuted");
+    await refresh();
+    return true;
+  }, [groupId, refresh]);
+
   const leave = useCallback(async () => {
     if (!groupId || !user?.id) return false;
     const { error } = await (supabase as any)
@@ -145,7 +158,7 @@ export function useGroupAdmin(groupId: string | null) {
   return {
     myRole, isAdmin, isOwner,
     members, invites, loading,
-    refresh, setRole, kick, leave,
+    refresh, setRole, kick, muteUntil, leave,
     updateGroupMeta, createInvite, revokeInvite,
   };
 }

@@ -1,6 +1,6 @@
 // Audit + security event recording with PII auto-redaction.
 
-import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.57.2';
+import { createClient } from './deps.ts';
 
 const EMAIL_RE = /[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}/gi;
 const PHONE_RE = /\+?\d[\d\s().-]{7,}\d/g;

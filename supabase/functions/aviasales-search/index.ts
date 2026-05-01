@@ -1,4 +1,4 @@
-import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { serve, createClient } from "../_shared/deps.ts";
 import { crypto } from "https://deno.land/std@0.168.0/crypto/mod.ts";
 
 const corsHeaders = {
@@ -31,8 +31,6 @@ async function generateSignature(token: string, params: Record<string, any>): Pr
   const values = flattenValues(params);
   const raw = token + ':' + values.join(':');
   
-  console.log(`[aviasales-search] Signature input: ${raw}`);
-  
   const encoder = new TextEncoder();
   const data = encoder.encode(raw);
   const hashBuffer = await crypto.subtle.digest('MD5', data);
@@ -43,6 +41,23 @@ async function generateSignature(token: string, params: Record<string, any>): Pr
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
+  }
+
+  const authHeader = req.headers.get('Authorization');
+  if (!authHeader?.startsWith('Bearer ')) {
+    return new Response(JSON.stringify({ error: 'Authentication required' }), {
+      status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+    });
+  }
+  const { data: { user }, error: authErr } = await createClient(
+    Deno.env.get('SUPABASE_URL') ?? '',
+    Deno.env.get('SUPABASE_ANON_KEY') ?? '',
+    { global: { headers: { Authorization: authHeader } } }
+  ).auth.getUser();
+  if (authErr || !user) {
+    return new Response(JSON.stringify({ error: 'Authentication required' }), {
+      status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+    });
   }
 
   try {
@@ -100,7 +115,9 @@ serve(async (req) => {
       signature,
     };
 
-    const clientIp = user_ip || req.headers.get('x-forwarded-for')?.split(',')[0]?.trim() || '1.1.1.1';
+    // Validate IP to prevent header injection — allow only IPv4/IPv6 chars
+    const rawIp = user_ip || req.headers.get('x-forwarded-for')?.split(',')[0]?.trim() || '1.1.1.1';
+    const clientIp = /^[\d.a-fA-F:]{2,45}$/.test(rawIp) ? rawIp : '1.1.1.1';
 
     console.log(`[aviasales-search] Starting search: ${origin} → ${destination}, depart: ${depart_date}, cabin: ${tripClass}, ip: ${clientIp}, marker: ${MARKER}`);
 

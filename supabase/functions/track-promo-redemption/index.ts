@@ -1,5 +1,5 @@
 // track-promo-redemption — validates a promo code use, records redemption, attributes to campaign.
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
+import { createClient } from "npm:@supabase/supabase-js@2.49.1";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -35,7 +35,7 @@ Deno.serve(async (req) => {
 
     const body = await req.json();
     const promoCode = String(body?.promo_code || "").trim().toUpperCase();
-    const userId = String(body?.user_id || callerId);
+    const userId = callerId;
     const orderId = body?.order_id ? String(body.order_id) : null;
     const discountCents = Number(body?.discount_cents || 0);
     const orderTotalCents = Number(body?.order_total_cents || 0);

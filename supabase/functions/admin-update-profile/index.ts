@@ -297,13 +297,7 @@ Deno.serve(async (req) => {
         const userVerified = verifiedProfile?.user_id === userId;
 
         if (!avatarVerified || !coverVerified || !userVerified) {
-          console.error("[admin-update-profile] verification failed:", {
-            userId,
-            expectedAvatarUrl,
-            expectedCoverUrl,
-            savedProfile,
-            verifiedProfile,
-          });
+          console.error("[admin-update-profile] verification failed: avatar/cover/user mismatch");
 
           return new Response(JSON.stringify({ error: "Profile update verification failed" }), {
             status: 500,
@@ -313,7 +307,7 @@ Deno.serve(async (req) => {
       }
     }
 
-    console.log("[admin-update-profile] Updated profile for:", userId, "by:", caller.id, "uploadedUrl:", uploadedUrl);
+    console.log("[admin-update-profile] Profile updated successfully");
 
     return new Response(JSON.stringify({ success: true, uploadedUrl }), {
       status: 200,

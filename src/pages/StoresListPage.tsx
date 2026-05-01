@@ -30,6 +30,9 @@ import {
   CloudOff,
   Trash2,
   RotateCcw,
+  Flame,
+  Timer,
+  ArrowUpDown,
 } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
@@ -55,6 +58,20 @@ const CATEGORY_ICONS: Record<string, string> = {
 };
 
 const FILTER_PREFS = "zivo:stores:filters";
+
+type SortMode = "distance" | "rating" | "name" | "open";
+
+function formatKm(mi: number): string {
+  const km = mi * 1.609344;
+  return km < 1 ? `${Math.round(km * 1000)} m` : `${km.toFixed(1)} km`;
+}
+
+function formatWalk(mi: number): string {
+  const mins = Math.ceil((mi * 1.609344 / 25) * 60);
+  if (mins < 2) return "< 1 min";
+  if (mins >= 60) return `~${Math.round(mins / 60)} h by tuk-tuk`;
+  return `~${mins} min by tuk-tuk`;
+}
 
 const getIcon = (c: string) => CATEGORY_ICONS[c] || CATEGORY_ICONS.default;
 const getLabel = (c: string) => STORE_CATEGORY_OPTIONS.find((o) => o.value === c)?.label || c;
@@ -148,8 +165,32 @@ export default function StoresListPage() {
   const [manageMode, setManageMode] = useState(false);
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [removingFavs, setRemovingFavs] = useState(false);
+  const [sortMode, setSortMode] = useState<SortMode>("distance");
+  const [trendingOnly, setTrendingOnly] = useState(false);
+  const [liveStoreMap, setLiveStoreMap] = useState<Record<string, string>>({});
 
   const { stores: allStores, isLoading, error, refetch, isFetching, isOffline } = useStorePins();
+
+  /* Live pulse for trending badge */
+  useEffect(() => {
+    let active = true;
+    const load = async () => {
+      const cutoff = new Date(Date.now() - 30 * 60 * 1000).toISOString();
+      const { data } = await (supabase as any)
+        .from("shop_live_pulse")
+        .select("store_id, last_purchase_at")
+        .gte("last_purchase_at", cutoff);
+      if (!active) return;
+      const next: Record<string, string> = {};
+      for (const row of data || []) {
+        if (row?.store_id) next[String(row.store_id)] = String(row.last_purchase_at || "");
+      }
+      setLiveStoreMap(next);
+    };
+    load();
+    const t = window.setInterval(load, 60_000);
+    return () => { active = false; window.clearInterval(t); };
+  }, []);
   const {
     isFavorite, toggleFavorite, removeFavorites, isAuthed, favoriteIds,
     pendingSyncCount, syncNow,
@@ -212,15 +253,18 @@ export default function StoresListPage() {
     return STORE_CATEGORY_OPTIONS.filter((o) => present.has(o.value));
   }, [allStores]);
 
+  const trendingCount = useMemo(() => allStores.filter((s) => !!liveStoreMap[s.id]).length, [allStores, liveStoreMap]);
+  const openNowCount = useMemo(() => allStores.filter((s) => isOpenNow(s.hours) === true).length, [allStores]);
+
   const filtered = useMemo(() => {
     const q = searchQuery.trim().toLowerCase();
     let list = allStores.filter((s) => {
       if (showFavorites && !favoriteIds.has(s.id)) return false;
+      if (trendingOnly && !liveStoreMap[s.id]) return false;
       const catOk = activeCategory === "all" || s.category === activeCategory;
       if (!catOk) return false;
       if (openNowOnly) {
-        const open = isOpenNow(s.hours);
-        if (open !== true) return false;
+        if (isOpenNow(s.hours) !== true) return false;
       }
       if (!q) return true;
       return (
@@ -229,15 +273,28 @@ export default function StoresListPage() {
         getLabel(s.category).toLowerCase().includes(q)
       );
     });
-    if (userLoc) {
-      list = [...list].sort(
-        (a, b) =>
-          distanceMiles(userLoc, { lat: a.latitude, lng: a.longitude }) -
-          distanceMiles(userLoc, { lat: b.latitude, lng: b.longitude })
-      );
-    }
+
+    list = [...list].sort((a, b) => {
+      if (sortMode === "distance" && userLoc) {
+        return distanceMiles(userLoc, { lat: a.latitude, lng: a.longitude }) -
+               distanceMiles(userLoc, { lat: b.latitude, lng: b.longitude });
+      }
+      if (sortMode === "rating") {
+        return (b.rating ?? 0) - (a.rating ?? 0);
+      }
+      if (sortMode === "name") {
+        return a.name.localeCompare(b.name);
+      }
+      if (sortMode === "open") {
+        const oa = isOpenNow(a.hours) === true ? 0 : 1;
+        const ob = isOpenNow(b.hours) === true ? 0 : 1;
+        return oa - ob;
+      }
+      return 0;
+    });
+
     return list;
-  }, [allStores, activeCategory, searchQuery, userLoc, showFavorites, openNowOnly, favoriteIds]);
+  }, [allStores, activeCategory, searchQuery, userLoc, showFavorites, openNowOnly, favoriteIds, trendingOnly, liveStoreMap, sortMode]);
 
   const visibleFavoriteIds = useMemo(
     () => filtered.filter((s) => favoriteIds.has(s.id)).map((s) => s.id),
@@ -335,12 +392,13 @@ export default function StoresListPage() {
   };
 
   const renderRow = (s: StorePin) => {
-    const dist = userLoc ? distanceMiles(userLoc, { lat: s.latitude, lng: s.longitude }) : null;
+    const distMi = userLoc ? distanceMiles(userLoc, { lat: s.latitude, lng: s.longitude }) : null;
     const fav = isFavorite(s.id);
     const selected = selectedIds.has(s.id);
     const inManage = manageMode && fav;
     const open = isOpenNow(s.hours);
     const showRating = typeof s.rating === "number" && s.rating > 0;
+    const isLive = !!liveStoreMap[s.id];
 
     return (
       <motion.div
@@ -353,11 +411,14 @@ export default function StoresListPage() {
           onClick={() => { if (inManage) toggleSelected(s.id); else setDrawerStore(s); }}
           className="w-full p-3.5 flex items-center gap-3 text-left"
         >
-          <div className="w-14 h-14 rounded-2xl flex items-center justify-center shrink-0 overflow-hidden bg-muted/40">
+          <div className="relative w-14 h-14 rounded-2xl flex items-center justify-center shrink-0 overflow-hidden bg-muted/40">
             {s.logo_url ? (
               <img src={s.logo_url} alt={s.name} className="w-full h-full object-cover" loading="lazy" />
             ) : (
               <span className="text-2xl">{getIcon(s.category)}</span>
+            )}
+            {isLive && (
+              <span className="absolute top-0.5 right-0.5 w-3 h-3 rounded-full bg-emerald-500 border-2 border-card animate-pulse" />
             )}
           </div>
           <div className="flex-1 min-w-0">
@@ -375,17 +436,22 @@ export default function StoresListPage() {
                 {getLabel(s.category)}
               </span>
               {open != null && (
-                <span
-                  className={`text-[10px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wide ${
-                    open ? "bg-emerald-100 text-emerald-700" : "bg-rose-100 text-rose-700"
-                  }`}
-                >
+                <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wide ${
+                  open ? "bg-emerald-100 text-emerald-700" : "bg-rose-100 text-rose-700"
+                }`}>
                   {open ? "Open" : "Closed"}
                 </span>
               )}
-              {dist != null && (
-                <span className="text-[11px] font-semibold text-muted-foreground">
-                  {dist < 0.1 ? "<0.1" : dist.toFixed(1)} mi
+              {isLive && (
+                <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 flex items-center gap-1">
+                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse inline-block" />
+                  Live
+                </span>
+              )}
+              {distMi != null && (
+                <span className="flex items-center gap-0.5 text-[11px] font-semibold text-muted-foreground">
+                  <Timer className="w-3 h-3" />
+                  {formatKm(distMi)} · {formatWalk(distMi)}
                 </span>
               )}
             </div>
@@ -432,7 +498,7 @@ export default function StoresListPage() {
             </button>
             <div className="w-px bg-border/30" />
             <button
-              onClick={(e) => { e.stopPropagation(); shareStore(s, dist); }}
+              onClick={(e) => { e.stopPropagation(); shareStore(s, distMi); }}
               className="flex-1 h-10 inline-flex items-center justify-center gap-1.5 text-[12px] font-semibold text-primary hover:bg-primary/5 transition"
             >
               <Share2 className="w-3.5 h-3.5" /> Share
@@ -528,7 +594,7 @@ export default function StoresListPage() {
                   <p className="text-[12px] text-muted-foreground mt-0.5 truncate">
                     {manageMode
                       ? `${selectedIds.size} selected · tap rows to choose`
-                      : `${filtered.length} ${filtered.length === 1 ? "store" : "stores"}${userLoc ? " · sorted by distance" : ""}`}
+                      : `${filtered.length} ${filtered.length === 1 ? "store" : "stores"} · ${sortMode === "distance" && userLoc ? "nearest first" : sortMode === "rating" ? "top rated" : sortMode === "name" ? "A–Z" : sortMode === "open" ? "open first" : ""}`}
                   </p>
                 </div>
                 {!manageMode && favoriteIds.size > 0 && (
@@ -556,6 +622,18 @@ export default function StoresListPage() {
                         <Locate className="w-4 h-4" />
                       )}
                       <span className="hidden xs:inline">Recenter</span>
+                    </button>
+                    {/* Sort cycle button: distance → rating → name → open → distance */}
+                    <button
+                      onClick={() => setSortMode((m) => m === "distance" ? "rating" : m === "rating" ? "name" : m === "name" ? "open" : "distance")}
+                      className="w-10 h-10 rounded-full flex items-center justify-center bg-card border border-border/40 shadow-sm text-muted-foreground hover:bg-muted transition relative"
+                      aria-label="Sort stores"
+                      title={`Sort: ${sortMode}`}
+                    >
+                      <ArrowUpDown className="w-[18px] h-[18px]" />
+                      <span className="absolute -bottom-0.5 -right-0.5 text-[8px] font-bold bg-primary text-primary-foreground rounded-full px-1 leading-4">
+                        {sortMode === "distance" ? "↔" : sortMode === "rating" ? "★" : sortMode === "name" ? "A" : "○"}
+                      </span>
                     </button>
                     <button
                       onClick={() => { setSearchOpen(true); setTimeout(() => searchInputRef.current?.focus(), 80); }}
@@ -589,9 +667,9 @@ export default function StoresListPage() {
               <div className="flex gap-2 w-max">
                 <motion.button
                   whileTap={{ scale: 0.95 }}
-                  onClick={() => { setShowFavorites(false); setActiveCategory("all"); }}
+                  onClick={() => { setShowFavorites(false); setActiveCategory("all"); setTrendingOnly(false); }}
                   className={`px-4 h-9 inline-flex items-center rounded-full text-[13px] font-semibold transition-all whitespace-nowrap border ${
-                    !showFavorites && activeCategory === "all"
+                    !showFavorites && !trendingOnly && activeCategory === "all"
                       ? "bg-primary text-primary-foreground border-primary shadow-sm"
                       : "bg-card text-foreground/80 border-border/40"
                   }`}
@@ -608,8 +686,22 @@ export default function StoresListPage() {
                   }`}
                 >
                   <Clock className="w-3.5 h-3.5" />
-                  Open now
+                  Open now ({openNowCount})
                 </motion.button>
+                {trendingCount > 0 && (
+                  <motion.button
+                    whileTap={{ scale: 0.95 }}
+                    onClick={() => { setTrendingOnly((v) => !v); setActiveCategory("all"); setShowFavorites(false); }}
+                    className={`px-4 h-9 inline-flex items-center gap-1.5 rounded-full text-[13px] font-semibold transition-all whitespace-nowrap border ${
+                      trendingOnly
+                        ? "bg-orange-500 text-white border-orange-500 shadow-sm"
+                        : "bg-card text-foreground/80 border-border/40"
+                    }`}
+                  >
+                    <Flame className="w-3.5 h-3.5" />
+                    Trending ({trendingCount})
+                  </motion.button>
+                )}
                 <motion.button
                   whileTap={{ scale: 0.95 }}
                   onClick={() => { setShowFavorites((v) => !v); }}
@@ -736,7 +828,7 @@ export default function StoresListPage() {
             <Button
               variant="outline"
               className="mt-4"
-              onClick={() => { setActiveCategory("all"); setSearchQuery(""); setShowFavorites(false); setOpenNowOnly(false); exitManageMode(); }}
+              onClick={() => { setActiveCategory("all"); setSearchQuery(""); setShowFavorites(false); setOpenNowOnly(false); setTrendingOnly(false); exitManageMode(); }}
             >
               Reset filters
             </Button>
@@ -799,6 +891,7 @@ export default function StoresListPage() {
           categoryLabel={getLabel(drawerStore.category)}
           isFavorite={isFavorite(drawerStore.id)}
           isAuthed={isAuthed}
+          isLive={!!liveStoreMap[drawerStore.id]}
           onClose={() => setDrawerStore(null)}
           onView={(s, promo) => handleViewStore(s, promo)}
           onRide={(s, promo) => handleRide(s, promo)}
@@ -806,6 +899,7 @@ export default function StoresListPage() {
           onShare={(s, d) => shareStore(s, d)}
           onToggleFavorite={handleToggleFavorite}
           onOpenInMap={(s) => navigate(`/store-map?focus=${s.id}`)}
+          onAddToTrail={(s) => navigate(`/store-map?focus=${s.id}&trail=1`)}
           onPromoApplied={(code) =>
             toast.success(`Promo ${code} ready for your next ride or order`)
           }

@@ -3,6 +3,7 @@
  * incident reporting, and emergency contacts
  */
 import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { Shield, ShieldAlert, ShieldCheck, Phone, AlertTriangle, Share2, Lock, Eye, MapPin, Users, FileWarning, CheckCircle, Copy, Megaphone, Radio, Siren, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -25,6 +26,7 @@ const incidentTypes = [
 ];
 
 export default function RideSafetyCenter() {
+  const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState<SafetyTab>("sos");
   const [sosCountdown, setSosCountdown] = useState<number | null>(null);
   const [ridePin] = useState(Math.floor(1000 + Math.random() * 9000).toString());
@@ -129,10 +131,22 @@ export default function RideSafetyCenter() {
               {/* Quick safety tools */}
               <div className="grid grid-cols-2 gap-2">
                 {[
-                  { icon: Phone, label: "Call 911", action: () => toast.info("Calling 911..."), color: "text-red-500 bg-red-500/10" },
+                  { icon: Phone, label: "Call 911", action: () => { window.location.href = "tel:911"; }, color: "text-red-500 bg-red-500/10" },
                   { icon: Radio, label: "Record Audio", action: () => { setAudioRecording(!audioRecording); toast.success(audioRecording ? "Recording stopped" : "Recording started 🔴"); }, color: audioRecording ? "text-red-500 bg-red-500/10" : "text-primary bg-primary/10" },
-                  { icon: Share2, label: "Share Location", action: () => toast.success("Location shared"), color: "text-emerald-500 bg-emerald-500/10" },
-                  { icon: Users, label: "Alert Contacts", action: () => toast.success("Trusted contacts notified"), color: "text-violet-500 bg-violet-500/10" },
+                  { icon: Share2, label: "Share Location", action: () => {
+                    navigator.geolocation.getCurrentPosition(
+                      (pos) => {
+                        const url = `https://maps.google.com/?q=${pos.coords.latitude},${pos.coords.longitude}`;
+                        if (navigator.share) { navigator.share({ title: "My Location", url }); }
+                        else { navigator.clipboard.writeText(url).then(() => toast.success("Location link copied!")); }
+                      },
+                      () => { navigator.clipboard.writeText(shareLink).then(() => toast.success("Trip link copied!")); }
+                    );
+                  }, color: "text-emerald-500 bg-emerald-500/10" },
+                  { icon: Users, label: "Alert Contacts", action: () => {
+                    navigator.clipboard.writeText(`🚨 I need help. Track my ride: ${shareLink}`).then(() => toast.success("Alert message copied — send it to your contacts"));
+                    navigate("/chat");
+                  }, color: "text-violet-500 bg-violet-500/10" },
                 ].map(tool => (
                   <button key={tool.label} onClick={tool.action} className="flex items-center gap-2.5 p-3 rounded-xl bg-card border border-border/40 active:scale-95 transition-transform">
                     <div className={cn("w-9 h-9 rounded-lg flex items-center justify-center", tool.color)}>

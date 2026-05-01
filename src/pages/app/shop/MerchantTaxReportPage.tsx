@@ -33,7 +33,7 @@ export default function MerchantTaxReportPage() {
       if (!user) return null;
       const { data } = await (supabase as any)
         .from("store_profiles")
-        .select("id, store_name")
+        .select("id, name")
         .eq("owner_id", user.id)
         .maybeSingle();
       return data;
@@ -97,7 +97,7 @@ export default function MerchantTaxReportPage() {
   const handleDownload = (summary: MonthSummary) => {
     const csv = [
       "Tax Summary Report",
-      `Store: ${store?.store_name}`,
+      `Store: ${store?.name}`,
       `Period: ${summary.label}`,
       "",
       "Metric,Value",

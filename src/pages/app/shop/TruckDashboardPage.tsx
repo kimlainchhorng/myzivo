@@ -112,17 +112,54 @@ export default function TruckDashboardPage() {
     })();
   }, [user]);
 
-  // Simulate nearby customers based on GPS
+  // Load recent customers from store_orders
   useEffect(() => {
-    if (!userLat || !userLng || !storeId) return;
-    // In production, query store_orders with customer locations
-    // For now, show demo data
-    setNearbyCustomers([
-      { id: "1", name: "Customer nearby", lat: userLat + 0.002, lng: userLng + 0.001, distance_km: 0.3 },
-      { id: "2", name: "Regular buyer", lat: userLat - 0.005, lng: userLng + 0.003, distance_km: 0.7 },
-      { id: "3", name: "New customer", lat: userLat + 0.008, lng: userLng - 0.004, distance_km: 1.1 },
-    ]);
-  }, [userLat, userLng, storeId]);
+    if (!storeId) return;
+    (async () => {
+      try {
+        const { data: orders } = await (supabase as any)
+          .from("store_orders")
+          .select("id, customer_id, created_at")
+          .eq("store_id", storeId)
+          .order("created_at", { ascending: false })
+          .limit(20);
+
+        if (!orders?.length) return;
+        const customerIds = [...new Set((orders as any[]).map((o: any) => o.customer_id).filter(Boolean))] as string[];
+        if (!customerIds.length) return;
+
+        const { data: profiles } = await (supabase as any)
+          .from("profiles")
+          .select("id, user_id, full_name")
+          .or(`id.in.(${customerIds.join(",")}),user_id.in.(${customerIds.join(",")})`);
+
+        const nameMap = new Map<string, string>();
+        (profiles || []).forEach((p: any) => {
+          if (p.id) nameMap.set(p.id, p.full_name || "Customer");
+          if (p.user_id) nameMap.set(p.user_id, p.full_name || "Customer");
+        });
+
+        const seen = new Set<string>();
+        const customers: NearbyCustomer[] = [];
+        for (const o of orders as any[]) {
+          if (!o.customer_id || seen.has(o.customer_id)) continue;
+          seen.add(o.customer_id);
+          customers.push({
+            id: o.customer_id,
+            name: nameMap.get(o.customer_id) || "Customer",
+            lat: userLat ?? 0,
+            lng: userLng ?? 0,
+            distance_km: 0,
+            last_order: o.created_at,
+          });
+          if (customers.length >= 5) break;
+        }
+        setNearbyCustomers(customers);
+      } catch {
+        // Non-critical
+      }
+    })();
+  }, [storeId, userLat, userLng]);
 
   const handleBarcodeScan = useCallback(async () => {
     if (!barcodeInput.trim() || !storeId) return;
@@ -204,7 +241,7 @@ export default function TruckDashboardPage() {
               <CardContent className="p-3 text-center">
                 <Users className="h-4 w-4 mx-auto mb-1 text-amber-500" />
                 <p className="text-lg font-bold">{nearbyCustomers.length}</p>
-                <p className="text-[10px] text-muted-foreground">Nearby</p>
+                <p className="text-[10px] text-muted-foreground">Customers</p>
               </CardContent>
             </Card>
             <Card className="border-border/30">
@@ -247,43 +284,40 @@ export default function TruckDashboardPage() {
             </CardContent>
           </Card>
 
-          {/* Nearby Customers */}
+          {/* Recent Customers */}
           <div>
             <p className="text-sm font-bold mb-2 flex items-center gap-2">
-              <Navigation className="h-4 w-4 text-primary" />
-              Nearby Customers
+              <Users className="h-4 w-4 text-primary" />
+              Recent Customers
             </p>
-            <div className="space-y-2">
-              {nearbyCustomers.map((c) => (
-                <Card key={c.id} className="border-border/30">
-                  <CardContent className="p-3 flex items-center justify-between">
-                    <div>
-                      <p className="text-sm font-semibold">{c.name}</p>
-                      <p className="text-[11px] text-muted-foreground flex items-center gap-1">
-                        <MapPin className="h-3 w-3" />
-                        {c.distance_km < 1
-                          ? `${Math.round(c.distance_km * 1000)}m away`
-                          : `${c.distance_km.toFixed(1)}km away`}
-                      </p>
-                    </div>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      className="text-xs rounded-xl"
-                      onClick={() => {
-                        window.open(
-                          `https://www.google.com/maps/dir/?api=1&destination=${c.lat},${c.lng}`,
-                          "_blank"
-                        );
-                      }}
-                    >
-                      <Navigation className="h-3 w-3 mr-1" />
-                      Navigate
-                    </Button>
-                  </CardContent>
-                </Card>
-              ))}
-            </div>
+            {nearbyCustomers.length === 0 ? (
+              <p className="text-xs text-muted-foreground py-2">No recent orders yet</p>
+            ) : (
+              <div className="space-y-2">
+                {nearbyCustomers.map((c) => (
+                  <Card key={c.id} className="border-border/30">
+                    <CardContent className="p-3 flex items-center justify-between">
+                      <div>
+                        <p className="text-sm font-semibold">{c.name}</p>
+                        {c.last_order && (
+                          <p className="text-[11px] text-muted-foreground">
+                            Last order: {new Date(c.last_order).toLocaleDateString()}
+                          </p>
+                        )}
+                      </div>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="text-xs rounded-xl"
+                        onClick={() => navigate("/chat", { state: { openChat: { userId: c.id, userName: c.name } } })}
+                      >
+                        Message
+                      </Button>
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
+            )}
           </div>
 
           {/* Inventory List */}

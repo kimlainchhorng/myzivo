@@ -230,6 +230,22 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       }
 
       if (!error) {
+        // Block driver accounts from signing into the passenger app
+        try {
+          const { data: { user: signedInUser } } = await supabase.auth.getUser();
+          if (signedInUser) {
+            const { data: isDriver } = await (supabase as any).rpc("is_driver", {
+              p_user_id: signedInUser.id,
+            });
+            if (isDriver) {
+              await supabase.auth.signOut();
+              return { error: new Error("DRIVER_ACCOUNT") };
+            }
+          }
+        } catch {
+          // Non-critical — if the check fails, proceed (fail-open for availability)
+        }
+
         loginGraceUntilRef.current = Date.now() + 15_000;
 
         // Reset session-security timers at the exact moment of successful auth.

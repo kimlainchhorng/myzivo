@@ -1,4 +1,5 @@
 import { createClient } from "npm:@supabase/supabase-js@2.57.2";
+import { rateLimitDb, rateLimitHeaders } from "../_shared/rateLimiter.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -7,12 +8,9 @@ const corsHeaders = {
 };
 
 function generateOTP(): string {
-  const digits = "0123456789";
-  let otp = "";
-  for (let i = 0; i < 6; i++) {
-    otp += digits[Math.floor(Math.random() * 10)];
-  }
-  return otp;
+  const bytes = crypto.getRandomValues(new Uint8Array(4));
+  const num = new DataView(bytes.buffer).getUint32(0) % 1_000_000;
+  return num.toString().padStart(6, "0");
 }
 
 Deno.serve(async (req) => {
@@ -136,7 +134,7 @@ Deno.serve(async (req) => {
       // The OTP is already stored, we need to notify the user
       // Best approach: Use the stored code and display it via the app notification
 
-      console.log(`OTP ${otp} generated for user ${user.email} store ${store_id}`);
+      console.log(`OTP generated for store ${store_id}`);
 
       return new Response(
         JSON.stringify({ 
@@ -153,6 +151,15 @@ Deno.serve(async (req) => {
           status: 400,
           headers: { ...corsHeaders, "Content-Type": "application/json" },
         });
+      }
+
+      // Rate limit: max 10 verify attempts per user per 15 minutes
+      const rl = await rateLimitDb(user.id, "auth_otp", { max: 10, windowSec: 900 });
+      if (!rl.allowed) {
+        return new Response(
+          JSON.stringify({ error: "Too many verification attempts. Try again later." }),
+          { status: 429, headers: { ...corsHeaders, "Content-Type": "application/json", ...rateLimitHeaders(rl, "auth_otp") } }
+        );
       }
 
       // Find a valid, unused code

@@ -124,7 +124,7 @@ const handler = withErrorHandling(async (req: Request): Promise<Response> => {
     `,
   });
 
-  console.log("OTP email sent successfully:", emailResponse);
+  console.log("OTP email sent successfully");
 
   return ok(req, { success: true, message: "Verification code sent", expiresAt });
 }, "send-otp-email");

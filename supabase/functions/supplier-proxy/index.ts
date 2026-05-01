@@ -15,12 +15,9 @@
  * - This is a best-effort embed — some sites still break (CSP script-src,
  *   geolocated bot walls). UI shows a graceful fallback when that happens.
  */
-import { corsHeaders } from "https://esm.sh/@supabase/supabase-js@2.95.0/cors";
-
 const getCorsHeaders = (req: Request): Record<string, string> => {
   const origin = req.headers.get("origin") ?? "*";
   return {
-    ...corsHeaders,
     "Access-Control-Allow-Origin": origin,
     "Access-Control-Allow-Credentials": "true",
     "Access-Control-Allow-Methods": "GET, POST, PUT, PATCH, DELETE, OPTIONS",

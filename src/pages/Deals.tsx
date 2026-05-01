@@ -5,6 +5,7 @@
  */
 
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
@@ -60,6 +61,7 @@ const categoryConfig: Record<DealCategoryType, { label: string; icon: typeof Pla
 };
 
 export default function Deals() {
+  const navigate = useNavigate();
   const [activeCategory, setActiveCategory] = useState<DealCategoryType>('all');
   const [email, setEmail] = useState("");
   const [submittingDeals, setSubmittingDeals] = useState(false);
@@ -264,8 +266,9 @@ export default function Deals() {
                 ZIVO Plus members get 24-hour early access to flash deals, 
                 priority price alerts, and exclusive member discounts.
               </p>
-              <Button 
-                size="lg" 
+              <Button
+                size="lg"
+                onClick={() => navigate("/zivo-plus")}
                 className="gap-2 rounded-2xl font-bold shadow-lg shadow-primary/25 bg-gradient-to-r from-primary to-emerald-500 hover:from-primary/90 hover:to-emerald-500/90 text-primary-foreground active:scale-[0.98] transition-all h-13 px-8"
               >
                 <Gift className="w-5 h-5" />

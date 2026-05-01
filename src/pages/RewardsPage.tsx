@@ -97,6 +97,38 @@ export default function RewardsPage() {
     staleTime: 5 * 60_000,
   });
 
+  /* ── Referral count ── */
+  const { data: referralCount = 0 } = useQuery({
+    queryKey: ["rewards-referral-count", user?.id],
+    queryFn: async () => {
+      if (!user?.id) return 0;
+      const { count } = await (supabase as any)
+        .from("referrals")
+        .select("id", { count: "exact", head: true })
+        .eq("referrer_user_id", user.id);
+      return count ?? 0;
+    },
+    enabled: !!user,
+    staleTime: 5 * 60_000,
+  });
+
+  /* ── Completed actions from loyalty_transactions ── */
+  const { data: completedActions = ["account_creation"] } = useQuery({
+    queryKey: ["rewards-completed-actions", user?.id],
+    queryFn: async () => {
+      if (!user?.id) return ["account_creation"];
+      const { data } = await (supabase as any)
+        .from("loyalty_transactions")
+        .select("transaction_type")
+        .eq("member_id", user.id);
+      const types = new Set((data || []).map((r: any) => r.transaction_type as string));
+      types.add("account_creation");
+      return [...types];
+    },
+    enabled: !!user,
+    staleTime: 5 * 60_000,
+  });
+
   /* ── Points history: last 6 months ── */
   const { data: monthlyPoints = [] } = useQuery({
     queryKey: ["rewards-monthly-points", user?.id],
@@ -201,11 +233,11 @@ export default function RewardsPage() {
             
             <TabsContent value="overview" className="space-y-5">
               <TierProgressCard />
-              <PointsEarningList completedActions={['account_creation']} />
+              <PointsEarningList completedActions={completedActions} />
             </TabsContent>
             
             <TabsContent value="earn" className="space-y-5">
-              <PointsEarningList completedActions={['account_creation']} />
+              <PointsEarningList completedActions={completedActions} />
               <Card className="border-primary/15 bg-primary/5">
                 <CardContent className="p-4 flex items-start gap-3">
                   <div className="w-8 h-8 rounded-xl bg-primary/10 flex items-center justify-center shrink-0 mt-0.5">
@@ -223,9 +255,9 @@ export default function RewardsPage() {
             </TabsContent>
             
             <TabsContent value="refer">
-              <ReferralCard 
+              <ReferralCard
                 referralCode={user?.id?.slice(0, 8).toUpperCase() || "ZIVO-NEW"}
-                referralCount={0}
+                referralCount={referralCount}
               />
             </TabsContent>
           </Tabs>

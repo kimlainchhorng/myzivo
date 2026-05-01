@@ -4,6 +4,7 @@
  */
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { motion, AnimatePresence } from "framer-motion";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { Sheet, SheetContent } from "@/components/ui/sheet";
@@ -67,6 +68,10 @@ export default function ChatHeaderProfileSheet({
   const [bio, setBio] = useState<string | null>(null);
   const [counts, setCounts] = useState({ media: 0, files: 0, links: 0 });
   const [lastSeen, setLastSeen] = useState<string | null>(null);
+  const [showReport, setShowReport] = useState(false);
+  const [reportReason, setReportReason] = useState<string | null>(null);
+
+  const REPORT_REASONS = ["Spam", "Harassment", "Fake profile", "Inappropriate content", "Scam", "Other"];
 
   useEffect(() => {
     if (!open || !partner.id || !user?.id) return;
@@ -179,10 +184,40 @@ export default function ChatHeaderProfileSheet({
             <Eraser className="w-4 h-4" />
             <span className="text-sm font-medium">Clear history</span>
           </button>
-          <button onClick={() => toast.success("Reported. Thank you.")} className="w-full flex items-center gap-3 px-4 py-3 text-left hover:bg-muted/40">
-            <Flag className="w-4 h-4" />
-            <span className="text-sm font-medium">Report user</span>
-          </button>
+          <div>
+            <button onClick={() => { setShowReport(v => !v); setReportReason(null); }} className="w-full flex items-center gap-3 px-4 py-3 text-left hover:bg-muted/40">
+              <Flag className="w-4 h-4" />
+              <span className="text-sm font-medium">Report user</span>
+            </button>
+            <AnimatePresence>
+              {showReport && (
+                <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: "auto" }} exit={{ opacity: 0, height: 0 }} className="overflow-hidden px-4 pb-3">
+                  <p className="text-xs text-muted-foreground mb-2">Select a reason:</p>
+                  <div className="flex flex-wrap gap-1.5 mb-3">
+                    {REPORT_REASONS.map(r => (
+                      <button key={r} onClick={() => setReportReason(r)} className={`px-2.5 py-1 rounded-lg text-xs font-medium border transition-all ${reportReason === r ? "bg-destructive text-destructive-foreground border-destructive" : "bg-muted/40 border-border/30"}`}>
+                        {r}
+                      </button>
+                    ))}
+                  </div>
+                  <button
+                    disabled={!reportReason}
+                    onClick={async () => {
+                      if (user?.id) {
+                        await dbFrom("user_reports").insert({ reporter_id: user.id, reported_id: partner.id, reason: reportReason });
+                      }
+                      toast.success("Report submitted. Our team will review it.");
+                      setShowReport(false);
+                      setReportReason(null);
+                    }}
+                    className="w-full py-2 rounded-lg bg-destructive text-destructive-foreground text-xs font-bold disabled:opacity-40 transition-opacity"
+                  >
+                    Submit Report
+                  </button>
+                </motion.div>
+              )}
+            </AnimatePresence>
+          </div>
           <button onClick={block} className="w-full flex items-center gap-3 px-4 py-3 text-left text-destructive hover:bg-destructive/10">
             <ShieldOff className="w-4 h-4" />
             <span className="text-sm font-medium">Block user</span>

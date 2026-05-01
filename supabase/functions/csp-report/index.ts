@@ -2,7 +2,7 @@
 // Browsers POST violation reports here. We log them to public.csp_violations
 // so admins can review and tune the policy before switching to enforce mode.
 
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2.57.2";
+import { createClient } from "../_shared/deps.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",

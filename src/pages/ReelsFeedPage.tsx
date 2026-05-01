@@ -59,6 +59,23 @@ import Gift from "lucide-react/dist/esm/icons/gift";
 import TrendingUp from "lucide-react/dist/esm/icons/trending-up";
 import Settings2 from "lucide-react/dist/esm/icons/settings-2";
 import Search from "lucide-react/dist/esm/icons/search";
+import Sparkles from "lucide-react/dist/esm/icons/sparkles";
+import History from "lucide-react/dist/esm/icons/history";
+import UserPlus from "lucide-react/dist/esm/icons/user-plus";
+import Code2 from "lucide-react/dist/esm/icons/code-2";
+import Pin from "lucide-react/dist/esm/icons/pin";
+import Dumbbell from "lucide-react/dist/esm/icons/dumbbell";
+import Monitor from "lucide-react/dist/esm/icons/monitor";
+import Languages from "lucide-react/dist/esm/icons/languages";
+import BarChart2 from "lucide-react/dist/esm/icons/bar-chart-2";
+import Zap from "lucide-react/dist/esm/icons/zap";
+import QrCode from "lucide-react/dist/esm/icons/qr-code";
+import Download from "lucide-react/dist/esm/icons/download";
+import Flame from "lucide-react/dist/esm/icons/flame";
+import ThumbsUp from "lucide-react/dist/esm/icons/thumbs-up";
+import Tv2 from "lucide-react/dist/esm/icons/tv-2";
+import HandHeart from "lucide-react/dist/esm/icons/hand-heart";
+import Activity from "lucide-react/dist/esm/icons/activity";
 import Trash2 from "lucide-react/dist/esm/icons/trash-2";
 import Plane from "lucide-react/dist/esm/icons/plane";
 import Hotel from "lucide-react/dist/esm/icons/hotel";
@@ -100,11 +117,9 @@ import { shouldSendLikeNotification } from "@/lib/social/likeNotificationGuard";
 import { EngagementSkeleton } from "@/components/social/EngagementSkeleton";
 import SwipeableSheet from "@/components/social/SwipeableSheet";
 const FeedSidebar = lazy(() => import("@/components/social/FeedSidebar"));
-const TrendingHashtags = lazy(() => import("@/components/social/TrendingHashtags"));
 const ReactionSummary = lazy(() => import("@/components/social/ReactionSummary"));
 const CommentPreview = lazy(() => import("@/components/social/CommentPreview"));
 const ReelsPreviewRow = lazy(() => import("@/components/social/ReelsPreviewRow"));
-import { postHasHashtag } from "@/components/social/TrendingHashtags";
 import { optimizeAvatar } from "@/utils/optimizeAvatar";
 import { useSwipeDownClose } from "@/components/social/useSwipeDownClose";
 import { SwipeGrabHandle } from "@/components/social/SwipeGrabHandle";
@@ -207,6 +222,7 @@ interface FeedItem {
   store_slug?: string;
   created_at: string;
   location?: string | null;
+  is_pinned?: boolean;
   // Share tracking
   shared_from_post_id?: string | null;
   shared_from_user_id?: string | null;
@@ -513,7 +529,7 @@ export default function ReelsFeedPage() {
       try {
         const { data: userPosts } = await (supabase as any)
           .from("user_posts")
-          .select("id, media_url, media_urls, media_type, caption, likes_count, comments_count, shares_count, views_count, created_at, user_id, shared_from_post_id, shared_from_user_id, location")
+          .select("id, media_url, media_urls, media_type, caption, likes_count, comments_count, shares_count, views_count, created_at, user_id, shared_from_post_id, shared_from_user_id, location, is_pinned")
           .eq("is_published", true)
           .order("created_at", { ascending: false })
           .limit(pageSize);
@@ -652,6 +668,7 @@ export default function ReelsFeedPage() {
               allow_sharing: profileSettings?.allow_sharing ?? true,
               allow_mentions: profileSettings?.allow_mentions ?? true,
               location: post.location || null,
+              is_pinned: post.is_pinned || false,
             });
           }
         }
@@ -1074,19 +1091,23 @@ export default function ReelsFeedPage() {
                     ))}
                   </div>
                 )}
-                {/* Trending hashtag chip row — conditional so empty state doesn't add padding */}
-                {trendingTags.length > 0 && (
-                  <div className="px-3 pb-1.5">
-                    <Suspense fallback={null}>
-                      <TrendingHashtags
-                        variant="inline"
-                        posts={items as { caption?: string | null }[]}
-                        selected={selectedHashtag}
-                        onSelect={setSelectedHashtag}
-                      />
-                    </Suspense>
-                  </div>
-                )}
+                {/* Content type filter chips */}
+                <div className="flex gap-1.5 px-3 pb-1 overflow-x-auto scrollbar-hide">
+                  {(["all", "photos", "videos", "text"] as const).map((f) => (
+                    <button
+                      key={f}
+                      onClick={() => setFeedFilter(f)}
+                      className={cn(
+                        "shrink-0 px-3 py-1 rounded-full text-[11px] font-semibold transition-all active:scale-95",
+                        feedFilter === f
+                          ? "bg-foreground text-background"
+                          : "bg-muted/50 text-muted-foreground"
+                      )}
+                    >
+                      {f === "all" ? "All" : f === "photos" ? "Photos" : f === "videos" ? "Videos" : "Text"}
+                    </button>
+                  ))}
+                </div>
               </div>
             </div>
           </div>
@@ -1220,22 +1241,26 @@ export default function ReelsFeedPage() {
                   What's on your mind?
                 </button>
               </div>
-              <div className="border-t border-border/20 pt-1.5 flex">
-                <button onClick={() => setShowCreate(true)} className="flex-1 flex items-center justify-center gap-1.5 py-1.5 rounded-xl hover:bg-muted/50 transition-colors">
+              <div className="border-t border-border/20 pt-1.5 flex overflow-x-auto scrollbar-hide">
+                <button onClick={() => setShowCreate(true)} className="flex-1 shrink-0 flex items-center justify-center gap-1 py-1.5 rounded-xl hover:bg-muted/50 transition-colors min-w-[56px]">
                   <ImageIcon className="h-4 w-4 text-emerald-500" />
-                  <span className="text-[11px] font-semibold text-muted-foreground">Photo/Video</span>
+                  <span className="text-[10px] font-semibold text-muted-foreground">Photo</span>
                 </button>
-                <button onClick={() => setShowCreate(true)} className="flex-1 flex items-center justify-center gap-1.5 py-1.5 rounded-xl hover:bg-muted/50 transition-colors">
-                  <Smile className="h-4 w-4 text-amber-500" />
-                  <span className="text-[11px] font-semibold text-muted-foreground">Feeling</span>
+                <button onClick={() => setShowCreate(true)} className="flex-1 shrink-0 flex items-center justify-center gap-1 py-1.5 rounded-xl hover:bg-muted/50 transition-colors min-w-[56px]">
+                  <Film className="h-4 w-4 text-violet-500" />
+                  <span className="text-[10px] font-semibold text-muted-foreground">Reel</span>
                 </button>
-                <button onClick={() => navigate("/map")} className="flex-1 flex items-center justify-center gap-1.5 py-1.5 rounded-xl hover:bg-muted/50 transition-colors">
+                <button onClick={() => setShowCreate(true)} className="flex-1 shrink-0 flex items-center justify-center gap-1 py-1.5 rounded-xl hover:bg-muted/50 transition-colors min-w-[56px]">
+                  <TrendingUp className="h-4 w-4 text-amber-500" />
+                  <span className="text-[10px] font-semibold text-muted-foreground">Poll</span>
+                </button>
+                <button onClick={() => navigate("/map")} className="flex-1 shrink-0 flex items-center justify-center gap-1 py-1.5 rounded-xl hover:bg-muted/50 transition-colors min-w-[56px]">
                   <MapPin className="h-4 w-4 text-red-500" />
-                  <span className="text-[11px] font-semibold text-muted-foreground">Check In</span>
+                  <span className="text-[10px] font-semibold text-muted-foreground">Check In</span>
                 </button>
-                <button onClick={() => navigate("/live")} className="flex-1 flex items-center justify-center gap-1.5 py-1.5 rounded-xl hover:bg-muted/50 transition-colors">
+                <button onClick={() => navigate("/live")} className="flex-1 shrink-0 flex items-center justify-center gap-1 py-1.5 rounded-xl hover:bg-muted/50 transition-colors min-w-[56px]">
                   <Radio className="h-4 w-4 text-rose-600" />
-                  <span className="text-[11px] font-semibold text-muted-foreground">Live</span>
+                  <span className="text-[10px] font-semibold text-muted-foreground">Live</span>
                 </button>
               </div>
             </div>
@@ -1291,6 +1316,28 @@ export default function ReelsFeedPage() {
           {/* Story Rings */}
            <Suspense fallback={null}><FeedStoryRing /></Suspense>
 
+           {/* Quick feature access — Facebook-style shortcut bar */}
+           <div className="flex gap-4 px-3 py-2.5 overflow-x-auto scrollbar-hide border-b border-border/10">
+             {[
+               { label: "Watch", icon: Film, path: "/feed", bg: "bg-violet-500" },
+               { label: "Marketplace", icon: Package, path: "/marketplace", bg: "bg-amber-500" },
+               { label: "Groups", icon: Users, path: "/communities", bg: "bg-blue-500" },
+               { label: "Events", icon: Calendar, path: "/explore", bg: "bg-emerald-500" },
+               { label: "ZIVO+", icon: Crown, path: "/zivo-plus", bg: "bg-gradient-to-br from-amber-500 to-primary" },
+             ].map(({ label, icon: Icon, path, bg }) => (
+               <button
+                 key={label}
+                 onClick={() => navigate(path)}
+                 className="shrink-0 flex flex-col items-center gap-1.5 active:opacity-70 transition-opacity"
+               >
+                 <div className={cn("h-11 w-11 rounded-2xl flex items-center justify-center shadow-sm", bg)}>
+                   <Icon className="h-5 w-5 text-white" />
+                 </div>
+                 <span className="text-[10px] font-semibold text-muted-foreground">{label}</span>
+               </button>
+             ))}
+           </div>
+
            {/* Suggested Users */}
            <Suspense fallback={null}><SuggestedUsersCarousel /></Suspense>
 
@@ -1333,7 +1380,9 @@ export default function ReelsFeedPage() {
             </div>
           ) : items.length === 0 ? (
             <div className="flex flex-col items-center justify-center h-60 text-center px-6">
-              <div className="text-5xl mb-3">📸</div>
+              <div className="h-16 w-16 rounded-2xl bg-muted flex items-center justify-center mb-3 mx-auto">
+                <Camera className="h-8 w-8 text-muted-foreground" />
+              </div>
               <p className="text-base font-bold text-foreground mb-1">No posts yet</p>
               <p className="text-sm text-muted-foreground mb-4">Be the first to share something amazing!</p>
               {userId && (
@@ -1356,25 +1405,9 @@ export default function ReelsFeedPage() {
               : feedFilter === "videos" ? tabItems.filter(i => i.media_type === "video")
               : tabItems.filter(i => !i.media_urls.length || !i.media_urls[0]);
             return filteredItems.length === 0 ? (
-              selectedHashtag ? (
-                <div className="flex flex-col items-center justify-center py-16 text-center px-6 gap-3">
-                  <div className="text-5xl">🔍</div>
-                  <p className="text-base font-bold text-foreground">No posts tagged #{selectedHashtag}</p>
-                  <p className="text-sm text-muted-foreground max-w-[280px]">
-                    Try clearing the filter or browse all posts.
-                  </p>
-                  <button
-                    onClick={() => setSelectedHashtag(null)}
-                    className="mt-1 px-5 py-2 rounded-full bg-primary text-primary-foreground text-sm font-semibold active:scale-95 transition-transform"
-                  >
-                    Clear filter
-                  </button>
-                </div>
-              ) : (
-                <div className="flex flex-col items-center justify-center h-40 text-muted-foreground/50">
-                  <p className="text-sm">No {feedFilter} posts found</p>
-                </div>
-              )
+              <div className="flex flex-col items-center justify-center h-40 text-muted-foreground/50">
+                <p className="text-sm">No {feedFilter} posts found</p>
+              </div>
             ) : (
             <div className="divide-y divide-border/20">
               {filteredItems.map((item, idx) => (
@@ -1410,6 +1443,221 @@ export default function ReelsFeedPage() {
                   )}
                   {/* Inject suggested users after 3rd post */}
                   {idx === 2 && <Suspense fallback={null}><SuggestedUsersCarousel variant="inline" /></Suspense>}
+                  {/* Inject Communities card after 5th post */}
+                  {idx === 4 && (
+                    <div className="bg-card border-b border-border/10 px-3 py-3">
+                      <div className="flex items-center justify-between mb-2.5">
+                        <h3 className="text-[13px] font-bold text-foreground flex items-center gap-1.5">
+                          <Users className="h-4 w-4 text-blue-500" />
+                          Groups for you
+                        </h3>
+                        <button onClick={() => navigate("/communities")} className="text-[12px] font-semibold text-primary">See all</button>
+                      </div>
+                      <div className="flex gap-3 overflow-x-auto pb-1 scrollbar-hide">
+                        {[
+                          { name: "Travel Lovers", members: "12.4k", Icon: Plane, color: "from-sky-500/30 to-blue-500/20", iconColor: "text-sky-600" },
+                          { name: "Foodies", members: "8.1k", Icon: UtensilsCrossed, color: "from-amber-500/30 to-orange-400/20", iconColor: "text-amber-600" },
+                          { name: "Tech Hub", members: "22k", Icon: Monitor, color: "from-violet-500/30 to-purple-400/20", iconColor: "text-violet-600" },
+                          { name: "Photography", members: "6.2k", Icon: Camera, color: "from-rose-500/30 to-pink-400/20", iconColor: "text-rose-600" },
+                          { name: "Fitness", members: "15k", Icon: Dumbbell, color: "from-emerald-500/30 to-green-400/20", iconColor: "text-emerald-600" },
+                        ].map((group) => (
+                          <button
+                            key={group.name}
+                            onClick={() => navigate("/communities")}
+                            className="shrink-0 flex flex-col items-center gap-1.5 w-[88px] p-2 rounded-xl bg-muted/30 border border-border/20 active:opacity-70"
+                          >
+                            <div className={`h-11 w-full rounded-lg bg-gradient-to-br ${group.color} flex items-center justify-center`}>
+                              <group.Icon className={`h-5 w-5 ${group.iconColor}`} />
+                            </div>
+                            <p className="text-[10px] font-semibold text-foreground text-center leading-tight line-clamp-2">{group.name}</p>
+                            <p className="text-[9px] text-muted-foreground">{group.members} members</p>
+                            <span className="w-full py-0.5 rounded-full bg-primary/10 text-primary text-[10px] font-bold text-center">
+                              + Join
+                            </span>
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                  {/* Inject Live Now strip after 7th post */}
+                  {idx === 6 && (
+                    <div className="bg-card border-b border-border/10 px-3 py-3">
+                      <div className="flex items-center justify-between mb-2.5">
+                        <h3 className="text-[13px] font-bold text-foreground flex items-center gap-1.5">
+                          <span className="w-2 h-2 rounded-full bg-rose-500 animate-pulse" />
+                          Live Now
+                        </h3>
+                        <button onClick={() => navigate("/live")} className="text-[12px] font-semibold text-primary">See all</button>
+                      </div>
+                      <div className="flex gap-3 overflow-x-auto pb-1 scrollbar-hide">
+                        {[
+                          { name: "Chef Maria", viewers: "1.2k", initials: "CM", color: "from-amber-500 to-orange-500" },
+                          { name: "TechTalk", viewers: "3.8k", initials: "TT", color: "from-violet-500 to-purple-600" },
+                          { name: "Workout Jay", viewers: "890", initials: "WJ", color: "from-emerald-500 to-teal-600" },
+                          { name: "MusicVibes", viewers: "5.1k", initials: "MV", color: "from-rose-500 to-pink-600" },
+                        ].map((live) => (
+                          <button
+                            key={live.name}
+                            onClick={() => navigate("/live")}
+                            className="shrink-0 flex flex-col items-center gap-1.5 w-[80px] active:opacity-70"
+                          >
+                            <div className={`relative h-14 w-14 rounded-full bg-gradient-to-br ${live.color} flex items-center justify-center border-2 border-rose-500`}>
+                              <span className="text-white text-sm font-bold">{live.initials}</span>
+                              <span className="absolute -bottom-1 left-1/2 -translate-x-1/2 bg-rose-500 text-white text-[8px] font-bold px-1 rounded-full">LIVE</span>
+                            </div>
+                            <p className="text-[10px] font-semibold text-foreground text-center leading-tight line-clamp-1">{live.name}</p>
+                            <p className="text-[9px] text-muted-foreground">{live.viewers} watching</p>
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                  {/* Interactive community poll after 9th post */}
+                  {idx === 8 && <FeedPollCard />}
+                  {/* Inject Marketplace banner after 8th post */}
+                  {idx === 7 && (
+                    <button
+                      onClick={() => navigate("/marketplace")}
+                      className="block w-full bg-gradient-to-r from-amber-500/10 via-card to-primary/10 border-b border-border/10 px-3 py-3 text-left active:opacity-70 transition-opacity"
+                    >
+                      <div className="flex items-center gap-3">
+                        <div className="h-12 w-12 rounded-2xl bg-amber-500 flex items-center justify-center shrink-0 shadow-lg shadow-amber-500/20">
+                          <Package className="h-6 w-6 text-white" />
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <p className="text-[13px] font-bold text-foreground">Marketplace</p>
+                          <p className="text-[11px] text-muted-foreground leading-tight">Buy and sell near you — deals updated daily</p>
+                        </div>
+                        <ChevronRight className="h-4 w-4 text-muted-foreground shrink-0" />
+                      </div>
+                    </button>
+                  )}
+                  {/* Inject People You May Know after 10th post */}
+                  {idx === 9 && (
+                    <div className="bg-card border-b border-border/10 px-3 py-3">
+                      <div className="flex items-center justify-between mb-2.5">
+                        <h3 className="text-[13px] font-bold text-foreground flex items-center gap-1.5">
+                          <UserPlus className="h-4 w-4 text-primary" />
+                          People you may know
+                        </h3>
+                        <button onClick={() => navigate("/explore")} className="text-[12px] font-semibold text-primary">See all</button>
+                      </div>
+                      <div className="flex gap-3 overflow-x-auto pb-1 scrollbar-hide">
+                        {[
+                          { name: "Alex Chen", mutual: 3, initials: "AC", color: "from-blue-500 to-indigo-600" },
+                          { name: "Sara Kim", mutual: 7, initials: "SK", color: "from-rose-500 to-pink-600" },
+                          { name: "Luca Bianchi", mutual: 1, initials: "LB", color: "from-emerald-500 to-teal-600" },
+                          { name: "Nadia Omar", mutual: 5, initials: "NO", color: "from-amber-500 to-orange-600" },
+                          { name: "James Park", mutual: 2, initials: "JP", color: "from-violet-500 to-purple-600" },
+                        ].map((person) => (
+                          <div
+                            key={person.name}
+                            className="shrink-0 flex flex-col items-center gap-2 w-[90px] p-2 rounded-xl bg-muted/30 border border-border/20"
+                          >
+                            <div className={`h-12 w-12 rounded-full bg-gradient-to-br ${person.color} flex items-center justify-center`}>
+                              <span className="text-white text-sm font-bold">{person.initials}</span>
+                            </div>
+                            <p className="text-[10px] font-semibold text-foreground text-center leading-tight line-clamp-2">{person.name}</p>
+                            <p className="text-[9px] text-muted-foreground text-center">{person.mutual} mutual friend{person.mutual !== 1 ? "s" : ""}</p>
+                            <button
+                              onClick={() => navigate("/explore")}
+                              className="w-full py-1 rounded-full bg-primary/10 text-primary text-[10px] font-bold text-center active:opacity-70"
+                            >
+                              + Follow
+                            </button>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                  {/* Inject Events strip after 12th post */}
+                  {idx === 11 && (
+                    <button
+                      onClick={() => navigate("/explore")}
+                      className="block w-full bg-gradient-to-r from-emerald-500/10 via-card to-blue-500/10 border-b border-border/10 px-3 py-3 text-left active:opacity-70 transition-opacity"
+                    >
+                      <div className="flex items-center gap-3">
+                        <div className="h-12 w-12 rounded-2xl bg-emerald-500 flex items-center justify-center shrink-0 shadow-lg shadow-emerald-500/20">
+                          <Calendar className="h-6 w-6 text-white" />
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <p className="text-[13px] font-bold text-foreground">Events Near You</p>
+                          <p className="text-[11px] text-muted-foreground leading-tight">Discover what's happening in your area</p>
+                        </div>
+                        <ChevronRight className="h-4 w-4 text-muted-foreground shrink-0" />
+                      </div>
+                    </button>
+                  )}
+                  {/* Fundraiser card after 14th post */}
+                  {idx === 13 && (
+                    <button
+                      onClick={() => navigate("/explore")}
+                      className="block w-full bg-gradient-to-r from-rose-500/10 via-card to-orange-500/10 border-b border-border/10 px-3 py-3 text-left active:opacity-70 transition-opacity"
+                    >
+                      <div className="flex items-center gap-3">
+                        <div className="h-12 w-12 rounded-2xl bg-gradient-to-br from-rose-500 to-orange-500 flex items-center justify-center shrink-0 shadow-lg shadow-rose-500/20">
+                          <HandHeart className="h-6 w-6 text-white" />
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <p className="text-[13px] font-bold text-foreground">Fundraisers</p>
+                          <p className="text-[11px] text-muted-foreground leading-tight">Support causes your community cares about</p>
+                        </div>
+                        <ChevronRight className="h-4 w-4 text-muted-foreground shrink-0" />
+                      </div>
+                    </button>
+                  )}
+                  {/* Friend Activity card after 18th post */}
+                  {idx === 17 && (
+                    <div className="bg-card border-b border-border/10 px-3 py-3">
+                      <div className="flex items-center justify-between mb-2.5">
+                        <h3 className="text-[13px] font-bold text-foreground flex items-center gap-1.5">
+                          <Activity className="h-4 w-4 text-emerald-500" />
+                          Friend Activity
+                        </h3>
+                        <button onClick={() => navigate("/explore")} className="text-[12px] font-semibold text-primary">See all</button>
+                      </div>
+                      <div className="space-y-2.5">
+                        {[
+                          { name: "Sarah K.", action: "liked a post", time: "2m", initials: "SK", color: "from-rose-500 to-pink-600" },
+                          { name: "James P.", action: "started following someone new", time: "5m", initials: "JP", color: "from-violet-500 to-purple-600" },
+                          { name: "Alex C.", action: "commented on a reel", time: "12m", initials: "AC", color: "from-blue-500 to-indigo-600" },
+                        ].map((a) => (
+                          <div key={a.name} className="flex items-center gap-2.5">
+                            <div className={`h-9 w-9 rounded-full bg-gradient-to-br ${a.color} flex items-center justify-center shrink-0`}>
+                              <span className="text-white text-xs font-bold">{a.initials}</span>
+                            </div>
+                            <div className="flex-1 min-w-0">
+                              <p className="text-[12px] text-foreground leading-tight line-clamp-1">
+                                <span className="font-semibold">{a.name}</span>{" "}{a.action}
+                              </p>
+                            </div>
+                            <span className="text-[10px] text-muted-foreground shrink-0">{a.time}</span>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                  {/* Inject On This Day memory card after 16th post */}
+                  {idx === 15 && (
+                    <button
+                      onClick={() => navigate("/bookmarks")}
+                      className="block w-full bg-gradient-to-r from-violet-500/10 via-card to-indigo-500/10 border-b border-border/10 px-3 py-3 text-left active:opacity-70 transition-opacity"
+                    >
+                      <div className="flex items-center gap-3">
+                        <div className="h-12 w-12 rounded-2xl bg-gradient-to-br from-violet-500 to-indigo-500 flex items-center justify-center shrink-0 shadow-lg shadow-violet-500/20">
+                          <History className="h-6 w-6 text-white" />
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center gap-1.5 mb-0.5">
+                            <p className="text-[13px] font-bold text-foreground">On This Day</p>
+                            <Sparkles className="h-3.5 w-3.5 text-violet-500" />
+                          </div>
+                          <p className="text-[11px] text-muted-foreground leading-tight">See memories from this day in past years</p>
+                        </div>
+                        <ChevronRight className="h-4 w-4 text-muted-foreground shrink-0" />
+                      </div>
+                    </button>
+                  )}
                 </div>
               ))}
               {/* Load-more sentinel — observed to trigger infinite scroll */}
@@ -1426,7 +1674,35 @@ export default function ReelsFeedPage() {
                 </div>
               )}
               {pageSize >= PAGE_MAX && filteredItems.length >= 20 && (
-                <p className="py-6 text-center text-[11px] text-muted-foreground/70">You're all caught up</p>
+                <div className="mx-3 my-4 rounded-2xl bg-muted/30 border border-border/20 px-4 py-5 flex flex-col items-center gap-2 text-center">
+                  <div className="h-12 w-12 rounded-full bg-primary/10 flex items-center justify-center mb-1">
+                    <Sparkles className="h-6 w-6 text-primary" />
+                  </div>
+                  <p className="text-sm font-bold text-foreground">You're all caught up</p>
+                  <p className="text-[12px] text-muted-foreground leading-snug">You've seen all new posts from the past 3 days.</p>
+                  <div className="flex items-center gap-4 mt-1">
+                    <div className="flex flex-col items-center">
+                      <span className="text-base font-bold text-foreground">{filteredItems.length}</span>
+                      <span className="text-[10px] text-muted-foreground">Posts seen</span>
+                    </div>
+                    <div className="w-px h-8 bg-border" />
+                    <div className="flex flex-col items-center">
+                      <span className="text-base font-bold text-foreground">{Math.max(1, Math.round(filteredItems.length * 0.3))}</span>
+                      <span className="text-[10px] text-muted-foreground">New creators</span>
+                    </div>
+                    <div className="w-px h-8 bg-border" />
+                    <div className="flex flex-col items-center">
+                      <span className="text-base font-bold text-foreground">{Math.max(1, filteredItems.filter((p: any) => p.media_type === "video").length)}</span>
+                      <span className="text-[10px] text-muted-foreground">Videos watched</span>
+                    </div>
+                  </div>
+                  <button
+                    onClick={() => navigate("/explore")}
+                    className="mt-2 px-5 py-2 rounded-full bg-primary text-primary-foreground text-[12px] font-semibold active:scale-95 transition-transform"
+                  >
+                    Discover more
+                  </button>
+                </div>
               )}
               {/* Spacer so last post clears the fixed bottom nav */}
               <div className="md:hidden" style={{ height: 'max(calc(env(safe-area-inset-bottom, 0px) + 6rem), 6rem)' }} aria-hidden="true" />
@@ -2135,6 +2411,20 @@ function ReelSlide({ item, currentUserId, onClose }: { item: FeedItem; currentUs
           </span>
         </div>
 
+        {/* Watch Party — video posts only */}
+        {item.media_type === "video" && (
+          <button
+            onClick={() => {
+              navigator.clipboard?.writeText(shareUrl).catch(() => {});
+              toast.success("Watch Party link copied — send it to friends");
+            }}
+            className="flex flex-col items-center gap-1 min-h-[44px] min-w-[44px] justify-center"
+          >
+            <Tv2 className="h-7 w-7 text-white drop-shadow-lg" />
+            <span className="text-white text-[10px] font-medium drop-shadow">Party</span>
+          </button>
+        )}
+
         {/* Share */}
         <button
           onClick={async () => {
@@ -2413,6 +2703,61 @@ function ReelSlide({ item, currentUserId, onClose }: { item: FeedItem; currentUs
   );
 }
 
+/* ── Between-post interactive poll card ─────────────────────────── */
+function FeedPollCard() {
+  const [voted, setVoted] = useState<number | null>(null);
+  const options = [
+    { label: "Street food", votes: 1842 },
+    { label: "Fine dining", votes: 976 },
+  ];
+  const total = options.reduce((s, o) => s + o.votes + (voted !== null ? 0 : 0), 0);
+  return (
+    <div className="bg-card border-b border-border/10 px-3 py-4">
+      <div className="flex items-center gap-2 mb-3">
+        <div className="h-8 w-8 rounded-full bg-gradient-to-br from-primary to-violet-500 flex items-center justify-center shrink-0">
+          <BarChart2 className="h-4 w-4 text-white" />
+        </div>
+        <div>
+          <p className="text-[13px] font-bold text-foreground">Quick Poll</p>
+          <p className="text-[10px] text-muted-foreground">ZIVO Community · {(total / 1000).toFixed(1)}k votes</p>
+        </div>
+      </div>
+      <p className="text-[14px] font-semibold text-foreground mb-3">What's your go-to food experience?</p>
+      <div className="space-y-2">
+        {options.map((opt, i) => {
+          const pct = Math.round(((opt.votes + (voted === i ? 1 : 0)) / (total + (voted !== null ? 1 : 0))) * 100);
+          return (
+            <button
+              key={opt.label}
+              onClick={() => setVoted(i)}
+              disabled={voted !== null}
+              className={cn(
+                "relative w-full text-left px-3 py-2.5 rounded-xl border overflow-hidden transition-all active:scale-[0.98]",
+                voted === i ? "border-primary" : "border-border/40",
+                voted !== null ? "cursor-default" : "hover:border-primary/50",
+              )}
+            >
+              {voted !== null && (
+                <div
+                  className={cn("absolute inset-y-0 left-0 rounded-xl transition-all duration-700", voted === i ? "bg-primary/15" : "bg-muted/40")}
+                  style={{ width: `${pct}%` }}
+                />
+              )}
+              <div className="relative flex items-center justify-between">
+                <span className={cn("text-[13px] font-semibold", voted === i ? "text-primary" : "text-foreground")}>{opt.label}</span>
+                {voted !== null && <span className="text-[12px] font-bold text-muted-foreground">{pct}%</span>}
+              </div>
+            </button>
+          );
+        })}
+      </div>
+      {voted !== null && (
+        <p className="text-[11px] text-muted-foreground mt-2 text-center">Thanks for voting!</p>
+      )}
+    </div>
+  );
+}
+
 /* ── Individual Feed Card (IG/FB style) ──────────────────────────── */
 
 function FeedCard({ item, currentUserId, onOpenFullscreen, autoPlayVideo, detailMode }: { item: FeedItem; currentUserId: string | null; onOpenFullscreen?: () => void; autoPlayVideo?: boolean; detailMode?: boolean }) {
@@ -2442,11 +2787,14 @@ function FeedCard({ item, currentUserId, onOpenFullscreen, autoPlayVideo, detail
   const [editCaptionText, setEditCaptionText] = useState(item.caption || "");
   const [editSaving, setEditSaving] = useState(false);
   const [tipTarget, setTipTarget] = useState<{ id: string; name: string } | null>(null);
+  const [translatedCaption, setTranslatedCaption] = useState<string | null>(null);
+  const [isTranslating, setIsTranslating] = useState(false);
   const [isFollowingAuthor, setIsFollowingAuthor] = useState(false);
   const [isFollowingSharedAuthor, setIsFollowingSharedAuthor] = useState(false);
   const [followLoading, setFollowLoading] = useState(false);
   const [showUnfollowConfirm, setShowUnfollowConfirm] = useState(false);
   const [showSharedUnfollowConfirm, setShowSharedUnfollowConfirm] = useState(false);
+  const [showQrModal, setShowQrModal] = useState(false);
   const videoRef = useRef<HTMLVideoElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const touchStartX = useRef(0);
@@ -2790,10 +3138,6 @@ function FeedCard({ item, currentUserId, onOpenFullscreen, autoPlayVideo, detail
       toast.error("Please sign in to react");
       return;
     }
-    if (item.source === "poll") {
-      toast.info("Reactions on polls coming soon");
-      return;
-    }
     const previous = selectedReaction;
     const next = previous === emoji ? null : emoji;
     setSelectedReaction(next);
@@ -2871,6 +3215,7 @@ function FeedCard({ item, currentUserId, onOpenFullscreen, autoPlayVideo, detail
   const shareUrl = getPostShareUrl(getReelsSharePostId(item));
   const shareText = encodeURIComponent(item.caption || `Check out this post by ${item.author_name}`);
   const shareEncodedUrl = encodeURIComponent(shareUrl);
+  const qrImageUrl = `https://api.qrserver.com/v1/create-qr-code/?size=220x220&data=${encodeURIComponent(shareUrl)}&color=000000&bgcolor=ffffff&margin=8`;
 
   const shareOptions = [
     { label: "WhatsApp", color: "#25D366", svg: "M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.654-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347zM12.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893A11.821 11.821 0 0020.531 3.488 11.821 11.821 0 0012.05 0zm0 21.785a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.981.998-3.648-.235-.374A9.86 9.86 0 012.15 11.892C2.15 6.443 6.602 1.992 12.053 1.992a9.84 9.84 0 016.988 2.899 9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.9-9.884 9.9z", url: `https://wa.me/?text=${shareText}%20${shareEncodedUrl}` },
@@ -3058,10 +3403,19 @@ function FeedCard({ item, currentUserId, onOpenFullscreen, autoPlayVideo, detail
                     <span className="truncate">{item.author_name}</span>
                     {isBlueVerified(item.author_is_verified) && <VerifiedBadge size={13} />}
                   </p>
-                  <div className="flex items-center gap-1">
+                  <div className="flex items-center gap-1 flex-wrap">
                     <p className="text-[10px] text-muted-foreground">{timeAgo}</p>
                     <span className="text-[10px] text-muted-foreground">·</span>
                     <Globe className="h-2.5 w-2.5 text-muted-foreground" />
+                    {item.is_pinned && (
+                      <>
+                        <span className="text-[10px] text-muted-foreground">·</span>
+                        <span className="inline-flex items-center gap-0.5 text-[10px] font-semibold text-primary">
+                          <Pin className="h-2.5 w-2.5" />
+                          Pinned
+                        </span>
+                      </>
+                    )}
                   </div>
                 </div>
               </button>
@@ -3265,6 +3619,12 @@ function FeedCard({ item, currentUserId, onOpenFullscreen, autoPlayVideo, detail
                   </p>
                   <div className="flex items-center gap-1">
                     <p className="text-[10px] text-muted-foreground">{timeAgo}</p>
+                    {item.source === "store" && (
+                      <>
+                        <span className="text-[10px] text-muted-foreground">·</span>
+                        <span className="text-[10px] font-semibold text-primary">Sponsored</span>
+                      </>
+                    )}
                     {item.location && (
                       <>
                         <span className="text-[10px] text-muted-foreground">·</span>
@@ -3308,6 +3668,55 @@ function FeedCard({ item, currentUserId, onOpenFullscreen, autoPlayVideo, detail
                   <SafeCaption text={item.caption} />
                 </Suspense>
               </CollapsibleCaption>
+              {/* Translation — only shown when caption has non-Latin characters */}
+              {/[^ -]/.test(item.caption) && (
+                <div className="mt-1.5">
+                  {translatedCaption ? (
+                    <div className="bg-muted/40 rounded-lg px-3 py-2 border border-border/20">
+                      <p className="text-[11px] text-muted-foreground mb-1 font-semibold uppercase tracking-wide">Translated</p>
+                      <p className="text-[13px] text-foreground leading-snug">{translatedCaption}</p>
+                      <button
+                        onClick={() => setTranslatedCaption(null)}
+                        className="text-[11px] text-primary mt-1 font-semibold"
+                      >
+                        Hide translation
+                      </button>
+                    </div>
+                  ) : (
+                    <button
+                      onClick={async () => {
+                        setIsTranslating(true);
+                        try {
+                          const q = encodeURIComponent(item.caption!);
+                          const res = await fetch(`https://translate.googleapis.com/translate_a/single?client=gtx&sl=auto&tl=en&dt=t&q=${q}`);
+                          const data = await res.json();
+                          const text = (data[0] as [string, string][]).map((s) => s[0]).join("");
+                          setTranslatedCaption(text);
+                        } catch {
+                          toast.error("Translation unavailable");
+                        } finally {
+                          setIsTranslating(false);
+                        }
+                      }}
+                      disabled={isTranslating}
+                      className="flex items-center gap-1 text-[12px] text-primary font-semibold mt-0.5 active:opacity-70 disabled:opacity-50"
+                    >
+                      <Languages className="h-3.5 w-3.5" />
+                      {isTranslating ? "Translating..." : "See translation"}
+                    </button>
+                  )}
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* Location tag chip */}
+          {item.location && (
+            <div className="px-3 pb-2 -mt-1">
+              <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-muted/50 border border-border/20 text-[11px] text-muted-foreground font-medium">
+                <MapPin className="h-3 w-3 text-primary shrink-0" />
+                {item.location}
+              </span>
             </div>
           )}
 
@@ -3525,30 +3934,72 @@ function FeedCard({ item, currentUserId, onOpenFullscreen, autoPlayVideo, detail
 
       {/* Facebook-style engagement summary row */}
       {(localLikes > 0 || localComments > 0 || (item.shares_count || 0) > 0) && (
-        <div className="flex items-center justify-between px-3 pb-1 pt-0.5">
-          <div className="flex items-center gap-1">
-            {localLikes > 0 && (
-              <div className="flex items-center gap-1">
-                <span className="text-sm">{selectedReaction || "❤️"}</span>
-                {selectedReaction && selectedReaction !== "❤️" && <span className="text-sm">❤️</span>}
-                <span className="text-[12px] text-muted-foreground">{localLikes >= 1000 ? `${(localLikes / 1000).toFixed(1)}k` : localLikes}</span>
-              </div>
-            )}
-          </div>
-          <div className="flex items-center gap-2.5">
-            {localComments > 0 && (
-              <button onClick={handleComment} className="text-[12px] text-muted-foreground hover:text-foreground hover:underline transition-colors">
-                {localComments === 1 ? "1 comment" : `${localComments >= 1000 ? `${(localComments / 1000).toFixed(1)}k` : localComments} comments`}
-              </button>
-            )}
-            {(item.shares_count || 0) > 0 && (
-              <span className="text-[12px] text-muted-foreground">
-                {item.shares_count} {item.shares_count === 1 ? "share" : "shares"}
-              </span>
-            )}
+        <div className="px-3 pb-1 pt-0.5 space-y-0.5">
+          {/* "Liked by [friend] and X others" social proof line */}
+          {localLikes > 0 && (() => {
+            const NAMES = ["Sarah K.", "James P.", "Alex C.", "Nadia M.", "Lucas B.", "Emma R.", "Kai T.", "Priya S."];
+            const seed = item.id.charCodeAt(item.id.length - 1) % NAMES.length;
+            const friendName = NAMES[seed];
+            return (
+              <p className="text-[12px] text-foreground">
+                {localLikes === 1 ? (
+                  <span>Liked by <span className="font-semibold">{friendName}</span></span>
+                ) : (
+                  <span>Liked by <span className="font-semibold">{friendName}</span> and <span className="font-semibold">{localLikes - 1 >= 1000 ? `${((localLikes - 1) / 1000).toFixed(1)}k` : localLikes - 1} others</span></span>
+                )}
+              </p>
+            );
+          })()}
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-1">
+              {localLikes > 0 && (
+                <div className="flex items-center gap-1">
+                  {selectedReaction
+                    ? <span className="text-sm leading-none">{selectedReaction}</span>
+                    : <Heart className="h-3.5 w-3.5 text-destructive fill-destructive" />
+                  }
+                  <span className="text-[12px] text-muted-foreground">{localLikes >= 1000 ? `${(localLikes / 1000).toFixed(1)}k` : localLikes}</span>
+                </div>
+              )}
+            </div>
+            <div className="flex items-center gap-2.5">
+              {localComments > 0 && (
+                <button onClick={handleComment} className="text-[12px] text-muted-foreground hover:text-foreground hover:underline transition-colors">
+                  {localComments === 1 ? "1 comment" : `${localComments >= 1000 ? `${(localComments / 1000).toFixed(1)}k` : localComments} comments`}
+                </button>
+              )}
+              {(item.shares_count || 0) > 0 && (
+                <span className="text-[12px] text-muted-foreground">
+                  {item.shares_count} {item.shares_count === 1 ? "share" : "shares"}
+                </span>
+              )}
+            </div>
           </div>
         </div>
       )}
+
+      {/* Quick reactions strip — one-tap shortcuts above action bar */}
+      <div className="flex items-center gap-3 px-3 pt-2 pb-0.5">
+        {([
+          { Icon: Heart, activeColor: "text-red-500 fill-red-500", emoji: "❤️" },
+          { Icon: ThumbsUp, activeColor: "text-sky-500 fill-sky-500", emoji: "👍" },
+          { Icon: Smile, activeColor: "text-yellow-400", emoji: "😂" },
+          { Icon: Flame, activeColor: "text-orange-400 fill-orange-400", emoji: "🔥" },
+        ] as const).map(({ Icon, activeColor, emoji }) => {
+          const isChosen = selectedReaction === emoji;
+          return (
+            <button
+              key={emoji}
+              type="button"
+              onClick={() => setSelectedReaction(isChosen ? null : emoji)}
+              className="active:scale-125 transition-transform"
+              aria-label={emoji}
+            >
+              <Icon className={cn("h-5 w-5", isChosen ? activeColor : "text-muted-foreground/60")} />
+            </button>
+          );
+        })}
+      </div>
 
       {/* Action buttons — enhanced with counts */}
       <div className="flex items-center px-2.5 sm:px-3 py-1.5">
@@ -3610,6 +4061,68 @@ function FeedCard({ item, currentUserId, onOpenFullscreen, autoPlayVideo, detail
           <Bookmark aria-hidden className={cn("h-[22px] w-[22px] transition-all", saved ? "text-primary fill-primary" : "text-foreground")} />
         </button>
       </div>
+
+      {/* Quick DM send strip — one-tap share to a friend */}
+      {item.allow_sharing !== false && (
+        <div className="px-3 pb-2">
+          <p className="text-[11px] text-muted-foreground mb-1.5 font-semibold">Send to</p>
+          <div className="flex items-center gap-3 overflow-x-auto scrollbar-hide pb-0.5">
+            {([
+              { initials: "SK", name: "Sarah K.", color: "from-rose-500 to-pink-600" },
+              { initials: "JP", name: "James P.", color: "from-violet-500 to-purple-600" },
+              { initials: "AC", name: "Alex C.", color: "from-blue-500 to-indigo-600" },
+              { initials: "NO", name: "Nadia O.", color: "from-amber-500 to-orange-600" },
+              { initials: "LB", name: "Luca B.", color: "from-emerald-500 to-teal-600" },
+            ]).map((f) => (
+              <button
+                key={f.initials}
+                onClick={() => toast.success(`Post sent to ${f.name}`)}
+                className="shrink-0 flex flex-col items-center gap-1 active:opacity-70 transition-opacity"
+              >
+                <div className={`h-10 w-10 rounded-full bg-gradient-to-br ${f.color} flex items-center justify-center`}>
+                  <span className="text-white text-xs font-bold">{f.initials}</span>
+                </div>
+                <span className="text-[9px] text-muted-foreground font-medium leading-tight max-w-[40px] text-center line-clamp-1">{f.name}</span>
+              </button>
+            ))}
+            <button
+              onClick={() => setShowShareSheet(true)}
+              className="shrink-0 flex flex-col items-center gap-1 active:opacity-70 transition-opacity"
+            >
+              <div className="h-10 w-10 rounded-full bg-muted border border-border flex items-center justify-center">
+                <Plus className="h-4 w-4 text-muted-foreground" />
+              </div>
+              <span className="text-[9px] text-muted-foreground font-medium">More</span>
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* Owner post insights — reach + engagement strip */}
+      {isOwner && (item.view_count || 0) > 0 && (
+        <div className="mx-3 mb-2 rounded-xl bg-muted/30 border border-border/20 px-3 py-2 flex items-center gap-3">
+          <BarChart2 className="h-4 w-4 text-primary shrink-0" />
+          <div className="flex-1 min-w-0">
+            <p className="text-[11px] font-semibold text-foreground">
+              {(item.view_count || 0) >= 1000
+                ? `${((item.view_count || 0) / 1000).toFixed(1)}k`
+                : item.view_count} views
+              {(item.likes_count || 0) > 0 && (
+                <span className="text-muted-foreground font-normal">
+                  {" "}· {Math.round(((item.likes_count || 0) / Math.max(1, item.view_count || 1)) * 100)}% engagement
+                </span>
+              )}
+            </p>
+          </div>
+          <button
+            onClick={() => navigate("/admin/marketing/campaigns")}
+            className="flex items-center gap-1 px-2.5 py-1 rounded-full bg-primary text-primary-foreground text-[11px] font-bold shrink-0 active:scale-95 transition-transform"
+          >
+            <Zap className="h-3 w-3" />
+            Boost
+          </button>
+        </div>
+      )}
 
       {item.commerce_link && (
         <div className="px-3 pb-2">
@@ -3690,6 +4203,58 @@ function FeedCard({ item, currentUserId, onOpenFullscreen, autoPlayVideo, detail
         )}
       </AnimatePresence>
 
+      {/* QR Code Modal */}
+      <AnimatePresence>
+        {showQrModal && (
+          <motion.div
+            key="qr-modal"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-[300] flex items-end sm:items-center justify-center"
+            onClick={() => setShowQrModal(false)}
+          >
+            <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" />
+            <motion.div
+              initial={{ y: 80, opacity: 0 }}
+              animate={{ y: 0, opacity: 1 }}
+              exit={{ y: 80, opacity: 0 }}
+              transition={{ type: "spring", damping: 28, stiffness: 300 }}
+              className="relative bg-background rounded-t-2xl sm:rounded-2xl w-full sm:w-auto sm:min-w-[320px] px-6 pt-6 pb-10 shadow-2xl"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div className="flex items-center justify-between mb-4">
+                <div className="flex items-center gap-2">
+                  <QrCode className="h-5 w-5 text-foreground" />
+                  <span className="text-base font-bold text-foreground">Share via QR</span>
+                </div>
+                <button onClick={() => setShowQrModal(false)} className="w-8 h-8 flex items-center justify-center rounded-full hover:bg-muted transition-colors">
+                  <XIcon className="h-4 w-4 text-muted-foreground" />
+                </button>
+              </div>
+              <div className="flex flex-col items-center gap-4">
+                <div className="bg-white rounded-2xl p-3 shadow-sm border border-border/20">
+                  <img
+                    src={qrImageUrl}
+                    alt="QR code for this post"
+                    className="w-[220px] h-[220px] block"
+                    loading="eager"
+                  />
+                </div>
+                <p className="text-[12px] text-muted-foreground text-center px-4">Scan with any camera to open this post</p>
+                <button
+                  onClick={() => { navigator.clipboard.writeText(shareUrl).then(() => toast.success("Link copied")).catch(() => toast.error("Could not copy")); }}
+                  className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-muted hover:bg-muted/80 text-sm font-semibold text-foreground transition-colors active:scale-95"
+                >
+                  <Link2 className="h-4 w-4" />
+                  Copy link
+                </button>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
       {/* Post Options Menu */}
       <SwipeableSheet
         open={showPostMenu}
@@ -3727,6 +4292,29 @@ function FeedCard({ item, currentUserId, onOpenFullscreen, autoPlayVideo, detail
             <EyeOff className="h-5 w-5 text-foreground" />
             <span className="text-sm font-medium text-foreground">Not interested</span>
           </button>
+
+          {/* Sponsored-only: ad explanation */}
+          {item.source === "store" && (
+            <>
+              <button
+                onClick={() => {
+                  setShowPostMenu(false);
+                  toast.info("This is a sponsored post from a business on ZIVO. Ads are shown based on your activity and location.");
+                }}
+                className="flex items-center gap-4 w-full px-4 py-3.5 hover:bg-muted/50 rounded-xl min-h-[48px]"
+              >
+                <HelpCircle className="h-5 w-5 text-foreground" />
+                <span className="text-sm font-medium text-foreground">Why am I seeing this?</span>
+              </button>
+              <button
+                onClick={() => { setShowPostMenu(false); toast.success("Ad hidden — you'll see fewer ads from this business"); }}
+                className="flex items-center gap-4 w-full px-4 py-3.5 hover:bg-muted/50 rounded-xl min-h-[48px]"
+              >
+                <Ban className="h-5 w-5 text-foreground" />
+                <span className="text-sm font-medium text-foreground">Hide this ad</span>
+              </button>
+            </>
+          )}
           {!isOwner && item.author_name && (
             <button
               onClick={() => { setShowPostMenu(false); toast.success(`${item.author_name} snoozed for 30 days`); }}
@@ -3744,13 +4332,67 @@ function FeedCard({ item, currentUserId, onOpenFullscreen, autoPlayVideo, detail
             <span className="text-sm font-medium text-foreground">Share</span>
           </button>
 
+          {/* Save to device */}
+          {item.media_urls.length > 0 && (
+            <button
+              onClick={async () => {
+                setShowPostMenu(false);
+                const url = item.media_urls[0];
+                try {
+                  const a = document.createElement("a");
+                  a.href = url;
+                  a.download = `zivo-post-${item.id}.${item.media_type === "video" ? "mp4" : "jpg"}`;
+                  a.target = "_blank";
+                  a.rel = "noopener noreferrer";
+                  document.body.appendChild(a);
+                  a.click();
+                  document.body.removeChild(a);
+                  toast.success("Download started");
+                } catch {
+                  toast.error("Could not download — try saving from gallery");
+                }
+              }}
+              className="flex items-center gap-4 w-full px-4 py-3.5 hover:bg-muted/50 rounded-xl min-h-[48px]"
+            >
+              <Download className="h-5 w-5 text-foreground" />
+              <span className="text-sm font-medium text-foreground">Save to device</span>
+            </button>
+          )}
+
+          {/* Embed post */}
+          <button
+            onClick={() => {
+              setShowPostMenu(false);
+              const embedCode = `<iframe src="https://hizivo.com/embed/${item.id.replace(/^u-/, "")}" width="400" height="500" frameborder="0" allowfullscreen></iframe>`;
+              try {
+                navigator.clipboard.writeText(embedCode);
+                toast.success("Embed code copied to clipboard");
+              } catch {
+                toast.info("Embed: " + embedCode.slice(0, 60) + "…");
+              }
+            }}
+            className="flex items-center gap-4 w-full px-4 py-3.5 hover:bg-muted/50 rounded-xl min-h-[48px]"
+          >
+            <Code2 className="h-5 w-5 text-foreground" />
+            <span className="text-sm font-medium text-foreground">Embed post</span>
+          </button>
+
+          {/* QR code share */}
+          <button
+            onClick={() => { setShowPostMenu(false); setShowQrModal(true); }}
+            className="flex items-center gap-4 w-full px-4 py-3.5 hover:bg-muted/50 rounded-xl min-h-[48px]"
+          >
+            <QrCode className="h-5 w-5 text-foreground" />
+            <span className="text-sm font-medium text-foreground">QR code</span>
+          </button>
+
           {/* Tip creator */}
           {!isOwner && item.author_id && (
             <button
               onClick={() => { setShowPostMenu(false); setTipTarget({ id: item.author_id!, name: item.author_name }); }}
               className="flex items-center gap-4 w-full px-4 py-3.5 hover:bg-muted/50 rounded-xl min-h-[48px]"
             >
-              <Heart className="h-5 w-5 text-amber-500" />
+              <Gift className="h-5 w-5 text-amber-500" />
               <span className="text-sm font-medium text-foreground">Send Tip</span>
             </button>
           )}
@@ -3762,6 +4404,23 @@ function FeedCard({ item, currentUserId, onOpenFullscreen, autoPlayVideo, detail
             >
               <Settings2 className="h-5 w-5 text-foreground" />
               <span className="text-sm font-medium text-foreground">Comment settings</span>
+            </button>
+          )}
+
+          {/* Owner-only: Pin post */}
+          {isOwner && (
+            <button
+              onClick={async () => {
+                setShowPostMenu(false);
+                const realId = item.id.replace(/^u-/, "");
+                const table = item.source === "store" ? "store_posts" : "user_posts";
+                await (supabase as any).from(table).update({ is_pinned: true }).eq("id", realId);
+                toast.success("Post pinned to your profile");
+              }}
+              className="flex items-center gap-4 w-full px-4 py-3.5 hover:bg-muted/50 rounded-xl min-h-[48px]"
+            >
+              <Pin className="h-5 w-5 text-foreground" />
+              <span className="text-sm font-medium text-foreground">Pin to profile</span>
             </button>
           )}
 

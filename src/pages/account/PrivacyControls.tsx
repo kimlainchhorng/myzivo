@@ -4,9 +4,10 @@
  * GDPR/CCPA compliant self-service privacy controls
  */
 
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { motion } from "framer-motion";
 import { Link, Navigate, useLocation } from "react-router-dom";
+import { supabase } from "@/integrations/supabase/client";
 import { withRedirectParam } from "@/lib/authRedirect";
 import {
   ArrowLeft, Shield, Download, Trash2, Eye, Mail, Clock,
@@ -146,14 +147,25 @@ export default function PrivacyControls() {
   const [requestReason, setRequestReason] = useState("");
   const [pendingRequests, setPendingRequests] = useState<string[]>([]);
   
-  // Consent state (would be loaded from backend in production)
-  const [consentState, setConsentState] = useState<Record<string, boolean>>({
-    marketing_email: false,
-    marketing_sms: false,
-    personalization: true,
-    analytics: true,
-    essential: true,
-  });
+  // Derive consent state from loaded user_consent_logs (most-recent-wins per policy_type)
+  const loadedConsents = useMemo<Record<string, boolean>>(() => {
+    const defaults: Record<string, boolean> = {
+      marketing_email: false, marketing_sms: false,
+      personalization: true, analytics: true, essential: true,
+    };
+    if (!consents?.length) return defaults;
+    const seen = new Set<string>();
+    const result = { ...defaults };
+    for (const c of consents) {
+      if (!seen.has(c.policy_type)) {
+        seen.add(c.policy_type);
+        result[c.policy_type] = c.consent_given;
+      }
+    }
+    return result;
+  }, [consents]);
+  const [consentOverrides, setConsentState] = useState<Record<string, boolean>>({});
+  const consentState = { ...loadedConsents, ...consentOverrides };
 
   const location = useLocation();
   // Redirect if not logged in
@@ -163,35 +175,68 @@ export default function PrivacyControls() {
   }
 
   const handleRequestSubmit = async () => {
-    if (!selectedRequest) return;
-    
-    // In production, this would submit to an edge function that logs the request
-    setPendingRequests(prev => [...prev, selectedRequest.id]);
-    setRequestDialogOpen(false);
-    setRequestReason("");
-    
-    toast.success(`${selectedRequest.title} request submitted`, {
-      description: `We'll process your request within ${selectedRequest.timeline}.`,
-    });
+    if (!selectedRequest || !user) return;
+    try {
+      await (supabase as any).from("feedback_submissions").insert({
+        user_id: user.id,
+        category: "dsar_request",
+        message: JSON.stringify({
+          request_type: selectedRequest.id,
+          request_title: selectedRequest.title,
+          reason: requestReason,
+          submitted_at: new Date().toISOString(),
+        }),
+        email: user.email,
+      });
+      setPendingRequests(prev => [...prev, selectedRequest.id]);
+      setRequestDialogOpen(false);
+      setRequestReason("");
+      toast.success(`${selectedRequest.title} request submitted`, {
+        description: `We'll process your request within ${selectedRequest.timeline}.`,
+      });
+    } catch {
+      toast.error("Failed to submit request. Please try again.");
+    }
   };
 
   const handleDeleteAccount = async () => {
-    if (deleteConfirmText !== "DELETE") return;
-    
-    setPendingRequests(prev => [...prev, "delete_account"]);
-    setDeleteConfirmOpen(false);
-    setDeleteConfirmText("");
-    
-    toast.success("Account deletion request submitted", {
-      description: "We'll process your request within 30 days. You'll receive confirmation via email.",
-    });
+    if (deleteConfirmText !== "DELETE" || !user) return;
+    try {
+      await (supabase as any).from("feedback_submissions").insert({
+        user_id: user.id,
+        category: "dsar_request",
+        message: JSON.stringify({
+          request_type: "delete",
+          request_title: "Delete My Data",
+          submitted_at: new Date().toISOString(),
+        }),
+        email: user.email,
+      });
+      setPendingRequests(prev => [...prev, "delete_account"]);
+      setDeleteConfirmOpen(false);
+      setDeleteConfirmText("");
+      toast.success("Account deletion request submitted", {
+        description: "We'll process your request within 30 days. You'll receive confirmation via email.",
+      });
+    } catch {
+      toast.error("Failed to submit request. Please try again.");
+    }
   };
 
   const handleConsentChange = async (category: string, enabled: boolean) => {
     setConsentState(prev => ({ ...prev, [category]: enabled }));
-    
-    // In production, this would log the consent change
-    toast.success(`${enabled ? "Enabled" : "Disabled"} ${category.replace("_", " ")}`);
+    try {
+      await (supabase as any).from("feedback_submissions").insert({
+        user_id: user?.id,
+        category: "consent_change",
+        message: JSON.stringify({ category, enabled, changed_at: new Date().toISOString() }),
+        email: user?.email,
+      });
+      toast.success(`${enabled ? "Enabled" : "Disabled"} ${category.replace(/_/g, " ")}`);
+    } catch {
+      setConsentState(prev => ({ ...prev, [category]: !enabled }));
+      toast.error("Failed to save consent preference");
+    }
   };
 
   const openRequestDialog = (request: typeof dsarRequestTypes[0]) => {

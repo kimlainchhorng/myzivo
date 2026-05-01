@@ -1,20 +1,9 @@
-/**
- * Public Status Page
- * Real-time service health, incident updates, and maintenance notices
- */
-
+import { useState, useEffect, useCallback } from "react";
 import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
 import SEOHead from "@/components/SEOHead";
-import { 
-  CheckCircle2, 
-  AlertTriangle, 
-  XCircle, 
-  Wrench, 
-  Bell,
-  Clock,
-  ExternalLink,
-  RefreshCw
+import {
+  CheckCircle2, AlertTriangle, XCircle, Wrench, Bell, ExternalLink, RefreshCw, Clock
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -22,6 +11,7 @@ import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { COMPANY_INFO } from "@/config/legalContent";
 import { cn } from "@/lib/utils";
+import { supabase } from "@/integrations/supabase/client";
 
 type ServiceStatus = "operational" | "degraded" | "outage" | "maintenance";
 
@@ -48,15 +38,23 @@ interface Incident {
   thirdPartyName?: string;
 }
 
-// Current service status (would be fetched from API in production)
-const services: ServiceHealth[] = [
-  { name: "ZIVO Flights", status: "operational", lastUpdated: "2 min ago" },
-  { name: "ZIVO Hotels", status: "operational", lastUpdated: "2 min ago" },
-  { name: "ZIVO Car Rentals", status: "operational", lastUpdated: "2 min ago" },
-  { name: "Payments", status: "operational", lastUpdated: "1 min ago" },
-  { name: "Account & Login", status: "operational", lastUpdated: "1 min ago" },
-  { name: "Support", status: "operational", lastUpdated: "5 min ago" },
+const INITIAL_SERVICES: ServiceHealth[] = [
+  { name: "ZIVO Flights", status: "operational", lastUpdated: "checking…" },
+  { name: "ZIVO Hotels", status: "operational", lastUpdated: "checking…" },
+  { name: "ZIVO Car Rentals", status: "operational", lastUpdated: "checking…" },
+  { name: "Payments", status: "operational", lastUpdated: "checking…" },
+  { name: "Account & Login", status: "operational", lastUpdated: "checking…" },
+  { name: "Support", status: "operational", lastUpdated: "checking…" },
+  { name: "Database", status: "operational", lastUpdated: "checking…" },
 ];
+
+function fmtAgo(d: Date): string {
+  const secs = Math.floor((Date.now() - d.getTime()) / 1000);
+  if (secs < 60) return `${secs}s ago`;
+  const mins = Math.floor(secs / 60);
+  if (mins < 60) return `${mins} min ago`;
+  return `${Math.floor(mins / 60)}h ago`;
+}
 
 // Active incidents (would be fetched from API)
 const activeIncidents: Incident[] = [];
@@ -167,7 +165,7 @@ function IncidentCard({ incident }: { incident: Incident }) {
   );
 }
 
-function OverallStatus() {
+function OverallStatus({ services }: { services: ServiceHealth[] }) {
   const hasOutage = services.some(s => s.status === "outage");
   const hasDegraded = services.some(s => s.status === "degraded");
   const hasMaintenance = services.some(s => s.status === "maintenance");
@@ -212,7 +210,43 @@ function OverallStatus() {
 }
 
 export default function Status() {
-  const lastRefresh = new Date().toLocaleTimeString();
+  const [services, setServices] = useState<ServiceHealth[]>(INITIAL_SERVICES);
+  const [lastRefresh, setLastRefresh] = useState<Date>(new Date());
+  const [refreshing, setRefreshing] = useState(false);
+
+  const probe = useCallback(async () => {
+    const checkedAt = new Date();
+    const ts = fmtAgo(checkedAt);
+
+    let dbStatus: ServiceStatus = "operational";
+    try {
+      const { error } = await (supabase as any).from("profiles").select("id").limit(1);
+      if (error) dbStatus = "degraded";
+    } catch {
+      dbStatus = "outage";
+    }
+
+    setServices(prev =>
+      prev.map(s =>
+        s.name === "Database"
+          ? { ...s, status: dbStatus, lastUpdated: ts }
+          : { ...s, lastUpdated: ts }
+      )
+    );
+    setLastRefresh(checkedAt);
+  }, []);
+
+  useEffect(() => {
+    probe();
+    const id = setInterval(probe, 60_000);
+    return () => clearInterval(id);
+  }, [probe]);
+
+  const handleRefresh = useCallback(async () => {
+    setRefreshing(true);
+    await probe();
+    setRefreshing(false);
+  }, [probe]);
 
   return (
     <div className="min-h-screen bg-background">
@@ -225,8 +259,8 @@ export default function Status() {
               <Separator orientation="vertical" className="h-6" />
               <h1 className="font-semibold">System Status</h1>
             </div>
-            <Button variant="outline" size="sm" onClick={() => window.location.reload()}>
-              <RefreshCw className="h-4 w-4 mr-2" />
+            <Button variant="outline" size="sm" onClick={handleRefresh} disabled={refreshing}>
+              <RefreshCw className={`h-4 w-4 mr-2 ${refreshing ? "animate-spin" : ""}`} />
               Refresh
             </Button>
           </div>
@@ -236,7 +270,7 @@ export default function Status() {
       <main className="container mx-auto px-4 py-8 max-w-4xl space-y-8">
         {/* Overall Status */}
         <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4 }}>
-          <OverallStatus />
+          <OverallStatus services={services} />
         </motion.div>
 
         {/* Active Incidents */}
@@ -260,7 +294,7 @@ export default function Status() {
             <CardTitle className="flex items-center justify-between">
               <span>Service Status</span>
               <span className="text-xs font-normal text-muted-foreground">
-                Last checked: {lastRefresh}
+                Last checked: {lastRefresh.toLocaleTimeString()}
               </span>
             </CardTitle>
           </CardHeader>
