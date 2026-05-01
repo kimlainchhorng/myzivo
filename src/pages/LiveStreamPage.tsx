@@ -74,6 +74,9 @@ import { giftCatalog, getLevelColor, type GiftItem } from "@/config/giftCatalog"
 import { playGiftSound, playPremiumGiftSound, playLegendaryGiftSound } from "@/utils/giftSounds";
 import VerifiedBadge from "@/components/VerifiedBadge";
 import { isBlueVerified } from "@/lib/verification";
+import { LIVE_FEATURE_FLAGS } from "@/config/liveFeatureFlags";
+import { useRecentlyWatchedLive } from "@/hooks/useRecentlyWatchedLive";
+import { useTopLiveGifters } from "@/hooks/useTopLiveGifters";
 
 const ZivoMobileNav = lazy(() =>import("@/components/app/ZivoMobileNav"));
 const GiftAnimationOverlay = lazy(() =>import("@/components/live/GiftAnimationOverlay"));
@@ -978,7 +981,11 @@ export default function LiveStreamPage() {
  const [feedbackToast, setFeedbackToast] = useState(false);
  const [eventReminders, setEventReminders] = useState<string[]>([]);
  const [joinedFamily, setJoinedFamily] = useState<string | null>(null);
- const [activeSection, setActiveSection] = useState<string>("");
+  const [activeSection, setActiveSection] = useState<string>("");
+
+  // Real data for the Community panel
+  const { data: recentlyWatched = [] } = useRecentlyWatchedLive(5);
+  const { data: topGifters = [] } = useTopLiveGifters(5, 7);
 
  // Observe section visibility to highlight quick-nav chip
  useEffect(() => {
