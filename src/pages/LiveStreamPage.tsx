@@ -1808,35 +1808,30 @@ export default function LiveStreamPage() {
   <div className="h-px flex-1 bg-gradient-to-l from-transparent to-blue-500/30" />
 </div>
 
- {/* ─── Recently Watched / Continue Watching ─── */}
+ {/* ─── Recently Watched / Continue Watching (real data) ─── */}
+{LIVE_FEATURE_FLAGS.recentlyWatched && recentlyWatched.length > 0 && (
 <div className="px-4 pt-4 pb-1">
 <div className="flex items-center justify-between mb-2.5">
 <h2 className="font-bold text-sm text-foreground flex items-center gap-1.5">
 <History className="w-4 h-4 text-blue-500" />Recently Watched
 </h2>
-<button onClick={() =>toast.success("Watch history cleared")} className="text-[11px] text-muted-foreground flex items-center gap-0.5 active:text-foreground">
+<button onClick={() =>toast.info("Watch history is managed automatically")} className="text-[11px] text-muted-foreground flex items-center gap-0.5 active:text-foreground">
  Clear<X className="w-3 h-3" />
 </button>
 </div>
 <div className="flex gap-3 overflow-x-auto scrollbar-hide -mx-4 px-4 pb-1">
- {[
- { name: "Maya Chen", topic: "Music", img: "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=200&q=70&auto=format&fit=crop", lastSeen: "2h ago", isLive: true },
- { name: "Jin Park", topic: "Gaming", img: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=200&q=70&auto=format&fit=crop", lastSeen: "5h ago", isLive: false },
- { name: "Sofia G.", topic: "Fitness", img: "https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=200&q=70&auto=format&fit=crop", lastSeen: "Yesterday", isLive: true },
- { name: "Lily Wong", topic: "Beauty", img: "https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=200&q=70&auto=format&fit=crop", lastSeen: "2d ago", isLive: false },
- { name: "Alex Rivera", topic: "Cooking", img: "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=200&q=70&auto=format&fit=crop", lastSeen: "3d ago", isLive: false },
- ].map((r) =>(
+ {recentlyWatched.map((r) =>(
 <button
-  key={r.name}
+  key={r.hostId}
   onClick={() =>{
-    if (r.isLive) toast.success(`Resuming ${r.name}'s ${r.topic} stream`);
+    if (r.isLive) toast.success(`Resuming ${r.name}'s stream`);
     else toast.info(`${r.name} isn't live — we'll notify you when they go live`);
   }}
   className="shrink-0 flex flex-col items-center gap-1.5 w-[64px] active:scale-95 transition-transform"
 >
 <div className="relative">
 <Avatar className={cn("h-14 w-14 ring-2", r.isLive ? "ring-red-500" : "ring-border/40 grayscale-[20%]")}>
-<AvatarImage src={r.img} />
+<AvatarImage src={r.avatar ?? undefined} />
 <AvatarFallback className="bg-muted">{r.name[0]}</AvatarFallback>
 </Avatar>
  {r.isLive && (
@@ -1851,8 +1846,10 @@ export default function LiveStreamPage() {
  ))}
 </div>
 </div>
+)}
 
- {/* ─── Top Gifters leaderboard ─── */}
+ {/* ─── Top Gifters leaderboard (real data) ─── */}
+{LIVE_FEATURE_FLAGS.topGifters && topGifters.length > 0 && (
 <div className="px-4 pt-4 pb-1">
 <div className="flex items-center justify-between mb-2.5">
 <h2 className="font-bold text-sm text-foreground flex items-center gap-1.5">
@@ -1864,43 +1861,37 @@ export default function LiveStreamPage() {
 </button>
 </div>
 <div className="rounded-2xl border border-border/40 bg-gradient-to-br from-amber-500/5 via-card to-orange-500/5 p-3 space-y-2">
- {[
- { rank: 1, name: "DiamondKing88", coins: "2.4M", img: "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=200&q=70&auto=format&fit=crop", level: 88 },
- { rank: 2, name: "QueenLuxe", coins: "1.8M", img: "https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=200&q=70&auto=format&fit=crop", level: 76 },
- { rank: 3, name: "RoyalBoss", coins: "1.5M", img: "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=200&q=70&auto=format&fit=crop", level: 65 },
- { rank: 4, name: "PandaLove", coins: "920K", img: "https://images.unsplash.com/photo-1531746020798-e6953c6e8e04?w=200&q=70&auto=format&fit=crop", level: 54 },
- { rank: 5, name: "Mr.Smile", coins: "780K", img: "https://images.unsplash.com/photo-1492562080023-ab3db95bfbce?w=200&q=70&auto=format&fit=crop", level: 48 },
- ].map((g) =>(
+ {topGifters.map((g) =>(
 <button
-  key={g.name}
-  onClick={() =>toast.info(`${g.name} · Lv ${g.level} · ${g.coins} coins gifted`)}
+  key={g.userId}
+  onClick={() =>toast.info(`${g.name} · ${g.coinsLabel} coins gifted this week`)}
   className="w-full flex items-center gap-3 p-1 rounded-xl hover:bg-muted/40 active:scale-[0.99] transition-all text-left"
 >
 <div className={cn(
  "w-7 text-center font-black text-[14px] shrink-0",
  g.rank === 1 ? "text-amber-500" : g.rank === 2 ? "text-zinc-400" : g.rank === 3 ? "text-orange-600" : "text-muted-foreground",
  )}>
- {g.rank === 1 ? "" : g.rank === 2 ? "" : g.rank === 3 ? "" : `#${g.rank}`}
+ {`#${g.rank}`}
 </div>
 <Avatar className="h-9 w-9 ring-1 ring-border/40">
-<AvatarImage src={g.img} />
+<AvatarImage src={g.avatar ?? undefined} />
 <AvatarFallback>{g.name[0]}</AvatarFallback>
 </Avatar>
 <div className="flex-1 min-w-0">
 <div className="flex items-center gap-1.5">
 <p className="text-[12px] font-bold text-foreground truncate">{g.name}</p>
-<Badge className="bg-gradient-to-r from-fuchsia-500 to-purple-500 text-white border-0 text-[8px] px-1 py-0 font-bold">Lv {g.level}</Badge>
 </div>
-<p className="text-[10px] text-muted-foreground">Top fan • Diamond donor</p>
+<p className="text-[10px] text-muted-foreground">Top supporter this week</p>
 </div>
 <div className="flex items-center gap-1 shrink-0">
 <Gift className="w-3 h-3 text-amber-500" />
-<span className="text-[12px] font-bold text-amber-600 dark:text-amber-400">{g.coins}</span>
+<span className="text-[12px] font-bold text-amber-600 dark:text-amber-400">{g.coinsLabel}</span>
 </div>
 </button>
  ))}
 </div>
 </div>
+)}
 
  {/* ─── Karaoke / Singing Rooms ─── */}
 <div className="px-4 pt-4 pb-1">
