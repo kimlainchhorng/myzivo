@@ -1044,10 +1044,6 @@ function ReelCard({
           onPause={() => setIsPlaying(false)}
           onWaiting={() => setIsBuffering(true)}
           onPlaying={() => setIsBuffering(false)}
-<<<<<<< Updated upstream
-          
-=======
->>>>>>> Stashed changes
           onTimeUpdate={(e) => {
             const v = e.currentTarget;
             if (Number.isFinite(v.duration) && v.duration > 0) {
