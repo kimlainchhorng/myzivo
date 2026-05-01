@@ -1281,6 +1281,12 @@ export default function LiveStreamPage() {
 </div>
 )}
 
+{/* The following sections (Replays, PK Season, Agency, AR Studio, Dating Live,
+    Become a Host, Auctions, Study Rooms, Daily Missions, Upcoming, Game/Pet/Travel/
+    Hot News/Sports/Zodiac/DJ/Comedy/Quiz Live, Creator of Day, Rising Stars,
+    Cosplay/ASMR/Crypto/Magic Live, Coin Recharge promo, Categories grid,
+    Top Creators leaderboard) are mock-only and hidden until backends ship. */}
+{false && (<>
  {/* ─── Replays / Top Moments ─── */}
 <div className="px-4 pt-4 pb-1">
 <div className="flex items-center justify-between mb-2.5">
