@@ -12,7 +12,7 @@ import {
   User, ArrowLeft, Loader2, Sparkles, Camera, ImagePlus, Check, X, MoveVertical,
   Shield, Star, ChevronRight, UserPlus, BadgeCheck,
   Wallet, Store, ExternalLink, Users, Globe, ChevronDown, Crown, MapPin, ShoppingBag,
-  Settings, Handshake, Car, Wrench, UtensilsCrossed, Building2, Truck, Phone, AlertCircle, Bell, MoreHorizontal,
+  Handshake, Car, Wrench, UtensilsCrossed, Building2, Truck, Phone, AlertCircle, Bell, MoreHorizontal,
   Pencil, RotateCcw, Share2, BarChart3, Link as LinkIcon, QrCode, Copy,
   Repeat, DollarSign, Briefcase, User as UserIcon,
 } from "lucide-react";
@@ -42,11 +42,7 @@ import { stripTrackingParams } from "@/lib/linkSafetyExtras";
 import ProfileContentTabs from "@/components/profile/ProfileContentTabs";
 import ProfileStories from "@/components/profile/ProfileStories";
 import SocialListModal from "@/components/profile/SocialListModal";
-import ProfileCompletenessCard from "@/components/profile/ProfileCompletenessCard";
-import ProfileQuickLinksCard from "@/components/profile/ProfileQuickLinksCard";
-import { DEFAULT_QUICK_LINKS } from "@/components/profile/quickLinks";
-import ProfileWalletCard from "@/components/profile/ProfileWalletCard";
-import ProfileReferralCard from "@/components/profile/ProfileReferralCard";
+// Wallet, Completeness, Referral & QuickLinks cards moved to /more page
 import ProfileTripsCard from "@/components/profile/ProfileTripsCard";
 import { useCoinBalance } from "@/hooks/useCoinBalance";
 import { useWalletSummary } from "@/hooks/useZivoWallet";
@@ -822,18 +818,6 @@ const Profile = () => {
           </AnimatePresence>
           </div>
           <motion.button
-            onClick={() => navigate("/account/settings")}
-            aria-label="Account settings"
-            whileTap={{ scale: 0.86 }}
-            transition={{ type: "spring", stiffness: 400, damping: 22 }}
-            className={cn(
-              "h-9 w-9 flex items-center justify-center rounded-full transition focus-visible:ring-2 focus-visible:ring-primary/70 focus-visible:outline-none focus-visible:ring-offset-2 focus-visible:ring-offset-background",
-              overCover ? "hover:bg-white/15 text-white drop-shadow-md" : "hover:bg-muted/60 text-foreground"
-            )}
-          >
-            <Settings className="h-5 w-5" />
-          </motion.button>
-          <motion.button
             onClick={() => navigate("/more")}
             aria-label="More account options"
             whileTap={{ scale: 0.86 }}
@@ -1308,19 +1292,7 @@ const Profile = () => {
 
               {/* ZIVO+ upgrade moved to /more page */}
 
-              {/* ── Wallet Preview ── */}
-              {user && (
-                <ParallaxSection index={1.1}>
-                  <ProfileWalletCard
-                    balance={coinBalance}
-                    credits={walletSummary?.availableCredits ?? 0}
-                    transactionCount={walletSummary?.transactionCount ?? 0}
-                    loading={coinLoading || walletLoading}
-                    onOpenWallet={() => { selectionChanged(); navigate("/wallet"); }}
-                    onBuyCoins={() => { selectionChanged(); navigate("/wallet?tab=coins"); }}
-                  />
-                </ParallaxSection>
-              )}
+              {/* Wallet, Completeness & Referral cards moved to /more page to avoid duplication */}
 
               {/* ── Recent Trips ── */}
               {user && (bookingsLoading || bookings.length > 0) && (
@@ -1334,43 +1306,7 @@ const Profile = () => {
                 </ParallaxSection>
               )}
 
-              {/* ── Profile Completeness Meter ── */}
-              {user && (
-                <ParallaxSection index={1.2}>
-                  <ProfileCompletenessCard
-                    profile={profile}
-                    username={claimedUsername}
-                    isVerified={!!profile?.is_verified}
-                    verificationPending={latestVerificationRequest?.status === "pending"}
-                    onPickAvatar={() => avatarInputRef.current?.click()}
-                    onPickCover={() => coverInputRef.current?.click()}
-                    onEditBio={() => {
-                      setBioDraft(profile?.bio ?? "");
-                      setBioEditing(true);
-                      window.scrollTo({ top: 0, behavior: "smooth" });
-                    }}
-                    onEditPhone={() => navigate("/account/profile-edit?focus=phone")}
-                    onEditUsername={() => navigate("/account/profile-edit?focus=username")}
-                    onEditName={() => navigate("/account/profile-edit?focus=name")}
-                    onEditSocials={() => navigate("/account/profile-edit?focus=socials")}
-                    onStartVerification={() => navigate("/account/verification")}
-                  />
-                </ParallaxSection>
-              )}
-
-              {/* ── Referral Program ── */}
-              {user && (
-                <ParallaxSection index={1.3}>
-                  <ProfileReferralCard
-                    code={referralCode?.code ?? null}
-                    totalReferrals={referralCode?.total_referrals ?? 0}
-                    totalEarnings={referralCode?.total_earnings ?? 0}
-                    loading={referralsLoading}
-                    onCopy={() => { selectionChanged(); void copyReferralLink(); }}
-                    onShare={() => { selectionChanged(); void shareReferral(); }}
-                  />
-                </ParallaxSection>
-              )}
+              {/* Profile Completeness & Referral cards moved to /more page */}
 
               {/* ── Phone Required Card ── */}
               {!profile?.phone?.trim() && (
@@ -1398,19 +1334,7 @@ const Profile = () => {
 
           {/* Notifications panel moved into the sticky header (Facebook-style popover) */}
 
-              {/* ── Account Quick Links ── */}
-              {user && (
-                <ParallaxSection index={2.2}>
-                  <ProfileQuickLinksCard
-                    onNavigate={(to) => { selectionChanged(); navigate(to); }}
-                    links={DEFAULT_QUICK_LINKS.map((l) =>
-                      l.key === "activity" && totalNotifCount > 0
-                        ? { ...l, badge: totalNotifCount }
-                        : l,
-                    )}
-                  />
-                </ParallaxSection>
-              )}
+              {/* Account Quick Links moved to /more page to avoid duplication */}
 
               {/* ── Social Content Tabs (Posts, Videos, Live, Status) ── */}
               <ParallaxSection index={2.5}>
