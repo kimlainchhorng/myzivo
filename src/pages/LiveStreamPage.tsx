@@ -1893,7 +1893,8 @@ export default function LiveStreamPage() {
 </div>
 )}
 
- {/* ─── Karaoke / Singing Rooms ─── */}
+ {/* ─── Karaoke / Singing Rooms (no backend yet — flagged off) ─── */}
+{LIVE_FEATURE_FLAGS.karaokeRooms && (
 <div className="px-4 pt-4 pb-1">
 <div className="flex items-center justify-between mb-2.5">
 <h2 className="font-bold text-sm text-foreground flex items-center gap-1.5">
@@ -1934,9 +1935,10 @@ export default function LiveStreamPage() {
 </button>
  ))}
 </div>
-</div>
+)}
 
- {/* ─── Birthday Celebrations ─── */}
+ {/* ─── Birthday Celebrations (no backend yet — flagged off) ─── */}
+{LIVE_FEATURE_FLAGS.birthdayCelebrations && (
 <div className="px-4 pt-4 pb-1">
 <div className="flex items-center justify-between mb-2.5">
 <h2 className="font-bold text-sm text-foreground flex items-center gap-1.5">
@@ -1974,7 +1976,7 @@ export default function LiveStreamPage() {
 </button>
  ))}
 </div>
-</div>
+)}
 
  {/* ─── Replays / Top Moments ─── */}
 <div className="px-4 pt-4 pb-1">
