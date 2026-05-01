@@ -1093,12 +1093,14 @@ export default function LiveStreamPage() {
 </button>
  );
  })}
+  </div>
 </div>
 
 {/* All discover-row sections (News ticker, Live Now stories, Following ticker,
     Country picker, Daily rewards, PK Battles, Trending hashtags, Voice rooms,
     Live Events, Mini Games, Live Shopping, New Faces) are hidden — no real
     backend yet. They will return once each underlying data source ships. */}
+
 
  {/* ─── Section divider: Community ─── */}
 <div id="section-community" className="px-4 pt-6 pb-1 flex items-center gap-3 scroll-mt-20">
