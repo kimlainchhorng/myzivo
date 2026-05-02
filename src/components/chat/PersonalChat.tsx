@@ -111,6 +111,7 @@ import Clock from "lucide-react/dist/esm/icons/clock";
 const ForwardPickerSheet = lazy(() => import("./ForwardPickerSheet"));
 const ScheduledMessagesSheet = lazy(() => import("./ScheduledMessagesSheet"));
 const PollCreatorSheet = lazy(() => import("./PollCreatorSheet"));
+const ChatPollMessage = lazy(() => import("./ChatPollMessage"));
 import { useMessageActions, type DirectMessage } from "@/hooks/useMessageActions";
 
 const INITIAL_VISIBLE_TIMELINE_ITEMS = 25;
@@ -2171,7 +2172,14 @@ export default function PersonalChat({ recipientId, recipientName, recipientAvat
                     )}
 
                     {/* Coin transfer message */}
-                    {msg.message_type === "coin_transfer" && msg.gift_payload ? (
+                    {msg.message_type === "poll" ? (
+                      <Suspense fallback={null}>
+                        <ChatPollMessage
+                          pollId={(msg.file_payload as { poll_id?: string } | null)?.poll_id || msg.message}
+                          isMe={isMe}
+                        />
+                      </Suspense>
+                    ) : msg.message_type === "coin_transfer" && msg.gift_payload ? (
                       <div className={`flex ${isMe ? "justify-end" : "justify-start"}`}>
                         <Suspense fallback={null}>
                           <CoinTransferBubble
@@ -2885,7 +2893,9 @@ export default function PersonalChat({ recipientId, recipientName, recipientAvat
         </Suspense>
       )}
 
-      {/* Poll creator (Telegram-style) */}
+      {/* Poll creator (Telegram-style). Inserts the poll, then sends a
+          message_type:"poll" message whose body is the poll id — the
+          renderer below picks that up and shows ChatPollBubble inline. */}
       <ChatPollCreator
         open={showPollCreator}
         onClose={() => setShowPollCreator(false)}
@@ -2895,24 +2905,32 @@ export default function PersonalChat({ recipientId, recipientName, recipientAvat
             throw new Error("missing user or recipient");
           }
           const optionsPayload = poll.options.map((text) => ({ text }));
-          const { error: pollError } = await dbFrom("chat_polls").insert({
-            creator_id: user.id,
-            chat_partner_id: recipientId,
-            question: poll.question,
-            options: optionsPayload,
-            is_anonymous: poll.isAnonymous,
-            votes: {},
-          });
-          if (pollError) {
+          const { data: created, error: pollError } = await dbFrom("chat_polls")
+            .insert({
+              creator_id: user.id,
+              chat_partner_id: recipientId,
+              question: poll.question,
+              options: optionsPayload,
+              is_anonymous: poll.isAnonymous,
+              votes: {},
+            })
+            .select("id")
+            .single();
+          if (pollError || !created?.id) {
             toast.error("Failed to create poll");
-            throw pollError;
+            throw pollError ?? new Error("missing poll id");
           }
-          const announcement = `📊 Poll: ${poll.question}\n${poll.options.map((o, i) => `${i + 1}. ${o}`).join("\n")}`;
+          // Send the message that displays the interactive poll bubble.
+          // Fallback announcement text is preserved in the message body so
+          // legacy clients (or push-notification previews) still show
+          // something meaningful even if they don't recognise the type.
+          const fallback = `📊 Poll: ${poll.question}\n${poll.options.map((o, i) => `${i + 1}. ${o}`).join("\n")}`;
           const { error: msgError } = await dbFrom("direct_messages").insert({
             sender_id: user.id,
             receiver_id: recipientId,
-            message: announcement,
-            message_type: "text",
+            message: created.id,
+            message_type: "poll",
+            file_payload: { poll_id: created.id, fallback_text: fallback },
           });
           if (msgError) {
             toast.error("Poll created, but couldn't send announcement");
