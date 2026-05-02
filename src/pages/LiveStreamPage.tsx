@@ -137,6 +137,52 @@ function LiveWatcher({ stream, onLeave }: { stream: LiveStream; onLeave: () =>vo
  const verifiedCacheRef = useRef<Map<string, boolean>>(new Map());
  const [elapsed, setElapsed] = useState(0);
  const [streamEnded, setStreamEnded] = useState(stream.status === "ended");
+ const [isFollowingHost, setIsFollowingHost] = useState(false);
+ const [followBusy, setFollowBusy] = useState(false);
+ const isHostMe = !!user && user.id === stream.user_id;
+
+ // Hydrate follow state for the host (skip if viewer IS the host)
+ useEffect(() => {
+   if (!user || isHostMe) return;
+   let alive = true;
+   (supabase as any)
+     .from("user_followers")
+     .select("id")
+     .eq("follower_id", user.id)
+     .eq("following_id", stream.user_id)
+     .maybeSingle()
+     .then(({ data }: any) => { if (alive) setIsFollowingHost(Boolean(data)); });
+   return () => { alive = false; };
+ }, [user, stream.user_id, isHostMe]);
+
+ const handleFollowHost = useCallback(async () => {
+   if (!user) { toast.error("Sign in to follow"); return; }
+   if (isHostMe || followBusy) return;
+   setFollowBusy(true);
+   const wasFollowing = isFollowingHost;
+   setIsFollowingHost(!wasFollowing); // optimistic
+   try {
+     if (wasFollowing) {
+       const { error } = await (supabase as any)
+         .from("user_followers")
+         .delete()
+         .eq("follower_id", user.id)
+         .eq("following_id", stream.user_id);
+       if (error) throw error;
+     } else {
+       const { error } = await (supabase as any)
+         .from("user_followers")
+         .insert({ follower_id: user.id, following_id: stream.user_id });
+       if (error && !String(error.message).includes("duplicate")) throw error;
+       toast.success(`Following ${stream.host_name}`);
+     }
+   } catch {
+     setIsFollowingHost(wasFollowing); // rollback
+     toast.error(wasFollowing ? "Couldn't unfollow" : "Couldn't follow");
+   } finally {
+     setFollowBusy(false);
+   }
+ }, [user, isHostMe, followBusy, isFollowingHost, stream.user_id, stream.host_name]);
 
  const lastTapRef = useRef<number>(0);
  const chatEndRef = useRef<HTMLDivElement>(null);
@@ -527,6 +573,21 @@ function LiveWatcher({ stream, onLeave }: { stream: LiveStream; onLeave: () =>vo
 </p>
 <p className="text-white/50 text-[10px] leading-tight">{stream.topic}</p>
 </div>
+{!isHostMe && (
+  <button
+    onClick={handleFollowHost}
+    disabled={followBusy}
+    className={cn(
+      "shrink-0 rounded-full text-[11px] font-bold px-3 py-1 transition-colors disabled:opacity-60",
+      isFollowingHost
+        ? "bg-white/10 text-white/70 border border-white/15"
+        : "bg-rose-500 text-white hover:bg-rose-600",
+    )}
+    aria-label={isFollowingHost ? "Following" : "Follow host"}
+  >
+    {isFollowingHost ? "Following" : "Follow"}
+  </button>
+)}
 </div>
 
 <div className="flex items-center gap-1 bg-black/40 backdrop-blur-sm rounded-full px-2 py-1">
